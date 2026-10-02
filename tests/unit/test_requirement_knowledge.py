@@ -640,7 +640,7 @@ def test_no_supported_answer_is_a_successful_empty_suggestion_set(
         EmptySuggester(),
         container.clock,
         container.transaction_manager,
-        references=container.reference_knowledge,
+        references=container.current_references,
         authorization=access_service_for(
             container.requirement_repository, container.access_repository
         ),
@@ -730,7 +730,7 @@ def test_invalid_suggestion_output_does_not_overwrite_the_prior_valid_set(
         InvalidSuggester(),
         container.clock,
         container.transaction_manager,
-        references=container.reference_knowledge,
+        references=container.current_references,
         authorization=access_service_for(
             container.requirement_repository, container.access_repository
         ),
@@ -802,7 +802,7 @@ def test_stale_provider_citation_fails_without_overwriting_prior_suggestions(
         StaleCitationSuggester(),
         container.clock,
         container.transaction_manager,
-        references=container.reference_knowledge,
+        references=container.current_references,
         authorization=access_service_for(
             container.requirement_repository, container.access_repository
         ),

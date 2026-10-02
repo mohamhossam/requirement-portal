@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import replace
 from datetime import datetime
 from threading import RLock
@@ -11,7 +12,13 @@ from psycopg.types.json import Jsonb
 from pydantic import TypeAdapter
 
 from smb_requirement_agent.application.errors import DocumentVersionConflictError
+from smb_requirement_agent.application.ports.document_library import DocumentLibraryPort
+from smb_requirement_agent.application.ports.knowledge_events import (
+    REFERENCE_DOCUMENT_CHANGED,
+    KnowledgeEventOutboxPort,
+)
 from smb_requirement_agent.domain.document.library import IngestionStage, LibraryDocument
+from smb_requirement_agent.domain.document.reference import ReferenceDocumentState
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 
 
@@ -305,3 +312,65 @@ class PostgresDocumentLibrary:
             document = claimed(previous, now, until, token)
             self.save(document, previous.version)
             return document
+
+
+class PublishingDocumentLibrary:
+    """A library repository that publishes each document's citable state as it changes.
+
+    Every add and save (a claim included) writes a `reference_document_changed`
+    event in the same transaction. While requirement work runs in this process,
+    `relay` hands the event straight to its local copy in that transaction too,
+    so a withdrawal is seen at once. Once the library has its own service the
+    relay goes away and the copy catches up from the outbox (ADR-0099).
+    """
+
+    def __init__(
+        self,
+        inner: DocumentLibraryPort,
+        outbox: KnowledgeEventOutboxPort,
+        relay: Callable[[int, ReferenceDocumentState], None] | None = None,
+    ) -> None:
+        self._inner = inner
+        self._outbox = outbox
+        self._relay = relay
+
+    def _publish(self, document: LibraryDocument) -> None:
+        state = document.citable_state()
+        seq = self._outbox.append(REFERENCE_DOCUMENT_CHANGED, document.id, state.to_payload())
+        if self._relay is not None:
+            self._relay(seq, state)
+
+    def add(self, document: LibraryDocument) -> None:
+        self._inner.add(document)
+        self._publish(document)
+
+    def save(self, document: LibraryDocument, expected_version: int) -> None:
+        self._inner.save(document, expected_version)
+        self._publish(document)
+
+    def claim(self, now: datetime, until: datetime, token: str) -> LibraryDocument | None:
+        document = self._inner.claim(now, until, token)
+        if document is not None:
+            self._publish(document)
+        return document
+
+    def get(self, document_id: str) -> LibraryDocument | None:
+        return self._inner.get(document_id)
+
+    def has_published(self) -> bool:
+        return self._inner.has_published()
+
+    def has_incompatible_publication(self, identities: tuple[str, ...]) -> bool:
+        return self._inner.has_incompatible_publication(identities)
+
+    def lock_publications(self, document_ids: tuple[str, ...]) -> None:
+        self._inner.lock_publications(document_ids)
+
+    def pending_publication(self, now: datetime) -> LibraryDocument | None:
+        return self._inner.pending_publication(now)
+
+    def list_visible(self, actor_id: str, offset: int, limit: int) -> tuple[LibraryDocument, ...]:
+        return self._inner.list_visible(actor_id, offset, limit)
+
+    def find_submission(self, actor_id: str, key: str) -> LibraryDocument | None:
+        return self._inner.find_submission(actor_id, key)

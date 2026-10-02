@@ -61,6 +61,7 @@ from smb_requirement_agent.application.ports.document_library import DocumentLib
 from smb_requirement_agent.application.ports.document_repository import DocumentRepositoryPort
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
+from smb_requirement_agent.application.ports.knowledge_events import KnowledgeEventOutboxPort
 from smb_requirement_agent.application.ports.knowledge_index_generations import (
     KnowledgeIndexGenerationsPort,
 )
@@ -69,6 +70,9 @@ from smb_requirement_agent.application.ports.organisation_repository import (
     OrganisationRepositoryPort,
 )
 from smb_requirement_agent.application.ports.reference_index import ReferenceIndexPort
+from smb_requirement_agent.application.ports.reference_publications import (
+    ReferencePublicationStatePort,
+)
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
@@ -144,6 +148,7 @@ from smb_requirement_agent.infrastructure.persistence.attachment_ingestions impo
 from smb_requirement_agent.infrastructure.persistence.document_library import (
     InMemoryDocumentLibrary,
     PostgresDocumentLibrary,
+    PublishingDocumentLibrary,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_ai_jobs import (
     InMemoryAiJobStore,
@@ -213,6 +218,10 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_worklist import 
     InMemoryCurrentWorklistProjection,
     InMemoryRequirementWorklistSnapshotAdapter,
 )
+from smb_requirement_agent.infrastructure.persistence.knowledge_events import (
+    InMemoryKnowledgeEvents,
+    PostgresKnowledgeEvents,
+)
 from smb_requirement_agent.infrastructure.persistence.postgres_activity import (
     PostgresProjectedActivity,
 )
@@ -267,6 +276,10 @@ from smb_requirement_agent.infrastructure.persistence.postgres_worklist import (
 from smb_requirement_agent.infrastructure.persistence.reference_index import (
     InMemoryReferenceIndex,
     PostgresReferenceIndex,
+)
+from smb_requirement_agent.infrastructure.persistence.reference_publications import (
+    InMemoryReferencePublications,
+    PostgresReferencePublications,
 )
 from smb_requirement_agent.infrastructure.persistence.requirement_indexing import (
     MemoryRequirementIndexProgress,
@@ -340,6 +353,8 @@ class PersistenceAdapters:
     architecture_job_repository: ArchitectureJobRepositoryPort
     mapping_job_repository: ArchitectureJobRepositoryPort
     library_repository: DocumentLibraryPort
+    knowledge_events: KnowledgeEventOutboxPort
+    reference_publications: ReferencePublicationStatePort
     attachment_ingestions: AttachmentIngestionRepositoryPort
     reference_index: ReferenceIndexPort
     revision_repository: BreakdownRepositoryPort
@@ -412,7 +427,11 @@ def _postgres(
     )
     architecture_job_repository = PostgresArchitectureJobs(connector)
     mapping_job_repository = PostgresArchitectureJobs(connector, table="requirement_mapping_jobs")
-    library_repository: DocumentLibraryPort = PostgresDocumentLibrary(postgres)
+    knowledge_events: KnowledgeEventOutboxPort = PostgresKnowledgeEvents(postgres)
+    reference_publications: ReferencePublicationStatePort = PostgresReferencePublications(postgres)
+    library_repository: DocumentLibraryPort = PublishingDocumentLibrary(
+        PostgresDocumentLibrary(postgres), knowledge_events, reference_publications.apply
+    )
     attachment_ingestions: AttachmentIngestionRepositoryPort = PostgresAttachmentIngestions(
         postgres
     )
@@ -508,6 +527,8 @@ def _postgres(
         architecture_job_repository=architecture_job_repository,
         mapping_job_repository=mapping_job_repository,
         library_repository=library_repository,
+        knowledge_events=knowledge_events,
+        reference_publications=reference_publications,
         attachment_ingestions=attachment_ingestions,
         reference_index=reference_index,
         revision_repository=revision_repository,
@@ -546,8 +567,14 @@ def _memory(
     memory_library = InMemoryDocumentLibrary(memory_lock)
     memory_attachments = InMemoryAttachmentIngestions(memory_lock)
     attachment_ingestions = memory_attachments
-    library_repository = memory_library
-    memory_reference_index = InMemoryReferenceIndex(memory_lock, library_repository)
+    memory_events = InMemoryKnowledgeEvents(memory_lock)
+    memory_publications = InMemoryReferencePublications(memory_lock)
+    knowledge_events = memory_events
+    reference_publications = memory_publications
+    library_repository = PublishingDocumentLibrary(
+        memory_library, memory_events, memory_publications.apply
+    )
+    memory_reference_index = InMemoryReferenceIndex(memory_lock, memory_library)
     reference_index = memory_reference_index
     base_analyses = InMemoryRequirementAnalysisRepository()
     analysis_audit_repository = InMemoryAnalysisAuditRepository(
@@ -645,6 +672,8 @@ def _memory(
     evidence_fragment_cache = InMemoryEvidenceFragmentCache()
     memory_transactions.enroll(
         memory_library,
+        memory_events,
+        memory_publications,
         memory_attachments,
         memory_reference_index,
         base_requirements,
@@ -717,6 +746,8 @@ def _memory(
         architecture_job_repository=architecture_job_repository,
         mapping_job_repository=mapping_job_repository,
         library_repository=library_repository,
+        knowledge_events=knowledge_events,
+        reference_publications=reference_publications,
         attachment_ingestions=attachment_ingestions,
         reference_index=reference_index,
         revision_repository=revision_repository,

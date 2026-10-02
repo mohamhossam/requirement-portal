@@ -73,13 +73,16 @@ class ReferenceSearchPort(ReferenceEvidencePort, Protocol):
     def retrieve(self, query: str) -> tuple[ReferenceEvidence, ...]: ...
 
 
-class ReferenceKnowledgePort(ReferenceSearchPort, Protocol):
+class ReferenceKnowledgePort(Protocol):
     """What requirement work reads from the shared reference library (ADR-0099).
 
     Everything crosses as this application's own values (`ReferenceEvidence`,
     `PublishedReference`), never the library's chunks, so the library can move to
-    its own service behind an HTTP adapter.
+    its own service behind an HTTP adapter. Whether a citation is still current
+    is answered locally, by `ReferenceEvidencePort`.
     """
+
+    def retrieve(self, query: str) -> tuple[ReferenceEvidence, ...]: ...
 
     def has_published(self) -> bool: ...
 

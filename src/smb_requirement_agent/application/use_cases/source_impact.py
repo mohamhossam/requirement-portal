@@ -9,8 +9,10 @@ from smb_requirement_agent.application.errors import (
     ArtifactVersionConflictError,
     DocumentNotFoundError,
 )
-from smb_requirement_agent.application.ports.document_library import DocumentLibraryPort
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidencePort
+from smb_requirement_agent.application.ports.reference_publications import (
+    ReferencePublicationStatePort,
+)
 from smb_requirement_agent.application.ports.source_dependencies import (
     SourceDependency,
     SourceDependencyPort,
@@ -48,7 +50,7 @@ class SourceImpactReview:
     def __init__(
         self,
         index: SourceDependencyPort,
-        documents: DocumentLibraryPort,
+        documents: ReferencePublicationStatePort,
         authorization: RequirementAccessService,
         transactions: TransactionManagerPort,
         clock: ClockPort,
@@ -59,12 +61,12 @@ class SourceImpactReview:
 
     def _view(self, row: SourceDependency) -> DependencyImpact:
         document = self._documents.get(row.lineage.citation.document_id)
-        state = (
-            f"{document.version}:{document.published_id or 'withdrawn'}"
-            if document
-            else "unavailable"
+        state = document.publication_state if document else "unavailable"
+        current = bool(
+            document
+            and document.published
+            and document.published.publication_id == row.lineage.citation.publication_id
         )
-        current = bool(document and document.published_id == row.lineage.citation.publication_id)
         decisions = self._index.decisions(row.id)
         retained = bool(
             decisions
@@ -91,7 +93,7 @@ class SourceImpactReview:
                 document = self._documents.get(document_id)
                 if document is None:
                     raise DocumentNotFoundError("Document was not found.")
-                if document.owner.id != actor.id:
+                if document.owner_id != actor.id.value:
                     raise AuthorizationDeniedError(
                         "Only the document owner can inspect its dependencies."
                     )
@@ -130,7 +132,7 @@ class SourceImpactReview:
             self._authorization.require(
                 RequirementId(row.requirement_id), actor, RequirementPermission.OWNER
             )
-            self._documents.lock_publications((row.lineage.citation.document_id,))
+            self._documents.lock((row.lineage.citation.document_id,))
             row = self._index.get(dependency_id)
             if row is None or not row.active:
                 raise ArtifactVersionConflictError(
@@ -177,9 +179,7 @@ class SourceImpactReview:
                 or row.target_kind not in {"epic", "feature", "story"}
                 or row.target_id in target_ids
             )
-            self._documents.lock_publications(
-                tuple(sorted({r.lineage.citation.document_id for r in rows}))
-            )
+            self._documents.lock(tuple(sorted({r.lineage.citation.document_id for r in rows})))
             return tuple(
                 dict.fromkeys(
                     row.target_id if row.target_kind == "proposal" else row.id

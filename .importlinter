@@ -150,6 +150,7 @@ source_modules =
     smb_requirement_agent.application.ports.knowledge_index_generations
     smb_requirement_agent.application.ports.notifications
     smb_requirement_agent.application.ports.reference_grounding
+    smb_requirement_agent.application.ports.reference_publications
     smb_requirement_agent.application.ports.requirement_analysis_repository
     smb_requirement_agent.application.ports.requirement_analyzer
     smb_requirement_agent.application.ports.requirement_draft_repository
@@ -208,6 +209,7 @@ source_modules =
     smb_requirement_agent.application.use_cases.owned_requirements
     smb_requirement_agent.application.use_cases.provider_call_rate
     smb_requirement_agent.application.use_cases.rebuild_knowledge_index
+    smb_requirement_agent.application.use_cases.reference_currency
     smb_requirement_agent.application.use_cases.reference_grounding
     smb_requirement_agent.application.use_cases.requirement_commands
     smb_requirement_agent.application.use_cases.requirement_drafts
@@ -316,6 +318,7 @@ source_modules =
     smb_requirement_agent.infrastructure.persistence.postgres_saved_views
     smb_requirement_agent.infrastructure.persistence.postgres_snapshots
     smb_requirement_agent.infrastructure.persistence.postgres_worklist
+    smb_requirement_agent.infrastructure.persistence.reference_publications
     smb_requirement_agent.infrastructure.persistence.requirement_indexing
     smb_requirement_agent.infrastructure.persistence.requirement_knowledge_repository
     smb_requirement_agent.infrastructure.persistence.requirement_snapshot
@@ -385,12 +388,13 @@ forbidden_modules =
     smb_requirement_agent.infrastructure.persistence.in_memory_catalogue_candidates
     smb_requirement_agent.infrastructure.persistence.in_memory_organisation
     smb_requirement_agent.infrastructure.persistence.in_memory_sample_requirements
+    smb_requirement_agent.infrastructure.persistence.knowledge_events
     smb_requirement_agent.infrastructure.persistence.postgres_architecture_knowledge
     smb_requirement_agent.infrastructure.persistence.postgres_catalogue_candidates
     smb_requirement_agent.infrastructure.persistence.postgres_organisation
     smb_requirement_agent.infrastructure.persistence.postgres_sample_requirements
     smb_requirement_agent.infrastructure.persistence.reference_index
-# Baseline of 11 existing crossings, 2026-10-02. Never add to it.
+# Baseline of 10 existing crossings, 2026-10-02. Never add to it.
 ignore_imports =
     smb_requirement_agent.application.ports.architecture_knowledge -> smb_requirement_agent.domain.architecture.entities
     smb_requirement_agent.application.use_cases.approval_policy -> smb_requirement_agent.domain.architecture.entities
@@ -399,7 +403,6 @@ ignore_imports =
     smb_requirement_agent.application.use_cases.breakdown_review_evidence -> smb_requirement_agent.domain.architecture.entities
     smb_requirement_agent.application.use_cases.breakdown_review_policy -> smb_requirement_agent.domain.architecture.entities
     smb_requirement_agent.application.use_cases.export_breakdown -> smb_requirement_agent.domain.architecture.entities
-    smb_requirement_agent.application.use_cases.source_impact -> smb_requirement_agent.application.ports.document_library
     smb_requirement_agent.domain.feature.entities -> smb_requirement_agent.domain.architecture.entities
     smb_requirement_agent.domain.story.entities -> smb_requirement_agent.domain.architecture.entities
     smb_requirement_agent.infrastructure.persistence.architecture_mapping_stats -> smb_requirement_agent.application.ports.architecture_mapping_stats
@@ -472,6 +475,7 @@ source_modules =
     smb_requirement_agent.infrastructure.persistence.in_memory_catalogue_candidates
     smb_requirement_agent.infrastructure.persistence.in_memory_organisation
     smb_requirement_agent.infrastructure.persistence.in_memory_sample_requirements
+    smb_requirement_agent.infrastructure.persistence.knowledge_events
     smb_requirement_agent.infrastructure.persistence.postgres_architecture_knowledge
     smb_requirement_agent.infrastructure.persistence.postgres_catalogue_candidates
     smb_requirement_agent.infrastructure.persistence.postgres_organisation
@@ -499,6 +503,7 @@ forbidden_modules =
     smb_requirement_agent.application.ports.knowledge_index_generations
     smb_requirement_agent.application.ports.notifications
     smb_requirement_agent.application.ports.reference_grounding
+    smb_requirement_agent.application.ports.reference_publications
     smb_requirement_agent.application.ports.requirement_analysis_repository
     smb_requirement_agent.application.ports.requirement_analyzer
     smb_requirement_agent.application.ports.requirement_draft_repository
@@ -557,6 +562,7 @@ forbidden_modules =
     smb_requirement_agent.application.use_cases.owned_requirements
     smb_requirement_agent.application.use_cases.provider_call_rate
     smb_requirement_agent.application.use_cases.rebuild_knowledge_index
+    smb_requirement_agent.application.use_cases.reference_currency
     smb_requirement_agent.application.use_cases.reference_grounding
     smb_requirement_agent.application.use_cases.requirement_commands
     smb_requirement_agent.application.use_cases.requirement_drafts
@@ -665,6 +671,7 @@ forbidden_modules =
     smb_requirement_agent.infrastructure.persistence.postgres_saved_views
     smb_requirement_agent.infrastructure.persistence.postgres_snapshots
     smb_requirement_agent.infrastructure.persistence.postgres_worklist
+    smb_requirement_agent.infrastructure.persistence.reference_publications
     smb_requirement_agent.infrastructure.persistence.requirement_indexing
     smb_requirement_agent.infrastructure.persistence.requirement_knowledge_repository
     smb_requirement_agent.infrastructure.persistence.requirement_snapshot
@@ -672,7 +679,7 @@ forbidden_modules =
     smb_requirement_agent.infrastructure.persistence.revision_tracking
     smb_requirement_agent.infrastructure.persistence.source_dependencies
     smb_requirement_agent.infrastructure.persistence.story_quality_repository
-# Baseline of 16 existing crossings, 2026-10-02. Never add to it.
+# Baseline of 13 existing crossings, 2026-10-02. Never add to it.
 ignore_imports =
     smb_requirement_agent.application.ports.architecture_rag -> smb_requirement_agent.application.ports.architecture_knowledge
     smb_requirement_agent.application.use_cases.architecture_comparison -> smb_requirement_agent.application.ports.architecture_knowledge
@@ -684,9 +691,6 @@ ignore_imports =
     smb_requirement_agent.application.use_cases.library_governance -> smb_requirement_agent.domain.analysis.value_objects
     smb_requirement_agent.application.use_cases.reference_knowledge -> smb_requirement_agent.application.ports.reference_grounding
     smb_requirement_agent.application.use_cases.reference_knowledge -> smb_requirement_agent.application.ports.transaction_manager
-    smb_requirement_agent.application.use_cases.reference_knowledge -> smb_requirement_agent.application.use_cases.source_lineage
-    smb_requirement_agent.application.use_cases.reference_knowledge -> smb_requirement_agent.domain.analysis.entities
-    smb_requirement_agent.application.use_cases.reference_knowledge -> smb_requirement_agent.domain.analysis.value_objects
     smb_requirement_agent.application.use_cases.resolve_architecture_knowledge -> smb_requirement_agent.application.ports.architecture_knowledge
     smb_requirement_agent.infrastructure.architecture.reasoning -> smb_requirement_agent.application.ports.architecture_knowledge
     smb_requirement_agent.infrastructure.architecture.yaml_knowledge -> smb_requirement_agent.application.ports.architecture_knowledge
