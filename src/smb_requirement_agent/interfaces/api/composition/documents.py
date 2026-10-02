@@ -97,7 +97,7 @@ def build_documents(
     )
     library = DocumentLibrary(
         persistence.library_repository,
-        persistence.document_storage,
+        persistence.knowledge_document_storage,
         background_extractor,
         scanner,
         persistence.transaction_manager,

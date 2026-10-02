@@ -142,7 +142,7 @@ def build_architecture_knowledge(
         build_index=BuildArchitectureIndex(
             manage,
             persistence.architecture_evidence_index,
-            persistence.document_storage,
+            persistence.knowledge_document_storage,
             located_extractor,
             retrieval.tokenizer,
         ),
@@ -152,16 +152,16 @@ def build_architecture_knowledge(
         upload_document=UploadKnowledgeDocument(
             manage,
             persistence.architecture_repository,
-            persistence.document_storage,
+            persistence.knowledge_document_storage,
             document_extractor,
             settings.document_max_file_bytes,
         ),
         read_document=ReadKnowledgeDocument(
-            manage, persistence.document_storage, located_extractor
+            manage, persistence.knowledge_document_storage, located_extractor
         ),
         propose_changes=ProposeCatalogueChanges(
             manage,
-            persistence.document_storage,
+            persistence.knowledge_document_storage,
             located_extractor,
             document_extractor,
             # Every provider reads catalogue tables exactly before its model (ADR-0093).

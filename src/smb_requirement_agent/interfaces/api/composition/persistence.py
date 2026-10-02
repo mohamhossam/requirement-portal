@@ -352,6 +352,8 @@ class PersistenceAdapters:
     requirement_draft_repository: RequirementDraftRepositoryPort
     document_repository: DocumentRepositoryPort
     document_storage: DocumentStoragePort
+    # The library's and the catalogue's file bytes, apart from requirement documents (ADR-0099).
+    knowledge_document_storage: DocumentStoragePort
     analysis_repository: RequirementAnalysisRepositoryPort
     analysis_audit_repository: AnalysisAuditRepositoryPort
     epic_repository: EpicRepositoryPort
@@ -441,6 +443,7 @@ def _postgres(
     requirement_draft_repository = PostgresRequirementDraftRepository(postgres)
     document_repository = PostgresDocumentRepository(postgres)
     document_storage = PostgresDocumentStorage(postgres)
+    knowledge_document_storage = PostgresDocumentStorage(postgres, "knowledge_document_blobs")
     knowledge_relay = KnowledgeRelay()
     architecture_repository = RelayingArchitectureKnowledgeRepository(
         postgres_architecture_knowledge.PostgresArchitectureKnowledgeRepository(
@@ -531,6 +534,7 @@ def _postgres(
         requirement_draft_repository=requirement_draft_repository,
         document_repository=document_repository,
         document_storage=document_storage,
+        knowledge_document_storage=knowledge_document_storage,
         analysis_repository=analysis_repository,
         analysis_audit_repository=analysis_audit_repository,
         epic_repository=epic_repository,
@@ -590,6 +594,7 @@ def _memory(
     requirement_draft_repository = InMemoryRequirementDraftRepository()
     document_repository = InMemoryDocumentRepository()
     document_storage = InMemoryDocumentStorage(lock=memory_lock)
+    knowledge_document_storage = InMemoryDocumentStorage(lock=memory_lock)
     memory_events = InMemoryKnowledgeEvents(memory_lock)
     memory_releases = InMemoryArchitectureReleaseState(memory_lock)
     knowledge_relay = KnowledgeRelay()
@@ -721,6 +726,7 @@ def _memory(
         requirement_draft_repository,
         document_repository,
         document_storage,
+        knowledge_document_storage,
         base_analyses,
         analysis_audit_repository,
         base_epics,
@@ -758,6 +764,7 @@ def _memory(
         requirement_draft_repository=requirement_draft_repository,
         document_repository=document_repository,
         document_storage=document_storage,
+        knowledge_document_storage=knowledge_document_storage,
         analysis_repository=analysis_repository,
         analysis_audit_repository=analysis_audit_repository,
         epic_repository=epic_repository,
