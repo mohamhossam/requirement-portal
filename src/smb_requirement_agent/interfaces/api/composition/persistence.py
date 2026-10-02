@@ -47,6 +47,9 @@ from smb_requirement_agent.application.ports.architecture_rag import (
 from smb_requirement_agent.application.ports.architecture_tokenizer import (
     ArchitectureTokenizerPort,
 )
+from smb_requirement_agent.application.ports.attachment_ingestions import (
+    AttachmentIngestionRepositoryPort,
+)
 from smb_requirement_agent.application.ports.breakdown_repository import BreakdownRepositoryPort
 from smb_requirement_agent.application.ports.breakdown_review_repository import (
     BreakdownReviewRepositoryPort,
@@ -133,6 +136,10 @@ from smb_requirement_agent.infrastructure.persistence.activity_projection import
 from smb_requirement_agent.infrastructure.persistence.architecture_mapping_stats import (
     PostgresArchitectureMappingStats,
     RepositoryArchitectureMappingStats,
+)
+from smb_requirement_agent.infrastructure.persistence.attachment_ingestions import (
+    InMemoryAttachmentIngestions,
+    PostgresAttachmentIngestions,
 )
 from smb_requirement_agent.infrastructure.persistence.document_library import (
     InMemoryDocumentLibrary,
@@ -332,6 +339,7 @@ class PersistenceAdapters:
     architecture_evidence_index: ArchitectureEvidenceIndexPort
     architecture_job_repository: ArchitectureJobRepositoryPort
     library_repository: DocumentLibraryPort
+    attachment_ingestions: AttachmentIngestionRepositoryPort
     reference_index: ReferenceIndexPort
     revision_repository: BreakdownRepositoryPort
     transaction_manager: TransactionManagerPort
@@ -403,6 +411,9 @@ def _postgres(
     )
     architecture_job_repository = PostgresArchitectureJobs(connector)
     library_repository: DocumentLibraryPort = PostgresDocumentLibrary(postgres)
+    attachment_ingestions: AttachmentIngestionRepositoryPort = PostgresAttachmentIngestions(
+        postgres
+    )
     reference_index: ReferenceIndexPort = PostgresReferenceIndex(postgres)
     analysis_repository = PostgresAnalysisRepository(postgres)
     analysis_audit_repository = PostgresAnalysisAuditRepository(postgres)
@@ -494,6 +505,7 @@ def _postgres(
         architecture_evidence_index=architecture_evidence_index,
         architecture_job_repository=architecture_job_repository,
         library_repository=library_repository,
+        attachment_ingestions=attachment_ingestions,
         reference_index=reference_index,
         revision_repository=revision_repository,
         transaction_manager=transaction_manager,
@@ -528,6 +540,8 @@ def _memory(
     )
     architecture_job_repository = InMemoryArchitectureJobs()
     memory_library = InMemoryDocumentLibrary(memory_lock)
+    memory_attachments = InMemoryAttachmentIngestions(memory_lock)
+    attachment_ingestions = memory_attachments
     library_repository = memory_library
     memory_reference_index = InMemoryReferenceIndex(memory_lock, library_repository)
     reference_index = memory_reference_index
@@ -627,6 +641,7 @@ def _memory(
     evidence_fragment_cache = InMemoryEvidenceFragmentCache()
     memory_transactions.enroll(
         memory_library,
+        memory_attachments,
         memory_reference_index,
         base_requirements,
         requirement_draft_repository,
@@ -697,6 +712,7 @@ def _memory(
         architecture_evidence_index=architecture_evidence_index,
         architecture_job_repository=architecture_job_repository,
         library_repository=library_repository,
+        attachment_ingestions=attachment_ingestions,
         reference_index=reference_index,
         revision_repository=revision_repository,
         transaction_manager=transaction_manager,

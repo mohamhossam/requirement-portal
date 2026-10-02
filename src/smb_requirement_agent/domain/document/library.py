@@ -6,7 +6,6 @@ import hashlib
 import json
 from dataclasses import dataclass, replace
 from datetime import datetime
-from enum import StrEnum
 
 from smb_requirement_agent.domain.document.entities import (
     DocumentAsset,
@@ -14,20 +13,10 @@ from smb_requirement_agent.domain.document.entities import (
     DocumentExtractionWarning,
 )
 from smb_requirement_agent.domain.document.errors import InvalidDocumentError
+from smb_requirement_agent.domain.document.ingestion import IngestionStage as IngestionStage
 from smb_requirement_agent.domain.document.value_objects import ExtractionWarningSeverity
 from smb_requirement_agent.domain.identity.entities import ActorSnapshot
 from smb_requirement_agent.domain.shared.staleness import require_aware
-
-
-class IngestionStage(StrEnum):
-    QUEUED = "queued"
-    SCANNING = "scanning"
-    EXTRACTING = "extracting"
-    READY = "ready_for_review"
-    FAILED = "failed"
-    QUARANTINED = "quarantined"
-    CANCELLED = "cancelled"
-
 
 # They bound what one review submission can carry. They are checked when a
 # review is submitted, not when a stored one is loaded, so no stored review
@@ -230,21 +219,6 @@ class OwnershipTransfer:
 
 
 @dataclass(frozen=True)
-class AttachmentTarget:
-    source_id: str
-    is_draft: bool
-    include_in_analysis: bool
-    document_id: str | None = None
-    expected_version: int | None = None
-
-    def __post_init__(self) -> None:
-        if not self.source_id.strip():
-            raise InvalidDocumentError("Attachment source is required.")
-        if (self.document_id is None) != (self.expected_version is None):
-            raise InvalidDocumentError("Replacement requires the current document version.")
-
-
-@dataclass(frozen=True)
 class LibraryDocument:
     id: str
     title: str
@@ -254,9 +228,6 @@ class LibraryDocument:
     publications: tuple[Publication, ...] = ()
     published_id: str | None = None
     ownership_history: tuple[OwnershipTransfer, ...] = ()
-    attachment_target: AttachmentTarget | None = None
-    attached_document_id: str | None = None
-    attachment_excluded: bool = False
 
     def __post_init__(self) -> None:
         if not self.id or not self.title.strip() or self.version < 1 or not self.versions:
@@ -294,8 +265,6 @@ class LibraryDocument:
         raise InvalidDocumentError("Version does not belong to this document.")
 
     def transfer(self, change: OwnershipTransfer) -> LibraryDocument:
-        if self.attachment_target is not None:
-            raise InvalidDocumentError("Requirement attachments follow Requirement access.")
         if change.previous_owner != self.owner:
             raise InvalidDocumentError("Document owner changed; reload before transferring.")
         return replace(
@@ -345,10 +314,6 @@ class LibraryDocument:
         return self.update_file(replace(source, revisions=(*source.revisions, revision)))
 
     def approve(self, publication: Publication) -> LibraryDocument:
-        if self.attachment_target is not None:
-            raise InvalidDocumentError(
-                "Requirement attachments cannot be published as library documents."
-            )
         source = self.file_version(publication.version_id)
         if source.stage is not IngestionStage.READY or source.unresolved_blocking_warnings:
             raise InvalidDocumentError("Blocking extraction problems prevent publication.")

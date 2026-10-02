@@ -136,6 +136,7 @@ source_modules =
     smb_requirement_agent.application.ports.ai_jobs
     smb_requirement_agent.application.ports.analysis_audit_repository
     smb_requirement_agent.application.ports.architecture_knowledge
+    smb_requirement_agent.application.ports.attachment_ingestions
     smb_requirement_agent.application.ports.backlog_export
     smb_requirement_agent.application.ports.breakdown_repository
     smb_requirement_agent.application.ports.breakdown_review_repository
@@ -227,6 +228,7 @@ source_modules =
     smb_requirement_agent.domain.analysis.entities
     smb_requirement_agent.domain.analysis.errors
     smb_requirement_agent.domain.analysis.value_objects
+    smb_requirement_agent.domain.document.attachment
     smb_requirement_agent.domain.document.lineage
     smb_requirement_agent.domain.epic.entities
     smb_requirement_agent.domain.epic.errors
@@ -250,6 +252,7 @@ source_modules =
     smb_requirement_agent.domain.story.errors
     smb_requirement_agent.domain.story.quality
     smb_requirement_agent.domain.story.value_objects
+    smb_requirement_agent.infrastructure.documents.attachment_worker
     smb_requirement_agent.infrastructure.exports.json_exporter
     smb_requirement_agent.infrastructure.exports.xlsx_exporter
     smb_requirement_agent.infrastructure.jobs.polling_worker
@@ -276,6 +279,7 @@ source_modules =
     smb_requirement_agent.infrastructure.persistence.activity_projection
     smb_requirement_agent.infrastructure.persistence.analysis_payloads
     smb_requirement_agent.infrastructure.persistence.architecture_mapping_stats
+    smb_requirement_agent.infrastructure.persistence.attachment_ingestions
     smb_requirement_agent.infrastructure.persistence.backfill_document_blobs
     smb_requirement_agent.infrastructure.persistence.backlog_payloads
     smb_requirement_agent.infrastructure.persistence.document_payloads
@@ -389,14 +393,11 @@ forbidden_modules =
     smb_requirement_agent.infrastructure.persistence.postgres_organisation
     smb_requirement_agent.infrastructure.persistence.postgres_sample_requirements
     smb_requirement_agent.infrastructure.persistence.reference_index
-# Baseline of 14 existing crossings, 2026-10-02. Never add to it.
+# Baseline of 11 existing crossings, 2026-10-02. Never add to it.
 ignore_imports =
     smb_requirement_agent.application.ports.architecture_knowledge -> smb_requirement_agent.domain.architecture.entities
     smb_requirement_agent.application.use_cases.approval_policy -> smb_requirement_agent.domain.architecture.entities
     smb_requirement_agent.application.use_cases.architecture_mapping -> smb_requirement_agent.domain.architecture.entities
-    smb_requirement_agent.application.use_cases.attachment_ingestion -> smb_requirement_agent.application.ports.document_library
-    smb_requirement_agent.application.use_cases.attachment_ingestion -> smb_requirement_agent.application.use_cases.document_library
-    smb_requirement_agent.application.use_cases.attachment_ingestion -> smb_requirement_agent.domain.document.library
     smb_requirement_agent.application.use_cases.breakdown_review -> smb_requirement_agent.application.ports.architecture_knowledge_repository
     smb_requirement_agent.application.use_cases.breakdown_review_evidence -> smb_requirement_agent.domain.architecture.entities
     smb_requirement_agent.application.use_cases.breakdown_review_policy -> smb_requirement_agent.domain.architecture.entities
@@ -491,6 +492,7 @@ forbidden_modules =
     smb_requirement_agent.application.ports.ai_jobs
     smb_requirement_agent.application.ports.analysis_audit_repository
     smb_requirement_agent.application.ports.architecture_knowledge
+    smb_requirement_agent.application.ports.attachment_ingestions
     smb_requirement_agent.application.ports.backlog_export
     smb_requirement_agent.application.ports.breakdown_repository
     smb_requirement_agent.application.ports.breakdown_review_repository
@@ -582,6 +584,7 @@ forbidden_modules =
     smb_requirement_agent.domain.analysis.entities
     smb_requirement_agent.domain.analysis.errors
     smb_requirement_agent.domain.analysis.value_objects
+    smb_requirement_agent.domain.document.attachment
     smb_requirement_agent.domain.document.lineage
     smb_requirement_agent.domain.epic.entities
     smb_requirement_agent.domain.epic.errors
@@ -605,6 +608,7 @@ forbidden_modules =
     smb_requirement_agent.domain.story.errors
     smb_requirement_agent.domain.story.quality
     smb_requirement_agent.domain.story.value_objects
+    smb_requirement_agent.infrastructure.documents.attachment_worker
     smb_requirement_agent.infrastructure.exports.json_exporter
     smb_requirement_agent.infrastructure.exports.xlsx_exporter
     smb_requirement_agent.infrastructure.jobs.polling_worker
@@ -631,6 +635,7 @@ forbidden_modules =
     smb_requirement_agent.infrastructure.persistence.activity_projection
     smb_requirement_agent.infrastructure.persistence.analysis_payloads
     smb_requirement_agent.infrastructure.persistence.architecture_mapping_stats
+    smb_requirement_agent.infrastructure.persistence.attachment_ingestions
     smb_requirement_agent.infrastructure.persistence.backfill_document_blobs
     smb_requirement_agent.infrastructure.persistence.backlog_payloads
     smb_requirement_agent.infrastructure.persistence.document_payloads
@@ -673,7 +678,7 @@ forbidden_modules =
     smb_requirement_agent.infrastructure.persistence.revision_tracking
     smb_requirement_agent.infrastructure.persistence.source_dependencies
     smb_requirement_agent.infrastructure.persistence.story_quality_repository
-# Baseline of 19 existing crossings, 2026-10-02. Never add to it.
+# Baseline of 18 existing crossings, 2026-10-02. Never add to it.
 ignore_imports =
     smb_requirement_agent.application.ports.architecture_rag -> smb_requirement_agent.application.ports.architecture_knowledge
     smb_requirement_agent.application.use_cases.architecture_comparison -> smb_requirement_agent.application.ports.architecture_knowledge
@@ -693,5 +698,4 @@ ignore_imports =
     smb_requirement_agent.application.use_cases.resolve_architecture_knowledge -> smb_requirement_agent.application.ports.architecture_knowledge
     smb_requirement_agent.infrastructure.architecture.reasoning -> smb_requirement_agent.application.ports.architecture_knowledge
     smb_requirement_agent.infrastructure.architecture.yaml_knowledge -> smb_requirement_agent.application.ports.architecture_knowledge
-    smb_requirement_agent.infrastructure.documents.library_worker -> smb_requirement_agent.application.use_cases.attachment_ingestion
 

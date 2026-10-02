@@ -8,7 +8,6 @@ import re
 import uuid
 from dataclasses import dataclass, replace
 from datetime import timedelta
-from pathlib import PurePosixPath, PureWindowsPath
 
 from smb_kernel.documents.ports import DocumentExtractorPort, DocumentStoragePort
 from smb_kernel.time.clock import ClockPort
@@ -26,11 +25,10 @@ from smb_requirement_agent.application.ports.document_library import (
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.documents import (
-    SUPPORTED_EXTENSIONS,
     UploadDocumentInput,
+    validate_ingested_upload,
 )
 from smb_requirement_agent.domain.document.library import (
-    AttachmentTarget,
     ExtractionRevision,
     IngestionStage,
     LibraryDocument,
@@ -98,8 +96,6 @@ class DocumentLibrary:
 
     def _owned(self, document_id: str, actor: ActorProfile, expected: int) -> LibraryDocument:
         document = self._get(document_id)
-        if document.attachment_target is not None:
-            raise DocumentNotFoundError("Use the Requirement attachment processing controls.")
         if document.owner.id != actor.id:
             raise AuthorizationDeniedError("Only the document owner can change this document.")
         if document.version != expected:
@@ -108,8 +104,6 @@ class DocumentLibrary:
 
     @staticmethod
     def _visible(document: LibraryDocument, actor: ActorProfile) -> LibraryView:
-        if document.attachment_target is not None:
-            raise DocumentNotFoundError("Requirement upload is not a shared library document.")
         if document.owner.id == actor.id:
             latest = document.versions[-1]
             return LibraryView(
@@ -188,35 +182,10 @@ class DocumentLibrary:
         actor: ActorProfile,
         document_id: str | None = None,
         expected: int | None = None,
-        attachment_target: AttachmentTarget | None = None,
     ) -> LibraryDocument:
-        filename = data.filename.strip()
-        mime = data.mime_type.split(";", 1)[0].strip().lower()
-        extension = PurePosixPath(filename).suffix.lower()
-        if mime in {"", "application/octet-stream"}:
-            mime = next(
-                (
-                    m
-                    for m, suffixes in SUPPORTED_EXTENSIONS.items()
-                    if extension in ((suffixes,) if isinstance(suffixes, str) else suffixes)
-                ),
-                mime,
-            )
-        suffixes = SUPPORTED_EXTENSIONS.get(mime)
-        if (
-            not filename
-            or "\x00" in filename
-            or len(filename) > 255
-            or PurePosixPath(filename).name != filename
-            or PureWindowsPath(filename).name != filename
-            or not suffixes
-            or not filename.lower().endswith(suffixes)
-            or not 0 < len(data.content) <= self.max_file_bytes
-        ):
-            raise UnsupportedDocumentError(
-                "Provide a supported, nonempty file within the upload limit, "
-                "without a path in its name."
-            )
+        filename, mime = validate_ingested_upload(
+            data.filename, data.mime_type, data.content, self.max_file_bytes
+        )
         if not title.strip() or len(title) > 200 or not key.strip() or len(key) > 100:
             raise UnsupportedDocumentError(
                 "A title (up to 200 characters) and submission key (up to 100) are required."
@@ -240,7 +209,6 @@ class DocumentLibrary:
                         mime,
                     )
                     or existing.title != title.strip()
-                    or existing.attachment_target != attachment_target
                     or (document_id is not None and existing.id != document_id)
                 ):
                     raise DocumentVersionConflictError(
@@ -266,7 +234,6 @@ class DocumentLibrary:
                     title.strip(),
                     actor.snapshot(),
                     (version,),
-                    attachment_target=attachment_target,
                 )
                 self._repository.add(document)
             else:
@@ -281,8 +248,6 @@ class DocumentLibrary:
         self, document_id: str, version_id: str, actor: ActorProfile
     ) -> tuple[LibraryVersion, bytes]:
         document = self._get(document_id)
-        if document.attachment_target is not None:
-            raise DocumentNotFoundError("Use the Requirement attachment review.")
         if document.owner.id != actor.id:
             raise AuthorizationDeniedError(
                 "Original files may contain excluded material; only the owner can download them."
