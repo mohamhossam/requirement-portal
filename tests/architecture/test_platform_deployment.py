@@ -6,12 +6,15 @@ keeps its own database, finds the other by its service name, presents and
 checks the same tokens, and no browser reaches either service's /internal routes.
 """
 
+import inspect
 import json
 import re
 from pathlib import Path
 from typing import Any
 
 import yaml
+
+from smb_requirement_agent.application.ports import identity
 
 ROOT = Path(__file__).resolve().parents[2]
 DEPLOY = ROOT / "deploy"
@@ -108,10 +111,15 @@ def test_the_edge_proxies_each_api_and_the_knowledge_portal() -> None:
     assert (DEPLOY / "web" / "knowledge-unavailable.html").is_file()
 
 
-def test_the_realm_grants_knowledge_admin_through_a_group_and_a_roles_claim() -> None:
-    assert [role["name"] for role in REALM["roles"]["realm"]] == ["knowledge_admin"]
-    group = next(item for item in REALM["groups"] if item["name"] == "knowledge-admins")
-    assert group["realmRoles"] == ["knowledge_admin"]
+def test_the_realm_grants_each_role_through_a_group_and_a_roles_claim() -> None:
+    roles = [role["name"] for role in REALM["roles"]["realm"]]
+    assert roles == ["knowledge_admin", "knowledge_reader", "knowledge_maintainer"]
+    groups = {item["name"]: item["realmRoles"] for item in REALM["groups"]}
+    assert groups == {
+        "knowledge-admins": ["knowledge_admin"],
+        "knowledge-readers": ["knowledge_reader"],
+        "knowledge-maintainers": ["knowledge_reader", "knowledge_maintainer"],
+    }
 
     clients = {client["clientId"]: client for client in REALM["clients"]}
     for client_id, audience in (
@@ -141,3 +149,11 @@ def test_the_knowledge_client_signs_in_only_under_its_own_path() -> None:
     assert all(
         uri.startswith("${KNOWLEDGE_APP_ORIGIN}/knowledge/") for uri in client["redirectUris"]
     )
+
+
+def test_the_realm_defines_every_role_requirement_work_checks() -> None:
+    """The roles mapping jobs check (require_reader, require_maintainer) exist."""
+    checked = set(re.findall(r'"(knowledge_\w+)"', inspect.getsource(identity)))
+
+    assert checked == {"knowledge_reader", "knowledge_maintainer"}
+    assert checked <= {role["name"] for role in REALM["roles"]["realm"]}

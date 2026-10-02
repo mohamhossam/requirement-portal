@@ -141,6 +141,14 @@
       {
         "name": "knowledge_admin",
         "description": "Curates the shared library and the architecture and squad catalogues in the knowledge portal."
+      },
+      {
+        "name": "knowledge_reader",
+        "description": "Starts and reads architecture mapping for the Requirements they work on."
+      },
+      {
+        "name": "knowledge_maintainer",
+        "description": "Also cancels and retries other people's architecture mapping jobs."
       }
     ]
   },
@@ -150,6 +158,21 @@
       "path": "/knowledge-admins",
       "realmRoles": [
         "knowledge_admin"
+      ]
+    },
+    {
+      "name": "knowledge-readers",
+      "path": "/knowledge-readers",
+      "realmRoles": [
+        "knowledge_reader"
+      ]
+    },
+    {
+      "name": "knowledge-maintainers",
+      "path": "/knowledge-maintainers",
+      "realmRoles": [
+        "knowledge_reader",
+        "knowledge_maintainer"
       ]
     }
   ],
