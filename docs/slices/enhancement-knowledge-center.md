@@ -38,7 +38,7 @@ Give knowledge administrators one place, the **Knowledge Center**, to:
 | 1 | "Already existing knowledge" | Knowledge that exists **outside** the application and must be imported |
 | 1a | Requirement sources | Old BRDs (documents), plus Azure DevOps for the delivered breakdown, giving lineage |
 | 1b | Architecture sources | Word and Markdown files |
-| 2 | Form | A separate area inside the same application, sharing sign-in and deployment |
+| 2 | Form | ~~A separate area inside the same application, sharing sign-in and deployment~~ **Superseded 2026-10-02 by ADR-0098:** a separate service, database, UI and repository, `knowledge-portal`, on the same host at `/knowledge/`. Sub-slices A–E are delivered there |
 | 3 | Authority | A new `knowledge_admin` role that can act across all knowledge, including overriding document owners |
 | 4 | Requirement knowledge | Retiring obsolete Requirements from the corpus: yes. Importing historic Requirements as reference knowledge: yes |
 | 5 | Review cycles | Yes, every 6 months (configurable) |

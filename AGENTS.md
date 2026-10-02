@@ -31,6 +31,24 @@ Before changing code, read these files in this order:
 6. The active slice file in `docs/slices/`, if one exists.
 7. Existing tests and code in the area being changed.
 
+### 2.1 Sibling repositories
+
+This repository is one of three (ADR-0098):
+- `requirement-portal` (this one) owns the requirements service, its UI and the platform
+  deployment.
+- `knowledge-portal` owns the shared library, the architecture catalogue and the squad
+  catalogue, with its own database and UI.
+- `platform-kernel` owns `smb_kernel`, which holds shared mechanisms with no business meaning
+  (ADR-0100).
+
+Rules:
+- Reach knowledge only through the ports in ADR-0099.
+- Never add a dependency on knowledge-portal code.
+- A change that belongs in the kernel goes there as a release, never as a local copy.
+
+The original `smb-ai-requirement-agent` stays maintained in parallel. Port its fixes only by the
+procedure in `UPSTREAM.md`.
+
 If documents conflict:
 - `AGENTS.md` governs engineering behavior and architecture.
 - An accepted ADR in `docs/architecture/` governs the specific decision it records.

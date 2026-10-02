@@ -1,4 +1,11 @@
-# SMB AI Requirement Breakdown Agent
+# Requirement Portal
+
+> **Part of a three-repository platform** (ADR-0098): `requirement-portal` (this repository),
+> [`knowledge-portal`](https://github.com/mohamhossam/knowledge-portal) and
+> [`platform-kernel`](https://github.com/mohamhossam/platform-kernel). Imported fresh from
+> [`smb-ai-requirement-agent@d5cfb57`](https://github.com/mohamhossam/smb-ai-requirement-agent/commit/d5cfb57),
+> which stays maintained in parallel; see `UPSTREAM.md`. The split is in progress: until it
+> completes, this repository still contains the library and catalogue code it inherited.
 
 > Production-readiness remediation is merged into `main`; target-environment release qualification
 > is still open (see `ROADMAP.md`). Follow `docs/slices/production-readiness-remediation.md` and
