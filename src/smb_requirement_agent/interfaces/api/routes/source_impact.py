@@ -1,9 +1,8 @@
 """Source impact is requirement work: how a published-source change affects its content.
 
-These routes replace `/library/requirements/{id}/source-impact` and
-`/library/source-impact/{id}/decisions`, which stay below as deprecated aliases
-until the browser stops calling them (ADR-0099). A library owner's view of a
-document's dependents lives in the knowledge portal.
+They replaced `/library/requirements/{id}/source-impact` and
+`/library/source-impact/{id}/decisions`, which are gone (ADR-0099). A library
+owner's view of a document's dependents lives in the knowledge portal.
 """
 
 from __future__ import annotations
@@ -70,44 +69,4 @@ def decide_requirement_source_impact(
         data.decision,
         data.reason,
         requirement_id=requirement_id,
-    )
-
-
-alias_router = APIRouter(
-    prefix="/library", tags=["source impact"], dependencies=[Depends(require_authenticated_actor)]
-)
-
-
-@alias_router.get("/requirements/{requirement_id}/source-impact", deprecated=True)
-def requirement_source_impact_alias(
-    requirement_id: str,
-    actor: CurrentActorDep,
-    service: ImpactDep,
-    response: Response,
-    offset: int = Query(0, ge=0),
-    limit: int = Query(20, ge=1, le=100),
-    active_only: bool = False,
-    query: str = Query("", max_length=200),
-) -> DependencyImpactPage:
-    """Deprecated alias of `GET /requirements/{requirement_id}/source-impact` (ADR-0099)."""
-    return requirement_source_impact(
-        requirement_id, actor, service, response, offset, limit, active_only, query
-    )
-
-
-@alias_router.post("/source-impact/{dependency_id}/decisions", deprecated=True)
-def decide_source_impact_alias(
-    dependency_id: str,
-    data: ImpactDecisionRequest,
-    actor: CurrentActorDep,
-    service: ImpactDep,
-) -> DependencyImpact:
-    """Deprecated alias of `POST /requirements/{id}/source-impact/{dependency_id}/decisions`."""
-    return service.decide(
-        dependency_id,
-        actor,
-        data.publication_state,
-        data.expected_version,
-        data.decision,
-        data.reason,
     )

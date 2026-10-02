@@ -234,48 +234,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/library/requirements/{requirement_id}/source-impact": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Requirement Source Impact Alias
-         * @deprecated
-         * @description Deprecated alias of `GET /requirements/{requirement_id}/source-impact` (ADR-0099).
-         */
-        get: operations["requirement_source_impact_alias_library_requirements__requirement_id__source_impact_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/library/source-impact/{dependency_id}/decisions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Decide Source Impact Alias
-         * @deprecated
-         * @description Deprecated alias of `POST /requirements/{id}/source-impact/{dependency_id}/decisions`.
-         */
-        post: operations["decide_source_impact_alias_library_source_impact__dependency_id__decisions_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/notifications": {
         parameters: {
             query?: never;
@@ -5528,81 +5486,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UnifiedSearchHit"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    requirement_source_impact_alias_library_requirements__requirement_id__source_impact_get: {
-        parameters: {
-            query?: {
-                offset?: number;
-                limit?: number;
-                active_only?: boolean;
-                query?: string;
-            };
-            header?: {
-                "X-Fake-Actor-Id"?: string | null;
-            };
-            path: {
-                requirement_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DependencyImpactPage"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    decide_source_impact_alias_library_source_impact__dependency_id__decisions_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Fake-Actor-Id"?: string | null;
-            };
-            path: {
-                dependency_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ImpactDecisionRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DependencyImpact"];
                 };
             };
             /** @description Validation Error */

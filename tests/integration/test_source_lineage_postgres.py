@@ -106,6 +106,7 @@ def test_postgres_lineage_restart_rebuild_concurrency_and_rollback(isolated_url:
                     0,
                     ImpactDecisionKind.RETAIN,
                     "Retain for this rollout",
+                    requirement_id=selected.dependency.requirement_id,
                 )
                 return "saved"
             except ArtifactVersionConflictError:
