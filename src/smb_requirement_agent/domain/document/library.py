@@ -14,6 +14,10 @@ from smb_requirement_agent.domain.document.entities import (
 )
 from smb_requirement_agent.domain.document.errors import InvalidDocumentError
 from smb_requirement_agent.domain.document.ingestion import IngestionStage as IngestionStage
+from smb_requirement_agent.domain.document.reference import (
+    CurrentPublication,
+    ReferenceDocumentState,
+)
 from smb_requirement_agent.domain.document.value_objects import ExtractionWarningSeverity
 from smb_requirement_agent.domain.identity.entities import ActorSnapshot
 from smb_requirement_agent.domain.shared.staleness import require_aware
@@ -257,6 +261,33 @@ class LibraryDocument:
             raise InvalidDocumentError(
                 "Searchable publication must be activated and not withdrawn."
             )
+
+    def citable_state(self) -> ReferenceDocumentState:
+        """What this document lets a citation prove, published as an event (ADR-0099)."""
+        publication = next(
+            (p for p in self.publications if p.id == self.published_id and p.withdrawn_at is None),
+            None,
+        )
+        published = None
+        if publication is not None:
+            source = self.file_version(publication.version_id)
+            revision = next((r for r in source.revisions if r.id == publication.revision_id), None)
+            passages: dict[str, str] = {}
+            for passage in revision.passages if revision else ():
+                if passage.included:
+                    passages.setdefault(passage.block_id, passage.text)
+            published = CurrentPublication(
+                publication.id,
+                publication.fingerprint,
+                publication.version_id,
+                source.number,
+                publication.revision_id,
+                tuple((block.id, block.label) for block in source.blocks),
+                tuple(passages.items()),
+            )
+        return ReferenceDocumentState(
+            self.id, self.owner.id.value, self.title, self.version, published
+        )
 
     def file_version(self, version_id: str) -> LibraryVersion:
         for item in self.versions:

@@ -17,6 +17,7 @@ from smb_requirement_agent.application.use_cases.document_library import (
     DocumentLibrary,
 )
 from smb_requirement_agent.application.use_cases.documents import UploadDocumentInput
+from smb_requirement_agent.application.use_cases.reference_currency import ReferenceCurrency
 from smb_requirement_agent.application.use_cases.reference_knowledge import (
     ReferenceKnowledge,
     StructureAwareChunks,
@@ -26,6 +27,10 @@ from smb_requirement_agent.domain.identity.entities import ActorId, ActorProfile
 from smb_requirement_agent.infrastructure.documents.library_worker import OfflineDocumentScanner
 from smb_requirement_agent.infrastructure.persistence.document_library import (
     PostgresDocumentLibrary,
+    PublishingDocumentLibrary,
+)
+from smb_requirement_agent.infrastructure.persistence.knowledge_events import (
+    PostgresKnowledgeEvents,
 )
 from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
 from smb_requirement_agent.infrastructure.persistence.postgres_document_repository import (
@@ -35,6 +40,9 @@ from smb_requirement_agent.infrastructure.persistence.postgres_store import Post
 from smb_requirement_agent.infrastructure.persistence.reference_index import (
     PostgresReferenceIndex,
     Utf8BudgetCounter,
+)
+from smb_requirement_agent.infrastructure.persistence.reference_publications import (
+    PostgresReferencePublications,
 )
 from tests.delimited_fixtures import reviewed_delimited_table
 from tests.presentation_fixtures import PPTX_MIME, reviewed_table_presentation
@@ -306,7 +314,8 @@ def test_postgres_library_publication_survives_restart_and_replacement() -> None
     store = PostgresStore(
         DirectPostgresConnector(url), lambda _id, _connection: None, lambda _connection, _ids: None
     )
-    repository = PostgresDocumentLibrary(store)
+    repository = _publishing(store)
+    currency = ReferenceCurrency(PostgresReferencePublications(store), store)
     storage = PostgresDocumentStorage(store)
     clock = FixedClock(datetime(2026, 9, 21, tzinfo=UTC))
     service = DocumentLibrary(
@@ -384,7 +393,7 @@ def test_postgres_library_publication_survives_restart_and_replacement() -> None
         DirectPostgresConnector(url), lambda _id, _conn: None, lambda _conn, _ids: None
     )
     restarted_knowledge = ReferenceKnowledge(
-        PostgresDocumentLibrary(restarted_store),
+        _publishing(restarted_store),
         PostgresReferenceIndex(restarted_store),
         ConstantEmbeddings(),
         StructureAwareChunks(Utf8BudgetCounter()),
@@ -447,6 +456,8 @@ def test_postgres_library_publication_survives_restart_and_replacement() -> None
     ).get_by_requirement_id(requirement.id)
     assert reloaded == analysis
     knowledge.require_current(reloaded.intent_proposals[0].reference_evidence)
+    # Requirement work answers the same question from its local copy (ADR-0099).
+    currency.require_current(reloaded.intent_proposals[0].reference_evidence)
     from smb_requirement_agent.domain.analysis.value_objects import QuestionId
     from smb_requirement_agent.domain.knowledge.entities import (
         AnswerSuggestion,
@@ -491,7 +502,16 @@ def test_postgres_library_publication_survives_restart_and_replacement() -> None
     assert any(c.document_id == document.id for c in knowledge.search("XGPON"))
     service.withdraw(document.id, replacement.version, actor, "Unsafe policy")
     assert not any(c.document_id == document.id for c in knowledge.search("XGPON"))
-    assert knowledge.stale_proposals(reloaded.intent_proposals) == (
+    assert currency.stale_proposals(reloaded.intent_proposals) == (
         analysis.intent_proposals[0].id.value,
     )
     assert PostgresAnalysisRepository(store).get_by_requirement_id(requirement.id) == analysis
+
+
+def _publishing(store: PostgresStore) -> PublishingDocumentLibrary:
+    """A library repository that keeps requirement work's local copy current, as wired."""
+    return PublishingDocumentLibrary(
+        PostgresDocumentLibrary(store),
+        PostgresKnowledgeEvents(store),
+        PostgresReferencePublications(store).apply,
+    )

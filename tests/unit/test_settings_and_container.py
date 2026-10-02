@@ -667,6 +667,7 @@ def test_container_names_every_background_worker_for_readiness() -> None:
             "workers",
             "document_worker",
             "attachment_worker",
+            "knowledge_event_worker",
         }
         assert container.background_workers["workers"] is container.ai_job_worker
         # Attachments have their own worker, apart from the library's (ADR-0099).

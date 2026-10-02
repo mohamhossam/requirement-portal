@@ -206,6 +206,10 @@ from smb_requirement_agent.application.use_cases.provider_call_rate import Provi
 from smb_requirement_agent.application.use_cases.rebuild_knowledge_index import (
     RebuildKnowledgeIndex,
 )
+from smb_requirement_agent.application.use_cases.reference_currency import (
+    CurrentReferences,
+    ReferenceCurrency,
+)
 from smb_requirement_agent.application.use_cases.reference_knowledge import (
     ReferenceKnowledge,
 )
@@ -321,6 +325,8 @@ class Container:
     library_governance: LibraryGovernance
     unified_knowledge_search: UnifiedKnowledgeSearch
     reference_knowledge: ReferenceKnowledge
+    reference_currency: ReferenceCurrency
+    current_references: CurrentReferences
     requirement_indexer: IndexRequirementKnowledge
     requirement_index_worker: RequirementIndexWorker
     document_ingestion_worker: DocumentIngestionWorker
@@ -624,6 +630,7 @@ def _build_container(
         "workers": jobs.worker,
         "document_worker": documents.ingestion_worker,
         "attachment_worker": documents.attachment_worker,
+        "knowledge_event_worker": knowledge.knowledge_event_worker,
     }
     if architecture_jobs.worker is not None:
         background_workers["architecture_job_worker"] = architecture_jobs.worker
@@ -648,6 +655,8 @@ def _build_container(
         library_governance=documents.library_governance,
         unified_knowledge_search=knowledge.unified_search,
         reference_knowledge=knowledge.reference_knowledge,
+        reference_currency=knowledge.reference_currency,
+        current_references=knowledge.current_references,
         requirement_indexer=knowledge.indexer,
         requirement_index_worker=knowledge.index_worker,
         document_ingestion_worker=documents.ingestion_worker,
