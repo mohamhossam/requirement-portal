@@ -20,7 +20,7 @@ from smb_requirement_agent.application.ports.architecture_knowledge import (
 from smb_requirement_agent.application.ports.knowledge_events import (
     ARCHITECTURE_RELEASE_ACTIVATED,
     REFERENCE_DOCUMENT_CHANGED,
-    KnowledgeEventOutboxPort,
+    KnowledgeEventSourcePort,
 )
 from smb_requirement_agent.application.ports.reference_grounding import (
     ReferenceEvidence,
@@ -135,7 +135,7 @@ class ProjectKnowledgeEvents:
 
     def __init__(
         self,
-        outbox: KnowledgeEventOutboxPort,
+        outbox: KnowledgeEventSourcePort,
         states: ReferencePublicationStatePort,
         releases: ArchitectureReleaseStatePort,
         transactions: TransactionManagerPort,

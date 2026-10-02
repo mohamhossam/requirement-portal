@@ -60,6 +60,8 @@ from smb_requirement_agent.application.errors import (
     ReviewFlagNotFoundError,
     SavedViewConflictError,
     SavedViewNotFoundError,
+    ServiceResponseError,
+    ServiceUnavailableError,
     StoryGenerationError,
     StoryNotFoundError,
     StoryProposalNotFoundError,
@@ -241,6 +243,8 @@ EXPECTED_STATUS_CODES: dict[type[Exception], int] = {
     KnowledgeGenerationError: 502,
     KnowledgeIndexPendingError: 503,
     ModelTransportError: 502,
+    ServiceUnavailableError: 503,
+    ServiceResponseError: 502,
     InvalidAiJobError: 422,
     RequirementAccessConflictError: 409,
     InvalidIdentityError: 422,
@@ -349,7 +353,9 @@ EXPECTED_STATUS_CODES: dict[type[Exception], int] = {
     ids=lambda value: value.__name__ if isinstance(value, type) else str(value),
 )
 def test_known_errors_are_mapped(error_type: type[Exception], expected: int) -> None:
-    assert status_code_for(error_type("boom")) == expected
+    # A refusal carries the other service's status and detail.
+    error = error_type(422, "boom") if error_type is ServiceResponseError else error_type("boom")
+    assert status_code_for(error) == expected
 
 
 def test_every_mapped_error_is_covered() -> None:

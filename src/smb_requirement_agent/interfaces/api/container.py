@@ -45,6 +45,7 @@ from smb_requirement_agent.application.ports.epic_generator import EpicGenerator
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_generator import FeatureGeneratorPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
+from smb_requirement_agent.application.ports.knowledge_events import KnowledgeEventOutboxPort
 from smb_requirement_agent.application.ports.knowledge_index_generations import (
     KnowledgeIndexGenerationsPort,
 )
@@ -324,6 +325,7 @@ class Container:
     attachment_ingestion: AttachmentIngestion
     source_impact: SourceImpactReview
     internal_reads: InternalReads
+    knowledge_events: KnowledgeEventOutboxPort
     library_governance: LibraryGovernance
     unified_knowledge_search: UnifiedKnowledgeSearch
     reference_knowledge: ReferenceKnowledge
@@ -664,6 +666,7 @@ def _build_container(
         document_library=documents.library,
         attachment_ingestion=documents.attachment_ingestion,
         source_impact=knowledge.source_impact,
+        knowledge_events=persistence.knowledge_events,
         internal_reads=InternalReads(
             persistence.dependency_index,
             knowledge.source_impact,

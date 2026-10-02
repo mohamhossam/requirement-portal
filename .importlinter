@@ -261,6 +261,7 @@ source_modules =
     smb_requirement_agent.infrastructure.exports.xlsx_exporter
     smb_requirement_agent.infrastructure.jobs.polling_worker
     smb_requirement_agent.infrastructure.jobs.requirement_index_worker
+    smb_requirement_agent.infrastructure.knowledge_client
     smb_requirement_agent.infrastructure.llm.candidate_mappers
     smb_requirement_agent.infrastructure.llm.fake_epic_generator
     smb_requirement_agent.infrastructure.llm.fake_feature_generator
@@ -614,6 +615,7 @@ forbidden_modules =
     smb_requirement_agent.infrastructure.exports.xlsx_exporter
     smb_requirement_agent.infrastructure.jobs.polling_worker
     smb_requirement_agent.infrastructure.jobs.requirement_index_worker
+    smb_requirement_agent.infrastructure.knowledge_client
     smb_requirement_agent.infrastructure.llm.candidate_mappers
     smb_requirement_agent.infrastructure.llm.fake_epic_generator
     smb_requirement_agent.infrastructure.llm.fake_feature_generator

@@ -13,6 +13,8 @@ from smb_kernel.errors import IdentityProviderUnavailableError as IdentityProvid
 from smb_kernel.errors import KnowledgeGenerationError as KnowledgeGenerationError
 from smb_kernel.errors import ModelTransportError as ModelTransportError
 from smb_kernel.errors import PersistenceError as PersistenceError
+from smb_kernel.errors import ServiceResponseError as ServiceResponseError
+from smb_kernel.errors import ServiceUnavailableError as ServiceUnavailableError
 from smb_kernel.errors import UnsupportedDocumentError as UnsupportedDocumentError
 
 from smb_requirement_agent.domain.analysis.errors import RequirementAnalysisError
