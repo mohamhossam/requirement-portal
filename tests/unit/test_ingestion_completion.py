@@ -17,10 +17,10 @@ from smb_requirement_agent.application.use_cases.document_library import Documen
 from smb_requirement_agent.application.use_cases.documents import UploadDocumentInput
 from smb_requirement_agent.application.use_cases.reference_knowledge import ReferenceKnowledge
 from smb_requirement_agent.application.use_cases.requirement_drafts import RequirementDraftInput
+from smb_requirement_agent.domain.document.attachment import AttachmentTarget
 from smb_requirement_agent.domain.document.entities import DocumentExtractionWarning
 from smb_requirement_agent.domain.document.errors import InvalidDocumentError
 from smb_requirement_agent.domain.document.library import (
-    AttachmentTarget,
     ExtractionRevision,
     LibraryDocument,
     ReviewedPassage,
@@ -149,6 +149,7 @@ def test_async_attachment_cancel_retry_and_atomic_completion(is_draft: bool) -> 
         requirement.id.value, is_draft, queued.id, queued.version, False, actor
     )
     assert cancelled.stage == "cancelled"
+    assert not service.scan_next()
     assert not container.document_library.process_next()
     retried = service.control(
         requirement.id.value, is_draft, queued.id, cancelled.version, True, actor
@@ -156,10 +157,13 @@ def test_async_attachment_cancel_retry_and_atomic_completion(is_draft: bool) -> 
     with pytest.raises(DocumentVersionConflictError):
         service.control(requirement.id.value, is_draft, queued.id, cancelled.version, False, actor)
     assert retried.stage == "queued"
-    assert container.document_library.process_next()
-    assert service.process_next()
+    # The library worker never touches attachments; their own pipeline does (ADR-0099).
+    assert not container.document_library.process_next()
+    assert service.scan_next()
+    assert service.attach_next()
     completed = service.list(requirement.id.value, is_draft, actor)[0]
     assert completed.attached_document_id is not None
+    assert not service.attach_next()
     assert not service.process_next()
     attached = container.get_document.execute(DocumentId(completed.attached_document_id), actor)
     assert attached.is_included
@@ -181,8 +185,8 @@ def test_async_attachment_quarantine_cannot_attach_or_retry() -> None:
         "infected",
         actor,
     )
-    assert container.document_library.process_next()
-    assert not service.process_next()
+    assert service.scan_next()
+    assert not service.attach_next()
     status = service.list(requirement.id.value, False, actor)[0]
     assert status.stage == "quarantined" and status.attached_document_id is None
     with pytest.raises(DocumentVersionConflictError):

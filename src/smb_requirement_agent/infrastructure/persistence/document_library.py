@@ -60,29 +60,6 @@ def claimed(
 
 
 class InMemoryDocumentLibrary:
-    def list_attachments(self, source_id: str, is_draft: bool) -> tuple[LibraryDocument, ...]:
-        with self._lock:
-            return tuple(
-                d
-                for d in self._documents.values()
-                if d.attachment_target is not None
-                and d.attachment_target.source_id == source_id
-                and d.attachment_target.is_draft == is_draft
-            )
-
-    def pending_attachment(self) -> LibraryDocument | None:
-        with self._lock:
-            return next(
-                (
-                    d
-                    for d in self._documents.values()
-                    if d.attachment_target is not None
-                    and d.attached_document_id is None
-                    and d.versions[-1].stage is IngestionStage.READY
-                ),
-                None,
-            )
-
     def has_incompatible_publication(self, identities: tuple[str, ...]) -> bool:
         with self._lock:
             return any(
@@ -156,7 +133,7 @@ class InMemoryDocumentLibrary:
             return tuple(
                 d
                 for d in sorted(self._documents.values(), key=lambda d: d.id)
-                if d.attachment_target is None and (d.owner.id.value == actor_id or d.published_id)
+                if d.owner.id.value == actor_id or d.published_id
             )[offset : offset + limit]
 
     def find_submission(self, actor_id: str, key: str) -> LibraryDocument | None:
@@ -184,26 +161,6 @@ class InMemoryDocumentLibrary:
 
 
 class PostgresDocumentLibrary:
-    def list_attachments(self, source_id: str, is_draft: bool) -> tuple[LibraryDocument, ...]:
-        with self._store.connection() as connection:
-            rows = connection.execute(
-                """SELECT payload FROM library_documents
-                WHERE payload->'attachment_target'->>'source_id'=%s
-                AND (payload->'attachment_target'->>'is_draft')::boolean=%s ORDER BY id""",
-                (source_id, is_draft),
-            ).fetchall()
-        return tuple(self._codec.validate_python(row[0]) for row in rows)
-
-    def pending_attachment(self) -> LibraryDocument | None:
-        with self._store.connection() as connection:
-            row = connection.execute(
-                """SELECT payload FROM library_documents
-                WHERE payload->'attachment_target'->>'source_id' IS NOT NULL
-                AND payload->>'attached_document_id' IS NULL
-                AND payload->'versions'->-1->>'stage'='ready_for_review' ORDER BY id LIMIT 1""",
-            ).fetchone()
-        return self._codec.validate_python(row[0]) if row else None
-
     def has_incompatible_publication(self, identities: tuple[str, ...]) -> bool:
         with self._store.connection() as connection:
             row = connection.execute(
@@ -317,7 +274,6 @@ class PostgresDocumentLibrary:
             rows = connection.execute(
                 """SELECT payload FROM library_documents
                 WHERE (owner_id=%s OR published_id IS NOT NULL)
-                AND payload->'attachment_target'->>'source_id' IS NULL
                 ORDER BY id OFFSET %s LIMIT %s""",
                 (actor_id, offset, limit),
             ).fetchall()

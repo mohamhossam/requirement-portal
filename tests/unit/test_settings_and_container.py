@@ -666,8 +666,14 @@ def test_container_names_every_background_worker_for_readiness() -> None:
             "requirement_index_worker",
             "workers",
             "document_worker",
+            "attachment_worker",
         }
         assert container.background_workers["workers"] is container.ai_job_worker
+        # Attachments have their own worker, apart from the library's (ADR-0099).
+        assert (
+            container.background_workers["attachment_worker"]
+            is container.attachment_ingestion_worker
+        )
     finally:
         container.close_resources()
 

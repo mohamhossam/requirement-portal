@@ -12,6 +12,7 @@ from smb_kernel.documents.bounded_extractor import (
 from smb_kernel.documents.process_resources import (
     child_process_resource_limiter,
 )
+from smb_kernel.documents.scanner import ClamAvDocumentScanner, OfflineDocumentScanner
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.use_cases.attachment_ingestion import AttachmentIngestion
@@ -32,10 +33,11 @@ from smb_requirement_agent.application.use_cases.invalidate_derived_artifacts im
 from smb_requirement_agent.application.use_cases.library_governance import LibraryGovernance
 from smb_requirement_agent.application.use_cases.reference_knowledge import ReferenceKnowledge
 from smb_requirement_agent.infrastructure.config.settings import Settings
+from smb_requirement_agent.infrastructure.documents.attachment_worker import (
+    AttachmentIngestionWorker,
+)
 from smb_requirement_agent.infrastructure.documents.library_worker import (
-    ClamAvDocumentScanner,
     DocumentIngestionWorker,
-    OfflineDocumentScanner,
 )
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
 
@@ -54,6 +56,7 @@ class DocumentWiring:
     upload: UploadDocument
     attachment_ingestion: AttachmentIngestion
     ingestion_worker: DocumentIngestionWorker
+    attachment_worker: AttachmentIngestionWorker
     list_documents: ListDocuments
     get_document: GetDocument
     set_inclusion: SetDocumentInclusion
@@ -84,13 +87,19 @@ def build_documents(
         resource_limiter=child_process_resource_limiter(),
         process_context=multiprocessing.get_context("spawn"),
     )
+    # One background extractor and scanner serve both ingestion workers, so at most
+    # one large extraction runs at a time, as when a single worker did both.
+    background_extractor = _library_extractor(settings)
+    scanner = (
+        OfflineDocumentScanner()
+        if settings.library_scan_mode == "offline"
+        else ClamAvDocumentScanner(settings.library_scanner_host, settings.library_scanner_port)
+    )
     library = DocumentLibrary(
         persistence.library_repository,
         persistence.document_storage,
-        _library_extractor(settings),
-        OfflineDocumentScanner()
-        if settings.library_scan_mode == "offline"
-        else ClamAvDocumentScanner(settings.library_scanner_host, settings.library_scanner_port),
+        background_extractor,
+        scanner,
         persistence.transaction_manager,
         clock,
         settings.document_max_file_bytes,
@@ -108,12 +117,15 @@ def build_documents(
         settings.document_max_file_bytes,
     )
     attachment_ingestion = AttachmentIngestion(
-        library,
-        persistence.library_repository,
+        persistence.attachment_ingestions,
         persistence.document_storage,
+        scanner,
+        background_extractor,
         upload,
         access,
         persistence.transaction_manager,
+        clock,
+        settings.document_max_file_bytes,
     )
     return DocumentWiring(
         extractor=extractor,
@@ -133,9 +145,8 @@ def build_documents(
         ),
         upload=upload,
         attachment_ingestion=attachment_ingestion,
-        ingestion_worker=DocumentIngestionWorker(
-            library, reference_knowledge, attachment_ingestion
-        ),
+        attachment_worker=AttachmentIngestionWorker(attachment_ingestion),
+        ingestion_worker=DocumentIngestionWorker(library, reference_knowledge),
         list_documents=ListDocuments(persistence.document_repository, access),
         get_document=GetDocument(
             persistence.document_repository,

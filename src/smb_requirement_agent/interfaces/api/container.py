@@ -250,9 +250,10 @@ from smb_requirement_agent.application.use_cases.unified_knowledge_search import
 from smb_requirement_agent.infrastructure.config.settings import (
     Settings,
 )
-from smb_requirement_agent.infrastructure.documents.library_worker import (
-    DocumentIngestionWorker,
+from smb_requirement_agent.infrastructure.documents.attachment_worker import (
+    AttachmentIngestionWorker,
 )
+from smb_requirement_agent.infrastructure.documents.library_worker import DocumentIngestionWorker
 from smb_requirement_agent.infrastructure.exports.json_exporter import JsonBacklogExporter
 from smb_requirement_agent.infrastructure.exports.xlsx_exporter import XlsxBacklogExporter
 from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import (
@@ -320,6 +321,7 @@ class Container:
     requirement_indexer: IndexRequirementKnowledge
     requirement_index_worker: RequirementIndexWorker
     document_ingestion_worker: DocumentIngestionWorker
+    attachment_ingestion_worker: AttachmentIngestionWorker
     # Every background worker this process may run, keyed by its readiness check name.
     background_workers: Mapping[str, BackgroundWorker]
     analysis_repository: RequirementAnalysisRepositoryPort
@@ -617,6 +619,7 @@ def _build_container(
         "requirement_index_worker": knowledge.index_worker,
         "workers": jobs.worker,
         "document_worker": documents.ingestion_worker,
+        "attachment_worker": documents.attachment_worker,
     }
     if architecture_jobs.worker is not None:
         background_workers["architecture_job_worker"] = architecture_jobs.worker
@@ -642,6 +645,7 @@ def _build_container(
         requirement_indexer=knowledge.indexer,
         requirement_index_worker=knowledge.index_worker,
         document_ingestion_worker=documents.ingestion_worker,
+        attachment_ingestion_worker=documents.attachment_worker,
         background_workers=background_workers,
         analysis_repository=persistence.analysis_repository,
         analysis_audit_repository=persistence.analysis_audit_repository,

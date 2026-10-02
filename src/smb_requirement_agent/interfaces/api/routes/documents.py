@@ -21,8 +21,8 @@ from smb_requirement_agent.application.use_cases.documents import (
     UploadDocument,
     UploadDocumentInput,
 )
+from smb_requirement_agent.domain.document.attachment import AttachmentTarget
 from smb_requirement_agent.domain.document.entities import SourceDocument, SourceDocumentVersion
-from smb_requirement_agent.domain.document.library import AttachmentTarget
 from smb_requirement_agent.domain.document.value_objects import (
     DocumentId,
     DocumentVersionId,
