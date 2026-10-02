@@ -59,6 +59,8 @@ from smb_requirement_agent.application.errors import (
     ReviewFlagNotFoundError,
     SavedViewConflictError,
     SavedViewNotFoundError,
+    ServiceResponseError,
+    ServiceUnavailableError,
     StoryGenerationError,
     StoryNotFoundError,
     StoryProposalNotFoundError,
@@ -304,6 +306,9 @@ ERROR_CATALOGUE: tuple[tuple[type[Exception], str, FailureCategory], ...] = (
     (KnowledgeIndexPendingError, "knowledge_index_pending", FailureCategory.UNAVAILABLE),
     (KnowledgeGenerationError, "knowledge_generation", FailureCategory.PROVIDER),
     (ModelTransportError, "model_transport", FailureCategory.PROVIDER),
+    # A platform service (ADR-0099) could not be reached, or refused the request.
+    (ServiceUnavailableError, "platform_service_unavailable", FailureCategory.UNAVAILABLE),
+    (ServiceResponseError, "platform_service_refused", FailureCategory.PROVIDER),
     (RequirementAnalysisConflictError, "requirement_analysis_conflict", FailureCategory.CONFLICT),
     (AnalysisConfirmationRequiredError, "analysis_confirmation_required", FailureCategory.CONFLICT),
     (DuplicateRequirementError, "duplicate_requirement", FailureCategory.CONFLICT),

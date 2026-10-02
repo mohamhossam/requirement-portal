@@ -22,11 +22,15 @@ class KnowledgeEvent:
     created_at: datetime
 
 
-class KnowledgeEventOutboxPort(Protocol):
-    def append(self, kind: str, subject_id: str, payload: object) -> int:
-        """Record an event inside the caller's transaction; returns its sequence number."""
-        ...
+class KnowledgeEventSourcePort(Protocol):
+    """What a consumer reads: in process, the outbox itself; once split, the knowledge API."""
 
     def after(self, seq: int, limit: int) -> tuple[KnowledgeEvent, ...]:
         """Events after `seq`, oldest first."""
+        ...
+
+
+class KnowledgeEventOutboxPort(KnowledgeEventSourcePort, Protocol):
+    def append(self, kind: str, subject_id: str, payload: object) -> int:
+        """Record an event inside the caller's transaction; returns its sequence number."""
         ...
