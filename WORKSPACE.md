@@ -1023,9 +1023,8 @@ source change or explicit configured-generation rebuild; no bulk source rewrite 
 Live, opt-in synthetic qualification commands (never part of pytest):
 
 ```powershell
-.venv/Scripts/python.exe -m tests.chunk_token_fixtures
+.venv/Scripts/python.exe -m tests.chunk_token_fixtures  # Requirement samples; library samples are knowledge-portal's
 .venv/Scripts/python.exe -m smb_requirement_agent.interfaces.cli.llm qualify-tokens --config config/llm.yaml --samples docs/evaluation/chunk-token-fixtures.json --input-limit 2048
-.venv/Scripts/python.exe -m tests.live_model_rollout --config config/llm.yaml --target-model gemini-embedding-2
 ```
 
 The first command is offline. The latter two use configured credentials and live embedding endpoints;

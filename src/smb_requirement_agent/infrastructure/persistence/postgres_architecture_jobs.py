@@ -15,17 +15,13 @@ from smb_requirement_agent.application.ports.architecture_jobs import (
 )
 from smb_requirement_agent.domain.architecture.knowledge import KnowledgeConflictError
 
-# Queues sharing this adapter: the catalogue's jobs and requirement mapping jobs (ADR-0099).
-# The table name reaches SQL text, so only these are accepted.
-JOB_TABLES = frozenset({"architecture_jobs", "requirement_mapping_jobs"})
-
 
 class PostgresArchitectureJobs:
-    def __init__(self, connector: PostgresConnector, table: str = "architecture_jobs") -> None:
-        if table not in JOB_TABLES:
-            raise ValueError(f"Unknown job table {table!r}.")
+    """Requirement work's mapping queue; the catalogue's jobs left with it (ADR-0099)."""
+
+    def __init__(self, connector: PostgresConnector) -> None:
         self._connector = connector
-        self._table = table
+        self._table = "requirement_mapping_jobs"
 
     @staticmethod
     def _job(row: tuple[object, ...]) -> ArchitectureJob:

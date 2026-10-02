@@ -10,7 +10,6 @@ from smb_requirement_agent.application.errors import (
     RequirementAnalysisConflictError,
 )
 from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirementInput
-from smb_requirement_agent.application.use_cases.document_library import LibraryView
 from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     RequirementKnowledgeCorpus,
 )
@@ -29,18 +28,21 @@ from smb_requirement_agent.infrastructure.persistence.backlog_payloads import (
     story_from_payload,
     story_to_payload,
 )
-from smb_requirement_agent.interfaces.api.container import Container
 from smb_requirement_agent.interfaces.api.main import create_app
 from tests.unit import test_reference_grounding
+from tests.unit.test_reference_grounding import Grounded
 from tests.unit.workflow_helpers import drain_requirement_index
 
 grounded = test_reference_grounding.grounded
+TOKEN = "k" * 40
+SERVICE = {"Authorization": f"Bearer {TOKEN}"}
 
 
 def test_answer_origin_survives_reanalysis_and_is_not_independent(
-    grounded: tuple[Container, LibraryView],
+    grounded: Grounded,
 ) -> None:
-    container, document = grounded
+    container = grounded.container
+    document_id = grounded.citation.document_id
     owner = FAKE_ACTORS[0]
     requirement = container.create_requirement.execute(
         CreateRequirementInput("XGPON order", "Order bundles through BCRM."), owner
@@ -64,7 +66,7 @@ def test_answer_origin_survives_reanalysis_and_is_not_independent(
     assert answer.source_lineage[0].citation == suggestion.reference_evidence[0]
     assert analysis_from_payload(analysis_to_payload(workspace.analysis)) == workspace.analysis
     rows = container.source_impact.page(
-        owner, document_id=document.id, active_only=True, limit=100
+        owner, document_id=document_id, active_only=True, limit=100
     ).items
     assert {item.dependency.target_kind for item in rows} >= {
         "clarification",
@@ -80,7 +82,7 @@ def test_answer_origin_survives_reanalysis_and_is_not_independent(
         container.knowledge_repository,
     )
     copies = [chunk for chunk in corpus.chunks(requirement) if chunk.source_lineage]
-    assert copies and all(c.source_lineage[0].citation.document_id == document.id for c in copies)
+    assert copies and all(c.source_lineage[0].citation.document_id == document_id for c in copies)
     drain_requirement_index(container)
     hits = container.unified_knowledge_search.execute("XGPON coverage")
     assert any(hit.reference_evidence for hit in hits)
@@ -89,10 +91,8 @@ def test_answer_origin_survives_reanalysis_and_is_not_independent(
     )
 
 
-def test_derived_backlog_lineage_and_content_bound_review(
-    grounded: tuple[Container, LibraryView],
-) -> None:
-    container, document = grounded
+def test_derived_backlog_lineage_and_content_bound_review(grounded: Grounded) -> None:
+    container = grounded.container
     owner = FAKE_ACTORS[0]
     requirement = container.create_requirement.execute(
         CreateRequirementInput("XGPON order", "Order bundles through BCRM."), owner
@@ -129,7 +129,7 @@ def test_derived_backlog_lineage_and_content_bound_review(
     assert feature_from_payload(feature_to_payload(feature)) == feature
     assert story_from_payload(story_to_payload(stories[0])) == stories[0]
     before = container.breakdown_repository.list_breakdown_revisions(requirement.id)
-    container.document_library.withdraw(document.id, document.version, owner, "Policy retired")
+    grounded.withdraw()
     rows = container.source_impact.page(
         owner, requirement_id=requirement.id.value, active_only=True, limit=100
     ).items
@@ -223,9 +223,10 @@ def test_derived_backlog_lineage_and_content_bound_review(
 
 
 def test_source_impact_api_permissions_cas_and_private_counts(
-    grounded: tuple[Container, LibraryView],
+    grounded: Grounded,
 ) -> None:
-    container, document = grounded
+    container = grounded.container
+    document_id = grounded.citation.document_id
     owner = FAKE_ACTORS[0]
     for actor in FAKE_ACTORS[:2]:
         requirement = container.create_requirement.execute(
@@ -233,14 +234,26 @@ def test_source_impact_api_permissions_cas_and_private_counts(
             actor,
         )
         container.analyze_requirement.execute(actor, requirement.id)
-    container.document_library.withdraw(document.id, document.version, owner, "Retired")
-    with TestClient(create_app(lambda: container)) as client:
-        path = f"/library/documents/{document.id}/source-impact"
-        page = client.get(path + "?active_only=true&limit=100")
+    grounded.withdraw()
+    # The owner's view of a document's dependents is served to the knowledge service.
+    serving = replace(
+        container, settings=replace(container.settings, knowledge_service_token=TOKEN)
+    )
+    with TestClient(create_app(lambda: serving)) as client:
+        path = f"/internal/references/{document_id}/impact"
+        page = client.get(
+            path,
+            params={"actor_id": owner.id.value, "active_only": True, "limit": 100},
+            headers=SERVICE,
+        )
         assert page.status_code == 200 and "fake-reviewer" not in page.text
         assert "total" not in page.json() and page.json()["next_offset"] is None
-        assert client.get(path, headers={"X-Fake-Actor-Id": "fake-observer"}).status_code == 403
-        assert client.get(path + "?limit=101").status_code == 422
+        observer = client.get(path, params={"actor_id": "fake-observer"}, headers=SERVICE)
+        assert observer.status_code == 403
+        too_many = client.get(
+            path, params={"actor_id": owner.id.value, "limit": 101}, headers=SERVICE
+        )
+        assert too_many.status_code == 422
         item = page.json()["items"][0]
         decision_path = f"/library/source-impact/{item['dependency']['id']}/decisions"
         body = dict(
@@ -265,10 +278,10 @@ def test_source_impact_api_permissions_cas_and_private_counts(
 
 
 def test_source_impact_lives_under_the_requirement_with_the_library_paths_as_aliases(
-    grounded: tuple[Container, LibraryView],
+    grounded: Grounded,
 ) -> None:
     """Source impact is requirement work (ADR-0099); the old library paths still answer."""
-    container, document = grounded
+    container = grounded.container
     owner = FAKE_ACTORS[0]
     mine = container.create_requirement.execute(
         CreateRequirementInput("Mine", "XGPON coverage for bundles."), owner
@@ -277,7 +290,7 @@ def test_source_impact_lives_under_the_requirement_with_the_library_paths_as_ali
     other = container.create_requirement.execute(
         CreateRequirementInput("Other", "Unrelated wording."), owner
     )
-    container.document_library.withdraw(document.id, document.version, owner, "Retired")
+    grounded.withdraw()
     with TestClient(create_app(lambda: container)) as client:
         path = f"/requirements/{mine.id.value}/source-impact?active_only=true&limit=100"
         page = client.get(path)

@@ -24,10 +24,6 @@ from smb_requirement_agent.application.use_cases.reference_currency import (
     ProjectKnowledgeEvents,
     ReferenceCurrency,
 )
-from smb_requirement_agent.application.use_cases.reference_knowledge import (
-    ReferenceKnowledge,
-    StructureAwareChunks,
-)
 from smb_requirement_agent.application.use_cases.requirement_indexing import (
     IndexRequirementKnowledge,
 )
@@ -48,7 +44,6 @@ from smb_requirement_agent.infrastructure.documents.ingestion_loop import Ingest
 from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import (
     RequirementIndexWorker,
 )
-from smb_requirement_agent.infrastructure.persistence.reference_index import Utf8BudgetCounter
 from smb_requirement_agent.interfaces.api.composition.knowledge_service import KnowledgeService
 from smb_requirement_agent.interfaces.api.composition.llm import LLMAdapters
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
@@ -69,13 +64,14 @@ class RequirementKnowledgeWiring:
     answer_scheduler: AnswerSuggestionScheduler
     indexer: IndexRequirementKnowledge
     index_worker: RequirementIndexWorker
-    reference_knowledge: ReferenceKnowledge
-    # What requirement work searches and cites: this process's library, or the service's.
+    # What requirement work searches and cites: the knowledge service's library.
     references: ReferenceKnowledgePort
     reference_currency: ReferenceCurrency
     current_references: CurrentReferences
     current_release: CurrentArchitectureRelease
     knowledge_event_worker: IngestionLoop
+    # Brings the local copies up to date with the knowledge service's events.
+    projection: ProjectKnowledgeEvents
     source_impact: SourceImpactReview
     suggest_answers: SuggestClarificationAnswers
     screen: ScreenRequirementKnowledge
@@ -118,33 +114,22 @@ def build_requirement_knowledge(
         embedding_identity,
         access,
     )
-    reference_knowledge = ReferenceKnowledge(
-        persistence.library_repository,
-        persistence.reference_index,
-        llm.knowledge_embedding,
-        StructureAwareChunks(Utf8BudgetCounter()),
-        persistence.transaction_manager,
-        clock,
-        embedding_identity,
-    )
     # Requirement work checks citations against its local copy of the library's state.
     reference_currency = ReferenceCurrency(
         persistence.reference_publications, persistence.transaction_manager
     )
-    references = service.references or reference_knowledge
+    references = service.references
     current_references = CurrentReferences(references, reference_currency)
     projector = ProjectKnowledgeEvents(
-        service.events or persistence.knowledge_events,
+        service.events,
         persistence.reference_publications,
         persistence.architecture_releases,
         persistence.transaction_manager,
         clock,
     )
     if not service.remote:
-        # While both sides share this process, a catalogue write drains the outbox
-        # straight after it commits; drain once now for anything written before start.
+        # The offline feed is fixed; read it now so a catalogue version is known at once.
         # A remote service's events are polled by the knowledge event worker instead.
-        persistence.knowledge_relay.bind(projector.drain)
         projector.drain()
     return RequirementKnowledgeWiring(
         corpus=corpus,
@@ -163,12 +148,12 @@ def build_requirement_knowledge(
         ),
         indexer=indexer,
         index_worker=RequirementIndexWorker(indexer),
-        reference_knowledge=reference_knowledge,
         references=references,
         reference_currency=reference_currency,
         current_references=current_references,
         current_release=CurrentArchitectureRelease(persistence.architecture_releases),
         knowledge_event_worker=IngestionLoop("knowledge-events", (projector.project_next,)),
+        projection=projector,
         source_impact=SourceImpactReview(
             persistence.dependency_index,
             persistence.reference_publications,

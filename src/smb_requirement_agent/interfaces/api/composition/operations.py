@@ -6,19 +6,14 @@ lifecycle; they live beside the composition root, not inside it."""
 from __future__ import annotations
 
 import io
-from collections.abc import Callable, Iterator
-from contextlib import contextmanager
+from collections.abc import Callable
 from datetime import UTC, datetime
-from threading import RLock
 from time import monotonic
 
 import httpx as httpx
 from PIL import Image
 from pydantic import BaseModel, Field
 from smb_kernel.diagnostics import build_debug_trace
-from smb_kernel.documents.text_extractor import (
-    SafeDocumentTextExtractor,
-)
 from smb_kernel.llm.compatible_transport import (
     CompatibleStructuredOutputClient,
     ConfiguredKnowledgeEmbedding,
@@ -31,30 +26,13 @@ from smb_kernel.time.system import SystemClock
 
 from smb_requirement_agent.application.errors import ModelTransportError
 from smb_requirement_agent.application.use_cases.dependency_projection import DependencyProjection
-from smb_requirement_agent.application.use_cases.document_library import DocumentLibrary
 from smb_requirement_agent.application.use_cases.qualify_chunk_tokens import (
     qualify_chunk_tokens,
-)
-from smb_requirement_agent.application.use_cases.reference_knowledge import (
-    ReferenceKnowledge,
-    StructureAwareChunks,
 )
 from smb_requirement_agent.application.use_cases.retention import PruneReadNotifications
 from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.infrastructure.config.options import ConfigurationError
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.documents.library_worker import (
-    OfflineDocumentScanner,
-)
-from smb_requirement_agent.infrastructure.persistence.document_library import (
-    InMemoryDocumentLibrary,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_document_repository import (
-    InMemoryDocumentStorage,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_transaction import (
-    InMemoryTransactionManager,
-)
 from smb_requirement_agent.infrastructure.persistence.postgres_ai_jobs import (
     PostgresNotificationRepository,
 )
@@ -69,10 +47,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_snapshots import 
     PostgresSnapshotReader,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
-from smb_requirement_agent.infrastructure.persistence.reference_index import (
-    InMemoryReferenceIndex,
-    Utf8BudgetCounter,
-)
 from smb_requirement_agent.infrastructure.persistence.source_dependencies import (
     PostgresSourceDependencies,
 )
@@ -150,57 +124,6 @@ def build_projection_rebuild(database_url: str) -> Callable[[], int]:
         return count
 
     return rebuild
-
-
-@contextmanager
-def reference_model_qualification(
-    settings: Settings,
-    target_model: str,
-) -> Iterator[tuple[DocumentLibrary, ReferenceKnowledge, ReferenceKnowledge]]:
-    """Isolated synthetic corpus for explicit live model rollout/rollback qualification.
-
-    Uses no application database and cannot change a running configuration.
-    """
-
-    config = settings.llm_profiles
-    if config is None or not target_model.strip():
-        raise ConfigurationError("Qualification requires configured embeddings and a target model.")
-    trace = build_debug_trace(enabled=False, path=settings.debug_trace_path, secrets=config.secrets)
-    lock, clock = RLock(), SystemClock()
-    repository, storage = InMemoryDocumentLibrary(lock), InMemoryDocumentStorage(lock=lock)
-    index = InMemoryReferenceIndex(lock, repository)
-    transactions = InMemoryTransactionManager(lambda _: None, lock)
-    transactions.enroll(repository, storage, index)
-    library = DocumentLibrary(
-        repository,
-        storage,
-        SafeDocumentTextExtractor(),
-        OfflineDocumentScanner(),
-        transactions,
-        clock,
-        100000,
-    )
-    try:
-        with httpx.Client() as http:
-            profiles = (
-                config.selected_embedding,
-                config.selected_embedding.model_copy(update={"model": target_model}),
-            )
-            models = tuple(
-                ReferenceKnowledge(
-                    repository,
-                    index,
-                    ConfiguredKnowledgeEmbedding(profile, http, trace),
-                    StructureAwareChunks(Utf8BudgetCounter()),
-                    transactions,
-                    clock,
-                    profile.identity,
-                )
-                for profile in profiles
-            )
-            yield library, models[0], models[1]
-    finally:
-        trace.close()
 
 
 def qualify_embedding_tokens(

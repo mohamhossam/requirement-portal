@@ -1,4 +1,4 @@
-"""Background workers outside the HTTP lifecycle: architecture polling and the worker process."""
+"""Background workers outside the HTTP lifecycle: mapping-job polling and the worker process."""
 
 from __future__ import annotations
 
@@ -11,13 +11,16 @@ from typing import Any, cast
 import pytest
 from smb_kernel.observability.metrics import Metrics
 
-from smb_requirement_agent.application.use_cases.architecture_jobs import ArchitectureJobs
+from smb_requirement_agent.application.use_cases.architecture_mapping_jobs import (
+    ArchitectureMappingJobs,
+)
 from smb_requirement_agent.infrastructure.config.options import LLMProvider, PersistenceProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.jobs.architecture_job_worker import (
     ArchitectureJobWorker,
 )
 from smb_requirement_agent.interfaces import worker as worker_process
+from smb_requirement_agent.interfaces.api.container import build_container
 
 
 @dataclass(frozen=True)
@@ -53,7 +56,7 @@ class QueuedJobs:
 
 def _worker(jobs: QueuedJobs) -> ArchitectureJobWorker:
     return ArchitectureJobWorker(
-        cast(ArchitectureJobs, jobs), poll_interval_seconds=0.01, shutdown_grace_seconds=1
+        cast(ArchitectureMappingJobs, jobs), poll_interval_seconds=0.01, shutdown_grace_seconds=1
     )
 
 
@@ -82,6 +85,40 @@ def test_architecture_worker_survives_a_failed_poll() -> None:
         assert worker.healthy is True
     finally:
         assert worker.stop() is True
+
+
+@pytest.mark.parametrize(
+    ("settings", "mapping_worker"),
+    [
+        pytest.param(Settings(llm_provider=LLMProvider.FAKE), False, id="fake models"),
+        pytest.param(
+            Settings(llm_provider=LLMProvider.OPENAI, openai_api_key="sk-test"),
+            True,
+            id="real models",
+        ),
+    ],
+)
+def test_the_container_runs_the_requirement_workers(
+    settings: Settings, mapping_worker: bool
+) -> None:
+    """Catalogue and library work left with the knowledge service (ADR-0099).
+
+    Mapping jobs finish inside the request with fake models; real models queue
+    them for their own worker.
+    """
+    container = build_container(settings)
+    try:
+        expected = {
+            "workers",
+            "requirement_index_worker",
+            "attachment_worker",
+            "knowledge_event_worker",
+        }
+        if mapping_worker:
+            expected.add("architecture_mapping_job_worker")
+        assert set(container.background_workers) == expected
+    finally:
+        container.close_resources()
 
 
 def test_worker_process_refuses_memory_persistence(
@@ -146,12 +183,18 @@ def test_worker_process_exits_for_restart_when_a_worker_turns_unhealthy(
     events: list[str] = []
     workers = {
         "workers": RecordingWorker(events, "ai"),
-        "document_worker": RecordingWorker(events, "doc"),
+        "attachment_worker": RecordingWorker(events, "attachments"),
     }
-    workers["document_worker"].healthy = False
+    workers["attachment_worker"].healthy = False
 
     assert _run_worker_process(monkeypatch, workers, events) == 1
-    assert events == ["start ai", "start doc", "stop doc", "stop ai", "resources closed"]
+    assert events == [
+        "start ai",
+        "start attachments",
+        "stop attachments",
+        "stop ai",
+        "resources closed",
+    ]
 
 
 def test_worker_process_stops_cleanly_on_termination_signal(

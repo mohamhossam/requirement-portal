@@ -250,8 +250,18 @@ passages and evidence.
   `http://knowledge-api:8000`) and `REQUIREMENT_SERVICE_TOKEN`, the secret this service
   presents. It is 32+ characters, and the knowledge service holds the same value. Startup
   refuses one without the other.
-- **Neither set:** the knowledge code still in this process answers, and the viewers have
-  nothing to show. This lasts until Stage 4.2b removes that code.
+- **Neither set (development only):** deterministic fakes stand in, with no library, one
+  empty catalogue version (`offline-catalogue`), and nothing for the viewers to show.
+  `APP_ENV=production` refuses to start this way.
+- **Gone from this service:** the library, the architecture and squad catalogues, their
+  routes (`/library/*`, `/architecture-knowledge/*`, `/organisation/*`, `/jobs/*`,
+  `/knowledge/search`) and their worker. They live in the knowledge portal. Two deprecated
+  aliases, `/library/requirements/{id}/source-impact` and
+  `/library/source-impact/{id}/decisions`, remain until the browser stops calling them.
+- **Architecture mapping jobs** are read, cancelled and retried under
+  `/requirements/{id}/architecture-mapping/jobs/{job_id}`.
+- **`KNOWLEDGE_EVALUATION_APPROVED`** is no longer read here. The knowledge service holds that
+  production gate for the models that do the matching.
 - **Catalogue version names:** the local copy of the active catalogue release now records
   its name too (`202610021500_active_release_name.sql`). The read-only views read
   `GET /architecture/active-release`.

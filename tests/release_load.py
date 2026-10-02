@@ -1,6 +1,8 @@
 """Opt-in HTTP search load measurement. Results are measurements, not release approval.
 
-Only /health, /ready and the read-only POST /knowledge/search are called. Supply
+Only /health, /ready and the read-only POST /knowledge/search/unified are called: the
+requirement service's search over Requirements and published library passages. The
+library's own search is the knowledge service's to measure (ADR-0099). Supply
 representative queries and run against an explicitly selected qualification environment.
 """
 
@@ -20,7 +22,7 @@ from time import perf_counter
 import httpx
 from pydantic import TypeAdapter, ValidationError
 
-from smb_requirement_agent.application.ports.reference_index import ReferenceChunk
+from smb_requirement_agent.application.use_cases.unified_knowledge_search import UnifiedSearchHit
 
 
 @dataclass(frozen=True)
@@ -78,7 +80,7 @@ def measure(
         for path in ("/health", "/ready"):
             client.get(path).raise_for_status()
     barrier = Barrier(users, timeout=timeout)
-    codec = TypeAdapter(tuple[ReferenceChunk, ...])
+    codec = TypeAdapter(tuple[UnifiedSearchHit, ...])
 
     def worker(index: int) -> tuple[SearchSample, ...]:
         samples: list[SearchSample] = []
@@ -91,7 +93,8 @@ def measure(
                 error = None
                 try:
                     response = client.post(
-                        "/knowledge/search", json={"query": queries[position % len(queries)]}
+                        "/knowledge/search/unified",
+                        json={"query": queries[position % len(queries)]},
                     )
                     status = response.status_code
                     response.raise_for_status()
@@ -116,7 +119,7 @@ def measure(
         "query_count": len(queries),
         "wall_seconds": seconds,
         "requests_per_second": requests / seconds,
-        "scope": "HTTP search including query embedding; successful response latency only",
+        "scope": "HTTP unified search including query embedding; successful response latency only",
         "limits": "Corpus size, database/embedding timing, ingestion fairness and semantic quality "
         "must be qualified separately. Closed-loop clients; no think time; no warmup excluded.",
         **summarize(samples),

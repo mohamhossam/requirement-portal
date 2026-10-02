@@ -2,12 +2,14 @@
 
 The knowledge itself is curated in the knowledge portal; these routes only show
 what is published: the exact passage a Requirement cites, the evidence behind an
-architecture impact, and which catalogue version is in use.
+architecture impact, and which catalogue version is in use. Unified search spans
+the member's own Requirement knowledge and the published library together.
 """
 
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Response
+from pydantic import BaseModel, Field
 
 from smb_requirement_agent.application.ports.architecture_knowledge import ActiveRelease
 from smb_requirement_agent.application.ports.knowledge_views import (
@@ -19,9 +21,15 @@ from smb_requirement_agent.application.use_cases.knowledge_views import Knowledg
 from smb_requirement_agent.application.use_cases.reference_currency import (
     CurrentArchitectureRelease,
 )
+from smb_requirement_agent.application.use_cases.unified_knowledge_search import (
+    UnifiedKnowledgeSearch,
+    UnifiedSearchHit,
+)
 from smb_requirement_agent.interfaces.api.dependencies import (
     get_current_release,
     get_knowledge_views,
+    get_unified_knowledge_search,
+    limit_provider_calls,
     require_authenticated_actor,
 )
 
@@ -61,3 +69,16 @@ def architecture_evidence(
 def active_release(release: ReleaseDep) -> ActiveRelease | None:
     """The catalogue version new mappings use; null until the first one is known."""
     return release.active_release()
+
+
+class KnowledgeSearchRequest(BaseModel):
+    query: str = Field(min_length=1, max_length=2000)
+
+
+@router.post("/knowledge/search/unified", dependencies=[Depends(limit_provider_calls)])
+def unified_search(
+    data: KnowledgeSearchRequest,
+    service: Annotated[UnifiedKnowledgeSearch, Depends(get_unified_knowledge_search)],
+) -> tuple[UnifiedSearchHit, ...]:
+    """Requirement knowledge the member may see, and published library passages (ADR-0075)."""
+    return service.execute(data.query)

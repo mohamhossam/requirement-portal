@@ -1,7 +1,7 @@
 """Published reference applicability stays attributable and revocable."""
 
 from collections.abc import Iterator
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from unittest.mock import Mock
 
 import pytest
@@ -12,17 +12,11 @@ from smb_requirement_agent.application.errors import (
     RequirementAnalysisConflictError,
     RequirementAnalysisGenerationError,
 )
-from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidence
 from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirementInput
-from smb_requirement_agent.application.use_cases.document_library import (
-    CHUNKING_POLICY,
-    LibraryView,
-)
-from smb_requirement_agent.application.use_cases.documents import UploadDocumentInput
 from smb_requirement_agent.application.use_cases.requirement_drafts import RequirementDraftInput
 from smb_requirement_agent.domain.analysis.errors import InvalidIntentProposalDecisionError
 from smb_requirement_agent.domain.analysis.value_objects import IntentProposalStatus
-from smb_requirement_agent.domain.document.library import ReviewedPassage
+from smb_requirement_agent.domain.document.reference import PublishedReference
 from smb_requirement_agent.domain.identity.errors import AuthorizationDeniedError
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
@@ -36,58 +30,45 @@ from smb_requirement_agent.infrastructure.persistence.analysis_payloads import (
     analysis_from_payload,
     analysis_to_payload,
 )
-from smb_requirement_agent.interfaces.api.container import Container, build_container
+from smb_requirement_agent.interfaces.api.container import Container
 from smb_requirement_agent.interfaces.api.main import create_app
+from tests.knowledge_doubles import PublishedLibrary, container_with_library, sync
 from tests.unit.workflow_helpers import drain_requirement_index
 
 
+@dataclass(frozen=True)
+class Grounded:
+    """A container whose library has one published policy, and that policy's citation."""
+
+    container: Container
+    library: PublishedLibrary
+    citation: PublishedReference
+
+    def withdraw(self) -> None:
+        """Withdraw the policy in the library, and let requirement work learn of it."""
+        self.library.withdraw(self.citation.document_id)
+        sync(self.container)
+
+
 @pytest.fixture
-def grounded() -> Iterator[tuple[Container, LibraryView]]:
-    container = build_container(
-        Settings(llm_provider=LLMProvider.FAKE, library_scan_mode="offline")
+def grounded() -> Iterator[Grounded]:
+    # The policy's owner is the first fake actor, who also owns the Requirements below.
+    container, library = container_with_library(
+        Settings(llm_provider=LLMProvider.FAKE), PublishedLibrary(owner_id=FAKE_ACTORS[0].id.value)
     )
-    library = container.document_library
-    uploaded = library.submit(
-        "XGPON policy",
-        UploadDocumentInput(
-            "policy.txt",
-            "text/plain",
-            b"High-speed bundles require XGPON coverage at the customer address.",
-        ),
-        "reference-test",
-        FAKE_ACTORS[0],
+    (citation,) = library.publish(
+        "XGPON policy", ("High-speed bundles require XGPON coverage at the customer address.",)
     )
-    assert library.process_next()
-    view = library.get(uploaded.id, FAKE_ACTORS[0])
-    source = view.versions[0]
-    document = library.review(
-        view.id,
-        source.id,
-        view.version,
-        FAKE_ACTORS[0],
-        tuple(ReviewedPassage(b.id, b.text or "", True, "") for b in source.blocks),
-        "Reviewed",
-    )
-    revision = document.versions[0].revisions[-1]
-    library.approve(
-        document.id,
-        source.id,
-        revision.id,
-        revision.fingerprint(source.id, CHUNKING_POLICY),
-        document.version,
-        FAKE_ACTORS[0],
-    )
-    assert container.reference_knowledge.index_next()
-    yield_value = library.get(document.id, FAKE_ACTORS[0])
-    yield container, yield_value
+    sync(container)
+    yield Grounded(container, library, citation)
     container.close_resources()
 
 
 def test_unified_search_balances_sources_across_the_workspace(
-    grounded: tuple[Container, LibraryView],
+    grounded: Grounded,
 ) -> None:
     """Search sees what reading sees (ADR-0075): anyone's submitted work, no drafts."""
-    container, document = grounded
+    container = grounded.container
     owned = container.create_requirement.execute(
         CreateRequirementInput("XGPON launch", "Order bundles through BCRM."), FAKE_ACTORS[0]
     )
@@ -109,21 +90,19 @@ def test_unified_search_balances_sources_across_the_workspace(
         assert response.status_code == 200
         assert {h["source_type"] for h in response.json()} == {"requirement", "published_document"}
         assert client.post("/knowledge/search/unified", json={"query": "   "}).status_code == 422
-        container.document_library.withdraw(
-            document.id, document.version, FAKE_ACTORS[0], "Retired"
-        )
+        grounded.withdraw()
         response = client.post("/knowledge/search/unified", json={"query": "XGPON bundles"})
         assert all(h["source_type"] == "requirement" for h in response.json())
 
 
 def test_document_answer_preserves_citation_and_hides_after_withdrawal(
-    grounded: tuple[Container, LibraryView],
+    grounded: Grounded,
 ) -> None:
     from smb_requirement_agent.application.errors import AnswerSuggestionNotFoundError
     from smb_requirement_agent.domain.knowledge.entities import AnswerSuggestionSource
     from smb_requirement_agent.interfaces.api.routes.knowledge import suggestion_response
 
-    container, document = grounded
+    container = grounded.container
     requirement = container.create_requirement.execute(
         CreateRequirementInput("XGPON bundle", "Order a high-speed bundle."), FAKE_ACTORS[0]
     )
@@ -135,13 +114,13 @@ def test_document_answer_preserves_citation_and_hides_after_withdrawal(
     )
     cited = next(s for s in result.suggestions if s.reference_evidence)
     assert cited.source_for(requirement.id) is AnswerSuggestionSource.PUBLISHED_REFERENCE
-    assert cited.reference_evidence[0].document_id == document.id
+    assert cited.reference_evidence[0].document_id == grounded.citation.document_id
     assert suggestion_response(result).suggestions[0].reference_evidence
     assert (
         container.knowledge_repository.latest_suggestion_set(requirement.id, question.id.value)
         == result
     )
-    container.document_library.withdraw(document.id, document.version, FAKE_ACTORS[0], "Retired")
+    grounded.withdraw()
     assert container.suggest_clarification_answers.get_current(requirement.id, question.id) is None
     with pytest.raises(AnswerSuggestionNotFoundError):
         container.suggest_clarification_answers.require_suggestion(
@@ -155,7 +134,7 @@ def test_document_answer_preserves_citation_and_hides_after_withdrawal(
 
 
 def test_document_withdrawn_during_answer_generation_cannot_persist(
-    grounded: tuple[Container, LibraryView],
+    grounded: Grounded,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from smb_requirement_agent.application.ports.requirement_knowledge import (
@@ -165,7 +144,7 @@ def test_document_withdrawn_during_answer_generation_cannot_persist(
         FakeClarificationAnswerSuggester,
     )
 
-    container, document = grounded
+    container = grounded.container
     requirement = container.create_requirement.execute(
         CreateRequirementInput("XGPON bundle", "Order high-speed bundles."), FAKE_ACTORS[0]
     )
@@ -174,9 +153,7 @@ def test_document_withdrawn_during_answer_generation_cannot_persist(
     drain_requirement_index(container)
 
     def withdrawing(*args: object, **kwargs: object) -> tuple[AnswerSuggestionCandidate, ...]:
-        container.document_library.withdraw(
-            document.id, document.version, FAKE_ACTORS[0], "Retired"
-        )
+        grounded.withdraw()
         return (
             AnswerSuggestionCandidate(
                 "Coverage required", "The cited policy supports it", ("reference:0",)
@@ -195,9 +172,9 @@ def test_document_withdrawn_during_answer_generation_cannot_persist(
 
 
 def test_reference_conflict_requires_owner_review_in_screening(
-    grounded: tuple[Container, LibraryView],
+    grounded: Grounded,
 ) -> None:
-    container, _ = grounded
+    container = grounded.container
     requirement = container.create_requirement.execute(
         CreateRequirementInput("XGPON bundle", "Order high-speed bundles."), FAKE_ACTORS[0]
     )
@@ -221,7 +198,7 @@ def test_reference_conflict_requires_owner_review_in_screening(
 
 
 def test_reference_withdrawal_during_answer_reanalysis_cannot_commit(
-    grounded: tuple[Container, LibraryView],
+    grounded: Grounded,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from smb_requirement_agent.application.errors import ArtifactVersionConflictError
@@ -232,7 +209,7 @@ def test_reference_withdrawal_during_answer_reanalysis_cannot_commit(
         FakeRequirementAnalyzer,
     )
 
-    container, document = grounded
+    container = grounded.container
     requirement = container.create_requirement.execute(
         CreateRequirementInput("XGPON bundle", "Order high-speed bundles."), FAKE_ACTORS[0]
     )
@@ -247,9 +224,7 @@ def test_reference_withdrawal_during_answer_reanalysis_cannot_commit(
 
     def withdrawing(*args: object, **kwargs: object) -> RequirementAnalysisCandidate:
         result = original(*args, **kwargs)  # type: ignore[arg-type]
-        container.document_library.withdraw(
-            document.id, document.version, FAKE_ACTORS[0], "Retired"
-        )
+        grounded.withdraw()
         return result
 
     monkeypatch.setattr(FakeRequirementAnalyzer, "analyze", withdrawing)
@@ -267,9 +242,9 @@ def test_reference_withdrawal_during_answer_reanalysis_cannot_commit(
 
 
 def test_owner_applicability_roundtrip_and_withdrawal(
-    grounded: tuple[Container, LibraryView],
+    grounded: Grounded,
 ) -> None:
-    container, document = grounded
+    container = grounded.container
     requirement = container.create_requirement.execute(
         CreateRequirementInput(
             title="High-speed bundles",
@@ -313,9 +288,7 @@ def test_owner_applicability_roundtrip_and_withdrawal(
     assert decided.reference_evidence == proposal.reference_evidence
     assert decided.decisions[-1].rationale
     assert analysis_from_payload(analysis_to_payload(workspace.analysis)) == workspace.analysis
-    container.document_library.withdraw(
-        document.id, document.version, FAKE_ACTORS[0], "Policy revoked"
-    )
+    grounded.withdraw()
     current = container.analysis_collaboration.workspace(requirement.id)
     assert proposal.id.value in current.stale_reference_proposal_ids
     assert current.analysis.intent_proposals == workspace.analysis.intent_proposals
@@ -338,21 +311,13 @@ def test_owner_applicability_roundtrip_and_withdrawal(
 
 
 @pytest.mark.parametrize("bad", ["blank", "citation", "empty", "provider"])
-def test_reference_adapter_rejects_unusable_output(
-    grounded: tuple[Container, LibraryView], bad: str
-) -> None:
-    container, _ = grounded
+def test_reference_adapter_rejects_unusable_output(grounded: Grounded, bad: str) -> None:
+    container = grounded.container
     requirement = container.create_requirement.execute(
         CreateRequirementInput("Bundles", "Order high-speed bundles."), FAKE_ACTORS[0]
     )
-    evidence = tuple(
-        ReferenceEvidence(
-            container.reference_knowledge.citation(chunk),
-            chunk.context_text,
-            chunk.context_locations,
-        )
-        for chunk in container.reference_knowledge.search("XGPON")
-    )
+    evidence = grounded.library.search_evidence("XGPON")
+    assert evidence
     transport = Mock()
     transport.model = "test"
     transport.parse.return_value = ReferenceOutput(
@@ -388,26 +353,24 @@ def test_reference_adapter_rejects_unusable_output(
     assert "surrounding_approved_context" in transport.parse.call_args.kwargs["user_prompt"]
 
 
-def test_tampered_citation_is_not_current(grounded: tuple[Container, LibraryView]) -> None:
-    container, _ = grounded
-    citation = container.reference_knowledge.citation(
-        container.reference_knowledge.search("XGPON")[0]
-    )
-    container.reference_knowledge.require_current((citation,))
+def test_tampered_citation_is_not_current(grounded: Grounded) -> None:
+    container = grounded.container
+    citation = grounded.library.search_evidence("XGPON")[0].citation
+    container.reference_currency.require_current((citation,))
     with pytest.raises(RequirementAnalysisConflictError):
-        container.reference_knowledge.require_current(
+        container.reference_currency.require_current(
             (replace(citation, excerpt="X" * len(citation.excerpt)),)
         )
 
 
 def test_withdrawal_during_reference_generation_cannot_persist(
-    grounded: tuple[Container, LibraryView],
+    grounded: Grounded,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from smb_requirement_agent.application.ports.reference_grounding import ReferenceProposalResult
     from smb_requirement_agent.infrastructure.llm.reference_proposals import FakeReferenceProposer
 
-    container, document = grounded
+    container = grounded.container
     requirement = container.create_requirement.execute(
         CreateRequirementInput("High-speed bundles", "Order high-speed bundles through BCRM."),
         FAKE_ACTORS[0],
@@ -416,9 +379,7 @@ def test_withdrawal_during_reference_generation_cannot_persist(
 
     def withdrawing(*args: object, **kwargs: object) -> ReferenceProposalResult:
         result = original(*args, **kwargs)  # type: ignore[arg-type]
-        container.document_library.withdraw(
-            document.id, document.version, FAKE_ACTORS[0], "Revoked"
-        )
+        grounded.withdraw()
         return result
 
     monkeypatch.setattr(FakeReferenceProposer, "propose", withdrawing)
@@ -429,13 +390,13 @@ def test_withdrawal_during_reference_generation_cannot_persist(
 
 
 def test_confirmed_reference_withdrawal_blocks_generation_and_preserves_history(
-    grounded: tuple[Container, LibraryView],
+    grounded: Grounded,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from smb_requirement_agent.application.ports.epic_generator import EpicCandidate
     from smb_requirement_agent.infrastructure.llm.fake_epic_generator import FakeEpicGenerator
 
-    container, document = grounded
+    container = grounded.container
     requirement = container.create_requirement.execute(
         CreateRequirementInput(
             "High-speed bundles", "Order high-speed bundles.", desired_outcome="Eligible ordering"
@@ -463,9 +424,7 @@ def test_confirmed_reference_withdrawal_blocks_generation_and_preserves_history(
 
     def withdrawing(*args: object, **kwargs: object) -> EpicCandidate:
         result = original(*args, **kwargs)  # type: ignore[arg-type]
-        container.document_library.withdraw(
-            document.id, document.version, FAKE_ACTORS[0], "Revoked"
-        )
+        grounded.withdraw()
         return result
 
     monkeypatch.setattr(FakeEpicGenerator, "generate", withdrawing)
@@ -480,14 +439,3 @@ def test_confirmed_reference_withdrawal_blocks_generation_and_preserves_history(
         next(p for p in reopened.analysis.intent_proposals if p.id == proposal.id).decisions
         == next(p for p in confirmed.intent_proposals if p.id == proposal.id).decisions
     )
-
-
-def test_changed_index_identity_is_explicitly_unavailable(
-    grounded: tuple[Container, LibraryView],
-) -> None:
-    from smb_requirement_agent.application.errors import KnowledgeGenerationError
-
-    container, _ = grounded
-    container.reference_knowledge.identity = "different-generation"
-    with pytest.raises(KnowledgeGenerationError, match="another index generation"):
-        container.reference_knowledge.search("XGPON")

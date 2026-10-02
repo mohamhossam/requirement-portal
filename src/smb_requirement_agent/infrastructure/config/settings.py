@@ -193,7 +193,6 @@ class Settings:
     oidc_unknown_key_ttl_seconds: float = DEFAULT_OIDC_UNKNOWN_KEY_TTL_SECONDS
     oidc_unknown_key_cache_size: int = DEFAULT_OIDC_UNKNOWN_KEY_CACHE_SIZE
     oidc_roles_claim: str = "roles"
-    knowledge_evaluation_approved: bool = False
     ai_job_worker_concurrency: int = DEFAULT_AI_JOB_WORKER_CONCURRENCY
     ai_job_poll_interval_seconds: float = DEFAULT_AI_JOB_POLL_INTERVAL_SECONDS
     ai_job_lease_seconds: float = DEFAULT_AI_JOB_LEASE_SECONDS
@@ -308,9 +307,6 @@ class Settings:
         raw_oidc_jwks_ttl = os.getenv("OIDC_JWKS_TTL_SECONDS", "").strip()
         raw_oidc_unknown_ttl = os.getenv("OIDC_UNKNOWN_KEY_TTL_SECONDS", "").strip()
         raw_oidc_unknown_cache = os.getenv("OIDC_UNKNOWN_KEY_CACHE_SIZE", "").strip()
-        raw_knowledge_evaluation = (
-            os.getenv("KNOWLEDGE_EVALUATION_APPROVED", "false").strip().lower()
-        )
         raw_debug_trace = os.getenv("DEBUG_TRACE_ENABLED", "false").strip().lower()
         raw_api_workers = os.getenv("API_BACKGROUND_WORKERS", "true").strip().lower()
         raw_pool_min = os.getenv("DATABASE_POOL_MIN_SIZE", "").strip()
@@ -319,7 +315,6 @@ class Settings:
         for name, value in (
             ("DEBUG_TRACE_ENABLED", raw_debug_trace),
             ("API_BACKGROUND_WORKERS", raw_api_workers),
-            ("KNOWLEDGE_EVALUATION_APPROVED", raw_knowledge_evaluation),
         ):
             if value not in {"true", "false"}:
                 raise ConfigurationError(f"{name} must be true or false.")
@@ -523,7 +518,6 @@ class Settings:
             oidc_unknown_key_ttl_seconds=oidc_unknown_ttl,
             oidc_unknown_key_cache_size=oidc_unknown_cache,
             oidc_roles_claim=os.getenv("OIDC_ROLES_CLAIM", "roles").strip(),
-            knowledge_evaluation_approved=raw_knowledge_evaluation == "true",
             ai_job_worker_concurrency=job_concurrency,
             ai_job_poll_interval_seconds=job_poll,
             ai_job_lease_seconds=job_lease,

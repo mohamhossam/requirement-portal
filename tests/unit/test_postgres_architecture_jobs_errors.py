@@ -1,4 +1,4 @@
-"""The architecture job queue reports storage failures as `PersistenceError`.
+"""The requirement mapping job queue reports storage failures as `PersistenceError`.
 
 A driver error must never escape as a raw `psycopg` exception, and a stored row
 the code cannot interpret must fail loudly rather than become a wrong job. The
@@ -20,6 +20,7 @@ from smb_requirement_agent.application.ports.architecture_jobs import (
     ArchitectureJob,
     ArchitectureJobKind,
     ArchitectureJobStatus,
+    MappingJobInput,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_architecture_jobs import (
     PostgresArchitectureJobs,
@@ -27,8 +28,9 @@ from smb_requirement_agent.infrastructure.persistence.postgres_architecture_jobs
 from smb_requirement_agent.infrastructure.persistence.postgres_values import DbConnection
 
 NOW = datetime(2026, 9, 25, 12, tzinfo=UTC)
+KEY = MappingJobInput("release-1", "fingerprint", "embedding", "reasoning").key
 JOB = ArchitectureJob(
-    "job-1", ArchitectureJobKind.INDEX, "draft-1", "1", "editor", ArchitectureJobStatus.QUEUED
+    "job-1", ArchitectureJobKind.MAPPING, "req-1", KEY, "editor", ArchitectureJobStatus.QUEUED
 )
 
 
@@ -79,9 +81,9 @@ def test_a_driver_error_becomes_a_persistence_error(
 def _row(**changes: object) -> tuple[object, ...]:
     row: dict[str, object] = {
         "id": "job-1",
-        "kind": "index",
-        "subject": "draft-1",
-        "fingerprint": "1",
+        "kind": "mapping",
+        "subject": "req-1",
+        "fingerprint": KEY,
         "actor": "editor",
         "status": "queued",
         "attempts": 0,
@@ -97,6 +99,8 @@ def _row(**changes: object) -> tuple[object, ...]:
     [
         pytest.param(_row(attempts="1"), "attempt count", id="attempts"),
         pytest.param(_row(kind="reindex"), "kind or status", id="kind"),
+        # The catalogue's own jobs left with the catalogue (ADR-0099).
+        pytest.param(_row(kind="index"), "kind or status", id="catalogue kind"),
         pytest.param(_row(status="paused"), "kind or status", id="status"),
     ],
 )
@@ -108,6 +112,8 @@ def test_an_uninterpretable_stored_row_fails_loudly(row: tuple[object, ...], mes
 def test_a_stored_row_maps_to_a_job() -> None:
     job = PostgresArchitectureJobs._job(_row(status="running", attempts=2, lease=NOW))
 
+    assert job.kind is ArchitectureJobKind.MAPPING
+    assert MappingJobInput.from_key(job.fingerprint).release_id == "release-1"
     assert job.status is ArchitectureJobStatus.RUNNING
     assert job.attempts == 2
     assert job.lease_until == NOW

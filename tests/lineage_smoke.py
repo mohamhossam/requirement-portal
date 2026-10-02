@@ -10,13 +10,10 @@ from unittest.mock import patch
 
 from fastapi import FastAPI
 from psycopg.conninfo import conninfo_to_dict
+from smb_kernel.documents.scanner import ClamAvDocumentScanner, OfflineDocumentScanner
 
 from smb_requirement_agent.infrastructure.config.options import LLMProvider, PersistenceProvider
 from smb_requirement_agent.infrastructure.config.settings import PersistenceSettings, Settings
-from smb_requirement_agent.infrastructure.documents.library_worker import (
-    ClamAvDocumentScanner,
-    OfflineDocumentScanner,
-)
 from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
 from smb_requirement_agent.interfaces.api.composition.operations import build_projection_rebuild
 from smb_requirement_agent.interfaces.api.container import Container, build_container

@@ -1,7 +1,6 @@
-"""Architecture job state transitions against PostgreSQL.
+"""Architecture mapping job state transitions against PostgreSQL (`requirement_mapping_jobs`).
 
-The happy path (enqueue, claim, heartbeat, finish) runs in
-`test_postgres_architecture.py`. These cover what an operator relies on when
+These cover what an operator relies on when
 it goes wrong: a job that keeps failing stops being retried, a failed job can
 be retried by hand, a queued job can be cancelled, a re-enqueued failure is
 queued again, and a transition from the wrong state is a conflict.
@@ -42,7 +41,9 @@ def jobs() -> Iterator[PostgresArchitectureJobs]:
     # `claim` takes the oldest claimable job in the table, so start with none.
     # Finished jobs are left alone; only claimable ones would interfere.
     with connector.connection() as connection:
-        connection.execute("DELETE FROM architecture_jobs WHERE status IN ('queued', 'running')")
+        connection.execute(
+            "DELETE FROM requirement_mapping_jobs WHERE status IN ('queued', 'running')"
+        )
     yield PostgresArchitectureJobs(connector)
 
 
@@ -50,10 +51,10 @@ def _enqueue(jobs: PostgresArchitectureJobs) -> ArchitectureJob:
     return jobs.enqueue(
         ArchitectureJob(
             uuid4().hex,
-            ArchitectureJobKind.INDEX,
-            f"draft-{uuid4().hex}",
-            "1",
-            "knowledge-editor",
+            ArchitectureJobKind.MAPPING,
+            f"requirement-{uuid4().hex}",
+            "release-1|fingerprint|embedding|reasoning",
+            "fake-owner",
             ArchitectureJobStatus.QUEUED,
         )
     )
