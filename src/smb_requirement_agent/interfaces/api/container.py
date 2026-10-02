@@ -184,6 +184,7 @@ from smb_requirement_agent.application.use_cases.identity_access import (
     ResolveCurrentActor,
     SearchKnownActors,
 )
+from smb_requirement_agent.application.use_cases.internal_reads import InternalReads
 from smb_requirement_agent.application.use_cases.invalidate_approval_workflow import (
     InvalidateApprovalWorkflow,
 )
@@ -322,6 +323,7 @@ class Container:
     document_library: DocumentLibrary
     attachment_ingestion: AttachmentIngestion
     source_impact: SourceImpactReview
+    internal_reads: InternalReads
     library_governance: LibraryGovernance
     unified_knowledge_search: UnifiedKnowledgeSearch
     reference_knowledge: ReferenceKnowledge
@@ -662,6 +664,13 @@ def _build_container(
         document_library=documents.library,
         attachment_ingestion=documents.attachment_ingestion,
         source_impact=knowledge.source_impact,
+        internal_reads=InternalReads(
+            persistence.dependency_index,
+            knowledge.source_impact,
+            persistence.actor_directory,
+            persistence.architecture_mapping_stats,
+            persistence.transaction_manager,
+        ),
         library_governance=documents.library_governance,
         unified_knowledge_search=knowledge.unified_search,
         reference_knowledge=knowledge.reference_knowledge,

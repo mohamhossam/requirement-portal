@@ -10,9 +10,10 @@ from time import perf_counter
 
 from fastapi import FastAPI, Request, Response
 from smb_kernel.http.body_limit import BodyLimits, RequestBodyLimit
+from smb_kernel.http.service_auth import INTERNAL_PREFIX, InternalRouteGuard, ServiceTokenVerifier
 from smb_kernel.observability.correlation import correlation_scope
 from starlette.middleware.base import RequestResponseEndpoint
-from starlette.types import Scope
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.interfaces.api.error_handlers import register_error_handlers
@@ -42,6 +43,7 @@ from smb_requirement_agent.interfaces.api.routes.identity import (
 from smb_requirement_agent.interfaces.api.routes.identity import (
     router as identity_router,
 )
+from smb_requirement_agent.interfaces.api.routes.internal import router as internal_router
 from smb_requirement_agent.interfaces.api.routes.jobs import (
     notification_router,
 )
@@ -72,6 +74,42 @@ def _route_template(request: Request) -> str:
     """The matched route's path template: a bounded metric label, free of identifiers."""
     route = request.scope.get("route")
     return str(getattr(route, "path", "unmatched"))
+
+
+class InternalAccess:
+    """Service-token access to /internal (ADR-0099), configured per deployment.
+
+    With no KNOWLEDGE_SERVICE_TOKEN the internal API is not served: every
+    /internal path answers 404. With one, the kernel's guard admits only that
+    token, naming the caller "knowledge".
+    """
+
+    def __init__(self, app: ASGIApp) -> None:
+        self._app = app
+        self._guards: dict[str, InternalRouteGuard] = {}
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        path: str = scope.get("path", "")
+        internal = path == INTERNAL_PREFIX or path.startswith(INTERNAL_PREFIX + "/")
+        if scope["type"] != "http" or not internal:
+            await self._app(scope, receive, send)
+            return
+        token = scope["app"].state.container.settings.knowledge_service_token
+        if token is None:
+            await send(
+                {
+                    "type": "http.response.start",
+                    "status": 404,
+                    "headers": [(b"content-type", b"application/json")],
+                }
+            )
+            await send({"type": "http.response.body", "body": b'{"detail":"Not Found"}'})
+            return
+        guard = self._guards.get(token)
+        if guard is None:
+            guard = InternalRouteGuard(self._app, ServiceTokenVerifier({"knowledge": token}))
+            self._guards = {token: guard}
+        await guard(scope, receive, send)
 
 
 def _body_limits(scope: Scope) -> BodyLimits:
@@ -117,6 +155,7 @@ def create_app(container_factory: Callable[[], Container] = build_container) -> 
     # Registered before the trace middleware, so it runs inside it: a refused
     # body still gets a correlation ID, a log line and a metric.
     application.add_middleware(RequestBodyLimit, limits=_body_limits)
+    application.add_middleware(InternalAccess)
 
     @application.middleware("http")
     async def trace_request(request: Request, call_next: RequestResponseEndpoint) -> Response:
@@ -215,6 +254,7 @@ def create_app(container_factory: Callable[[], Container] = build_container) -> 
         library_router,
         search_router,
         source_impact_router,
+        internal_router,
         documents_router,
         analysis_router,
         epic_router,

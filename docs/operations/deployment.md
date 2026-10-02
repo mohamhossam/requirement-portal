@@ -224,6 +224,22 @@ Requirement.
 The count is kept per API process. With `N` API replicas an actor can reach `N`
 times the limit. Enforce an exact global ceiling at a gateway if you need one.
 
+## Internal API
+
+The knowledge service reads a few things from this service over `/internal`
+(ADR-0099):
+- a document's dependents and impact, for its owner;
+- mapping counts per catalogue release;
+- actor details for ownership transfers.
+
+- **Off by default.** Every `/internal` path answers 404 until
+  `KNOWLEDGE_SERVICE_TOKEN` is set.
+- **Turning it on.** Set it to a random secret of 32 characters or more, and give the same
+  value to the knowledge service. Requests must then carry `Authorization: Bearer <token>`;
+  no user sign-in is involved.
+- **Never public.** The bundled nginx answers 404 for `/api/internal` whatever the token
+  holds, and the CI deployment job checks it.
+
 ## Image updates
 
 - **Pinning.** Base and service images are pinned by digest. Dependabot opens
