@@ -53,3 +53,13 @@ class ActiveArchitectureReleasePort(Protocol):
     """Which catalogue release new mappings pin. Requirement work reads only its id."""
 
     def active_release_id(self) -> str: ...
+
+
+class ArchitectureReleaseStatePort(Protocol):
+    """Requirement work's local copy of which catalogue release is active (ADR-0099)."""
+
+    def active_release_id(self) -> str | None: ...
+
+    def apply(self, seq: int, release_id: str) -> None:
+        """Record `release_id` unless a newer activation was already applied."""
+        ...

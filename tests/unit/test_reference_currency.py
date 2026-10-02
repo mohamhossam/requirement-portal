@@ -10,12 +10,17 @@ from threading import RLock
 import pytest
 from smb_kernel.time.fixed import FixedClock
 
-from smb_requirement_agent.application.errors import RequirementAnalysisConflictError
+from smb_requirement_agent.application.errors import (
+    PersistenceError,
+    RequirementAnalysisConflictError,
+)
 from smb_requirement_agent.application.ports.knowledge_events import (
+    ARCHITECTURE_RELEASE_ACTIVATED,
     REFERENCE_DOCUMENT_CHANGED,
     KnowledgeEvent,
 )
 from smb_requirement_agent.application.use_cases.reference_currency import (
+    CurrentArchitectureRelease,
     ProjectKnowledgeEvents,
     ReferenceCurrency,
 )
@@ -25,6 +30,9 @@ from smb_requirement_agent.domain.document.reference import (
     PublishedReference,
     ReferenceDocumentState,
     normalize_search,
+)
+from smb_requirement_agent.infrastructure.persistence.architecture_release_state import (
+    InMemoryArchitectureReleaseState,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_transaction import (
     InMemoryTransactionManager,
@@ -112,7 +120,9 @@ def _currency() -> tuple[
     events = InMemoryKnowledgeEvents(lock)
     transactions = InMemoryTransactionManager(lambda _: None, lock)
     transactions.enroll(states, events)
-    projector = ProjectKnowledgeEvents(events, states, transactions, FixedClock(NOW))
+    projector = ProjectKnowledgeEvents(
+        events, states, InMemoryArchitectureReleaseState(lock), transactions, FixedClock(NOW)
+    )
     return ReferenceCurrency(states, transactions), states, events, projector
 
 
@@ -167,7 +177,11 @@ def test_the_cursor_waits_at_a_fresh_gap_and_steps_over_an_old_one(
     _, states, _, _ = _currency()
     transactions = InMemoryTransactionManager(lambda _: None, RLock())
     projector = ProjectKnowledgeEvents(
-        _GappedOutbox(written), states, transactions, FixedClock(NOW)
+        _GappedOutbox(written),
+        states,
+        InMemoryArchitectureReleaseState(RLock()),
+        transactions,
+        FixedClock(NOW),
     )
 
     projector.project_next()
@@ -175,3 +189,29 @@ def test_the_cursor_waits_at_a_fresh_gap_and_steps_over_an_old_one(
     # Every visible event is applied either way; only the cursor waits.
     assert states.get("doc-1") is not None
     assert states.cursor() == cursor
+
+
+def test_the_active_release_follows_activation_events_and_never_goes_back() -> None:
+    lock = RLock()
+    events = InMemoryKnowledgeEvents(lock)
+    releases = InMemoryArchitectureReleaseState(lock)
+    transactions = InMemoryTransactionManager(lambda _: None, lock)
+    transactions.enroll(events, releases)
+    projector = ProjectKnowledgeEvents(
+        events, InMemoryReferencePublications(lock), releases, transactions, FixedClock(NOW)
+    )
+    current = CurrentArchitectureRelease(releases)
+    with pytest.raises(PersistenceError, match="No active architecture release"):
+        current.active_release_id()
+
+    events.append(ARCHITECTURE_RELEASE_ACTIVATED, "r1", {"release_id": "r1"})
+    events.append(ARCHITECTURE_RELEASE_ACTIVATED, "r2", {"release_id": "r2"})
+    projector.drain()
+    assert current.active_release_id() == "r2"
+    releases.apply(1, "r1")
+    assert current.active_release_id() == "r2"
+
+    events.append(ARCHITECTURE_RELEASE_ACTIVATED, "r3", {"release": "malformed"})
+    with pytest.raises(PersistenceError, match="malformed"):
+        projector.drain()
+    assert current.active_release_id() == "r2"

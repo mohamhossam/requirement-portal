@@ -10,8 +10,15 @@ from datetime import timedelta
 
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.errors import RequirementAnalysisConflictError
+from smb_requirement_agent.application.errors import (
+    PersistenceError,
+    RequirementAnalysisConflictError,
+)
+from smb_requirement_agent.application.ports.architecture_knowledge import (
+    ArchitectureReleaseStatePort,
+)
 from smb_requirement_agent.application.ports.knowledge_events import (
+    ARCHITECTURE_RELEASE_ACTIVATED,
     REFERENCE_DOCUMENT_CHANGED,
     KnowledgeEventOutboxPort,
 )
@@ -130,6 +137,7 @@ class ProjectKnowledgeEvents:
         self,
         outbox: KnowledgeEventOutboxPort,
         states: ReferencePublicationStatePort,
+        releases: ArchitectureReleaseStatePort,
         transactions: TransactionManagerPort,
         clock: ClockPort,
         batch: int = 100,
@@ -137,6 +145,7 @@ class ProjectKnowledgeEvents:
     ) -> None:
         self._outbox = outbox
         self._states = states
+        self._releases = releases
         self._transactions = transactions
         self._clock = clock
         self._batch = batch
@@ -151,6 +160,8 @@ class ProjectKnowledgeEvents:
                     self._states.apply(
                         event.seq, ReferenceDocumentState.from_payload(event.payload)
                     )
+                elif event.kind == ARCHITECTURE_RELEASE_ACTIVATED:
+                    self._releases.apply(event.seq, _release_id(event.payload))
             reached = cursor
             now = self._clock.now()
             for event in events:
@@ -160,3 +171,28 @@ class ProjectKnowledgeEvents:
             if reached > cursor:
                 self._states.advance(reached)
             return reached > cursor
+
+    def drain(self) -> None:
+        """Project until caught up, or until the cursor waits at an in-flight gap."""
+        for _ in range(1000):
+            if not self.project_next():
+                return
+
+
+class CurrentArchitectureRelease:
+    """The active catalogue release, as requirement work's local copy records it."""
+
+    def __init__(self, releases: ArchitectureReleaseStatePort) -> None:
+        self._releases = releases
+
+    def active_release_id(self) -> str:
+        release_id = self._releases.active_release_id()
+        if release_id is None:
+            raise PersistenceError("No active architecture release is known yet.")
+        return release_id
+
+
+def _release_id(payload: object) -> str:
+    if isinstance(payload, dict) and isinstance(payload.get("release_id"), str):
+        return str(payload["release_id"])
+    raise PersistenceError("Architecture release event is malformed.")

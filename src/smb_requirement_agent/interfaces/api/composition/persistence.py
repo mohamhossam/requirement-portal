@@ -34,6 +34,9 @@ from smb_requirement_agent.application.ports.analysis_audit_repository import (
 from smb_requirement_agent.application.ports.architecture_jobs import (
     ArchitectureJobRepositoryPort,
 )
+from smb_requirement_agent.application.ports.architecture_knowledge import (
+    ArchitectureReleaseStatePort,
+)
 from smb_requirement_agent.application.ports.architecture_knowledge_repository import (
     ArchitectureKnowledgeRepositoryPort,
 )
@@ -140,6 +143,10 @@ from smb_requirement_agent.infrastructure.persistence.activity_projection import
 from smb_requirement_agent.infrastructure.persistence.architecture_mapping_stats import (
     PostgresArchitectureMappingStats,
     RepositoryArchitectureMappingStats,
+)
+from smb_requirement_agent.infrastructure.persistence.architecture_release_state import (
+    InMemoryArchitectureReleaseState,
+    PostgresArchitectureReleaseState,
 )
 from smb_requirement_agent.infrastructure.persistence.attachment_ingestions import (
     InMemoryAttachmentIngestions,
@@ -281,6 +288,9 @@ from smb_requirement_agent.infrastructure.persistence.reference_publications imp
     InMemoryReferencePublications,
     PostgresReferencePublications,
 )
+from smb_requirement_agent.infrastructure.persistence.relaying_architecture_knowledge import (
+    RelayingArchitectureKnowledgeRepository,
+)
 from smb_requirement_agent.infrastructure.persistence.requirement_indexing import (
     MemoryRequirementIndexProgress,
     PostgresRequirementIndexProgress,
@@ -316,6 +326,24 @@ class RequirementWorklistWiring:
 
     reader: RequirementWorklistReader
     projection: CurrentWorklistProjectionPort
+
+
+class KnowledgeRelay:
+    """Drains the knowledge outbox into requirement work's local copies after a write.
+
+    The projector is built after persistence, so it is bound later; until then
+    a call does nothing and the polling worker catches up (ADR-0099).
+    """
+
+    def __init__(self) -> None:
+        self._target: Callable[[], None] | None = None
+
+    def bind(self, target: Callable[[], None]) -> None:
+        self._target = target
+
+    def __call__(self) -> None:
+        if self._target is not None:
+            self._target()
 
 
 @dataclass(frozen=True)
@@ -355,6 +383,8 @@ class PersistenceAdapters:
     library_repository: DocumentLibraryPort
     knowledge_events: KnowledgeEventOutboxPort
     reference_publications: ReferencePublicationStatePort
+    architecture_releases: ArchitectureReleaseStatePort
+    knowledge_relay: KnowledgeRelay
     attachment_ingestions: AttachmentIngestionRepositoryPort
     reference_index: ReferenceIndexPort
     revision_repository: BreakdownRepositoryPort
@@ -411,10 +441,12 @@ def _postgres(
     requirement_draft_repository = PostgresRequirementDraftRepository(postgres)
     document_repository = PostgresDocumentRepository(postgres)
     document_storage = PostgresDocumentStorage(postgres)
-    architecture_repository = (
+    knowledge_relay = KnowledgeRelay()
+    architecture_repository = RelayingArchitectureKnowledgeRepository(
         postgres_architecture_knowledge.PostgresArchitectureKnowledgeRepository(
             connector, seed_knowledge()
-        )
+        ),
+        knowledge_relay,
     )
     organisation_repository = postgres_organisation.PostgresOrganisationRepository(
         connector, resolved_clock
@@ -429,6 +461,7 @@ def _postgres(
     mapping_job_repository = PostgresArchitectureJobs(connector, table="requirement_mapping_jobs")
     knowledge_events: KnowledgeEventOutboxPort = PostgresKnowledgeEvents(postgres)
     reference_publications: ReferencePublicationStatePort = PostgresReferencePublications(postgres)
+    architecture_releases: ArchitectureReleaseStatePort = PostgresArchitectureReleaseState(postgres)
     library_repository: DocumentLibraryPort = PublishingDocumentLibrary(
         PostgresDocumentLibrary(postgres), knowledge_events, reference_publications.apply
     )
@@ -529,6 +562,8 @@ def _postgres(
         library_repository=library_repository,
         knowledge_events=knowledge_events,
         reference_publications=reference_publications,
+        architecture_releases=architecture_releases,
+        knowledge_relay=knowledge_relay,
         attachment_ingestions=attachment_ingestions,
         reference_index=reference_index,
         revision_repository=revision_repository,
@@ -555,7 +590,12 @@ def _memory(
     requirement_draft_repository = InMemoryRequirementDraftRepository()
     document_repository = InMemoryDocumentRepository()
     document_storage = InMemoryDocumentStorage(lock=memory_lock)
-    architecture_repository = InMemoryArchitectureKnowledgeRepository(seed_knowledge())
+    memory_events = InMemoryKnowledgeEvents(memory_lock)
+    memory_releases = InMemoryArchitectureReleaseState(memory_lock)
+    knowledge_relay = KnowledgeRelay()
+    architecture_repository = RelayingArchitectureKnowledgeRepository(
+        InMemoryArchitectureKnowledgeRepository(seed_knowledge(), memory_events), knowledge_relay
+    )
     organisation_repository = InMemoryOrganisationRepository(resolved_clock)
     sample_requirements = InMemorySampleRequirements()
     catalogue_candidates = InMemoryCatalogueCandidates()
@@ -567,10 +607,10 @@ def _memory(
     memory_library = InMemoryDocumentLibrary(memory_lock)
     memory_attachments = InMemoryAttachmentIngestions(memory_lock)
     attachment_ingestions = memory_attachments
-    memory_events = InMemoryKnowledgeEvents(memory_lock)
     memory_publications = InMemoryReferencePublications(memory_lock)
     knowledge_events = memory_events
     reference_publications = memory_publications
+    architecture_releases = memory_releases
     library_repository = PublishingDocumentLibrary(
         memory_library, memory_events, memory_publications.apply
     )
@@ -674,6 +714,7 @@ def _memory(
         memory_library,
         memory_events,
         memory_publications,
+        memory_releases,
         memory_attachments,
         memory_reference_index,
         base_requirements,
@@ -748,6 +789,8 @@ def _memory(
         library_repository=library_repository,
         knowledge_events=knowledge_events,
         reference_publications=reference_publications,
+        architecture_releases=architecture_releases,
+        knowledge_relay=knowledge_relay,
         attachment_ingestions=attachment_ingestions,
         reference_index=reference_index,
         revision_repository=revision_repository,

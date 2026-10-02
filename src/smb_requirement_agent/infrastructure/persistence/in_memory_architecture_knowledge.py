@@ -3,6 +3,10 @@
 from datetime import UTC, datetime
 from threading import RLock
 
+from smb_requirement_agent.application.ports.knowledge_events import (
+    ARCHITECTURE_RELEASE_ACTIVATED,
+    KnowledgeEventOutboxPort,
+)
 from smb_requirement_agent.domain.architecture.knowledge import (
     ArchitectureKnowledge,
     KnowledgeAuditEvent,
@@ -13,13 +17,26 @@ from smb_requirement_agent.domain.architecture.knowledge import (
 
 
 class InMemoryArchitectureKnowledgeRepository:
-    def __init__(self, initial: ArchitectureKnowledge) -> None:
+    def __init__(
+        self,
+        initial: ArchitectureKnowledge,
+        events: KnowledgeEventOutboxPort | None = None,
+    ) -> None:
         self._lock = RLock()
+        self._outbox = events
         self._releases = {initial.id: initial}
         self._documents = {item.id: item for item in initial.documents}
         self._published_documents = set(self._documents)
         self._active_id = initial.id
         self._events: list[KnowledgeAuditEvent] = []
+        self._activated(initial.id)
+
+    def _activated(self, release_id: str) -> None:
+        """Report the new active release, as the PostgreSQL adapter does (ADR-0099)."""
+        if self._outbox is not None:
+            self._outbox.append(
+                ARCHITECTURE_RELEASE_ACTIVATED, release_id, {"release_id": release_id}
+            )
 
     def get(self, release_id: str) -> ArchitectureKnowledge | None:
         with self._lock:
@@ -72,6 +89,7 @@ class InMemoryArchitectureKnowledgeRepository:
             if release is None or release.status is not KnowledgeReleaseStatus.PUBLISHED:
                 raise KnowledgeConflictError("Only a published release can be activated.")
             self._active_id = release_id
+            self._activated(release_id)
             self._events.append(
                 KnowledgeAuditEvent(
                     release_id, actor_id, "activate", release.revision, rationale, datetime.now(UTC)
@@ -97,6 +115,7 @@ class InMemoryArchitectureKnowledgeRepository:
             self._releases[release.id] = release
             self._published_documents.update(item.id for item in release.documents)
             self._active_id = release.id
+            self._activated(release.id)
             self._events.append(
                 KnowledgeAuditEvent(
                     release.id,
