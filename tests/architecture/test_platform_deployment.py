@@ -88,11 +88,23 @@ def test_the_import_runs_only_on_request_after_both_schemas_exist() -> None:
     assert any("@postgres:5432/smb_requirements" in part for part in importer["command"])
 
 
-def test_the_edge_waits_for_both_apis() -> None:
+def test_the_edge_waits_for_both_apis_and_the_portal_app() -> None:
     depends = SERVICES["web"]["depends_on"]
 
     assert depends["api"] == {"condition": "service_healthy"}
     assert depends["knowledge-api"] == {"condition": "service_healthy"}
+    assert depends["knowledge-web"] == {"condition": "service_healthy"}
+
+
+def test_the_portal_app_comes_from_the_same_release_and_learns_the_issuer_at_start() -> None:
+    portal = SERVICES["knowledge-web"]
+
+    tag = SERVICES["knowledge-api"]["image"].split(":", 1)[1]
+    assert portal["image"] == f"ghcr.io/mohamhossam/knowledge-web:{tag}"
+    assert portal["environment"]["CSP_IDENTITY_ORIGINS"] == "${CSP_IDENTITY_ORIGINS:-}"
+    assert portal["read_only"] is True
+    assert "/etc/nginx/conf.d:uid=101,gid=101" in portal["tmpfs"]
+    assert "8080" in " ".join(portal["healthcheck"]["test"])
 
 
 def test_no_internal_route_passes_the_edge() -> None:

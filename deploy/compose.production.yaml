@@ -7,8 +7,8 @@
 #   docker compose -f deploy/compose.production.yaml up -d --build
 #
 # The browser reaches only `web` (port 8080; put TLS in front of it). It serves
-# requirement work at / and /api/, and the knowledge portal at /knowledge/ and
-# /knowledge-api/. The APIs, workers, databases, scanner and metrics ports stay
+# requirement work at / and /api/, and proxies the knowledge portal's app at
+# /knowledge/ (`knowledge-web`) and its API at /knowledge-api/. The APIs, workers, databases, scanner and metrics ports stay
 # on the private network, and neither service's /internal routes pass the edge.
 # See docs/operations/deployment.md for the process model, secrets and scaling.
 
@@ -270,6 +270,26 @@ services:
       knowledge-migrate:
         condition: service_completed_successfully
 
+  # The knowledge portal's browser app: nginx serving /knowledge/, from the same
+  # knowledge-portal release as the API. The issuer origins reach its page's
+  # Content-Security-Policy when the container starts.
+  knowledge-web:
+    image: ghcr.io/mohamhossam/knowledge-web:${KNOWLEDGE_IMAGE_TAG:-v0.1.0}
+    environment:
+      CSP_IDENTITY_ORIGINS: ${CSP_IDENTITY_ORIGINS:-}
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:uid=101,gid=101
+      - /etc/nginx/conf.d:uid=101,gid=101
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+
   web:
     image: requirement-platform/web:${IMAGE_TAG:-local}
     build:
@@ -292,6 +312,8 @@ services:
       api:
         condition: service_healthy
       knowledge-api:
+        condition: service_healthy
+      knowledge-web:
         condition: service_healthy
 
 # A fine-grained, read-only token for mohamhossam/platform-kernel, used only while

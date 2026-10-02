@@ -20,6 +20,7 @@ port other than 8080 while both run.
 | `requirement-platform/api` | `deploy/api/Dockerfile` | Four processes, each chosen by the container command: the **API** (`python -m smb_requirement_agent.interfaces.api.serve`); the **worker** (`python -m smb_requirement_agent.interfaces.worker`); **migrate** (`python -m smb_requirement_agent.infrastructure.persistence.migrate`); and **maintenance** (`python -m smb_requirement_agent.interfaces.maintenance`). |
 | `requirement-platform/web` | `deploy/web/Dockerfile` | nginx serving the built browser app, proxying `/api/` to the API, and `/knowledge-api/` and `/knowledge/` to the knowledge service. |
 | `ghcr.io/mohamhossam/knowledge-api` | knowledge-portal's release workflow, pinned by `KNOWLEDGE_IMAGE_TAG` | The knowledge service's four processes: `knowledge-api`, `knowledge-worker`, `knowledge-migrate` and the one-off `knowledge-import`. |
+| `ghcr.io/mohamhossam/knowledge-web` | the same release, same tag | `knowledge-web`: nginx serving the knowledge portal's browser app under `/knowledge/`. |
 
 Both images run as non-root users on read-only root filesystems. The backend
 image installs dependencies from `uv.lock` (`uv sync --locked --no-dev`).
@@ -41,9 +42,13 @@ image installs dependencies from `uv.lock` (`uv sync --locked --no-dev`).
   - The APIs, workers, both PostgreSQL servers, ClamAV and metrics ports stay on
     the private network.
   - `/internal` on either service answers 404 at the edge.
-  - `/knowledge/` is the knowledge portal's browser app, from its own image.
-    Until that image is deployed, it answers 503 with a page saying the portal
-    is not available.
+  - `/knowledge/` is the knowledge portal's browser app, served by
+    `knowledge-web`. While that container is down, it answers 503 with a page
+    saying the portal is not available, not a bare 502.
+  - `CSP_IDENTITY_ORIGINS` reaches both apps: it is built into the `web`
+    image, and `knowledge-web` reads it when it starts (its image is published
+    once, so it cannot be built in). Set it in `deploy/.env` and restart
+    `knowledge-web` when the issuer changes.
   - nginx passes its `$request_id` as `X-Request-ID`, so one ID links the edge
     log, the API's log line and any error body the browser receives.
 
@@ -81,7 +86,7 @@ CSP_IDENTITY_ORIGINS=https://login.example.com   # the OIDC issuer origin
 ```bash
 cp deploy/production.env.example deploy/production.env   # fill in every blank; git-ignored
 cp deploy/knowledge.env.example deploy/knowledge.env     # fill in every blank; git-ignored
-docker compose -f deploy/compose.production.yaml pull knowledge-api
+docker compose -f deploy/compose.production.yaml pull knowledge-api knowledge-web
 docker compose -f deploy/compose.production.yaml build
 docker compose -f deploy/compose.production.yaml run --rm maintenance
 docker compose -f deploy/compose.production.yaml up -d
@@ -181,7 +186,7 @@ docker compose -f deploy/compose.production.yaml up -d
 ```
 
 To move to a knowledge-portal release, change `KNOWLEDGE_IMAGE_TAG` and
-`pull knowledge-api` first. `up` re-runs `migrate` and `knowledge-migrate`
+`pull knowledge-api knowledge-web` first. `up` re-runs `migrate` and `knowledge-migrate`
 before recreating the APIs and workers. Run
 `maintenance` again only when a release's notes require it, and follow
 `production-readiness-maintenance.md`: stop the API and every worker first, and
@@ -380,8 +385,6 @@ code changed (ADR-0077).
 - **Backups.** Back up the `postgres_data` and `knowledge_postgres_data`
   volumes, or use managed PostgreSQL servers and point each service's
   `DATABASE_URL` at its own.
-- **The knowledge portal's browser app.** `/knowledge/` shows a "not available"
-  page until knowledge-portal publishes a web image and the manifest runs it as
-  `knowledge-web`.
+
 - **Identity.** `deploy/keycloak/` is a development identity provider, not a
   production one.

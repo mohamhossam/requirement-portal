@@ -222,7 +222,7 @@ jobs:
           REGISTRY_TOKEN: ${{ github.token }}
         run: |
           echo "$REGISTRY_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-          $COMPOSE pull knowledge-api
+          $COMPOSE pull knowledge-api knowledge-web
 
       - name: Build images
         run: $COMPOSE build
@@ -252,10 +252,15 @@ jobs:
             code=$(curl --silent --output /dev/null --write-out '%{http_code}' "http://127.0.0.1:8080$path")
             test "$code" = 404 || { echo "$path answered $code at the edge"; exit 1; }
           done
-          # The knowledge portal's browser app is not deployed yet: admins get a page saying so.
+          # The knowledge portal's browser app, under /knowledge/, client routes included.
+          curl --fail --silent http://127.0.0.1:8080/knowledge/ | grep -q '<title>Knowledge portal</title>'
+          curl --fail --silent http://127.0.0.1:8080/knowledge/library | grep -q '<title>Knowledge portal</title>'
+          # With the portal's app down, admins get a page saying so, not a bare 502.
+          $COMPOSE stop knowledge-web
           code=$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:8080/knowledge/)
           test "$code" = 503
           curl --silent http://127.0.0.1:8080/knowledge/ | grep -q "The knowledge portal is not available"
+          $COMPOSE start knowledge-web
 
       - name: Requirement work reads the knowledge service
         run: |
