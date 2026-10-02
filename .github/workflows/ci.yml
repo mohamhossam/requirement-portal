@@ -181,11 +181,20 @@ jobs:
         run: npm audit --audit-level=high
 
   deployment:
-    # Builds both images and brings the reference manifest up offline, so a
-    # broken Dockerfile, nginx template or entrypoint fails here, not in a deploy.
+    # Builds both images and brings the whole platform up offline, with the
+    # knowledge service's pinned release, so a broken Dockerfile, nginx template,
+    # entrypoint or service wiring fails here, not in a deploy.
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # The knowledge service's image (ghcr.io/mohamhossam/knowledge-api). The
+      # package must grant this repository read access (package settings).
+      packages: read
     env:
       POSTGRES_PASSWORD: ci-only
+      KNOWLEDGE_POSTGRES_PASSWORD: ci-only
+      REQUIREMENT_SERVICE_TOKEN: ci-only-requirement-service-token-0000
+      KNOWLEDGE_SERVICE_TOKEN: ci-only-knowledge-service-token-000000
       GRAFANA_ADMIN_PASSWORD: ci-only
       COMPOSE: docker compose -f deploy/compose.production.yaml
       # Passed to the image build as a BuildKit secret, never as a build arg.
@@ -201,13 +210,26 @@ jobs:
           LLM_PROVIDER=fake
           LIBRARY_SCAN_MODE=clamav
           SETTINGS
+          cat > deploy/knowledge.env <<'SETTINGS'
+          APP_ENV=development
+          IDENTITY_PROVIDER=fake
+          LLM_PROVIDER=fake
+          LIBRARY_SCAN_MODE=clamav
+          SETTINGS
+
+      - name: Pull the knowledge service's release
+        env:
+          REGISTRY_TOKEN: ${{ github.token }}
+        run: |
+          echo "$REGISTRY_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          $COMPOSE pull knowledge-api
 
       - name: Build images
         run: $COMPOSE build
 
       - name: Scan images for fixable HIGH and CRITICAL vulnerabilities
         run: |
-          for image in requirement-ai/api:local requirement-ai/web:local; do
+          for image in requirement-platform/api:local requirement-platform/web:local; do
             docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
               aquasec/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969 \
               image --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed \
@@ -217,22 +239,49 @@ jobs:
       - name: First install, then start
         run: |
           $COMPOSE run --rm maintenance
-          $COMPOSE up -d --wait web worker
+          $COMPOSE up -d --wait web worker knowledge-worker
 
       - name: Ready through the proxy, with security headers
         run: |
           curl --fail --silent http://127.0.0.1:8080/api/ready
+          curl --fail --silent http://127.0.0.1:8080/knowledge-api/ready
           curl --fail --silent --head http://127.0.0.1:8080/ | grep -i "frame-ancestors 'none'"
           curl --fail --silent http://127.0.0.1:8080/ | grep -q 'http-equiv="Content-Security-Policy"'
-          # Service-to-service routes never pass the edge (ADR-0099).
-          code=$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:8080/api/internal/actors/x)
-          test "$code" = 404
+          # Service-to-service routes never pass the edge, on either service (ADR-0099).
+          for path in /api/internal/architecture-mapping/stats /knowledge-api/internal/events; do
+            code=$(curl --silent --output /dev/null --write-out '%{http_code}' "http://127.0.0.1:8080$path")
+            test "$code" = 404 || { echo "$path answered $code at the edge"; exit 1; }
+          done
+          # The knowledge portal's browser app is not deployed yet: admins get a page saying so.
+          code=$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:8080/knowledge/)
+          test "$code" = 503
+          curl --silent http://127.0.0.1:8080/knowledge/ | grep -q "The knowledge portal is not available"
+
+      - name: Requirement work reads the knowledge service
+        run: |
+          # The knowledge database starts with its initial catalogue version, and
+          # requirement work learns of it through the knowledge event feed.
+          for attempt in $(seq 1 30); do
+            release=$(curl --fail --silent http://127.0.0.1:8080/api/architecture/active-release)
+            echo "$release" | grep -q '"id":"smb-source-reference-v1"' && break
+            sleep 2
+          done
+          echo "$release" | grep -q '"id":"smb-source-reference-v1"' ||
+            { echo "Requirement work never saw the active catalogue: $release"; exit 1; }
+          # And the knowledge service answers its own admins, through the edge.
+          curl --fail --silent -H "X-Fake-Actor-Id: fake-owner" \
+            http://127.0.0.1:8080/knowledge-api/library/documents > /dev/null
+          code=$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            -H "X-Fake-Actor-Id: fake-observer" http://127.0.0.1:8080/knowledge-api/library/documents)
+          test "$code" = 403
 
       - name: Model files are mounted read-only
         run: |
-          $COMPOSE exec -T api test -r /app/config/llm.yaml
-          $COMPOSE exec -T worker test -r /app/config/llm.yaml
+          for service in api worker knowledge-api knowledge-worker; do
+            $COMPOSE exec -T "$service" test -r /app/config/llm.yaml
+          done
           ! $COMPOSE exec -T api touch /app/config/written
+          ! $COMPOSE exec -T knowledge-api touch /app/config/written
 
       - name: Monitoring add-on scrapes both exporters and serves its dashboard
         run: |
@@ -241,12 +290,12 @@ jobs:
           $MONITORING exec -T prometheus promtool check config /etc/prometheus/prometheus.yml
           for attempt in $(seq 1 30); do
             up=$($MONITORING exec -T prometheus wget -qO- \
-              'http://127.0.0.1:9090/api/v1/query?query=count(up%7Bjob%3D~%22api%7Cworker%22%7D%3D%3D1)' |
+              'http://127.0.0.1:9090/api/v1/query?query=count(up%7Bjob%3D~%22api%7Cworker%7Cknowledge-api%7Cknowledge-worker%22%7D%3D%3D1)' |
               python3 -c 'import json, sys; r = json.load(sys.stdin)["data"]["result"]; print(r[0]["value"][1] if r else 0)')
-            [ "$up" = "2" ] && break
+            [ "$up" = "4" ] && break
             sleep 2
           done
-          [ "$up" = "2" ] || { echo "Prometheus scrapes $up of 2 exporters"; exit 1; }
+          [ "$up" = "4" ] || { echo "Prometheus scrapes $up of 4 exporters"; exit 1; }
           curl --fail --silent -u admin:ci-only \
             'http://127.0.0.1:3000/api/dashboards/uid/requirement-ai-overview' > /dev/null
           curl --fail --silent -u admin:ci-only \

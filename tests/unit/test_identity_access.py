@@ -402,3 +402,15 @@ def test_identity_provider_unavailability_maps_to_503() -> None:
             oidc_client.get("/requirements", headers={"Authorization": "Bearer token"}).status_code
             == 503
         )
+
+
+def test_offline_personas_match_the_knowledge_portal_admins(client: TestClient) -> None:
+    """The same two personas are knowledge admins in knowledge-portal's fake identity."""
+    admins = {
+        actor_id
+        for actor_id in ("fake-owner", "fake-reviewer", "fake-observer")
+        if "knowledge_admin"
+        in client.get("/identity/me", headers={"X-Fake-Actor-Id": actor_id}).json()["roles"]
+    }
+
+    assert admins == {"fake-owner", "fake-reviewer"}

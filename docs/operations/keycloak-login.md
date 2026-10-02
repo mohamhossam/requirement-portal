@@ -56,6 +56,33 @@ migration notes before changing that version.
    OIDC_PASSWORD_LOGIN_ENABLED=true
    ```
 
+5. Configure the knowledge service the same way, with its own audience and
+   client (ADR-0099):
+
+   ```dotenv
+   OIDC_ISSUER_URL=https://localhost:8443/realms/requirement-ai
+   OIDC_AUDIENCE=knowledge-api
+   OIDC_CLIENT_ID=knowledge-spa
+   ```
+
+   The `knowledge-spa` client signs in under `/knowledge/` on
+   `KNOWLEDGE_APP_ORIGIN`, which defaults to `REQUIREMENT_APP_ORIGIN`. Set it
+   when the portal's development server runs on another origin.
+
+### Knowledge admins
+
+Only actors with the realm role `knowledge_admin` open the knowledge portal, and
+only they see the link to it in requirement work. Add a person to the
+`knowledge-admins` group to grant it. Both browser clients put realm roles in
+the access token's `roles` claim, which is what `OIDC_ROLES_CLAIM` reads.
+
+A realm imported before this role, group and client existed does not gain them
+on restart. Add them in the admin console, matching
+`deploy/keycloak/realm-requirement-ai.json`: the `knowledge_admin` realm role,
+the `knowledge-admins` group, the `knowledge-spa` client with its
+`knowledge-api` audience mapper, and a `realm-roles` mapper (claim `roles`,
+access token only) on both clients.
+
 Compose maps `KEYCLOAK_ADMIN` and `KEYCLOAK_ADMIN_PASSWORD` to Keycloak's
 `KC_BOOTSTRAP_ADMIN_USERNAME` and `KC_BOOTSTRAP_ADMIN_PASSWORD` container settings.
 These create a temporary administrator on the initial startup; they do not reset
