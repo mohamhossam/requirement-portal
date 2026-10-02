@@ -10,14 +10,15 @@ from __future__ import annotations
 from collections.abc import Iterator
 from typing import Annotated
 
-from fastapi import Depends, Header, Request
+from fastapi import Depends, Header, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from smb_kernel.http.service_auth import CALLER_SCOPE_KEY
+from smb_kernel.identity.ports import IdentityCredential
+from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.errors import AuthenticationRequiredError
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.identity import Actor
-from smb_requirement_agent.application.ports.identity_provider import IdentityCredential
 from smb_requirement_agent.application.use_cases.activity_reporting import (
     GetOperationalReport,
     ListActivity,
@@ -54,6 +55,9 @@ from smb_requirement_agent.application.use_cases.architecture_mapping import (
 )
 from smb_requirement_agent.application.use_cases.architecture_mapping_impact import (
     ReportMappingImpact,
+)
+from smb_requirement_agent.application.use_cases.architecture_mapping_jobs import (
+    ArchitectureMappingJobs,
 )
 from smb_requirement_agent.application.use_cases.architecture_preview import (
     PreviewArchitectureImpact,
@@ -103,6 +107,7 @@ from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     SearchKnownActors,
 )
+from smb_requirement_agent.application.use_cases.internal_reads import InternalReads
 from smb_requirement_agent.application.use_cases.library_governance import LibraryGovernance
 from smb_requirement_agent.application.use_cases.organisation_catalogue import (
     ManageOrganisationCatalogue,
@@ -184,6 +189,18 @@ def get_current_actor(
 
 
 CurrentActorDep = Annotated[ActorProfile, Depends(get_current_actor)]
+
+
+def require_service_caller(request: Request) -> str:
+    """The platform service the middleware authenticated on an /internal route (ADR-0099).
+
+    The second wall: a route that somehow ran without the middleware's check
+    still refuses, rather than answering as nobody.
+    """
+    caller = request.scope.get(CALLER_SCOPE_KEY)
+    if not isinstance(caller, str) or not caller:
+        raise HTTPException(status_code=401, detail="An internal request needs a service token.")
+    return caller
 
 
 def require_authenticated_actor(actor: CurrentActorDep) -> None:
@@ -523,6 +540,10 @@ def get_source_impact(container: ContainerDep) -> SourceImpactReview:
     return container.source_impact
 
 
+def get_internal_reads(container: ContainerDep) -> InternalReads:
+    return container.internal_reads
+
+
 def get_knowledge_actor(actor: CurrentActorDep) -> Actor:
     """The role-bearing actor that architecture knowledge authorizes against."""
     return Actor(actor.id.value, actor.roles)
@@ -549,6 +570,10 @@ def get_decide_catalogue_candidates(container: ContainerDep) -> DecideCatalogueC
 
 def get_architecture_jobs(container: ContainerDep) -> ArchitectureJobs:
     return container.architecture_jobs
+
+
+def get_architecture_mapping_jobs(container: ContainerDep) -> ArchitectureMappingJobs:
+    return container.architecture_mapping_jobs
 
 
 def get_upload_knowledge_document(container: ContainerDep) -> UploadKnowledgeDocument:

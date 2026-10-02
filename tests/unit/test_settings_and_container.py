@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 import pytest
+from smb_kernel.observability.metrics import Metrics
 
 from smb_requirement_agent.infrastructure.config.options import (
     DEFAULT_LOCAL_LLM_BASE_URL,
@@ -56,7 +57,6 @@ from smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters imp
     OpenAIKnowledgeEmbedding,
     OpenRouterKnowledgeEmbedding,
 )
-from smb_requirement_agent.infrastructure.observability.metrics import Metrics
 from smb_requirement_agent.interfaces.api.composition import llm as composition
 from smb_requirement_agent.interfaces.api.composition.llm import build_llm_adapters
 from smb_requirement_agent.interfaces.api.container import build_container
@@ -666,8 +666,15 @@ def test_container_names_every_background_worker_for_readiness() -> None:
             "requirement_index_worker",
             "workers",
             "document_worker",
+            "attachment_worker",
+            "knowledge_event_worker",
         }
         assert container.background_workers["workers"] is container.ai_job_worker
+        # Attachments have their own worker, apart from the library's (ADR-0099).
+        assert (
+            container.background_workers["attachment_worker"]
+            is container.attachment_ingestion_worker
+        )
     finally:
         container.close_resources()
 
@@ -678,6 +685,8 @@ def test_real_models_poll_architecture_jobs_in_process() -> None:
     )
     try:
         assert "architecture_job_worker" in container.background_workers
+        # Mapping a Requirement's backlog has its own queue and worker (ADR-0099).
+        assert "architecture_mapping_job_worker" in container.background_workers
     finally:
         container.close_resources()
 

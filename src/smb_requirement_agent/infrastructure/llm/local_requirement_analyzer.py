@@ -6,6 +6,16 @@ from collections.abc import Sequence
 
 import httpx
 from pydantic import ValidationError
+from smb_kernel.diagnostics import DebugTrace, NullDebugTrace
+from smb_kernel.llm.local_structured_output import (
+    LocalStructuredOutputClient,
+)
+from smb_kernel.llm.structured_output import (
+    StructuredOutputClient,
+    StructuredOutputError,
+    StructuredResponseValidationError,
+    response_validation_error,
+)
 
 from smb_requirement_agent.application.errors import (
     ModelTransportError,
@@ -23,7 +33,6 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     IntentProposal,
 )
 from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.infrastructure.diagnostics import DebugTrace, NullDebugTrace
 from smb_requirement_agent.infrastructure.llm.candidate_mappers import (
     analysis_evidence_subjects,
     attach_analysis_evidence,
@@ -33,9 +42,6 @@ from smb_requirement_agent.infrastructure.llm.candidate_mappers import (
     to_analysis_content_candidate,
     to_clarification_questions,
     to_desired_outcome_review,
-)
-from smb_requirement_agent.infrastructure.llm.local_structured_output import (
-    LocalStructuredOutputClient,
 )
 from smb_requirement_agent.infrastructure.llm.prompts.analysis_prompt import (
     CITATION_RECOVERY_SYSTEM_PROMPT,
@@ -64,12 +70,6 @@ from smb_requirement_agent.infrastructure.llm.schemas.analysis_schema import (
     IndexedUncertaintyRationaleRecoverySchema,
     RequirementAnalysisSchema,
     citation_recovery_schema,
-)
-from smb_requirement_agent.infrastructure.llm.structured_output import (
-    StructuredOutputClient,
-    StructuredOutputError,
-    StructuredResponseValidationError,
-    response_validation_error,
 )
 
 logger = logging.getLogger("smb_requirement_agent.llm.local_analysis")

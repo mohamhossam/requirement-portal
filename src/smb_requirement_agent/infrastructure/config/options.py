@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from enum import Enum
 
+from smb_kernel.observability.logging import LogFormat as LogFormat
+
 DEFAULT_OPENAI_MODEL = "gpt-4o"
 
 
@@ -164,13 +166,6 @@ class PersistenceProvider(Enum):
 class IdentityProvider(Enum):
     FAKE = "fake"
     OIDC = "oidc"
-
-
-class LogFormat(Enum):
-    """Operational log output: readable lines locally, one JSON object per line in production."""
-
-    TEXT = "text"
-    JSON = "json"
 
 
 LOG_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR")

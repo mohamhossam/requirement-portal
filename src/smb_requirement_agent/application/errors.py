@@ -1,4 +1,21 @@
-"""Application failures caused by orchestration or external boundaries."""
+"""Application failures caused by orchestration or external boundaries.
+
+Infrastructure failures raised by platform-kernel mechanisms are re-exported, not
+redefined (ADR-0100), so a handler for one of these names catches exactly what
+the kernel raises.
+"""
+
+from smb_kernel.errors import AuthenticationRequiredError as AuthenticationRequiredError
+from smb_kernel.errors import DocumentExtractionBusyError as DocumentExtractionBusyError
+from smb_kernel.errors import DocumentExtractionError as DocumentExtractionError
+from smb_kernel.errors import DocumentExtractionTimeoutError as DocumentExtractionTimeoutError
+from smb_kernel.errors import IdentityProviderUnavailableError as IdentityProviderUnavailableError
+from smb_kernel.errors import KnowledgeGenerationError as KnowledgeGenerationError
+from smb_kernel.errors import ModelTransportError as ModelTransportError
+from smb_kernel.errors import PersistenceError as PersistenceError
+from smb_kernel.errors import ServiceResponseError as ServiceResponseError
+from smb_kernel.errors import ServiceUnavailableError as ServiceUnavailableError
+from smb_kernel.errors import UnsupportedDocumentError as UnsupportedDocumentError
 
 from smb_requirement_agent.domain.analysis.errors import RequirementAnalysisError
 from smb_requirement_agent.domain.epic.errors import EpicError
@@ -107,20 +124,8 @@ class StoryProposalNotFoundError(StoryError):
     """A pending Story change proposal does not exist in the repository."""
 
 
-class PersistenceError(Exception):
-    """Raised when durable state cannot be read or written safely."""
-
-
 class DocumentNotFoundError(Exception):
     """A requested source document or immutable version does not exist."""
-
-
-class UnsupportedDocumentError(Exception):
-    """An uploaded file is unsafe, too large, or has an unsupported type."""
-
-
-class DocumentExtractionError(Exception):
-    """A supported document could not produce usable plain text."""
 
 
 class DocumentStorageError(Exception):
@@ -129,14 +134,6 @@ class DocumentStorageError(Exception):
 
 class DocumentVersionConflictError(Exception):
     """A document mutation used stale metadata."""
-
-
-class DocumentExtractionBusyError(Exception):
-    """The bounded extraction facility has no execution or waiting capacity."""
-
-
-class DocumentExtractionTimeoutError(Exception):
-    """Document extraction exceeded its configured subprocess deadline."""
 
 
 class DocumentContextTooLargeError(Exception):
@@ -159,6 +156,14 @@ class ArchitectureMappingConflictError(Exception):
     """The current breakdown is not ready for architecture mapping."""
 
 
+class ArchitectureMappingProfileChangedError(Exception):
+    """A queued mapping was asked for under models that are no longer configured.
+
+    It reports as `architecture_knowledge_conflict`, as it did while mapping jobs
+    ran in the catalogue's queue (ADR-0099).
+    """
+
+
 class BreakdownReviewNotFoundError(Exception):
     """No generated breakdown review exists for the Requirement."""
 
@@ -177,14 +182,6 @@ class ApprovalWorkflowNotReadyError(Exception):
 
 class ApprovalPolicyBlockedError(Exception):
     """The configured governance policy prevents final approval."""
-
-
-class AuthenticationRequiredError(Exception):
-    """A request did not carry a valid authenticated identity."""
-
-
-class IdentityProviderUnavailableError(Exception):
-    """The configured identity provider could not validate a request."""
 
 
 class ActorNotFoundError(Exception):
@@ -227,42 +224,8 @@ class KnowledgeFindingNotFoundError(Exception):
     """A requested requirement-knowledge finding does not exist."""
 
 
-class ModelTransportError(Exception):
-    """Safe provider failure classification independent of transport libraries."""
-
-    def __init__(self, kind: str) -> None:
-        self.kind = kind
-        messages = {
-            "timeout": "The model request timed out. Retry after checking model performance.",
-            "rate_limit": "The model provider rate limit was reached. Wait before retrying.",
-            "authentication": (
-                "The model provider rejected its credentials. Check backend configuration."
-            ),
-            "configuration": "The provider rejected the configured model or request parameters.",
-            "index_required": (
-                "Knowledge search needs a current index for the configured "
-                "embedding model. Contact your administrator."
-            ),
-            "invalid_output": (
-                "The model returned invalid, empty, refused or truncated structured output."
-            ),
-            "payment": (
-                "The model provider requires available credits or a higher key spending limit."
-            ),
-            "invalid_citations": (
-                "The model could not provide valid source citations. Analysis was not saved."
-            ),
-            "unavailable": "The model provider is currently unavailable. Try again later.",
-        }
-        super().__init__(messages.get(kind, messages["unavailable"]))
-
-
 class KnowledgeIndexPendingError(Exception):
     """Derived Requirement knowledge has not caught up to its source changes."""
-
-
-class KnowledgeGenerationError(Exception):
-    """A knowledge provider failed or returned unusable evidence."""
 
 
 class KnowledgeScreenConflictError(Exception):

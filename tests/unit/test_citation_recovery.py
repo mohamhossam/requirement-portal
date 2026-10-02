@@ -10,6 +10,18 @@ from unittest.mock import patch
 import httpx
 import pytest
 from pydantic import ValidationError
+from smb_kernel.diagnostics import JsonLinesDebugTrace
+from smb_kernel.llm.compatible_transport import (
+    CompatibleStructuredOutputClient,
+)
+from smb_kernel.llm.local_structured_output import (
+    LocalStructuredOutputClient,
+)
+from smb_kernel.llm.openrouter_structured_output import (
+    OpenRouterStructuredOutputClient,
+)
+from smb_kernel.llm.profiles import ModelProfile
+from smb_kernel.llm.structured_output import StructuredOutputClient
 
 from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
 from smb_requirement_agent.application.ports.requirement_analyzer import (
@@ -37,24 +49,12 @@ from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementStatus,
     RequirementTitle,
 )
-from smb_requirement_agent.infrastructure.config.llm_profiles import ModelProfile
-from smb_requirement_agent.infrastructure.diagnostics import JsonLinesDebugTrace
-from smb_requirement_agent.infrastructure.llm.compatible_transport import (
-    CompatibleStructuredOutputClient,
-)
 from smb_requirement_agent.infrastructure.llm.local_requirement_analyzer import (
     StructuredRequirementAnalyzerAdapter,
-)
-from smb_requirement_agent.infrastructure.llm.local_structured_output import (
-    LocalStructuredOutputClient,
-)
-from smb_requirement_agent.infrastructure.llm.openrouter_structured_output import (
-    OpenRouterStructuredOutputClient,
 )
 from smb_requirement_agent.infrastructure.llm.schemas.analysis_schema import (
     citation_recovery_schema,
 )
-from smb_requirement_agent.infrastructure.llm.structured_output import StructuredOutputClient
 from tests.conftest import TEST_NOW
 
 PROVIDERS = ["legacy-local", "legacy-openrouter", "Gemini", "OpenAI", "OpenRouter", "Ollama"]
@@ -731,7 +731,7 @@ def test_embedded_provider_error_is_not_json_repair(
     ],
 )
 def test_incomplete_error_envelopes_are_detected(payload: dict[str, Any]) -> None:
-    from smb_requirement_agent.infrastructure.llm.structured_output import response_provider_error
+    from smb_kernel.llm.structured_output import response_provider_error
 
     assert response_provider_error(payload) is not None
 

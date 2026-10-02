@@ -12,9 +12,9 @@ from openpyxl.chart import BarChart, Reference
 from openpyxl.drawing.image import Image as SpreadsheetImage
 from openpyxl.worksheet.worksheet import Worksheet
 from PIL import Image
+from smb_kernel.documents.text_extractor import SafeDocumentTextExtractor
 
 from smb_requirement_agent.domain.document.value_objects import EvidenceBlockKind
-from smb_requirement_agent.infrastructure.documents.text_extractor import SafeDocumentTextExtractor
 from tests.spreadsheet_fixtures import XLSX_MIME, reviewed_worksheet_names_document
 
 

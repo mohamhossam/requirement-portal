@@ -3,7 +3,8 @@
 from collections.abc import Callable
 from threading import RLock
 
-from smb_requirement_agent.application.ports.clock import ClockPort
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.domain.organisation.catalogue import (
     OrganisationAuditEvent,
     OrganisationCatalogue,

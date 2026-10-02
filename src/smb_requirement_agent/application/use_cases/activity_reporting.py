@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from statistics import median
 
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.errors import InvalidReportingWindowError
 from smb_requirement_agent.application.ports.activity import (
     ActivityAction,
@@ -22,7 +24,6 @@ from smb_requirement_agent.application.ports.activity import (
 from smb_requirement_agent.application.ports.activity import (
     ActivityResult as ActivityResult,
 )
-from smb_requirement_agent.application.ports.clock import ClockPort
 
 
 class ListActivity:

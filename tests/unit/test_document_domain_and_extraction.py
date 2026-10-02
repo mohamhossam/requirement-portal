@@ -19,6 +19,14 @@ from openpyxl.drawing.image import Image as SpreadsheetImage
 from openpyxl.worksheet.worksheet import Worksheet
 from PIL import Image
 from pypdf import PdfWriter
+from smb_kernel.documents.bounded_extractor import (
+    BoundedSubprocessDocumentExtractor,
+    ExtractionLimits,
+)
+from smb_kernel.documents.ports import ExtractedDocument
+from smb_kernel.documents.text_extractor import (
+    SafeDocumentTextExtractor,
+)
 
 from smb_requirement_agent.application.errors import (
     DocumentExtractionBusyError,
@@ -27,7 +35,6 @@ from smb_requirement_agent.application.errors import (
     DocumentStorageError,
     UnsupportedDocumentError,
 )
-from smb_requirement_agent.application.ports.document_extractor import ExtractedDocument
 from smb_requirement_agent.domain.document.entities import (
     SourceDocument,
     SourceDocumentVersion,
@@ -39,13 +46,6 @@ from smb_requirement_agent.domain.document.value_objects import (
     ExtractionStatus,
 )
 from smb_requirement_agent.domain.requirement.value_objects import RequirementId
-from smb_requirement_agent.infrastructure.documents.bounded_extractor import (
-    BoundedSubprocessDocumentExtractor,
-    ExtractionLimits,
-)
-from smb_requirement_agent.infrastructure.documents.text_extractor import (
-    SafeDocumentTextExtractor,
-)
 from smb_requirement_agent.infrastructure.persistence.document_payloads import (
     document_from_payload,
     document_to_payload,

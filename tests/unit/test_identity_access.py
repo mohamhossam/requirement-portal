@@ -6,12 +6,12 @@ from threading import Thread
 
 import pytest
 from fastapi.testclient import TestClient
+from smb_kernel.identity.ports import IdentityCredential
 
 from smb_requirement_agent.application.errors import (
     AuthenticationRequiredError,
     IdentityProviderUnavailableError,
 )
-from smb_requirement_agent.application.ports.identity_provider import IdentityCredential
 from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirementInput
 from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementPermission,

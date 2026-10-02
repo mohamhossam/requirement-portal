@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 
 import psycopg
+from smb_kernel.persistence.connector import PostgresConnector
 
 from smb_requirement_agent.application.errors import PersistenceError
 from smb_requirement_agent.application.ports.architecture_jobs import (
@@ -13,12 +14,18 @@ from smb_requirement_agent.application.ports.architecture_jobs import (
     ArchitectureJobStatus,
 )
 from smb_requirement_agent.domain.architecture.knowledge import KnowledgeConflictError
-from smb_requirement_agent.infrastructure.persistence.postgres_connector import PostgresConnector
+
+# Queues sharing this adapter: the catalogue's jobs and requirement mapping jobs (ADR-0099).
+# The table name reaches SQL text, so only these are accepted.
+JOB_TABLES = frozenset({"architecture_jobs", "requirement_mapping_jobs"})
 
 
 class PostgresArchitectureJobs:
-    def __init__(self, connector: PostgresConnector) -> None:
+    def __init__(self, connector: PostgresConnector, table: str = "architecture_jobs") -> None:
+        if table not in JOB_TABLES:
+            raise ValueError(f"Unknown job table {table!r}.")
         self._connector = connector
+        self._table = table
 
     @staticmethod
     def _job(row: tuple[object, ...]) -> ArchitectureJob:
@@ -45,18 +52,18 @@ class PostgresArchitectureJobs:
         try:
             with self._connector.connection() as connection:
                 row = connection.execute(
-                    "INSERT INTO architecture_jobs "
+                    f"INSERT INTO {self._table} "
                     "(job_id, kind, subject_id, fingerprint, actor_id, status) "
                     "VALUES (%s, %s, %s, %s, %s, 'queued') "
                     "ON CONFLICT (kind, subject_id, fingerprint) DO UPDATE SET "
                     # Asking again for a failed or cancelled job starts it afresh;
                     # a job already queued, running or done is returned as it is.
-                    "attempts = CASE WHEN architecture_jobs.status IN ('failed', 'cancelled') "
-                    "THEN 0 ELSE architecture_jobs.attempts END, "
-                    "error_category = CASE WHEN architecture_jobs.status IN "
-                    "('failed', 'cancelled') THEN NULL ELSE architecture_jobs.error_category END, "
-                    "status = CASE WHEN architecture_jobs.status IN ('failed', 'cancelled') "
-                    "THEN 'queued' ELSE architecture_jobs.status END, "
+                    f"attempts = CASE WHEN {self._table}.status IN ('failed', 'cancelled') "
+                    f"THEN 0 ELSE {self._table}.attempts END, "
+                    f"error_category = CASE WHEN {self._table}.status IN "
+                    f"('failed', 'cancelled') THEN NULL ELSE {self._table}.error_category END, "
+                    f"status = CASE WHEN {self._table}.status IN ('failed', 'cancelled') "
+                    f"THEN 'queued' ELSE {self._table}.status END, "
                     "updated_at = now() "
                     "RETURNING job_id, kind, subject_id, fingerprint, actor_id, status, "
                     "attempts, error_category, lease_until",
@@ -75,7 +82,7 @@ class PostgresArchitectureJobs:
             with self._connector.connection() as connection:
                 rows = connection.execute(
                     "SELECT job_id, kind, subject_id, fingerprint, actor_id, status, attempts, "
-                    "error_category, lease_until FROM architecture_jobs "
+                    f"error_category, lease_until FROM {self._table} "
                     "WHERE kind = %s AND subject_id = %s ORDER BY updated_at, created_at",
                     (kind.value, subject_id),
                 ).fetchall()
@@ -88,7 +95,7 @@ class PostgresArchitectureJobs:
             with self._connector.connection() as connection:
                 row = connection.execute(
                     "SELECT job_id, kind, subject_id, fingerprint, actor_id, status, attempts, "
-                    "error_category, lease_until FROM architecture_jobs WHERE job_id = %s",
+                    f"error_category, lease_until FROM {self._table} WHERE job_id = %s",
                     (job_id,),
                 ).fetchone()
             return self._job(row) if row else None
@@ -99,14 +106,14 @@ class PostgresArchitectureJobs:
         try:
             with self._connector.connection() as connection:
                 row = connection.execute(
-                    """
+                    f"""
                     WITH candidate AS (
-                      SELECT job_id FROM architecture_jobs
+                      SELECT job_id FROM {self._table}
                       WHERE attempts < 3 AND (status = 'queued' OR
                         (status = 'running' AND lease_until < %s))
                       ORDER BY created_at FOR UPDATE SKIP LOCKED LIMIT 1
                     )
-                    UPDATE architecture_jobs j
+                    UPDATE {self._table} j
                     SET status = 'running', attempts = attempts + 1,
                         lease_until = %s + interval '5 minutes', updated_at = now()
                     FROM candidate WHERE j.job_id = candidate.job_id
@@ -117,7 +124,7 @@ class PostgresArchitectureJobs:
                 ).fetchone()
                 if row is None:
                     connection.execute(
-                        "UPDATE architecture_jobs SET status = 'failed', "
+                        f"UPDATE {self._table} SET status = 'failed', "
                         "error_category = 'attempts_exhausted', lease_until = NULL, "
                         "updated_at = now() WHERE attempts >= 3 AND "
                         "(status = 'queued' OR (status = 'running' AND lease_until < %s))",
@@ -131,7 +138,7 @@ class PostgresArchitectureJobs:
         try:
             with self._connector.connection() as connection:
                 row = connection.execute(
-                    "UPDATE architecture_jobs SET lease_until = %s + interval '5 minutes', "
+                    f"UPDATE {self._table} SET lease_until = %s + interval '5 minutes', "
                     "updated_at = now() WHERE job_id = %s AND attempts = %s "
                     "AND status = 'running' RETURNING job_id",
                     (now, job_id, attempt),
@@ -150,7 +157,7 @@ class PostgresArchitectureJobs:
         try:
             with self._connector.connection() as connection:
                 connection.execute(
-                    "UPDATE architecture_jobs SET status = %s, error_category = %s, "
+                    f"UPDATE {self._table} SET status = %s, error_category = %s, "
                     "lease_until = NULL, updated_at = now() "
                     "WHERE job_id = %s AND attempts = %s AND status = 'running'",
                     (status.value, error_category, job_id, attempt),
@@ -175,7 +182,7 @@ class PostgresArchitectureJobs:
         try:
             with self._connector.connection() as connection:
                 row = connection.execute(
-                    "UPDATE architecture_jobs SET status = %s, attempts = 0, "
+                    f"UPDATE {self._table} SET status = %s, attempts = 0, "
                     "error_category = NULL, lease_until = NULL, updated_at = now() "
                     "WHERE job_id = %s AND status = %s "
                     "RETURNING job_id, kind, subject_id, fingerprint, actor_id, status, "

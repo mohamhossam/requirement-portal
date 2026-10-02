@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import pytest
+from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.application.errors import (
     InvalidSavedViewError,
@@ -19,7 +20,6 @@ from smb_requirement_agent.domain.identity.entities import ActorId, ActorProfile
 from smb_requirement_agent.infrastructure.persistence.in_memory_saved_views import (
     InMemorySavedViewRepository,
 )
-from smb_requirement_agent.infrastructure.time.fixed_clock import FixedClock
 
 NOW = datetime(2026, 9, 4, 12, tzinfo=UTC)
 OWNER = ActorProfile(ActorId("owner"), "Owner")

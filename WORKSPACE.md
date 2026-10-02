@@ -125,6 +125,21 @@ python -m pip install ruff "import-linter" --force-reinstall --quiet
 After activation, all standard quality gate commands (`pytest`, `ruff`, `mypy`,
 `lint-imports`) resolve through `.venv\Scripts\` as normal.
 
+### The platform kernel
+
+`smb-platform-kernel` (ADR-0100) is a private git dependency, pinned by tag in
+`pyproject.toml`. pip and uv fetch it with your own git credentials, so you need read
+access to `mohamhossam/platform-kernel`.
+
+To work on the kernel and this application together, install your local checkout over
+the pinned one. Never commit that change:
+
+```bash
+pip install -e ../platform-kernel
+```
+
+Upgrading means changing the tag in `pyproject.toml`, then running `uv lock`.
+
 ---
 
 ## 5. Environment Configuration

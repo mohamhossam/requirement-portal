@@ -5,6 +5,8 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, replace
 
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.errors import (
     ArtifactVersionConflictError,
     BreakdownReviewNotFoundError,
@@ -16,13 +18,12 @@ from smb_requirement_agent.application.errors import (
 from smb_requirement_agent.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
-from smb_requirement_agent.application.ports.architecture_knowledge_repository import (
-    ArchitectureKnowledgeRepositoryPort,
+from smb_requirement_agent.application.ports.architecture_knowledge import (
+    ActiveArchitectureReleasePort,
 )
 from smb_requirement_agent.application.ports.breakdown_review_repository import (
     BreakdownReviewRepositoryPort,
 )
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidencePort
@@ -149,7 +150,7 @@ class RefreshSavedBreakdownReview:
         quality: StoryQualityRepositoryPort,
         policy: BreakdownReviewPolicy,
         clock: ClockPort,
-        knowledge: ArchitectureKnowledgeRepositoryPort,
+        knowledge: ActiveArchitectureReleasePort,
     ) -> None:
         self._evidence = evidence
         self._reviews = reviews
@@ -171,7 +172,7 @@ class RefreshSavedBreakdownReview:
                 assessments.extend(snapshot.assessments)
         review = replace(
             self._policy.build(evidence, tuple(assessments), self._clock.now()),
-            knowledge_version=self._knowledge.active().id,
+            knowledge_version=self._knowledge.active_release_id(),
         )
         existing = self._reviews.get(requirement_id)
         if existing is not None:
@@ -189,7 +190,7 @@ class GenerateBreakdownReview:
         policy: BreakdownReviewPolicy,
         clock: ClockPort,
         transactions: TransactionManagerPort,
-        knowledge: ArchitectureKnowledgeRepositoryPort,
+        knowledge: ActiveArchitectureReleasePort,
         *,
         authorization: RequirementAccessService,
         quality: StoryQualityRepositoryPort,
@@ -217,7 +218,7 @@ class GenerateBreakdownReview:
     def _execute(self, requirement_id: RequirementId) -> GeneratedBreakdownReview:
         evidence = self._evidence.load(requirement_id)
         evidence.requirement.require_active()
-        active_knowledge_version = self._knowledge.active().id
+        active_knowledge_version = self._knowledge.active_release_id()
         if not _architecture_knowledge_is_current(evidence, active_knowledge_version):
             raise BreakdownReviewStaleError(
                 "Architecture mappings were generated from an inactive knowledge release. "
@@ -237,7 +238,7 @@ class GenerateBreakdownReview:
                 raise BreakdownReviewStaleError(
                     "The breakdown changed while its review was generated. Refresh and try again."
                 )
-            if self._knowledge.active().id != active_knowledge_version:
+            if self._knowledge.active_release_id() != active_knowledge_version:
                 raise BreakdownReviewStaleError(
                     "The active architecture knowledge release changed while the review was "
                     "generated. Refresh and try again."
@@ -292,7 +293,7 @@ class GetBreakdownReview:
         self,
         evidence: ReviewEvidenceLoader,
         reviews: BreakdownReviewRepositoryPort,
-        knowledge: ArchitectureKnowledgeRepositoryPort,
+        knowledge: ActiveArchitectureReleasePort,
     ) -> None:
         self._evidence = evidence
         self._reviews = reviews
@@ -310,7 +311,7 @@ class GetBreakdownReview:
             raise BreakdownReviewNotFoundError(
                 f"No breakdown review exists for requirement {requirement_id.value!r}."
             )
-        active_knowledge_version = self._knowledge.active().id
+        active_knowledge_version = self._knowledge.active_release_id()
         return BreakdownReviewView(
             review,
             review.ruleset_version == REVIEW_RULESET_VERSION

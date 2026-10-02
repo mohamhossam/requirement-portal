@@ -13,10 +13,10 @@ import sys
 from collections.abc import Sequence
 
 import uvicorn
+from smb_kernel.observability.logging import configure_logging
 
 from smb_requirement_agent.infrastructure.config.options import ConfigurationError
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.observability.logging import configure_logging
 
 
 def main(argv: Sequence[str] | None = None) -> int:

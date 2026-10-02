@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from smb_requirement_agent.application.ports.clock import ClockPort
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.use_cases.ai_job_scheduling import (
     AnswerSuggestionScheduler,
     KnowledgeScreenScheduler,
@@ -15,6 +16,12 @@ from smb_requirement_agent.application.use_cases.answer_suggestions import (
 from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
 from smb_requirement_agent.application.use_cases.rebuild_knowledge_index import (
     RebuildKnowledgeIndex,
+)
+from smb_requirement_agent.application.use_cases.reference_currency import (
+    CurrentArchitectureRelease,
+    CurrentReferences,
+    ProjectKnowledgeEvents,
+    ReferenceCurrency,
 )
 from smb_requirement_agent.application.use_cases.reference_knowledge import (
     ReferenceKnowledge,
@@ -36,6 +43,7 @@ from smb_requirement_agent.application.use_cases.unified_knowledge_search import
 )
 from smb_requirement_agent.domain.identity.entities import ActorId, ActorProfile
 from smb_requirement_agent.infrastructure.config.settings import Settings
+from smb_requirement_agent.infrastructure.documents.ingestion_loop import IngestionLoop
 from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import (
     RequirementIndexWorker,
 )
@@ -60,6 +68,10 @@ class RequirementKnowledgeWiring:
     indexer: IndexRequirementKnowledge
     index_worker: RequirementIndexWorker
     reference_knowledge: ReferenceKnowledge
+    reference_currency: ReferenceCurrency
+    current_references: CurrentReferences
+    current_release: CurrentArchitectureRelease
+    knowledge_event_worker: IngestionLoop
     source_impact: SourceImpactReview
     suggest_answers: SuggestClarificationAnswers
     screen: ScreenRequirementKnowledge
@@ -110,6 +122,22 @@ def build_requirement_knowledge(
         clock,
         embedding_identity,
     )
+    # Requirement work checks citations against its local copy of the library's state.
+    reference_currency = ReferenceCurrency(
+        persistence.reference_publications, persistence.transaction_manager
+    )
+    current_references = CurrentReferences(reference_knowledge, reference_currency)
+    projector = ProjectKnowledgeEvents(
+        persistence.knowledge_events,
+        persistence.reference_publications,
+        persistence.architecture_releases,
+        persistence.transaction_manager,
+        clock,
+    )
+    # While both sides share this process, a catalogue write drains the outbox
+    # straight after it commits; drain once now for anything written before start.
+    persistence.knowledge_relay.bind(projector.drain)
+    projector.drain()
     return RequirementKnowledgeWiring(
         corpus=corpus,
         review=review,
@@ -128,13 +156,17 @@ def build_requirement_knowledge(
         indexer=indexer,
         index_worker=RequirementIndexWorker(indexer),
         reference_knowledge=reference_knowledge,
+        reference_currency=reference_currency,
+        current_references=current_references,
+        current_release=CurrentArchitectureRelease(persistence.architecture_releases),
+        knowledge_event_worker=IngestionLoop("knowledge-events", (projector.project_next,)),
         source_impact=SourceImpactReview(
             persistence.dependency_index,
-            persistence.library_repository,
+            persistence.reference_publications,
             access,
             persistence.transaction_manager,
             clock,
-            reference_knowledge,
+            reference_currency,
         ),
         suggest_answers=SuggestClarificationAnswers(
             persistence.requirement_repository,
@@ -147,7 +179,7 @@ def build_requirement_knowledge(
             llm.answer_suggester,
             clock,
             persistence.transaction_manager,
-            reference_knowledge,
+            current_references,
             authorization=access,
         ),
         screen=ScreenRequirementKnowledge(
@@ -179,7 +211,7 @@ def build_requirement_knowledge(
             corpus,
             persistence.knowledge_index,
             llm.knowledge_embedding,
-            reference_knowledge,
+            current_references,
             persistence.access_repository,
         ),
     )

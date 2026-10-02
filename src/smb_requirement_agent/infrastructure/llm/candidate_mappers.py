@@ -10,6 +10,8 @@ from __future__ import annotations
 import re
 from collections.abc import Iterable, Sequence
 
+from smb_kernel.diagnostics import DebugTrace
+
 from smb_requirement_agent.application.errors import (
     EpicGenerationError,
     FeatureGenerationError,
@@ -41,7 +43,6 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     QuestionChangeAction,
     is_additional_intent_proposal,
 )
-from smb_requirement_agent.infrastructure.diagnostics import DebugTrace
 from smb_requirement_agent.infrastructure.llm.response_sanitizer import (
     clean_pairs,
     clean_statements,

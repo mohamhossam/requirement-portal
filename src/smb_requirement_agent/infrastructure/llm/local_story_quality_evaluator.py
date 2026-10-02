@@ -1,6 +1,14 @@
 """Local OpenAI-compatible semantic INVEST evaluator."""
 
 import httpx
+from smb_kernel.diagnostics import DebugTrace, NullDebugTrace
+from smb_kernel.llm.local_structured_output import (
+    LocalStructuredOutputClient,
+)
+from smb_kernel.llm.structured_output import (
+    StructuredOutputClient,
+    StructuredOutputError,
+)
 
 from smb_requirement_agent.application.errors import StoryQualityEvaluationError
 from smb_requirement_agent.application.ports.story_quality_evaluator import (
@@ -9,10 +17,6 @@ from smb_requirement_agent.application.ports.story_quality_evaluator import (
 )
 from smb_requirement_agent.domain.story.entities import UserStory
 from smb_requirement_agent.domain.story.quality import InvestCriterion, ValidationFinding
-from smb_requirement_agent.infrastructure.diagnostics import DebugTrace, NullDebugTrace
-from smb_requirement_agent.infrastructure.llm.local_structured_output import (
-    LocalStructuredOutputClient,
-)
 from smb_requirement_agent.infrastructure.llm.prompts.story_quality_prompt import (
     PROMPT_VERSION,
     STORY_QUALITY_SYSTEM_PROMPT,
@@ -23,10 +27,6 @@ from smb_requirement_agent.infrastructure.llm.schemas.story_quality_schema impor
 )
 from smb_requirement_agent.infrastructure.llm.story_quality_mapping import (
     request_complete_quality_findings,
-)
-from smb_requirement_agent.infrastructure.llm.structured_output import (
-    StructuredOutputClient,
-    StructuredOutputError,
 )
 
 

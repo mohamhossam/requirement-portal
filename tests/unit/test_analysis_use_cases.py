@@ -1,6 +1,7 @@
 """Tests for analysis use cases."""
 
 import pytest
+from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.application.errors import (
     RequirementAnalysisNotFoundError,
@@ -65,7 +66,6 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_story_repository
     InMemoryStoryChangeProposalRepository,
     InMemoryStoryRepository,
 )
-from smb_requirement_agent.infrastructure.time.fixed_clock import FixedClock
 from tests.conftest import (
     TEST_NOW,
     AcceptAllSuggestionValidator,

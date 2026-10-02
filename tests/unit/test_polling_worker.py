@@ -6,6 +6,9 @@ import threading
 from datetime import timedelta
 from typing import cast
 
+from smb_kernel.observability.metrics import Metrics
+from smb_kernel.time.fixed import FixedClock
+
 from smb_requirement_agent.application.ports.ai_jobs import (
     AiJobCommand,
     AiJobQueuePort,
@@ -16,8 +19,6 @@ from smb_requirement_agent.infrastructure.jobs.polling_worker import (
     AiJobWorkerGroup,
     PollingAiJobWorker,
 )
-from smb_requirement_agent.infrastructure.observability.metrics import Metrics
-from smb_requirement_agent.infrastructure.time.fixed_clock import FixedClock
 from tests.unit.test_ai_jobs import NOW, _job
 
 

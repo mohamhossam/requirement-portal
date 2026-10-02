@@ -10,6 +10,8 @@ from dataclasses import asdict, dataclass, replace
 from functools import wraps
 from typing import Concatenate, cast
 
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.errors import (
     ArtifactVersionConflictError,
     EpicNotFoundError,
@@ -19,7 +21,6 @@ from smb_requirement_agent.application.errors import (
     StoryGenerationError,
     StoryNotFoundError,
 )
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (

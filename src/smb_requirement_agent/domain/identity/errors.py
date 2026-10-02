@@ -1,8 +1,9 @@
-"""Identity and access invariant failures."""
+"""Identity and access invariant failures.
 
+`InvalidIdentityError` is platform-kernel's, re-exported (ADR-0100).
+"""
 
-class InvalidIdentityError(ValueError):
-    """Actor or assignment content is invalid."""
+from smb_kernel.identity.actor import InvalidIdentityError as InvalidIdentityError
 
 
 class RequirementAccessConflictError(ValueError):

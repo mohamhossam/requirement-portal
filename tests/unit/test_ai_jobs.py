@@ -417,10 +417,11 @@ def test_fenced_deferral_releases_lease_and_stale_attempt_cannot_defer() -> None
 def test_stale_attempt_and_synchronous_analysis_cannot_report_new_attempt_progress() -> None:
     from datetime import timedelta
 
+    from smb_kernel.time.fixed import FixedClock
+
     from smb_requirement_agent.application.ports.ai_jobs import AiJobCommand, AiJobRecord
     from smb_requirement_agent.application.use_cases.ai_jobs import AnalysisProgressReporter
     from smb_requirement_agent.application.use_cases.job_execution_context import bind_attempt
-    from smb_requirement_agent.infrastructure.time.fixed_clock import FixedClock
 
     jobs = InMemoryAiJobStore(RLock())
     jobs.add(AiJobRecord(_job(), AiJobCommand({})))

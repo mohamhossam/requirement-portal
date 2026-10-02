@@ -14,6 +14,12 @@ from dataclasses import dataclass
 from threading import RLock
 
 import httpx as httpx
+from smb_kernel.documents.ports import DocumentStoragePort
+from smb_kernel.persistence.connector import (
+    POOL_MAX_IDLE_SECONDS,
+    PooledPostgresConnector,
+)
+from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.application.ports.activity import ActivityReadPort, ReportingReadPort
@@ -28,6 +34,9 @@ from smb_requirement_agent.application.ports.analysis_audit_repository import (
 from smb_requirement_agent.application.ports.architecture_jobs import (
     ArchitectureJobRepositoryPort,
 )
+from smb_requirement_agent.application.ports.architecture_knowledge import (
+    ArchitectureReleaseStatePort,
+)
 from smb_requirement_agent.application.ports.architecture_knowledge_repository import (
     ArchitectureKnowledgeRepositoryPort,
 )
@@ -41,6 +50,9 @@ from smb_requirement_agent.application.ports.architecture_rag import (
 from smb_requirement_agent.application.ports.architecture_tokenizer import (
     ArchitectureTokenizerPort,
 )
+from smb_requirement_agent.application.ports.attachment_ingestions import (
+    AttachmentIngestionRepositoryPort,
+)
 from smb_requirement_agent.application.ports.breakdown_repository import BreakdownRepositoryPort
 from smb_requirement_agent.application.ports.breakdown_review_repository import (
     BreakdownReviewRepositoryPort,
@@ -48,12 +60,11 @@ from smb_requirement_agent.application.ports.breakdown_review_repository import 
 from smb_requirement_agent.application.ports.catalogue_candidates import (
     CatalogueCandidateRepositoryPort,
 )
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.document_library import DocumentLibraryPort
 from smb_requirement_agent.application.ports.document_repository import DocumentRepositoryPort
-from smb_requirement_agent.application.ports.document_storage import DocumentStoragePort
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
+from smb_requirement_agent.application.ports.knowledge_events import KnowledgeEventOutboxPort
 from smb_requirement_agent.application.ports.knowledge_index_generations import (
     KnowledgeIndexGenerationsPort,
 )
@@ -62,6 +73,9 @@ from smb_requirement_agent.application.ports.organisation_repository import (
     OrganisationRepositoryPort,
 )
 from smb_requirement_agent.application.ports.reference_index import ReferenceIndexPort
+from smb_requirement_agent.application.ports.reference_publications import (
+    ReferencePublicationStatePort,
+)
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
@@ -130,9 +144,18 @@ from smb_requirement_agent.infrastructure.persistence.architecture_mapping_stats
     PostgresArchitectureMappingStats,
     RepositoryArchitectureMappingStats,
 )
+from smb_requirement_agent.infrastructure.persistence.architecture_release_state import (
+    InMemoryArchitectureReleaseState,
+    PostgresArchitectureReleaseState,
+)
+from smb_requirement_agent.infrastructure.persistence.attachment_ingestions import (
+    InMemoryAttachmentIngestions,
+    PostgresAttachmentIngestions,
+)
 from smb_requirement_agent.infrastructure.persistence.document_library import (
     InMemoryDocumentLibrary,
     PostgresDocumentLibrary,
+    PublishingDocumentLibrary,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_ai_jobs import (
     InMemoryAiJobStore,
@@ -202,6 +225,10 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_worklist import 
     InMemoryCurrentWorklistProjection,
     InMemoryRequirementWorklistSnapshotAdapter,
 )
+from smb_requirement_agent.infrastructure.persistence.knowledge_events import (
+    InMemoryKnowledgeEvents,
+    PostgresKnowledgeEvents,
+)
 from smb_requirement_agent.infrastructure.persistence.postgres_activity import (
     PostgresProjectedActivity,
 )
@@ -217,10 +244,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_ai_jobs import (
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_architecture_jobs import (
     PostgresArchitectureJobs,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_connector import (
-    POOL_MAX_IDLE_SECONDS,
-    PooledPostgresConnector,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_document_repository import (
     PostgresDocumentRepository,
@@ -261,6 +284,13 @@ from smb_requirement_agent.infrastructure.persistence.reference_index import (
     InMemoryReferenceIndex,
     PostgresReferenceIndex,
 )
+from smb_requirement_agent.infrastructure.persistence.reference_publications import (
+    InMemoryReferencePublications,
+    PostgresReferencePublications,
+)
+from smb_requirement_agent.infrastructure.persistence.relaying_architecture_knowledge import (
+    RelayingArchitectureKnowledgeRepository,
+)
 from smb_requirement_agent.infrastructure.persistence.requirement_indexing import (
     MemoryRequirementIndexProgress,
     PostgresRequirementIndexProgress,
@@ -298,12 +328,32 @@ class RequirementWorklistWiring:
     projection: CurrentWorklistProjectionPort
 
 
+class KnowledgeRelay:
+    """Drains the knowledge outbox into requirement work's local copies after a write.
+
+    The projector is built after persistence, so it is bound later; until then
+    a call does nothing and the polling worker catches up (ADR-0099).
+    """
+
+    def __init__(self) -> None:
+        self._target: Callable[[], None] | None = None
+
+    def bind(self, target: Callable[[], None]) -> None:
+        self._target = target
+
+    def __call__(self) -> None:
+        if self._target is not None:
+            self._target()
+
+
 @dataclass(frozen=True)
 class PersistenceAdapters:
     requirement_repository: RequirementRepositoryPort
     requirement_draft_repository: RequirementDraftRepositoryPort
     document_repository: DocumentRepositoryPort
     document_storage: DocumentStoragePort
+    # The library's and the catalogue's file bytes, apart from requirement documents (ADR-0099).
+    knowledge_document_storage: DocumentStoragePort
     analysis_repository: RequirementAnalysisRepositoryPort
     analysis_audit_repository: AnalysisAuditRepositoryPort
     epic_repository: EpicRepositoryPort
@@ -331,7 +381,13 @@ class PersistenceAdapters:
     catalogue_candidates: CatalogueCandidateRepositoryPort
     architecture_evidence_index: ArchitectureEvidenceIndexPort
     architecture_job_repository: ArchitectureJobRepositoryPort
+    mapping_job_repository: ArchitectureJobRepositoryPort
     library_repository: DocumentLibraryPort
+    knowledge_events: KnowledgeEventOutboxPort
+    reference_publications: ReferencePublicationStatePort
+    architecture_releases: ArchitectureReleaseStatePort
+    knowledge_relay: KnowledgeRelay
+    attachment_ingestions: AttachmentIngestionRepositoryPort
     reference_index: ReferenceIndexPort
     revision_repository: BreakdownRepositoryPort
     transaction_manager: TransactionManagerPort
@@ -387,10 +443,13 @@ def _postgres(
     requirement_draft_repository = PostgresRequirementDraftRepository(postgres)
     document_repository = PostgresDocumentRepository(postgres)
     document_storage = PostgresDocumentStorage(postgres)
-    architecture_repository = (
+    knowledge_document_storage = PostgresDocumentStorage(postgres, "knowledge_document_blobs")
+    knowledge_relay = KnowledgeRelay()
+    architecture_repository = RelayingArchitectureKnowledgeRepository(
         postgres_architecture_knowledge.PostgresArchitectureKnowledgeRepository(
             connector, seed_knowledge()
-        )
+        ),
+        knowledge_relay,
     )
     organisation_repository = postgres_organisation.PostgresOrganisationRepository(
         connector, resolved_clock
@@ -402,7 +461,16 @@ def _postgres(
         connector, architecture_embeddings, architecture_tokenizer
     )
     architecture_job_repository = PostgresArchitectureJobs(connector)
-    library_repository: DocumentLibraryPort = PostgresDocumentLibrary(postgres)
+    mapping_job_repository = PostgresArchitectureJobs(connector, table="requirement_mapping_jobs")
+    knowledge_events: KnowledgeEventOutboxPort = PostgresKnowledgeEvents(postgres)
+    reference_publications: ReferencePublicationStatePort = PostgresReferencePublications(postgres)
+    architecture_releases: ArchitectureReleaseStatePort = PostgresArchitectureReleaseState(postgres)
+    library_repository: DocumentLibraryPort = PublishingDocumentLibrary(
+        PostgresDocumentLibrary(postgres), knowledge_events, reference_publications.apply
+    )
+    attachment_ingestions: AttachmentIngestionRepositoryPort = PostgresAttachmentIngestions(
+        postgres
+    )
     reference_index: ReferenceIndexPort = PostgresReferenceIndex(postgres)
     analysis_repository = PostgresAnalysisRepository(postgres)
     analysis_audit_repository = PostgresAnalysisAuditRepository(postgres)
@@ -466,6 +534,7 @@ def _postgres(
         requirement_draft_repository=requirement_draft_repository,
         document_repository=document_repository,
         document_storage=document_storage,
+        knowledge_document_storage=knowledge_document_storage,
         analysis_repository=analysis_repository,
         analysis_audit_repository=analysis_audit_repository,
         epic_repository=epic_repository,
@@ -493,7 +562,13 @@ def _postgres(
         catalogue_candidates=catalogue_candidates,
         architecture_evidence_index=architecture_evidence_index,
         architecture_job_repository=architecture_job_repository,
+        mapping_job_repository=mapping_job_repository,
         library_repository=library_repository,
+        knowledge_events=knowledge_events,
+        reference_publications=reference_publications,
+        architecture_releases=architecture_releases,
+        knowledge_relay=knowledge_relay,
+        attachment_ingestions=attachment_ingestions,
         reference_index=reference_index,
         revision_repository=revision_repository,
         transaction_manager=transaction_manager,
@@ -519,7 +594,13 @@ def _memory(
     requirement_draft_repository = InMemoryRequirementDraftRepository()
     document_repository = InMemoryDocumentRepository()
     document_storage = InMemoryDocumentStorage(lock=memory_lock)
-    architecture_repository = InMemoryArchitectureKnowledgeRepository(seed_knowledge())
+    knowledge_document_storage = InMemoryDocumentStorage(lock=memory_lock)
+    memory_events = InMemoryKnowledgeEvents(memory_lock)
+    memory_releases = InMemoryArchitectureReleaseState(memory_lock)
+    knowledge_relay = KnowledgeRelay()
+    architecture_repository = RelayingArchitectureKnowledgeRepository(
+        InMemoryArchitectureKnowledgeRepository(seed_knowledge(), memory_events), knowledge_relay
+    )
     organisation_repository = InMemoryOrganisationRepository(resolved_clock)
     sample_requirements = InMemorySampleRequirements()
     catalogue_candidates = InMemoryCatalogueCandidates()
@@ -527,9 +608,18 @@ def _memory(
         architecture_embeddings, architecture_tokenizer
     )
     architecture_job_repository = InMemoryArchitectureJobs()
+    mapping_job_repository = InMemoryArchitectureJobs()
     memory_library = InMemoryDocumentLibrary(memory_lock)
-    library_repository = memory_library
-    memory_reference_index = InMemoryReferenceIndex(memory_lock, library_repository)
+    memory_attachments = InMemoryAttachmentIngestions(memory_lock)
+    attachment_ingestions = memory_attachments
+    memory_publications = InMemoryReferencePublications(memory_lock)
+    knowledge_events = memory_events
+    reference_publications = memory_publications
+    architecture_releases = memory_releases
+    library_repository = PublishingDocumentLibrary(
+        memory_library, memory_events, memory_publications.apply
+    )
+    memory_reference_index = InMemoryReferenceIndex(memory_lock, memory_library)
     reference_index = memory_reference_index
     base_analyses = InMemoryRequirementAnalysisRepository()
     analysis_audit_repository = InMemoryAnalysisAuditRepository(
@@ -627,11 +717,16 @@ def _memory(
     evidence_fragment_cache = InMemoryEvidenceFragmentCache()
     memory_transactions.enroll(
         memory_library,
+        memory_events,
+        memory_publications,
+        memory_releases,
+        memory_attachments,
         memory_reference_index,
         base_requirements,
         requirement_draft_repository,
         document_repository,
         document_storage,
+        knowledge_document_storage,
         base_analyses,
         analysis_audit_repository,
         base_epics,
@@ -669,6 +764,7 @@ def _memory(
         requirement_draft_repository=requirement_draft_repository,
         document_repository=document_repository,
         document_storage=document_storage,
+        knowledge_document_storage=knowledge_document_storage,
         analysis_repository=analysis_repository,
         analysis_audit_repository=analysis_audit_repository,
         epic_repository=epic_repository,
@@ -696,7 +792,13 @@ def _memory(
         catalogue_candidates=catalogue_candidates,
         architecture_evidence_index=architecture_evidence_index,
         architecture_job_repository=architecture_job_repository,
+        mapping_job_repository=mapping_job_repository,
         library_repository=library_repository,
+        knowledge_events=knowledge_events,
+        reference_publications=reference_publications,
+        architecture_releases=architecture_releases,
+        knowledge_relay=knowledge_relay,
+        attachment_ingestions=attachment_ingestions,
         reference_index=reference_index,
         revision_repository=revision_repository,
         transaction_manager=transaction_manager,

@@ -1,7 +1,8 @@
 """Owned source setup for tests of authorized mutation commands."""
 
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.use_cases.create_requirement import (
     CreateRequirement,

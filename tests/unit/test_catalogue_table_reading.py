@@ -11,6 +11,8 @@ from datetime import UTC, datetime
 from typing import Any
 
 import pytest
+from smb_kernel.documents.text_extractor import SafeDocumentTextExtractor
+from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.application.ports.catalogue_extractor import (
     CatalogueProposal,
@@ -46,7 +48,6 @@ from smb_requirement_agent.infrastructure.architecture.located_extractor import 
     LocatedDocumentExtractor,
 )
 from smb_requirement_agent.infrastructure.architecture.tokenizer import FakeWordTokenizer
-from smb_requirement_agent.infrastructure.documents.text_extractor import SafeDocumentTextExtractor
 from smb_requirement_agent.infrastructure.llm.catalogue_extraction import (
     ChangeOutput,
     ExtractionOutput,
@@ -67,7 +68,6 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_catalogue_candid
 from smb_requirement_agent.infrastructure.persistence.in_memory_document_repository import (
     InMemoryDocumentStorage,
 )
-from smb_requirement_agent.infrastructure.time.fixed_clock import FixedClock
 
 NOW = datetime(2026, 10, 1, 9, 0, tzinfo=UTC)
 MAINTAINER = Actor("amina", frozenset({"knowledge_maintainer"}))

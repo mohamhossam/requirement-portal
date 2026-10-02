@@ -40,6 +40,16 @@ jobs:
           python-version: "3.12"
           enable-cache: true
 
+      - name: Read access to platform-kernel
+        # The kernel is a private git dependency (ADR-0100). The token is a
+        # fine-grained, read-only token for that one repository.
+        env:
+          KERNEL_READ_TOKEN: ${{ secrets.KERNEL_READ_TOKEN }}
+        run: |
+          test -n "$KERNEL_READ_TOKEN" || { echo "KERNEL_READ_TOKEN secret is not set"; exit 1; }
+          kernel="github.com/mohamhossam/platform-kernel"
+          git config --global "url.https://x-access-token:${KERNEL_READ_TOKEN}@${kernel}.insteadOf" "https://${kernel}"
+
       - name: Install locked project
         run: |
           uv sync --locked --extra dev
@@ -83,6 +93,17 @@ jobs:
         with:
           python-version: "3.12"
           enable-cache: true
+
+      - name: Read access to platform-kernel
+        # The kernel is a private git dependency (ADR-0100). The token is a
+        # fine-grained, read-only token for that one repository.
+        env:
+          KERNEL_READ_TOKEN: ${{ secrets.KERNEL_READ_TOKEN }}
+        run: |
+          test -n "$KERNEL_READ_TOKEN" || { echo "KERNEL_READ_TOKEN secret is not set"; exit 1; }
+          kernel="github.com/mohamhossam/platform-kernel"
+          git config --global "url.https://x-access-token:${KERNEL_READ_TOKEN}@${kernel}.insteadOf" "https://${kernel}"
+
       - name: Install locked project
         run: |
           uv sync --locked --extra dev
@@ -141,14 +162,14 @@ jobs:
 
       - name: Python dependency audit
         run: |
-          uv export --frozen --no-dev --no-emit-project --format requirements-txt > requirements.txt
+          uv export --frozen --no-dev --no-emit-project --no-emit-package smb-platform-kernel --format requirements-txt > requirements.txt
           uvx pip-audit==2.10.1 --strict --disable-pip --no-deps -r requirements.txt
 
       - name: Python dependency audit (document-ocr extra)
         # Not in the image, but an operator who extends it for OCR installs
         # this tree (docling and its model stack), so it is audited too.
         run: |
-          uv export --frozen --no-dev --no-emit-project --extra document-ocr --format requirements-txt > requirements-ocr.txt
+          uv export --frozen --no-dev --no-emit-project --no-emit-package smb-platform-kernel --extra document-ocr --format requirements-txt > requirements-ocr.txt
           uvx pip-audit==2.10.1 --strict --disable-pip --no-deps -r requirements-ocr.txt
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -167,6 +188,8 @@ jobs:
       POSTGRES_PASSWORD: ci-only
       GRAFANA_ADMIN_PASSWORD: ci-only
       COMPOSE: docker compose -f deploy/compose.production.yaml
+      # Passed to the image build as a BuildKit secret, never as a build arg.
+      KERNEL_READ_TOKEN: ${{ secrets.KERNEL_READ_TOKEN }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -201,6 +224,9 @@ jobs:
           curl --fail --silent http://127.0.0.1:8080/api/ready
           curl --fail --silent --head http://127.0.0.1:8080/ | grep -i "frame-ancestors 'none'"
           curl --fail --silent http://127.0.0.1:8080/ | grep -q 'http-equiv="Content-Security-Policy"'
+          # Service-to-service routes never pass the edge (ADR-0099).
+          code=$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:8080/api/internal/actors/x)
+          test "$code" = 404
 
       - name: Model files are mounted read-only
         run: |
@@ -258,6 +284,16 @@ jobs:
           python-version: "3.12"
           enable-cache: true
 
+      - name: Read access to platform-kernel
+        # The kernel is a private git dependency (ADR-0100). The token is a
+        # fine-grained, read-only token for that one repository.
+        env:
+          KERNEL_READ_TOKEN: ${{ secrets.KERNEL_READ_TOKEN }}
+        run: |
+          test -n "$KERNEL_READ_TOKEN" || { echo "KERNEL_READ_TOKEN secret is not set"; exit 1; }
+          kernel="github.com/mohamhossam/platform-kernel"
+          git config --global "url.https://x-access-token:${KERNEL_READ_TOKEN}@${kernel}.insteadOf" "https://${kernel}"
+
       - name: Install locked project
         run: |
           uv sync --locked --extra dev
@@ -295,6 +331,16 @@ jobs:
         with:
           python-version: "3.12"
           enable-cache: true
+
+      - name: Read access to platform-kernel
+        # The kernel is a private git dependency (ADR-0100). The token is a
+        # fine-grained, read-only token for that one repository.
+        env:
+          KERNEL_READ_TOKEN: ${{ secrets.KERNEL_READ_TOKEN }}
+        run: |
+          test -n "$KERNEL_READ_TOKEN" || { echo "KERNEL_READ_TOKEN secret is not set"; exit 1; }
+          kernel="github.com/mohamhossam/platform-kernel"
+          git config --global "url.https://x-access-token:${KERNEL_READ_TOKEN}@${kernel}.insteadOf" "https://${kernel}"
 
       - name: Install locked project
         run: |
@@ -346,6 +392,17 @@ jobs:
         with:
           python-version: "3.12"
           enable-cache: true
+
+      - name: Read access to platform-kernel
+        # The kernel is a private git dependency (ADR-0100). The token is a
+        # fine-grained, read-only token for that one repository.
+        env:
+          KERNEL_READ_TOKEN: ${{ secrets.KERNEL_READ_TOKEN }}
+        run: |
+          test -n "$KERNEL_READ_TOKEN" || { echo "KERNEL_READ_TOKEN secret is not set"; exit 1; }
+          kernel="github.com/mohamhossam/platform-kernel"
+          git config --global "url.https://x-access-token:${KERNEL_READ_TOKEN}@${kernel}.insteadOf" "https://${kernel}"
+
       - name: Install locked project
         run: |
           uv sync --locked --extra dev

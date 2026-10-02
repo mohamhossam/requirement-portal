@@ -18,10 +18,11 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (

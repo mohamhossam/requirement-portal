@@ -20,23 +20,17 @@ def test_production_code_uses_explicit_errors_instead_of_assert() -> None:
     assert not offenders, "Raise an explicit error instead of assert: " + ", ".join(offenders)
 
 
-# Modules whose imports must stay inside functions, and why.
-DEFERRED_IMPORTS = {
-    "infrastructure/documents/bounded_extractor.py": (
-        "runs in the spawned extraction child, which must cap native thread pools "
-        "before NumPy-backed extractors are imported"
-    ),
-    "infrastructure/documents/process_resources.py": (
-        "imports the running platform's OS API only (resource on Unix, ctypes on Windows)"
-    ),
-}
+# Modules whose imports must stay inside functions, and why. The two this
+# application had (the bounded extractor and process resources) moved to
+# platform-kernel with ADR-0100; none remain here.
+DEFERRED_IMPORTS: dict[str, str] = {}
 
 
 def test_every_import_is_at_module_level() -> None:
     """A function-level import hides a dependency and usually papers over a cycle.
 
     Every dependency this package imports is installed, so none needs deferring;
-    the two exceptions above are process- and platform-specific.
+    any exception above must say why it is process- or platform-specific.
     """
     offenders: list[str] = []
     for path in sorted(SOURCE_ROOT.rglob("*.py")):

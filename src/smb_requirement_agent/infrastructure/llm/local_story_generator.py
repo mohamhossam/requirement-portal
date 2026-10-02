@@ -5,6 +5,14 @@ from __future__ import annotations
 import logging
 
 import httpx
+from smb_kernel.diagnostics import DebugTrace, NullDebugTrace
+from smb_kernel.llm.local_structured_output import (
+    LocalStructuredOutputClient,
+)
+from smb_kernel.llm.structured_output import (
+    StructuredOutputClient,
+    StructuredOutputError,
+)
 
 from smb_requirement_agent.application.errors import StoryGenerationError
 from smb_requirement_agent.application.ports.generation_guidance import (
@@ -17,11 +25,7 @@ from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.feature.entities import Feature
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.story.entities import UserStory
-from smb_requirement_agent.infrastructure.diagnostics import DebugTrace, NullDebugTrace
 from smb_requirement_agent.infrastructure.llm.candidate_mappers import to_story_candidates
-from smb_requirement_agent.infrastructure.llm.local_structured_output import (
-    LocalStructuredOutputClient,
-)
 from smb_requirement_agent.infrastructure.llm.prompts.story_prompt import (
     PROMPT_VERSION,
     SPLIT_OPERATION,
@@ -30,10 +34,6 @@ from smb_requirement_agent.infrastructure.llm.prompts.story_prompt import (
     build_story_user_prompt,
 )
 from smb_requirement_agent.infrastructure.llm.schemas.story_schema import StorySetSchema
-from smb_requirement_agent.infrastructure.llm.structured_output import (
-    StructuredOutputClient,
-    StructuredOutputError,
-)
 
 logger = logging.getLogger("smb_requirement_agent.llm.local_story")
 

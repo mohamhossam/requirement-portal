@@ -12,6 +12,7 @@ from dataclasses import replace
 
 import pytest
 from fastapi.testclient import TestClient
+from smb_kernel.documents.text_extractor import SafeDocumentTextExtractor
 
 from smb_requirement_agent.application.ports.architecture_rag import EvidenceChunk
 from smb_requirement_agent.application.ports.catalogue_file import CatalogueFileFormat
@@ -35,7 +36,6 @@ from smb_requirement_agent.infrastructure.architecture.located_extractor import 
     LocatedDocumentExtractor,
 )
 from smb_requirement_agent.infrastructure.architecture.tokenizer import ApproximateTokenizer
-from smb_requirement_agent.infrastructure.documents.text_extractor import SafeDocumentTextExtractor
 from smb_requirement_agent.infrastructure.persistence.in_memory_architecture_knowledge import (
     InMemoryArchitectureKnowledgeRepository,
 )

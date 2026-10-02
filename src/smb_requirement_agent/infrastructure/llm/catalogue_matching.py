@@ -14,6 +14,10 @@ import re
 from difflib import SequenceMatcher
 
 from pydantic import BaseModel, Field, ValidationError
+from smb_kernel.llm.structured_output import (
+    StructuredOutputClient,
+    StructuredOutputError,
+)
 
 from smb_requirement_agent.application.errors import ModelTransportError
 from smb_requirement_agent.application.ports.architecture_rag import (
@@ -31,10 +35,6 @@ from smb_requirement_agent.infrastructure.llm.prompts.catalogue_matching_prompt 
     PROMPT_VERSION,
     SYSTEM_PROMPT,
     build_user_prompt,
-)
-from smb_requirement_agent.infrastructure.llm.structured_output import (
-    StructuredOutputClient,
-    StructuredOutputError,
 )
 
 SHORTLIST_SIZE = 5

@@ -7,6 +7,14 @@ import math
 import httpx
 from openai import OpenAI, OpenAIError
 from pydantic import ValidationError
+from smb_kernel.diagnostics import DebugTrace, NullDebugTrace
+from smb_kernel.llm.local_structured_output import (
+    LocalStructuredOutputClient,
+)
+from smb_kernel.llm.structured_output import (
+    StructuredOutputClient,
+    StructuredOutputError,
+)
 
 from smb_requirement_agent.application.errors import KnowledgeGenerationError
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidence
@@ -23,10 +31,6 @@ from smb_requirement_agent.domain.knowledge.entities import (
 )
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.requirement.value_objects import RequirementId
-from smb_requirement_agent.infrastructure.diagnostics import DebugTrace, NullDebugTrace
-from smb_requirement_agent.infrastructure.llm.local_structured_output import (
-    LocalStructuredOutputClient,
-)
 from smb_requirement_agent.infrastructure.llm.prompts.knowledge_prompt import (
     RELATIONSHIP_SYSTEM_PROMPT,
     SCREEN_PROMPT_VERSION,
@@ -38,10 +42,6 @@ from smb_requirement_agent.infrastructure.llm.prompts.knowledge_prompt import (
 from smb_requirement_agent.infrastructure.llm.schemas.knowledge_schema import (
     AnswerSuggestionListSchema,
     RelationshipScreenSchema,
-)
-from smb_requirement_agent.infrastructure.llm.structured_output import (
-    StructuredOutputClient,
-    StructuredOutputError,
 )
 
 EMBEDDING_DIMENSIONS = 768

@@ -9,10 +9,10 @@ from typing import cast
 
 from psycopg.types.json import Jsonb
 from pydantic import TypeAdapter
+from smb_kernel.embeddings import Embedding
 
 from smb_requirement_agent.application.ports.document_library import DocumentLibraryPort
 from smb_requirement_agent.application.ports.reference_index import ReferenceChunk
-from smb_requirement_agent.application.ports.requirement_knowledge import Embedding
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 
 

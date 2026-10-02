@@ -1,0 +1,1015 @@
+{
+  "components": {
+    "schemas": {
+      "ArchitectureCitation": {
+        "properties": {
+          "chunk_id": {
+            "title": "Chunk Id",
+            "type": "string"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "system_id": {
+            "title": "System Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "system_id",
+          "chunk_id",
+          "quote"
+        ],
+        "title": "ArchitectureCitation",
+        "type": "object"
+      },
+      "ArchitectureDependency": {
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/RelationshipKind",
+            "default": "unspecified"
+          },
+          "source_system_id": {
+            "title": "Source System Id",
+            "type": "string"
+          },
+          "target_system_id": {
+            "title": "Target System Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_system_id",
+          "target_system_id",
+          "description"
+        ],
+        "title": "ArchitectureDependency",
+        "type": "object"
+      },
+      "ArchitectureKnowledgeMatch": {
+        "properties": {
+          "adjacent_dependencies": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ArchitectureDependency"
+            },
+            "title": "Adjacent Dependencies",
+            "type": "array"
+          },
+          "adjacent_omitted": {
+            "default": 0,
+            "title": "Adjacent Omitted",
+            "type": "integer"
+          },
+          "adjacent_systems": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/SystemReference"
+            },
+            "title": "Adjacent Systems",
+            "type": "array"
+          },
+          "citation_ids": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Citation Ids",
+            "type": "array"
+          },
+          "citations": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ArchitectureCitation"
+            },
+            "title": "Citations",
+            "type": "array"
+          },
+          "dependencies": {
+            "items": {
+              "$ref": "#/components/schemas/ArchitectureDependency"
+            },
+            "title": "Dependencies",
+            "type": "array"
+          },
+          "embedding_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Embedding Model"
+          },
+          "evidence_classification": {
+            "default": "legacy_deterministic",
+            "title": "Evidence Classification",
+            "type": "string"
+          },
+          "index_revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Index Revision"
+          },
+          "journey_steps": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/JourneyStep"
+            },
+            "title": "Journey Steps",
+            "type": "array"
+          },
+          "knowledge_version": {
+            "title": "Knowledge Version",
+            "type": "string"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "product_contexts": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ProductContext"
+            },
+            "title": "Product Contexts",
+            "type": "array"
+          },
+          "prompt_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Version"
+          },
+          "suggested_domains": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/DomainSuggestion"
+            },
+            "title": "Suggested Domains",
+            "type": "array"
+          },
+          "systems": {
+            "items": {
+              "$ref": "#/components/schemas/SystemReference"
+            },
+            "title": "Systems",
+            "type": "array"
+          },
+          "uncertainty": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uncertainty"
+          }
+        },
+        "required": [
+          "knowledge_version",
+          "systems",
+          "dependencies"
+        ],
+        "title": "ArchitectureKnowledgeMatch",
+        "type": "object"
+      },
+      "ArchitectureQuery": {
+        "description": "Provider-neutral evidence used to find likely architecture impact.",
+        "properties": {
+          "declared_systems": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Declared Systems",
+            "type": "array"
+          },
+          "release_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release Id"
+          },
+          "text": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Text",
+            "type": "array"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "ArchitectureQuery",
+        "type": "object"
+      },
+      "DomainSuggestion": {
+        "description": "A capability domain whose wording the item matched when no system was found.\n\nAdvice for a reviewer, never mapped impact: it names the systems that do\nwork in that domain and the catalogue words that matched.",
+        "properties": {
+          "domain_id": {
+            "title": "Domain Id",
+            "type": "string"
+          },
+          "matched_terms": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Matched Terms",
+            "type": "array"
+          },
+          "path": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Path",
+            "type": "array"
+          },
+          "system_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "System Ids",
+            "type": "array"
+          },
+          "system_names": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "System Names",
+            "type": "array"
+          }
+        },
+        "required": [
+          "domain_id",
+          "path",
+          "system_ids",
+          "matched_terms"
+        ],
+        "title": "DomainSuggestion",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "JourneyNeighbour": {
+        "description": "An activity just before or after a journey step, and the system that performs it.",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "system_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Id"
+          },
+          "system_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Name"
+          }
+        },
+        "required": [
+          "number",
+          "name"
+        ],
+        "title": "JourneyNeighbour",
+        "type": "object"
+      },
+      "JourneyStep": {
+        "description": "A journey activity a mapped system performs or supports (ADR-0097).\n\nWith the activities that lead into it and follow it, so a reviewer sees which\nsystems hand over to and from the change. Advice, never mapped impact.",
+        "properties": {
+          "after": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/JourneyNeighbour"
+            },
+            "title": "After",
+            "type": "array"
+          },
+          "before": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/JourneyNeighbour"
+            },
+            "title": "Before",
+            "type": "array"
+          },
+          "fulfils": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Fulfils",
+            "type": "array"
+          },
+          "journey_id": {
+            "title": "Journey Id",
+            "type": "string"
+          },
+          "journey_name": {
+            "title": "Journey Name",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "performs": {
+            "title": "Performs",
+            "type": "boolean"
+          },
+          "system_id": {
+            "title": "System Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "system_id",
+          "journey_id",
+          "journey_name",
+          "number",
+          "name",
+          "performs"
+        ],
+        "title": "JourneyStep",
+        "type": "object"
+      },
+      "OfferingDuty": {
+        "description": "One system's part in delivering one component of a product offering.",
+        "properties": {
+          "component_id": {
+            "title": "Component Id",
+            "type": "string"
+          },
+          "component_name": {
+            "title": "Component Name",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "system_id": {
+            "title": "System Id",
+            "type": "string"
+          },
+          "system_name": {
+            "title": "System Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "component_id",
+          "component_name",
+          "system_id",
+          "system_name",
+          "role",
+          "description"
+        ],
+        "title": "OfferingDuty",
+        "type": "object"
+      },
+      "OrganisationReference": {
+        "description": "A squad, value stream or product recorded as it was named at mapping time.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "OrganisationReference",
+        "type": "object"
+      },
+      "ProductContext": {
+        "description": "A product offering the item's text names, and the systems that deliver it (ADR-0097).\n\nAdvice for a reviewer, never mapped impact: the item named the offering, one\nof its components or both, and these are the catalogue's responsibilities\nfor what it named, for the order type it named when it named one.",
+        "properties": {
+          "matched_terms": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Matched Terms",
+            "type": "array"
+          },
+          "order_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Type"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "string"
+          },
+          "product_name": {
+            "title": "Product Name",
+            "type": "string"
+          },
+          "responsibilities": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OfferingDuty"
+            },
+            "title": "Responsibilities",
+            "type": "array"
+          }
+        },
+        "required": [
+          "product_id",
+          "product_name",
+          "matched_terms"
+        ],
+        "title": "ProductContext",
+        "type": "object"
+      },
+      "PublishedReference": {
+        "properties": {
+          "approval_fingerprint": {
+            "title": "Approval Fingerprint",
+            "type": "string"
+          },
+          "block_id": {
+            "title": "Block Id",
+            "type": "string"
+          },
+          "document_id": {
+            "title": "Document Id",
+            "type": "string"
+          },
+          "end_offset": {
+            "title": "End Offset",
+            "type": "integer"
+          },
+          "excerpt": {
+            "title": "Excerpt",
+            "type": "string"
+          },
+          "lineage_hash": {
+            "title": "Lineage Hash",
+            "type": "string"
+          },
+          "location": {
+            "title": "Location",
+            "type": "string"
+          },
+          "publication_id": {
+            "title": "Publication Id",
+            "type": "string"
+          },
+          "revision_id": {
+            "title": "Revision Id",
+            "type": "string"
+          },
+          "start_offset": {
+            "title": "Start Offset",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "version_id": {
+            "title": "Version Id",
+            "type": "string"
+          },
+          "version_number": {
+            "title": "Version Number",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "document_id",
+          "title",
+          "version_id",
+          "version_number",
+          "revision_id",
+          "publication_id",
+          "approval_fingerprint",
+          "block_id",
+          "location",
+          "excerpt",
+          "start_offset",
+          "end_offset",
+          "lineage_hash"
+        ],
+        "title": "PublishedReference",
+        "type": "object"
+      },
+      "PublishedResponse": {
+        "properties": {
+          "has_published": {
+            "title": "Has Published",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "has_published"
+        ],
+        "title": "PublishedResponse",
+        "type": "object"
+      },
+      "ReferenceEvidence": {
+        "description": "Exact citable passage plus bounded, non-authoritative retrieval context.",
+        "properties": {
+          "citation": {
+            "$ref": "#/components/schemas/PublishedReference"
+          },
+          "context_locations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Context Locations",
+            "type": "array"
+          },
+          "context_text": {
+            "title": "Context Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "citation",
+          "context_text",
+          "context_locations"
+        ],
+        "title": "ReferenceEvidence",
+        "type": "object"
+      },
+      "RelationshipKind": {
+        "description": "How the source system depends on the target, when a source says so.",
+        "enum": [
+          "calls_api",
+          "publishes_events_to",
+          "transfers_data_to",
+          "orchestrates",
+          "unspecified"
+        ],
+        "title": "RelationshipKind",
+        "type": "string"
+      },
+      "SearchRequest": {
+        "properties": {
+          "query": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "SearchRequest",
+        "type": "object"
+      },
+      "SystemCapability": {
+        "properties": {
+          "component_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Component Id"
+          },
+          "component_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Component Name"
+          },
+          "domain_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domain Id"
+          },
+          "domain_path": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Domain Path",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "SystemCapability",
+        "type": "object"
+      },
+      "SystemReference": {
+        "properties": {
+          "capabilities": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/SystemCapability"
+            },
+            "title": "Capabilities",
+            "type": "array"
+          },
+          "catalogued": {
+            "title": "Catalogued",
+            "type": "boolean"
+          },
+          "constraints": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Constraints",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "products": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OrganisationReference"
+            },
+            "title": "Products",
+            "type": "array"
+          },
+          "squads": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OrganisationReference"
+            },
+            "title": "Squads",
+            "type": "array"
+          },
+          "value_streams": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OrganisationReference"
+            },
+            "title": "Value Streams",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "catalogued"
+        ],
+        "title": "SystemReference",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "Knowledge service internal API",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/internal/architecture/match": {
+      "post": {
+        "operationId": "match_internal_architecture_match_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArchitectureQuery"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArchitectureKnowledgeMatch"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Match"
+      }
+    },
+    "/internal/events": {
+      "get": {
+        "operationId": "events_internal_events_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "after",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "After",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response Events Internal Events Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Events"
+      }
+    },
+    "/internal/library/published": {
+      "get": {
+        "operationId": "published_internal_library_published_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishedResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Published"
+      }
+    },
+    "/internal/library/retrieve": {
+      "post": {
+        "operationId": "retrieve_internal_library_retrieve_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ReferenceEvidence"
+                  },
+                  "title": "Response Retrieve Internal Library Retrieve Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Retrieve"
+      }
+    },
+    "/internal/library/search": {
+      "post": {
+        "operationId": "search_internal_library_search_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ReferenceEvidence"
+                  },
+                  "title": "Response Search Internal Library Search Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search"
+      }
+    }
+  }
+}

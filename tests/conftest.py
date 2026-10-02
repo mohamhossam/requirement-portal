@@ -13,6 +13,8 @@ from typing import Never
 
 import pytest
 from fastapi.testclient import TestClient
+from smb_kernel.documents.text_extractor import SafeDocumentTextExtractor
+from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
@@ -34,7 +36,6 @@ from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.domain.shared.generation import Provenance
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.documents.text_extractor import SafeDocumentTextExtractor
 from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_audit_repository import (
     InMemoryAnalysisAuditRepository,
 )
@@ -57,7 +58,6 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_feature_reposito
 from smb_requirement_agent.infrastructure.persistence.in_memory_story_repository import (
     InMemoryStoryRepository,
 )
-from smb_requirement_agent.infrastructure.time.fixed_clock import FixedClock
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.interfaces.api.main import create_app
 

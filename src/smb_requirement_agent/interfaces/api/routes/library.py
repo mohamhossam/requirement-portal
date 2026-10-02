@@ -33,7 +33,6 @@ from smb_requirement_agent.application.use_cases.unified_knowledge_search import
     UnifiedSearchHit,
 )
 from smb_requirement_agent.domain.document.library import OwnershipTransfer, ReviewedPassage
-from smb_requirement_agent.domain.document.lineage import ImpactDecisionKind
 from smb_requirement_agent.domain.identity.entities import ActorId
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
@@ -45,6 +44,7 @@ from smb_requirement_agent.interfaces.api.dependencies import (
     limit_provider_calls,
     require_authenticated_actor,
 )
+from smb_requirement_agent.interfaces.api.schemas.source_impact import ImpactDecisionRequest
 
 router = APIRouter(
     prefix="/library", tags=["library"], dependencies=[Depends(require_authenticated_actor)]
@@ -77,7 +77,7 @@ def document_source_impact(
     )
 
 
-@router.get("/requirements/{requirement_id}/source-impact")
+@router.get("/requirements/{requirement_id}/source-impact", deprecated=True)
 def requirement_source_impact(
     requirement_id: str,
     actor: CurrentActorDep,
@@ -88,6 +88,7 @@ def requirement_source_impact(
     active_only: bool = False,
     query: str = Query("", max_length=200),
 ) -> DependencyImpactPage:
+    """Deprecated alias of `GET /requirements/{requirement_id}/source-impact` (ADR-0099)."""
     response.headers["Cache-Control"] = "private, no-store"
     return service.page(
         actor,
@@ -99,20 +100,14 @@ def requirement_source_impact(
     )
 
 
-class ImpactDecisionRequest(BaseModel):
-    publication_state: str = Field(min_length=1, max_length=200)
-    expected_version: int = Field(ge=0)
-    decision: ImpactDecisionKind
-    reason: str = Field(min_length=1, max_length=2000)
-
-
-@router.post("/source-impact/{dependency_id}/decisions")
+@router.post("/source-impact/{dependency_id}/decisions", deprecated=True)
 def decide_source_impact(
     dependency_id: str,
     data: ImpactDecisionRequest,
     actor: CurrentActorDep,
     service: ImpactDep,
 ) -> DependencyImpact:
+    """Deprecated alias of `POST /requirements/{id}/source-impact/{dependency_id}/decisions`."""
     return service.decide(
         dependency_id,
         actor,

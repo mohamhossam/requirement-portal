@@ -6,6 +6,8 @@ import uuid
 from dataclasses import dataclass, replace
 from enum import Enum
 
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.errors import (
     ArtifactVersionConflictError,
     EpicNotFoundError,
@@ -13,7 +15,6 @@ from smb_requirement_agent.application.errors import (
     RequirementAnalysisNotFoundError,
     RequirementNotFoundError,
 )
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_generator import (
     FeatureCandidate,

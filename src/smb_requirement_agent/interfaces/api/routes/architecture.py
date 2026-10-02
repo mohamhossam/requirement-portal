@@ -4,15 +4,17 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from smb_requirement_agent.application.use_cases.architecture_jobs import ArchitectureJobs
 from smb_requirement_agent.application.use_cases.architecture_mapping import (
     MapBreakdownArchitecture,
+)
+from smb_requirement_agent.application.use_cases.architecture_mapping_jobs import (
+    ArchitectureMappingJobs,
 )
 from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     KnowledgeActorDep,
-    get_architecture_jobs,
+    get_architecture_mapping_jobs,
     get_map_breakdown_architecture,
     limit_provider_calls,
     require_authenticated_actor,
@@ -43,11 +45,9 @@ router = APIRouter(
 def start_mapping_job(
     requirement_id: str,
     actor: KnowledgeActorDep,
-    jobs: Annotated[ArchitectureJobs, Depends(get_architecture_jobs)],
+    jobs: Annotated[ArchitectureMappingJobs, Depends(get_architecture_mapping_jobs)],
 ) -> ArchitectureJobResponse:
-    return ArchitectureJobResponse.from_domain(
-        jobs.start_mapping(RequirementId(requirement_id), actor)
-    )
+    return ArchitectureJobResponse.from_domain(jobs.start(RequirementId(requirement_id), actor))
 
 
 @router.post(

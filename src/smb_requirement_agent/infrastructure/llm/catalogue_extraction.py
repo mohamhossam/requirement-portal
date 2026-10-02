@@ -10,6 +10,11 @@ from dataclasses import dataclass, replace
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from smb_kernel.llm.structured_output import (
+    StructuredOutputClient,
+    StructuredOutputError,
+    truncated,
+)
 
 from smb_requirement_agent.application.errors import ModelTransportError
 from smb_requirement_agent.application.ports.catalogue_extractor import (
@@ -52,11 +57,6 @@ from smb_requirement_agent.infrastructure.llm.prompts.catalogue_extraction_promp
     PROMPT_VERSION,
     SYSTEM_PROMPT,
     build_user_prompt,
-)
-from smb_requirement_agent.infrastructure.llm.structured_output import (
-    StructuredOutputClient,
-    StructuredOutputError,
-    truncated,
 )
 
 _MAX_NAME = 200

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import defaultdict
 
 import psycopg
+from smb_kernel.persistence.connector import PostgresConnector
 
 from smb_requirement_agent.application.errors import PersistenceError
 from smb_requirement_agent.application.ports.architecture_mapping_stats import MappingCount
@@ -14,7 +15,6 @@ from smb_requirement_agent.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )
 from smb_requirement_agent.application.ports.story_repository import StoryRepositoryPort
-from smb_requirement_agent.infrastructure.persistence.postgres_connector import PostgresConnector
 
 _COUNTS = """
 WITH mapped AS (

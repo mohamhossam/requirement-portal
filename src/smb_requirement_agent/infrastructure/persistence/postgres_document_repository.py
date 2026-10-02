@@ -2,8 +2,9 @@
 
 import hashlib
 
+from smb_kernel.documents.ports import DocumentStoragePort
+
 from smb_requirement_agent.application.errors import DocumentNotFoundError, DocumentStorageError
-from smb_requirement_agent.application.ports.document_storage import DocumentStoragePort
 from smb_requirement_agent.domain.document.value_objects import DocumentVersionId
 from smb_requirement_agent.infrastructure.persistence.postgres_document_metadata import (
     PostgresDocumentRepository as PostgresDocumentRepository,
@@ -11,19 +12,26 @@ from smb_requirement_agent.infrastructure.persistence.postgres_document_metadata
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 from smb_requirement_agent.infrastructure.persistence.postgres_values import _integer
 
+# Requirement documents and the knowledge side keep separate blob stores (ADR-0099).
+# The table name reaches SQL text, so only these are accepted.
+BLOB_TABLES = frozenset({"document_blobs", "knowledge_document_blobs"})
+
 
 class PostgresDocumentStorage(DocumentStoragePort):
     """Store immutable document bytes in the caller's PostgreSQL unit of work."""
 
-    def __init__(self, store: PostgresSession) -> None:
+    def __init__(self, store: PostgresSession, table: str = "document_blobs") -> None:
+        if table not in BLOB_TABLES:
+            raise ValueError(f"Unknown blob table {table!r}.")
         self._store = store
+        self._table = table
 
     def put(self, version_id: DocumentVersionId, content: bytes) -> None:
         checksum = hashlib.sha256(content).hexdigest()
         with self._store.connection() as connection:
             connection.execute(
-                """
-                INSERT INTO document_blobs
+                f"""
+                INSERT INTO {self._table}
                     (document_version_id, checksum_sha256, size_bytes, content)
                 VALUES (%s, %s, %s, %s)
                 ON CONFLICT (document_version_id) DO NOTHING
@@ -31,8 +39,8 @@ class PostgresDocumentStorage(DocumentStoragePort):
                 (version_id.value, checksum, len(content), content),
             )
             row = connection.execute(
-                """
-                SELECT checksum_sha256, size_bytes, content FROM document_blobs
+                f"""
+                SELECT checksum_sha256, size_bytes, content FROM {self._table}
                 WHERE document_version_id=%s
                 """,
                 (version_id.value,),
@@ -51,8 +59,8 @@ class PostgresDocumentStorage(DocumentStoragePort):
     def get(self, version_id: DocumentVersionId) -> bytes:
         with self._store.connection() as connection:
             row = connection.execute(
-                """
-                SELECT content, checksum_sha256, size_bytes FROM document_blobs
+                f"""
+                SELECT content, checksum_sha256, size_bytes FROM {self._table}
                 WHERE document_version_id=%s
                 """,
                 (version_id.value,),
@@ -68,7 +76,7 @@ class PostgresDocumentStorage(DocumentStoragePort):
         """Remove a blob only when its surrounding application action is rolling back."""
         with self._store.connection() as connection:
             connection.execute(
-                "DELETE FROM document_blobs WHERE document_version_id=%s",
+                f"DELETE FROM {self._table} WHERE document_version_id=%s",
                 (version_id.value,),
             )
 

@@ -4,7 +4,7 @@ import logging
 from threading import Event, Thread
 
 from smb_requirement_agent.application.ports.architecture_jobs import ArchitectureJob
-from smb_requirement_agent.application.use_cases.architecture_jobs import ArchitectureJobs
+from smb_requirement_agent.application.use_cases.leased_jobs import LeasedJobs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,13 +23,15 @@ class ArchitectureJobWorker:
 
     def __init__(
         self,
-        jobs: ArchitectureJobs,
+        jobs: LeasedJobs,
         *,
         poll_interval_seconds: float,
         shutdown_grace_seconds: float,
         lease_renewal_seconds: float = LEASE_RENEWAL_SECONDS,
+        name: str = "architecture-jobs",
     ) -> None:
         self._jobs = jobs
+        self._name = name
         self._poll_interval = poll_interval_seconds
         self._shutdown_grace = shutdown_grace_seconds
         self._lease_renewal = lease_renewal_seconds
@@ -44,7 +46,7 @@ class ArchitectureJobWorker:
         if self._thread is not None and self._thread.is_alive():
             return
         self._stop.clear()
-        self._thread = Thread(target=self._run, name="architecture-jobs", daemon=True)
+        self._thread = Thread(target=self._run, name=self._name, daemon=True)
         self._thread.start()
 
     def _run(self) -> None:

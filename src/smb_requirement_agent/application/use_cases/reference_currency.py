@@ -1,0 +1,198 @@
+"""Whether the references requirement work relies on are still current (ADR-0099).
+
+Answered from requirement work's local copy of the library's citable state,
+never by reading the library. The copy's rows are locked for the caller's
+transaction, so a withdrawal is serialised against the work that checks it.
+"""
+
+from collections.abc import Sequence
+from datetime import timedelta
+
+from smb_kernel.time.clock import ClockPort
+
+from smb_requirement_agent.application.errors import (
+    PersistenceError,
+    RequirementAnalysisConflictError,
+)
+from smb_requirement_agent.application.ports.architecture_knowledge import (
+    ArchitectureReleaseStatePort,
+)
+from smb_requirement_agent.application.ports.knowledge_events import (
+    ARCHITECTURE_RELEASE_ACTIVATED,
+    REFERENCE_DOCUMENT_CHANGED,
+    KnowledgeEventSourcePort,
+)
+from smb_requirement_agent.application.ports.reference_grounding import (
+    ReferenceEvidence,
+    ReferenceEvidencePort,
+    ReferenceKnowledgePort,
+)
+from smb_requirement_agent.application.ports.reference_publications import (
+    ReferencePublicationStatePort,
+)
+from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
+from smb_requirement_agent.application.use_cases.source_lineage import analysis_lineage
+from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
+from smb_requirement_agent.domain.analysis.value_objects import (
+    IntentProposal,
+    IntentProposalStatus,
+)
+from smb_requirement_agent.domain.document.reference import (
+    PublishedReference,
+    ReferenceDocumentState,
+)
+
+
+class ReferenceCurrency:
+    def __init__(
+        self, states: ReferencePublicationStatePort, transactions: TransactionManagerPort
+    ) -> None:
+        self._states = states
+        self._transactions = transactions
+
+    def _current(self, citation: PublishedReference) -> bool:
+        state = self._states.get(citation.document_id)
+        return state is not None and state.cites(citation)
+
+    def require_current(self, evidence: Sequence[PublishedReference]) -> None:
+        with self._transactions.transaction():
+            self._states.lock(tuple(sorted({c.document_id for c in evidence})))
+            if any(not self._current(c) for c in evidence):
+                raise RequirementAnalysisConflictError(
+                    "A cited reference was withdrawn or replaced. "
+                    "Re-analyse and reconcile its applicability before continuing."
+                )
+
+    def stale_analysis(
+        self, analysis: RequirementAnalysis, *, target_ids: Sequence[str] | None = None
+    ) -> tuple[str, ...]:
+        with self._transactions.transaction():
+            origins = analysis_lineage(analysis)
+            self._states.lock(tuple(sorted({item.citation.document_id for item in origins})))
+            return (
+                *self.stale_proposals(analysis.intent_proposals),
+                *(
+                    item.citation.publication_id
+                    for item in origins
+                    if not self._current(item.citation)
+                ),
+            )
+
+    def stale_proposals(self, proposals: Sequence[IntentProposal]) -> tuple[str, ...]:
+        with self._transactions.transaction():
+            self._states.lock(
+                tuple(
+                    sorted(
+                        {
+                            c.document_id
+                            for p in proposals
+                            if p.status is not IntentProposalStatus.REJECTED
+                            for c in p.reference_evidence
+                        }
+                    )
+                )
+            )
+            return tuple(
+                p.id.value
+                for p in proposals
+                if p.status is not IntentProposalStatus.REJECTED
+                and any(not self._current(c) for c in p.reference_evidence)
+            )
+
+
+class CurrentReferences:
+    """Library retrieval with local currency checks: one `ReferenceSearchPort`."""
+
+    def __init__(self, knowledge: ReferenceKnowledgePort, currency: ReferenceEvidencePort) -> None:
+        self._knowledge = knowledge
+        self._currency = currency
+
+    def retrieve(self, query: str) -> tuple[ReferenceEvidence, ...]:
+        return self._knowledge.retrieve(query)
+
+    def require_current(self, evidence: Sequence[PublishedReference]) -> None:
+        self._currency.require_current(evidence)
+
+    def stale_analysis(
+        self, analysis: RequirementAnalysis, *, target_ids: Sequence[str] | None = None
+    ) -> tuple[str, ...]:
+        return self._currency.stale_analysis(analysis, target_ids=target_ids)
+
+    def stale_proposals(self, proposals: Sequence[IntentProposal]) -> tuple[str, ...]:
+        return self._currency.stale_proposals(proposals)
+
+
+class ProjectKnowledgeEvents:
+    """Bring the local copy up to date with the library's events, a batch at a time.
+
+    Sequence numbers are taken when an event is written, but transactions commit
+    in their own order, so a later number can be visible while an earlier one is
+    still in flight. Every visible event is applied (each carries its document's
+    whole state, and a newer one always wins), but the cursor only moves through
+    an unbroken run of numbers. A gap older than `gap_grace` is a rolled-back
+    write and is stepped over.
+    """
+
+    def __init__(
+        self,
+        outbox: KnowledgeEventSourcePort,
+        states: ReferencePublicationStatePort,
+        releases: ArchitectureReleaseStatePort,
+        transactions: TransactionManagerPort,
+        clock: ClockPort,
+        batch: int = 100,
+        gap_grace: timedelta = timedelta(seconds=60),
+    ) -> None:
+        self._outbox = outbox
+        self._states = states
+        self._releases = releases
+        self._transactions = transactions
+        self._clock = clock
+        self._batch = batch
+        self._gap_grace = gap_grace
+
+    def project_next(self) -> bool:
+        with self._transactions.transaction():
+            cursor = self._states.cursor()
+            events = self._outbox.after(cursor, self._batch)
+            for event in events:
+                if event.kind == REFERENCE_DOCUMENT_CHANGED:
+                    self._states.apply(
+                        event.seq, ReferenceDocumentState.from_payload(event.payload)
+                    )
+                elif event.kind == ARCHITECTURE_RELEASE_ACTIVATED:
+                    self._releases.apply(event.seq, _release_id(event.payload))
+            reached = cursor
+            now = self._clock.now()
+            for event in events:
+                if event.seq != reached + 1 and now - event.created_at < self._gap_grace:
+                    break
+                reached = event.seq
+            if reached > cursor:
+                self._states.advance(reached)
+            return reached > cursor
+
+    def drain(self) -> None:
+        """Project until caught up, or until the cursor waits at an in-flight gap."""
+        for _ in range(1000):
+            if not self.project_next():
+                return
+
+
+class CurrentArchitectureRelease:
+    """The active catalogue release, as requirement work's local copy records it."""
+
+    def __init__(self, releases: ArchitectureReleaseStatePort) -> None:
+        self._releases = releases
+
+    def active_release_id(self) -> str:
+        release_id = self._releases.active_release_id()
+        if release_id is None:
+            raise PersistenceError("No active architecture release is known yet.")
+        return release_id
+
+
+def _release_id(payload: object) -> str:
+    if isinstance(payload, dict) and isinstance(payload.get("release_id"), str):
+        return str(payload["release_id"])
+    raise PersistenceError("Architecture release event is malformed.")

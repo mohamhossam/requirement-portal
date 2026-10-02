@@ -13,9 +13,19 @@ ENV UV_COMPILE_BYTECODE=1 \
     UV_PYTHON_DOWNLOADS=never \
     UV_PROJECT_ENVIRONMENT=/app/.venv
 WORKDIR /src
-# Dependencies first, so a source change does not reinstall them.
+# uv fetches platform-kernel, a private git dependency (ADR-0100), with git.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+# Dependencies first, so a source change does not reinstall them. The read
+# token arrives as a BuildKit secret and reaches git only through environment
+# configuration inside this one step, so it is never written to a layer.
 COPY pyproject.toml uv.lock ./
-RUN uv sync --locked --no-dev --no-install-project
+RUN --mount=type=secret,id=kernel_read_token,required=true \
+    export GIT_CONFIG_COUNT=1 \
+      GIT_CONFIG_KEY_0="url.https://x-access-token:$(cat /run/secrets/kernel_read_token)@github.com/mohamhossam/platform-kernel.insteadOf" \
+      GIT_CONFIG_VALUE_0="https://github.com/mohamhossam/platform-kernel" \
+    && uv sync --locked --no-dev --no-install-project
 COPY src ./src
 RUN uv sync --locked --no-dev --no-editable
 

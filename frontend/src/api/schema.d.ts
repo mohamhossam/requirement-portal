@@ -1148,7 +1148,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Requirement Source Impact */
+        /**
+         * Requirement Source Impact
+         * @deprecated
+         * @description Deprecated alias of `GET /requirements/{requirement_id}/source-impact` (ADR-0099).
+         */
         get: operations["requirement_source_impact_library_requirements__requirement_id__source_impact_get"];
         put?: never;
         post?: never;
@@ -1167,7 +1171,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Decide Source Impact */
+        /**
+         * Decide Source Impact
+         * @deprecated
+         * @description Deprecated alias of `POST /requirements/{id}/source-impact/{dependency_id}/decisions`.
+         */
         post: operations["decide_source_impact_library_source_impact__dependency_id__decisions_post"];
         delete?: never;
         options?: never;
@@ -2744,6 +2752,40 @@ export interface paths {
         get: operations["export_revision_requirements__requirement_id__revisions__revision_number__export_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/requirements/{requirement_id}/source-impact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Requirement Source Impact */
+        get: operations["requirement_source_impact_requirements__requirement_id__source_impact_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/requirements/{requirement_id}/source-impact/{dependency_id}/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decide Requirement Source Impact */
+        post: operations["decide_requirement_source_impact_requirements__requirement_id__source_impact__dependency_id__decisions_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -14032,6 +14074,82 @@ export interface operations {
                 content: {
                     "application/json": unknown;
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    requirement_source_impact_requirements__requirement_id__source_impact_get: {
+        parameters: {
+            query?: {
+                offset?: number;
+                limit?: number;
+                active_only?: boolean;
+                query?: string;
+            };
+            header?: {
+                "X-Fake-Actor-Id"?: string | null;
+            };
+            path: {
+                requirement_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DependencyImpactPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decide_requirement_source_impact_requirements__requirement_id__source_impact__dependency_id__decisions_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Fake-Actor-Id"?: string | null;
+            };
+            path: {
+                requirement_id: string;
+                dependency_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImpactDecisionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DependencyImpact"];
                 };
             };
             /** @description Validation Error */

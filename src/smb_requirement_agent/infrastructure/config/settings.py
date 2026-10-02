@@ -13,12 +13,12 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from dotenv import load_dotenv
-
-from smb_requirement_agent.infrastructure.config.llm_profiles import (
+from smb_kernel.llm.profiles import (
     LLMProfileConfiguration,
     ProfileConfigurationError,
     load_profiles,
 )
+
 from smb_requirement_agent.infrastructure.config.options import (
     DEFAULT_AI_JOB_HEARTBEAT_SECONDS,
     DEFAULT_AI_JOB_LEASE_SECONDS,
@@ -212,6 +212,9 @@ class Settings:
     metrics_port: int | None = None
     metrics_host: str = "127.0.0.1"
     request_max_body_bytes: int = DEFAULT_REQUEST_MAX_BODY_BYTES
+    # The token the knowledge service presents on /internal routes (ADR-0099).
+    # Unset, the internal API is not served at all.
+    knowledge_service_token: str | None = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
         validate_settings(self)
@@ -556,4 +559,5 @@ def _operability_from_env() -> dict[str, Any]:
         "metrics_port": port,
         "metrics_host": os.getenv("METRICS_HOST", "127.0.0.1").strip(),
         "request_max_body_bytes": body,
+        "knowledge_service_token": os.getenv("KNOWLEDGE_SERVICE_TOKEN", "").strip() or None,
     }

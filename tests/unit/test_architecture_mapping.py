@@ -384,7 +384,7 @@ def test_mapping_job_pins_release_and_review_rejects_outdated_architecture(
     container: Container,
 ) -> None:
     requirement_id, _, _ = _tree(client)
-    job = container.architecture_jobs.enqueue_mapping(
+    job = container.architecture_mapping_jobs.enqueue(
         RequirementId(requirement_id),
         Actor("fake-owner", frozenset({"knowledge_reader", "knowledge_maintainer"})),
     )
@@ -398,7 +398,7 @@ def test_mapping_job_pins_release_and_review_rejects_outdated_architecture(
     )
     assert published.status_code == 200
 
-    completed = container.architecture_jobs.run_once()
+    completed = container.architecture_mapping_jobs.run_once()
     assert completed is not None and completed.id == job.id and completed.status == "succeeded"
     features = client.get(f"/requirements/{requirement_id}/features").json()["features"]
     assert features[0]["architecture"]["knowledge_version"] == "smb-source-reference-v1"
@@ -411,3 +411,40 @@ def test_mapping_job_pins_release_and_review_rejects_outdated_architecture(
     review = client.post(f"/requirements/{requirement_id}/breakdown-review")
     assert review.status_code == 200
     assert review.json()["fresh"] is True
+
+
+def test_mapping_jobs_run_in_their_own_queue_behind_the_shared_job_url(
+    client: TestClient,
+    container: Container,
+) -> None:
+    """Mapping is requirement work with its own queue (ADR-0099); its URLs are unchanged."""
+    requirement_id, _, _ = _tree(client)
+    started = client.post(f"/requirements/{requirement_id}/architecture-mapping/jobs")
+    assert started.status_code == 202
+    job = started.json()
+    assert job["status"] == "succeeded"
+
+    assert container.architecture_mapping_jobs.owns(job["id"])
+    assert not container.architecture_jobs.owns(job["id"])
+    assert client.get(f"/jobs/{job['id']}").json()["id"] == job["id"]
+    assert client.get("/jobs/no-such-job").status_code == 404
+
+
+def test_a_mapping_queued_under_other_models_records_a_knowledge_conflict(
+    client: TestClient,
+    container: Container,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    requirement_id, _, _ = _tree(client)
+    actor = Actor("fake-owner", frozenset({"knowledge_reader", "knowledge_maintainer"}))
+    queued = container.architecture_mapping_jobs.enqueue(RequirementId(requirement_id), actor)
+    # The configured reasoning model changes between asking and running.
+    monkeypatch.setattr(
+        container.architecture_mapping_jobs, "_reasoning_profile", "other:architecture-impact-v1"
+    )
+
+    finished = container.architecture_mapping_jobs.run_once()
+
+    assert finished is not None and finished.id == queued.id
+    assert finished.status == "failed"
+    assert finished.error_category == "architecture_knowledge_conflict"

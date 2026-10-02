@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import cast
 
-from psycopg import Connection
+from smb_kernel.persistence.connector import DbConnection as DbConnection
 
 from smb_requirement_agent.application.errors import (
     PersistenceError,
@@ -14,8 +14,6 @@ from smb_requirement_agent.domain.epic.value_objects import EpicId
 from smb_requirement_agent.domain.feature.value_objects import FeatureId
 from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.infrastructure.persistence.payload_fields import JsonObject
-
-DbConnection = Connection[tuple[object, ...]]
 
 
 def _payload(value: object) -> JsonObject:

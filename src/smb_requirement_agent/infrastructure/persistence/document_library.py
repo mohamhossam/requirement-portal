@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import replace
 from datetime import datetime
 from threading import RLock
@@ -11,7 +12,13 @@ from psycopg.types.json import Jsonb
 from pydantic import TypeAdapter
 
 from smb_requirement_agent.application.errors import DocumentVersionConflictError
+from smb_requirement_agent.application.ports.document_library import DocumentLibraryPort
+from smb_requirement_agent.application.ports.knowledge_events import (
+    REFERENCE_DOCUMENT_CHANGED,
+    KnowledgeEventOutboxPort,
+)
 from smb_requirement_agent.domain.document.library import IngestionStage, LibraryDocument
+from smb_requirement_agent.domain.document.reference import ReferenceDocumentState
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 
 
@@ -60,29 +67,6 @@ def claimed(
 
 
 class InMemoryDocumentLibrary:
-    def list_attachments(self, source_id: str, is_draft: bool) -> tuple[LibraryDocument, ...]:
-        with self._lock:
-            return tuple(
-                d
-                for d in self._documents.values()
-                if d.attachment_target is not None
-                and d.attachment_target.source_id == source_id
-                and d.attachment_target.is_draft == is_draft
-            )
-
-    def pending_attachment(self) -> LibraryDocument | None:
-        with self._lock:
-            return next(
-                (
-                    d
-                    for d in self._documents.values()
-                    if d.attachment_target is not None
-                    and d.attached_document_id is None
-                    and d.versions[-1].stage is IngestionStage.READY
-                ),
-                None,
-            )
-
     def has_incompatible_publication(self, identities: tuple[str, ...]) -> bool:
         with self._lock:
             return any(
@@ -156,7 +140,7 @@ class InMemoryDocumentLibrary:
             return tuple(
                 d
                 for d in sorted(self._documents.values(), key=lambda d: d.id)
-                if d.attachment_target is None and (d.owner.id.value == actor_id or d.published_id)
+                if d.owner.id.value == actor_id or d.published_id
             )[offset : offset + limit]
 
     def find_submission(self, actor_id: str, key: str) -> LibraryDocument | None:
@@ -184,26 +168,6 @@ class InMemoryDocumentLibrary:
 
 
 class PostgresDocumentLibrary:
-    def list_attachments(self, source_id: str, is_draft: bool) -> tuple[LibraryDocument, ...]:
-        with self._store.connection() as connection:
-            rows = connection.execute(
-                """SELECT payload FROM library_documents
-                WHERE payload->'attachment_target'->>'source_id'=%s
-                AND (payload->'attachment_target'->>'is_draft')::boolean=%s ORDER BY id""",
-                (source_id, is_draft),
-            ).fetchall()
-        return tuple(self._codec.validate_python(row[0]) for row in rows)
-
-    def pending_attachment(self) -> LibraryDocument | None:
-        with self._store.connection() as connection:
-            row = connection.execute(
-                """SELECT payload FROM library_documents
-                WHERE payload->'attachment_target'->>'source_id' IS NOT NULL
-                AND payload->>'attached_document_id' IS NULL
-                AND payload->'versions'->-1->>'stage'='ready_for_review' ORDER BY id LIMIT 1""",
-            ).fetchone()
-        return self._codec.validate_python(row[0]) if row else None
-
     def has_incompatible_publication(self, identities: tuple[str, ...]) -> bool:
         with self._store.connection() as connection:
             row = connection.execute(
@@ -317,7 +281,6 @@ class PostgresDocumentLibrary:
             rows = connection.execute(
                 """SELECT payload FROM library_documents
                 WHERE (owner_id=%s OR published_id IS NOT NULL)
-                AND payload->'attachment_target'->>'source_id' IS NULL
                 ORDER BY id OFFSET %s LIMIT %s""",
                 (actor_id, offset, limit),
             ).fetchall()
@@ -349,3 +312,65 @@ class PostgresDocumentLibrary:
             document = claimed(previous, now, until, token)
             self.save(document, previous.version)
             return document
+
+
+class PublishingDocumentLibrary:
+    """A library repository that publishes each document's citable state as it changes.
+
+    Every add and save (a claim included) writes a `reference_document_changed`
+    event in the same transaction. While requirement work runs in this process,
+    `relay` hands the event straight to its local copy in that transaction too,
+    so a withdrawal is seen at once. Once the library has its own service the
+    relay goes away and the copy catches up from the outbox (ADR-0099).
+    """
+
+    def __init__(
+        self,
+        inner: DocumentLibraryPort,
+        outbox: KnowledgeEventOutboxPort,
+        relay: Callable[[int, ReferenceDocumentState], None] | None = None,
+    ) -> None:
+        self._inner = inner
+        self._outbox = outbox
+        self._relay = relay
+
+    def _publish(self, document: LibraryDocument) -> None:
+        state = document.citable_state()
+        seq = self._outbox.append(REFERENCE_DOCUMENT_CHANGED, document.id, state.to_payload())
+        if self._relay is not None:
+            self._relay(seq, state)
+
+    def add(self, document: LibraryDocument) -> None:
+        self._inner.add(document)
+        self._publish(document)
+
+    def save(self, document: LibraryDocument, expected_version: int) -> None:
+        self._inner.save(document, expected_version)
+        self._publish(document)
+
+    def claim(self, now: datetime, until: datetime, token: str) -> LibraryDocument | None:
+        document = self._inner.claim(now, until, token)
+        if document is not None:
+            self._publish(document)
+        return document
+
+    def get(self, document_id: str) -> LibraryDocument | None:
+        return self._inner.get(document_id)
+
+    def has_published(self) -> bool:
+        return self._inner.has_published()
+
+    def has_incompatible_publication(self, identities: tuple[str, ...]) -> bool:
+        return self._inner.has_incompatible_publication(identities)
+
+    def lock_publications(self, document_ids: tuple[str, ...]) -> None:
+        self._inner.lock_publications(document_ids)
+
+    def pending_publication(self, now: datetime) -> LibraryDocument | None:
+        return self._inner.pending_publication(now)
+
+    def list_visible(self, actor_id: str, offset: int, limit: int) -> tuple[LibraryDocument, ...]:
+        return self._inner.list_visible(actor_id, offset, limit)
+
+    def find_submission(self, actor_id: str, key: str) -> LibraryDocument | None:
+        return self._inner.find_submission(actor_id, key)

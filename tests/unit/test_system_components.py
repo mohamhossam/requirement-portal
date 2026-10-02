@@ -11,6 +11,7 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 from openpyxl import Workbook, load_workbook
+from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.application.ports.architecture_knowledge import (
     ArchitectureKnowledgeMatch,
@@ -83,7 +84,6 @@ from smb_requirement_agent.infrastructure.persistence.shared_payloads import (
     architecture_from_payload,
     architecture_to_payload,
 )
-from smb_requirement_agent.infrastructure.time.fixed_clock import FixedClock
 from smb_requirement_agent.interfaces.api.schemas.architecture_knowledge import (
     SystemDefinitionSchema,
 )
