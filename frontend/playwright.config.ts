@@ -7,7 +7,6 @@ const apiPort = process.env.SMOKE_API_PORT ?? "8000";
 const uiPort = process.env.SMOKE_UI_PORT ?? "4173";
 const apiUrl = `http://127.0.0.1:${apiPort}`;
 const uiUrl = `http://127.0.0.1:${uiPort}`;
-const lineagePostgres = process.env.SMOKE_LINEAGE_POSTGRES === "1";
 
 export default defineConfig({
   testDir: "./tests",
@@ -33,11 +32,11 @@ export default defineConfig({
   webServer: [
     {
       command:
-        `"${smokePython}" -m uvicorn ${lineagePostgres ? "tests.lineage_smoke:create_app --factory" : "smb_requirement_agent.interfaces.api.main:app"} --host 127.0.0.1 --port ${apiPort}`,
+        `"${smokePython}" -m uvicorn smb_requirement_agent.interfaces.api.main:app --host 127.0.0.1 --port ${apiPort}`,
       cwd: path.resolve(import.meta.dirname, ".."),
       url: `${apiUrl}/health`,
       reuseExistingServer: !process.env.CI,
-      env: { ...process.env, PROVIDER_RATE_LIMIT_PER_MINUTE: "0", LLM_PROVIDER: "fake", PERSISTENCE_PROVIDER: lineagePostgres ? "postgres" : "memory", IDENTITY_PROVIDER: "fake", LIBRARY_SCAN_MODE: lineagePostgres ? "clamav" : "offline" },
+      env: { ...process.env, PROVIDER_RATE_LIMIT_PER_MINUTE: "0", LLM_PROVIDER: "fake", PERSISTENCE_PROVIDER: "memory", IDENTITY_PROVIDER: "fake", LIBRARY_SCAN_MODE: "offline" },
       timeout: 120_000,
     },
     {

@@ -9,8 +9,8 @@ import { Button } from "../../components/ui";
 import "./source-impact.css";
 import { ErrorNotice, LoadingState } from "../../components/states";
 
-export function SourceImpactPanel({ documentId, requirementId, canDecide = false }: {
-  documentId?: string; requirementId?: string; canDecide?: boolean;
+export function SourceImpactPanel({ requirementId, canDecide = false }: {
+  requirementId: string; canDecide?: boolean;
 }) {
   const heading = useId();
   const [open, setOpen] = useState(false);
@@ -19,8 +19,8 @@ export function SourceImpactPanel({ documentId, requirementId, canDecide = false
   const [query, setQuery] = useState("");
   const [search, setSearch] = useState("");
   const result = useQuery({
-    queryKey: queryKeys.scope("source-impact", documentId, requirementId, offset, activeOnly, search),
-    queryFn: () => api.sourceImpact({ documentId, requirementId, offset, activeOnly, query: search }),
+    queryKey: queryKeys.scope("source-impact", requirementId, offset, activeOnly, search),
+    queryFn: () => api.sourceImpact({ requirementId, offset, activeOnly, query: search }),
     enabled: open,
   });
   return <section className="source-impact" aria-labelledby={heading}>
@@ -53,7 +53,7 @@ function ImpactRow({ item, canDecide }: { item: DependencyImpact; canDecide: boo
   const row = item.dependency;
   const citation = row.lineage.citation;
   const mutation = useMutation({
-    mutationFn: () => api.decideSourceImpact(item, decision, reason),
+    mutationFn: () => api.decideSourceImpact(row.requirement_id, item, decision, reason),
     onSuccess: async () => {
       setReason("");
       await Promise.all([

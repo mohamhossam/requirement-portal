@@ -6,8 +6,9 @@ import { Link } from "react-router-dom";
 import type { ArchitectureImpact } from "../../api/client";
 
 type SystemReference = ArchitectureImpact["systems"][number];
-import { knowledgeApi } from "../../api/knowledge";
-import { kindNote, roleLabel } from "../catalogue/labels";
+import { KNOWLEDGE_PORTAL_URL, evidenceHref, knowledgeApi } from "../../api/knowledge";
+import { useIsKnowledgeAdmin } from "../../auth/useIsKnowledgeAdmin";
+import { kindNote, roleLabel } from "./labels";
 import { Badge, cx } from "../../components/ui";
 
 /**
@@ -34,7 +35,7 @@ export function ArchitectureImpactPanel({
   impact: ArchitectureImpact | null;
   compact?: boolean;
 }) {
-  const active = useQuery({ queryKey: ["knowledge", "active"], queryFn: knowledgeApi.active,
+  const active = useQuery({ queryKey: ["knowledge", "active"], queryFn: knowledgeApi.activeRelease,
     enabled: Boolean(impact) });
   if (!impact) {
     return (
@@ -52,7 +53,6 @@ export function ArchitectureImpactPanel({
   // (ADR-0089). Only matched capabilities are listed, so the label says so.
   const areas = [...new Set(impact.systems.flatMap((system) =>
     system.capabilities.map((capability) => capability.domain_path?.[0]).filter((area): area is string => Boolean(area))))];
-  const release = `/architecture-knowledge/releases/${encodeURIComponent(impact.knowledge_version)}/evidence`;
   return (
     <section className="grid gap-4" aria-label="Architecture impact" data-compact={compact || undefined}>
       <header className="flex flex-wrap items-start justify-between gap-3">
@@ -140,7 +140,7 @@ export function ArchitectureImpactPanel({
               {(impact.citations ?? []).filter((item) => item.system_id === system.id).map((citation, index) => (
                 <blockquote key={`${citation.chunk_id}-${index}`} dir="auto" className="border-line m-0 grid gap-1 border-0 border-l-2 border-solid pl-3">
                   <p className="text-document font-document text-ink-soft m-0">{citation.quote}</p>
-                  <Link className={cx("text-meta", LINK)} to={`${release}/${encodeURIComponent(citation.chunk_id)}`}>
+                  <Link className={cx("text-meta", LINK)} to={evidenceHref(impact.knowledge_version, citation.chunk_id)}>
                     View supporting evidence
                   </Link>
                 </blockquote>
@@ -176,7 +176,7 @@ export function ArchitectureImpactPanel({
           <ul className="m-0 flex list-none flex-wrap gap-x-4 gap-y-1 p-0">
             {impact.citation_ids.map((id, index) => (
               <li key={id}>
-                <Link className={cx("text-meta", LINK)} to={`${release}/${encodeURIComponent(id)}`}>
+                <Link className={cx("text-meta", LINK)} to={evidenceHref(impact.knowledge_version, id)}>
                   Evidence {index + 1}
                 </Link>
               </li>
@@ -276,7 +276,7 @@ function ConnectedSystems({ impact, compact }: { impact: ArchitectureImpact; com
           {more > 0 && (
             <p className="text-meta text-ink-muted m-0">
               {more === 1 ? "1 more connected system is" : `${more} more connected systems are`} in the{" "}
-              <Link className={LINK} to="/architecture-knowledge">architecture catalogue</Link>.
+              <CatalogueName />.
             </p>
           )}
         </>
@@ -426,7 +426,7 @@ function SuggestedDomains({ impact }: { impact: ArchitectureImpact }) {
       <p className="text-meta text-ink-muted m-0 max-w-[68ch]">
         A suggestion, not a mapping: the wording shares these words with the catalogue. Check whether their
         systems are affected. Naming a system on the requirement, or adding these words to the{" "}
-        <Link className={LINK} to="/architecture-knowledge?view=domains">architecture catalogue</Link>, lets mapping find it.
+        <CatalogueName />, lets mapping find it.
       </p>
       <ul role="list" className="m-0 grid list-none gap-2 p-0">
         {suggestions.map((item) => (
@@ -443,4 +443,15 @@ function SuggestedDomains({ impact }: { impact: ArchitectureImpact }) {
       </ul>
     </div>
   );
+}
+
+/**
+ * "architecture catalogue", linked to the knowledge portal for the people who
+ * curate it there (ADR-0099); plain words for everyone else.
+ */
+function CatalogueName() {
+  const admin = useIsKnowledgeAdmin();
+  return admin
+    ? <a className={LINK} href={KNOWLEDGE_PORTAL_URL}>architecture catalogue</a>
+    : <>architecture catalogue</>;
 }

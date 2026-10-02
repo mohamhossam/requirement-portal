@@ -3,6 +3,7 @@ import { Badge, Button, Card, Textarea } from "../../components/ui";
 import { SourceLinks } from "./AnalysisSources";
 import { humanEvidence } from "./analysisFormat";
 import { INTENT_KIND_LABEL, PROPOSAL_STATUS_LABEL } from "./labels";
+import { passageHref } from "../../api/knowledge";
 
 export type IntentProposalDraft = { version: number; replacement: string; measures: string; rationale?: string };
 
@@ -103,7 +104,7 @@ export function IntentProposalCard({
           {stale && <p role="alert" className="text-body m-0">Reference evidence changed. Re-analyse, then reject the outdated proposal or review a new citation before continuing.</p>}
           {references.map((citation) => (
             <div key={`${citation.publication_id}:${citation.block_id}:${citation.start_offset}`} className="grid min-w-0 gap-1">
-              <a className="text-accent text-body break-words underline" target="_blank" rel="noreferrer" href={`/documents/library/${encodeURIComponent(citation.document_id)}?${new URLSearchParams({ publication: citation.publication_id, version: citation.version_id, revision: citation.revision_id, passage: citation.block_id })}`}>
+              <a className="text-accent text-body break-words underline" target="_blank" rel="noreferrer" href={passageHref(citation)}>
                 <bdi>{citation.title}</bdi> · version {citation.version_number} · <bdi>{citation.location}</bdi>
               </a>
               <blockquote dir="auto" className="text-document m-0 whitespace-pre-wrap break-words font-serif">{citation.excerpt}</blockquote>

@@ -4,6 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { api, type DocumentSummary, type Requirement, type RequirementDraft } from "../api/client";
+import { AuthContext, type AuthState } from "../auth/authContext";
 import { renderWithClient } from "../test/renderWithClient";
 import { DocumentsPage } from "./DocumentsPage";
 
@@ -40,11 +41,12 @@ const catalogue = [
   file("doc-3", "notes.md", { requirement_id: null, draft_id: "draft-1" }, { mime_type: "text/markdown", created_at: "2026-09-02T12:00:00Z" }),
 ];
 
-function renderPage() {
+function renderPage(roles: string[] = []) {
   vi.spyOn(api, "listDocuments").mockResolvedValue(catalogue);
   vi.spyOn(api, "getRequirement").mockResolvedValue({ id: "requirement-1", title: "High-speed business bundles" } as Requirement);
   vi.spyOn(api, "listRequirementDrafts").mockResolvedValue([{ id: "draft-1", title: "Invoice discount display" } as RequirementDraft]);
-  renderWithClient(<MemoryRouter><DocumentsPage /></MemoryRouter>);
+  const auth = { actor: { id: "a-1", display_name: "Amina", email: null, roles } } as unknown as AuthState;
+  renderWithClient(<AuthContext.Provider value={auth}><MemoryRouter><DocumentsPage /></MemoryRouter></AuthContext.Provider>);
 }
 
 const fileNames = () => within(screen.getByRole("table", { name: "Documents" }))
@@ -129,4 +131,16 @@ it("tells apart two requirements with the same title in the filter", async () =>
   await screen.findAllByRole("link", { name: "Same name" });
   expect(within(select).getByRole("option", { name: "Same name · 11111111" })).toBeInTheDocument();
   expect(within(select).getByRole("option", { name: "Same name · 22222222" })).toBeInTheDocument();
+});
+
+it("opens the knowledge portal for its admins, and only for them", async () => {
+  renderPage(["knowledge_admin"]);
+  expect(await screen.findByRole("link", { name: "Open knowledge portal" })).toHaveAttribute("href", "/knowledge/");
+});
+
+it("keeps the shared library out of a member's documents", async () => {
+  renderPage();
+  await screen.findByRole("link", { name: "contract.docx" });
+  expect(screen.queryByRole("link", { name: "Open knowledge portal" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: /library/i })).not.toBeInTheDocument();
 });

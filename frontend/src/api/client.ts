@@ -32,10 +32,6 @@ export type StoryProposal = components["schemas"]["StoryChangeProposalResponse"]
 export type DocumentSummary = components["schemas"]["DocumentSummaryResponse"];
 export type DocumentDetail = components["schemas"]["DocumentDetailResponse"];
 export type DocumentContent = components["schemas"]["DocumentContentResponse"];
-export type LibraryDocument = components["schemas"]["LibraryView"];
-export type LibraryPassage = components["schemas"]["ReviewedPassage"];
-export type CorpusBuildPreview = components["schemas"]["CorpusBuildPreview"];
-export type ReferenceChunk = components["schemas"]["ReferenceChunk"];
 export type StoryQuality = components["schemas"]["StoryQualityResponse"];
 export type FeatureStoryQuality = components["schemas"]["FeatureStoryQualityResponse"];
 export type FeatureStoryQualitySnapshot =
@@ -354,9 +350,6 @@ async function requestBlob(path: string): Promise<Blob> {
 export const api = {
   getRequirementIndex: (id: string) => request<components["schemas"]["RequirementIndexStatus"]>(`/requirements/${encodeURIComponent(id)}/knowledge-index`),
   retryRequirementIndex: (id: string) => request<components["schemas"]["RequirementIndexStatus"]>(`/requirements/${encodeURIComponent(id)}/knowledge-index/retry`, { method: "POST" }),
-  listLibrary: () => request<LibraryDocument[]>("/library/documents"),
-  previewLibraryOriginal: (id: string, versionId: string, blockId: string) =>
-    request<components["schemas"]["OriginalPreview"]>(`/library/documents/${encodeURIComponent(id)}/versions/${encodeURIComponent(versionId)}/blocks/${encodeURIComponent(blockId)}/original-preview`),
   listAttachmentIngestions: (sourceId: string, draft: boolean) =>
     request<components["schemas"]["AttachmentIngestionView"][]>(`/${draft ? "requirement-drafts" : "requirements"}/${encodeURIComponent(sourceId)}/document-ingestions`),
   submitAttachment: (sourceId: string, draft: boolean, file: File, key: string, include: boolean, replacement?: DocumentSummary) => {
@@ -369,59 +362,11 @@ export const api = {
     request<components["schemas"]["AttachmentIngestionView"]>(`/${draft ? "requirement-drafts" : "requirements"}/${encodeURIComponent(sourceId)}/document-ingestions/${encodeURIComponent(id)}/${action}`, {
       method: "POST", body: JSON.stringify({ expected_version: version }),
     }),
-  transferLibraryOwnership: (document: LibraryDocument, actorId: string, reason: string) =>
-    request<components["schemas"]["OwnershipTransfer"]>(`/library/documents/${document.id}/ownership`, {
-      method: "POST", body: JSON.stringify({ expected_version: document.version, actor_id: actorId, reason }),
-    }),
-  libraryOwnershipHistory: (id: string) => request<components["schemas"]["OwnershipTransfer"][]>(`/library/documents/${id}/ownership/history`),
-  libraryDependencies: (id: string, offset = 0) => request<components["schemas"]["LibraryDependencyPage"]>(`/library/documents/${id}/dependencies?offset=${offset}&limit=20`),
-  sourceImpact: ({ documentId, requirementId, offset, activeOnly, query }: { documentId?: string; requirementId?: string; offset: number; activeOnly: boolean; query: string }) => request<components["schemas"]["DependencyImpactPage"]>(`/library/${documentId ? `documents/${documentId}` : `requirements/${requirementId}`}/source-impact?offset=${offset}&limit=20&active_only=${activeOnly}&query=${encodeURIComponent(query)}`),
-  decideSourceImpact: (item: DependencyImpact, decision: "retain_historical" | "revise_content", reason: string) => request<DependencyImpact>(`/library/source-impact/${item.dependency.id}/decisions`, { method: "POST", body: JSON.stringify({ publication_state: item.publication_state, expected_version: item.decisions.length, decision, reason }) }),
-  previewLibraryChunks: (id: string) => request<ReferenceChunk[]>(`/library/documents/${id}/chunks/preview`),
-  previewLibraryBuild: (id: string) => request<CorpusBuildPreview>(`/library/documents/${id}/builds/preview`),
-  buildLibrary: (id: string, preview: CorpusBuildPreview) => request<LibraryDocument>(`/library/documents/${id}/builds`, {
-    method: "POST", body: JSON.stringify({ expected_version: preview.document_version, fingerprint: preview.fingerprint, index_identity: preview.index_identity }),
-  }),
-  activateLibraryBuild: (document: LibraryDocument, buildId: string, manifest: string) => request<LibraryDocument>(`/library/documents/${document.id}/builds/${buildId}/activation`, {
-    method: "POST", body: JSON.stringify({ expected_version: document.version, manifest }),
-  }),
-  discardLibraryBuild: (document: LibraryDocument, buildId: string) => request<LibraryDocument>(`/library/documents/${document.id}/builds/${buildId}/discard`, {
-    method: "POST", body: JSON.stringify({ expected_version: document.version }),
-  }),
-  retryLibraryIndex: (document: LibraryDocument) => request<LibraryDocument>(`/library/documents/${document.id}/index-retry`, {
-    method: "POST", body: JSON.stringify({ expected_version: document.version }),
-  }),
-  getLibraryDocument: (id: string) => request<LibraryDocument>(`/library/documents/${id}`),
-  uploadLibrary: (file: File, title: string, key: string, document?: LibraryDocument) => {
-    const body = new FormData();
-    body.append("file", file); body.append("title", title); body.append("idempotency_key", key);
-    if (document) { body.append("document_id", document.id); body.append("expected_version", String(document.version)); }
-    return request<LibraryDocument>("/library/ingestions", { method: "POST", body });
-  },
-  reviewLibrary: (document: LibraryDocument, versionId: string, passages: LibraryPassage[], explanation: string) =>
-    request<LibraryDocument>(`/library/documents/${document.id}/versions/${versionId}/review`, {
-      method: "POST", body: JSON.stringify({ expected_version: document.version, passages, explanation }),
-    }),
-  approveLibrary: (document: LibraryDocument) => {
-    const source = document.versions.at(-1)!;
-    return request<LibraryDocument>(`/library/documents/${document.id}/versions/${source.id}/approval`, {
-      method: "POST", body: JSON.stringify({ expected_version: document.version,
-        revision_id: source.revisions.at(-1)!.id, fingerprint: document.review_fingerprint }),
-    });
-  },
-  withdrawLibrary: (document: LibraryDocument, reason: string) => request<LibraryDocument>(`/library/documents/${document.id}/withdrawal`, {
-    method: "POST", body: JSON.stringify({ expected_version: document.version, reason }),
-  }),
-  controlLibrary: (document: LibraryDocument, action: "retry" | "cancellation") =>
-    request<LibraryDocument>(`/library/documents/${document.id}/versions/${document.versions.at(-1)!.id}/${action}`, {
-      method: "POST", body: JSON.stringify({ expected_version: document.version }),
-    }),
-  downloadLibrary: (id: string, versionId: string, filename: string) =>
-    download(`/library/documents/${id}/versions/${versionId}/original`, filename),
+  sourceImpact: ({ requirementId, offset, activeOnly, query }: { requirementId: string; offset: number; activeOnly: boolean; query: string }) =>
+    request<components["schemas"]["DependencyImpactPage"]>(`/requirements/${encodeURIComponent(requirementId)}/source-impact?offset=${offset}&limit=20&active_only=${activeOnly}&query=${encodeURIComponent(query)}`),
+  decideSourceImpact: (requirementId: string, item: DependencyImpact, decision: "retain_historical" | "revise_content", reason: string) =>
+    request<DependencyImpact>(`/requirements/${encodeURIComponent(requirementId)}/source-impact/${encodeURIComponent(item.dependency.id)}/decisions`, { method: "POST", body: JSON.stringify({ publication_state: item.publication_state, expected_version: item.decisions.length, decision, reason }) }),
   searchUnifiedKnowledge: (query: string) => request<components["schemas"]["UnifiedSearchHit"][]>("/knowledge/search/unified", {
-    method: "POST", body: JSON.stringify({ query }),
-  }),
-  searchKnowledge: (query: string) => request<ReferenceChunk[]>("/knowledge/search", {
     method: "POST", body: JSON.stringify({ query }),
   }),
   listActivity: (params: ActivityListParams = {}) =>

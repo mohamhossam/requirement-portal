@@ -19,6 +19,7 @@ import {
   SEVERITY_LABEL,
   SUGGESTION_SOURCE_LABEL,
 } from "./labels";
+import { passageHref } from "../../api/knowledge";
 
 export function QuestionGroup({
   analysis,
@@ -369,7 +370,7 @@ function QuestionCard({
         {suggestionSet?.suggestions.filter(s => s.id === pickedSuggestion).flatMap(s => s.reference_evidence ?? []).map(c => (
           <div className="min-w-0 [overflow-wrap:anywhere]" key={`${c.publication_id}-${c.block_id}-${c.start_offset}`}>
             <p>Published reference — confirm that it applies before submitting this answer.</p>
-            <a className="text-accent underline" target="_blank" rel="noreferrer" href={`/documents/library/${encodeURIComponent(c.document_id)}?${new URLSearchParams({ publication: c.publication_id, version: c.version_id, revision: c.revision_id, passage: c.block_id })}`}>
+            <a className="text-accent underline" target="_blank" rel="noreferrer" href={passageHref(c)}>
               {c.title} · version {c.version_number} · {c.location}
             </a>
             <blockquote dir="auto">{c.excerpt}</blockquote>
