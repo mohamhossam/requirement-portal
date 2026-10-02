@@ -1,7 +1,14 @@
 """Opt-in nonempty PostgreSQL backup/restore fixture. Never targets application databases.
 
 Run seed, take pg_dump, restore into a NEW database, then run verify there with the
-seed manifest. Providers/scanning are synthetic; this does not qualify deployment.
+seed manifest. Providers are synthetic; this does not qualify deployment.
+
+The reference library is the knowledge service's (ADR-0099) and is restored there.
+This fixture covers what requirement work keeps: its Requirements and analyses,
+their attachments, the search index, the source dependencies on published
+references, and the local copy of each reference's citable state. The seed
+publishes through a stand-in knowledge service; the restored database is checked
+with no library connected at all, so every read comes from what was restored.
 """
 
 from __future__ import annotations
@@ -13,7 +20,6 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
-from unittest.mock import patch
 
 import psycopg
 from psycopg import sql
@@ -21,25 +27,27 @@ from psycopg.conninfo import conninfo_to_dict
 from pydantic import TypeAdapter
 
 from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirementInput
-from smb_requirement_agent.application.use_cases.document_library import CHUNKING_POLICY
 from smb_requirement_agent.application.use_cases.documents import UploadDocumentInput
+from smb_requirement_agent.application.use_cases.requirement_drafts import RequirementDraftInput
 from smb_requirement_agent.domain.analysis.value_objects import IntentProposalStatus
-from smb_requirement_agent.domain.document.library import ReviewedPassage
+from smb_requirement_agent.domain.document.value_objects import DocumentId
 from smb_requirement_agent.domain.identity.errors import AuthorizationDeniedError
+from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.infrastructure.config.options import (
     LLMProvider,
     PersistenceProvider,
 )
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.documents.library_worker import ClamAvDocumentScanner
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
 from smb_requirement_agent.interfaces.api.composition.operations import (
     build_projection_rebuild,
 )
 from smb_requirement_agent.interfaces.api.container import Container, build_container
+from tests.knowledge_doubles import PublishedLibrary, service_for, sync
 
 DATABASE_PREFIX = "codex_qualification_test_"
+REFERENCE_DOCUMENT_ID = "recovery-policy"
 
 
 def require_test_database(database_url: str) -> str:
@@ -50,20 +58,23 @@ def require_test_database(database_url: str) -> str:
 
 
 @contextmanager
-def fixture_container(database_url: str) -> Iterator[Container]:
+def fixture_container(
+    database_url: str, library: PublishedLibrary | None = None
+) -> Iterator[Container]:
+    """The requirement service on `database_url`; with no `library`, the offline fakes."""
     require_test_database(database_url)
     settings = Settings(
         llm_provider=LLMProvider.FAKE,
         persistence_provider=PersistenceProvider.POSTGRES,
         database_url=database_url,
     )
-    # Test-only substitution at the same seam as the existing PostgreSQL browser fixture.
-    with patch.object(ClamAvDocumentScanner, "scan", return_value=True):
-        container = build_container(settings)
-        try:
-            yield container
-        finally:
-            container.close_resources()
+    container = build_container(
+        settings, knowledge_service=service_for(library) if library is not None else None
+    )
+    try:
+        yield container
+    finally:
+        container.close_resources()
 
 
 @dataclass(frozen=True)
@@ -75,8 +86,8 @@ class TableDigest:
 @dataclass(frozen=True)
 class RecoveryManifest:
     source_database: str
-    document_id: str
-    version_id: str
+    requirement_id: str
+    attachment_id: str
     original_sha256: str
     tables: dict[str, TableDigest]
 
@@ -109,29 +120,30 @@ def check_restored_behavior(database_url: str, manifest: RecoveryManifest) -> No
     with fixture_container(database_url) as container:
         if not container.readiness_check():
             raise RuntimeError("Restored schema/projection readiness failed.")
-        _, content = container.document_library.original(
-            manifest.document_id, manifest.version_id, FAKE_ACTORS[0]
-        )
+        owner, other = FAKE_ACTORS[0], FAKE_ACTORS[1]
+        attachment = DocumentId(manifest.attachment_id)
+        content = container.get_document.blob(attachment, None, owner)
         if hashlib.sha256(content).hexdigest() != manifest.original_sha256:
             raise RuntimeError("Original file checksum changed after recovery.")
         try:
-            container.document_library.original(
-                manifest.document_id, manifest.version_id, FAKE_ACTORS[1]
-            )
+            container.get_document.blob(attachment, None, other)
         except AuthorizationDeniedError:
             pass
         else:
-            raise RuntimeError("Restored original file leaked to a non-owner.")
-        results = container.reference_knowledge.search("XGPON coverage")
-        if not results or any(c.document_id != manifest.document_id for c in results):
-            raise RuntimeError(
-                "Restored search lost the active source or exposed a private source."
-            )
-        if any("PRIVATE" in c.original_text or "PRIVATE" in c.context_text for c in results):
-            raise RuntimeError("An excluded passage leaked through search.")
-        dependencies = container.source_impact.page(
-            FAKE_ACTORS[0], document_id=manifest.document_id
-        ).items
+            raise RuntimeError("Restored draft attachment leaked to a non-owner.")
+        requirement_id = RequirementId(manifest.requirement_id)
+        analysis = container.analysis_repository.get_by_requirement_id(requirement_id)
+        if analysis is None or not any(p.reference_evidence for p in analysis.intent_proposals):
+            raise RuntimeError("Restored analysis lost its cited reference.")
+        # The local copy alone decides currency: no library is connected here.
+        if container.reference_currency.stale_proposals(analysis.intent_proposals):
+            raise RuntimeError("Restored local copy no longer holds the cited publication.")
+        results = container.unified_knowledge_search.execute("XGPON coverage")
+        if not any(hit.source_id == manifest.requirement_id for hit in results):
+            raise RuntimeError("Restored search lost the submitted Requirement.")
+        if any("PRIVATE" in hit.excerpt or "PRIVATE" in hit.title for hit in results):
+            raise RuntimeError("A private draft leaked through search.")
+        dependencies = container.source_impact.page(owner, document_id=REFERENCE_DOCUMENT_ID).items
         if not dependencies:
             raise RuntimeError("Restored source dependencies are missing.")
 
@@ -150,45 +162,16 @@ def seed(database_url: str) -> RecoveryManifest:
             )
     run_migrations(database_url)
     build_projection_rebuild(database_url)()
+    owner = FAKE_ACTORS[0]
+    library = PublishedLibrary(owner_id=owner.id.value)
+    library.publish(
+        "Recovery policy",
+        ("XGPON coverage is required for high-speed orders.",),
+        document_id=REFERENCE_DOCUMENT_ID,
+    )
     original = b"XGPON coverage is required for high-speed orders.\nPRIVATE internal pricing."
-    with fixture_container(database_url) as container:
-        library = container.document_library
-        owner = FAKE_ACTORS[0]
-        uploaded = library.submit(
-            "Recovery policy",
-            UploadDocumentInput("recovery.txt", "text/plain", original),
-            "recovery-published",
-            owner,
-        )
-        if not library.process_next():
-            raise RuntimeError("Synthetic ingestion did not complete.")
-        document = library.get(uploaded.id, owner)
-        version = document.versions[0]
-        passages = tuple(
-            ReviewedPassage(
-                block.id,
-                block.text or "",
-                "PRIVATE" not in (block.text or ""),
-                "Private source excluded" if "PRIVATE" in (block.text or "") else "",
-            )
-            for block in version.blocks
-        )
-        if not any(not p.included for p in passages):
-            raise RuntimeError("Fixture must contain an independently excluded passage.")
-        reviewed = library.review(
-            document.id, version.id, document.version, owner, passages, "Synthetic recovery review"
-        )
-        revision = reviewed.versions[0].revisions[-1]
-        library.approve(
-            document.id,
-            version.id,
-            revision.id,
-            revision.fingerprint(version.id, CHUNKING_POLICY),
-            reviewed.version,
-            owner,
-        )
-        if not container.reference_knowledge.index_next():
-            raise RuntimeError("Synthetic publication did not index.")
+    with fixture_container(database_url, library) as container:
+        sync(container)
         requirement = container.create_requirement.execute(
             CreateRequirementInput("XGPON recovery", "Order high-speed bundles through BCRM."),
             owner,
@@ -203,19 +186,23 @@ def seed(database_url: str) -> RecoveryManifest:
             owner,
             rationale="Synthetic recovery acceptance",
         )
-        library.submit(
-            "PRIVATE unpublished policy",
-            UploadDocumentInput("private.txt", "text/plain", b"PRIVATE XGPON draft"),
-            "recovery-private",
-            FAKE_ACTORS[1],
+        draft = container.create_requirement_draft.execute(
+            RequirementDraftInput("PRIVATE XGPON draft", "PRIVATE XGPON coverage pricing."), owner
         )
-        if not library.process_next():
-            raise RuntimeError("Private fixture ingestion did not complete.")
+        attachment = container.upload_document.for_draft(
+            draft.id, UploadDocumentInput("recovery.txt", "text/plain", original), owner
+        )
+        for _ in range(1000):
+            if container.requirement_indexer.ready():
+                break
+            container.requirement_indexer.process_next()
+        else:
+            raise RuntimeError("Synthetic requirement indexing did not complete.")
     build_projection_rebuild(database_url)()
     manifest = RecoveryManifest(
         name,
-        document.id,
-        version.id,
+        requirement.id.value,
+        attachment.id.value,
         hashlib.sha256(original).hexdigest(),
         table_digests(database_url),
     )
@@ -245,7 +232,12 @@ def verify(database_url: str, manifest: RecoveryManifest) -> dict[str, object]:
     if rebuilt != second or not rebuilt:
         raise RuntimeError("Nonempty projection maintenance was not repeatable.")
     after = table_digests(database_url)
-    for name in ("document_blobs", "library_documents", "analysis_rounds", "breakdown_revisions"):
+    for name in (
+        "document_blobs",
+        "reference_publication_state",
+        "source_dependencies",
+        "analysis_rounds",
+    ):
         if not manifest.tables[name].rows or after[name] != manifest.tables[name]:
             raise RuntimeError(f"Maintenance altered or lost authoritative recovery data: {name}")
     return {
@@ -255,8 +247,8 @@ def verify(database_url: str, manifest: RecoveryManifest) -> dict[str, object]:
         "rows_verified": sum(table.rows for table in actual.values()),
         "requirements_rebuilt_twice": rebuilt,
         "original_checksum_verified": True,
-        "publication_and_history_digests_verified": True,
-        "private_original_and_excluded_passage_guards_verified": True,
+        "reference_copy_and_history_digests_verified": True,
+        "private_attachment_and_draft_guards_verified": True,
         "source_dependency_and_search_reads_verified": True,
         "authoritative_history_unchanged_after_maintenance": True,
     }

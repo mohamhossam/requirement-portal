@@ -10,8 +10,7 @@ from __future__ import annotations
 
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, FastAPI, Query
 
 from smb_requirement_agent.application.ports.architecture_mapping_stats import MappingCount
 from smb_requirement_agent.application.use_cases.internal_reads import (
@@ -33,13 +32,6 @@ router = APIRouter(
 )
 ReadsDep = Annotated[InternalReads, Depends(get_internal_reads)]
 ActorQuery = Annotated[str, Query(min_length=1, max_length=200)]
-
-
-class InternalActorResponse(BaseModel):
-    id: str
-    display_name: str
-    email: str | None
-    roles: list[str]
 
 
 @router.get("/references/{document_id}/impact")
@@ -77,19 +69,6 @@ def document_dependents(
 @router.get("/architecture-mapping/stats")
 def mapping_stats(reads: ReadsDep) -> list[MappingCount]:
     return list(reads.mapping_counts())
-
-
-@router.get("/actors/{actor_id}")
-def actor(actor_id: str, reads: ReadsDep) -> InternalActorResponse:
-    found = reads.actor(actor_id)
-    if found is None:
-        raise HTTPException(status_code=404, detail="Actor not found.")
-    return InternalActorResponse(
-        id=found.id.value,
-        display_name=found.display_name,
-        email=found.email,
-        roles=sorted(found.roles),
-    )
 
 
 def contract_openapi() -> dict[str, Any]:

@@ -1,9 +1,15 @@
-"""Domain, adapter, application, persistence, and API coverage for Slice 7."""
+"""Mapping a Requirement's backlog to systems: domain, application, persistence and API.
+
+Matching runs in the knowledge service (ADR-0099). Requirement work asks it
+through `ArchitectureKnowledgePort` and learns which catalogue release is active
+from its local copy, fed by the service's events. Here `Catalogue` stands in for
+the service's matching and `PublishedLibrary` for its event feed. Catalogue
+editing, publishing and the matcher itself are tested in knowledge-portal.
+"""
 
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -24,23 +30,22 @@ from smb_requirement_agent.application.use_cases.invalidate_approval_workflow im
 from smb_requirement_agent.domain.architecture.entities import (
     ArchitectureDependency,
     ArchitectureImpact,
+    SystemCapability,
     SystemReference,
 )
 from smb_requirement_agent.domain.architecture.errors import InvalidArchitectureContentError
 from smb_requirement_agent.domain.requirement.value_objects import RequirementId
-from smb_requirement_agent.infrastructure.architecture.yaml_knowledge import (
-    YamlArchitectureKnowledge,
-    default_knowledge_path,
-)
-from smb_requirement_agent.infrastructure.config.options import ConfigurationError
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
+from smb_requirement_agent.infrastructure.knowledge_client import OFFLINE_RELEASE_ID
 from smb_requirement_agent.infrastructure.persistence.backlog_payloads import (
     feature_from_payload,
     feature_to_payload,
     story_from_payload,
     story_to_payload,
 )
-from smb_requirement_agent.interfaces.api.container import Container
+from smb_requirement_agent.interfaces.api.container import Container, build_container
+from tests.conftest import FAKE_PROVIDER_SETTINGS
+from tests.knowledge_doubles import PublishedLibrary, service_for, sync
 from tests.unit.workflow_helpers import (
     confirm_fake_analysis,
     post_analysis,
@@ -61,6 +66,71 @@ class RecordingKnowledge:
     def match(self, query: ArchitectureQuery) -> ArchitectureKnowledgeMatch:
         self.queries.append(query)
         return ArchitectureKnowledgeMatch("test-v1", (), ())
+
+
+BCRM = SystemReference(
+    "bcrm", "BCRM", True, (SystemCapability("assisted-sales", "Assisted sales"),)
+)
+
+
+class Catalogue:
+    """The knowledge service's matching, as requirement work sees it.
+
+    Declared systems it knows are catalogued, others are not; BCRM orders through
+    any other declared system. It answers for the release a query pins, or for
+    the release it has active, as the service does.
+    """
+
+    def __init__(self) -> None:
+        self.active = OFFLINE_RELEASE_ID
+        self.queries: list[ArchitectureQuery] = []
+
+    def match(self, query: ArchitectureQuery) -> ArchitectureKnowledgeMatch:
+        self.queries.append(query)
+        systems = tuple(
+            BCRM if name == BCRM.name else SystemReference(name.lower(), name, False)
+            for name in query.declared_systems
+        )
+        dependencies = tuple(
+            ArchitectureDependency(BCRM.id, item.id, f"BCRM orders through {item.name}.")
+            for item in systems
+            if BCRM in systems and item != BCRM
+        )
+        return ArchitectureKnowledgeMatch(
+            query.release_id or self.active,
+            systems,
+            dependencies,
+        )
+
+
+@pytest.fixture
+def catalogue() -> Catalogue:
+    return Catalogue()
+
+
+@pytest.fixture
+def library() -> PublishedLibrary:
+    return PublishedLibrary()
+
+
+@pytest.fixture
+def container(catalogue: Catalogue, library: PublishedLibrary) -> Container:
+    """The conftest client serves this graph: matching by `catalogue`, events by `library`."""
+    return build_container(
+        FAKE_PROVIDER_SETTINGS,
+        architecture_knowledge=catalogue,
+        knowledge_service=service_for(library),
+    )
+
+
+def _activate(
+    container: Container, catalogue: Catalogue, library: PublishedLibrary, release_id: str
+) -> None:
+    """The knowledge service activates a release; requirement work's copy follows its event."""
+    catalogue.active = release_id
+    library.activate_release(release_id, f"Release {release_id}")
+    sync(container)
+    assert container.current_release.active_release_id() == release_id
 
 
 def _tree(client: TestClient) -> tuple[str, list[dict[str, object]], list[dict[str, object]]]:
@@ -101,104 +171,6 @@ def test_architecture_impact_distinguishes_empty_mapping_and_cross_system() -> N
         ArchitectureImpact(
             "v1", NOW, systems[:1], (ArchitectureDependency("one", "two", "Missing target"),)
         )
-
-
-def test_yaml_adapter_maps_catalogued_and_declared_unknown_systems() -> None:
-    adapter = YamlArchitectureKnowledge(default_knowledge_path())
-
-    result = adapter.match(
-        ArchitectureQuery(
-            text=("The assisted sales journey needs service activation.",),
-            declared_systems=("BCRM", "CPP"),
-        )
-    )
-
-    by_name = {item.name: item for item in result.systems}
-    assert result.knowledge_version == "smb-source-reference-v1"
-    assert by_name["BCRM"].catalogued is True
-    assert by_name["CPP"].catalogued is False
-    assert by_name["eVEDA / E2ESO / XaaS / IN"].capabilities[0].name == (
-        "Network and service activation"
-    )
-    assert all(not item.squads for item in result.systems)
-
-
-def test_yaml_adapter_matches_punctuation_and_selected_dependencies(
-    tmp_path: Path,
-) -> None:
-    catalogue = tmp_path / "catalogue.yaml"
-    catalogue.write_text(
-        """version: test-v1
-systems:
-  - id: front-end
-    name: Front End
-    aliases: [customer portal]
-    capabilities:
-      - {id: quote, name: Quote capture, triggers: [quote capture]}
-  - {id: crm, name: CRM, aliases: [customer records]}
-dependencies:
-  - {source_system_id: front-end, target_system_id: crm, description: Reads customers}
-""",
-        encoding="utf-8",
-    )
-
-    result = YamlArchitectureKnowledge(catalogue).match(
-        ArchitectureQuery(
-            text=("The customer-portal performs quote capture.",),
-            declared_systems=("CRM",),
-        )
-    )
-
-    assert [item.name for item in result.systems] == ["CRM", "Front End"]
-    front_end = result.systems[1]
-    assert front_end.capabilities[0].name == "Quote capture"
-    assert result.dependencies == (ArchitectureDependency("front-end", "crm", "Reads customers"),)
-
-
-def test_yaml_adapter_rejects_duplicate_aliases_and_dangling_dependencies(
-    tmp_path: Path,
-) -> None:
-    duplicate = tmp_path / "duplicate.yaml"
-    duplicate.write_text(
-        """version: v1
-systems:
-  - {id: one, name: One, aliases: [shared]}
-  - {id: two, name: Two, aliases: [shared]}
-""",
-        encoding="utf-8",
-    )
-    with pytest.raises(ConfigurationError, match="multiple systems"):
-        YamlArchitectureKnowledge(duplicate)
-
-    dangling = tmp_path / "dangling.yaml"
-    dangling.write_text(
-        """version: v1
-systems:
-  - {id: one, name: One}
-dependencies:
-  - {source_system_id: one, target_system_id: missing, description: Missing}
-""",
-        encoding="utf-8",
-    )
-    with pytest.raises(ConfigurationError, match="absent"):
-        YamlArchitectureKnowledge(dangling)
-
-    duplicate_id = tmp_path / "duplicate-id.yaml"
-    duplicate_id.write_text(
-        """version: v1
-systems:
-  - {id: repeated, name: One}
-  - {id: repeated, name: Two}
-""",
-        encoding="utf-8",
-    )
-    with pytest.raises(ConfigurationError, match="Duplicate architecture system id"):
-        YamlArchitectureKnowledge(duplicate_id)
-
-    malformed = tmp_path / "malformed.yaml"
-    malformed.write_text("version: [", encoding="utf-8")
-    with pytest.raises(ConfigurationError, match="could not be loaded"):
-        YamlArchitectureKnowledge(malformed)
 
 
 def test_application_mappers_use_item_text_and_preserve_review_state(
@@ -379,55 +351,100 @@ def test_story_edit_clears_mapping_and_stale_story_blocks_refresh(client: TestCl
     assert "stale" in blocked.json()["message"]
 
 
+def test_mapping_pins_one_release_for_the_whole_breakdown(
+    client: TestClient, catalogue: Catalogue
+) -> None:
+    requirement_id, _, _ = _tree(client)
+    catalogue.queries.clear()
+
+    mapped = client.post(f"/requirements/{requirement_id}/architecture-mapping")
+
+    assert mapped.status_code == 200
+    # The first query takes the service's active release; every later one pins it.
+    assert catalogue.queries[0].release_id is None
+    assert {query.release_id for query in catalogue.queries[1:]} == {OFFLINE_RELEASE_ID}
+    features = mapped.json()["features"]
+    versions = {item["architecture"]["knowledge_version"] for item in features} | {
+        story["architecture"]["knowledge_version"] for item in features for story in item["stories"]
+    }
+    assert versions == {OFFLINE_RELEASE_ID}
+
+
+def test_activating_a_release_makes_the_review_stale_until_the_breakdown_is_remapped(
+    client: TestClient,
+    container: Container,
+    catalogue: Catalogue,
+    library: PublishedLibrary,
+) -> None:
+    requirement_id, _, _ = _tree(client)
+    review_url = f"/requirements/{requirement_id}/breakdown-review"
+    assert client.post(f"/requirements/{requirement_id}/architecture-mapping").status_code == 200
+    reviewed = client.post(review_url)
+    assert reviewed.status_code == 200 and reviewed.json()["fresh"] is True
+
+    _activate(container, catalogue, library, "release-2")
+
+    assert client.get(review_url).json()["fresh"] is False
+    refused = client.post(review_url)
+    assert refused.status_code == 409
+    assert "inactive knowledge release" in refused.json()["message"]
+    remapped = client.post(f"/requirements/{requirement_id}/architecture-mapping")
+    assert remapped.status_code == 200
+    assert remapped.json()["features"][0]["architecture"]["knowledge_version"] == "release-2"
+    review = client.post(review_url)
+    assert review.status_code == 200
+    assert review.json()["fresh"] is True
+
+
 def test_mapping_job_pins_release_and_review_rejects_outdated_architecture(
     client: TestClient,
     container: Container,
+    catalogue: Catalogue,
+    library: PublishedLibrary,
 ) -> None:
     requirement_id, _, _ = _tree(client)
     job = container.architecture_mapping_jobs.enqueue(
         RequirementId(requirement_id),
         Actor("fake-owner", frozenset({"knowledge_reader", "knowledge_maintainer"})),
     )
-    draft = client.post("/architecture-knowledge/releases", json={"name": "Next version"}).json()
-    container.build_architecture_index.execute(
-        draft["id"], draft["revision"], "fake-owner", fence=lambda: None
-    )
-    published = client.post(
-        f"/architecture-knowledge/releases/{draft['id']}/publish",
-        json={"expected_revision": draft["revision"], "rationale": "Reviewed"},
-    )
-    assert published.status_code == 200
+    _activate(container, catalogue, library, "release-2")
+    catalogue.queries.clear()
 
     completed = container.architecture_mapping_jobs.run_once()
     assert completed is not None and completed.id == job.id and completed.status == "succeeded"
+    # The job asks for the release that was active when it was queued.
+    assert {query.release_id for query in catalogue.queries} == {OFFLINE_RELEASE_ID}
     features = client.get(f"/requirements/{requirement_id}/features").json()["features"]
-    assert features[0]["architecture"]["knowledge_version"] == "smb-source-reference-v1"
+    assert features[0]["architecture"]["knowledge_version"] == OFFLINE_RELEASE_ID
     stale_review = client.post(f"/requirements/{requirement_id}/breakdown-review")
     assert stale_review.status_code == 409
 
     refreshed = client.post(f"/requirements/{requirement_id}/architecture-mapping")
     assert refreshed.status_code == 200
-    assert refreshed.json()["features"][0]["architecture"]["knowledge_version"] == draft["id"]
+    assert refreshed.json()["features"][0]["architecture"]["knowledge_version"] == "release-2"
     review = client.post(f"/requirements/{requirement_id}/breakdown-review")
     assert review.status_code == 200
     assert review.json()["fresh"] is True
 
 
-def test_mapping_jobs_run_in_their_own_queue_behind_the_shared_job_url(
+def test_mapping_jobs_run_in_the_requirement_queue_under_the_requirement_url(
     client: TestClient,
     container: Container,
 ) -> None:
-    """Mapping is requirement work with its own queue (ADR-0099); its URLs are unchanged."""
+    """Mapping is requirement work with its own queue (ADR-0099)."""
     requirement_id, _, _ = _tree(client)
     started = client.post(f"/requirements/{requirement_id}/architecture-mapping/jobs")
     assert started.status_code == 202
     job = started.json()
+    # Fake models finish the job inside the request.
     assert job["status"] == "succeeded"
 
     assert container.architecture_mapping_jobs.owns(job["id"])
-    assert not container.architecture_jobs.owns(job["id"])
-    assert client.get(f"/jobs/{job['id']}").json()["id"] == job["id"]
-    assert client.get("/jobs/no-such-job").status_code == 404
+    base = f"/requirements/{requirement_id}/architecture-mapping/jobs"
+    assert client.get(f"{base}/{job['id']}").json()["id"] == job["id"]
+    assert client.get(f"{base}/no-such-job").status_code == 404
+    features = client.get(f"/requirements/{requirement_id}/features").json()["features"]
+    assert all(item["architecture"] is not None for item in features)
 
 
 def test_a_mapping_queued_under_other_models_records_a_knowledge_conflict(

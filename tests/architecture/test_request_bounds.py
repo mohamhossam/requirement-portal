@@ -16,13 +16,6 @@ from smb_requirement_agent.interfaces.api.main import create_app
 # Multipart uploads are bounded by the upload size limits, not by a schema.
 UNSCHEMA_BOUND_CONTENT = {"multipart/form-data"}
 
-# Fields of a domain value used directly as a request item. The domain bounds
-# them at submission (`require_submittable_passages`, called by
-# `DocumentLibrary.review`), and a request-only copy would rename the shared
-# OpenAPI component the browser client is typed against.
-_REVIEW = "POST /library/documents/{document_id}/versions/{version_id}/review body.passages[]"
-DOMAIN_BOUNDED = {f"{_REVIEW}.block_id", f"{_REVIEW}.text", f"{_REVIEW}.exclusion_reason"}
-
 
 def _resolve(schema: dict[str, Any], components: dict[str, Any]) -> dict[str, Any]:
     reference = schema.get("$ref")
@@ -77,6 +70,4 @@ def test_every_request_string_and_list_is_bounded() -> None:
                     for field in _unbounded(body["schema"], components, "body", set())
                 )
 
-    unexplained = set(unbounded) - DOMAIN_BOUNDED
-    assert not unexplained, "Unbounded request fields:\n" + "\n".join(sorted(unexplained))
-    assert DOMAIN_BOUNDED <= set(unbounded), "A domain-bounded entry is stale."
+    assert not unbounded, "Unbounded request fields:\n" + "\n".join(sorted(unbounded))

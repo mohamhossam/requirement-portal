@@ -8,7 +8,7 @@ The fakes are deterministic stand-ins for running without the knowledge service.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import quote
 
@@ -163,16 +163,22 @@ def _text(value: object) -> str:
     return value
 
 
+# The one catalogue version an offline knowledge service announces.
+OFFLINE_RELEASE_ID = "offline-catalogue"
+OFFLINE_RELEASE_NAME = "Offline catalogue"
+
+
 class FakeArchitectureKnowledge:
     """Maps nothing: offline, requirement work runs without catalogue impact."""
 
     def match(self, query: ArchitectureQuery) -> ArchitectureKnowledgeMatch:
         return ArchitectureKnowledgeMatch(
-            query.release_id or "offline-catalogue",
+            query.release_id or OFFLINE_RELEASE_ID,
             (),
             (),
             uncertainty="No architecture catalogue is connected.",
-            evidence_classification="offline",
+            # Nothing was inferred: offline there is no model behind the empty answer.
+            evidence_classification="legacy_deterministic",
         )
 
 
@@ -190,10 +196,22 @@ class FakeReferenceKnowledge:
 
 
 class FakeKnowledgeEvents:
-    """A knowledge service that has published nothing."""
+    """A knowledge service with no library that has activated one empty catalogue version.
+
+    The activation lets requirement work pin and review mappings offline, against
+    the version `FakeArchitectureKnowledge` answers for.
+    """
+
+    _ACTIVATION = KnowledgeEvent(
+        1,
+        "architecture_release_activated",
+        OFFLINE_RELEASE_ID,
+        {"release_id": OFFLINE_RELEASE_ID, "name": OFFLINE_RELEASE_NAME},
+        datetime(2026, 10, 2, tzinfo=UTC),
+    )
 
     def after(self, seq: int, limit: int) -> tuple[KnowledgeEvent, ...]:
-        return ()
+        return (self._ACTIVATION,) if seq < 1 and limit > 0 else ()
 
 
 class FakeKnowledgeViews:

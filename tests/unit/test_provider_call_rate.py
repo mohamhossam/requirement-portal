@@ -81,15 +81,21 @@ def test_the_api_answers_429_with_retry_after_once_an_actor_is_over_budget() -> 
     with TestClient(create_app(lambda: container)) as client:
         query = {"query": "eligibility"}
         for _ in range(2):
-            assert client.post("/knowledge/search", json=query, headers=owner).status_code == 200
+            assert (
+                client.post("/knowledge/search/unified", json=query, headers=owner).status_code
+                == 200
+            )
 
-        refused = client.post("/knowledge/search", json=query, headers=owner)
+        refused = client.post("/knowledge/search/unified", json=query, headers=owner)
 
         assert refused.status_code == 429
         assert refused.json()["code"] == "provider_rate_limited"
         assert 1 <= int(refused.headers["Retry-After"]) <= 60
         # Another actor is unaffected, and reads that call no provider are never counted.
-        assert client.post("/knowledge/search", json=query, headers=reviewer).status_code == 200
+        assert (
+            client.post("/knowledge/search/unified", json=query, headers=reviewer).status_code
+            == 200
+        )
         assert client.get("/requirements", headers=owner).status_code == 200
 
 
@@ -138,16 +144,16 @@ def test_requests_refused_before_any_provider_call_are_refunded() -> None:
     owner = {"X-Fake-Actor-Id": "fake-owner"}
     with TestClient(create_app(lambda: container)) as client:
         # 422: the body fails validation. 404: the Requirement does not exist.
-        assert client.post("/knowledge/search", json={}, headers=owner).status_code == 422
+        assert client.post("/knowledge/search/unified", json={}, headers=owner).status_code == 422
         missing = client.post(
             "/requirements/no-such-id/analysis", json={"context_token": "x"}, headers=owner
         )
         assert missing.status_code == 404
 
         # Neither consumed the single call per minute.
-        search = client.post("/knowledge/search", json={"query": "q"}, headers=owner)
+        search = client.post("/knowledge/search/unified", json={"query": "q"}, headers=owner)
         assert search.status_code == 200
-        refused = client.post("/knowledge/search", json={"query": "q"}, headers=owner)
+        refused = client.post("/knowledge/search/unified", json={"query": "q"}, headers=owner)
         assert refused.status_code == 429
 
 

@@ -29,8 +29,6 @@ from smb_kernel.observability.metrics import (
     Metrics,
 )
 
-from smb_requirement_agent.application.ports.architecture_rag import ArchitectureReasonerPort
-from smb_requirement_agent.application.ports.catalogue_extractor import CatalogueExtractorPort
 from smb_requirement_agent.application.ports.epic_generator import EpicGeneratorPort
 from smb_requirement_agent.application.ports.feature_generator import FeatureGeneratorPort
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceProposerPort
@@ -44,22 +42,8 @@ from smb_requirement_agent.application.ports.story_generator import StoryGenerat
 from smb_requirement_agent.application.ports.story_quality_evaluator import (
     StoryQualityEvaluatorPort,
 )
-from smb_requirement_agent.application.ports.system_matcher import SystemMatcherPort
-from smb_requirement_agent.infrastructure.architecture.embeddings import ArchitectureEmbeddings
-from smb_requirement_agent.infrastructure.architecture.reasoning import (
-    FakeArchitectureReasoner,
-    StructuredArchitectureReasoner,
-)
 from smb_requirement_agent.infrastructure.config.options import ConfigurationError, LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.llm.catalogue_extraction import (
-    FakeCatalogueExtractor,
-    StructuredCatalogueExtractor,
-)
-from smb_requirement_agent.infrastructure.llm.catalogue_matching import (
-    FakeSystemMatcher,
-    StructuredSystemMatcher,
-)
 from smb_requirement_agent.infrastructure.llm.fake_epic_generator import FakeEpicGenerator
 from smb_requirement_agent.infrastructure.llm.fake_feature_generator import FakeFeatureGenerator
 from smb_requirement_agent.infrastructure.llm.fake_requirement_analyzer import (
@@ -127,10 +111,6 @@ from smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters imp
     StructuredRequirementRelationshipClassifierAdapter,
 )
 
-# Hosted models configured without a profile declare no context window; this is
-# conservative for current OpenAI and OpenRouter models.
-HOSTED_MODEL_INPUT_TOKENS = 100_000
-
 
 @dataclass(frozen=True)
 class LLMAdapters:
@@ -145,9 +125,6 @@ class LLMAdapters:
     relationship_classifier: RequirementRelationshipClassifierPort
     answer_suggester: ClarificationAnswerSuggesterPort
     reference_proposer: ReferenceProposerPort
-    catalogue_extractor: CatalogueExtractorPort
-    system_matcher: SystemMatcherPort
-    architecture_reasoner: ArchitectureReasonerPort
     debug_trace: DebugTrace
 
     resources: ExitStack
@@ -181,10 +158,9 @@ def _profile_adapters(
     generation = config.for_task("generation")
     review = config.for_task("review")
     knowledge = config.for_task("knowledge")
-    catalogue = config.for_task("catalogue")
     clients = {
         task: CompatibleStructuredOutputClient(config.for_task(task), http, debug_trace)
-        for task in ("analysis", "generation", "review", "knowledge", "catalogue")
+        for task in ("analysis", "generation", "review", "knowledge")
     }
     debug_trace.record("models.configured", profiles=config.summary())
     for task, selection in config.summary().items():
@@ -215,21 +191,6 @@ def _profile_adapters(
             clients["knowledge"], knowledge.provider
         ),
         reference_proposer=StructuredReferenceProposer(clients["knowledge"]),
-        catalogue_extractor=StructuredCatalogueExtractor(
-            clients["catalogue"],
-            supports_images=catalogue.images,
-            max_input_tokens=catalogue.context_tokens - catalogue.output_tokens,
-            max_output_tokens=catalogue.output_tokens,
-        ),
-        system_matcher=StructuredSystemMatcher(
-            clients["catalogue"],
-            ArchitectureEmbeddings(embedding),
-            max_input_tokens=catalogue.context_tokens - catalogue.output_tokens,
-        ),
-        architecture_reasoner=StructuredArchitectureReasoner(
-            clients["knowledge"],
-            max_input_tokens=knowledge.context_tokens - knowledge.output_tokens,
-        ),
         debug_trace=debug_trace,
         resources=resources,
     )
@@ -273,9 +234,6 @@ def _build_llm_adapters(settings: Settings, resources: ExitStack, metrics: Metri
             relationship_classifier=FakeRequirementRelationshipClassifier(),
             answer_suggester=FakeClarificationAnswerSuggester(),
             reference_proposer=FakeReferenceProposer(),
-            catalogue_extractor=FakeCatalogueExtractor(),
-            system_matcher=FakeSystemMatcher(),
-            architecture_reasoner=FakeArchitectureReasoner(),
             debug_trace=debug_trace,
             resources=resources,
         )
@@ -299,9 +257,6 @@ def _build_llm_adapters(settings: Settings, resources: ExitStack, metrics: Metri
             settings.local_llm_timeout_seconds,
             http_client,
         )
-        local_input_tokens = (
-            settings.local_llm_context_window_tokens - settings.local_llm_max_output_tokens
-        )
         return LLMAdapters(
             analyzer=LocalRequirementAnalyzer(
                 **shared, vision_enabled=settings.local_llm_vision_enabled
@@ -314,21 +269,6 @@ def _build_llm_adapters(settings: Settings, resources: ExitStack, metrics: Metri
             relationship_classifier=LocalRequirementRelationshipClassifier(**shared),
             answer_suggester=LocalClarificationAnswerSuggester(**shared),
             reference_proposer=StructuredReferenceProposer(LocalStructuredOutputClient(**shared)),
-            catalogue_extractor=StructuredCatalogueExtractor(
-                LocalStructuredOutputClient(**shared),
-                supports_images=settings.local_llm_vision_enabled,
-                max_input_tokens=local_input_tokens,
-                max_output_tokens=settings.local_llm_max_output_tokens,
-            ),
-            system_matcher=StructuredSystemMatcher(
-                LocalStructuredOutputClient(**shared),
-                ArchitectureEmbeddings(local_embedding),
-                max_input_tokens=local_input_tokens,
-            ),
-            architecture_reasoner=StructuredArchitectureReasoner(
-                LocalStructuredOutputClient(**shared),
-                max_input_tokens=local_input_tokens,
-            ),
             debug_trace=debug_trace,
             resources=resources,
         )
@@ -369,21 +309,6 @@ def _build_llm_adapters(settings: Settings, resources: ExitStack, metrics: Metri
             answer_suggester=OpenRouterClarificationAnswerSuggester(**openrouter_shared),
             reference_proposer=StructuredReferenceProposer(
                 OpenRouterStructuredOutputClient(**openrouter_shared)
-            ),
-            catalogue_extractor=StructuredCatalogueExtractor(
-                OpenRouterStructuredOutputClient(**openrouter_shared),
-                supports_images=True,
-                max_input_tokens=HOSTED_MODEL_INPUT_TOKENS,
-                max_output_tokens=settings.openrouter_max_output_tokens,
-            ),
-            system_matcher=StructuredSystemMatcher(
-                OpenRouterStructuredOutputClient(**openrouter_shared),
-                ArchitectureEmbeddings(openrouter_embedding),
-                max_input_tokens=HOSTED_MODEL_INPUT_TOKENS,
-            ),
-            architecture_reasoner=StructuredArchitectureReasoner(
-                OpenRouterStructuredOutputClient(**openrouter_shared),
-                max_input_tokens=HOSTED_MODEL_INPUT_TOKENS,
             ),
             debug_trace=debug_trace,
             resources=resources,
@@ -426,26 +351,6 @@ def _build_llm_adapters(settings: Settings, resources: ExitStack, metrics: Metri
         ),
         reference_proposer=StructuredReferenceProposer(
             OpenAIStructuredOutputClient(client, model=openai_model, timeout_seconds=openai_timeout)
-        ),
-        catalogue_extractor=StructuredCatalogueExtractor(
-            OpenAIStructuredOutputClient(
-                client, model=openai_model, timeout_seconds=openai_timeout
-            ),
-            supports_images=True,
-            max_input_tokens=HOSTED_MODEL_INPUT_TOKENS,
-        ),
-        system_matcher=StructuredSystemMatcher(
-            OpenAIStructuredOutputClient(
-                client, model=openai_model, timeout_seconds=openai_timeout
-            ),
-            ArchitectureEmbeddings(openai_embedding),
-            max_input_tokens=HOSTED_MODEL_INPUT_TOKENS,
-        ),
-        architecture_reasoner=StructuredArchitectureReasoner(
-            OpenAIStructuredOutputClient(
-                client, model=openai_model, timeout_seconds=openai_timeout
-            ),
-            max_input_tokens=HOSTED_MODEL_INPUT_TOKENS,
         ),
         debug_trace=debug_trace,
         resources=resources,

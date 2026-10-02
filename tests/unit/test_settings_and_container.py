@@ -665,12 +665,11 @@ def test_container_names_every_background_worker_for_readiness() -> None:
         assert set(container.background_workers) == {
             "requirement_index_worker",
             "workers",
-            "document_worker",
             "attachment_worker",
             "knowledge_event_worker",
         }
         assert container.background_workers["workers"] is container.ai_job_worker
-        # Attachments have their own worker, apart from the library's (ADR-0099).
+        # Attachments are this service's only document ingestion; the library left (ADR-0099).
         assert (
             container.background_workers["attachment_worker"]
             is container.attachment_ingestion_worker
@@ -679,14 +678,14 @@ def test_container_names_every_background_worker_for_readiness() -> None:
         container.close_resources()
 
 
-def test_real_models_poll_architecture_jobs_in_process() -> None:
+def test_real_models_poll_architecture_mapping_jobs_in_process() -> None:
     container = build_container(
         Settings(llm_provider=LLMProvider.LOCAL, local_llm_model="m", local_embedding_model="e")
     )
     try:
-        assert "architecture_job_worker" in container.background_workers
-        # Mapping a Requirement's backlog has its own queue and worker (ADR-0099).
+        # Mapping a Requirement's backlog is queued work; the catalogue's jobs left (ADR-0099).
         assert "architecture_mapping_job_worker" in container.background_workers
+        assert "architecture_job_worker" not in container.background_workers
     finally:
         container.close_resources()
 
@@ -804,15 +803,39 @@ class TestKnowledgeService:
         finally:
             container.close_resources()
 
-    def test_unconfigured_the_knowledge_in_this_process_answers(self) -> None:
-        from smb_requirement_agent.application.use_cases.reference_knowledge import (
-            ReferenceKnowledge,
+    def test_unconfigured_offline_fakes_answer(self) -> None:
+        from smb_requirement_agent.infrastructure.knowledge_client import (
+            FakeArchitectureKnowledge,
+            FakeKnowledgeViews,
+            FakeReferenceKnowledge,
         )
-        from smb_requirement_agent.infrastructure.knowledge_client import FakeKnowledgeViews
 
         container = build_container(Settings(llm_provider=LLMProvider.FAKE))
         try:
             assert isinstance(container.knowledge_views._views, FakeKnowledgeViews)
-            assert isinstance(container.current_references._knowledge, ReferenceKnowledge)
+            assert isinstance(container.current_references._knowledge, FakeReferenceKnowledge)
+            assert isinstance(container.architecture_knowledge, FakeArchitectureKnowledge)
+            # The offline feed's one catalogue version is known from the start.
+            assert container.current_release.active_release_id() == "offline-catalogue"
         finally:
             container.close_resources()
+
+    def test_production_needs_the_knowledge_service(self) -> None:
+        production = {
+            "llm_provider": LLMProvider.FAKE,
+            "app_environment": "production",
+            "persistence_provider": PersistenceProvider.POSTGRES,
+            "database_url": "postgresql://example/test",
+            "identity_provider": IdentityProvider.OIDC,
+            "oidc_issuer_url": "https://identity.example/tenant",
+            "oidc_audience": "api://smb",
+            "oidc_client_id": "browser",
+        }
+        with pytest.raises(ConfigurationError, match="KNOWLEDGE_API_BASE_URL"):
+            Settings(**production)  # type: ignore[arg-type]
+        connected = Settings(
+            **production,  # type: ignore[arg-type]
+            knowledge_api_base_url="http://knowledge-api:8000",
+            requirement_service_token=self.TOKEN,
+        )
+        assert connected.knowledge_api_base_url == "http://knowledge-api:8000"

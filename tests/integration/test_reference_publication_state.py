@@ -7,66 +7,39 @@ import shutil
 import uuid
 from collections.abc import Iterator
 from dataclasses import replace
-from datetime import UTC, datetime
 from pathlib import Path
-from threading import RLock
 from urllib.parse import quote
 
 import psycopg
 import pytest
 from psycopg.types.json import Jsonb
-from pydantic import TypeAdapter
-from smb_kernel.documents.scanner import OfflineDocumentScanner
-from smb_kernel.documents.text_extractor import SafeDocumentTextExtractor
 from smb_kernel.persistence.connector import DirectPostgresConnector
-from smb_kernel.time.fixed import FixedClock
 from smb_kernel.time.system import SystemClock
 
+from smb_requirement_agent.application.errors import RequirementAnalysisConflictError
 from smb_requirement_agent.application.ports.architecture_knowledge import ActiveRelease
-from smb_requirement_agent.application.use_cases.document_library import (
-    CHUNKING_POLICY,
-    DocumentLibrary,
-)
-from smb_requirement_agent.application.use_cases.documents import UploadDocumentInput
 from smb_requirement_agent.application.use_cases.reference_currency import (
     CurrentArchitectureRelease,
     ProjectKnowledgeEvents,
+    ReferenceCurrency,
 )
-from smb_requirement_agent.domain.document.library import LibraryDocument, ReviewedPassage
-from smb_requirement_agent.domain.document.reference import ReferenceDocumentState
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorProfile
-from smb_requirement_agent.infrastructure.architecture.knowledge_yaml import seed_knowledge
+from smb_requirement_agent.domain.document.reference import (
+    CurrentPublication,
+    ReferenceDocumentState,
+)
 from smb_requirement_agent.infrastructure.persistence import migration_runner
 from smb_requirement_agent.infrastructure.persistence.architecture_release_state import (
     PostgresArchitectureReleaseState,
-)
-from smb_requirement_agent.infrastructure.persistence.document_library import (
-    InMemoryDocumentLibrary,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_document_repository import (
-    InMemoryDocumentStorage,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_transaction import (
-    InMemoryTransactionManager,
-)
-from smb_requirement_agent.infrastructure.persistence.knowledge_events import (
-    PostgresKnowledgeEvents,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_architecture_knowledge import (
-    PostgresArchitectureKnowledgeRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
 from smb_requirement_agent.infrastructure.persistence.reference_publications import (
     PostgresReferencePublications,
 )
-from smb_requirement_agent.infrastructure.persistence.relaying_architecture_knowledge import (
-    RelayingArchitectureKnowledgeRepository,
-)
+from tests.knowledge_doubles import PublishedLibrary
 
 DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 pytestmark = pytest.mark.skipif(not DATABASE_URL, reason="TEST_DATABASE_URL is not configured")
 SEEDING = "202610021200_knowledge_events_and_reference_state.sql"
-OWNER = ActorProfile(ActorId("library-owner"), "Owner")
 
 
 @pytest.fixture
@@ -81,68 +54,70 @@ def isolated_url() -> Iterator[str]:
         connection.execute(f'DROP SCHEMA "{schema}" CASCADE')
 
 
-def _published_documents() -> tuple[LibraryDocument, LibraryDocument, LibraryDocument]:
-    """One published, one withdrawn and one never published, through the real library flow."""
-    lock = RLock()
-    repository = InMemoryDocumentLibrary(lock)
-    storage = InMemoryDocumentStorage()
-    transactions = InMemoryTransactionManager(lambda _: None, lock)
-    transactions.enroll(repository, storage)
-    clock = FixedClock(datetime(2026, 10, 2, tzinfo=UTC))
-    service = DocumentLibrary(
-        repository,
-        storage,
-        SafeDocumentTextExtractor(),
-        OfflineDocumentScanner(),
-        transactions,
-        clock,
-        100_000,
+def _legacy_document(
+    document_id: str,
+    *,
+    published: bool = True,
+    withdrawn: bool = False,
+) -> dict[str, object]:
+    """A `library_documents` payload as the in-process library stored it before the split.
+
+    Only the fields the seeding migration reads. Block 2 is excluded from review,
+    and block 1 has a second included passage that the seed must not pick.
+    """
+    version = {
+        "id": f"{document_id}-v1",
+        "number": 1,
+        "blocks": [
+            {"id": "b1", "label": "Line 1"},
+            {"id": "b2", "label": "Line 2"},
+            {"id": "b3", "label": "Line 3"},
+        ],
+        "revisions": [
+            {
+                "id": f"{document_id}-r1",
+                "passages": [
+                    {"block_id": "b1", "text": "XGPON coverage is required.", "included": True},
+                    {"block_id": "b2", "text": "Private appendix.", "included": False},
+                    {"block_id": "b3", "text": "Third line.", "included": True},
+                    {"block_id": "b1", "text": "A later duplicate.", "included": True},
+                ],
+            }
+        ],
+    }
+    publication = {
+        "id": f"{document_id}-p1",
+        "fingerprint": "f" * 64,
+        "version_id": version["id"],
+        "revision_id": f"{document_id}-r1",
+        "withdrawn_at": "2026-10-02T00:00:00Z" if withdrawn else None,
+    }
+    return {
+        "owner": {"id": {"value": "library-owner"}},
+        "title": "Eligibility",
+        "versions": [version],
+        "publications": [publication] if published else [],
+        "published_id": publication["id"] if published else None,
+    }
+
+
+def _expected(document_id: str, version: int, *, live: bool) -> ReferenceDocumentState:
+    """What `LibraryDocument.citable_state()` gave for the payload above."""
+    publication = CurrentPublication(
+        f"{document_id}-p1",
+        "f" * 64,
+        f"{document_id}-v1",
+        1,
+        f"{document_id}-r1",
+        (("b1", "Line 1"), ("b2", "Line 2"), ("b3", "Line 3")),
+        (("b1", "XGPON coverage is required."), ("b3", "Third line.")),
+    )
+    return ReferenceDocumentState(
+        document_id, "library-owner", "Eligibility", version, publication if live else None
     )
 
-    def publish(key: str, content: bytes) -> LibraryDocument:
-        document = service.submit(
-            "Eligibility", UploadDocumentInput("p.txt", "text/plain", content), key, OWNER
-        )
-        assert service.process_next()
-        view = service.get(document.id, OWNER)
-        source = view.versions[0]
-        # The first block is included; the second is excluded, so it never appears.
-        passages = tuple(
-            ReviewedPassage(b.id, b.text or "", i != 1, "" if i != 1 else "Private")
-            for i, b in enumerate(source.blocks)
-        )
-        reviewed = service.review(document.id, source.id, view.version, OWNER, passages, "Checked")
-        revision = reviewed.versions[0].revisions[-1]
-        approved = service.approve(
-            document.id,
-            source.id,
-            revision.id,
-            revision.fingerprint(source.id, CHUNKING_POLICY),
-            reviewed.version,
-            OWNER,
-        )
-        stored = repository.get(approved.id)
-        assert stored is not None and stored.publications
-        publication = stored.publications[-1]
-        activated = stored.activate(publication.id, clock.now())
-        activated = replace(activated, version=stored.version + 1)
-        repository.save(activated, stored.version)
-        return activated
 
-    live = publish("live", b"XGPON coverage is required.\nPrivate appendix.\nThird line.")
-    gone = publish("gone", b"Retired policy.\nIts appendix.")
-    withdrawn = gone.withdraw(clock.now(), "Retired")
-    withdrawn = replace(withdrawn, version=gone.version + 1)
-    repository.save(withdrawn, gone.version)
-    draft = service.submit(
-        "Draft", UploadDocumentInput("d.txt", "text/plain", b"Draft."), "d", OWNER
-    )
-    stored_draft = repository.get(draft.id)
-    assert stored_draft is not None
-    return live, withdrawn, stored_draft
-
-
-def test_the_seed_builds_exactly_the_state_the_library_publishes(
+def test_the_seed_builds_exactly_the_state_the_library_published(
     isolated_url: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     real = Path(migration_runner.MIGRATIONS)
@@ -151,20 +126,17 @@ def test_the_seed_builds_exactly_the_state_the_library_publishes(
             shutil.copy(path, tmp_path / path.name)
     monkeypatch.setattr(migration_runner, "MIGRATIONS", tmp_path)
     migration_runner.run_migrations(isolated_url)
-    documents = _published_documents()
-    codec = TypeAdapter(LibraryDocument)
+    documents = {
+        "live": (_legacy_document("live"), 3),
+        "gone": (_legacy_document("gone", withdrawn=True), 4),
+        "draft": (_legacy_document("draft", published=False), 1),
+    }
     with psycopg.connect(isolated_url) as connection:
-        for document in documents:
+        for document_id, (payload, version) in documents.items():
             connection.execute(
                 "INSERT INTO library_documents (id, owner_id, version, published_id, payload) "
                 "VALUES (%s,%s,%s,%s,%s)",
-                (
-                    document.id,
-                    document.owner.id.value,
-                    document.version,
-                    document.published_id,
-                    Jsonb(codec.dump_python(document, mode="json")),
-                ),
+                (document_id, "library-owner", version, payload["published_id"], Jsonb(payload)),
             )
 
     shutil.copy(real / SEEDING, tmp_path / SEEDING)
@@ -176,19 +148,15 @@ def test_the_seed_builds_exactly_the_state_the_library_publishes(
                 "SELECT document_id, payload FROM reference_publication_state"
             ).fetchall()
         )
-    live, withdrawn, draft = documents
-    assert live.citable_state().published is not None
-    assert withdrawn.citable_state().published is None and draft.citable_state().published is None
-    for document in documents:
-        seeded = ReferenceDocumentState.from_payload(rows[document.id])
-        assert seeded == document.citable_state()
+    assert ReferenceDocumentState.from_payload(rows["live"]) == _expected("live", 3, live=True)
+    assert ReferenceDocumentState.from_payload(rows["gone"]) == _expected("gone", 4, live=False)
+    assert ReferenceDocumentState.from_payload(rows["draft"]) == _expected("draft", 1, live=False)
 
 
-def test_the_postgres_copy_keeps_the_newest_state_and_its_cursor() -> None:
-    assert DATABASE_URL is not None
-    migration_runner.run_migrations(DATABASE_URL)
+def test_the_postgres_copy_keeps_the_newest_state_and_its_cursor(isolated_url: str) -> None:
+    migration_runner.run_migrations(isolated_url)
     store = PostgresStore(
-        DirectPostgresConnector(DATABASE_URL), lambda _id, _conn: None, lambda _c, _i: None
+        DirectPostgresConnector(isolated_url), lambda _id, _conn: None, lambda _c, _i: None
     )
     states = PostgresReferencePublications(store)
     state = ReferenceDocumentState(f"doc-{uuid.uuid4().hex}", "owner", "Policy", 3)
@@ -206,32 +174,37 @@ def test_the_postgres_copy_keeps_the_newest_state_and_its_cursor() -> None:
     assert states.cursor() == before + 5
 
 
-def test_an_activation_writes_its_event_and_the_relay_brings_the_copy_along() -> None:
-    assert DATABASE_URL is not None
-    migration_runner.run_migrations(DATABASE_URL)
-    connector = DirectPostgresConnector(DATABASE_URL)
-    store = PostgresStore(connector, lambda _id, _conn: None, lambda _c, _i: None)
+def test_the_knowledge_service_feed_brings_the_postgres_copy_along(isolated_url: str) -> None:
+    """Publications, withdrawals and activations reach the copy only through the feed."""
+    migration_runner.run_migrations(isolated_url)
+    store = PostgresStore(
+        DirectPostgresConnector(isolated_url), lambda _id, _conn: None, lambda _c, _i: None
+    )
+    states = PostgresReferencePublications(store)
     releases = PostgresArchitectureReleaseState(store)
-    projector = ProjectKnowledgeEvents(
-        PostgresKnowledgeEvents(store),
-        PostgresReferencePublications(store),
-        releases,
-        store,
-        SystemClock(),
-    )
-    repository = RelayingArchitectureKnowledgeRepository(
-        PostgresArchitectureKnowledgeRepository(connector, seed_knowledge()), projector.drain
-    )
-    active = repository.active().id
+    library = PublishedLibrary()
+    projector = ProjectKnowledgeEvents(library, states, releases, store, SystemClock())
+    currency = ReferenceCurrency(states, store)
+    (citation,) = library.publish("Eligibility", ("XGPON coverage is required.",))
+    library.activate_release("release-2", "Q4 catalogue")
 
-    repository.activate(active, "maintainer", "Re-affirmed")
+    projector.drain()
 
-    with psycopg.connect(DATABASE_URL) as connection:
-        kind, subject = connection.execute(
-            "SELECT kind, subject_id FROM knowledge_events ORDER BY seq DESC LIMIT 1"
-        ).fetchone() or (None, None)
-    assert (kind, subject) == ("architecture_release_activated", active)
-    assert CurrentArchitectureRelease(releases).active_release_id() == active
+    currency.require_current((citation,))
+    assert CurrentArchitectureRelease(releases).active_release() == ActiveRelease(
+        "release-2", "Q4 catalogue"
+    )
+    library.withdraw(citation.document_id)
+    projector.drain()
+    with pytest.raises(RequirementAnalysisConflictError, match="withdrawn or replaced"):
+        currency.require_current((citation,))
+    state = states.get(citation.document_id)
+    assert state is not None and state.published is None
+    assert states.cursor() == len(library.after(0, 1000))
+    # Caught up: a restarted copy resumes where it stopped, with nothing left to apply.
+    assert not ProjectKnowledgeEvents(
+        library, PostgresReferencePublications(store), releases, store, SystemClock()
+    ).project_next()
 
 
 def test_the_migration_seeds_the_release_active_now(

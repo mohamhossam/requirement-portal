@@ -11,6 +11,10 @@ from smb_requirement_agent.application.errors import (
     StoryGenerationError,
     StoryQualityEvaluationError,
 )
+from smb_requirement_agent.application.ports.architecture_knowledge import (
+    ArchitectureKnowledgeMatch,
+    ArchitectureQuery,
+)
 from smb_requirement_agent.application.ports.feature_generator import FeatureCandidate
 from smb_requirement_agent.application.ports.generation_guidance import (
     EMPTY_GENERATION_GUIDANCE,
@@ -23,6 +27,10 @@ from smb_requirement_agent.application.ports.story_quality_evaluator import (
 )
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
 from smb_requirement_agent.domain.analysis.value_objects import KnownFact
+from smb_requirement_agent.domain.architecture.entities import (
+    ArchitectureDependency,
+    SystemReference,
+)
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.feature.entities import Feature
 from smb_requirement_agent.domain.feature.value_objects import FeatureId
@@ -37,6 +45,7 @@ from smb_requirement_agent.domain.story.quality import (
 from smb_requirement_agent.domain.story.value_objects import BusinessValue
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
+from smb_requirement_agent.infrastructure.knowledge_client import OFFLINE_RELEASE_ID
 from smb_requirement_agent.infrastructure.llm.fake_feature_generator import FakeFeatureGenerator
 from smb_requirement_agent.infrastructure.llm.fake_story_generator import FakeStoryGenerator
 from smb_requirement_agent.infrastructure.persistence.backlog_payloads import (
@@ -339,10 +348,31 @@ class CrossSystemFeatures(FakeFeatureGenerator):
         return result
 
 
+class NamedSystems:
+    """The knowledge service's matching for these tests: BCRM and BSCS, by name in the text.
+
+    BCRM orders through BSCS, so a Feature naming both crosses systems.
+    """
+
+    def match(self, query: ArchitectureQuery) -> ArchitectureKnowledgeMatch:
+        text = " ".join(query.text)
+        systems = tuple(
+            SystemReference(name.lower(), name, True) for name in ("BCRM", "BSCS") if name in text
+        )
+        dependencies = (
+            (ArchitectureDependency("bcrm", "bscs", "BCRM orders through BSCS."),)
+            if len(systems) == 2
+            else ()
+        )
+        return ArchitectureKnowledgeMatch(OFFLINE_RELEASE_ID, systems, dependencies)
+
+
 def test_feature_generation_considers_catalogue_and_keeps_unavoidable_dependency() -> None:
     generator = CrossSystemFeatures()
     container = build_container(
-        Settings(llm_provider=LLMProvider.FAKE), feature_generator=generator
+        Settings(llm_provider=LLMProvider.FAKE),
+        feature_generator=generator,
+        architecture_knowledge=NamedSystems(),
     )
     with TestClient(create_app(lambda: container)) as client:
         requirement_id, _, _ = generate_story_tree(client)

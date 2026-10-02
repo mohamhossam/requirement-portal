@@ -38,29 +38,11 @@ from smb_requirement_agent.application.use_cases.approval_workflow import (
     SubmitForReview,
 )
 from smb_requirement_agent.application.use_cases.approve_epic import ApproveEpic
-from smb_requirement_agent.application.use_cases.architecture_comparison import (
-    CompareArchitectureImpact,
-    ManageSampleRequirements,
-)
-from smb_requirement_agent.application.use_cases.architecture_documents import (
-    ReadKnowledgeDocument,
-    UploadKnowledgeDocument,
-)
-from smb_requirement_agent.application.use_cases.architecture_jobs import ArchitectureJobs
-from smb_requirement_agent.application.use_cases.architecture_knowledge import (
-    ManageArchitectureKnowledge,
-)
 from smb_requirement_agent.application.use_cases.architecture_mapping import (
     MapBreakdownArchitecture,
 )
-from smb_requirement_agent.application.use_cases.architecture_mapping_impact import (
-    ReportMappingImpact,
-)
 from smb_requirement_agent.application.use_cases.architecture_mapping_jobs import (
     ArchitectureMappingJobs,
-)
-from smb_requirement_agent.application.use_cases.architecture_preview import (
-    PreviewArchitectureImpact,
 )
 from smb_requirement_agent.application.use_cases.attachment_ingestion import AttachmentIngestion
 from smb_requirement_agent.application.use_cases.breakdown_review import (
@@ -70,16 +52,12 @@ from smb_requirement_agent.application.use_cases.breakdown_review import (
     ResolveFlag,
     ResolveOpenQuestion,
 )
-from smb_requirement_agent.application.use_cases.catalogue_candidates import (
-    DecideCatalogueCandidate,
-)
 from smb_requirement_agent.application.use_cases.clarify_requirement_analysis import (
     ClarifyRequirementAnalysis,
 )
 from smb_requirement_agent.application.use_cases.confirm_requirement_analysis import (
     ConfirmRequirementAnalysis,
 )
-from smb_requirement_agent.application.use_cases.document_library import DocumentLibrary
 from smb_requirement_agent.application.use_cases.documents import (
     GetDocument,
     ListDocuments,
@@ -109,10 +87,6 @@ from smb_requirement_agent.application.use_cases.identity_access import (
 )
 from smb_requirement_agent.application.use_cases.internal_reads import InternalReads
 from smb_requirement_agent.application.use_cases.knowledge_views import KnowledgeViews
-from smb_requirement_agent.application.use_cases.library_governance import LibraryGovernance
-from smb_requirement_agent.application.use_cases.organisation_catalogue import (
-    ManageOrganisationCatalogue,
-)
 from smb_requirement_agent.application.use_cases.owned_requirements import (
     CreateOwnedRequirement,
     CreateOwnedRequirementDraft,
@@ -124,7 +98,6 @@ from smb_requirement_agent.application.use_cases.owned_requirements import (
 from smb_requirement_agent.application.use_cases.reference_currency import (
     CurrentArchitectureRelease,
 )
-from smb_requirement_agent.application.use_cases.reference_knowledge import ReferenceKnowledge
 from smb_requirement_agent.application.use_cases.requirement_commands import RequirementCommands
 from smb_requirement_agent.application.use_cases.requirement_impact import (
     PreviewRequirementImpact,
@@ -516,18 +489,6 @@ def get_suggest_clarification_answers(container: ContainerDep) -> SuggestClarifi
     return container.suggest_clarification_answers
 
 
-def get_library_governance(container: ContainerDep) -> LibraryGovernance:
-    return container.library_governance
-
-
-def get_document_library(container: ContainerDep) -> DocumentLibrary:
-    return container.document_library
-
-
-def get_reference_knowledge(container: ContainerDep) -> ReferenceKnowledge:
-    return container.reference_knowledge
-
-
 def get_requirement_indexer(container: ContainerDep) -> IndexRequirementKnowledge:
     return container.requirement_indexer
 
@@ -568,45 +529,5 @@ def get_clock(container: ContainerDep) -> ClockPort:
     return container.clock
 
 
-def get_manage_architecture_knowledge(container: ContainerDep) -> ManageArchitectureKnowledge:
-    return container.manage_architecture_knowledge
-
-
-def get_manage_organisation_catalogue(container: ContainerDep) -> ManageOrganisationCatalogue:
-    return container.manage_organisation_catalogue
-
-
-def get_decide_catalogue_candidates(container: ContainerDep) -> DecideCatalogueCandidate:
-    return container.decide_catalogue_candidates
-
-
-def get_architecture_jobs(container: ContainerDep) -> ArchitectureJobs:
-    return container.architecture_jobs
-
-
 def get_architecture_mapping_jobs(container: ContainerDep) -> ArchitectureMappingJobs:
     return container.architecture_mapping_jobs
-
-
-def get_upload_knowledge_document(container: ContainerDep) -> UploadKnowledgeDocument:
-    return container.upload_knowledge_document
-
-
-def get_read_knowledge_document(container: ContainerDep) -> ReadKnowledgeDocument:
-    return container.read_knowledge_document
-
-
-def get_preview_architecture_impact(container: ContainerDep) -> PreviewArchitectureImpact:
-    return container.preview_architecture_impact
-
-
-def get_manage_sample_requirements(container: ContainerDep) -> ManageSampleRequirements:
-    return container.manage_sample_requirements
-
-
-def get_compare_architecture_impact(container: ContainerDep) -> CompareArchitectureImpact:
-    return container.compare_architecture_impact
-
-
-def get_report_mapping_impact(container: ContainerDep) -> ReportMappingImpact:
-    return container.report_mapping_impact

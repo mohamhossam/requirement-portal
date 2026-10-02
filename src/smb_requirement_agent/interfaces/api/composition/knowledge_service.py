@@ -1,9 +1,9 @@
-"""Where requirement work's knowledge comes from: this process, or the knowledge service.
+"""Where requirement work's knowledge comes from: the knowledge service, or offline fakes.
 
 With KNOWLEDGE_API_BASE_URL set, library search, architecture matching, the
 event feed and the read-only views all come from the knowledge service over
-its internal API (ADR-0099). Unset, the knowledge code still in this process
-answers, and the views have nothing to show.
+its internal API (ADR-0099). Unset, deterministic fakes stand in: no library,
+one empty catalogue version, and nothing for the viewers to show.
 """
 
 from __future__ import annotations
@@ -21,7 +21,10 @@ from smb_requirement_agent.application.ports.knowledge_views import KnowledgeVie
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceKnowledgePort
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.knowledge_client import (
+    FakeArchitectureKnowledge,
+    FakeKnowledgeEvents,
     FakeKnowledgeViews,
+    FakeReferenceKnowledge,
     HttpArchitectureKnowledge,
     HttpKnowledgeEvents,
     HttpKnowledgeViews,
@@ -31,23 +34,25 @@ from smb_requirement_agent.infrastructure.knowledge_client import (
 
 @dataclass(frozen=True)
 class KnowledgeService:
-    """The remote knowledge service's adapters; `None` where this process still answers."""
-
-    references: ReferenceKnowledgePort | None
-    architecture: ArchitectureKnowledgePort | None
-    events: KnowledgeEventSourcePort | None
+    references: ReferenceKnowledgePort
+    architecture: ArchitectureKnowledgePort
+    events: KnowledgeEventSourcePort
     views: KnowledgeViewsPort
-
-    @property
-    def remote(self) -> bool:
-        return self.events is not None
+    # A remote feed is polled by the knowledge event worker; the offline one is read at start.
+    remote: bool
 
 
 def build_knowledge_service(
     settings: Settings, resources: ExitStack, metrics: Metrics
 ) -> KnowledgeService:
     if settings.knowledge_api_base_url is None or settings.requirement_service_token is None:
-        return KnowledgeService(None, None, None, FakeKnowledgeViews())
+        return KnowledgeService(
+            FakeReferenceKnowledge(),
+            FakeArchitectureKnowledge(),
+            FakeKnowledgeEvents(),
+            FakeKnowledgeViews(),
+            remote=False,
+        )
     http = resources.enter_context(
         httpx.Client(transport=MeteredTransport(metrics, "knowledge", httpx.HTTPTransport()))
     )
@@ -62,4 +67,5 @@ def build_knowledge_service(
         HttpArchitectureKnowledge(client),
         HttpKnowledgeEvents(client),
         HttpKnowledgeViews(client),
+        remote=True,
     )
