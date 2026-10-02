@@ -592,7 +592,12 @@ def _build_container(
         access_service,
     )
     review = build_review(
-        persistence, resolved_clock, access_service, knowledge.source_impact, backlog_exporters
+        persistence,
+        resolved_clock,
+        access_service,
+        knowledge.source_impact,
+        backlog_exporters,
+        knowledge.current_release,
     )
     breakdown = build_breakdown(
         persistence,
@@ -612,7 +617,12 @@ def _build_container(
         access_service,
     )
     architecture_jobs = build_architecture_jobs(
-        settings, architecture, persistence, breakdown.map_breakdown_architecture, resolved_clock
+        settings,
+        architecture,
+        persistence,
+        breakdown.map_breakdown_architecture,
+        resolved_clock,
+        knowledge.current_release,
     )
     jobs = build_ai_jobs(
         settings,

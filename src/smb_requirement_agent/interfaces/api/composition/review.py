@@ -11,6 +11,9 @@ from dataclasses import dataclass
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.application.ports.architecture_knowledge import (
+    ActiveArchitectureReleasePort,
+)
 from smb_requirement_agent.application.ports.backlog_export import BacklogExportPort
 from smb_requirement_agent.application.use_cases.approval_policy import ApprovalPolicy
 from smb_requirement_agent.application.use_cases.approval_workflow import (
@@ -38,6 +41,7 @@ from smb_requirement_agent.interfaces.api.composition.persistence import Persist
 
 @dataclass(frozen=True)
 class ReviewWiring:
+    current_release: ActiveArchitectureReleasePort
     review_evidence: ReviewEvidenceLoader
     get_breakdown_review: GetBreakdownReview
     approval_recorder: ApprovalRecorder
@@ -58,6 +62,7 @@ def build_review(
     access: RequirementAccessService,
     source_impact: SourceImpactReview,
     exporters: tuple[BacklogExportPort, ...],
+    current_release: ActiveArchitectureReleasePort,
 ) -> ReviewWiring:
     reviews = persistence.breakdown_review_repository
     transactions = persistence.transaction_manager
@@ -70,10 +75,11 @@ def build_review(
         persistence.analysis_audit_repository,
         source_impact,
     )
-    get_review = GetBreakdownReview(evidence, reviews, persistence.architecture_repository)
+    get_review = GetBreakdownReview(evidence, reviews, current_release)
     recorder = ApprovalRecorder(persistence.access_repository, clock, access)
     workflow = GetApprovalWorkflow(evidence, reviews, recorder, ApprovalPolicy())
     return ReviewWiring(
+        current_release=current_release,
         review_evidence=evidence,
         get_breakdown_review=get_review,
         approval_recorder=recorder,

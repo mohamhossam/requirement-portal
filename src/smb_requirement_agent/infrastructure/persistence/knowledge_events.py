@@ -7,6 +7,7 @@ from threading import RLock
 from typing import cast
 
 from psycopg.types.json import Jsonb
+from smb_kernel.persistence.connector import DbConnection
 
 from smb_requirement_agent.application.errors import PersistenceError
 from smb_requirement_agent.application.ports.knowledge_events import KnowledgeEvent
@@ -35,20 +36,25 @@ class InMemoryKnowledgeEvents:
             return tuple(e for e in self._events if e.seq > seq)[:limit]
 
 
+def append_event(connection: DbConnection, kind: str, subject_id: str, payload: object) -> int:
+    """Record an event on `connection`, so it commits or rolls back with the change it reports."""
+    row = connection.execute(
+        "INSERT INTO knowledge_events (kind, subject_id, payload) "
+        "VALUES (%s, %s, %s) RETURNING seq",
+        (kind, subject_id, Jsonb(payload)),
+    ).fetchone()
+    if row is None or not isinstance(row[0], int):
+        raise PersistenceError("Knowledge event was not recorded.")
+    return row[0]
+
+
 class PostgresKnowledgeEvents:
     def __init__(self, store: PostgresSession) -> None:
         self._store = store
 
     def append(self, kind: str, subject_id: str, payload: object) -> int:
         with self._store.connection() as connection:
-            row = connection.execute(
-                "INSERT INTO knowledge_events (kind, subject_id, payload) "
-                "VALUES (%s, %s, %s) RETURNING seq",
-                (kind, subject_id, Jsonb(payload)),
-            ).fetchone()
-        if row is None or not isinstance(row[0], int):
-            raise PersistenceError("Knowledge event was not recorded.")
-        return row[0]
+            return append_event(connection, kind, subject_id, payload)
 
     def after(self, seq: int, limit: int) -> tuple[KnowledgeEvent, ...]:
         with self._store.connection() as connection:

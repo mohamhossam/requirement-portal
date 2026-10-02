@@ -282,6 +282,7 @@ source_modules =
     smb_requirement_agent.infrastructure.persistence.activity_projection
     smb_requirement_agent.infrastructure.persistence.analysis_payloads
     smb_requirement_agent.infrastructure.persistence.architecture_mapping_stats
+    smb_requirement_agent.infrastructure.persistence.architecture_release_state
     smb_requirement_agent.infrastructure.persistence.attachment_ingestions
     smb_requirement_agent.infrastructure.persistence.backfill_document_blobs
     smb_requirement_agent.infrastructure.persistence.backlog_payloads
@@ -394,12 +395,12 @@ forbidden_modules =
     smb_requirement_agent.infrastructure.persistence.postgres_organisation
     smb_requirement_agent.infrastructure.persistence.postgres_sample_requirements
     smb_requirement_agent.infrastructure.persistence.reference_index
-# Baseline of 10 existing crossings, 2026-10-02. Never add to it.
+    smb_requirement_agent.infrastructure.persistence.relaying_architecture_knowledge
+# Baseline of 9 existing crossings, 2026-10-02. Never add to it.
 ignore_imports =
     smb_requirement_agent.application.ports.architecture_knowledge -> smb_requirement_agent.domain.architecture.entities
     smb_requirement_agent.application.use_cases.approval_policy -> smb_requirement_agent.domain.architecture.entities
     smb_requirement_agent.application.use_cases.architecture_mapping -> smb_requirement_agent.domain.architecture.entities
-    smb_requirement_agent.application.use_cases.breakdown_review -> smb_requirement_agent.application.ports.architecture_knowledge_repository
     smb_requirement_agent.application.use_cases.breakdown_review_evidence -> smb_requirement_agent.domain.architecture.entities
     smb_requirement_agent.application.use_cases.breakdown_review_policy -> smb_requirement_agent.domain.architecture.entities
     smb_requirement_agent.application.use_cases.export_breakdown -> smb_requirement_agent.domain.architecture.entities
@@ -481,6 +482,7 @@ source_modules =
     smb_requirement_agent.infrastructure.persistence.postgres_organisation
     smb_requirement_agent.infrastructure.persistence.postgres_sample_requirements
     smb_requirement_agent.infrastructure.persistence.reference_index
+    smb_requirement_agent.infrastructure.persistence.relaying_architecture_knowledge
 forbidden_modules =
     smb_requirement_agent.application.exports
     smb_requirement_agent.application.grounding_evaluation
@@ -635,6 +637,7 @@ forbidden_modules =
     smb_requirement_agent.infrastructure.persistence.activity_projection
     smb_requirement_agent.infrastructure.persistence.analysis_payloads
     smb_requirement_agent.infrastructure.persistence.architecture_mapping_stats
+    smb_requirement_agent.infrastructure.persistence.architecture_release_state
     smb_requirement_agent.infrastructure.persistence.attachment_ingestions
     smb_requirement_agent.infrastructure.persistence.backfill_document_blobs
     smb_requirement_agent.infrastructure.persistence.backlog_payloads

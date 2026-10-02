@@ -18,6 +18,7 @@ from smb_requirement_agent.application.use_cases.rebuild_knowledge_index import 
     RebuildKnowledgeIndex,
 )
 from smb_requirement_agent.application.use_cases.reference_currency import (
+    CurrentArchitectureRelease,
     CurrentReferences,
     ProjectKnowledgeEvents,
     ReferenceCurrency,
@@ -69,6 +70,7 @@ class RequirementKnowledgeWiring:
     reference_knowledge: ReferenceKnowledge
     reference_currency: ReferenceCurrency
     current_references: CurrentReferences
+    current_release: CurrentArchitectureRelease
     knowledge_event_worker: IngestionLoop
     source_impact: SourceImpactReview
     suggest_answers: SuggestClarificationAnswers
@@ -128,9 +130,14 @@ def build_requirement_knowledge(
     projector = ProjectKnowledgeEvents(
         persistence.knowledge_events,
         persistence.reference_publications,
+        persistence.architecture_releases,
         persistence.transaction_manager,
         clock,
     )
+    # While both sides share this process, a catalogue write drains the outbox
+    # straight after it commits; drain once now for anything written before start.
+    persistence.knowledge_relay.bind(projector.drain)
+    projector.drain()
     return RequirementKnowledgeWiring(
         corpus=corpus,
         review=review,
@@ -151,6 +158,7 @@ def build_requirement_knowledge(
         reference_knowledge=reference_knowledge,
         reference_currency=reference_currency,
         current_references=current_references,
+        current_release=CurrentArchitectureRelease(persistence.architecture_releases),
         knowledge_event_worker=IngestionLoop("knowledge-events", (projector.project_next,)),
         source_impact=SourceImpactReview(
             persistence.dependency_index,

@@ -7,9 +7,9 @@ from dataclasses import dataclass
 from smb_kernel.documents.text_extractor import SafeDocumentTextExtractor
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.ports.architecture_knowledge import ArchitectureKnowledgePort
-from smb_requirement_agent.application.ports.architecture_knowledge_repository import (
-    ArchitectureKnowledgeRepositoryPort,
+from smb_requirement_agent.application.ports.architecture_knowledge import (
+    ActiveArchitectureReleasePort,
+    ArchitectureKnowledgePort,
 )
 from smb_requirement_agent.application.ports.architecture_rag import (
     ArchitectureReasonerPort,
@@ -102,16 +102,6 @@ class ArchitectureJobWiring:
     mapping_worker: ArchitectureJobWorker | None
 
 
-class _CatalogueActiveRelease:
-    """The active release id, read from the catalogue until a local projection replaces it."""
-
-    def __init__(self, repository: ArchitectureKnowledgeRepositoryPort) -> None:
-        self._repository = repository
-
-    def active_release_id(self) -> str:
-        return self._repository.active().id
-
-
 def build_architecture_retrieval(embeddings: KnowledgeEmbeddingPort) -> ArchitectureRetrieval:
     """Architecture evidence uses the application's configured embedding model."""
     return ArchitectureRetrieval(
@@ -197,6 +187,7 @@ def build_architecture_jobs(
     persistence: PersistenceAdapters,
     map_breakdown_architecture: MapBreakdownArchitecture,
     clock: ClockPort,
+    current_release: ActiveArchitectureReleasePort,
 ) -> ArchitectureJobWiring:
     """Jobs need the breakdown mapper, so they are built once the backlog graph exists."""
     jobs = ArchitectureJobs(
@@ -209,7 +200,7 @@ def build_architecture_jobs(
     )
     mapping_jobs = ArchitectureMappingJobs(
         persistence.mapping_job_repository,
-        _CatalogueActiveRelease(persistence.architecture_repository),
+        current_release,
         map_breakdown_architecture,
         architecture.job_execution,
         architecture.build_index.profile,

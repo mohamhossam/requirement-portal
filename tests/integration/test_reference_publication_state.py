@@ -20,16 +20,25 @@ from smb_kernel.documents.scanner import OfflineDocumentScanner
 from smb_kernel.documents.text_extractor import SafeDocumentTextExtractor
 from smb_kernel.persistence.connector import DirectPostgresConnector
 from smb_kernel.time.fixed import FixedClock
+from smb_kernel.time.system import SystemClock
 
 from smb_requirement_agent.application.use_cases.document_library import (
     CHUNKING_POLICY,
     DocumentLibrary,
 )
 from smb_requirement_agent.application.use_cases.documents import UploadDocumentInput
+from smb_requirement_agent.application.use_cases.reference_currency import (
+    CurrentArchitectureRelease,
+    ProjectKnowledgeEvents,
+)
 from smb_requirement_agent.domain.document.library import LibraryDocument, ReviewedPassage
 from smb_requirement_agent.domain.document.reference import ReferenceDocumentState
 from smb_requirement_agent.domain.identity.entities import ActorId, ActorProfile
+from smb_requirement_agent.infrastructure.architecture.knowledge_yaml import seed_knowledge
 from smb_requirement_agent.infrastructure.persistence import migration_runner
+from smb_requirement_agent.infrastructure.persistence.architecture_release_state import (
+    PostgresArchitectureReleaseState,
+)
 from smb_requirement_agent.infrastructure.persistence.document_library import (
     InMemoryDocumentLibrary,
 )
@@ -39,9 +48,18 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_document_reposit
 from smb_requirement_agent.infrastructure.persistence.in_memory_transaction import (
     InMemoryTransactionManager,
 )
+from smb_requirement_agent.infrastructure.persistence.knowledge_events import (
+    PostgresKnowledgeEvents,
+)
+from smb_requirement_agent.infrastructure.persistence.postgres_architecture_knowledge import (
+    PostgresArchitectureKnowledgeRepository,
+)
 from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
 from smb_requirement_agent.infrastructure.persistence.reference_publications import (
     PostgresReferencePublications,
+)
+from smb_requirement_agent.infrastructure.persistence.relaying_architecture_knowledge import (
+    RelayingArchitectureKnowledgeRepository,
 )
 
 DATABASE_URL = os.getenv("TEST_DATABASE_URL")
@@ -185,3 +203,57 @@ def test_the_postgres_copy_keeps_the_newest_state_and_its_cursor() -> None:
     states.advance(before + 5)
     states.advance(before + 2)
     assert states.cursor() == before + 5
+
+
+def test_an_activation_writes_its_event_and_the_relay_brings_the_copy_along() -> None:
+    assert DATABASE_URL is not None
+    migration_runner.run_migrations(DATABASE_URL)
+    connector = DirectPostgresConnector(DATABASE_URL)
+    store = PostgresStore(connector, lambda _id, _conn: None, lambda _c, _i: None)
+    releases = PostgresArchitectureReleaseState(store)
+    projector = ProjectKnowledgeEvents(
+        PostgresKnowledgeEvents(store),
+        PostgresReferencePublications(store),
+        releases,
+        store,
+        SystemClock(),
+    )
+    repository = RelayingArchitectureKnowledgeRepository(
+        PostgresArchitectureKnowledgeRepository(connector, seed_knowledge()), projector.drain
+    )
+    active = repository.active().id
+
+    repository.activate(active, "maintainer", "Re-affirmed")
+
+    with psycopg.connect(DATABASE_URL) as connection:
+        kind, subject = connection.execute(
+            "SELECT kind, subject_id FROM knowledge_events ORDER BY seq DESC LIMIT 1"
+        ).fetchone() or (None, None)
+    assert (kind, subject) == ("architecture_release_activated", active)
+    assert CurrentArchitectureRelease(releases).active_release_id() == active
+
+
+def test_the_migration_seeds_the_release_active_now(
+    isolated_url: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    real = Path(migration_runner.MIGRATIONS)
+    seeding = "202610021300_active_architecture_release.sql"
+    for path in real.glob("*.sql"):
+        if path.name != seeding:
+            shutil.copy(path, tmp_path / path.name)
+    monkeypatch.setattr(migration_runner, "MIGRATIONS", tmp_path)
+    migration_runner.run_migrations(isolated_url)
+    with psycopg.connect(isolated_url) as connection:
+        connection.execute(
+            "INSERT INTO architecture_knowledge_releases (release_id, revision, payload, active) "
+            "VALUES ('old', 1, '{}'::jsonb, false), ('live', 2, '{}'::jsonb, true)"
+        )
+
+    shutil.copy(real / seeding, tmp_path / seeding)
+    migration_runner.run_migrations(isolated_url)
+
+    with psycopg.connect(isolated_url) as connection:
+        row = connection.execute(
+            "SELECT release_id, seq FROM active_architecture_release"
+        ).fetchone()
+    assert row == ("live", 0)

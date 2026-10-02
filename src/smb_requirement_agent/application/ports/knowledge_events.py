@@ -10,6 +10,7 @@ from datetime import datetime
 from typing import Protocol
 
 REFERENCE_DOCUMENT_CHANGED = "reference_document_changed"
+ARCHITECTURE_RELEASE_ACTIVATED = "architecture_release_activated"
 
 
 @dataclass(frozen=True)
