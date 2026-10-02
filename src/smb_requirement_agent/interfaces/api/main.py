@@ -51,9 +51,6 @@ from smb_requirement_agent.interfaces.api.routes.knowledge_views import (
 from smb_requirement_agent.interfaces.api.routes.requirements import router as requirements_router
 from smb_requirement_agent.interfaces.api.routes.review import router as review_router
 from smb_requirement_agent.interfaces.api.routes.revisions import router as revisions_router
-from smb_requirement_agent.interfaces.api.routes.source_impact import (
-    alias_router as source_impact_alias_router,
-)
 from smb_requirement_agent.interfaces.api.routes.source_impact import router as source_impact_router
 from smb_requirement_agent.interfaces.api.routes.story import router as story_router
 from smb_requirement_agent.interfaces.runtime import (
@@ -248,7 +245,6 @@ def create_app(container_factory: Callable[[], Container] = build_container) -> 
         knowledge_router,
         knowledge_views_router,
         source_impact_router,
-        source_impact_alias_router,
         documents_router,
         analysis_router,
         epic_router,

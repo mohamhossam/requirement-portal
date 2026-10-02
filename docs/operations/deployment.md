@@ -345,9 +345,10 @@ passages and evidence.
   `APP_ENV=production` refuses to start this way.
 - **Gone from this service:** the library, the architecture and squad catalogues, their
   routes (`/library/*`, `/architecture-knowledge/*`, `/organisation/*`, `/jobs/*`,
-  `/knowledge/search`) and their worker. They live in the knowledge portal. Two deprecated
-  aliases, `/library/requirements/{id}/source-impact` and
-  `/library/source-impact/{id}/decisions`, remain until the browser stops calling them.
+  `/knowledge/search`) and their worker. They live in the knowledge portal. A Requirement's
+  source impact is read and decided under `/requirements/{id}/source-impact`; the old
+  `/library/requirements/{id}/source-impact` and `/library/source-impact/{id}/decisions`
+  paths are gone.
 - **Architecture mapping jobs** are read, cancelled and retried under
   `/requirements/{id}/architecture-mapping/jobs/{job_id}`.
 - **`KNOWLEDGE_EVALUATION_APPROVED`** is no longer read here. The knowledge service holds that
