@@ -338,6 +338,7 @@ class PersistenceAdapters:
     catalogue_candidates: CatalogueCandidateRepositoryPort
     architecture_evidence_index: ArchitectureEvidenceIndexPort
     architecture_job_repository: ArchitectureJobRepositoryPort
+    mapping_job_repository: ArchitectureJobRepositoryPort
     library_repository: DocumentLibraryPort
     attachment_ingestions: AttachmentIngestionRepositoryPort
     reference_index: ReferenceIndexPort
@@ -410,6 +411,7 @@ def _postgres(
         connector, architecture_embeddings, architecture_tokenizer
     )
     architecture_job_repository = PostgresArchitectureJobs(connector)
+    mapping_job_repository = PostgresArchitectureJobs(connector, table="requirement_mapping_jobs")
     library_repository: DocumentLibraryPort = PostgresDocumentLibrary(postgres)
     attachment_ingestions: AttachmentIngestionRepositoryPort = PostgresAttachmentIngestions(
         postgres
@@ -504,6 +506,7 @@ def _postgres(
         catalogue_candidates=catalogue_candidates,
         architecture_evidence_index=architecture_evidence_index,
         architecture_job_repository=architecture_job_repository,
+        mapping_job_repository=mapping_job_repository,
         library_repository=library_repository,
         attachment_ingestions=attachment_ingestions,
         reference_index=reference_index,
@@ -539,6 +542,7 @@ def _memory(
         architecture_embeddings, architecture_tokenizer
     )
     architecture_job_repository = InMemoryArchitectureJobs()
+    mapping_job_repository = InMemoryArchitectureJobs()
     memory_library = InMemoryDocumentLibrary(memory_lock)
     memory_attachments = InMemoryAttachmentIngestions(memory_lock)
     attachment_ingestions = memory_attachments
@@ -711,6 +715,7 @@ def _memory(
         catalogue_candidates=catalogue_candidates,
         architecture_evidence_index=architecture_evidence_index,
         architecture_job_repository=architecture_job_repository,
+        mapping_job_repository=mapping_job_repository,
         library_repository=library_repository,
         attachment_ingestions=attachment_ingestions,
         reference_index=reference_index,

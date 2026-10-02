@@ -179,6 +179,7 @@ source_modules =
     smb_requirement_agent.application.use_cases.approval_workflow
     smb_requirement_agent.application.use_cases.approve_epic
     smb_requirement_agent.application.use_cases.architecture_mapping
+    smb_requirement_agent.application.use_cases.architecture_mapping_jobs
     smb_requirement_agent.application.use_cases.attachment_ingestion
     smb_requirement_agent.application.use_cases.breakdown_review
     smb_requirement_agent.application.use_cases.breakdown_review_evidence
@@ -323,7 +324,6 @@ source_modules =
     smb_requirement_agent.infrastructure.persistence.source_dependencies
     smb_requirement_agent.infrastructure.persistence.story_quality_repository
 forbidden_modules =
-    smb_requirement_agent.application.ports.architecture_jobs
     smb_requirement_agent.application.ports.architecture_knowledge_repository
     smb_requirement_agent.application.ports.architecture_mapping_stats
     smb_requirement_agent.application.ports.architecture_rag
@@ -378,16 +378,13 @@ forbidden_modules =
     smb_requirement_agent.infrastructure.architecture.tokenizer
     smb_requirement_agent.infrastructure.architecture.yaml_knowledge
     smb_requirement_agent.infrastructure.documents.library_worker
-    smb_requirement_agent.infrastructure.jobs.architecture_job_worker
     smb_requirement_agent.infrastructure.llm.catalogue_extraction
     smb_requirement_agent.infrastructure.llm.catalogue_matching
     smb_requirement_agent.infrastructure.persistence.document_library
-    smb_requirement_agent.infrastructure.persistence.in_memory_architecture_jobs
     smb_requirement_agent.infrastructure.persistence.in_memory_architecture_knowledge
     smb_requirement_agent.infrastructure.persistence.in_memory_catalogue_candidates
     smb_requirement_agent.infrastructure.persistence.in_memory_organisation
     smb_requirement_agent.infrastructure.persistence.in_memory_sample_requirements
-    smb_requirement_agent.infrastructure.persistence.postgres_architecture_jobs
     smb_requirement_agent.infrastructure.persistence.postgres_architecture_knowledge
     smb_requirement_agent.infrastructure.persistence.postgres_catalogue_candidates
     smb_requirement_agent.infrastructure.persistence.postgres_organisation
@@ -414,7 +411,6 @@ type = forbidden
 # indirect path disappears with the direct import that creates it.
 allow_indirect_imports = True
 source_modules =
-    smb_requirement_agent.application.ports.architecture_jobs
     smb_requirement_agent.application.ports.architecture_knowledge_repository
     smb_requirement_agent.application.ports.architecture_mapping_stats
     smb_requirement_agent.application.ports.architecture_rag
@@ -469,16 +465,13 @@ source_modules =
     smb_requirement_agent.infrastructure.architecture.tokenizer
     smb_requirement_agent.infrastructure.architecture.yaml_knowledge
     smb_requirement_agent.infrastructure.documents.library_worker
-    smb_requirement_agent.infrastructure.jobs.architecture_job_worker
     smb_requirement_agent.infrastructure.llm.catalogue_extraction
     smb_requirement_agent.infrastructure.llm.catalogue_matching
     smb_requirement_agent.infrastructure.persistence.document_library
-    smb_requirement_agent.infrastructure.persistence.in_memory_architecture_jobs
     smb_requirement_agent.infrastructure.persistence.in_memory_architecture_knowledge
     smb_requirement_agent.infrastructure.persistence.in_memory_catalogue_candidates
     smb_requirement_agent.infrastructure.persistence.in_memory_organisation
     smb_requirement_agent.infrastructure.persistence.in_memory_sample_requirements
-    smb_requirement_agent.infrastructure.persistence.postgres_architecture_jobs
     smb_requirement_agent.infrastructure.persistence.postgres_architecture_knowledge
     smb_requirement_agent.infrastructure.persistence.postgres_catalogue_candidates
     smb_requirement_agent.infrastructure.persistence.postgres_organisation
@@ -535,6 +528,7 @@ forbidden_modules =
     smb_requirement_agent.application.use_cases.approval_workflow
     smb_requirement_agent.application.use_cases.approve_epic
     smb_requirement_agent.application.use_cases.architecture_mapping
+    smb_requirement_agent.application.use_cases.architecture_mapping_jobs
     smb_requirement_agent.application.use_cases.attachment_ingestion
     smb_requirement_agent.application.use_cases.breakdown_review
     smb_requirement_agent.application.use_cases.breakdown_review_evidence
@@ -678,12 +672,10 @@ forbidden_modules =
     smb_requirement_agent.infrastructure.persistence.revision_tracking
     smb_requirement_agent.infrastructure.persistence.source_dependencies
     smb_requirement_agent.infrastructure.persistence.story_quality_repository
-# Baseline of 18 existing crossings, 2026-10-02. Never add to it.
+# Baseline of 16 existing crossings, 2026-10-02. Never add to it.
 ignore_imports =
     smb_requirement_agent.application.ports.architecture_rag -> smb_requirement_agent.application.ports.architecture_knowledge
     smb_requirement_agent.application.use_cases.architecture_comparison -> smb_requirement_agent.application.ports.architecture_knowledge
-    smb_requirement_agent.application.use_cases.architecture_jobs -> smb_requirement_agent.application.use_cases.architecture_mapping
-    smb_requirement_agent.application.use_cases.architecture_jobs -> smb_requirement_agent.domain.requirement.value_objects
     smb_requirement_agent.application.use_cases.architecture_preview -> smb_requirement_agent.application.ports.architecture_knowledge
     smb_requirement_agent.application.use_cases.document_library -> smb_requirement_agent.application.ports.transaction_manager
     smb_requirement_agent.application.use_cases.document_library -> smb_requirement_agent.application.use_cases.documents

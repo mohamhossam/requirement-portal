@@ -15,6 +15,7 @@ from smb_requirement_agent.application.errors import (
     ApprovalWorkflowNotReadyError,
     ArchitectureJobNotFoundError,
     ArchitectureMappingConflictError,
+    ArchitectureMappingProfileChangedError,
     ArtifactVersionConflictError,
     AuthenticationRequiredError,
     BacklogExportFormatError,
@@ -217,6 +218,11 @@ ERROR_CATALOGUE: tuple[tuple[type[Exception], str, FailureCategory], ...] = (
     ),
     (
         KnowledgeConflictError,
+        "architecture_knowledge_conflict",
+        FailureCategory.CONFLICT,
+    ),
+    (
+        ArchitectureMappingProfileChangedError,
         "architecture_knowledge_conflict",
         FailureCategory.CONFLICT,
     ),

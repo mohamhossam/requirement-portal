@@ -684,6 +684,8 @@ def test_real_models_poll_architecture_jobs_in_process() -> None:
     )
     try:
         assert "architecture_job_worker" in container.background_workers
+        # Mapping a Requirement's backlog has its own queue and worker (ADR-0099).
+        assert "architecture_mapping_job_worker" in container.background_workers
     finally:
         container.close_resources()
 

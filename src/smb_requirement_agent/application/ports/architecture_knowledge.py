@@ -47,3 +47,9 @@ class ArchitectureKnowledgeMatch:
 
 class ArchitectureKnowledgePort(Protocol):
     def match(self, query: ArchitectureQuery) -> ArchitectureKnowledgeMatch: ...
+
+
+class ActiveArchitectureReleasePort(Protocol):
+    """Which catalogue release new mappings pin. Requirement work reads only its id."""
+
+    def active_release_id(self) -> str: ...

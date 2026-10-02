@@ -154,6 +154,14 @@ class ArchitectureMappingConflictError(Exception):
     """The current breakdown is not ready for architecture mapping."""
 
 
+class ArchitectureMappingProfileChangedError(Exception):
+    """A queued mapping was asked for under models that are no longer configured.
+
+    It reports as `architecture_knowledge_conflict`, as it did while mapping jobs
+    ran in the catalogue's queue (ADR-0099).
+    """
+
+
 class BreakdownReviewNotFoundError(Exception):
     """No generated breakdown review exists for the Requirement."""
 
