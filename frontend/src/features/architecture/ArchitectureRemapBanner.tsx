@@ -8,8 +8,9 @@ import { Button, Card } from "../../components/ui";
 
 /**
  * Says when a breakdown was mapped with a catalogue version no longer in use,
- * and lets the requirement's own team remap it. People without a knowledge
- * role cannot read the version in use, so they are not shown the banner.
+ * and lets the requirement's own team remap it. The version in use comes from
+ * this app's copy of the knowledge portal's activations (ADR-0099), so every
+ * member sees the banner; until a version is known there is nothing to compare.
  */
 export function ArchitectureRemapBanner({ mappedWith, canRemap, busy, onRemap }: {
   /** The catalogue versions the breakdown's current mappings were made with. */
@@ -19,7 +20,7 @@ export function ArchitectureRemapBanner({ mappedWith, canRemap, busy, onRemap }:
   onRemap: () => void;
 }) {
   const [confirming, setConfirming] = useState(false);
-  const active = useQuery({ queryKey: ["knowledge", "active"], queryFn: knowledgeApi.active,
+  const active = useQuery({ queryKey: ["knowledge", "active"], queryFn: knowledgeApi.activeRelease,
     enabled: mappedWith.length > 0, retry: false });
   const catalogue = active.data;
   if (!catalogue || !mappedWith.some((version) => version !== catalogue.id)) return null;

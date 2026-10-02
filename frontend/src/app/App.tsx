@@ -1,9 +1,10 @@
 import { lazy, Suspense } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 
 import { AppShell } from "../components/shell";
 import { LoadingState } from "../components/states";
 import { DashboardPage } from "./DashboardPage";
+import { LegacyEvidenceLink, LegacyLibraryLink } from "./legacyKnowledgeLinks";
 import { RequirementEntryRedirect } from "./RequirementEntryRedirect";
 
 /**
@@ -23,11 +24,9 @@ const ActivityPage = lazy(() => import("./ActivityPage").then((m) => ({ default:
 const ReportsPage = lazy(() => import("./ReportsPage").then((m) => ({ default: m.ReportsPage })));
 const NewRequirementPage = lazy(() => import("./NewRequirementPage").then((m) => ({ default: m.NewRequirementPage })));
 const DocumentsPage = lazy(() => import("./DocumentsPage").then((m) => ({ default: m.DocumentsPage })));
-const LibraryPage = lazy(() => import("./LibraryPage").then((m) => ({ default: m.LibraryPage })));
 const DocumentDetailPage = lazy(() => import("./DocumentDetailPage").then((m) => ({ default: m.DocumentDetailPage })));
 const RequirementPage = lazy(() => import("./RequirementPage").then((m) => ({ default: m.RequirementPage })));
-const ArchitectureCataloguePage = lazy(() => import("../features/catalogue/ArchitectureCataloguePage").then((m) => ({ default: m.ArchitectureCataloguePage })));
-const SquadCataloguePage = lazy(() => import("../features/organisation/SquadCataloguePage").then((m) => ({ default: m.SquadCataloguePage })));
+const ReferencePassagePage = lazy(() => import("./ReferencePassagePage").then((m) => ({ default: m.ReferencePassagePage })));
 const ArchitectureEvidencePage = lazy(() => import("./ArchitectureEvidencePage").then((m) => ({ default: m.ArchitectureEvidencePage })));
 
 /**
@@ -51,12 +50,15 @@ export function App() {
           <Route path="/reports" element={<ReportsPage />} />
           <Route path="/requirements/new" element={<NewRequirementPage />} />
           <Route path="/documents" element={<DocumentsPage />} />
-          <Route path="/documents/library" element={<LibraryPage />} />
-          <Route path="/documents/library/:libraryId" element={<LibraryPage />} />
+          {/* The library and the catalogues moved to the knowledge portal (ADR-0099). Old links
+              to a cited passage or to evidence still open, in this app's read-only views. */}
+          <Route path="/documents/library" element={<Navigate to="/documents" replace />} />
+          <Route path="/documents/library/:libraryId" element={<LegacyLibraryLink />} />
           <Route path="/documents/:documentId" element={<DocumentDetailPage />} />
-          <Route path="/architecture-knowledge" element={<ArchitectureCataloguePage />} />
-          <Route path="/architecture-knowledge/squads" element={<SquadCataloguePage />} />
-          <Route path="/architecture-knowledge/releases/:releaseId/evidence/:chunkId" element={<ArchitectureEvidencePage />} />
+          <Route path="/references/passage" element={<ReferencePassagePage />} />
+          <Route path="/architecture-evidence/:releaseId/:chunkId" element={<ArchitectureEvidencePage />} />
+          <Route path="/architecture-knowledge/releases/:releaseId/evidence/:chunkId" element={<LegacyEvidenceLink />} />
+          <Route path="/architecture-knowledge/*" element={<Navigate to="/documents" replace />} />
           <Route path="/requirements/:id" element={<RequirementEntryRedirect />} />
           <Route path="/requirements/:id/capture" element={<RequirementPage view="capture" />} />
           <Route path="/requirements/:id/clarify" element={<RequirementPage view="clarify" />} />

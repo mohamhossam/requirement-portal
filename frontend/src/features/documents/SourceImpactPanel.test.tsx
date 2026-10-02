@@ -46,7 +46,7 @@ it("requires a rationale and refreshes the analysis gate after owner reconciliat
   await user.type(screen.getByLabelText("Reason for impact decision"), "Retain this rollout's reviewed policy");
   await user.click(button);
   expect(await screen.findByRole("status")).toHaveTextContent("Impact decision recorded.");
-  expect(save).toHaveBeenCalledWith(item, "retain_historical", "Retain this rollout's reviewed policy");
+  expect(save).toHaveBeenCalledWith("req-1", item, "retain_historical", "Retain this rollout's reviewed policy");
   expect(cache.getQueryState(queryKeys.analysis("req-1"))?.isInvalidated).toBe(true);
 });
 
