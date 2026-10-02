@@ -254,7 +254,6 @@ def create_app(container_factory: Callable[[], Container] = build_container) -> 
         library_router,
         search_router,
         source_impact_router,
-        internal_router,
         documents_router,
         analysis_router,
         epic_router,
@@ -269,6 +268,7 @@ def create_app(container_factory: Callable[[], Container] = build_container) -> 
         governance_router,
     ):
         application.include_router(router)
+    application.include_router(internal_router, include_in_schema=False)
     return application
 
 

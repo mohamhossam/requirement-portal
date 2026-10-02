@@ -8,9 +8,9 @@ never routes /internal.
 
 from __future__ import annotations
 
-from typing import Annotated
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query
 from pydantic import BaseModel
 
 from smb_requirement_agent.application.ports.architecture_mapping_stats import MappingCount
@@ -24,10 +24,11 @@ from smb_requirement_agent.interfaces.api.dependencies import (
     require_service_caller,
 )
 
+# Mounted with include_in_schema=False (main.py): the browser contract never lists
+# these. `contract_openapi()` documents them on their own for the knowledge service.
 router = APIRouter(
     prefix="/internal",
     tags=["internal"],
-    include_in_schema=False,
     dependencies=[Depends(require_service_caller)],
 )
 ReadsDep = Annotated[InternalReads, Depends(get_internal_reads)]
@@ -89,3 +90,10 @@ def actor(actor_id: str, reads: ReadsDep) -> InternalActorResponse:
         email=found.email,
         roles=sorted(found.roles),
     )
+
+
+def contract_openapi() -> dict[str, Any]:
+    """This internal API on its own: the contract the knowledge service builds against."""
+    application = FastAPI(title="Requirement service internal API")
+    application.include_router(router)
+    return application.openapi()
