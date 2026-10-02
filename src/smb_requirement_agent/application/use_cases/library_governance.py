@@ -9,7 +9,7 @@ from smb_requirement_agent.application.errors import (
     DocumentNotFoundError,
     DocumentVersionConflictError,
 )
-from smb_requirement_agent.application.ports.actor_directory import ActorDirectoryPort
+from smb_requirement_agent.application.ports.actor_directory import ActorLookupPort
 from smb_requirement_agent.application.ports.document_library import DocumentLibraryPort
 from smb_requirement_agent.application.ports.source_dependencies import SourceDependencyPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
@@ -44,7 +44,7 @@ class LibraryGovernance:
     def __init__(
         self,
         documents: DocumentLibraryPort,
-        actors: ActorDirectoryPort,
+        actors: ActorLookupPort,
         transactions: TransactionManagerPort,
         clock: ClockPort,
         index: SourceDependencyPort,
