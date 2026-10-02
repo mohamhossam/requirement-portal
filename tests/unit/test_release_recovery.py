@@ -20,6 +20,6 @@ def test_recovery_accepts_only_explicit_qualification_database() -> None:
 
 def test_restore_cannot_be_verified_against_its_source_without_restoring() -> None:
     name = "codex_qualification_test_source"
-    manifest = RecoveryManifest(name, "document", "version", "checksum", {})
+    manifest = RecoveryManifest(name, "requirement", "attachment", "checksum", {})
     with pytest.raises(ValueError, match="different database"):
         verify(f"postgresql://127.0.0.1/{name}", manifest)

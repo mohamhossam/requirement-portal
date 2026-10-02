@@ -1,4 +1,10 @@
-"""Connected systems: one catalogued relationship away from a mapped impact (ADR-0087)."""
+"""Connected systems on a mapped impact, as requirement work receives them (ADR-0087).
+
+Finding connected systems in the catalogue is the knowledge service's job and is
+covered there. These tests cover what requirement work does with the connected
+systems it is given: record them, store them, and keep them out of approval
+fingerprints and generation prompts.
+"""
 
 from __future__ import annotations
 
@@ -7,7 +13,6 @@ from dataclasses import replace
 from datetime import UTC, datetime
 
 import pytest
-from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.application.ports.architecture_knowledge import (
     ArchitectureKnowledgeMatch,
@@ -15,41 +20,25 @@ from smb_requirement_agent.application.ports.architecture_knowledge import (
 )
 from smb_requirement_agent.application.ports.generation_guidance import GenerationGuidance
 from smb_requirement_agent.application.use_cases.approval_policy import artifact_fingerprint
-from smb_requirement_agent.application.use_cases.resolve_architecture_knowledge import (
-    ResolveArchitectureKnowledge,
+from smb_requirement_agent.application.use_cases.architecture_mapping import (
+    MapFeatureArchitecture,
 )
 from smb_requirement_agent.domain.architecture.entities import (
     ArchitectureDependency,
     ArchitectureImpact,
+    OrganisationReference,
     SystemReference,
 )
 from smb_requirement_agent.domain.architecture.errors import InvalidArchitectureContentError
-from smb_requirement_agent.domain.architecture.knowledge import SystemRelationship
-from smb_requirement_agent.domain.architecture.neighbours import adjacent
-from smb_requirement_agent.domain.organisation.catalogue import (
-    OrganisationCatalogue,
-    Squad,
-    SquadSystemResource,
-    ValueStream,
-)
-from smb_requirement_agent.infrastructure.architecture.embeddings import FakeEmbeddings
-from smb_requirement_agent.infrastructure.architecture.evidence_index import (
-    InMemoryEvidenceIndex,
-)
-from smb_requirement_agent.infrastructure.architecture.knowledge_yaml import seed_knowledge
-from smb_requirement_agent.infrastructure.architecture.reasoning import FakeArchitectureReasoner
-from smb_requirement_agent.infrastructure.architecture.tokenizer import FakeWordTokenizer
-from smb_requirement_agent.infrastructure.architecture.yaml_knowledge import (
-    YamlArchitectureKnowledge,
-    default_knowledge_path,
+from smb_requirement_agent.domain.requirement.entities import Requirement
+from smb_requirement_agent.domain.requirement.value_objects import (
+    RequirementContext,
+    RequirementDescription,
+    RequirementId,
+    RequirementStatus,
+    RequirementTitle,
 )
 from smb_requirement_agent.infrastructure.llm.prompts.generation_guidance import render_guidance
-from smb_requirement_agent.infrastructure.persistence.in_memory_architecture_knowledge import (
-    InMemoryArchitectureKnowledgeRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_organisation import (
-    InMemoryOrganisationRepository,
-)
 from smb_requirement_agent.infrastructure.persistence.shared_payloads import (
     architecture_from_payload,
     architecture_to_payload,
@@ -57,51 +46,6 @@ from smb_requirement_agent.infrastructure.persistence.shared_payloads import (
 from tests.unit.test_feature_domain import make_feature
 
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=UTC)
-
-
-def _rel(source: str, target: str, text: str = "uses") -> SystemRelationship:
-    return SystemRelationship(source, target, text)
-
-
-def test_adjacent_walks_one_hop_both_ways_and_skips_selected_systems() -> None:
-    result = adjacent(
-        {"hub"},
-        (
-            _rel("hub", "billing"),
-            _rel("portal", "hub"),
-            _rel("billing", "ledger"),  # two hops away: not reached
-            _rel("hub", "inside"),
-            _rel("inside", "hub", "calls back"),
-        ),
-    )
-
-    assert result.system_ids == ("inside", "billing", "portal")
-    assert [(item.source_system_id, item.target_system_id) for item in result.dependencies] == [
-        ("hub", "inside"),
-        ("inside", "hub"),
-        ("hub", "billing"),
-        ("portal", "hub"),
-    ]
-    assert result.omitted == 0
-
-
-def test_adjacent_ignores_relationships_inside_the_selection_and_caps_the_list() -> None:
-    relationships = (
-        _rel("a", "b"),
-        *(_rel("a", f"n{index}") for index in range(5)),
-    )
-
-    result = adjacent({"a", "b"}, relationships, limit=3)
-
-    assert result.system_ids == ("n0", "n1", "n2")
-    assert result.omitted == 2
-    assert all(
-        "b" not in (item.source_system_id, item.target_system_id) for item in result.dependencies
-    )
-    assert adjacent({"a", "b"}, relationships, limit=3) == result
-    assert adjacent(set(), relationships).system_ids == ()
-    with pytest.raises(ValueError):
-        adjacent({"a"}, relationships, limit=-1)
 
 
 def _impact(**changes: object) -> ArchitectureImpact:
@@ -128,41 +72,53 @@ def test_impact_rejects_connected_systems_that_are_mapped_or_unreached() -> None
         _impact(adjacent_omitted=-1)
 
 
-def _resolver(organisation: InMemoryOrganisationRepository) -> ResolveArchitectureKnowledge:
-    return ResolveArchitectureKnowledge(
-        InMemoryArchitectureKnowledgeRepository(seed_knowledge()),
-        InMemoryEvidenceIndex(FakeEmbeddings(), FakeWordTokenizer()),
-        FakeArchitectureReasoner(),
-        YamlArchitectureKnowledge(default_knowledge_path()),
-        organisation,
-    )
+class _FixedKnowledge:
+    """The knowledge service, answering every query with one fixed match."""
+
+    def __init__(self, match: ArchitectureKnowledgeMatch) -> None:
+        self.match_result = match
+        self.queries: list[ArchitectureQuery] = []
+
+    def match(self, query: ArchitectureQuery) -> ArchitectureKnowledgeMatch:
+        self.queries.append(query)
+        return self.match_result
 
 
-def test_resolver_lists_connected_systems_with_their_owners() -> None:
-    organisation = InMemoryOrganisationRepository(FixedClock(NOW))
-    organisation.change(
-        lambda _: OrganisationCatalogue(
-            value_streams=(ValueStream("retail", "Retail"),),
-            squads=(
-                Squad("care", "Care squad", "retail", None, (SquadSystemResource("cbcm-crmgw"),)),
+def test_mapping_records_the_connected_systems_and_their_owners_as_given() -> None:
+    care = OrganisationReference("care", "Care squad")
+    knowledge = _FixedKnowledge(
+        ArchitectureKnowledgeMatch(
+            "v1",
+            (SystemReference("dcrm", "DCRM", True),),
+            (),
+            adjacent_systems=(SystemReference("cbcm-crmgw", "CBCM CRM GW", True, squads=(care,)),),
+            adjacent_dependencies=(
+                ArchitectureDependency("dcrm", "cbcm-crmgw", "Reads customers."),
             ),
-        ),
-        "amina",
-        "seed",
-        "all",
+            adjacent_omitted=2,
+        )
+    )
+    requirement = Requirement(
+        id=RequirementId("req-1"),
+        title=RequirementTitle("Back-office orders"),
+        description=RequirementDescription("Capture back-office orders"),
+        status=RequirementStatus.DRAFT,
+        systems=(RequirementContext("DCRM"),),
     )
 
-    result = _resolver(organisation).match(
-        ArchitectureQuery(text=("Capture back-office orders",), declared_systems=("DCRM",))
-    )
+    mapped = MapFeatureArchitecture(knowledge).execute(requirement, make_feature(), NOW)
 
-    assert [item.id for item in result.systems] == ["dcrm"]
-    assert result.dependencies == ()
-    assert [item.id for item in result.adjacent_systems] == ["cbcm-crmgw"]
-    assert [item.name for item in result.adjacent_systems[0].squads] == ["Care squad"]
+    assert knowledge.queries[0].declared_systems == ("DCRM",)
+    impact = mapped.impact
+    assert mapped.feature.architecture == impact
+    assert [item.id for item in impact.systems] == ["dcrm"]
+    assert impact.dependencies == ()
+    assert [item.id for item in impact.adjacent_systems] == ["cbcm-crmgw"]
+    assert [item.name for item in impact.adjacent_systems[0].squads] == ["Care squad"]
     assert [
-        (item.source_system_id, item.target_system_id) for item in result.adjacent_dependencies
+        (item.source_system_id, item.target_system_id) for item in impact.adjacent_dependencies
     ] == [("dcrm", "cbcm-crmgw")]
+    assert impact.adjacent_omitted == 2
 
 
 def test_mapping_keeps_connected_systems_out_of_fingerprints_and_prompts() -> None:

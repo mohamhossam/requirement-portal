@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from smb_requirement_agent.application.ports.actor_directory import ActorDirectoryPort
 from smb_requirement_agent.application.ports.architecture_mapping_stats import (
     ArchitectureMappingStatsPort,
     MappingCount,
@@ -38,13 +37,11 @@ class InternalReads:
         self,
         dependencies: SourceDependencyPort,
         impact: SourceImpactReview,
-        actors: ActorDirectoryPort,
         mapping_stats: ArchitectureMappingStatsPort,
         transactions: TransactionManagerPort,
     ) -> None:
         self._dependencies = dependencies
         self._impact = impact
-        self._actors = actors
         self._mapping_stats = mapping_stats
         self._transactions = transactions
 
@@ -83,9 +80,6 @@ class InternalReads:
 
     def mapping_counts(self) -> tuple[MappingCount, ...]:
         return self._mapping_stats.by_release()
-
-    def actor(self, actor_id: str) -> ActorProfile | None:
-        return self._actors.get(ActorId(actor_id))
 
 
 def _acting(actor_id: str) -> ActorProfile:

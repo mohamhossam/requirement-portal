@@ -15,13 +15,21 @@ from smb_requirement_agent.application.errors import ModelTransportError
 from smb_requirement_agent.application.use_cases.qualify_chunk_tokens import qualify_chunk_tokens
 
 
-def test_qualification_fixture_matches_actual_reviewed_chunk_output() -> None:
-    from tests.chunk_token_fixtures import chunk_token_samples
+def test_qualification_fixture_matches_actual_requirement_chunk_output() -> None:
+    """The saved requirement samples are exactly what requirement work cuts today.
 
-    saved = json.loads(
-        Path("docs/evaluation/chunk-token-fixtures.json").read_text(encoding="utf-8")
+    The fixture's library samples are cut by the knowledge service, which checks them.
+    """
+    from tests.chunk_token_fixtures import (
+        FIXTURE_PATH,
+        REQUIREMENT_PREFIX,
+        chunk_token_samples,
     )
-    assert saved == [{"case": case, "text": text} for case, text in chunk_token_samples()]
+
+    saved = json.loads(Path(FIXTURE_PATH).read_text(encoding="utf-8"))
+    assert [item for item in saved if item["case"].startswith(REQUIREMENT_PREFIX)] == [
+        {"case": case, "text": text} for case, text in chunk_token_samples()
+    ]
 
 
 def profile() -> EmbeddingProfile:

@@ -11,14 +11,13 @@ from fastapi.testclient import TestClient
 from smb_kernel.http.service_auth import CALLER_SCOPE_KEY
 
 from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirementInput
-from smb_requirement_agent.application.use_cases.document_library import LibraryView
 from smb_requirement_agent.infrastructure.config.options import ConfigurationError
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
-from smb_requirement_agent.interfaces.api.container import Container
 from smb_requirement_agent.interfaces.api.dependencies import require_service_caller
 from smb_requirement_agent.interfaces.api.main import create_app
 from tests.unit import test_reference_grounding
+from tests.unit.test_reference_grounding import Grounded
 
 grounded = test_reference_grounding.grounded
 TOKEN = "k" * 40
@@ -26,8 +25,9 @@ SERVICE = {"Authorization": f"Bearer {TOKEN}"}
 
 
 @pytest.fixture
-def internal(grounded: tuple[Container, LibraryView]) -> Iterator[tuple[TestClient, LibraryView]]:
-    container, document = grounded
+def internal(grounded: Grounded) -> Iterator[tuple[TestClient, str]]:
+    """A service-token client, and the policy a Requirement now cites."""
+    container = grounded.container
     owner = FAKE_ACTORS[0]
     requirement = container.create_requirement.execute(
         CreateRequirementInput("Cites the policy", "XGPON coverage for bundles."), owner
@@ -37,13 +37,13 @@ def internal(grounded: tuple[Container, LibraryView]) -> Iterator[tuple[TestClie
         container, settings=replace(container.settings, knowledge_service_token=TOKEN)
     )
     with TestClient(create_app(lambda: serving)) as client:
-        yield client, document
+        yield client, grounded.citation.document_id
 
 
 def test_without_a_token_the_internal_api_is_not_served(
-    grounded: tuple[Container, LibraryView],
+    grounded: Grounded,
 ) -> None:
-    container, _ = grounded
+    container = grounded.container
     with TestClient(create_app(lambda: container)) as client:
         assert (
             client.get("/internal/architecture-mapping/stats", headers=SERVICE).status_code == 404
@@ -58,7 +58,7 @@ def test_without_a_token_the_internal_api_is_not_served(
     [{}, {"Authorization": "Bearer " + "x" * 40}, {"X-Fake-Actor-Id": "fake-owner"}],
 )
 def test_only_the_knowledge_service_token_is_admitted(
-    internal: tuple[TestClient, LibraryView], headers: dict[str, str]
+    internal: tuple[TestClient, str], headers: dict[str, str]
 ) -> None:
     client, _ = internal
     response = client.get("/internal/architecture-mapping/stats", headers=headers)
@@ -67,12 +67,12 @@ def test_only_the_knowledge_service_token_is_admitted(
 
 
 def test_a_document_owner_sees_dependents_and_impact_through_the_service(
-    internal: tuple[TestClient, LibraryView],
+    internal: tuple[TestClient, str],
 ) -> None:
-    client, document = internal
+    client, document_id = internal
     owner = FAKE_ACTORS[0].id.value
     dependents = client.get(
-        f"/internal/references/{document.id}/dependents",
+        f"/internal/references/{document_id}/dependents",
         params={"actor_id": owner, "target_kind": "proposal"},
         headers=SERVICE,
     )
@@ -80,17 +80,17 @@ def test_a_document_owner_sees_dependents_and_impact_through_the_service(
     page = dependents.json()
     assert page["next_offset"] is None
     assert page["items"] and all(item["target_kind"] == "proposal" for item in page["items"])
-    assert all(item["lineage"]["citation"]["document_id"] == document.id for item in page["items"])
+    assert all(item["lineage"]["citation"]["document_id"] == document_id for item in page["items"])
 
     impact = client.get(
-        f"/internal/references/{document.id}/impact",
+        f"/internal/references/{document_id}/impact",
         params={"actor_id": owner, "limit": 100},
         headers=SERVICE,
     )
     assert impact.status_code == 200 and impact.json()["items"]
     # Ownership is checked again on this side: another person is refused.
     other = client.get(
-        f"/internal/references/{document.id}/impact",
+        f"/internal/references/{document_id}/impact",
         params={"actor_id": FAKE_ACTORS[1].id.value},
         headers=SERVICE,
     )
@@ -98,11 +98,11 @@ def test_a_document_owner_sees_dependents_and_impact_through_the_service(
 
 
 def test_another_persons_dependents_stay_private(
-    internal: tuple[TestClient, LibraryView],
+    internal: tuple[TestClient, str],
 ) -> None:
-    client, document = internal
+    client, document_id = internal
     observer = client.get(
-        f"/internal/references/{document.id}/dependents",
+        f"/internal/references/{document_id}/dependents",
         params={"actor_id": FAKE_ACTORS[2].id.value},
         headers=SERVICE,
     )
@@ -110,20 +110,12 @@ def test_another_persons_dependents_stay_private(
     assert observer.json()["items"] == []
 
 
-def test_mapping_counts_and_actors(internal: tuple[TestClient, LibraryView]) -> None:
+def test_mapping_counts_and_bounded_actor_ids(internal: tuple[TestClient, str]) -> None:
     client, _ = internal
     stats = client.get("/internal/architecture-mapping/stats", headers=SERVICE).json()
     assert all(set(row) == {"release_id", "requirements", "features", "stories"} for row in stats)
-    owner = FAKE_ACTORS[0]
-    actor = client.get(f"/internal/actors/{owner.id.value}", headers=SERVICE)
-    assert actor.status_code == 200
-    assert actor.json() == {
-        "id": owner.id.value,
-        "display_name": owner.display_name,
-        "email": owner.email,
-        "roles": sorted(owner.roles),
-    }
-    assert client.get("/internal/actors/nobody", headers=SERVICE).status_code == 404
+    # People are the identity service's to describe; requirement work no longer serves them.
+    assert client.get("/internal/actors/fake-owner", headers=SERVICE).status_code == 404
     assert (
         client.get(
             f"/internal/references/x/dependents?actor_id={'a' * 201}", headers=SERVICE

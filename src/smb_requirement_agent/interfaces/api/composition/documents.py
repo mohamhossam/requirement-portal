@@ -16,7 +16,6 @@ from smb_kernel.documents.scanner import ClamAvDocumentScanner, OfflineDocumentS
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.use_cases.attachment_ingestion import AttachmentIngestion
-from smb_requirement_agent.application.use_cases.document_library import DocumentLibrary
 from smb_requirement_agent.application.use_cases.documents import (
     AssembleAnalysisDocuments,
     GetDocument,
@@ -30,32 +29,24 @@ from smb_requirement_agent.application.use_cases.identity_access import Requirem
 from smb_requirement_agent.application.use_cases.invalidate_derived_artifacts import (
     InvalidateDerivedArtifacts,
 )
-from smb_requirement_agent.application.use_cases.library_governance import LibraryGovernance
-from smb_requirement_agent.application.use_cases.reference_knowledge import ReferenceKnowledge
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.documents.attachment_worker import (
     AttachmentIngestionWorker,
-)
-from smb_requirement_agent.infrastructure.documents.library_worker import (
-    DocumentIngestionWorker,
 )
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
 
 # Library sources are extracted one at a time in the background, so they get a
 # far larger allowance than a request-time attachment.
-_LIBRARY_EXTRACTION_SECONDS = 600
-_LIBRARY_EXTRACTION_MEMORY_BYTES = 4 * 1024 * 1024 * 1024
+_BACKGROUND_EXTRACTION_SECONDS = 600
+_BACKGROUND_EXTRACTION_MEMORY_BYTES = 4 * 1024 * 1024 * 1024
 
 
 @dataclass(frozen=True)
 class DocumentWiring:
     extractor: BoundedSubprocessDocumentExtractor
     analysis_documents: AssembleAnalysisDocuments
-    library: DocumentLibrary
-    library_governance: LibraryGovernance
     upload: UploadDocument
     attachment_ingestion: AttachmentIngestion
-    ingestion_worker: DocumentIngestionWorker
     attachment_worker: AttachmentIngestionWorker
     list_documents: ListDocuments
     get_document: GetDocument
@@ -70,7 +61,6 @@ def build_documents(
     clock: ClockPort,
     invalidation: InvalidateDerivedArtifacts,
     access: RequirementAccessService,
-    reference_knowledge: ReferenceKnowledge,
 ) -> DocumentWiring:
     extractor = BoundedSubprocessDocumentExtractor(
         concurrency=settings.document_extraction_concurrency,
@@ -87,22 +77,12 @@ def build_documents(
         resource_limiter=child_process_resource_limiter(),
         process_context=multiprocessing.get_context("spawn"),
     )
-    # One background extractor and scanner serve both ingestion workers, so at most
-    # one large extraction runs at a time, as when a single worker did both.
-    background_extractor = _library_extractor(settings)
+    # Attachments are extracted in the background, one large extraction at a time.
+    background_extractor = _background_extractor(settings)
     scanner = (
         OfflineDocumentScanner()
         if settings.library_scan_mode == "offline"
         else ClamAvDocumentScanner(settings.library_scanner_host, settings.library_scanner_port)
-    )
-    library = DocumentLibrary(
-        persistence.library_repository,
-        persistence.knowledge_document_storage,
-        background_extractor,
-        scanner,
-        persistence.transaction_manager,
-        clock,
-        settings.document_max_file_bytes,
     )
     upload = UploadDocument(
         persistence.document_repository,
@@ -135,18 +115,9 @@ def build_documents(
             extractor,
             settings.document_context_max_characters,
         ),
-        library=library,
-        library_governance=LibraryGovernance(
-            persistence.library_repository,
-            persistence.actor_directory,
-            persistence.transaction_manager,
-            clock,
-            persistence.dependency_index,
-        ),
         upload=upload,
         attachment_ingestion=attachment_ingestion,
         attachment_worker=AttachmentIngestionWorker(attachment_ingestion),
-        ingestion_worker=DocumentIngestionWorker(library, reference_knowledge),
         list_documents=ListDocuments(persistence.document_repository, access),
         get_document=GetDocument(
             persistence.document_repository,
@@ -175,12 +146,12 @@ def build_documents(
     )
 
 
-def _library_extractor(settings: Settings) -> BoundedSubprocessDocumentExtractor:
+def _background_extractor(settings: Settings) -> BoundedSubprocessDocumentExtractor:
     return BoundedSubprocessDocumentExtractor(
         concurrency=1,
         waiting_requests=1,
-        deadline_seconds=_LIBRARY_EXTRACTION_SECONDS,
-        memory_bytes=_LIBRARY_EXTRACTION_MEMORY_BYTES,
+        deadline_seconds=_BACKGROUND_EXTRACTION_SECONDS,
+        memory_bytes=_BACKGROUND_EXTRACTION_MEMORY_BYTES,
         limits=ExtractionLimits(
             ocr_artifacts_path=settings.library_ocr_artifacts_path,
             office_preview_executable=settings.document_office_preview_executable,

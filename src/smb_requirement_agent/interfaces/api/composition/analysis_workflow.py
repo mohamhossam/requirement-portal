@@ -30,7 +30,7 @@ from smb_requirement_agent.application.use_cases.get_requirement_analysis import
 from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
 from smb_requirement_agent.application.use_cases.reference_grounding import ReferenceGrounding
 from smb_requirement_agent.application.use_cases.requirement_commands import RequirementCommands
-from smb_requirement_agent.infrastructure.persistence.reference_index import Utf8BudgetCounter
+from smb_requirement_agent.infrastructure.text.budget import Utf8BudgetCounter
 from smb_requirement_agent.interfaces.api.composition.knowledge import RequirementKnowledgeWiring
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
 

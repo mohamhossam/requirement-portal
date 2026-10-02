@@ -71,26 +71,15 @@ from smb_requirement_agent.application.errors import (
     StoryQualitySnapshotNotFoundError,
     UnsupportedDocumentError,
 )
-from smb_requirement_agent.application.ports.architecture_rag import ArchitectureEvidenceError
-from smb_requirement_agent.application.ports.catalogue_extractor import (
-    CatalogueAnswerUnusableError,
-    CatalogueCitationError,
-    CatalogueExtractionError,
-    CatalogueExtractionUnsupportedError,
-)
 from smb_requirement_agent.application.ports.requirement_analyzer import (
     ActiveQuestionContext,
     AnalysisDocumentContext,
     RequirementAnalysisCandidate,
     RequirementAnalyzerPort,
 )
-from smb_requirement_agent.application.ports.system_matcher import SystemMatchingError
 from smb_requirement_agent.application.public_errors import (
     FailureCategory,
     describe_public_error,
-)
-from smb_requirement_agent.application.use_cases.architecture_knowledge import (
-    KnowledgeNotFoundError,
 )
 from smb_requirement_agent.domain.analysis.errors import (
     AnalysisClarificationConflictError,
@@ -104,11 +93,6 @@ from smb_requirement_agent.domain.analysis.errors import (
     InvalidIntentProposalTransitionError,
 )
 from smb_requirement_agent.domain.analysis.value_objects import HumanClarification, IntentProposal
-from smb_requirement_agent.domain.architecture.candidates import (
-    CandidateDecisionConflictError,
-    CandidateDependencyError,
-    CandidateNotFoundError,
-)
 from smb_requirement_agent.domain.architecture.errors import InvalidArchitectureContentError
 from smb_requirement_agent.domain.architecture.knowledge import (
     InvalidKnowledgeError as InvalidArchitectureKnowledgeError,
@@ -139,11 +123,6 @@ from smb_requirement_agent.domain.knowledge.errors import (
     InvalidKnowledgeError,
     KnowledgeFindingConflictError,
     KnowledgeReviewRequiredError,
-)
-from smb_requirement_agent.domain.organisation.catalogue import (
-    InvalidOrganisationError,
-    OrganisationConflictError,
-    OrganisationNotFoundError,
 )
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.requirement.errors import (
@@ -250,12 +229,10 @@ EXPECTED_STATUS_CODES: dict[type[Exception], int] = {
     RequirementAccessConflictError: 409,
     InvalidIdentityError: 422,
     IdentityProviderUnavailableError: 503,
-    KnowledgeNotFoundError: 404,
     ArchitectureJobNotFoundError: 404,
     KnowledgeViewUnavailableError: 404,
     KnowledgeConflictError: 409,
     InvalidArchitectureKnowledgeError: 422,
-    ArchitectureEvidenceError: 502,
     ArchitectureMappingConflictError: 409,
     ArchitectureMappingProfileChangedError: 409,
     BreakdownReviewNotFoundError: 404,
@@ -335,17 +312,6 @@ EXPECTED_STATUS_CODES: dict[type[Exception], int] = {
     PersistenceError: 500,
     ProviderRateLimitExceededError: 429,
     RequirementIntakeTooLargeError: 422,
-    OrganisationNotFoundError: 404,
-    OrganisationConflictError: 409,
-    InvalidOrganisationError: 422,
-    CandidateNotFoundError: 404,
-    CandidateDecisionConflictError: 409,
-    CandidateDependencyError: 409,
-    CatalogueExtractionError: 502,
-    CatalogueAnswerUnusableError: 502,
-    CatalogueCitationError: 502,
-    CatalogueExtractionUnsupportedError: 422,
-    SystemMatchingError: 502,
 }
 
 

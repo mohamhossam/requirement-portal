@@ -194,10 +194,11 @@ def validate_settings(settings: Settings) -> None:
         and settings.identity_provider is IdentityProvider.FAKE
     ):
         raise ConfigurationError("APP_ENV=production requires IDENTITY_PROVIDER=oidc.")
-    if settings.app_environment == "production" and not settings.knowledge_evaluation_approved:
+    if settings.app_environment == "production" and settings.knowledge_api_base_url is None:
+        # The library, the catalogue and architecture matching live in the knowledge
+        # service (ADR-0099); offline fakes are for development only.
         raise ConfigurationError(
-            "Production architecture mapping requires KNOWLEDGE_EVALUATION_APPROVED=true "
-            "after the bilingual architecture evaluation passes on the configured models."
+            "APP_ENV=production requires KNOWLEDGE_API_BASE_URL and REQUIREMENT_SERVICE_TOKEN."
         )
     if not 0 <= settings.database_pool_min_size <= settings.database_pool_max_size:
         raise ConfigurationError(

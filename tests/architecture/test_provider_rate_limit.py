@@ -21,15 +21,14 @@ from fastapi.dependencies.models import Dependant
 from fastapi.routing import APIRoute, iter_route_contexts
 
 import smb_requirement_agent.application as application_package
-from smb_requirement_agent.application.ports.architecture_rag import (
-    ArchitectureReasonerPort,
-    EmbeddingPort,
+from smb_requirement_agent.application.ports.architecture_knowledge import (
+    ArchitectureKnowledgePort,
 )
-from smb_requirement_agent.application.ports.catalogue_extractor import CatalogueExtractorPort
 from smb_requirement_agent.application.ports.epic_generator import EpicGeneratorPort
 from smb_requirement_agent.application.ports.feature_generator import FeatureGeneratorPort
 from smb_requirement_agent.application.ports.reference_grounding import (
     ReferenceAnalysisPort,
+    ReferenceKnowledgePort,
     ReferenceProposerPort,
     ReferenceSearchPort,
 )
@@ -76,17 +75,9 @@ PROVIDER_OPERATIONS = {
     ("POST", "/requirements/{requirement_id}/breakdown-review"),
     ("POST", "/requirements/{requirement_id}/architecture-mapping"),
     ("POST", "/requirements/{requirement_id}/architecture-mapping/jobs"),
+    ("POST", "/requirements/{requirement_id}/architecture-mapping/jobs/{job_id}/retry"),
     ("POST", "/requirements/{requirement_id}/knowledge-index/retry"),
-    ("POST", "/knowledge/search"),
     ("POST", "/knowledge/search/unified"),
-    ("POST", "/library/documents/{document_id}/builds"),
-    ("POST", "/library/documents/{document_id}/index-retry"),
-    ("POST", "/architecture-knowledge/releases/{release_id}/build"),
-    ("POST", "/architecture-knowledge/releases/{release_id}/preview"),
-    ("POST", "/architecture-knowledge/releases/{release_id}/preview-impact"),
-    ("POST", "/architecture-knowledge/releases/{release_id}/compare-impact"),
-    ("POST", "/architecture-knowledge/releases/{release_id}/documents/{version_id}/extractions"),
-    ("POST", "/jobs/{job_id}/retry"),
 }
 
 # Routes that call no provider themselves but queue automatic work that does:
@@ -106,15 +97,16 @@ AUTOMATIC_TRIGGERS = {
 }
 
 # Ports whose calls reach an AI provider, and ports that queue work that will.
+# The knowledge service's matching and library search run models on requirement
+# work's behalf (ADR-0099), so calling them is provider spend too.
 PROVIDER_PORTS: set[type] = {
-    ArchitectureReasonerPort,
-    CatalogueExtractorPort,
+    ArchitectureKnowledgePort,
     ClarificationAnswerSuggesterPort,
-    EmbeddingPort,
     EpicGeneratorPort,
     FeatureGeneratorPort,
     KnowledgeEmbeddingPort,
     ReferenceAnalysisPort,
+    ReferenceKnowledgePort,
     ReferenceProposerPort,
     ReferenceSearchPort,
     RequirementAnalyzerPort,
@@ -129,31 +121,19 @@ SCHEDULER_PORTS: set[type] = {AnswerSuggestionSchedulerPort, KnowledgeScreenSche
 # use case holds a provider port it does not call on that path is listed here
 # with the reason. Anything new must be limited or explained.
 NOT_PROVIDER_CALLING = {
-    ("GET", "/jobs/{job_id}"): "reads architecture job status",
     (
         "GET",
-        "/architecture-knowledge/releases/{release_id}/extractions",
-    ): "reads document reading job status",
+        "/requirements/{requirement_id}/architecture-mapping/jobs/{job_id}",
+    ): "reads mapping job status",
     (
-        "GET",
-        "/architecture-knowledge/releases/{release_id}/build",
-    ): "reads evidence index build status",
-    ("POST", "/jobs/{job_id}/cancel"): "cancels a queued architecture job",
+        "POST",
+        "/requirements/{requirement_id}/architecture-mapping/jobs/{job_id}/cancel",
+    ): "cancels a queued mapping job",
     ("GET", "/requirements/{requirement_id}/knowledge-index"): "reads index progress",
     (
         "GET",
         "/requirements/{requirement_id}/analysis/questions/{question_id}/answer-suggestions",
     ): "reads stored suggestions",
-    ("GET", "/library/documents/{document_id}/chunks/preview"): "chunks locally, no embedding",
-    ("GET", "/library/documents/{document_id}/builds/preview"): "chunks locally, no embedding",
-    (
-        "POST",
-        "/library/documents/{document_id}/builds/{build_id}/activation",
-    ): "switches to an already indexed build",
-    (
-        "POST",
-        "/library/documents/{document_id}/builds/{build_id}/discard",
-    ): "drops an unactivated build",
     ("GET", "/requirements/{requirement_id}/analysis"): "reads the analysis workspace",
     ("GET", "/requirements/{requirement_id}/analysis/rounds"): "reads analysis rounds",
     ("GET", "/requirements/{requirement_id}/analysis/rounds/{analysis_id}"): "reads a round",

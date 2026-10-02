@@ -38,12 +38,11 @@ from smb_requirement_agent.infrastructure.persistence.architecture_release_state
 from smb_requirement_agent.infrastructure.persistence.in_memory_transaction import (
     InMemoryTransactionManager,
 )
-from smb_requirement_agent.infrastructure.persistence.knowledge_events import (
-    InMemoryKnowledgeEvents,
-)
 from smb_requirement_agent.infrastructure.persistence.reference_publications import (
     InMemoryReferencePublications,
 )
+from tests.conftest import FAKE_PROVIDER_SETTINGS
+from tests.knowledge_doubles import container_with_library, sync
 
 NOW = datetime(2026, 10, 2, 9, tzinfo=UTC)
 TEXT = "XGPON coverage is required."
@@ -51,6 +50,21 @@ PUBLISHED = CurrentPublication(
     "pub-1", "f" * 64, "ver-1", 1, "rev-1", (("b1", "Line 1"),), (("b1", TEXT),)
 )
 STATE = ReferenceDocumentState("doc-1", "owner", "Eligibility", 4, PUBLISHED)
+
+
+class _EventFeed:
+    """The knowledge service's event feed, as requirement work reads it: oldest first."""
+
+    def __init__(self) -> None:
+        self.events: list[KnowledgeEvent] = []
+
+    def append(self, kind: str, subject_id: str, payload: object) -> int:
+        seq = len(self.events) + 1
+        self.events.append(KnowledgeEvent(seq, kind, subject_id, payload, NOW))
+        return seq
+
+    def after(self, seq: int, limit: int) -> tuple[KnowledgeEvent, ...]:
+        return tuple(e for e in self.events if e.seq > seq)[:limit]
 
 
 def _citation(**changes: object) -> PublishedReference:
@@ -113,21 +127,21 @@ def test_states_survive_the_event_payload_and_refuse_malformed_ones() -> None:
 def _currency() -> tuple[
     ReferenceCurrency,
     InMemoryReferencePublications,
-    InMemoryKnowledgeEvents,
+    _EventFeed,
     ProjectKnowledgeEvents,
 ]:
     lock = RLock()
     states = InMemoryReferencePublications(lock)
-    events = InMemoryKnowledgeEvents(lock)
+    events = _EventFeed()
     transactions = InMemoryTransactionManager(lambda _: None, lock)
-    transactions.enroll(states, events)
+    transactions.enroll(states)
     projector = ProjectKnowledgeEvents(
         events, states, InMemoryArchitectureReleaseState(lock), transactions, FixedClock(NOW)
     )
     return ReferenceCurrency(states, transactions), states, events, projector
 
 
-def test_the_copy_catches_up_from_the_outbox_and_checks_citations_locally() -> None:
+def test_the_copy_catches_up_from_the_event_feed_and_checks_citations_locally() -> None:
     currency, states, events, projector = _currency()
     events.append(REFERENCE_DOCUMENT_CHANGED, "doc-1", STATE.to_payload())
     with pytest.raises(RequirementAnalysisConflictError):
@@ -194,10 +208,10 @@ def test_the_cursor_waits_at_a_fresh_gap_and_steps_over_an_old_one(
 
 def test_the_active_release_follows_activation_events_and_never_goes_back() -> None:
     lock = RLock()
-    events = InMemoryKnowledgeEvents(lock)
+    events = _EventFeed()
     releases = InMemoryArchitectureReleaseState(lock)
     transactions = InMemoryTransactionManager(lambda _: None, lock)
-    transactions.enroll(events, releases)
+    transactions.enroll(releases)
     projector = ProjectKnowledgeEvents(
         events, InMemoryReferencePublications(lock), releases, transactions, FixedClock(NOW)
     )
@@ -220,3 +234,25 @@ def test_the_active_release_follows_activation_events_and_never_goes_back() -> N
     with pytest.raises(PersistenceError, match="malformed"):
         projector.drain()
     assert current.active_release_id() == "r2"
+
+
+def test_the_containers_copy_follows_the_knowledge_services_feed() -> None:
+    """A withdrawal reaches requirement work through the feed, never by reading the library."""
+    container, library = container_with_library(FAKE_PROVIDER_SETTINGS)
+    (citation,) = library.publish("Eligibility", (TEXT,))
+    with pytest.raises(RequirementAnalysisConflictError):
+        container.reference_currency.require_current((citation,))
+    sync(container)
+    container.reference_currency.require_current((citation,))
+
+    library.withdraw(citation.document_id)
+    # Until the feed is read, the copy still holds the publication it last saw.
+    container.reference_currency.require_current((citation,))
+    sync(container)
+    with pytest.raises(RequirementAnalysisConflictError, match="withdrawn or replaced"):
+        container.reference_currency.require_current((citation,))
+    republished = library.publish("Eligibility", (TEXT,), document_id=citation.document_id)
+    sync(container)
+    container.reference_currency.require_current(republished)
+    with pytest.raises(RequirementAnalysisConflictError):
+        container.reference_currency.require_current((citation,))

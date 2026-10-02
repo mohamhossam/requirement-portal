@@ -6,6 +6,11 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from smb_requirement_agent.application.ports.architecture_jobs import (
+    ArchitectureJob,
+    ArchitectureJobKind,
+    ArchitectureJobStatus,
+)
 from smb_requirement_agent.domain.architecture.entities import (
     ArchitectureDependency,
     ArchitectureImpact,
@@ -276,3 +281,31 @@ class FeatureArchitectureMappingResponse(BaseModel):
 class BreakdownArchitectureMappingResponse(BaseModel):
     requirement_id: str
     features: list[FeatureArchitectureMappingResponse]
+
+
+class ArchitectureJobResponse(BaseModel):
+    """A queued mapping of a Requirement's backlog to the catalogue (ADR-0099)."""
+
+    id: str
+    kind: ArchitectureJobKind
+    subject_id: str
+    fingerprint: str
+    actor_id: str
+    status: ArchitectureJobStatus
+    attempts: int = 0
+    error_category: str | None = None
+    lease_until: datetime | None = None
+
+    @classmethod
+    def from_domain(cls, job: ArchitectureJob) -> ArchitectureJobResponse:
+        return cls(
+            id=job.id,
+            kind=job.kind,
+            subject_id=job.subject_id,
+            fingerprint=job.fingerprint,
+            actor_id=job.actor_id,
+            status=job.status,
+            attempts=job.attempts,
+            error_category=job.error_category,
+            lease_until=job.lease_until,
+        )

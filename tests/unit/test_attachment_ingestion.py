@@ -107,14 +107,3 @@ def test_controls_refuse_unknown_uploads_and_stale_versions(container: Container
     with pytest.raises(DocumentVersionConflictError):
         # Only stopped uploads can be excluded.
         service.control(requirement_id, False, queued.id, queued.version, None, ACTOR)
-
-
-def test_the_library_never_lists_or_processes_attachments(container: Container) -> None:
-    service: AttachmentIngestion = container.attachment_ingestion
-    requirement_id = _requirement_id(container)
-    service.submit(AttachmentTarget(requirement_id, False, True), POLICY, "p", ACTOR)
-
-    assert container.document_library.list(ACTOR) == ()
-    assert not container.document_library.process_next()
-    assert service.process_next()
-    assert service.list(requirement_id, False, ACTOR)[0].attached_document_id is not None

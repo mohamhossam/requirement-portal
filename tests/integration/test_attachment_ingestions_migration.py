@@ -21,9 +21,8 @@ import pytest
 from psycopg.types.json import Jsonb
 from pydantic import TypeAdapter
 
-from smb_requirement_agent.domain.document.attachment import AttachmentUpload
+from smb_requirement_agent.domain.document.attachment import AttachmentFile, AttachmentUpload
 from smb_requirement_agent.domain.document.ingestion import IngestionStage
-from smb_requirement_agent.domain.document.library import LibraryDocument, LibraryVersion
 from smb_requirement_agent.domain.identity.entities import ActorId, ActorSnapshot
 from smb_requirement_agent.infrastructure.persistence import migration_runner
 
@@ -47,10 +46,15 @@ def isolated_url() -> Iterator[str]:
         connection.execute(f'DROP SCHEMA "{schema}" CASCADE')
 
 
-def _document(key: str, stage: IngestionStage) -> LibraryDocument:
-    version = LibraryVersion(
+def _document(key: str, stage: IngestionStage) -> dict[str, Any]:
+    """A library row's payload as the library stored it before the move.
+
+    The library's own types left with the library (ADR-0099), so the stored
+    shape is written out here: a library version was the attachment file
+    record plus its number and extraction revisions.
+    """
+    file = AttachmentFile(
         str(uuid.uuid4()),
-        1,
         "policy.txt",
         "text/plain",
         12,
@@ -62,25 +66,33 @@ def _document(key: str, stage: IngestionStage) -> LibraryDocument:
         attempt=2,
         error="Scanner restarted." if stage is IngestionStage.FAILED else None,
     )
-    return LibraryDocument(str(uuid.uuid4()), "policy.txt", OWNER, (version,), version=3)
+    version = TypeAdapter(AttachmentFile).dump_python(file, mode="json") | {
+        "number": 1,
+        "revisions": [],
+    }
+    return {
+        "id": str(uuid.uuid4()),
+        "title": "policy.txt",
+        "owner": TypeAdapter(ActorSnapshot).dump_python(OWNER, mode="json"),
+        "versions": [version],
+        "version": 3,
+        "publications": [],
+        "published_id": None,
+        "ownership_history": [],
+    }
 
 
-def _insert(connection: psycopg.Connection[Any], document: LibraryDocument, **extra: Any) -> None:
-    payload = TypeAdapter(LibraryDocument).dump_python(document, mode="json") | extra
+def _insert(connection: psycopg.Connection[Any], document: dict[str, Any], **extra: Any) -> None:
     connection.execute(
         "INSERT INTO library_documents (id, owner_id, version, published_id, payload) "
         "VALUES (%s,%s,%s,NULL,%s)",
-        (document.id, OWNER.id.value, document.version, Jsonb(payload)),
+        (document["id"], OWNER.id.value, document["version"], Jsonb(document | extra)),
     )
+    version = document["versions"][0]
     connection.execute(
         "INSERT INTO library_submissions (owner_id, submission_key, document_id, version_id) "
         "VALUES (%s,%s,%s,%s)",
-        (
-            OWNER.id.value,
-            document.versions[0].idempotency_key,
-            document.id,
-            document.versions[0].id,
-        ),
+        (OWNER.id.value, version["idempotency_key"], document["id"], version["id"]),
     )
 
 
@@ -126,17 +138,17 @@ def test_attachment_rows_move_out_of_the_library_with_their_state(
             r[0] for r in connection.execute("SELECT submission_key FROM library_submissions")
         ]
 
-    assert library_ids == [library.id]
+    assert library_ids == [library["id"]]
     assert submissions == ["library-key"]
     by_key = {row[4]: row for row in rows}
     assert set(by_key) == {"attached-key", "stopped-key"}
 
     moved = TypeAdapter(AttachmentUpload).validate_python(by_key["attached-key"][6])
     assert by_key["attached-key"][1:6] == ("req-1", False, "fake-owner", "attached-key", 3)
-    assert moved.id == attached.id and moved.version == 3
+    assert moved.id == attached["id"] and moved.version == 3
     assert moved.attached_document_id == "doc-9" and not moved.excluded
     assert moved.target.source_id == "req-1" and moved.target.include_in_analysis
-    assert moved.file.id == attached.versions[0].id
+    assert moved.file.id == attached["versions"][0]["id"]
     assert (moved.file.stage, moved.file.attempt) == (IngestionStage.QUEUED, 2)
 
     excluded = TypeAdapter(AttachmentUpload).validate_python(by_key["stopped-key"][6])

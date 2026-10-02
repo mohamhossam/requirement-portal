@@ -70,17 +70,6 @@ from smb_requirement_agent.application.errors import (
     StoryQualitySnapshotNotFoundError,
     UnsupportedDocumentError,
 )
-from smb_requirement_agent.application.ports.architecture_rag import ArchitectureEvidenceError
-from smb_requirement_agent.application.ports.catalogue_extractor import (
-    CatalogueAnswerUnusableError,
-    CatalogueCitationError,
-    CatalogueExtractionError,
-    CatalogueExtractionUnsupportedError,
-)
-from smb_requirement_agent.application.ports.system_matcher import SystemMatchingError
-from smb_requirement_agent.application.use_cases.architecture_knowledge import (
-    KnowledgeNotFoundError,
-)
 from smb_requirement_agent.domain.analysis.errors import (
     AnalysisClarificationConflictError,
     AnalysisConfirmationBlockedError,
@@ -91,11 +80,6 @@ from smb_requirement_agent.domain.analysis.errors import (
     InvalidClarificationTransitionError,
     InvalidIntentProposalDecisionError,
     InvalidIntentProposalTransitionError,
-)
-from smb_requirement_agent.domain.architecture.candidates import (
-    CandidateDecisionConflictError,
-    CandidateDependencyError,
-    CandidateNotFoundError,
 )
 from smb_requirement_agent.domain.architecture.errors import InvalidArchitectureContentError
 from smb_requirement_agent.domain.architecture.knowledge import (
@@ -127,11 +111,6 @@ from smb_requirement_agent.domain.knowledge.errors import (
     InvalidKnowledgeError,
     KnowledgeFindingConflictError,
     KnowledgeReviewRequiredError,
-)
-from smb_requirement_agent.domain.organisation.catalogue import (
-    InvalidOrganisationError,
-    OrganisationConflictError,
-    OrganisationNotFoundError,
 )
 from smb_requirement_agent.domain.requirement.errors import (
     DuplicateRequirementStateError,
@@ -210,11 +189,6 @@ ERROR_CATALOGUE: tuple[tuple[type[Exception], str, FailureCategory], ...] = (
         FailureCategory.UNAVAILABLE,
     ),
     (
-        KnowledgeNotFoundError,
-        "architecture_knowledge_not_found",
-        FailureCategory.NOT_FOUND,
-    ),
-    (
         ArchitectureJobNotFoundError,
         "architecture_job_not_found",
         FailureCategory.NOT_FOUND,
@@ -239,36 +213,8 @@ ERROR_CATALOGUE: tuple[tuple[type[Exception], str, FailureCategory], ...] = (
         "invalid_architecture_knowledge",
         FailureCategory.INVALID_INPUT,
     ),
-    (
-        ArchitectureEvidenceError,
-        "architecture_evidence_generation",
-        FailureCategory.PROVIDER,
-    ),
     (ArchitectureMappingConflictError, "architecture_mapping_conflict", FailureCategory.CONFLICT),
-    (OrganisationNotFoundError, "organisation_not_found", FailureCategory.NOT_FOUND),
-    (CandidateNotFoundError, "catalogue_suggestion_not_found", FailureCategory.NOT_FOUND),
-    (
-        CandidateDecisionConflictError,
-        "catalogue_suggestion_conflict",
-        FailureCategory.CONFLICT,
-    ),
-    (
-        CandidateDependencyError,
-        "catalogue_suggestion_dependency",
-        FailureCategory.CONFLICT,
-    ),
     # The specific reasons first: the first matching entry wins.
-    (CatalogueAnswerUnusableError, "catalogue_extraction_unusable", FailureCategory.PROVIDER),
-    (CatalogueCitationError, "catalogue_extraction_uncited", FailureCategory.PROVIDER),
-    (CatalogueExtractionError, "catalogue_extraction", FailureCategory.PROVIDER),
-    (SystemMatchingError, "catalogue_matching", FailureCategory.PROVIDER),
-    (
-        CatalogueExtractionUnsupportedError,
-        "catalogue_extraction_unsupported",
-        FailureCategory.INVALID_INPUT,
-    ),
-    (OrganisationConflictError, "organisation_conflict", FailureCategory.CONFLICT),
-    (InvalidOrganisationError, "invalid_organisation", FailureCategory.INVALID_INPUT),
     (BreakdownReviewNotFoundError, "breakdown_review_not_found", FailureCategory.NOT_FOUND),
     (ReviewFlagNotFoundError, "review_flag_not_found", FailureCategory.NOT_FOUND),
     (BreakdownReviewStaleError, "breakdown_review_stale", FailureCategory.CONFLICT),

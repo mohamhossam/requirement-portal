@@ -3,7 +3,7 @@
 import hashlib
 from dataclasses import asdict, dataclass
 
-from smb_requirement_agent.application.ports.reference_index import TokenCounterPort
+from smb_requirement_agent.application.ports.embedding import TokenCounterPort
 
 
 @dataclass(frozen=True)

@@ -24,12 +24,6 @@ from smb_requirement_agent.interfaces.api.routes.activity import (
 )
 from smb_requirement_agent.interfaces.api.routes.analysis import router as analysis_router
 from smb_requirement_agent.interfaces.api.routes.architecture import router as architecture_router
-from smb_requirement_agent.interfaces.api.routes.architecture_knowledge import (
-    job_router as architecture_job_router,
-)
-from smb_requirement_agent.interfaces.api.routes.architecture_knowledge import (
-    router as architecture_knowledge_router,
-)
 from smb_requirement_agent.interfaces.api.routes.documents import router as documents_router
 from smb_requirement_agent.interfaces.api.routes.epic import router as epic_router
 from smb_requirement_agent.interfaces.api.routes.feature import router as feature_router
@@ -54,14 +48,12 @@ from smb_requirement_agent.interfaces.api.routes.knowledge import router as know
 from smb_requirement_agent.interfaces.api.routes.knowledge_views import (
     router as knowledge_views_router,
 )
-from smb_requirement_agent.interfaces.api.routes.library import router as library_router
-from smb_requirement_agent.interfaces.api.routes.library import search_router
-from smb_requirement_agent.interfaces.api.routes.organisation import (
-    router as organisation_router,
-)
 from smb_requirement_agent.interfaces.api.routes.requirements import router as requirements_router
 from smb_requirement_agent.interfaces.api.routes.review import router as review_router
 from smb_requirement_agent.interfaces.api.routes.revisions import router as revisions_router
+from smb_requirement_agent.interfaces.api.routes.source_impact import (
+    alias_router as source_impact_alias_router,
+)
 from smb_requirement_agent.interfaces.api.routes.source_impact import router as source_impact_router
 from smb_requirement_agent.interfaces.api.routes.story import router as story_router
 from smb_requirement_agent.interfaces.runtime import (
@@ -255,9 +247,8 @@ def create_app(container_factory: Callable[[], Container] = build_container) -> 
         notification_router,
         knowledge_router,
         knowledge_views_router,
-        library_router,
-        search_router,
         source_impact_router,
+        source_impact_alias_router,
         documents_router,
         analysis_router,
         epic_router,
@@ -265,9 +256,6 @@ def create_app(container_factory: Callable[[], Container] = build_container) -> 
         story_router,
         revisions_router,
         architecture_router,
-        architecture_knowledge_router,
-        architecture_job_router,
-        organisation_router,
         review_router,
         governance_router,
     ):

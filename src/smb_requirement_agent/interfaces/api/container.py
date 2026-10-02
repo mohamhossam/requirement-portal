@@ -32,9 +32,6 @@ from smb_requirement_agent.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
 from smb_requirement_agent.application.ports.architecture_knowledge import ArchitectureKnowledgePort
-from smb_requirement_agent.application.ports.architecture_knowledge_repository import (
-    ArchitectureKnowledgeRepositoryPort,
-)
 from smb_requirement_agent.application.ports.backlog_export import BacklogExportPort
 from smb_requirement_agent.application.ports.breakdown_repository import BreakdownRepositoryPort
 from smb_requirement_agent.application.ports.breakdown_review_repository import (
@@ -45,7 +42,6 @@ from smb_requirement_agent.application.ports.epic_generator import EpicGenerator
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_generator import FeatureGeneratorPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
-from smb_requirement_agent.application.ports.knowledge_events import KnowledgeEventOutboxPort
 from smb_requirement_agent.application.ports.knowledge_index_generations import (
     KnowledgeIndexGenerationsPort,
 )
@@ -110,34 +106,13 @@ from smb_requirement_agent.application.use_cases.approval_workflow import (
     SubmitForReview,
 )
 from smb_requirement_agent.application.use_cases.approve_epic import ApproveEpic
-from smb_requirement_agent.application.use_cases.architecture_comparison import (
-    CompareArchitectureImpact,
-    ManageSampleRequirements,
-)
-from smb_requirement_agent.application.use_cases.architecture_documents import (
-    ReadKnowledgeDocument,
-    UploadKnowledgeDocument,
-)
-from smb_requirement_agent.application.use_cases.architecture_index import BuildArchitectureIndex
-from smb_requirement_agent.application.use_cases.architecture_jobs import (
-    ArchitectureJobs,
-)
-from smb_requirement_agent.application.use_cases.architecture_knowledge import (
-    ManageArchitectureKnowledge,
-)
 from smb_requirement_agent.application.use_cases.architecture_mapping import (
     MapBreakdownArchitecture,
     MapFeatureArchitecture,
     MapStoryArchitecture,
 )
-from smb_requirement_agent.application.use_cases.architecture_mapping_impact import (
-    ReportMappingImpact,
-)
 from smb_requirement_agent.application.use_cases.architecture_mapping_jobs import (
     ArchitectureMappingJobs,
-)
-from smb_requirement_agent.application.use_cases.architecture_preview import (
-    PreviewArchitectureImpact,
 )
 from smb_requirement_agent.application.use_cases.attachment_ingestion import AttachmentIngestion
 from smb_requirement_agent.application.use_cases.breakdown_review import (
@@ -147,16 +122,12 @@ from smb_requirement_agent.application.use_cases.breakdown_review import (
     ResolveFlag,
     ResolveOpenQuestion,
 )
-from smb_requirement_agent.application.use_cases.catalogue_candidates import (
-    DecideCatalogueCandidate,
-)
 from smb_requirement_agent.application.use_cases.clarify_requirement_analysis import (
     ClarifyRequirementAnalysis,
 )
 from smb_requirement_agent.application.use_cases.confirm_requirement_analysis import (
     ConfirmRequirementAnalysis,
 )
-from smb_requirement_agent.application.use_cases.document_library import DocumentLibrary
 from smb_requirement_agent.application.use_cases.documents import (
     GetDocument,
     ListDocuments,
@@ -193,10 +164,6 @@ from smb_requirement_agent.application.use_cases.invalidate_derived_artifacts im
     InvalidateDerivedArtifacts,
 )
 from smb_requirement_agent.application.use_cases.knowledge_views import KnowledgeViews
-from smb_requirement_agent.application.use_cases.library_governance import LibraryGovernance
-from smb_requirement_agent.application.use_cases.organisation_catalogue import (
-    ManageOrganisationCatalogue,
-)
 from smb_requirement_agent.application.use_cases.owned_requirements import (
     CreateOwnedRequirement,
     CreateOwnedRequirementDraft,
@@ -212,10 +179,8 @@ from smb_requirement_agent.application.use_cases.rebuild_knowledge_index import 
 from smb_requirement_agent.application.use_cases.reference_currency import (
     CurrentArchitectureRelease,
     CurrentReferences,
+    ProjectKnowledgeEvents,
     ReferenceCurrency,
-)
-from smb_requirement_agent.application.use_cases.reference_knowledge import (
-    ReferenceKnowledge,
 )
 from smb_requirement_agent.application.use_cases.requirement_commands import RequirementCommands
 from smb_requirement_agent.application.use_cases.requirement_impact import (
@@ -264,7 +229,6 @@ from smb_requirement_agent.infrastructure.config.settings import (
 from smb_requirement_agent.infrastructure.documents.attachment_worker import (
     AttachmentIngestionWorker,
 )
-from smb_requirement_agent.infrastructure.documents.library_worker import DocumentIngestionWorker
 from smb_requirement_agent.infrastructure.exports.json_exporter import JsonBacklogExporter
 from smb_requirement_agent.infrastructure.exports.xlsx_exporter import XlsxBacklogExporter
 from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import (
@@ -276,8 +240,6 @@ from smb_requirement_agent.interfaces.api.composition.analysis_workflow import (
 )
 from smb_requirement_agent.interfaces.api.composition.architecture import (
     build_architecture_jobs,
-    build_architecture_knowledge,
-    build_architecture_retrieval,
 )
 from smb_requirement_agent.interfaces.api.composition.breakdown import (
     BreakdownModels,
@@ -288,6 +250,7 @@ from smb_requirement_agent.interfaces.api.composition.identity import build_iden
 from smb_requirement_agent.interfaces.api.composition.jobs import build_ai_jobs
 from smb_requirement_agent.interfaces.api.composition.knowledge import build_requirement_knowledge
 from smb_requirement_agent.interfaces.api.composition.knowledge_service import (
+    KnowledgeService,
     build_knowledge_service,
 )
 from smb_requirement_agent.interfaces.api.composition.llm import build_llm_adapters
@@ -326,21 +289,17 @@ class Container:
     requirement_draft_repository: RequirementDraftRepositoryPort
     document_repository: DocumentRepositoryPort
     document_storage: DocumentStoragePort
-    document_library: DocumentLibrary
     attachment_ingestion: AttachmentIngestion
     source_impact: SourceImpactReview
     internal_reads: InternalReads
-    knowledge_events: KnowledgeEventOutboxPort
     knowledge_views: KnowledgeViews
+    knowledge_projection: ProjectKnowledgeEvents
     current_release: CurrentArchitectureRelease
-    library_governance: LibraryGovernance
     unified_knowledge_search: UnifiedKnowledgeSearch
-    reference_knowledge: ReferenceKnowledge
     reference_currency: ReferenceCurrency
     current_references: CurrentReferences
     requirement_indexer: IndexRequirementKnowledge
     requirement_index_worker: RequirementIndexWorker
-    document_ingestion_worker: DocumentIngestionWorker
     attachment_ingestion_worker: AttachmentIngestionWorker
     # Every background worker this process may run, keyed by its readiness check name.
     background_workers: Mapping[str, BackgroundWorker]
@@ -358,18 +317,6 @@ class Container:
     story_generator: StoryGeneratorPort
     story_quality_evaluator: StoryQualityEvaluatorPort
     architecture_knowledge: ArchitectureKnowledgePort
-    architecture_knowledge_repository: ArchitectureKnowledgeRepositoryPort
-    manage_architecture_knowledge: ManageArchitectureKnowledge
-    manage_organisation_catalogue: ManageOrganisationCatalogue
-    build_architecture_index: BuildArchitectureIndex
-    preview_architecture_impact: PreviewArchitectureImpact
-    manage_sample_requirements: ManageSampleRequirements
-    compare_architecture_impact: CompareArchitectureImpact
-    report_mapping_impact: ReportMappingImpact
-    upload_knowledge_document: UploadKnowledgeDocument
-    read_knowledge_document: ReadKnowledgeDocument
-    decide_catalogue_candidates: DecideCatalogueCandidate
-    architecture_jobs: ArchitectureJobs
     architecture_mapping_jobs: ArchitectureMappingJobs
     clock: ClockPort
     breakdown_repository: BreakdownRepositoryPort
@@ -478,6 +425,7 @@ def build_container(
     architecture_knowledge: ArchitectureKnowledgePort | None = None,
     clock: ClockPort | None = None,
     identity_provider: IdentityProviderPort | None = None,
+    knowledge_service: KnowledgeService | None = None,
 ) -> Container:
     with ExitStack() as resources:
         container = _build_container(
@@ -490,6 +438,7 @@ def build_container(
             architecture_knowledge=architecture_knowledge,
             clock=clock,
             identity_provider=identity_provider,
+            knowledge_service=knowledge_service,
             resources=resources,
         )
         owned = resources.pop_all()
@@ -507,6 +456,7 @@ def _build_container(
     architecture_knowledge: ArchitectureKnowledgePort | None = None,
     clock: ClockPort | None = None,
     identity_provider: IdentityProviderPort | None = None,
+    knowledge_service: KnowledgeService | None = None,
     resources: ExitStack,
 ) -> Container:
     """Wire the object graph.
@@ -524,11 +474,9 @@ def _build_container(
     defaults = build_llm_adapters(settings, metrics)
     resources.callback(defaults.close)
     resources.callback(defaults.debug_trace.close)
-    retrieval = build_architecture_retrieval(defaults.knowledge_embedding)
-    persistence = build_persistence(
-        settings, resources, resolved_clock, retrieval.embeddings, retrieval.tokenizer
-    )
-    knowledge_service = build_knowledge_service(settings, resources, metrics)
+    persistence = build_persistence(settings, resources, resolved_clock)
+    # Tests may supply their own knowledge service; otherwise settings choose it.
+    knowledge_service = knowledge_service or build_knowledge_service(settings, resources, metrics)
     resolved_identity = build_identity(
         settings, resources, persistence.actor_directory, identity_provider
     )
@@ -549,17 +497,11 @@ def _build_container(
         if story_quality_evaluator is not None
         else defaults.story_quality_evaluator
     )
-    architecture = build_architecture_knowledge(
-        settings,
-        persistence,
-        retrieval,
-        defaults.architecture_reasoner,
+    # Architecture matching is the knowledge service's; tests may supply their own.
+    resolved_architecture = (
         architecture_knowledge
         if architecture_knowledge is not None
-        else knowledge_service.architecture,
-        defaults.catalogue_extractor,
-        defaults.system_matcher,
-        resolved_clock,
+        else knowledge_service.architecture
     )
 
     approval_invalidation = InvalidateApprovalWorkflow(persistence.breakdown_review_repository)
@@ -590,7 +532,6 @@ def _build_container(
         resolved_clock,
         invalidation,
         access_service,
-        knowledge.reference_knowledge,
     )
     worklist = persistence.worklist(knowledge.review)
     intake = build_requirement_intake(
@@ -621,7 +562,7 @@ def _build_container(
             resolved_story_generator,
             resolved_story_quality_evaluator,
         ),
-        architecture.knowledge,
+        resolved_architecture,
         review,
         analysis.analysis_collaboration,
         analysis.generation_context_tokens,
@@ -632,7 +573,6 @@ def _build_container(
     )
     architecture_jobs = build_architecture_jobs(
         settings,
-        architecture,
         persistence,
         breakdown.map_breakdown_architecture,
         resolved_clock,
@@ -652,12 +592,9 @@ def _build_container(
     background_workers: dict[str, BackgroundWorker] = {
         "requirement_index_worker": knowledge.index_worker,
         "workers": jobs.worker,
-        "document_worker": documents.ingestion_worker,
         "attachment_worker": documents.attachment_worker,
         "knowledge_event_worker": knowledge.knowledge_event_worker,
     }
-    if architecture_jobs.worker is not None:
-        background_workers["architecture_job_worker"] = architecture_jobs.worker
     if architecture_jobs.mapping_worker is not None:
         background_workers["architecture_mapping_job_worker"] = architecture_jobs.mapping_worker
 
@@ -673,27 +610,22 @@ def _build_container(
         requirement_draft_repository=persistence.requirement_draft_repository,
         document_repository=persistence.document_repository,
         document_storage=persistence.document_storage,
-        document_library=documents.library,
         attachment_ingestion=documents.attachment_ingestion,
         source_impact=knowledge.source_impact,
         knowledge_views=KnowledgeViews(knowledge_service.views),
+        knowledge_projection=knowledge.projection,
         current_release=knowledge.current_release,
-        knowledge_events=persistence.knowledge_events,
         internal_reads=InternalReads(
             persistence.dependency_index,
             knowledge.source_impact,
-            persistence.actor_directory,
             persistence.architecture_mapping_stats,
             persistence.transaction_manager,
         ),
-        library_governance=documents.library_governance,
         unified_knowledge_search=knowledge.unified_search,
-        reference_knowledge=knowledge.reference_knowledge,
         reference_currency=knowledge.reference_currency,
         current_references=knowledge.current_references,
         requirement_indexer=knowledge.indexer,
         requirement_index_worker=knowledge.index_worker,
-        document_ingestion_worker=documents.ingestion_worker,
         attachment_ingestion_worker=documents.attachment_worker,
         background_workers=background_workers,
         analysis_repository=persistence.analysis_repository,
@@ -708,27 +640,7 @@ def _build_container(
         feature_generator=resolved_feature_generator,
         story_generator=resolved_story_generator,
         story_quality_evaluator=resolved_story_quality_evaluator,
-        architecture_knowledge=architecture.knowledge,
-        architecture_knowledge_repository=persistence.architecture_repository,
-        manage_architecture_knowledge=architecture.manage,
-        manage_organisation_catalogue=ManageOrganisationCatalogue(
-            persistence.organisation_repository, persistence.architecture_repository
-        ),
-        build_architecture_index=architecture.build_index,
-        preview_architecture_impact=architecture.preview_impact,
-        manage_sample_requirements=ManageSampleRequirements(
-            persistence.sample_requirements, resolved_clock
-        ),
-        compare_architecture_impact=CompareArchitectureImpact(
-            architecture.manage, architecture.preview_impact, architecture.knowledge
-        ),
-        report_mapping_impact=ReportMappingImpact(
-            persistence.architecture_repository, persistence.architecture_mapping_stats
-        ),
-        upload_knowledge_document=architecture.upload_document,
-        read_knowledge_document=architecture.read_document,
-        decide_catalogue_candidates=architecture.decide_candidates,
-        architecture_jobs=architecture_jobs.jobs,
+        architecture_knowledge=resolved_architecture,
         architecture_mapping_jobs=architecture_jobs.mapping_jobs,
         clock=resolved_clock,
         breakdown_repository=persistence.revision_repository,

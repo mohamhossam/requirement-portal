@@ -1,85 +1,65 @@
 """Persistent dependency projection, restart, rollback and concurrent owner review."""
 
 import os
+import uuid
+from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
+from urllib.parse import quote
 
 import psycopg
 import pytest
 
 from smb_requirement_agent.application.errors import ArtifactVersionConflictError
 from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirementInput
-from smb_requirement_agent.application.use_cases.document_library import CHUNKING_POLICY
-from smb_requirement_agent.application.use_cases.documents import UploadDocumentInput
 from smb_requirement_agent.domain.analysis.value_objects import IntentProposalStatus
-from smb_requirement_agent.domain.document.library import ReviewedPassage
 from smb_requirement_agent.domain.document.lineage import ImpactDecisionKind
+from smb_requirement_agent.domain.identity.errors import AuthorizationDeniedError
 from smb_requirement_agent.infrastructure.config.options import LLMProvider, PersistenceProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.documents.library_worker import ClamAvDocumentScanner
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
 from smb_requirement_agent.interfaces.api.composition.operations import build_projection_rebuild
 from smb_requirement_agent.interfaces.api.container import build_container
+from tests.knowledge_doubles import PublishedLibrary, service_for, sync
+
+DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 
 
-@pytest.mark.skipif(
-    not os.getenv("TEST_DATABASE_URL"), reason="TEST_DATABASE_URL is not configured"
-)
-def test_postgres_lineage_restart_rebuild_concurrency_and_rollback(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    url = os.environ["TEST_DATABASE_URL"]
-    with psycopg.connect(url) as connection:
+@pytest.fixture
+def isolated_url() -> Iterator[str]:
+    """A schema of its own: the local copy's event cursor starts at zero for this library."""
+    assert DATABASE_URL is not None
+    with psycopg.connect(DATABASE_URL) as connection:
         row = connection.execute("select current_database()").fetchone()
         assert row and "test" in row[0]
+    schema = f"source_lineage_{uuid.uuid4().hex}"
+    with psycopg.connect(DATABASE_URL, autocommit=True) as connection:
+        connection.execute(f'CREATE SCHEMA "{schema}"')
+    separator = "&" if "?" in DATABASE_URL else "?"
+    yield f"{DATABASE_URL}{separator}options={quote(f'-csearch_path={schema},public')}"
+    with psycopg.connect(DATABASE_URL, autocommit=True) as connection:
+        connection.execute(f'DROP SCHEMA "{schema}" CASCADE')
+
+
+@pytest.mark.skipif(not DATABASE_URL, reason="TEST_DATABASE_URL is not configured")
+def test_postgres_lineage_restart_rebuild_concurrency_and_rollback(isolated_url: str) -> None:
+    url = isolated_url
     run_migrations(url)
-    with psycopg.connect(url) as connection:
-        connection.execute(
-            "TRUNCATE library_chunks, library_embedding_cache, "
-            "library_submissions, library_documents CASCADE"
-        )
     settings = Settings(
         llm_provider=LLMProvider.FAKE,
         persistence_provider=PersistenceProvider.POSTGRES,
         database_url=url,
     )
-    monkeypatch.setattr(ClamAvDocumentScanner, "scan", lambda _self, _content: True)
-    container = build_container(settings)
     owner = FAKE_ACTORS[0]
+    # The policy belongs to someone else, who must never see the owner's private work.
+    library = PublishedLibrary(owner_id=FAKE_ACTORS[1].id.value)
+    (citation,) = library.publish(
+        "Lineage policy", ("XGPON coverage is required for high-speed orders.",)
+    )
+    container = build_container(settings, knowledge_service=service_for(library))
     try:
-        import uuid
-
-        library = container.document_library
-        uploaded = library.submit(
-            "Lineage policy",
-            UploadDocumentInput(
-                "policy.txt", "text/plain", b"XGPON coverage is required for high-speed orders."
-            ),
-            str(uuid.uuid4()),
-            owner,
-        )
-        assert library.process_next()
-        doc = library.get(uploaded.id, owner)
-        source = doc.versions[0]
-        reviewed = library.review(
-            doc.id,
-            source.id,
-            doc.version,
-            owner,
-            tuple(ReviewedPassage(b.id, b.text or "", True, "") for b in source.blocks),
-            "Reviewed synthetic fixture",
-        )
-        revision = reviewed.versions[0].revisions[-1]
-        library.approve(
-            doc.id,
-            source.id,
-            revision.id,
-            revision.fingerprint(source.id, CHUNKING_POLICY),
-            reviewed.version,
-            owner,
-        )
-        assert container.reference_knowledge.index_next()
+        sync(container)
         requirement = container.create_requirement.execute(
             CreateRequirementInput("XGPON orders", "Order high-speed bundles through BCRM."), owner
         )
@@ -93,8 +73,8 @@ def test_postgres_lineage_restart_rebuild_concurrency_and_rollback(
             owner,
             rationale="Applies to rollout",
         )
-        current = library.get(doc.id, owner)
-        library.withdraw(doc.id, current.version, owner, "Superseded")
+        library.withdraw(citation.document_id)
+        sync(container)
         rows = container.source_impact.page(
             owner, requirement_id=requirement.id.value, active_only=True
         ).items
@@ -117,7 +97,7 @@ def test_postgres_lineage_restart_rebuild_concurrency_and_rollback(
         )
 
         def decide() -> str:
-            other = build_container(settings)
+            other = build_container(settings, knowledge_service=service_for(library))
             try:
                 other.source_impact.decide(
                     selected.dependency.id,
@@ -137,7 +117,7 @@ def test_postgres_lineage_restart_rebuild_concurrency_and_rollback(
             assert sorted(pool.map(lambda _: decide(), range(2))) == ["conflict", "saved"]
         assert container.breakdown_repository.list_breakdown_revisions(requirement.id) == before
         build_projection_rebuild(url)()
-        restarted = build_container(settings)
+        restarted = build_container(settings, knowledge_service=service_for(library))
         try:
             after = restarted.source_impact.page(
                 owner, requirement_id=requirement.id.value, active_only=True
@@ -145,11 +125,14 @@ def test_postgres_lineage_restart_rebuild_concurrency_and_rollback(
             retained = next(row for row in after if row.dependency.id == selected.dependency.id)
             assert not retained.needs_review and len(retained.decisions) == 1
             assert retained.dependency.lineage == selected.dependency.lineage
-            latest = restarted.document_library.get(doc.id, owner)
-            restarted.library_governance.transfer(
-                doc.id, owner, FAKE_ACTORS[1].id, latest.version, "Test handover"
+            # The persisted copy still knows the document's owner after a restart: only
+            # they may inspect it, and they see nothing of Requirements they cannot read.
+            with pytest.raises(AuthorizationDeniedError):
+                restarted.source_impact.page(owner, document_id=citation.document_id)
+            assert (
+                restarted.source_impact.page(FAKE_ACTORS[1], document_id=citation.document_id).items
+                == ()
             )
-            assert restarted.source_impact.page(FAKE_ACTORS[1], document_id=doc.id).items == ()
         finally:
             restarted.close_resources()
     finally:
