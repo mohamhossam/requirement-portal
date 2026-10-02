@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1
 #
-# The built browser app behind nginx, which also proxies /api to the backend.
+# The built browser app behind nginx, which also proxies /api to requirement
+# work and /knowledge-api and /knowledge to the knowledge service (ADR-0099).
 # Build from the repository root: docker build -f deploy/web/Dockerfile .
 # CSP_IDENTITY_ORIGINS must name the OIDC issuer origin for an OIDC deployment;
 # it is baked into the page's Content-Security-Policy at build time.
@@ -24,9 +25,13 @@ FROM nginxinc/nginx-unprivileged:1.31-alpine@sha256:26b0bf6fbf07297983cb341998d7
 USER root
 RUN apk upgrade --no-cache
 USER 101
-# The image renders templates with the environment at start-up (API_UPSTREAM).
+# The image renders templates with the environment at start-up (the *_UPSTREAM
+# variables below; nginx's own $variables are left alone).
 COPY deploy/web/default.conf.template /etc/nginx/templates/default.conf.template
 COPY deploy/web/security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY --from=build /app/dist /usr/share/nginx/html
-ENV API_UPSTREAM=http://api:8000
+COPY deploy/web/knowledge-unavailable.html /usr/share/nginx/html/knowledge-unavailable.html
+ENV API_UPSTREAM=http://api:8000 \
+    KNOWLEDGE_API_UPSTREAM=http://knowledge-api:8000 \
+    KNOWLEDGE_WEB_UPSTREAM=http://knowledge-web:8080
 EXPOSE 8080

@@ -11,8 +11,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 PINNED = re.compile(r"^[\w./:-]+@sha256:[0-9a-f]{64}$")
-# Images this repository builds itself; they are tagged, not pulled.
-OWN_IMAGES = ("requirement-ai/",)
+# The platform's own images: the two this repository builds, tagged rather than
+# pulled, and knowledge-portal's, pinned by the release tag its workflow
+# publishes only after CI passes (ADR-0098).
+OWN_IMAGES = ("requirement-platform/", "ghcr.io/mohamhossam/knowledge-api:")
 
 
 def _references() -> list[tuple[str, str]]:

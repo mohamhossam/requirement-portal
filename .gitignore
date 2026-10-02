@@ -28,6 +28,7 @@ deploy/keycloak/certs/*.crt
 deploy/keycloak/certs/*.key
 # Operator secrets for the reference deployment; see deploy/production.env.example.
 deploy/production.env
+deploy/knowledge.env
 # Installed by the Impeccable skill; platform binaries, not source.
 .agents/skills/*/scripts/bin/
 .claude/skills/*/scripts/bin/

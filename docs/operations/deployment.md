@@ -1,16 +1,25 @@
 # Deployment
 
-The reference deployment is `deploy/compose.production.yaml`. It runs every
-process in its own container on one host. Use it as it stands for a single-host
-install, or as the specification to translate for Kubernetes or another
-orchestrator. CI builds both images and starts this manifest on every push.
+The reference deployment is `deploy/compose.production.yaml`. It runs the whole
+platform on one host, every process in its own container: requirement work,
+built from this repository, and the knowledge service, from the image
+knowledge-portal publishes (ADR-0098, ADR-0099). Use it as it stands for a
+single-host install, or as the specification to translate for Kubernetes or
+another orchestrator. CI builds both images and starts this manifest, with the
+knowledge service, on every push.
+
+The Compose project is `requirement-platform`, so its containers, images and
+volumes never collide with the earlier single-repository deployment
+(`requirement-ai`) on the same host. Set `WEB_PORT` to publish the proxy on a
+port other than 8080 while both run.
 
 ## Images and processes
 
 | Image | Built from | Runs |
 |---|---|---|
-| `requirement-ai/api` | `deploy/api/Dockerfile` | Four processes, each chosen by the container command: the **API** (`python -m smb_requirement_agent.interfaces.api.serve`); the **worker** (`python -m smb_requirement_agent.interfaces.worker`); **migrate** (`python -m smb_requirement_agent.infrastructure.persistence.migrate`); and **maintenance** (`python -m smb_requirement_agent.interfaces.maintenance`). |
-| `requirement-ai/web` | `deploy/web/Dockerfile` | nginx serving the built browser app and proxying `/api/` to the API. |
+| `requirement-platform/api` | `deploy/api/Dockerfile` | Four processes, each chosen by the container command: the **API** (`python -m smb_requirement_agent.interfaces.api.serve`); the **worker** (`python -m smb_requirement_agent.interfaces.worker`); **migrate** (`python -m smb_requirement_agent.infrastructure.persistence.migrate`); and **maintenance** (`python -m smb_requirement_agent.interfaces.maintenance`). |
+| `requirement-platform/web` | `deploy/web/Dockerfile` | nginx serving the built browser app, proxying `/api/` to the API, and `/knowledge-api/` and `/knowledge/` to the knowledge service. |
+| `ghcr.io/mohamhossam/knowledge-api` | knowledge-portal's release workflow, pinned by `KNOWLEDGE_IMAGE_TAG` | The knowledge service's four processes: `knowledge-api`, `knowledge-worker`, `knowledge-migrate` and the one-off `knowledge-import`. |
 
 Both images run as non-root users on read-only root filesystems. The backend
 image installs dependencies from `uv.lock` (`uv sync --locked --no-dev`).
@@ -18,15 +27,23 @@ image installs dependencies from `uv.lock` (`uv sync --locked --no-dev`).
 - **API.** Runs with `API_BACKGROUND_WORKERS=false`, so it only serves HTTP.
   Scale it with `--scale api=N` behind the proxy.
 - **Worker.** Runs every background worker: AI jobs, requirement indexing,
-  document ingestion, and architecture jobs when knowledge is local. Jobs are
-  leased in PostgreSQL, so `--scale worker=N` is safe. The process exits
+  attachment ingestion, architecture mapping jobs, and reading the knowledge
+  service's events. Jobs are leased in PostgreSQL, so `--scale worker=N` is safe. The process exits
   non-zero when a worker stops being healthy, and the restart policy replaces it.
 - **Migrate.** Runs to completion before the API and worker start. Migrations
   never run on application boot.
-- **Web.** The only published port (8080).
+- **The knowledge service.** `knowledge-api` serves HTTP only, and
+  `knowledge-worker` runs library ingestion and catalogue jobs; both scale like
+  their requirement counterparts. `knowledge-migrate` runs its migrations first.
+  It has its own database, `knowledge-postgres`, and shares ClamAV.
+- **Web.** The only published port (8080, or `WEB_PORT`).
   - Put TLS termination in front of it.
-  - The API, worker, PostgreSQL, ClamAV and metrics ports stay on the private
-    network.
+  - The APIs, workers, both PostgreSQL servers, ClamAV and metrics ports stay on
+    the private network.
+  - `/internal` on either service answers 404 at the edge.
+  - `/knowledge/` is the knowledge portal's browser app, from its own image.
+    Until that image is deployed, it answers 503 with a page saying the portal
+    is not available.
   - nginx passes its `$request_id` as `X-Request-ID`, so one ID links the edge
     log, the API's log line and any error body the browser receives.
 
@@ -41,10 +58,30 @@ stored in an image layer:
 export KERNEL_READ_TOKEN=...   # Contents: read-only on platform-kernel
 ```
 
+The knowledge service's image is private on ghcr.io. Sign in once with a token
+that can read packages:
+
+```bash
+echo "$GHCR_READ_TOKEN" | docker login ghcr.io -u <github-user> --password-stdin
+```
+
+Compose reads its own variables from the shell or from `deploy/.env`
+(git-ignored). Generate each secret, for example with `openssl rand -hex 32`:
+
+```bash
+# deploy/.env
+POSTGRES_PASSWORD=...              # requirement work's database
+KNOWLEDGE_POSTGRES_PASSWORD=...    # the knowledge service's database
+REQUIREMENT_SERVICE_TOKEN=...      # 32+ characters; requirement work presents it
+KNOWLEDGE_SERVICE_TOKEN=...        # 32+ characters; the knowledge service presents it
+KNOWLEDGE_IMAGE_TAG=v0.1.0         # a knowledge-portal release
+CSP_IDENTITY_ORIGINS=https://login.example.com   # the OIDC issuer origin
+```
+
 ```bash
 cp deploy/production.env.example deploy/production.env   # fill in every blank; git-ignored
-export POSTGRES_PASSWORD=...                              # or put it in deploy/.env
-export CSP_IDENTITY_ORIGINS=https://login.example.com     # the OIDC issuer origin
+cp deploy/knowledge.env.example deploy/knowledge.env     # fill in every blank; git-ignored
+docker compose -f deploy/compose.production.yaml pull knowledge-api
 docker compose -f deploy/compose.production.yaml build
 docker compose -f deploy/compose.production.yaml run --rm maintenance
 docker compose -f deploy/compose.production.yaml up -d
@@ -59,6 +96,54 @@ seconds.
 is missing, the browser blocks the OIDC sign-in and token calls. Rebuild the web
 image when the issuer changes.
 
+## Moving knowledge from an earlier system
+
+A new install starts with an empty library and the knowledge service's initial
+catalogue; skip this section. To carry over an earlier system's library and
+catalogues, restore its database backup into this platform's requirements
+database first (the earlier system's own database is never written). Then:
+
+```bash
+docker compose -f deploy/compose.production.yaml run --rm maintenance
+docker compose -f deploy/compose.production.yaml run --rm knowledge-import
+```
+
+`maintenance` runs requirement work's migrations, which move attachments out of
+the library tables. `knowledge-import` copies the library, the architecture and
+squad catalogues and their blobs into the knowledge database, keeping every id,
+then compares every table (`--verify`). It is safe to repeat. Run it before the
+APIs and workers start; the copied tables stay in the requirements database
+until a later release drops them.
+
+## Knowledge admins
+
+Only actors with the `knowledge_admin` role open the knowledge portal, and only
+they see the link to it in requirement work. Everyone else keeps the read-only
+passage and evidence views.
+
+- **Keycloak** (`deploy/keycloak/`): add the person to the `knowledge-admins`
+  group. The realm puts realm roles in each access token's `roles` claim
+  (`OIDC_ROLES_CLAIM`, default `roles`), for both browser clients:
+  `requirement-spa` (audience `requirement-api`) and `knowledge-spa` (audience
+  `knowledge-api`, signing in under `/knowledge/`). Set `KNOWLEDGE_APP_ORIGIN`
+  when the portal is served from another origin than requirement work.
+- **Another identity provider:** issue `knowledge_admin` in the claim
+  `OIDC_ROLES_CLAIM` names, and register a second public client for the portal.
+- **Offline (fake identity):** Amina Owner and Ravi Reviewer are knowledge
+  admins in both portals; Omar Observer is not.
+
+Architecture mapping in requirement work checks two more roles, also granted by
+group in the Keycloak realm:
+
+| Group | Roles | Allows |
+|---|---|---|
+| `knowledge-readers` | `knowledge_reader` | Starting and reading architecture mapping jobs on Requirements the person works on |
+| `knowledge-maintainers` | `knowledge_reader`, `knowledge_maintainer` | Also cancelling and retrying other people's mapping jobs |
+
+Without `knowledge_reader`, a signed-in member cannot map a Requirement's
+architecture. Offline, Amina Owner has both roles, Ravi Reviewer is a reader,
+and Omar Observer has neither.
+
 ## Model files
 
 The backend image holds no configuration files, and its root filesystem is
@@ -69,6 +154,7 @@ every backend container (`api`, `worker`, `migrate`, `maintenance`,
 | Host directory | Default | Mounted at | Setting that names the file |
 |---|---|---|---|
 | `LLM_CONFIG_DIR` | `config/` | `/app/config` | `LLM_CONFIG_PATH=/app/config/llm.yaml`, only when you use model profiles |
+| `KNOWLEDGE_LLM_CONFIG_DIR` | `config/` | `/app/config` in the knowledge containers | the same, in `deploy/knowledge.env` |
 
 - **Model profiles.** The default mounts the repository's `config/`. To keep
   your own profiles outside the checkout, set `LLM_CONFIG_DIR`. Setting
@@ -94,7 +180,9 @@ docker compose -f deploy/compose.production.yaml build
 docker compose -f deploy/compose.production.yaml up -d
 ```
 
-`up` re-runs `migrate` before recreating the API and workers. Run
+To move to a knowledge-portal release, change `KNOWLEDGE_IMAGE_TAG` and
+`pull knowledge-api` first. `up` re-runs `migrate` and `knowledge-migrate`
+before recreating the APIs and workers. Run
 `maintenance` again only when a release's notes require it, and follow
 `production-readiness-maintenance.md`: stop the API and every worker first, and
 never run it against live traffic.
@@ -122,6 +210,7 @@ newest 100, so their cost does not grow with a workspace's age.
 |---|---|
 | `GET /api/health` | The process is serving HTTP. |
 | `GET /api/ready` | The API accepts requests, the schema is at the newest packaged migration, the maintenance marker exists, and (when the API runs them) its background workers are healthy. The compose healthcheck uses it. |
+| `GET /knowledge-api/ready` | The same for the knowledge service; `web` waits for both. |
 
 ## Logs
 
@@ -172,8 +261,9 @@ Suggested alerts:
 `deploy/compose.monitoring.yaml` is an optional overlay that collects and
 shows these metrics. It adds two containers:
 
-- **Prometheus** scrapes every `api` and `worker` container through Docker's
-  DNS, so `--scale` needs no configuration change. It evaluates the alerts
+- **Prometheus** scrapes every `api`, `worker`, `knowledge-api` and
+  `knowledge-worker` container through Docker's DNS, so `--scale` needs no
+  configuration change. The dashboard shows requirement work. It evaluates the alerts
   above (`deploy/monitoring/prometheus/alerts.yml`) and keeps 15 days of data
   (`PROMETHEUS_RETENTION`). It is not published.
 - **Grafana** opens on the provisioned **Requirement AI — overview**
@@ -190,7 +280,7 @@ Pass both `-f` files to every command for these containers (`ps`, `logs`,
 `down`). The dashboard and data source are read-only in the UI: change
 `deploy/monitoring/` and restart Grafana. `tests/architecture/test_monitoring_metrics.py`
 fails when a panel or alert names a metric the application does not export,
-and CI starts the overlay and checks that both exporters are scraped.
+and CI starts the overlay and checks that all four exporters are scraped.
 
 Before relying on it in production:
 
@@ -233,12 +323,12 @@ The knowledge service reads a few things from this service over `/internal`
 - actor details for ownership transfers.
 
 - **Off by default.** Every `/internal` path answers 404 until
-  `KNOWLEDGE_SERVICE_TOKEN` is set.
+  `KNOWLEDGE_SERVICE_TOKEN` is set. The reference deployment sets it, from `deploy/.env`.
 - **Turning it on.** Set it to a random secret of 32 characters or more, and give the same
-  value to the knowledge service. Requests must then carry `Authorization: Bearer <token>`;
+  value to the knowledge service. The manifest passes both tokens to both services. Requests must then carry `Authorization: Bearer <token>`;
   no user sign-in is involved.
-- **Never public.** The bundled nginx answers 404 for `/api/internal` whatever the token
-  holds, and the CI deployment job checks it.
+- **Never public.** The bundled nginx answers 404 for `/api/internal` and
+  `/knowledge-api/internal` whatever the tokens hold, and the CI deployment job checks both.
 
 ## Reaching the knowledge service
 
@@ -286,7 +376,11 @@ code changed (ADR-0077).
 - **OCR and office previews.** The image omits the optional `document-ocr` extra
   (docling) and LibreOffice. Extend the image if you need
   `LIBRARY_OCR_ARTIFACTS_PATH` or `DOCUMENT_OFFICE_PREVIEW_EXECUTABLE`.
-- **Backups.** Back up the `postgres_data` volume, or use a managed PostgreSQL
-  and point `DATABASE_URL` at it.
+- **Backups.** Back up the `postgres_data` and `knowledge_postgres_data`
+  volumes, or use managed PostgreSQL servers and point each service's
+  `DATABASE_URL` at its own.
+- **The knowledge portal's browser app.** `/knowledge/` shows a "not available"
+  page until knowledge-portal publishes a web image and the manifest runs it as
+  `knowledge-web`.
 - **Identity.** `deploy/keycloak/` is a development identity provider, not a
   production one.

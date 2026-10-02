@@ -7,7 +7,7 @@ groups:
   - name: requirement-ai
     rules:
       - alert: ProcessDown
-        expr: up{job=~"api|worker"} == 0
+        expr: up{job=~"api|worker|knowledge-api|knowledge-worker"} == 0
         for: 2m
         labels:
           severity: critical

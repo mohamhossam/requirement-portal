@@ -28,16 +28,26 @@ The Docker stack and the launchers keep separate data and use different ports
 
 ## 2. Run with Docker
 
-`deploy/compose.production.yaml` starts every process in its own container:
+`deploy/compose.production.yaml` starts the whole platform, every process in
+its own container: requirement work, built from this repository, and the
+knowledge service, from the image knowledge-portal publishes.
 
 | Container | Purpose |
 |---|---|
-| `postgres` | PostgreSQL 17 with pgvector; a named volume keeps the data |
-| `clamav` | Malware scanner for shared knowledge library uploads |
-| `migrate` | Applies database migrations, then exits |
+| `postgres` | PostgreSQL 17 with pgvector for requirement work; a named volume keeps the data |
+| `clamav` | Malware scanner for uploads to either service |
+| `migrate` | Applies requirement work's migrations, then exits |
 | `api` | The FastAPI backend (HTTP only) |
-| `worker` | Background AI jobs, indexing and document ingestion |
-| `web` | nginx serving the review UI on port `8080` and forwarding `/api` to the API |
+| `worker` | Background AI jobs, indexing, attachment ingestion and the knowledge event feed |
+| `knowledge-postgres` | The knowledge service's own database |
+| `knowledge-migrate` | Applies the knowledge service's migrations, then exits |
+| `knowledge-api` | The knowledge service: shared library, architecture and squad catalogues |
+| `knowledge-worker` | Library ingestion and catalogue jobs |
+| `web` | nginx serving the review UI on port `8080`, forwarding `/api` to the API and `/knowledge-api` to the knowledge service |
+
+The Compose project is `requirement-platform`, so it can run beside an earlier
+`requirement-ai` stack; set `WEB_PORT` in `deploy/.env` to publish it on a port
+other than `8080`.
 
 `deploy/demo.env.example` configures a local demo:
 
@@ -45,7 +55,9 @@ The Docker stack and the launchers keep separate data and use different ports
   requirement-knowledge embeddings (a model billed to your OpenRouter account);
 - PostgreSQL storage in the stack's `postgres` container;
 - the development personas instead of a sign-in;
-- ClamAV scanning, and fake architecture knowledge.
+- ClamAV scanning, and the knowledge service's initial architecture catalogue.
+
+The same file works for the knowledge service, as `deploy/knowledge.env`.
 
 ### Prerequisites
 
@@ -63,27 +75,48 @@ Run every command from the repository root, the folder that contains
 
 ### Step 1: create the settings files
 
-The stack reads two files, both ignored by Git:
+The stack reads three files, all ignored by Git:
 
-- `deploy/production.env` holds the application settings.
-- `deploy/.env` holds the values Docker Compose itself needs, starting with the
-  database password. Compose reads it automatically for every command that
+- `deploy/production.env` holds requirement work's settings.
+- `deploy/knowledge.env` holds the knowledge service's settings.
+- `deploy/.env` holds the values Docker Compose itself needs: the two database
+  passwords and the two tokens the services use to call each other (each 32
+  characters or more). Compose reads it automatically for every command that
   uses `-f deploy/compose.production.yaml`. A `.env` file in the repository
   root is **not** read by these commands.
 
 ```powershell
 # Windows PowerShell
 Copy-Item deploy/demo.env.example deploy/production.env
-Set-Content deploy/.env "POSTGRES_PASSWORD=choose-a-password"
+Copy-Item deploy/demo.env.example deploy/knowledge.env
+Set-Content deploy/.env @(
+  "POSTGRES_PASSWORD=choose-a-password",
+  "KNOWLEDGE_POSTGRES_PASSWORD=choose-another-password",
+  "REQUIREMENT_SERVICE_TOKEN=$([guid]::NewGuid().ToString('N') + [guid]::NewGuid().ToString('N'))",
+  "KNOWLEDGE_SERVICE_TOKEN=$([guid]::NewGuid().ToString('N') + [guid]::NewGuid().ToString('N'))"
+)
 ```
 
 ```bash
 # macOS/Linux
 cp deploy/demo.env.example deploy/production.env
-echo "POSTGRES_PASSWORD=choose-a-password" > deploy/.env
+cp deploy/demo.env.example deploy/knowledge.env
+cat > deploy/.env <<EOF
+POSTGRES_PASSWORD=choose-a-password
+KNOWLEDGE_POSTGRES_PASSWORD=choose-another-password
+REQUIREMENT_SERVICE_TOKEN=$(openssl rand -hex 32)
+KNOWLEDGE_SERVICE_TOKEN=$(openssl rand -hex 32)
+EOF
 ```
 
-Open `deploy/production.env` and set your OpenRouter key:
+The knowledge service's image is private on ghcr.io. Sign in once with a
+GitHub token that can read packages:
+
+```bash
+docker login ghcr.io -u <github-user>
+```
+
+Open `deploy/production.env` and `deploy/knowledge.env` and set your OpenRouter key in both:
 
 ```dotenv
 OPENROUTER_API_KEY=your-real-key
@@ -102,12 +135,14 @@ set it in every new terminal before running any `docker compose` command.
 ### Step 2: build and start
 
 ```bash
+docker compose -f deploy/compose.production.yaml pull knowledge-api
 docker compose -f deploy/compose.production.yaml build
 docker compose -f deploy/compose.production.yaml run --rm maintenance
 docker compose -f deploy/compose.production.yaml up -d
 ```
 
-- `build` creates the `requirement-ai/api` and `requirement-ai/web` images. It
+- `pull` fetches the knowledge service's pinned release (`KNOWLEDGE_IMAGE_TAG`).
+- `build` creates the `requirement-platform/api` and `requirement-platform/web` images. It
   takes several minutes the first time.
 - `run --rm maintenance` starts PostgreSQL, applies the migrations and records
   the marker the API needs before it reports ready. Run it once on a new
@@ -121,14 +156,17 @@ docker compose -f deploy/compose.production.yaml up -d
 docker compose -f deploy/compose.production.yaml ps
 ```
 
-After up to a minute, `api` shows `(healthy)`, and `web`, `worker`, `postgres`
-and `clamav` are `Up`. `migrate` has exited, which is expected.
+After up to a minute, `api` and `knowledge-api` show `(healthy)`, and `web`,
+`worker`, `knowledge-worker`, both PostgreSQL containers and `clamav` are `Up`.
+`migrate` and `knowledge-migrate` have exited, which is expected.
 
 | Address | Purpose |
 |---|---|
 | `http://localhost:8080` | Review UI |
 | `http://localhost:8080/api/health` | The API is serving; returns `{"status":"ok"}` |
 | `http://localhost:8080/api/ready` | The API is ready: database migrated and maintenance recorded |
+| `http://localhost:8080/knowledge-api/ready` | The knowledge service is ready |
+| `http://localhost:8080/knowledge/` | The knowledge portal, for knowledge admins (Amina Owner and Ravi Reviewer in the demo). Until its browser app is deployed, a page says it is not available. |
 
 Port `8080` is the only one the stack publishes. The API, worker, database and
 scanner are reachable only from inside the stack. Continue with section 5 to
@@ -236,11 +274,11 @@ updates.
 
 | Demo | Deployment |
 |---|---|
-| `deploy/demo.env.example` | `deploy/production.env.example`, with every blank filled in |
+| `deploy/demo.env.example`, twice | `deploy/production.env.example` and `deploy/knowledge.env.example`, with every blank filled in |
 | `APP_ENV=development` | `APP_ENV=production` |
 | Development personas, no sign-in | OIDC sign-in (`IDENTITY_PROVIDER=oidc`) |
 | OpenRouter's free chat model, also used for architecture mapping | A production `LLM_PROVIDER` or model profiles, used for architecture mapping too |
-| No knowledge evaluation | `KNOWLEDGE_EVALUATION_APPROVED=true`, set only after the local models pass the English/Arabic evaluation |
+| No knowledge evaluation | `KNOWLEDGE_EVALUATION_APPROVED=true` in `deploy/knowledge.env`, set only after the models pass the English/Arabic evaluation |
 | Plain HTTP on port `8080` | A TLS reverse proxy in front of port `8080` |
 
 With `APP_ENV=production`, the API and worker refuse to start on the fake
@@ -270,22 +308,32 @@ On the server, from a clone of the repository:
 
 ```bash
 cp deploy/production.env.example deploy/production.env
+cp deploy/knowledge.env.example deploy/knowledge.env
 ```
 
-Fill in every blank in `deploy/production.env`; `.env.example` documents each
-variable. Then create `deploy/.env` with the values Compose needs:
+Fill in every blank in both files; `.env.example` documents each variable. Then
+create `deploy/.env` with the values Compose needs:
 
 ```dotenv
 POSTGRES_PASSWORD=a-long-random-password
+KNOWLEDGE_POSTGRES_PASSWORD=another-long-random-password
+# The services' tokens for each other's internal API: 32+ random characters each.
+REQUIREMENT_SERVICE_TOKEN=...
+KNOWLEDGE_SERVICE_TOKEN=...
+# A knowledge-portal release.
+KNOWLEDGE_IMAGE_TAG=v0.1.0
 # The OIDC issuer origin. It is built into the page's Content-Security-Policy;
 # without it the browser blocks sign-in.
 CSP_IDENTITY_ORIGINS=https://login.example.com
 ```
 
-Restrict both files to the deployment account, for example
-`chmod 600 deploy/.env deploy/production.env`. Then build, prepare the database and start:
+Restrict the three files to the deployment account, for example
+`chmod 600 deploy/.env deploy/production.env deploy/knowledge.env`. Sign in to
+ghcr.io (`docker login ghcr.io`) with a token that can read the knowledge
+service's package. Then fetch, build, prepare the database and start:
 
 ```bash
+docker compose -f deploy/compose.production.yaml pull knowledge-api
 docker compose -f deploy/compose.production.yaml build
 docker compose -f deploy/compose.production.yaml run --rm maintenance
 docker compose -f deploy/compose.production.yaml up -d
