@@ -1,0 +1,258 @@
+[
+  {
+    "case": "docx-child-1",
+    "text": "coverage policy / table 1 / table 1, row 3 r3c1: [empty cell] [vertical merge continuation] |"
+  },
+  {
+    "case": "docx-child-2",
+    "text": "coverage policy / table 1 / table 1, row 3 r3c2: r3c2: xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة."
+  },
+  {
+    "case": "docx-child-3",
+    "text": "coverage policy / table 1 / table 1, row 3 r3c2: xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة."
+  },
+  {
+    "case": "docx-child-4",
+    "text": "coverage policy / table 1 / table 1, row 3 r3c2: xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. |"
+  },
+  {
+    "case": "docx-child-5",
+    "text": "coverage policy / table 1 / table 1, row 3 r3c3: public note [nested table 1 follows separately]"
+  },
+  {
+    "case": "docx-context",
+    "text": "Table 1, row 3\nR3C1: [empty cell] [vertical merge continuation] | \n\nTable 1, row 3\nR3C2:\nR3C2: XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. \n\nTable 1, row 3\nR3C2:\nXGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. \n\nTable 1, row 3\nR3C3: Public note\n[nested table 1 follows separately]"
+  },
+  {
+    "case": "pptx-child-1",
+    "text": "coverage policy / slide 1 / table 1 / slide 1, table 1, row 2 r2c1: [empty cell] [vertical merge continuation] |"
+  },
+  {
+    "case": "pptx-child-2",
+    "text": "coverage policy / slide 1 / table 1 / slide 1, table 1, row 2 r2c2: r2c2: xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة."
+  },
+  {
+    "case": "pptx-child-3",
+    "text": "coverage policy / slide 1 / table 1 / slide 1, table 1, row 2 r2c2: xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة."
+  },
+  {
+    "case": "pptx-child-4",
+    "text": "coverage policy / slide 1 / table 1 / slide 1, table 1, row 2 r2c2: xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة."
+  },
+  {
+    "case": "pptx-context",
+    "text": "Slide 1, table 1, row 2\nR2C1: [empty cell] [vertical merge continuation] | \n\nSlide 1, table 1, row 2\nR2C2:\nR2C2: XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. \n\nSlide 1, table 1, row 2\nR2C2:\nXGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. "
+  },
+  {
+    "case": "xlsx-child-1",
+    "text": "coverage policy / worksheet 1 / worksheet 1!3:3 a3=[merged a2:a3 continuation; anchor a2] |"
+  },
+  {
+    "case": "xlsx-child-2",
+    "text": "coverage policy / worksheet 1 / worksheet 1!3:3 b3= b3=xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة."
+  },
+  {
+    "case": "xlsx-child-3",
+    "text": "coverage policy / worksheet 1 / worksheet 1!3:3 b3= xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة."
+  },
+  {
+    "case": "xlsx-child-4",
+    "text": "coverage policy / worksheet 1 / worksheet 1!3:3 b3= xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة."
+  },
+  {
+    "case": "xlsx-child-5",
+    "text": "coverage policy / worksheet 1 / worksheet 1!3:3 b3= xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة."
+  },
+  {
+    "case": "xlsx-child-6",
+    "text": "coverage policy / worksheet 1 / worksheet 1!3:3 b3= xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة."
+  },
+  {
+    "case": "xlsx-child-7",
+    "text": "coverage policy / worksheet 1 / worksheet 1!3:3 b3= xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. xgpon التغطية مطلوبة. |"
+  },
+  {
+    "case": "xlsx-child-8",
+    "text": "coverage policy / worksheet 1 / worksheet 1!3:3 c3=public note"
+  },
+  {
+    "case": "xlsx-context",
+    "text": "Worksheet 1!3:3\nA3=[merged A2:A3 continuation; anchor A2] | \n\nWorksheet 1!3:3\nB3=\nB3=XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. \n\nWorksheet 1!3:3\nB3=\nXGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. \n\nWorksheet 1!3:3\nB3=\nXGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. XGPON التغطية مطلوبة. "
+  },
+  {
+    "case": "csv-child-1",
+    "text": "coverage policy / delimited table / row 2 r2c1: xgpon |"
+  },
+  {
+    "case": "csv-child-2",
+    "text": "coverage policy / delimited table / row 2 r2c2: r2c2: التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة."
+  },
+  {
+    "case": "csv-child-3",
+    "text": "coverage policy / delimited table / row 2 r2c2: التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة."
+  },
+  {
+    "case": "csv-child-4",
+    "text": "coverage policy / delimited table / row 2 r2c2: التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة."
+  },
+  {
+    "case": "csv-child-5",
+    "text": "coverage policy / delimited table / row 2 r2c2: التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة."
+  },
+  {
+    "case": "csv-child-6",
+    "text": "coverage policy / delimited table / row 2 r2c2: التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة."
+  },
+  {
+    "case": "csv-context",
+    "text": "Row 2\nR2C1: XGPON | \n\nRow 2\nR2C2:\nR2C2: التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. \n\nRow 2\nR2C2:\nالتغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. \n\nRow 2\nR2C2:\nالتغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. "
+  },
+  {
+    "case": "tsv-child-1",
+    "text": "coverage policy / delimited table / row 2 r2c1: xgpon |"
+  },
+  {
+    "case": "tsv-child-2",
+    "text": "coverage policy / delimited table / row 2 r2c2: r2c2: التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة."
+  },
+  {
+    "case": "tsv-child-3",
+    "text": "coverage policy / delimited table / row 2 r2c2: التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة."
+  },
+  {
+    "case": "tsv-child-4",
+    "text": "coverage policy / delimited table / row 2 r2c2: التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة."
+  },
+  {
+    "case": "tsv-child-5",
+    "text": "coverage policy / delimited table / row 2 r2c2: التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة."
+  },
+  {
+    "case": "tsv-child-6",
+    "text": "coverage policy / delimited table / row 2 r2c2: التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة."
+  },
+  {
+    "case": "tsv-context",
+    "text": "Row 2\nR2C1: XGPON | \n\nRow 2\nR2C2:\nR2C2: التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. \n\nRow 2\nR2C2:\nالتغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. \n\nRow 2\nR2C2:\nالتغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. التغطية مطلوبة. "
+  },
+  {
+    "case": "txt-child-1",
+    "text": "coverage policy / line 1 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required!"
+  },
+  {
+    "case": "txt-child-2",
+    "text": "coverage policy / line 1 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required!"
+  },
+  {
+    "case": "txt-child-3",
+    "text": "coverage policy / line 1 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required!"
+  },
+  {
+    "case": "txt-child-4",
+    "text": "coverage policy / line 1 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required!"
+  },
+  {
+    "case": "txt-child-5",
+    "text": "coverage policy / line 1 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required!"
+  },
+  {
+    "case": "txt-child-6",
+    "text": "coverage policy / line 1 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required!"
+  },
+  {
+    "case": "txt-child-7",
+    "text": "coverage policy / line 1 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂 التغطية مطلوبة. coverage required! 🙂"
+  },
+  {
+    "case": "txt-context",
+    "text": "Line 1\nالتغطية مطلوبة. Coverage required! 🙂 التغطية مطلوبة. Coverage required! 🙂 التغطية مطلوبة. Coverage required! 🙂 التغطية مطلوبة. Coverage required! 🙂 التغطية مطلوبة. Coverage required! 🙂 التغطية مطلوبة. Coverage required! 🙂 التغطية مطلوبة. Coverage required! 🙂 التغطية مطلوبة. Coverage required! 🙂 التغطية مطلوبة. Coverage required! \n\nLine 1\n🙂 التغطية مطلوبة. Coverage required! 🙂 التغطية مطلوبة. Coverage required! 🙂 التغطية مطلوبة. Coverage required! 🙂 التغطية مطلوبة. Coverage required! 🙂 التغطية مطلوبة. Coverage required! 🙂 التغطية مطلوبة. Coverage required! 🙂 التغطية مطلوبة. Coverage required! 🙂 التغطية مطلوبة. Coverage required! 🙂 التغطية مطلوبة. Coverage required! \n\nLine 1\n🙂 التغطية مطلوبة. Coverage required! 🙂 التغطية مطلوبة. Coverage required! 🙂 التغطية مطلوبة. Coverage required! 🙂 التغطية مطلوبة. Coverage required! 🙂 التغطية مطلوبة. Coverage required! 🙂 التغطية مطلوبة. Coverage required! 🙂 التغطية مطلوبة. Coverage required! 🙂 التغطية مطلوبة. Coverage required! 🙂 التغطية مطلوبة. Coverage required! "
+  },
+  {
+    "case": "md-child-1",
+    "text": "coverage policy / heading at line 1 / line 2 eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address."
+  },
+  {
+    "case": "md-child-2",
+    "text": "coverage policy / heading at line 1 / line 2 eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address."
+  },
+  {
+    "case": "md-child-3",
+    "text": "coverage policy / heading at line 1 / line 2 eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address."
+  },
+  {
+    "case": "md-child-4",
+    "text": "coverage policy / heading at line 1 / line 2 eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address."
+  },
+  {
+    "case": "md-child-5",
+    "text": "coverage policy / heading at line 1 / line 2 eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address. eligibility requires a valid address."
+  },
+  {
+    "case": "md-context",
+    "text": "Line 2\nEligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. \n\nLine 2\nEligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. \n\nLine 2\nEligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. Eligibility requires a valid address. "
+  },
+  {
+    "case": "requirement-arabic-1",
+    "text": "التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية "
+  },
+  {
+    "case": "requirement-arabic-2",
+    "text": "مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة ق"
+  },
+  {
+    "case": "requirement-arabic-3",
+    "text": "بل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب."
+  },
+  {
+    "case": "requirement-arabic-4",
+    "text": " التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية "
+  },
+  {
+    "case": "requirement-arabic-5",
+    "text": "مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. التغطية مطلوبة قبل الطلب. "
+  },
+  {
+    "case": "requirement-mixed-1",
+    "text": "BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM ال"
+  },
+  {
+    "case": "requirement-mixed-2",
+    "text": "تغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطي"
+  },
+  {
+    "case": "requirement-mixed-3",
+    "text": "ة 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 e"
+  },
+  {
+    "case": "requirement-mixed-4",
+    "text": "́ ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BC"
+  },
+  {
+    "case": "requirement-mixed-5",
+    "text": "RM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM الت"
+  },
+  {
+    "case": "requirement-mixed-6",
+    "text": "غطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية "
+  },
+  {
+    "case": "requirement-mixed-7",
+    "text": "🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | BCRM التغطية 🙂 é ! | "
+  },
+  {
+    "case": "requirement-unbroken-1",
+    "text": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+  },
+  {
+    "case": "requirement-unbroken-2",
+    "text": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+  },
+  {
+    "case": "requirement-unbroken-3",
+    "text": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+  },
+  {
+    "case": "requirement-unbroken-4",
+    "text": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+  }
+]

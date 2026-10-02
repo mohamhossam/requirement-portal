@@ -1,0 +1,82 @@
+version: 1
+default: gemini-flash-lite
+tasks: {}
+embedding: gemini
+profiles:
+  gemini-flash-lite:
+    provider: Google Gemini
+    endpoint: https://generativelanguage.googleapis.com/v1beta/openai/
+    model: gemini-3.1-flash-lite
+    api_key_env: GEMINI_API_KEY
+    images: true
+    structured_output: json_schema
+    context_tokens: 1048576
+    output_tokens: 8192
+    reasoning_effort: minimal
+    timeout_seconds: 120
+  openai:
+    provider: OpenAI
+    endpoint: https://api.openai.com/v1
+    model: gpt-4.1-mini
+    api_key_env: OPENAI_API_KEY
+    images: true
+    context_tokens: 1047576
+  openrouter:
+    provider: OpenRouter
+    endpoint: https://openrouter.ai/api/v1
+    model: google/gemini-3.1-flash-lite
+    api_key_env: OPENROUTER_API_KEY
+    images: true
+    structured_output: json_object
+    context_tokens: 1048576
+    request_options:
+      provider:
+        require_parameters: true
+        data_collection: deny
+        allow_fallbacks: false
+  ollama:
+    provider: Ollama
+    endpoint: http://127.0.0.1:11434/v1
+    model: smb-qwen3-vl:8b-16k
+    images: false
+    context_tokens: 16384
+    output_tokens: 8192
+    reasoning_effort: none
+    ollama_reasoning_fallback: true
+    timeout_seconds: 300
+  compatible-template:
+    provider: Compatible endpoint
+    endpoint: https://your-api.example/v1
+    model: your-model-id
+    api_key_env: COMPATIBLE_API_KEY
+    images: false
+    context_tokens: 32768
+embeddings:
+  gemini:
+    provider: Google Gemini
+    protocol: google
+    endpoint: https://generativelanguage.googleapis.com/v1beta
+    model: gemini-embedding-001
+    api_key_env: GEMINI_API_KEY
+    dimensions: 768
+    normalize: true
+  openai:
+    provider: OpenAI
+    endpoint: https://api.openai.com/v1
+    model: text-embedding-3-small
+    api_key_env: OPENAI_API_KEY
+  openrouter:
+    provider: OpenRouter
+    endpoint: https://openrouter.ai/api/v1
+    model: openai/text-embedding-3-small
+    api_key_env: OPENROUTER_API_KEY
+    request_options:
+      provider:
+        require_parameters: true
+        data_collection: deny
+        allow_fallbacks: false
+  ollama:
+    provider: Ollama
+    endpoint: http://127.0.0.1:11434/v1
+    model: nomic-embed-text
+    send_dimensions: false

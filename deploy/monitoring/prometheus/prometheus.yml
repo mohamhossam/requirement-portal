@@ -1,0 +1,29 @@
+# Scrapes the exporters of deploy/compose.production.yaml (METRICS_PORT=9464).
+# Docker's DNS returns one address per replica, so `--scale api=N` and
+# `--scale worker=N` are picked up without editing this file.
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+scrape_configs:
+  - job_name: api
+    dns_sd_configs:
+      - names: [api]
+        type: A
+        port: 9464
+        refresh_interval: 30s
+
+  - job_name: worker
+    dns_sd_configs:
+      - names: [worker]
+        type: A
+        port: 9464
+        refresh_interval: 30s
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ["127.0.0.1:9090"]

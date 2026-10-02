@@ -1,0 +1,164 @@
+# Reference deployment: one host, every process in its own container.
+#
+#   cp deploy/production.env.example deploy/production.env   # then fill it in
+#   POSTGRES_PASSWORD=... docker compose -f deploy/compose.production.yaml up -d --build
+#
+# The browser reaches only `web` (port 8080; put TLS in front of it). The API,
+# worker, database, scanner and metrics ports stay on the private network.
+# See docs/operations/deployment.md for the process model and scaling.
+
+name: requirement-ai
+
+x-backend: &backend
+  image: requirement-ai/api:${IMAGE_TAG:-local}
+  build:
+    context: ..
+    dockerfile: deploy/api/Dockerfile
+  env_file:
+    - path: production.env
+      required: true
+  environment: &backend-environment
+    PERSISTENCE_PROVIDER: postgres
+    DATABASE_URL: postgresql://smb:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/smb_requirements
+    LIBRARY_SCANNER_HOST: clamav
+    LIBRARY_SCANNER_PORT: "3310"
+    LOG_FORMAT: json
+    METRICS_HOST: 0.0.0.0
+    METRICS_PORT: "9464"
+  restart: unless-stopped
+  read_only: true
+  tmpfs:
+    - /tmp
+  # Files the settings name by path, mounted read-only. Relative host paths
+  # resolve from this directory; a missing one fails the start instead of
+  # mounting an empty directory. See docs/operations/deployment.md.
+  volumes:
+    # Model profiles: LLM_CONFIG_PATH=/app/config/llm.yaml
+    - type: bind
+      source: ${LLM_CONFIG_DIR:-../config}
+      target: /app/config
+      read_only: true
+      bind:
+        create_host_path: false
+  security_opt:
+    - no-new-privileges:true
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17@sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f
+    environment:
+      POSTGRES_DB: smb_requirements
+      POSTGRES_USER: smb
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smb -d smb_requirements"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  # Library uploads are scanned before extraction. Loading signatures takes a
+  # few minutes on first start; ingestion waits, the rest of the app does not.
+  clamav:
+    image: clamav/clamav:1.5@sha256:ebec5bc138401b36ae987caa1a3fa3c3b2a21ed3d51f0bfa5852825e663e67b0
+    volumes:
+      - clamav_data:/var/lib/clamav
+    restart: unless-stopped
+
+  # Schema changes run once, before any API or worker starts, never on boot.
+  migrate:
+    <<: *backend
+    command: ["python", "-m", "smb_requirement_agent.infrastructure.persistence.migrate"]
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # First install, and maintenance windows only (docs/operations/deployment.md):
+  #   docker compose -f deploy/compose.production.yaml run --rm maintenance
+  # Rebuilds the derived projections and records the marker /ready requires.
+  # Never run it while an API or worker is up.
+  maintenance:
+    <<: *backend
+    command: ["python", "-m", "smb_requirement_agent.interfaces.maintenance"]
+    restart: "no"
+    profiles: ["maintenance"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  # Online: prunes read notifications (ADR-0079). Schedule it, e.g. daily:
+  # docker compose -f deploy/compose.production.yaml run --rm retention
+  retention:
+    <<: *backend
+    command: ["python", "-m", "smb_requirement_agent.interfaces.retention"]
+    restart: "no"
+    profiles: ["retention"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  api:
+    <<: *backend
+    # Only `web` connects to the API, so it may set X-Forwarded-* headers.
+    command:
+      - python
+      - -m
+      - smb_requirement_agent.interfaces.api.serve
+      - --host=0.0.0.0
+      - --port=8000
+      - --forwarded-allow-ips=*
+    environment:
+      <<: *backend-environment
+      # HTTP only; background work runs in `worker`, which scales separately.
+      API_BACKGROUND_WORKERS: "false"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/ready', timeout=3)"
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  # Exits non-zero when a worker stops being healthy; the restart policy
+  # replaces it. Scale with `--scale worker=N`: jobs are leased in PostgreSQL.
+  worker:
+    <<: *backend
+    command: ["python", "-m", "smb_requirement_agent.interfaces.worker"]
+    stop_grace_period: 3m
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    image: requirement-ai/web:${IMAGE_TAG:-local}
+    build:
+      context: ..
+      dockerfile: deploy/web/Dockerfile
+      args:
+        CSP_IDENTITY_ORIGINS: ${CSP_IDENTITY_ORIGINS:-}
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    read_only: true
+    # nginx-unprivileged runs as uid 101 and renders its config into conf.d.
+    tmpfs:
+      - /tmp:uid=101,gid=101
+      - /etc/nginx/conf.d:uid=101,gid=101
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  clamav_data:

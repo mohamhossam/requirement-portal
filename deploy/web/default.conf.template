@@ -1,0 +1,58 @@
+# The API path without the /api prefix, still percent-encoded and with its
+# query string, matching the development proxy.
+map $request_uri $api_request_uri {
+    ~^/api(?<api_path>/.*)$ $api_path;
+}
+
+server {
+    listen 8080;
+    server_tokens off;
+    root /usr/share/nginx/html;
+
+    # Docker's embedded DNS. The API name is re-resolved at request time, so a
+    # recreated api container (new IP) is reached without restarting this proxy.
+    resolver 127.0.0.11 valid=10s ipv6=off;
+
+    # Requirement documents are capped at 10 MiB (DOCUMENT_MAX_FILE_BYTES); the
+    # extra headroom is multipart framing. Keep the two in step.
+    client_max_body_size 12m;
+
+    # Compress the static app only. Proxied API responses stay uncompressed
+    # (gzip_proxied defaults to off), because compressing responses that
+    # reflect user input next to secrets invites BREACH-style attacks.
+    gzip on;
+    gzip_vary on;
+    gzip_comp_level 5;
+    gzip_min_length 1024;
+    gzip_types text/css application/javascript image/svg+xml application/json text/plain;
+
+    # Hashed build assets never change, so they cache for a year.
+    location /assets/ {
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        try_files $uri =404;
+    }
+
+    location /api/ {
+        include /etc/nginx/snippets/security-headers.conf;
+        # A variable in proxy_pass makes nginx resolve the host per request.
+        proxy_pass ${API_UPSTREAM}$api_request_uri;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        # One correlation ID from the edge to the API's logs and error bodies.
+        proxy_set_header X-Request-ID $request_id;
+        # Synchronous generation can run for minutes on a slow model.
+        proxy_read_timeout 600s;
+        proxy_send_timeout 600s;
+    }
+
+    # Client-side routes: every other path is the app shell, never cached, so a
+    # deploy reaches browsers on their next navigation.
+    location / {
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Cache-Control "no-cache" always;
+        try_files $uri /index.html;
+    }
+}

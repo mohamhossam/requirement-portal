@@ -1,0 +1,618 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-25T23:49:16Z",
+  "title": "Design System: Requirement AI",
+  "extensions": {
+    "colorMeta": {
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Working Paper",
+        "canonical": "#f6f6f3",
+        "dark": "#111316",
+        "tonalRamp": [
+          "#0c0e11",
+          "#111316",
+          "#191c20",
+          "#22262b",
+          "#2b3036",
+          "#606870",
+          "#85857e",
+          "#dcdcd5",
+          "#ecece7",
+          "#f6f6f3",
+          "#ffffff"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Clean Sheet",
+        "canonical": "#ffffff",
+        "dark": "#191c20",
+        "tonalRamp": [
+          "#0c0e11",
+          "#111316",
+          "#191c20",
+          "#22262b",
+          "#2b3036",
+          "#606870",
+          "#85857e",
+          "#dcdcd5",
+          "#ecece7",
+          "#f6f6f3",
+          "#ffffff"
+        ]
+      },
+      "surface-sunken": {
+        "role": "neutral",
+        "displayName": "Margin Grey",
+        "canonical": "#ecece7",
+        "dark": "#0c0e11",
+        "tonalRamp": [
+          "#0c0e11",
+          "#111316",
+          "#191c20",
+          "#22262b",
+          "#2b3036",
+          "#606870",
+          "#85857e",
+          "#dcdcd5",
+          "#ecece7",
+          "#f6f6f3",
+          "#ffffff"
+        ]
+      },
+      "surface-raised": {
+        "role": "neutral",
+        "displayName": "Raised Sheet",
+        "canonical": "#ffffff",
+        "dark": "#22262b",
+        "tonalRamp": [
+          "#0c0e11",
+          "#111316",
+          "#191c20",
+          "#22262b",
+          "#2b3036",
+          "#606870",
+          "#85857e",
+          "#dcdcd5",
+          "#ecece7",
+          "#f6f6f3",
+          "#ffffff"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Pressed Ink",
+        "canonical": "#14171a",
+        "dark": "#e9ebed",
+        "tonalRamp": [
+          "#14171a",
+          "#3a4047",
+          "#5b646d",
+          "#656d76",
+          "#8b939b",
+          "#9aa2aa",
+          "#c2c8ce",
+          "#e9ebed"
+        ]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Graphite",
+        "canonical": "#3a4047",
+        "dark": "#c2c8ce",
+        "tonalRamp": [
+          "#14171a",
+          "#3a4047",
+          "#5b646d",
+          "#656d76",
+          "#8b939b",
+          "#9aa2aa",
+          "#c2c8ce",
+          "#e9ebed"
+        ]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Pencil",
+        "canonical": "#5b646d",
+        "dark": "#9aa2aa",
+        "tonalRamp": [
+          "#14171a",
+          "#3a4047",
+          "#5b646d",
+          "#656d76",
+          "#8b939b",
+          "#9aa2aa",
+          "#c2c8ce",
+          "#e9ebed"
+        ]
+      },
+      "ink-faint": {
+        "role": "neutral",
+        "displayName": "Faint Pencil",
+        "canonical": "#656d76",
+        "dark": "#8b939b",
+        "tonalRamp": [
+          "#14171a",
+          "#3a4047",
+          "#5b646d",
+          "#656d76",
+          "#8b939b",
+          "#9aa2aa",
+          "#c2c8ce",
+          "#e9ebed"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#dcdcd5",
+        "dark": "#2b3036",
+        "tonalRamp": [
+          "#0c0e11",
+          "#111316",
+          "#191c20",
+          "#22262b",
+          "#2b3036",
+          "#606870",
+          "#85857e",
+          "#dcdcd5",
+          "#ecece7",
+          "#f6f6f3",
+          "#ffffff"
+        ]
+      },
+      "line-strong": {
+        "role": "neutral",
+        "displayName": "Rule Line",
+        "canonical": "#85857e",
+        "dark": "#606870",
+        "tonalRamp": [
+          "#0c0e11",
+          "#111316",
+          "#191c20",
+          "#22262b",
+          "#2b3036",
+          "#606870",
+          "#85857e",
+          "#dcdcd5",
+          "#ecece7",
+          "#f6f6f3",
+          "#ffffff"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Signal Indigo",
+        "canonical": "#4338ca",
+        "dark": "#a9a2ff",
+        "tonalRamp": [
+          "#15122b",
+          "#211f36",
+          "#352ba3",
+          "#4338ca",
+          "#a9a2ff",
+          "#c3bdff",
+          "#edebfb"
+        ]
+      },
+      "accent-strong": {
+        "role": "primary",
+        "displayName": "Deep Indigo",
+        "canonical": "#352ba3",
+        "dark": "#c3bdff",
+        "tonalRamp": [
+          "#15122b",
+          "#211f36",
+          "#352ba3",
+          "#4338ca",
+          "#a9a2ff",
+          "#c3bdff",
+          "#edebfb"
+        ]
+      },
+      "accent-wash": {
+        "role": "primary",
+        "displayName": "Indigo Wash",
+        "canonical": "#edebfb",
+        "dark": "#211f36",
+        "tonalRamp": [
+          "#15122b",
+          "#211f36",
+          "#352ba3",
+          "#4338ca",
+          "#a9a2ff",
+          "#c3bdff",
+          "#edebfb"
+        ]
+      },
+      "on-accent": {
+        "role": "primary",
+        "displayName": "On Indigo",
+        "canonical": "#ffffff",
+        "dark": "#15122b",
+        "tonalRamp": [
+          "#15122b",
+          "#211f36",
+          "#352ba3",
+          "#4338ca",
+          "#a9a2ff",
+          "#c3bdff",
+          "#edebfb"
+        ]
+      },
+      "success": {
+        "role": "status",
+        "displayName": "Approved Green",
+        "canonical": "#136b45",
+        "dark": "#5ccb93",
+        "tonalRamp": [
+          "#10251c",
+          "#136b45",
+          "#5ccb93",
+          "#e3f1e9"
+        ]
+      },
+      "success-wash": {
+        "role": "status",
+        "displayName": "Green Wash",
+        "canonical": "#e3f1e9",
+        "dark": "#10251c",
+        "tonalRamp": [
+          "#10251c",
+          "#136b45",
+          "#5ccb93",
+          "#e3f1e9"
+        ]
+      },
+      "warning": {
+        "role": "status",
+        "displayName": "Attention Amber",
+        "canonical": "#8a4b08",
+        "dark": "#e3a44d",
+        "tonalRamp": [
+          "#2a1f10",
+          "#8a4b08",
+          "#b96b12",
+          "#c98a33",
+          "#e3a44d",
+          "#faefdf"
+        ]
+      },
+      "warning-wash": {
+        "role": "status",
+        "displayName": "Amber Wash",
+        "canonical": "#faefdf",
+        "dark": "#2a1f10",
+        "tonalRamp": [
+          "#2a1f10",
+          "#8a4b08",
+          "#b96b12",
+          "#c98a33",
+          "#e3a44d",
+          "#faefdf"
+        ]
+      },
+      "warning-edge": {
+        "role": "status",
+        "displayName": "Amber Edge",
+        "canonical": "#b96b12",
+        "dark": "#c98a33",
+        "tonalRamp": [
+          "#2a1f10",
+          "#8a4b08",
+          "#b96b12",
+          "#c98a33",
+          "#e3a44d",
+          "#faefdf"
+        ]
+      },
+      "danger": {
+        "role": "status",
+        "displayName": "Blocking Red",
+        "canonical": "#b3231d",
+        "dark": "#ff8e85",
+        "tonalRamp": [
+          "#2e1614",
+          "#b3231d",
+          "#ff8e85",
+          "#fae6e4"
+        ]
+      },
+      "danger-wash": {
+        "role": "status",
+        "displayName": "Red Wash",
+        "canonical": "#fae6e4",
+        "dark": "#2e1614",
+        "tonalRamp": [
+          "#2e1614",
+          "#b3231d",
+          "#ff8e85",
+          "#fae6e4"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The page h1 — the requirement's own title, one per page."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section and panel headings."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card headings — an Epic, a Feature, a finding group."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Interface prose, table cells, helper text; 80ch cap."
+      },
+      "document": {
+        "displayName": "Document",
+        "purpose": "All requirement and generated prose; 68ch cap."
+      },
+      "document-lead": {
+        "displayName": "Document lead",
+        "purpose": "The business need, as first written."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Field labels and column headers, sentence case."
+      },
+      "meta": {
+        "displayName": "Meta",
+        "purpose": "Timestamps, owners, counts; tabular numerals."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Requirement IDs, checksums, fingerprints — nothing else."
+      }
+    },
+    "shadows": [
+      {
+        "name": "elev-1",
+        "value": "0 1px 2px rgb(20 23 26 / 0.06), 0 2px 8px rgb(20 23 26 / 0.06)",
+        "purpose": "Hover lift on an interactive card or row."
+      },
+      {
+        "name": "elev-2",
+        "value": "0 4px 12px rgb(20 23 26 / 0.10)",
+        "purpose": "Dropdowns, menus, popovers."
+      },
+      {
+        "name": "elev-3",
+        "value": "0 12px 28px rgb(20 23 26 / 0.14)",
+        "purpose": "Drawers — Source, People, evidence, narrow-screen navigation."
+      },
+      {
+        "name": "elev-4",
+        "value": "0 20px 48px rgb(20 23 26 / 0.18)",
+        "purpose": "Dialogs and the toast stack."
+      }
+    ],
+    "motion": [
+      {
+        "name": "motion-fast",
+        "value": "120ms",
+        "purpose": "Hover, focus, colour and border changes."
+      },
+      {
+        "name": "motion-base",
+        "value": "180ms",
+        "purpose": "Disclosure, chip toggle, tab change."
+      },
+      {
+        "name": "motion-slow",
+        "value": "240ms",
+        "purpose": "Popovers, dropdowns, toast entry."
+      },
+      {
+        "name": "motion-slower",
+        "value": "320ms",
+        "purpose": "Drawers and modals."
+      },
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.2, 0, 0, 1)",
+        "purpose": "Entering, expanding, appearing."
+      },
+      {
+        "name": "ease-in",
+        "value": "cubic-bezier(0.4, 0, 1, 1)",
+        "purpose": "Exiting, collapsing, dismissing."
+      },
+      {
+        "name": "ease-move",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Moving between two on-screen positions."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "900px"
+      },
+      {
+        "name": "lg",
+        "value": "1050px"
+      }
+    ],
+    "layers": [
+      {
+        "name": "z-base",
+        "value": "1"
+      },
+      {
+        "name": "z-sticky",
+        "value": "10"
+      },
+      {
+        "name": "z-chrome",
+        "value": "20"
+      },
+      {
+        "name": "z-overlay",
+        "value": "40"
+      },
+      {
+        "name": "z-top",
+        "value": "50"
+      }
+    ],
+    "themes": {
+      "light": "Paper",
+      "dark": "Slate",
+      "switch": ":root[data-theme=\"dark\"], and @media (prefers-color-scheme: dark) guarded by :root:not([data-theme=\"light\"])"
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The next action — Signal Indigo, spent once per screen.",
+      "html": "<button class=\"ds-btn-primary\">Save and analyse business need</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:8px 16px;border:1px solid var(--accent);border-radius:6px;background:var(--accent);color:var(--on-accent);font:600 0.875rem/1.5 'Public Sans',system-ui,sans-serif;cursor:pointer;transition:background-color 120ms cubic-bezier(0.2,0,0,1),border-color 120ms cubic-bezier(0.2,0,0,1)}.ds-btn-primary:hover{background:var(--accent-strong);border-color:var(--accent-strong)}.ds-btn-primary:focus-visible{outline:3px solid var(--focus-inverse);outline-offset:-3px}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Every other action: the Rule Line border is what identifies it.",
+      "html": "<button class=\"ds-btn-secondary\">Edit source</button>",
+      "css": ".ds-btn-secondary{display:inline-flex;align-items:center;min-height:36px;padding:8px 16px;border:1px solid var(--line-strong);border-radius:6px;background:transparent;color:var(--ink);font:600 0.875rem/1.5 'Public Sans',system-ui,sans-serif;cursor:pointer;transition:background-color 120ms cubic-bezier(0.2,0,0,1)}.ds-btn-secondary:hover{background:color-mix(in srgb,var(--accent) 10%,var(--surface))}.ds-btn-secondary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}"
+    },
+    {
+      "name": "Text Button",
+      "kind": "button",
+      "refersTo": "button-text",
+      "description": "Inline Cancel, Retry, Mark read — underlined, 24×24 minimum.",
+      "html": "<button class=\"ds-btn-text\">Mark read</button>",
+      "css": ".ds-btn-text{display:inline-flex;align-items:center;min-height:24px;min-width:24px;padding:0 4px;border:0;background:transparent;color:var(--accent);font:600 0.875rem/1.5 'Public Sans',system-ui,sans-serif;text-decoration:underline;text-underline-offset:2px;cursor:pointer}.ds-btn-text:hover{color:var(--accent-strong);text-decoration-thickness:2px}.ds-btn-text:focus-visible{outline:3px solid var(--focus);outline-offset:2px}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "A real label above, a worked example as placeholder, the error beside the problem.",
+      "html": "<label class=\"ds-field\"><span>Requirement title</span><input class=\"ds-input\" placeholder=\"Example: High-speed business bundles\"></label>",
+      "css": ".ds-field{display:grid;gap:8px;font:600 0.75rem/1.3 'Public Sans',system-ui,sans-serif;letter-spacing:0.04em;color:var(--ink)}.ds-input{min-height:36px;padding:8px 12px;border:1px solid var(--line-strong);border-radius:6px;background:var(--surface);color:var(--ink);font:400 0.875rem/1.45 'Public Sans',system-ui,sans-serif;letter-spacing:normal}.ds-input::placeholder{color:var(--ink-muted)}.ds-input:hover{border-color:var(--ink-muted)}.ds-input:focus{border-color:var(--accent)}.ds-input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}"
+    },
+    {
+      "name": "Attention Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "A flagged panel: Hairline frame, 3px status edge, the matching wash, and words.",
+      "html": "<article class=\"ds-card ds-card-attention\"><h3 class=\"ds-card-title\">2 open questions block confirmation</h3><p class=\"ds-card-body\">Who approves pricing exceptions for assisted channels?</p></article>",
+      "css": ".ds-card{padding:24px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}.ds-card-attention{border-left:3px solid var(--warning-edge);background:var(--warning-wash)}.ds-card-title{margin:0 0 8px;font:600 1rem/1.4 'Public Sans',system-ui,sans-serif;color:var(--ink)}.ds-card-body{margin:0;max-width:68ch;font:400 1rem/1.6 'Source Serif 4',Georgia,serif;color:var(--ink-soft)}"
+    },
+    {
+      "name": "Filter Pill",
+      "kind": "chip",
+      "refersTo": "pill-active",
+      "description": "Worklist status filters; active is the filled accent, and only non-zero counts render.",
+      "html": "<div class=\"ds-pills\"><button class=\"ds-pill ds-pill-active\" aria-pressed=\"true\">Needs answers <span>4</span></button><button class=\"ds-pill\" aria-pressed=\"false\">Ready for review <span>2</span></button></div>",
+      "css": ".ds-pills{display:flex;gap:8px}.ds-pill{display:inline-flex;align-items:center;gap:8px;min-height:32px;padding:4px 12px;border:1px solid var(--line-strong);border-radius:999px;background:var(--surface);color:var(--ink);font:600 0.8125rem/1.45 'Public Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer}.ds-pill:hover{background:color-mix(in srgb,var(--accent) 10%,var(--surface))}.ds-pill-active,.ds-pill-active:hover{border-color:var(--accent);background:var(--accent);color:var(--on-accent)}.ds-pill:focus-visible{outline:3px solid var(--focus);outline-offset:2px}.ds-pill-active:focus-visible{outline-color:var(--focus-inverse);outline-offset:-3px}"
+    },
+    {
+      "name": "Stage Rail",
+      "kind": "nav",
+      "refersTo": null,
+      "description": "Signature: six vertical steps; every state carries a glyph as well as a colour.",
+      "html": "<ol class=\"ds-rail\"><li class=\"ds-step ds-done\"><span class=\"ds-mark\"><svg viewBox=\"0 0 24 24\" width=\"14\" height=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" aria-hidden=\"true\"><path d=\"M20 6 9 17l-5-5\"/></svg></span>Source</li><li class=\"ds-step ds-current\" aria-current=\"step\"><span class=\"ds-mark\">2</span>Clarify</li><li class=\"ds-step ds-blocked\"><span class=\"ds-mark\"></span>Knowledge</li></ol>",
+      "css": ".ds-rail{display:grid;gap:4px;margin:0;padding:0;list-style:none;width:240px}.ds-step{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px;border-left:3px solid transparent;border-radius:0 6px 6px 0;font:400 0.875rem/1.5 'Public Sans',system-ui,sans-serif;color:var(--ink)}.ds-mark{display:grid;place-items:center;width:24px;height:24px;border:1px solid var(--line-strong);border-radius:999px;font-size:0.75rem;font-weight:600}.ds-done .ds-mark{border-color:var(--success);color:var(--success)}.ds-current{border-left-color:var(--accent);background:var(--accent-wash);color:var(--accent);font-weight:600}.ds-current .ds-mark{border-color:var(--accent)}.ds-blocked{color:var(--ink-faint)}.ds-blocked .ds-mark{border-color:var(--ink-faint)}"
+    },
+    {
+      "name": "Next Action",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Signature: one per workspace — the only element allowed to tell somebody what to do.",
+      "html": "<div class=\"ds-next\"><span class=\"ds-next-marker\">Next</span><strong>Answer 4 blocking questions</strong></div>",
+      "css": ".ds-next{display:grid;gap:4px;padding:12px 16px;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:6px;background:var(--surface);font:600 0.875rem/1.5 'Public Sans',system-ui,sans-serif;color:var(--ink)}.ds-next-marker{font-size:0.75rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Working Paper",
+    "overview": "A reading surface with a dashboard's frame. The interface is the desk; the requirement is the paper on it. The real work here is a person reading a document carefully, marking what is uncertain, and signing something, so the frame is dense and instrumented — tables, filters, sticky headers, counts — while the content it holds is set like a document: a generous measure, high contrast, nothing decorative and nothing moving.\n\nChrome recedes and content does not. Navigation, rails and toolbars sit on a quiet paper ground separated by hairlines, never by shadow; the panels that hold a requirement, a finding or a story get the full white sheet and the larger serif. The only loud thing on a screen is the unresolved thing: one indigo accent spent on the next action, and the attention and blocking states carried by colour *and* an edge *and* words. Nothing pretends to be finished — generated content carries its provenance, unapproved content its state, stale content says so.\n\nIt is not a glass, neumorphic or gradient surface; not an OLED-black dark theme; not a marketing page; not a consumer app. No illustration, no photography, no decorative iconography.",
+    "keyCharacteristics": [
+      "Warm paper neutrals, one indigo accent, three reserved status hues.",
+      "Two reading registers: Public Sans for the instrument, Source Serif 4 for the document.",
+      "Flat in flow; shadow only for layers that genuinely float, and always with a border.",
+      "A 3px left edge is the one emphasis device.",
+      "Paper (light) and Slate (dark) themes, both measured to WCAG 2.2 AA."
+    ],
+    "rules": [
+      {
+        "name": "The One Accent Rule",
+        "body": "Signal Indigo is spent once per screen, on the next action or the current step. Two accents on a screen means one of them is wrong; there is no secondary brand colour and no separate CTA colour.",
+        "section": "colors"
+      },
+      {
+        "name": "The Reserved Vocabulary Rule",
+        "body": "Green, amber and red mean approved, attention and blocking — everywhere, including charts. A green bar that means \"Q3\" is a defect.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Channels Rule",
+        "body": "No status is shown by colour alone: every one also carries a glyph, a 3px edge or words. Provenance is a glyph plus a label (\"Generated\", \"Edited\"), never a tint.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tokens Only Rule",
+        "body": "No component names a hex, an `rgb()` or a bare `white`; `styles/palette.test.ts` fails the build if one appears outside `tokens.css`.",
+        "section": "colors"
+      },
+      {
+        "name": "The Sentence Case Rule",
+        "body": "Labels are sentence case. Uppercase survives in exactly one place, the `NEXT` marker, where it is a symbol rather than a word.",
+        "section": "typography"
+      },
+      {
+        "name": "The Register Rule",
+        "body": "Serif means \"this is document content\", whoever wrote it. It is not the provenance signal.",
+        "section": "typography"
+      },
+      {
+        "name": "The Floor Rule",
+        "body": "14px is the interface floor and 16px the document floor; nothing renders below 12px, badges included. No light weights.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Flow Rule",
+        "body": "Nothing in the flow casts a shadow, and no button ever does — buttons answer hover with colour, never with lift.",
+        "section": "elevation"
+      },
+      {
+        "name": "The One Edge Rule",
+        "body": "The 3px left edge is the single emphasis device: Signal Indigo for the current or next thing, a status colour for a flagged one. No glows, no heavy outlines, no colour-filled panels.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do take every colour, radius, space, duration and layer from the tokens — `var(--…)` or the Tailwind utility that bridges it.",
+      "Do separate in-flow surfaces with a 1px Hairline and a tone step; reserve `--elev-*` for layers that float, and give each a border.",
+      "Do mark the current or next thing with the 3px Signal Indigo edge, and a flagged thing with its status edge plus words.",
+      "Do set requirement and generated prose in Source Serif 4 at 16px/1.6, capped at 68ch.",
+      "Do make the unresolved and the blocking the most legible things on the screen.",
+      "Do use the primitive's props (`variant`, `size`, `side`, `tone`) rather than a class that sets the same property — a competing class wins or loses by Tailwind's output order, not by intent.",
+      "Do verify in Paper and Slate: text at 4.5:1, boundaries and focus at 3:1."
+    ],
+    "donts": [
+      "Don't add a second accent, a CTA colour, or an amber or orange call to action — amber is the attention state.",
+      "Don't put a shadow on anything in the flow, or on any button, ever.",
+      "Don't set labels in tracked uppercase; the `NEXT` marker is the one exception.",
+      "Don't show a status by colour alone, or provenance by a wash alone.",
+      "Don't use a radius, space, duration or z-index off its ladder, or a fourth breakpoint.",
+      "Don't use pure black grounds or pure white text in Slate, or white text on the lifted indigo.",
+      "Don't add illustration, photography, decorative gradients or glass.",
+      "Don't let a raw enum string (`needs_answers`, `ready_for_review`) reach a person; it gets a label in business language."
+    ]
+  }
+}

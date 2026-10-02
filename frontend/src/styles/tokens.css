@@ -1,0 +1,335 @@
+/* Design tokens — docs/design-system.md.
+ *
+ * THREE LAYERS. Components read only layer 3 (§4.0).
+ *
+ *   1. Ramp       raw values, declared once, never referenced by a component
+ *   2. Semantic   --surface, --ink, --accent … redefined under the dark selector
+ *   3. Component  a component's own knob, only where it needs one
+ *
+ * No component may reference a hex. If a value is missing here, add it here.
+ *
+ * Radius and easing are NOT in this file: they collide with Tailwind's own
+ * `--radius-*` and `--ease-*` theme namespaces, so bridging them would be a
+ * self-reference. They are declared once in the `@theme` block in index.css,
+ * which emits them to :root — `var(--radius-md)` works in plain CSS all the
+ * same. Everything else is declared here and bridged from there.
+ */
+
+/* ------------------------------------------------------------------ *
+ * 1. RAMP — raw values. Nothing outside this file may name these.
+ * ------------------------------------------------------------------ */
+:root {
+  /* Signal Indigo. The accent, chosen by elimination: green, amber and red
+     are spent on approved / attention / blocking, and blue is the reference
+     register (§4.1). */
+  --ramp-indigo-700: #352ba3;
+  --ramp-indigo-600: #4338ca;
+  --ramp-indigo-300: #a9a2ff;
+  --ramp-indigo-200: #c3bdff;
+  --ramp-indigo-050: #edebfb;
+  --ramp-indigo-950: #211f36;
+  --ramp-indigo-990: #15122b;
+
+  /* Paper neutrals — warm, never blue-tinted, never pure white for a ground. */
+  --ramp-paper-000: #ffffff;
+  --ramp-paper-100: #f6f6f3;
+  --ramp-paper-200: #ecece7;
+  --ramp-paper-300: #dcdcd5;
+  --ramp-paper-500: #85857e;
+
+  /* Slate neutrals — the dark ramp starts at an elevated near-black, because
+     pure black under a light accent halates and makes long prose painful. */
+  --ramp-slate-990: #0c0e11;
+  --ramp-slate-950: #111316;
+  --ramp-slate-900: #191c20;
+  --ramp-slate-850: #22262b;
+  --ramp-slate-800: #2b3036;
+  --ramp-slate-600: #606870;
+  --ramp-slate-400: #8b939b;
+  --ramp-slate-350: #9aa2aa;
+  --ramp-slate-200: #c2c8ce;
+  --ramp-slate-100: #e9ebed;
+
+  --ramp-ink-950: #14171a;
+  --ramp-ink-800: #3a4047;
+  --ramp-ink-600: #5b646d;
+  --ramp-ink-500: #656d76;
+
+  --ramp-green-700: #136b45;
+  --ramp-green-050: #e3f1e9;
+  --ramp-green-400: #5ccb93;
+  --ramp-green-950: #10251c;
+
+  --ramp-amber-800: #8a4b08;
+  --ramp-amber-600: #b96b12;
+  --ramp-amber-050: #faefdf;
+  --ramp-amber-400: #e3a44d;
+  --ramp-amber-500: #c98a33;
+  --ramp-amber-950: #2a1f10;
+
+  --ramp-red-700: #b3231d;
+  --ramp-red-050: #fae6e4;
+  --ramp-red-300: #ff8e85;
+  --ramp-red-950: #2e1614;
+}
+
+/* ------------------------------------------------------------------ *
+ * THIRD-PARTY MARKS — not ours to theme.
+ *
+ * The Microsoft sign-in mark is four fixed squares, and its colours are set
+ * by Microsoft's brand guidance, not by this palette. They are the only
+ * colours in the product that do not change with the theme, and they are
+ * named here rather than left as hex in the login page so that the "no hex
+ * outside tokens.css" rule has no exceptions. Use them for that mark only.
+ * ------------------------------------------------------------------ */
+:root {
+  --mark-microsoft-red: #f35325;
+  --mark-microsoft-green: #81bc06;
+  --mark-microsoft-blue: #05a6f0;
+  --mark-microsoft-yellow: #ffba08;
+}
+
+/* ------------------------------------------------------------------ *
+ * 2. SEMANTIC — light theme, "Paper" (§4.2).
+ * ------------------------------------------------------------------ */
+:root {
+  --canvas: var(--ramp-paper-100);          /* page ground */
+  --surface: var(--ramp-paper-000);         /* panels, cards, table bodies */
+  --surface-sunken: var(--ramp-paper-200);  /* rails, insets, table headers */
+  --surface-raised: var(--ramp-paper-000);  /* popovers, menus, toasts */
+
+  --ink: var(--ramp-ink-950);               /* read this first */
+  --ink-soft: var(--ramp-ink-800);          /* secondary prose, table cells */
+  --ink-muted: var(--ramp-ink-600);         /* metadata, counts, helper text */
+  --ink-faint: var(--ramp-ink-500);         /* the floor — see the warning below */
+
+  --line: var(--ramp-paper-300);            /* decorative hairline INSIDE a bounded surface */
+  --line-strong: var(--ramp-paper-500);     /* control boundary — mandatory wherever a border
+                                               is the only thing identifying a control */
+
+  --accent: var(--ramp-indigo-600);         /* means exactly one thing: act here */
+  --accent-strong: var(--ramp-indigo-700);  /* hover and active */
+  --accent-wash: var(--ramp-indigo-050);    /* current step, generated content */
+  --on-accent: var(--ramp-paper-000);
+
+  --success: var(--ramp-green-700);
+  --success-wash: var(--ramp-green-050);
+
+  --warning: var(--ramp-amber-800);         /* attention — the most-used state */
+  --warning-wash: var(--ramp-amber-050);
+  --warning-edge: var(--ramp-amber-600);    /* NON-TEXT ONLY. Never carries a glyph. */
+
+  --danger: var(--ramp-red-700);
+  --danger-wash: var(--ramp-red-050);
+
+  --focus: var(--accent);
+  --focus-inverse: var(--ramp-paper-000);   /* the ring on an accent-filled surface */
+
+  --scrim: rgb(20 23 26 / 0.45);
+
+  /* Elevation (§8). Anything in the document flow is flat: a hairline plus a
+     half-step of surface tone does all the separating. Shadow is a cue, never
+     the only one — every elevated layer also carries a border. */
+  --elev-0: none;
+  --elev-1: 0 1px 2px rgb(20 23 26 / 0.06), 0 2px 8px rgb(20 23 26 / 0.06);
+  --elev-2: 0 4px 12px rgb(20 23 26 / 0.10);
+  --elev-3: 0 12px 28px rgb(20 23 26 / 0.14);
+  --elev-4: 0 20px 48px rgb(20 23 26 / 0.18);
+
+  color-scheme: light;
+}
+
+/* The system's one forbidden pair: --ink-faint on --surface-sunken measures
+   4.43:1. On a sunken ground, step up to --ink-muted (5.08:1). Nothing
+   lighter than --ink-faint may carry text in either theme. */
+
+/* ------------------------------------------------------------------ *
+ * 2b. SEMANTIC — dark theme, "Slate" (§4.3).
+ *
+ * Not an inversion, and not OLED black. Five rules that are not optional:
+ *   1. No pure black ground, no pure white text.
+ *   2. Elevation is lightness, not shadow — every floating layer moves one
+ *      step up the surface ramp AND keeps its 1px --line border.
+ *   3. Hover goes LIGHTER. Reusing the light-theme direction reads as disabled.
+ *   4. A filled accent takes dark text. #FFFFFF on --accent measures 2.26:1.
+ *   5. Washes lose their power here, so nothing load-bearing may rest on one.
+ * ------------------------------------------------------------------ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --canvas: var(--ramp-slate-950);
+    --surface: var(--ramp-slate-900);       /* LIGHTER than canvas: elevation goes up */
+    --surface-sunken: var(--ramp-slate-990);
+    --surface-raised: var(--ramp-slate-850);
+
+    --ink: var(--ramp-slate-100);           /* never #FFFFFF — that is the halation source */
+    --ink-soft: var(--ramp-slate-200);
+    --ink-muted: var(--ramp-slate-350);
+    --ink-faint: var(--ramp-slate-400);
+
+    --line: var(--ramp-slate-800);
+    --line-strong: var(--ramp-slate-600);
+
+    --accent: var(--ramp-indigo-300);
+    --accent-strong: var(--ramp-indigo-200); /* lighter, not darker */
+    --accent-wash: var(--ramp-indigo-950);
+    --on-accent: var(--ramp-indigo-990);     /* dark text on a filled accent */
+
+    --success: var(--ramp-green-400);
+    --success-wash: var(--ramp-green-950);
+
+    --warning: var(--ramp-amber-400);
+    --warning-wash: var(--ramp-amber-950);
+    --warning-edge: var(--ramp-amber-500);
+
+    --danger: var(--ramp-red-300);
+    --danger-wash: var(--ramp-red-950);
+
+    --focus: var(--accent);
+    --focus-inverse: var(--ramp-indigo-990);
+
+    --scrim: rgb(0 0 0 / 0.65);
+
+    --elev-0: none;
+    --elev-1: 0 1px 2px rgb(0 0 0 / 0.40);
+    --elev-2: 0 4px 12px rgb(0 0 0 / 0.50);
+    --elev-3: 0 12px 28px rgb(0 0 0 / 0.55);
+    --elev-4: 0 20px 48px rgb(0 0 0 / 0.60);
+
+    color-scheme: dark;
+  }
+}
+
+/* An explicit choice wins over the system preference. Same values as the
+   block above; the selector is the only difference. */
+:root[data-theme="dark"] {
+  --canvas: var(--ramp-slate-950);
+  --surface: var(--ramp-slate-900);
+  --surface-sunken: var(--ramp-slate-990);
+  --surface-raised: var(--ramp-slate-850);
+
+  --ink: var(--ramp-slate-100);
+  --ink-soft: var(--ramp-slate-200);
+  --ink-muted: var(--ramp-slate-350);
+  --ink-faint: var(--ramp-slate-400);
+
+  --line: var(--ramp-slate-800);
+  --line-strong: var(--ramp-slate-600);
+
+  --accent: var(--ramp-indigo-300);
+  --accent-strong: var(--ramp-indigo-200);
+  --accent-wash: var(--ramp-indigo-950);
+  --on-accent: var(--ramp-indigo-990);
+
+  --success: var(--ramp-green-400);
+  --success-wash: var(--ramp-green-950);
+
+  --warning: var(--ramp-amber-400);
+  --warning-wash: var(--ramp-amber-950);
+  --warning-edge: var(--ramp-amber-500);
+
+  --danger: var(--ramp-red-300);
+  --danger-wash: var(--ramp-red-950);
+
+  --focus: var(--accent);
+  --focus-inverse: var(--ramp-indigo-990);
+
+  --scrim: rgb(0 0 0 / 0.65);
+
+  --elev-0: none;
+  --elev-1: 0 1px 2px rgb(0 0 0 / 0.40);
+  --elev-2: 0 4px 12px rgb(0 0 0 / 0.50);
+  --elev-3: 0 12px 28px rgb(0 0 0 / 0.55);
+  --elev-4: 0 20px 48px rgb(0 0 0 / 0.60);
+
+  color-scheme: dark;
+}
+
+/* ------------------------------------------------------------------ *
+ * SPACING — 4px base grid (§6). One ladder, no values between steps.
+ * A value off the ladder is a defect. Tailwind's own scale is the same
+ * grid (`--spacing: 0.25rem`, index.css), so `p-4` and `var(--space-4)`
+ * are the same 16px.
+ * ------------------------------------------------------------------ */
+:root {
+  --space-1: 4px;     /* icon-to-label, chip padding */
+  --space-2: 8px;     /* control inner padding, tight stacks */
+  --space-3: 12px;    /* chrome padding, table cell padding */
+  --space-4: 16px;    /* card padding, standard stack gap */
+  --space-5: 20px;    /* document block padding */
+  --space-6: 24px;    /* panel padding, section gap */
+  --space-8: 32px;    /* column gap, major section gap */
+  --space-10: 40px;   /* page side padding */
+  --space-12: 48px;   /* page top padding */
+  --space-16: 64px;   /* clearing fixed chrome — and nothing else */
+
+  /* Control sizing. Floors, not targets. The 24px floor is WCAG 2.2 2.5.8
+     and applies to inline text buttons too. */
+  --control-height: 36px;          /* button, input, select */
+  --control-height-compact: 32px;  /* chrome control, icon button */
+  --target-min: 24px;              /* the absolute floor for any target */
+  --row-height: 44px;              /* table row */
+}
+
+/* ------------------------------------------------------------------ *
+ * TYPOGRAPHY (§5). Two reading registers and one machine register, all
+ * three self-hosted — deterministic offline operation is a first-class
+ * mode, so a font CDN is not permissible. The faces load in main.tsx;
+ * the families and the scale are declared in the @theme block.
+ *
+ * The register split is NOT the provenance signal: serif means "this is
+ * document content", whoever wrote it. Provenance is ground plus label.
+ * ------------------------------------------------------------------ */
+:root {
+  font-family: var(--font-ui);
+  font-synthesis: none;          /* ship the real weights, never fake them */
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  /* Light weights are prohibited: they fail contrast at small sizes even
+     when the colour passes. There is no third weight axis. */
+
+  /* Measure. A requirement body running the full width of a 1440px screen
+     is unreadable however much room there is. */
+  --measure-document: 68ch;
+  --measure-interface: 80ch;
+
+  color: var(--ink);
+  background: var(--canvas);
+}
+
+/* ------------------------------------------------------------------ *
+ * MOTION (§9). Motion explains a change of state, never decorates.
+ * 120–320ms. `transform` and `opacity` only — never width, height, top,
+ * left or margin. Linear easing is prohibited for UI.
+ * The easing curves live in the @theme block (see the header note).
+ * ------------------------------------------------------------------ */
+:root {
+  --motion-fast: 120ms;     /* hover, focus, colour and border changes */
+  --motion-base: 180ms;     /* the default: disclosure, chip toggle, tab change */
+  --motion-slow: 240ms;     /* popovers, dropdowns, toast entry */
+  --motion-slower: 320ms;   /* drawers and modals — the largest travel */
+}
+
+/* ------------------------------------------------------------------ *
+ * LAYOUT AND Z-INDEX (§10). One shell on every route. One named z scale,
+ * nothing outside it, nothing above 50.
+ * ------------------------------------------------------------------ */
+:root {
+  --header-height: 56px;
+  --sidebar-width: 240px;
+  --sidebar-width-collapsed: 56px;
+  --stage-rail-width: 240px;
+  --main-max-width: 1360px;
+
+  --z-base: 1;      /* in-flow lifts, sticky rails */
+  --z-sticky: 10;   /* sticky table headers, stage rail */
+  --z-chrome: 20;   /* fixed header, sidebar */
+  --z-overlay: 40;  /* modal scrim and dialog, drawers */
+  --z-top: 50;      /* toast stack, notification popover, skip link */
+
+  /* WCAG 2.2 2.4.11 — focus must not be obscured. Every scroll container
+     sitting under fixed chrome clears the header plus 8px. */
+  scroll-padding-top: calc(var(--header-height) + var(--space-2));
+}

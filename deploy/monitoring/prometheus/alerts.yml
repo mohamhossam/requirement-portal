@@ -1,0 +1,71 @@
+# The alerts suggested in docs/operations/deployment.md ("Metrics"), plus a
+# scrape-target check. Firing alerts show in Grafana (Alerting > Alert rules)
+# and in Prometheus. Nothing is sent anywhere until an Alertmanager is added.
+# Thresholds are starting points: tune them to your traffic and budget.
+
+groups:
+  - name: requirement-ai
+    rules:
+      - alert: ProcessDown
+        expr: up{job=~"api|worker"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.job }} {{ $labels.instance }} is not serving metrics"
+          description: "Prometheus cannot scrape this container. Check `docker compose ps` and its logs."
+
+      - alert: HttpServerErrors
+        expr: |
+          sum(rate(smb_http_requests_total{status=~"5.."}[5m]))
+            / sum(rate(smb_http_requests_total[5m])) > 0.05
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "More than 5% of API requests fail with a 5xx status"
+
+      - alert: ProviderErrors
+        expr: |
+          sum by (provider) (rate(smb_provider_requests_total{outcome=~"4xx|5xx|error"}[10m]))
+            / sum by (provider) (rate(smb_provider_requests_total[10m])) > 0.10
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "More than 10% of {{ $labels.provider }} requests fail"
+          description: "Usually quota, authentication or a provider outage."
+
+      - alert: AiJobsFailing
+        expr: sum by (operation) (increase(smb_ai_jobs_total{status=~"failed|error"}[15m])) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: "AI job attempts for {{ $labels.operation }} are failing"
+
+      - alert: SlowAiGeneration
+        expr: |
+          histogram_quantile(0.95,
+            sum by (le, provider) (rate(smb_provider_request_duration_seconds_bucket{operation="generation"}[15m]))
+          ) > 120
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "95th-percentile {{ $labels.provider }} generation takes over 2 minutes"
+
+      - alert: RateLimitBiting
+        expr: sum(increase(smb_http_requests_total{status="429"}[15m])) > 10
+        labels:
+          severity: info
+        annotations:
+          summary: "Users are hitting PROVIDER_RATE_LIMIT_PER_MINUTE"
+          description: "More than 10 refused requests in 15 minutes. Raise the limit if this is legitimate use."
+
+      - alert: DailyTokenBudgetExceeded
+        # Replace 5000000 with your own daily token budget.
+        expr: sum(increase(smb_provider_tokens_total[24h])) > 5000000
+        labels:
+          severity: warning
+        annotations:
+          summary: "Provider token use in the last 24 hours is over budget"

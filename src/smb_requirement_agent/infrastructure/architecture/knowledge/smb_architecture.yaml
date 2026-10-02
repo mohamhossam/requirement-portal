@@ -1,0 +1,319 @@
+version: smb-source-reference-v1
+systems:
+  - id: b2b-web
+    name: B2B Web
+    aliases: [B2B digital channel, web channel]
+    capabilities:
+      - id: self-service-ordering
+        name: Self-service ordering
+        triggers: [self-service ordering, web ordering, digital ordering]
+        domain: order-capture
+  - id: smb-app
+    name: SMB App
+    aliases: [mobile app]
+    capabilities:
+      - id: mobile-self-service
+        name: Mobile self-service
+        triggers: [mobile self-service, app ordering, mobile ordering]
+        domain: order-capture
+  - id: saas-self-service-portal
+    name: SaaS Self-Service Portal
+    aliases: [self-service portal, kiosk]
+    capabilities:
+      - id: saas-ordering
+        name: SaaS ordering
+        triggers: [saas ordering, kiosk ordering]
+        domain: order-capture
+  - id: b2b-bff
+    name: B2B BFF
+    aliases: [common BFF, BFF backend]
+    capabilities:
+      - id: digital-backend
+        name: Digital-channel backend
+        triggers: [backend for frontend, digital channel backend]
+        domain: enabling
+  - id: oracle-atg-bcc
+    name: Oracle ATG BCC
+    aliases: [BCC, ATG, product catalog]
+    capabilities:
+      - id: product-catalogue
+        name: Product catalogue
+        triggers: [product catalogue, product catalog, catalogue upload, catalog upload]
+        domain: product-catalogue
+  - id: bcrm
+    name: BCRM
+    aliases: [Microsoft Dynamics sales CRM, sales CRM]
+    capabilities:
+      - id: assisted-sales
+        name: Assisted sales, quoting, and order capture
+        triggers: [assisted sales, assisted channel, sales quoting, quote capture]
+        domain: order-capture
+  - id: cim
+    name: CIM
+    aliases: [customer care screen]
+    capabilities:
+      - id: customer-care
+        name: Customer care
+        triggers: [customer care, care agent]
+        domain: customer-management
+  - id: dcrm
+    name: DCRM
+    aliases: [backoffice order capture]
+    capabilities:
+      - id: backoffice-orders
+        name: Back-office order capture
+        triggers: [back office order, backoffice order]
+        domain: order-capture
+  - id: cbcm-crmgw
+    name: CBCM / CRMGW
+    aliases: [CBCM, CRMGW, CRM GW, central customer database]
+    capabilities:
+      - id: customer-master
+        name: Customer and eligibility master
+        triggers: [customer master, customer data, eligibility check, exit offer penalty]
+        domain: customer-management
+  - id: netcracker-cpm
+    name: Netcracker CPM
+    aliases: [CPM, complaint management]
+    capabilities:
+      - id: complaints
+        name: Complaint management
+        triggers: [customer complaint, complaint case]
+        domain: customer-management
+  - id: rtf
+    name: RTF
+    aliases: [RTF CFS catalog, mobile order orchestration]
+    capabilities:
+      - id: mobile-fulfilment
+        name: Mobile order orchestration
+        triggers: [mobile fulfilment, mobile fulfillment, mobile provisioning]
+        domain: order-fulfilment
+  - id: cwom
+    name: CWOM
+    aliases: [fixed order orchestration]
+    capabilities:
+      - id: fixed-fulfilment
+        name: Fixed order orchestration
+        triggers: [fixed fulfilment, fixed fulfillment, fixed provisioning, order orchestration]
+        domain: order-fulfilment
+  - id: ericsson-ecm
+    name: Ericsson ECM
+    aliases: [ECM catalog, ECM catalogue]
+    capabilities:
+      - id: fixed-catalogue
+        name: Fixed-product catalogue
+        triggers: [fixed product catalog, fixed product catalogue]
+        domain: product-catalogue
+  - id: netcracker-crm
+    name: Netcracker CRM / CSRD
+    aliases: [NC CRM, CSRD, Netcracker CRM]
+    capabilities:
+      - id: transformed-crm
+        name: Transformation-platform CRM
+        triggers: [transformation crm, new crm, netcracker transformation]
+        domain: customer-management
+  - id: tibco
+    name: TIBCO
+    aliases: [integration backbone]
+    capabilities:
+      - id: external-integration
+        name: External and government integration
+        triggers: [government integration, external integration, integration backbone]
+        domain: enabling
+  - id: ibm-bpm
+    name: IBM BPM
+    aliases: [BPM]
+    capabilities:
+      - id: process-orchestration
+        name: Process orchestration
+        triggers: [business process orchestration, workflow orchestration]
+        domain: enabling
+  - id: felix
+    name: Felix
+    aliases: [milestone tracking]
+    capabilities:
+      - id: order-milestones
+        name: Order milestone tracking
+        triggers: [order milestone, order tracking, delivery tracking]
+        domain: order-fulfilment
+  - id: cns
+    name: CNS
+    aliases: [notification service]
+    capabilities:
+      - id: notifications
+        name: SMS, email, and OTP notifications
+        triggers: [sms notification, email notification, otp notification, customer notification]
+        domain: enabling
+  - id: gis
+    name: GIS
+    aliases: [network feasibility]
+    capabilities:
+      - id: feasibility
+        name: Network feasibility
+        triggers: [service availability, coverage check, feasibility check, network coverage]
+        domain: resource-service
+  - id: edms
+    name: EDMS
+    aliases: [document management]
+    capabilities:
+      - id: documents
+        name: Document management
+        triggers: [document storage, document management]
+        domain: enabling
+  - id: ocr
+    name: OCR
+    aliases: [optical character recognition]
+    capabilities:
+      - id: document-extraction
+        name: Document data extraction
+        triggers: [scan document, extract document, document recognition]
+        domain: enabling
+  - id: eida
+    name: EIDA
+    aliases: [national ID verification]
+    capabilities:
+      - id: identity-verification
+        name: National identity verification
+        triggers: [national id, identity verification]
+        domain: enabling
+  - id: adfs
+    name: ADFS
+    aliases: [single sign-on, SSO]
+    capabilities:
+      - id: authentication
+        name: Enterprise authentication
+        triggers: [single sign on, user authentication]
+        domain: enabling
+  - id: service-now
+    name: ServiceNow
+    aliases: [Service Now]
+    capabilities:
+      - id: service-ticketing
+        name: Service and delivery ticketing
+        triggers: [service ticket, delivery ticket]
+        domain: assurance
+  - id: hpsm
+    name: HPSM
+    aliases: [HP Service Manager]
+    capabilities:
+      - id: service-management
+        name: Service management
+        triggers: [service management ticket]
+        domain: assurance
+  - id: remedy
+    name: Remedy
+    aliases: [assurance ticketing]
+    capabilities:
+      - id: assurance
+        name: Assurance ticketing
+        triggers: [assurance ticket, fault ticket]
+        domain: assurance
+  - id: sla-management
+    name: SLA Management
+    aliases: [SLA provisioning]
+    capabilities:
+      - id: sla
+        name: SLA provisioning
+        triggers: [service level agreement, sla provisioning]
+        domain: order-fulfilment
+  - id: wfm
+    name: WFM
+    aliases: [workforce management, manual work orders]
+    capabilities:
+      - id: field-work
+        name: Manual and field work orders
+        triggers: [field work order, manual fulfilment, manual fulfillment]
+        domain: order-fulfilment
+  - id: bscs
+    name: BSCS
+    aliases: [billing system]
+    capabilities:
+      - id: billing
+        name: Billing
+        triggers: [billing update, customer billing, charging]
+        domain: billing
+  - id: network-inventory
+    name: Network / SIM / Device / Number Inventory
+    aliases: [NRM, SIM inventory, device inventory, number inventory]
+    capabilities:
+      - id: inventory
+        name: Resource inventory
+        triggers: [inventory allocation, sim allocation, device allocation, number allocation]
+        domain: resource-service
+  - id: service-activation
+    name: eVEDA / E2ESO / XaaS / IN
+    aliases: [eVEDA, E2ESO, XaaS, activation systems]
+    capabilities:
+      - id: activation
+        name: Network and service activation
+        triggers: [service activation, network activation, activate service]
+        domain: resource-service
+capability_domains:
+  - id: order-capture
+    name: Order capture
+    description: Taking a customer's order in a digital, assisted or back-office channel.
+  - id: product-catalogue
+    name: Product catalogue
+    description: The products, offers and fixed-line catalogue that orders draw on.
+  - id: customer-management
+    name: Customer management
+    description: Customer records, eligibility, care and complaints.
+  - id: order-fulfilment
+    name: Order orchestration and fulfilment
+    description: Driving an order to completion, including field work, milestones and SLAs.
+  - id: resource-service
+    name: Resource and service
+    description: Network feasibility, resource inventory and service activation.
+  - id: assurance
+    name: Assurance
+    description: Service tickets and service management after delivery.
+  - id: billing
+    name: Billing
+    description: Charging and invoicing for what was ordered.
+  - id: enabling
+    name: Enabling and integration
+    description: Shared backends, integration, notifications, documents and identity.
+dependencies:
+  - source_system_id: b2b-web
+    target_system_id: b2b-bff
+    description: Digital web journeys use the common BFF backend.
+    kind: calls_api
+  - source_system_id: b2b-bff
+    target_system_id: oracle-atg-bcc
+    description: Digital channels read the shared product catalogue through the BFF.
+    kind: calls_api
+  - source_system_id: b2b-bff
+    target_system_id: cbcm-crmgw
+    description: Digital order journeys read customer and eligibility data through CRM GW.
+    kind: calls_api
+  - source_system_id: dcrm
+    target_system_id: cbcm-crmgw
+    description: DCRM captures back-office orders against the central customer domain.
+  - source_system_id: cbcm-crmgw
+    target_system_id: rtf
+    description: Validated digital orders are submitted to mobile order orchestration.
+    kind: transfers_data_to
+  - source_system_id: rtf
+    target_system_id: cwom
+    description: RTF translates relevant orders into the fixed orchestration format.
+    kind: orchestrates
+  - source_system_id: cwom
+    target_system_id: felix
+    description: CWOM milestones feed order tracking through Felix.
+    kind: publishes_events_to
+  - source_system_id: cwom
+    target_system_id: service-activation
+    description: Fulfilment triggers the appropriate network or service activation system.
+    kind: orchestrates
+  - source_system_id: cwom
+    target_system_id: wfm
+    description: Manual fulfilment steps are issued as work orders.
+    kind: orchestrates
+  - source_system_id: cwom
+    target_system_id: bscs
+    description: Order closure updates billing.
+    kind: transfers_data_to
+  - source_system_id: cwom
+    target_system_id: cns
+    description: Order milestones trigger customer notifications.
+    kind: publishes_events_to

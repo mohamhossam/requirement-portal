@@ -1,0 +1,56 @@
+/* What is left of the Backlog's own stylesheet.
+ *
+ * The Epic -> Feature -> Story tree used to live here as a third column in a
+ * second visual language: its own font stack (`system-ui`), its own red
+ * (#b52e2e), its own hairlines (#dce3ec) and a white ground that the dark theme
+ * turned into near-invisible text on near-white. docs/ux-plan.md §3.3 records
+ * the cost ("Backlog is a different application") and §4 the decision. The tree
+ * is now BacklogTree.tsx, styled in utilities beside its own markup and folded
+ * into the requirement's rail, so this file no longer describes it at all.
+ *
+ * ADR-0045 is superseded. What remains is the two disclosure shapes the backlog
+ * cards share. The login rules that used to sit at the foot went with the old
+ * login page; LoginPage.tsx carries its own utilities now.
+ */
+
+/* Below `lg` the six steps scroll sideways. A themed thin scrollbar is the
+   cheapest honest cue that steps 4-6 exist; without it the row simply ends. */
+.stage-rail-steps { scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+.stage-rail-steps::-webkit-scrollbar { height: 4px; }
+.stage-rail-steps::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: var(--radius-full); }
+/* The scrollbar is an overlay on this platform and stays hidden until someone
+   already knows to scroll, which is the wrong way round: the capture showed 3
+   of 6 steps ending in clean canvas. The fade says the row continues whether or
+   not the scrollbar has decided to appear. It is removed once the rail is a
+   column and there is nothing to scroll. */
+@media (width < theme(--breakpoint-lg)) {
+  .stage-rail-steps {
+    mask-image: linear-gradient(to right, rgb(0 0 0) calc(100% - 3rem), rgb(0 0 0 / 0.4) 100%);
+  }
+  .stage-rail-steps:not(:hover) { scrollbar-color: var(--line-strong) transparent; }
+}
+
+/* An inline disclosure inside a card: a rule above it, and content that pushes
+   rather than floats. */
+.workspace-disclosure { margin: var(--space-4) 0 0; border-top: 1px solid var(--line); padding-top: var(--space-3); font-size: var(--text-body); }
+.workspace-disclosure > summary { cursor: pointer; min-height: max(var(--target-min), var(--space-8)); display: flex; align-items: center; gap: var(--space-2); color: var(--ink); font-weight: 600; list-style: none; }
+/* Both are needed: `list-style: none` covers Firefox, the pseudo-element covers
+   WebKit. Disclosure.tsx draws the chevron that replaces them. */
+.workspace-disclosure > summary::-webkit-details-marker { display: none; }
+
+/* "More actions", which sits in a row of buttons and therefore has to read as
+   one. It is still a disclosure and still pushes its content down — it used to
+   be a `<details>` dressed as a dropdown, which answered neither Escape nor a
+   click outside, and moved the card's body on open with no warning. */
+.workspace-disclosure-inline > summary {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: var(--control-height); padding: 0 var(--space-4);
+  border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
+  background: transparent; color: var(--ink);
+  font-size: var(--text-body); font-weight: 600; cursor: pointer;
+  transition: background-color var(--motion-fast) ease-out, border-color var(--motion-fast) ease-out;
+}
+.workspace-disclosure-inline > summary:hover {
+  background-color: color-mix(in srgb, var(--accent) 10%, var(--surface));
+}
+

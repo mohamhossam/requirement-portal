@@ -1,0 +1,14 @@
+/* The persona switcher in the header (fake identity in development).
+ *
+ * The People panel's rules that lived here went with redesign Phase 10: the
+ * panel is built from the primitives now. */
+.actor-menu { display: flex; align-items: center; gap: 10px; border-right: 1px solid var(--line); padding-right: 12px; }
+.actor-menu > span { display: grid; text-align: right; }
+.actor-menu strong { font-size: .78rem; }
+.actor-menu small { color: var(--ink-muted); font-size: .68rem; }
+.actor-menu select { min-width: 9rem; padding: 7px 9px; }
+
+@media (width < theme(--breakpoint-lg)) {
+  /* Name and email need about 100px the header has not got until lg. */
+  .actor-menu > span { display: none; }
+}

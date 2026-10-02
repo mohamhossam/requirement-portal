@@ -1,0 +1,21 @@
+{
+  "measured_at": "2026-09-22T09:38:00.827309+00:00",
+  "source_model": "gemini-embedding-001",
+  "target_model": "gemini-embedding-2",
+  "source_identity": "e8203407e9abafcc5f2e67d5a030284923940a1219849a3fcacbeaec5bd95929:structure-512-768-v1:utf8-byte-upper-bound-v1:normalize-ar-v1",
+  "target_identity": "fb9c69d10d99d4cad5d74c5724dd736b52984cf414118f7be4f57f127e854cb0:structure-512-768-v1:utf8-byte-upper-bound-v1:normalize-ar-v1",
+  "owners": 2,
+  "documents": 2,
+  "result": "passed",
+  "checks": [
+    "owner authority",
+    "all-owner readiness gate",
+    "model identity isolation",
+    "activation",
+    "rollback by reviewed rebuild",
+    "excluded text",
+    "old citation staleness",
+    "immutable extraction/review history"
+  ],
+  "scope": "Live providers with synthetic in-memory corpus; deployed maintenance still required."
+}

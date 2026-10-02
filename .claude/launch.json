@@ -1,0 +1,24 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "frontend"],
+      "port": 5173
+    },
+    {
+      "name": "api-fake",
+      "runtimeExecutable": ".venv/Scripts/python.exe",
+      "runtimeArgs": ["-m", "uvicorn", "smb_requirement_agent.interfaces.api.main:app", "--host", "127.0.0.1", "--port", "8000"],
+      "port": 8000,
+      "env": {
+        "LLM_PROVIDER": "fake",
+        "PERSISTENCE_PROVIDER": "memory",
+        "IDENTITY_PROVIDER": "fake",
+        "LIBRARY_SCAN_MODE": "offline",
+        "PROVIDER_RATE_LIMIT_PER_MINUTE": "0"
+      }
+    }
+  ]
+}

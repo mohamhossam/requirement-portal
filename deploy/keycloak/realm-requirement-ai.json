@@ -1,0 +1,114 @@
+{
+  "realm": "requirement-ai",
+  "enabled": true,
+  "displayName": "Requirement AI",
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "editUsernameAllowed": false,
+  "rememberMe": true,
+  "verifyEmail": true,
+  "resetPasswordAllowed": true,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "failureFactor": 5,
+  "waitIncrementSeconds": 60,
+  "maxFailureWaitSeconds": 900,
+  "maxDeltaTimeSeconds": 43200,
+  "passwordPolicy": "length(12) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1) and notUsername(undefined)",
+  "loginTheme": "requirement-ai",
+  "eventsEnabled": true,
+  "eventsExpiration": 2592000,
+  "smtpServer": {
+    "host": "${SMTP_HOST}",
+    "port": "${SMTP_PORT}",
+    "from": "${SMTP_FROM}",
+    "fromDisplayName": "Requirement AI",
+    "auth": "true",
+    "user": "${SMTP_USERNAME}",
+    "password": "${SMTP_PASSWORD}",
+    "starttls": "true"
+  },
+  "clients": [
+    {
+      "clientId": "requirement-spa",
+      "name": "Requirement AI browser",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "frontchannelLogout": true,
+      "rootUrl": "${REQUIREMENT_APP_ORIGIN}",
+      "baseUrl": "${REQUIREMENT_APP_ORIGIN}",
+      "redirectUris": [
+        "${REQUIREMENT_APP_ORIGIN}/auth/callback",
+        "${REQUIREMENT_APP_ORIGIN}/auth/silent-callback"
+      ],
+      "webOrigins": ["${REQUIREMENT_APP_ORIGIN}"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "${REQUIREMENT_APP_ORIGIN}/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "requirement-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "requirement-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "authenticationFlows": [
+    {
+      "alias": "deny-unlinked-company-sso",
+      "description": "Microsoft access requires an administrator-created identity link.",
+      "providerId": "basic-flow",
+      "topLevel": true,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "deny-access-authenticator",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "userSetupAllowed": false
+        }
+      ]
+    }
+  ],
+  "identityProviders": [
+    {
+      "alias": "company-sso",
+      "displayName": "Microsoft",
+      "providerId": "oidc",
+      "enabled": true,
+      "trustEmail": false,
+      "storeToken": false,
+      "linkOnly": false,
+      "firstBrokerLoginFlowAlias": "deny-unlinked-company-sso",
+      "config": {
+        "clientId": "${ENTRA_CLIENT_ID}",
+        "clientSecret": "${ENTRA_CLIENT_SECRET}",
+        "issuer": "https://login.microsoftonline.com/${ENTRA_TENANT_ID}/v2.0",
+        "authorizationUrl": "https://login.microsoftonline.com/${ENTRA_TENANT_ID}/oauth2/v2.0/authorize",
+        "tokenUrl": "https://login.microsoftonline.com/${ENTRA_TENANT_ID}/oauth2/v2.0/token",
+        "userInfoUrl": "https://graph.microsoft.com/oidc/userinfo",
+        "jwksUrl": "https://login.microsoftonline.com/${ENTRA_TENANT_ID}/discovery/v2.0/keys",
+        "defaultScope": "openid profile email",
+        "validateSignature": "true",
+        "useJwksUrl": "true",
+        "syncMode": "IMPORT"
+      }
+    }
+  ]
+}

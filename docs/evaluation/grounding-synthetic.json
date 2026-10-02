@@ -1,0 +1,5 @@
+[
+  {"case_id":"supported-fixture","reviewer":"synthetic fixture, not human qualification","answerable":true,"abstained":false,"supported":true,"applicability_preserved":true,"conflict_present":false,"conflict_handled":null},
+  {"case_id":"unsupported-fixture","reviewer":"synthetic fixture, not human qualification","answerable":false,"abstained":false,"supported":false,"applicability_preserved":false,"conflict_present":true,"conflict_handled":false},
+  {"case_id":"abstention-fixture","reviewer":"synthetic fixture, not human qualification","answerable":false,"abstained":true,"supported":null,"applicability_preserved":null,"conflict_present":true,"conflict_handled":true}
+]

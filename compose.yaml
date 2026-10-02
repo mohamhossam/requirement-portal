@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg17@sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f
+    environment:
+      POSTGRES_DB: smb_requirements
+      POSTGRES_USER: smb
+      POSTGRES_PASSWORD: smb_dev
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - smb_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smb -d smb_requirements"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  smb_postgres_data:

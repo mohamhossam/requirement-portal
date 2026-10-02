@@ -1,0 +1,58 @@
+import { expect } from "@playwright/test";
+import { test } from "./library-fixture";
+import { execFileSync } from "node:child_process";
+import path from "node:path";
+
+test("Word row exclusions remove headers, merged anchors and nested table text from publication", async ({ page, request }, testInfo) => {
+  if (testInfo.project.name === "responsive-chromium") await page.setViewportSize({ width: 390, height: 1000 });
+  const root = path.resolve(import.meta.dirname, "../..");
+  const python = process.env.SMOKE_PYTHON ?? (process.platform === "win32" ? path.join(root, ".venv/Scripts/python.exe") : "python");
+  const buffer = execFileSync(python, ["-c", "import sys; from tests.word_table_fixtures import reviewed_word_table_document; sys.stdout.buffer.write(reviewed_word_table_document())"], { cwd: root });
+  const title = `Word policy ${crypto.randomUUID()}`;
+  await page.goto("/documents/library");
+  await page.getByLabel("Document title", { exact: true }).fill(title);
+  await page.getByLabel("Original file", { exact: true }).setInputFiles({ name: "policy.docx", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", buffer });
+  await page.getByRole("button", { name: "Upload for private review" }).click();
+  await expect(page.getByRole("heading", { name: "Review extracted passages" })).toBeVisible({ timeout: 30000 });
+  await expect(page.getByText(/headers and merged-cell wording are not copied/).first()).toBeVisible();
+  const passages = page.getByRole("textbox", { name: "Reviewed text", exact: true });
+  await expect(passages).toHaveCount(6);
+  await expect(passages.nth(3)).toHaveValue(/vertical merge continuation.*R3C2: XGPON التغطية مطلوبة/);
+  await expect(passages.nth(4)).toHaveValue(/Private nested rule/);
+  for (const index of [0, 1, 2, 4, 5]) {
+    await page.getByRole("checkbox", { name: "Include in shared publication" }).nth(index).uncheck();
+  }
+  const reasons = page.getByLabel("Reason for exclusion");
+  for (let index = 0; index < 5; index++) await reasons.nth(index).fill("Outside approved shared policy");
+  await page.getByLabel("Review summary").fill("Checked row grid and excluded private headers, anchor and nested table");
+  await page.getByRole("button", { name: "Save extraction review" }).click();
+  await page.getByRole("button", { name: "Preview table-aware version" }).click();
+  const build = page.locator("section").filter({ has: page.getByRole("heading", { name: "Build table-aware search version" }) });
+  await expect(build.getByText("Field label for context: R3C2:").first()).toBeVisible();
+  await expect(build.getByText(/Private|Different table context/)).toHaveCount(0);
+  await expect(build.locator(".library-passage > p.library-text").filter({ hasText: "nested table 1 follows separately" })).toBeVisible();
+  await build.screenshot({ path: testInfo.outputPath("word-table-preview.png") });
+  await page.getByRole("button", { name: "Approve and build search version" }).click();
+  await expect(page.getByText(/Build ready · \d+ chunks/)).toBeVisible({ timeout: 30000 });
+  await page.getByRole("checkbox", { name: "I understand that previous citations will need reconciliation." }).check();
+  await page.getByRole("button", { name: "Activate built version" }).click();
+  await expect(page.getByText("Published and searchable", { exact: true })).toBeVisible();
+  await page.getByLabel("Search text", { exact: true }).fill("XGPON");
+  await page.getByRole("button", { name: "Search published passages" }).click();
+  const results = page.getByRole("region", { name: "Search results" });
+  const citation = results.getByRole("link", { name: `${title} · version 1 · Table 1, row 3` }).first();
+  await expect(citation).toBeVisible();
+  await expect(results.getByText(/Private|Different table context/)).toHaveCount(0);
+  const documentId = new URL(page.url()).pathname.split("/").at(-1);
+  const apiRoot = `http://127.0.0.1:${process.env.SMOKE_API_PORT ?? "8000"}`;
+  const publicResponse = await request.get(`${apiRoot}/library/documents/${documentId}`, { headers: { "X-Fake-Actor-Id": "fake-observer" } });
+  expect(publicResponse.ok()).toBe(true);
+  const publicDocument = await publicResponse.json();
+  expect(publicDocument.versions[0].blocks).toHaveLength(1);
+  expect(publicDocument.versions[0].blocks[0].label).toBe("Table 1, row 3");
+  await page.goto((await citation.getAttribute("href"))!);
+  const cited = page.getByRole("region", { name: "Cited published passage" });
+  await expect(cited.getByRole("heading", { name: "Table 1, row 3" })).toBeVisible();
+  await expect(cited.getByText(/Private|Different table context/)).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});

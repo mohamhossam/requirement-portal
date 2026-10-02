@@ -1,0 +1,251 @@
+/* Application stylesheet.
+ *
+ * Layer order, first mention wins least. Everything the app has ever written
+ * lives in ONE layer, `app`; utilities come last so a utility class beats an
+ * app rule on the same element instead of losing to it silently.
+ *
+ *   theme       Tailwind's design tokens, bridged from tokens.css below
+ *   base        reserved; Tailwind's preflight is deliberately NOT imported
+ *   app         every file in this directory (see the import note below)
+ *   components  reserved for Tailwind @utility/@component output
+ *   utilities   Tailwind's utility classes
+ *
+ * Preflight is left out on purpose. It is a whole-document reset, and these
+ * 1400 lines were written against browser defaults: importing it would restyle
+ * every heading, list and form control in the app at once. The one thing it is
+ * missed for is borders — without it `border` sets a width but no style, so
+ * write `border border-solid`, or keep using an app rule.
+ */
+
+@layer theme, base, app, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+/* Scanned for class names: markup only. Explicit, so it does not depend on
+ * where the build happens to start looking, and narrow, because scanning the
+ * stylesheets made Tailwind emit utilities for words it found in CSS text
+ * (`transition`, `filter`, `outline`) that nothing renders. */
+@source "../**/*.{ts,tsx}";
+@source "../../index.html";
+
+/* Every selector is declared in exactly one of these files (media context
+ * included), which styles/selectors.test.ts enforces, so the order below no
+ * longer decides which of two declarations wins. It was load-bearing for years:
+ * three visual generations — the files that were 04-modernist.css and
+ * 08-stitch-foundation.css were nothing but overrides of 01 — redeclared 216
+ * selectors and relied on coming later. Phase 0.5 folded each one into a single
+ * declaration and deleted those files; a computed-style snapshot of 19 routes in
+ * both themes showed no difference.
+ *
+ * What order still does: tokens and base come first, and two different
+ * selectors of equal specificity that set the same property on one element are
+ * still resolved by position. Prefer a more specific selector, or a primitive,
+ * to relying on that.
+ */
+
+@import "./tokens.css" layer(app);
+@import "./base.css" layer(app);
+@import "./02-breakdown-workspace.css" layer(app);
+@import "./03-identity.css" layer(app);
+@import "./10-portfolio-reports.css" layer(app);
+/* The old 12-breakdown-tone.css, 13-toasts.css, 14-loading.css and 15-journey.css
+ * used to sit here. The tone file was status colour scoped to the Backlog shell
+ * and went with that shell; what was worth keeping in it — the document type
+ * register — became 12-document-register.css, and in Phase 10 moved into the
+ * components that set document prose (font-document text-document). The Toaster,
+ * the Skeleton, the StageRail and NextAction now carry their own styling, so the
+ * chain is three files shorter. The shell went the same way in this pass: the
+ * header, the sidebar, the page title and the state blocks are components with
+ * their own utilities. 04-modernist.css, 07-story-quality.css and
+ * 08-stitch-foundation.css went in Phase 0.5; 01-foundation.css,
+ * 06-source-documents.css, 09-breakdown-review.css and 12-document-register.css
+ * in Phase 10, when their last callers moved onto the primitives. */
+
+/* THE BRIDGE — docs/design-system.md §15: "theme values are declared once so
+ * theme() and the custom properties cannot drift."
+ *
+ * Two directions, and which one a token takes is decided by one thing only:
+ * whether its name collides with a Tailwind namespace.
+ *
+ *   tokens.css -> here    colour, elevation, type scale. tokens.css owns the
+ *                         value (it has to — these are redefined under the
+ *                         dark selector, and @theme only ever writes :root),
+ *                         and this block re-exports it as a utility.
+ *   here only             radius and easing. Tailwind's namespaces ARE
+ *                         `--radius-*` and `--ease-*`, so `--radius-sm:
+ *                         var(--radius-sm)` would be a self-reference.
+ *                         Declaring them here instead still puts them on
+ *                         :root, so `var(--radius-md)` works in plain CSS.
+ *
+ * `static` because most of these are read by `var()` in the stylesheets
+ * rather than through a utility class, and Tailwind drops a theme variable
+ * no utility mentions. Without it the type and radius ladders would be
+ * tree-shaken out from under the app's own CSS.
+ */
+@theme static {
+  /* -- Colour (§4). Values live in tokens.css and follow the theme. ------ */
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-raised: var(--surface-raised);
+
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-wash: var(--accent-wash);
+  --color-on-accent: var(--on-accent);
+
+  --color-success: var(--success);
+  --color-success-wash: var(--success-wash);
+  --color-warning: var(--warning);
+  --color-warning-wash: var(--warning-wash);
+  --color-warning-edge: var(--warning-edge);
+  --color-danger: var(--danger);
+  --color-danger-wash: var(--danger-wash);
+
+  --color-focus: var(--focus);
+  --color-focus-inverse: var(--focus-inverse);
+  --color-scrim: var(--scrim);
+
+
+  /* -- Type (§5) --------------------------------------------------------- *
+   * Three faces, self-hosted, loaded in main.tsx. Public Sans is the US Web
+   * Design System's interface face — deliberately characterless and heavily
+   * tested for legibility. Source Serif 4 is for reading paragraphs. The
+   * split also lets a person tell peripherally whether they are looking at
+   * the product or at the requirement.
+   *
+   * `font-sans` and `font-serif` are pointed at the same two faces so a
+   * stray Tailwind default cannot reintroduce a fourth family. */
+  --font-ui: "Public Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-document: "Source Serif 4", ui-serif, Georgia, Cambria, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+  --font-sans: var(--font-ui);
+  --font-serif: var(--font-document);
+
+  /* The scale. Sentence-case labels: all-caps is slower to read and reads as
+     institutional. Uppercase survives in exactly one place, the NEXT marker.
+     14px is the interface floor, 16px the document floor; nothing below 12px
+     renders anywhere, badges included. */
+  --text-display: 1.75rem;                 /* page h1 — the requirement's own title */
+  --text-display--line-height: 1.2;
+  --text-display--font-weight: 700;
+  --text-display--letter-spacing: -0.01em;
+
+  --text-headline: 1.25rem;                /* section and panel heading */
+  --text-headline--line-height: 1.3;
+  --text-headline--font-weight: 600;
+
+  --text-title: 1rem;                      /* card heading — an Epic, a finding group */
+  --text-title--line-height: 1.4;
+  --text-title--font-weight: 600;
+
+  --text-body: 0.875rem;                   /* interface prose, table cells, helper text */
+  --text-body--line-height: 1.5;
+  --text-body--font-weight: 400;
+
+  --text-document: 1rem;                   /* all requirement and generated prose */
+  --text-document--line-height: 1.6;
+  --text-document--font-weight: 400;
+
+  --text-document-lead: 1.125rem;          /* the business need, as first written */
+  --text-document-lead--line-height: 1.55;
+  --text-document-lead--font-weight: 400;
+
+  --text-label: 0.75rem;                   /* field labels, column headers, eyebrows */
+  --text-label--line-height: 1.3;
+  --text-label--font-weight: 600;
+  --text-label--letter-spacing: 0.04em;
+
+  --text-meta: 0.8125rem;                  /* timestamps, owners, counts */
+  --text-meta--line-height: 1.45;
+  --text-meta--font-weight: 400;
+
+  --text-mono: 0.8125rem;                  /* IDs, checksums, fingerprints */
+  --text-mono--line-height: 1.5;
+  --text-mono--font-weight: 400;
+
+  /* -- Spacing (§6) ------------------------------------------------------ *
+   * Tailwind's multiplier, set so its scale IS the 4px grid: `p-4` and
+   * `var(--space-4)` are the same 16px. The named ladder is in tokens.css. */
+  --spacing: 0.25rem;
+
+  /* -- Radius (§7) — declared here, see the header note ------------------ *
+   * Softer than the retired 2/4/8 ladder, which read as institutional.
+   * Nesting rule: an inner radius is the outer minus its padding, floored
+   * at --radius-sm. Do not match the parent. */
+  --radius-xs: 3px;      /* status marks, chart marks, selection outlines */
+  --radius-sm: 6px;      /* buttons, inputs, chips, badges, row hover */
+  --radius-md: 10px;     /* cards, panels, rails, disclosures, empty states */
+  --radius-lg: 16px;     /* dialogs, drawers, popovers, toasts */
+  --radius-full: 999px;  /* filter pills, avatars, step numbers, counts */
+  --radius-xl: initial;  /* Tailwind's remaining defaults, deleted: five steps, */
+  --radius-2xl: initial; /* nothing between them. */
+  --radius-3xl: initial;
+  --radius-4xl: initial;
+
+  /* -- Elevation (§8) ---------------------------------------------------- *
+   * Anything in the document flow is flat. In dark the tone step IS the
+   * elevation, so every elevated layer also moves to --surface-raised and
+   * keeps a 1px --line border — the shadow alone carries almost nothing. */
+  --shadow-elev-0: var(--elev-0);
+  --shadow-elev-1: var(--elev-1);  /* hover lift on an interactive row or card */
+  --shadow-elev-2: var(--elev-2);  /* dropdowns, menus, popovers, tooltips */
+  --shadow-elev-3: var(--elev-3);  /* drawers */
+  --shadow-elev-4: var(--elev-4);  /* modals, toast stack */
+
+  /* -- Motion (§9) — durations are in tokens.css ------------------------- *
+   * Linear easing is prohibited for UI: it reads mechanical. */
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);      /* entering, expanding, appearing */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);       /* exiting, collapsing, dismissing */
+  --ease-move: cubic-bezier(0.4, 0, 0.2, 1);   /* moving between two on-screen positions */
+
+  /* -- Breakpoints (§10.2) ----------------------------------------------- *
+   * Three, and only three. `sm` is Tailwind's own 40rem. Every stylesheet
+   * reads them through theme(), because a custom property cannot be used in
+   * a media query but this can, so the stylesheets and `max-md:` in a
+   * component cannot drift apart. A media query at a fourth width is a
+   * defect, not a refinement — so xl and 2xl are deleted rather than left
+   * lying around for someone to reach for.
+   *
+   *   lg  the widest multi-pane layouts fold: source rail, intake support
+   *   md  the sidebar goes; two-column content becomes one
+   *   sm  phone: headings stack, nav collapses, cards go full width
+   *
+   * All three in px. Tailwind's own `sm` is 40rem — the same width — but it
+   * orders variant media queries by value only within a unit, so a rem `sm`
+   * was emitted after the px `lg` and `sm:grid-cols-2 lg:grid-cols-5` stayed
+   * two columns at every desktop width.
+   */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 900px;
+  --breakpoint-lg: 1050px;
+  --breakpoint-xl: initial;
+  --breakpoint-2xl: initial;
+
+  /* The shimmer every Skeleton uses. Here rather than in a stylesheet for the
+   * same reason as Tailwind's own `animate-pulse`: the component asks for it
+   * by name. Reduced motion replaces it with a static fill (base.css). */
+  /* The one authored moment on the Backlog: a Feature's Stories unfolding in
+     the rail. Short enough to stay out of the way of a person clicking through
+     a tree, and flattened entirely by base.css under reduced motion. */
+  --animate-branch-unfold: branch-unfold 160ms cubic-bezier(0.2, 0, 0, 1) both;
+  @keyframes branch-unfold {
+    from { transform: translateY(-3px); }
+    to { transform: none; }
+  }
+
+  --animate-skeleton-pulse: skeleton-pulse 1.4s infinite alternate;
+  @keyframes skeleton-pulse {
+    from { opacity: .55; }
+    to { opacity: 1; }
+  }
+}

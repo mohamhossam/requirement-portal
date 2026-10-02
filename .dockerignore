@@ -1,0 +1,22 @@
+# An allow-list: the build context holds only what the Dockerfiles copy, so a
+# new top-level directory (agent tooling, logs, local data) can never leak into
+# an image or slow every build. Add a path here when a Dockerfile starts
+# copying it.
+*
+!pyproject.toml
+!uv.lock
+!src/
+!frontend/
+!deploy/web/
+
+# Local state inside the allowed directories.
+**/__pycache__
+**/*.py[cod]
+**/*.egg-info
+**/.env
+frontend/node_modules
+frontend/dist
+frontend/coverage
+frontend/playwright-report
+frontend/test-results
+frontend/*.tsbuildinfo

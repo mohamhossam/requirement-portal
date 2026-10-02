@@ -1,0 +1,72 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smb-requirement-agent"
+version = "0.1.0"
+description = "SMB AI Requirement Breakdown Agent"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115,<1",
+    "httpx>=0.27,<1",
+    "openpyxl>=3.1,<4",
+    "openai>=3.8,<4",
+    "Pillow>=12.3,<13",
+    "pydantic>=2.9,<3",
+    "PyJWT[crypto]>=2.13,<2.14",
+    "psycopg[binary,pool]>=3.2,<4",
+    "pypdf>=6.16.1,<7",
+    "pypdfium2>=4.30,<6",
+    "python-multipart>=0.0.18,<1",
+    "python-dotenv>=1.0,<2",
+    "tokenizers>=0.21,<1",
+    "PyYAML>=6,<7",
+    "uvicorn>=0.30,<1",
+    "prometheus-client>=0.21,<1",
+]
+
+[project.optional-dependencies]
+document-ocr = ["docling>=2.50,<3"]
+dev = [
+    "import-linter>=2.1,<3",
+    "mypy>=1.11,<3",
+    "pytest>=8.3,<10",
+    "pytest-cov>=7,<8",
+    "ruff>=0.8,<1",
+    "types-openpyxl>=3.1,<4",
+    "types-PyYAML>=6,<7",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"smb_requirement_agent.infrastructure.persistence" = ["migrations/*.sql"]
+"smb_requirement_agent.infrastructure.architecture" = ["knowledge/*.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+mypy_path = "src"
+
+[tool.coverage.run]
+source = ["smb_requirement_agent"]
+
+[tool.coverage.report]
+# Measured at 93.02% on 2026-09-29 (with TEST_DATABASE_URL, as CI runs it); the
+# floor sits just below so a platform's skipped paths do not flake the build,
+# while a real drop fails it.
+fail_under = 92.5
+skip_covered = true

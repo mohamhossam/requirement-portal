@@ -1,0 +1,461 @@
+{
+  "counter_identity": "google-countTokens:gemini-embedding-001:e8203407e9abafcc5f2e67d5a030284923940a1219849a3fcacbeaec5bd95929",
+  "model_input_limit": 2048,
+  "sample_count": 64,
+  "all_within_model_limit": true,
+  "measurements": [
+    {
+      "case": "docx-child-1",
+      "text_sha256": "dc7209ade23a8dede223017c6de0b9f284ee654f177b0995910f5489db702b9b",
+      "utf8_budget_units": 93,
+      "measured_model_tokens": 29,
+      "within_model_limit": true
+    },
+    {
+      "case": "docx-child-2",
+      "text_sha256": "e3ab0869ae102db32e58386dbb02f8c87b3dd4d9ebea5fb978d487a8cc7ff0e3",
+      "utf8_budget_units": 509,
+      "measured_model_tokens": 154,
+      "within_model_limit": true
+    },
+    {
+      "case": "docx-child-3",
+      "text_sha256": "e58c5f748d7c6cd94b9363ca1b7107fe894dfba30d02ae061e80518e74b64554",
+      "utf8_budget_units": 503,
+      "measured_model_tokens": 149,
+      "within_model_limit": true
+    },
+    {
+      "case": "docx-child-4",
+      "text_sha256": "0c4ad9d11f336c5b435d01c5c440ec397bac3c701e522390751c9b7d137c98a9",
+      "utf8_budget_units": 540,
+      "measured_model_tokens": 160,
+      "within_model_limit": true
+    },
+    {
+      "case": "docx-child-5",
+      "text_sha256": "8447117848bd2c42f986a9945ae0e7cfcebcf7385d34f24c693b3816febfb1c7",
+      "utf8_budget_units": 96,
+      "measured_model_tokens": 29,
+      "within_model_limit": true
+    },
+    {
+      "case": "docx-context",
+      "text_sha256": "0e4ac9ec1ffec1fd3efb81c5c62ca5408c4066e940c2343f739a117a608d8ac6",
+      "utf8_budget_units": 1098,
+      "measured_model_tokens": 346,
+      "within_model_limit": true
+    },
+    {
+      "case": "pptx-child-1",
+      "text_sha256": "71725a567efecc3335bcb2a14d2724807f0d7cf9510c0c93efb96b0a401aa336",
+      "utf8_budget_units": 112,
+      "measured_model_tokens": 37,
+      "within_model_limit": true
+    },
+    {
+      "case": "pptx-child-2",
+      "text_sha256": "7fe36394167c2065d796c067454fb8517378bd593240d87ffbabbfa86360a82a",
+      "utf8_budget_units": 528,
+      "measured_model_tokens": 162,
+      "within_model_limit": true
+    },
+    {
+      "case": "pptx-child-3",
+      "text_sha256": "0fa38bb7502a10687f54666a905d0e23e7c74d8fa15b7fdb6a9c55d2ed61925d",
+      "utf8_budget_units": 522,
+      "measured_model_tokens": 157,
+      "within_model_limit": true
+    },
+    {
+      "case": "pptx-child-4",
+      "text_sha256": "1f5978c70fe959a60bb61e0519684a098d02bbb94a0c383a00ccd880048f0a46",
+      "utf8_budget_units": 557,
+      "measured_model_tokens": 167,
+      "within_model_limit": true
+    },
+    {
+      "case": "pptx-context",
+      "text_sha256": "95d3a2865d9ecf30c2deccb0c4fc0d61abfae948ebd48fe23f703e03d5ee4587",
+      "utf8_budget_units": 1055,
+      "measured_model_tokens": 333,
+      "within_model_limit": true
+    },
+    {
+      "case": "xlsx-child-1",
+      "text_sha256": "c8c90701c73dfb6346acbb8d2056b563add7ade2b68b54269b10793a6b90c4a4",
+      "utf8_budget_units": 91,
+      "measured_model_tokens": 30,
+      "within_model_limit": true
+    },
+    {
+      "case": "xlsx-child-2",
+      "text_sha256": "09bc11fb0d5491e69b08f898892fb14f5f9e69a80109f509b1cdb981b563024f",
+      "utf8_budget_units": 509,
+      "measured_model_tokens": 149,
+      "within_model_limit": true
+    },
+    {
+      "case": "xlsx-child-3",
+      "text_sha256": "a523ba7a4d37c079d06cc333f4c4023426de288a9ca0a7aaf2265f1b5176b7e0",
+      "utf8_budget_units": 506,
+      "measured_model_tokens": 147,
+      "within_model_limit": true
+    },
+    {
+      "case": "xlsx-child-4",
+      "text_sha256": "a523ba7a4d37c079d06cc333f4c4023426de288a9ca0a7aaf2265f1b5176b7e0",
+      "utf8_budget_units": 506,
+      "measured_model_tokens": 147,
+      "within_model_limit": true
+    },
+    {
+      "case": "xlsx-child-5",
+      "text_sha256": "a523ba7a4d37c079d06cc333f4c4023426de288a9ca0a7aaf2265f1b5176b7e0",
+      "utf8_budget_units": 506,
+      "measured_model_tokens": 147,
+      "within_model_limit": true
+    },
+    {
+      "case": "xlsx-child-6",
+      "text_sha256": "a523ba7a4d37c079d06cc333f4c4023426de288a9ca0a7aaf2265f1b5176b7e0",
+      "utf8_budget_units": 506,
+      "measured_model_tokens": 147,
+      "within_model_limit": true
+    },
+    {
+      "case": "xlsx-child-7",
+      "text_sha256": "a2f6cb85e0c8d8e681982803314aaf6eb7c591afe08b5c42eabf199cbcf97236",
+      "utf8_budget_units": 578,
+      "measured_model_tokens": 168,
+      "within_model_limit": true
+    },
+    {
+      "case": "xlsx-child-8",
+      "text_sha256": "185065cbda67aed32963f1e19be3c71743f5409134ba6693889c9821ef5eb40b",
+      "utf8_budget_units": 62,
+      "measured_model_tokens": 19,
+      "within_model_limit": true
+    },
+    {
+      "case": "xlsx-context",
+      "text_sha256": "f38a8ec83ac803f987e5514fde0047f7f8fc39bbfacd6f290620670a0f68f577",
+      "utf8_budget_units": 1494,
+      "measured_model_tokens": 460,
+      "within_model_limit": true
+    },
+    {
+      "case": "csv-child-1",
+      "text_sha256": "ffc8e1bf50946b4ebaec69c4ab1f70366cbb20bc22876207585cf4c20242e2c2",
+      "utf8_budget_units": 55,
+      "measured_model_tokens": 18,
+      "within_model_limit": true
+    },
+    {
+      "case": "csv-child-2",
+      "text_sha256": "cf367b0f1dc0083ee2398e4fa8b1bdb438a97f634ae1ef5ee4eed0bc71e05763",
+      "utf8_budget_units": 517,
+      "measured_model_tokens": 131,
+      "within_model_limit": true
+    },
+    {
+      "case": "csv-child-3",
+      "text_sha256": "af28a3e5a5fe48a096b9943f367c52b273676190aec71305567a330e93471819",
+      "utf8_budget_units": 511,
+      "measured_model_tokens": 126,
+      "within_model_limit": true
+    },
+    {
+      "case": "csv-child-4",
+      "text_sha256": "af28a3e5a5fe48a096b9943f367c52b273676190aec71305567a330e93471819",
+      "utf8_budget_units": 511,
+      "measured_model_tokens": 126,
+      "within_model_limit": true
+    },
+    {
+      "case": "csv-child-5",
+      "text_sha256": "af28a3e5a5fe48a096b9943f367c52b273676190aec71305567a330e93471819",
+      "utf8_budget_units": 511,
+      "measured_model_tokens": 126,
+      "within_model_limit": true
+    },
+    {
+      "case": "csv-child-6",
+      "text_sha256": "af28a3e5a5fe48a096b9943f367c52b273676190aec71305567a330e93471819",
+      "utf8_budget_units": 511,
+      "measured_model_tokens": 126,
+      "within_model_limit": true
+    },
+    {
+      "case": "csv-context",
+      "text_sha256": "b8164c456980c553d638d6e704ed1d7a4a275496e224e332c645c1bdc938cf58",
+      "utf8_budget_units": 1460,
+      "measured_model_tokens": 391,
+      "within_model_limit": true
+    },
+    {
+      "case": "tsv-child-1",
+      "text_sha256": "ffc8e1bf50946b4ebaec69c4ab1f70366cbb20bc22876207585cf4c20242e2c2",
+      "utf8_budget_units": 55,
+      "measured_model_tokens": 18,
+      "within_model_limit": true
+    },
+    {
+      "case": "tsv-child-2",
+      "text_sha256": "cf367b0f1dc0083ee2398e4fa8b1bdb438a97f634ae1ef5ee4eed0bc71e05763",
+      "utf8_budget_units": 517,
+      "measured_model_tokens": 131,
+      "within_model_limit": true
+    },
+    {
+      "case": "tsv-child-3",
+      "text_sha256": "af28a3e5a5fe48a096b9943f367c52b273676190aec71305567a330e93471819",
+      "utf8_budget_units": 511,
+      "measured_model_tokens": 126,
+      "within_model_limit": true
+    },
+    {
+      "case": "tsv-child-4",
+      "text_sha256": "af28a3e5a5fe48a096b9943f367c52b273676190aec71305567a330e93471819",
+      "utf8_budget_units": 511,
+      "measured_model_tokens": 126,
+      "within_model_limit": true
+    },
+    {
+      "case": "tsv-child-5",
+      "text_sha256": "af28a3e5a5fe48a096b9943f367c52b273676190aec71305567a330e93471819",
+      "utf8_budget_units": 511,
+      "measured_model_tokens": 126,
+      "within_model_limit": true
+    },
+    {
+      "case": "tsv-child-6",
+      "text_sha256": "af28a3e5a5fe48a096b9943f367c52b273676190aec71305567a330e93471819",
+      "utf8_budget_units": 511,
+      "measured_model_tokens": 126,
+      "within_model_limit": true
+    },
+    {
+      "case": "tsv-context",
+      "text_sha256": "b8164c456980c553d638d6e704ed1d7a4a275496e224e332c645c1bdc938cf58",
+      "utf8_budget_units": 1460,
+      "measured_model_tokens": 391,
+      "within_model_limit": true
+    },
+    {
+      "case": "txt-child-1",
+      "text_sha256": "b70fa7701e099bf3b09343119c8f5715d4a7e9f9b02051e6a3652ef0149f68d5",
+      "utf8_budget_units": 496,
+      "measured_model_tokens": 104,
+      "within_model_limit": true
+    },
+    {
+      "case": "txt-child-2",
+      "text_sha256": "83aad99da457622af7bad553474c10404d5d7aba5c2bbbf4cce2258e96c2da5b",
+      "utf8_budget_units": 501,
+      "measured_model_tokens": 105,
+      "within_model_limit": true
+    },
+    {
+      "case": "txt-child-3",
+      "text_sha256": "83aad99da457622af7bad553474c10404d5d7aba5c2bbbf4cce2258e96c2da5b",
+      "utf8_budget_units": 501,
+      "measured_model_tokens": 105,
+      "within_model_limit": true
+    },
+    {
+      "case": "txt-child-4",
+      "text_sha256": "83aad99da457622af7bad553474c10404d5d7aba5c2bbbf4cce2258e96c2da5b",
+      "utf8_budget_units": 501,
+      "measured_model_tokens": 105,
+      "within_model_limit": true
+    },
+    {
+      "case": "txt-child-5",
+      "text_sha256": "83aad99da457622af7bad553474c10404d5d7aba5c2bbbf4cce2258e96c2da5b",
+      "utf8_budget_units": 501,
+      "measured_model_tokens": 105,
+      "within_model_limit": true
+    },
+    {
+      "case": "txt-child-6",
+      "text_sha256": "83aad99da457622af7bad553474c10404d5d7aba5c2bbbf4cce2258e96c2da5b",
+      "utf8_budget_units": 501,
+      "measured_model_tokens": 105,
+      "within_model_limit": true
+    },
+    {
+      "case": "txt-child-7",
+      "text_sha256": "b9b638568fd42c032a2f75a10f0e07146f114b51136509b102a56c5d034bbe67",
+      "utf8_budget_units": 347,
+      "measured_model_tokens": 73,
+      "within_model_limit": true
+    },
+    {
+      "case": "txt-context",
+      "text_sha256": "5b35bb41b9c7ea1ecc1b5383a869855c0f786747fb8b71dfc3b16d31ae3bfbe2",
+      "utf8_budget_units": 1451,
+      "measured_model_tokens": 313,
+      "within_model_limit": true
+    },
+    {
+      "case": "md-child-1",
+      "text_sha256": "cd2ddd927feccc7f0dc35fea885412d72828553be770efce6d1b28e3f2378dcf",
+      "utf8_budget_units": 500,
+      "measured_model_tokens": 84,
+      "within_model_limit": true
+    },
+    {
+      "case": "md-child-2",
+      "text_sha256": "cd2ddd927feccc7f0dc35fea885412d72828553be770efce6d1b28e3f2378dcf",
+      "utf8_budget_units": 500,
+      "measured_model_tokens": 84,
+      "within_model_limit": true
+    },
+    {
+      "case": "md-child-3",
+      "text_sha256": "cd2ddd927feccc7f0dc35fea885412d72828553be770efce6d1b28e3f2378dcf",
+      "utf8_budget_units": 500,
+      "measured_model_tokens": 84,
+      "within_model_limit": true
+    },
+    {
+      "case": "md-child-4",
+      "text_sha256": "cd2ddd927feccc7f0dc35fea885412d72828553be770efce6d1b28e3f2378dcf",
+      "utf8_budget_units": 500,
+      "measured_model_tokens": 84,
+      "within_model_limit": true
+    },
+    {
+      "case": "md-child-5",
+      "text_sha256": "cd2ddd927feccc7f0dc35fea885412d72828553be770efce6d1b28e3f2378dcf",
+      "utf8_budget_units": 500,
+      "measured_model_tokens": 84,
+      "within_model_limit": true
+    },
+    {
+      "case": "md-context",
+      "text_sha256": "e61903e9cc1f006520353b4a01ebebc3385de1118ef23c8da0b140fb42a9007a",
+      "utf8_budget_units": 1393,
+      "measured_model_tokens": 233,
+      "within_model_limit": true
+    },
+    {
+      "case": "requirement-arabic-1",
+      "text_sha256": "2e07f1bf56199ea6c4f58ef99962f5bfbaee59d555ba90428374bdf989c0e8ae",
+      "utf8_budget_units": 767,
+      "measured_model_tokens": 164,
+      "within_model_limit": true
+    },
+    {
+      "case": "requirement-arabic-2",
+      "text_sha256": "06281e92ebb66d2c973afc433b53ea0676cb49b371eaa66bfd62d28099a2a42e",
+      "utf8_budget_units": 767,
+      "measured_model_tokens": 164,
+      "within_model_limit": true
+    },
+    {
+      "case": "requirement-arabic-3",
+      "text_sha256": "5f63a61278e592048785eb63b7aa0d3a995e2b3fbb434cc4fc73572caa56b97d",
+      "utf8_budget_units": 768,
+      "measured_model_tokens": 164,
+      "within_model_limit": true
+    },
+    {
+      "case": "requirement-arabic-4",
+      "text_sha256": "2c828cf165472c1cdea74c8366ca2fc7f309131e34bdb2bdce7028db381083c5",
+      "utf8_budget_units": 768,
+      "measured_model_tokens": 164,
+      "within_model_limit": true
+    },
+    {
+      "case": "requirement-arabic-5",
+      "text_sha256": "23bd87233eb344664c03b25570db10cf4a55bc0bc4c526a7d652c234a5e4548d",
+      "utf8_budget_units": 220,
+      "measured_model_tokens": 48,
+      "within_model_limit": true
+    },
+    {
+      "case": "requirement-mixed-1",
+      "text_sha256": "a8fb76b4c817111c44ab86994ee3056f5d5a50304cebdde5799af0b1ee296909",
+      "utf8_budget_units": 768,
+      "measured_model_tokens": 233,
+      "within_model_limit": true
+    },
+    {
+      "case": "requirement-mixed-2",
+      "text_sha256": "0471365e7a3849f275d4833150d6dfb4697a4a53a1b6cc2468db202d360d1cb4",
+      "utf8_budget_units": 767,
+      "measured_model_tokens": 233,
+      "within_model_limit": true
+    },
+    {
+      "case": "requirement-mixed-3",
+      "text_sha256": "896991705149d87528ed431646d41ca40a568eba9a0a59383d74e016ce980410",
+      "utf8_budget_units": 768,
+      "measured_model_tokens": 233,
+      "within_model_limit": true
+    },
+    {
+      "case": "requirement-mixed-4",
+      "text_sha256": "bf11d208c1038bd46b6921657f2bf1735da609a21e7662b4239aeca8d9650e06",
+      "utf8_budget_units": 768,
+      "measured_model_tokens": 234,
+      "within_model_limit": true
+    },
+    {
+      "case": "requirement-mixed-5",
+      "text_sha256": "38cfdd508c5efa9da6cec504fe9d77e95d54da5daf33a6e96bff79274fe12b73",
+      "utf8_budget_units": 768,
+      "measured_model_tokens": 232,
+      "within_model_limit": true
+    },
+    {
+      "case": "requirement-mixed-6",
+      "text_sha256": "b6058a2ab6f5405372ff581b7cd6d980a695caa18dbb7b860471ada25118c0ff",
+      "utf8_budget_units": 768,
+      "measured_model_tokens": 233,
+      "within_model_limit": true
+    },
+    {
+      "case": "requirement-mixed-7",
+      "text_sha256": "6e3e869a629d43a3119ba8566f2850bb36b29e1f29019efa73d400d6e9cc95b8",
+      "utf8_budget_units": 343,
+      "measured_model_tokens": 106,
+      "within_model_limit": true
+    },
+    {
+      "case": "requirement-unbroken-1",
+      "text_sha256": "399bb8b6e511c24aa6c9df8b2a4bcf5111229821c134842b7adffabddeec01fd",
+      "utf8_budget_units": 768,
+      "measured_model_tokens": 528,
+      "within_model_limit": true
+    },
+    {
+      "case": "requirement-unbroken-2",
+      "text_sha256": "399bb8b6e511c24aa6c9df8b2a4bcf5111229821c134842b7adffabddeec01fd",
+      "utf8_budget_units": 768,
+      "measured_model_tokens": 528,
+      "within_model_limit": true
+    },
+    {
+      "case": "requirement-unbroken-3",
+      "text_sha256": "399bb8b6e511c24aa6c9df8b2a4bcf5111229821c134842b7adffabddeec01fd",
+      "utf8_budget_units": 768,
+      "measured_model_tokens": 528,
+      "within_model_limit": true
+    },
+    {
+      "case": "requirement-unbroken-4",
+      "text_sha256": "4153ae9f7e468ae31d0a72808203f50fe3ab475cd258c1ab3d64dd388592dc42",
+      "utf8_budget_units": 96,
+      "measured_model_tokens": 66,
+      "within_model_limit": true
+    }
+  ],
+  "scope": "Measured fixture safety only; not retrieval relevance or universal tokenizer equivalence.",
+  "embedding_requests_accepted": true,
+  "measured_at": "2026-09-22T09:28:57.069828+00:00",
+  "model": "gemini-embedding-001",
+  "endpoint": "https://generativelanguage.googleapis.com/v1beta"
+}

@@ -1,0 +1,138 @@
+/* Element resets, focus ring and document defaults. */
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; min-height: 100vh; background: var(--canvas); color: var(--ink); line-height: 1.45 }
+button { font: inherit; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+input { font: inherit; }
+textarea { font: inherit; width: 100%; min-height: 2.25rem; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); padding: var(--space-2) var(--space-3); font-size: var(--text-body); font-weight: 400; transition: border-color var(--motion-fast) ease-out; resize: vertical; line-height: 1.55; }
+select { font: inherit; width: 100%; min-height: 2.25rem; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); padding: var(--space-2) var(--space-3); font-size: var(--text-body); font-weight: 400; line-height: 1.45; transition: border-color var(--motion-fast) ease-out; }
+/* `manipulation` drops the 300ms wait a touch browser spends deciding whether
+   a tap was the first half of a double-tap-to-zoom. It removes only that
+   gesture on these elements; pinch zoom is untouched, and the page is never
+   `user-scalable=no`. */
+a { touch-action: manipulation; -webkit-tap-highlight-color: transparent; color: inherit; }
+summary, [role="tab"], [role="button"] { touch-action: manipulation; }
+label { touch-action: manipulation; display: grid; gap: var(--space-2); color: var(--ink); font-size: var(--text-label); font-weight: 600; line-height: 1.3; }
+
+/* One ring, set once, `:focus-visible` only — a ring on mouse click is noise.
+   `outline: none` without a replacement is prohibited. On an accent-filled
+   surface the ring inverts to var(--focus-inverse): an accent ring on an
+   accent fill measures about 1:1 (design-system.md §4.6). */
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* Anything else a keyboard can land on gets the same ring. Chrome now puts a
+   scrollable container with nothing focusable inside it into the tab order —
+   the Clarify screen's "What is settled" column was a stop with no ring at all.
+   `tabindex="-1"` is left out: it is only ever focused from code (a validation
+   summary, a route heading), which is not a keyboard stop. */
+:focus-visible:not([tabindex="-1"]) { outline: 3px solid var(--focus); outline-offset: 2px; }
+h1, h2, h3 { font-family: var(--font-ui); color: var(--ink); margin-top: 0; }
+strong { font-family: var(--font-ui); color: var(--ink); }
+p { margin-top: 0; }
+
+/* Form controls — the one declaration (design-system.md §11).
+ *
+ * `input`, `select`, `textarea` and `label` used to be declared in four files,
+ * three visual generations overriding each other by import order: a 0.65rem
+ * radius, then a 2px near-black square border, then a 1px 4px one, with a dead
+ * teal focus glow underneath all three. This is the shape the Input and Select
+ * primitives already draw (components/ui/recipes.ts, CONTROL_BASE), for every
+ * control that has not moved onto them yet.
+ *
+ * Checkboxes, radios and file inputs are excluded. The old rule gave them
+ * `width: 100%`, padding and a border, and a dozen call sites existed only to
+ * undo that; they are native controls and `accent-color` already themes them.
+ *
+ * The specificity is deliberate: `input:not([type=…])` is (0,1,1), the same
+ * as a scoped rule such as `.portfolio-filters input`, so a scoped rule later
+ * in the cascade still wins. Primitives sit in the utilities layer and beat
+ * all of it. */
+
+/* A label that wraps a checkbox is the option's own text, not a field label. */
+label:has(> input:is([type="checkbox"], [type="radio"])) { font-size: var(--text-body); font-weight: 400; line-height: 1.45; }
+
+input:not([type="checkbox"], [type="radio"], [type="file"], [type="hidden"], [type="range"]) { width: 100%; min-height: 2.25rem; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); padding: var(--space-2) var(--space-3); font-size: var(--text-body); font-weight: 400; line-height: 1.45; transition: border-color var(--motion-fast) ease-out; }
+
+/* The muted ink, not a lighter grey: intake's placeholders are the worked
+   examples a business owner writes from ("Example: High-speed business
+   bundles"), so they have to be readable. */
+input::placeholder, textarea::placeholder { color: var(--ink-muted); }
+:is(input, textarea, select):hover:not(:disabled, :focus) { border-color: var(--ink-muted); }
+/* Border to the accent, plus the global ring above on :focus-visible. */
+:is(input, textarea, select):focus { border-color: var(--accent); }
+/* Doubled with an inset shadow rather than a 2px border, so being told you got
+   something wrong does not move every pixel inside the field by one. */
+:is(input, textarea, select)[aria-invalid="true"] { border-color: var(--danger); box-shadow: inset 0 0 0 1px var(--danger); }
+:is(input, textarea, select):disabled { border-color: var(--line); background: var(--surface-sunken); color: var(--ink-faint); cursor: not-allowed; }
+
+/* WCAG 2.2 2.4.11 (technique C43) for the Clarify screen's pinned resolve bar.
+   A control already inside the viewport when it takes focus causes no scroll,
+   so `scroll-margin` on the controls never reached the ones sitting under the
+   bar. `scroll-padding` on the document scroller changes what counts as "in
+   view": while the bar is pinned the browser treats its height as outside the
+   viewport and scrolls a focused control clear of it. 112px is the bar's worst
+   case — 64px on a desktop column, 97px at 375px where it wraps — plus
+   clearance. The top value restates tokens.css so this rule can own both. */
+:root:has([data-resolve-pinned]) {
+  scroll-padding-top: calc(var(--header-height) + var(--space-2));
+  scroll-padding-bottom: calc(var(--space-16) + var(--space-12));
+}
+
+/* The same for the intake's action bar, which pins from `sm` up (below it the
+   bar sits at the end of the form and hides nothing). 128px is its worst case,
+   about 120px where the buttons wrap under the readiness line, plus clearance.
+   Without it, tabbing to "Desired outcome" at 1440×900 left the field wholly
+   under the bar. */
+@media (width >= theme(--breakpoint-sm)) {
+  :root:has([data-intake-actions]) {
+    scroll-padding-top: calc(var(--header-height) + var(--space-2));
+    scroll-padding-bottom: calc(var(--space-16) + var(--space-16));
+  }
+}
+
+/* Out of the way until it is the thing you want, then the first control on the
+   page. It sits at --z-top, above the fixed header's --z-chrome, because landing behind the
+   header is the classic way a skip link technically exists and practically
+   does not. */
+.skip-link {
+  position: fixed;
+  z-index: var(--z-top);
+  top: 0;
+  left: 0;
+  border-radius: 0 0 4px 0;
+  background: var(--accent);
+  padding: 12px 20px;
+  color: var(--on-accent);
+  font-size: .76rem;
+  font-weight: 700;
+  letter-spacing: .025em;
+  text-decoration: none;
+  text-transform: uppercase;
+  transform: translateY(-100%);
+}
+.skip-link:focus-visible {
+  outline-offset: -3px;
+  transform: translateY(0);
+}
+
+/* `hidden` means hidden, whatever a class says about display.
+ *
+ * The Backlog keeps every Feature and Story mounted and hides all but the
+ * selected one, so that an edit in progress survives navigating away and back —
+ * and `display: grid` from a class beats the attribute's own UA rule, which is
+ * why this needs `!important`. It used to live in two route-scoped selectors,
+ * `.breakdown-shell [hidden]` and `.workspace-drawer [hidden]`, so it held only
+ * where somebody had remembered to scope it. */
+[hidden] { display: none !important; }
+
+/* The browser surfaces this app did not draw, themed from its own palette
+   rather than left on the vendor defaults. */
+::selection { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--ink); }
+:root { accent-color: var(--accent); caret-color: var(--accent); }
+/* `color-scheme` is per-theme and lives with the themes, in tokens.css. */
+
+/* Reduced motion (design-system.md §9). Motion here only ever explains a
+   change of state, so removing it costs nothing — but a state change must
+   still leave a persistent mark, or a reduced-motion user learns nothing
+   from it. Tailwind utilities pair with `motion-reduce:` alongside this. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+}

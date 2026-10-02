@@ -1,0 +1,77 @@
+[importlinter]
+root_package = smb_requirement_agent
+include_external_packages = True
+
+[importlinter:contract:domain_independence]
+name = Domain must not depend on outer layers
+type = forbidden
+source_modules =
+    smb_requirement_agent.domain
+forbidden_modules =
+    smb_requirement_agent.application
+    smb_requirement_agent.infrastructure
+    smb_requirement_agent.interfaces
+
+[importlinter:contract:application_independence]
+name = Application must not depend on infrastructure or interfaces
+type = forbidden
+source_modules =
+    smb_requirement_agent.application
+forbidden_modules =
+    smb_requirement_agent.infrastructure
+    smb_requirement_agent.interfaces
+
+[importlinter:contract:domain_framework_independence]
+name = Domain must not import frameworks or provider SDKs
+type = forbidden
+source_modules =
+    smb_requirement_agent.domain
+forbidden_modules =
+    fastapi
+    pydantic
+    psycopg
+    openai
+    httpx
+    sqlalchemy
+
+[importlinter:contract:application_framework_independence]
+name = Application must not import delivery, persistence, or provider SDKs
+type = forbidden
+source_modules =
+    smb_requirement_agent.application
+forbidden_modules =
+    fastapi
+    psycopg
+    openai
+    sqlalchemy
+    httpx
+
+[importlinter:contract:routes_no_adapter_selection]
+name = Routes cannot select concrete infrastructure adapters
+type = forbidden
+source_modules =
+    smb_requirement_agent.interfaces.api.routes
+forbidden_modules =
+    smb_requirement_agent.infrastructure
+allow_indirect_imports = True
+
+[importlinter:contract:dependencies_no_adapter_selection]
+name = Dependency providers obtain adapters from the composition root
+type = forbidden
+source_modules =
+    smb_requirement_agent.interfaces.api.dependencies
+forbidden_modules =
+    smb_requirement_agent.infrastructure.persistence
+    smb_requirement_agent.infrastructure.llm
+    smb_requirement_agent.infrastructure.identity
+    smb_requirement_agent.infrastructure.documents
+    smb_requirement_agent.infrastructure.jobs
+allow_indirect_imports = True
+
+[importlinter:contract:infrastructure_not_interfaces]
+name = Infrastructure must not depend on delivery interfaces
+type = forbidden
+source_modules =
+    smb_requirement_agent.infrastructure
+forbidden_modules =
+    smb_requirement_agent.interfaces

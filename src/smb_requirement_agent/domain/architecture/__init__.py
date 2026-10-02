@@ -1,0 +1,1 @@
+"""Architecture impact domain model."""

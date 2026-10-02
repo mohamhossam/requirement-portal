@@ -1,0 +1,70 @@
+# Weekly dependency, base-image and action updates as reviewable pull requests.
+# Images are pinned by digest (tests/architecture/test_image_pins.py) and
+# actions by commit SHA (tests/architecture/test_action_pins.py), so this is
+# how those pins move.
+#
+# Kept quiet on purpose (ADR-0077):
+# - minor and patch updates are grouped, one PR per ecosystem;
+# - every Actions update is one grouped PR;
+# - runtime and database majors never arrive as automatic PRs. The Python
+#   and Node versions, and PostgreSQL's data format, are upgraded
+#   deliberately, with the code and data migration they need.
+# - At most three open PRs per ecosystem, so a backlog cannot flood the queue.
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: /
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 3
+    groups:
+      python-minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 3
+    groups:
+      # vitest and its plugins must move together: separate PRs each rewrite
+      # the lock file and cannot both merge, and mismatched versions fail.
+      vitest:
+        patterns: ["vitest", "@vitest/*"]
+      npm-minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # openapi-typescript (which generates src/api/schema.d.ts) accepts only
+      # TypeScript 5; a TypeScript major waits until it supports the new one.
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: docker
+    directories: [/deploy/api, /deploy/web]
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 3
+    ignore:
+      # The project runs Python 3.12 (pyproject, uv, CI). A newer interpreter is
+      # a deliberate upgrade, not an image bump.
+      - dependency-name: python
+        versions: [">=3.13"]
+      # Node majors change the frontend toolchain's runtime; odd majors are
+      # never long-term support. Upgrade to the next LTS deliberately.
+      - dependency-name: node
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: docker-compose
+    directories: [/, /deploy]
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 3
+    ignore:
+      # A PostgreSQL major changes the on-disk format and needs a dump and
+      # restore or pg_upgrade; it is never an image bump.
+      - dependency-name: pgvector/pgvector
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 3
+    groups:
+      github-actions:
+        patterns: ["*"]

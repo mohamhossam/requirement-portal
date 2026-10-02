@@ -1,0 +1,18 @@
+@layer app {
+  .source-impact { min-width: 0; }
+  .source-impact h3 { font-weight: 700; margin-block-end: .5rem; }
+  .source-impact > p { margin-block-end: 1rem; }
+  .source-impact-actions { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; margin-block: 1rem; }
+  .source-impact-actions label { flex: 1 1 16rem; }
+  .source-impact label { display: grid; gap: .5rem; margin-block: .75rem; }
+  .source-impact .source-impact-checkbox { display: flex; align-items: center; gap: .5rem; }
+  .source-impact-checkbox input { width: 1rem; height: 1rem; flex: none; }
+  .source-impact-row { padding-block: 1.5rem; border-block-start: 1px solid var(--line); overflow-wrap: anywhere; }
+  .source-impact-row:first-of-type { margin-block-start: 1rem; }
+  .source-impact-row p { margin-block: .5rem; }
+  .source-impact-row details { margin-block: .75rem; }
+  .source-impact-row summary { cursor: pointer; font-weight: 600; }
+  .source-impact-row blockquote { border-inline-start: 2px solid var(--line-strong); padding-inline-start: 1rem; margin-block: 1rem; }
+  .source-impact-text { white-space: pre-wrap; max-width: 75ch; unicode-bidi: plaintext; }
+  .source-impact-row ol { padding-inline-start: 1.5rem; list-style: decimal; }
+}

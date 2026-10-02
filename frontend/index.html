@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      Matches --canvas in each theme (tokens.css), so the browser chrome on a
+      phone does not sit a white bar above a dark page.
+    -->
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f6f3" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#111316" />
+    <meta
+      name="description"
+      content="Review AI-assisted telecom SMB requirements, Epics and Features."
+    />
+    <title>Requirement AI</title>
+    <!--
+      Resolve the stored theme before first paint (design-system.md §15).
+      Blocking and inline on purpose: run this from a module and the page
+      paints light first, then flips, which is the flash the checklist
+      forbids. It only ever sets an attribute the tokens read — with no
+      stored choice the attribute stays off and the `prefers-color-scheme`
+      block in tokens.css decides, which is the intended default.
+    -->
+    <script>
+      (function () {
+        try {
+          var choice = localStorage.getItem("requirement-ai-theme");
+          if (choice === "light" || choice === "dark") {
+            document.documentElement.setAttribute("data-theme", choice);
+          }
+        } catch (error) {
+          /* Private mode, or storage blocked. System preference it is. */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

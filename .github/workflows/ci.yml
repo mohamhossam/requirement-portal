@@ -1,0 +1,374 @@
+name: CI
+
+on:
+  # Only the default branch on push: a branch with an open pull request is
+  # already covered by the pull_request trigger, and listing both ran every
+  # commit twice.
+  push:
+    branches: [main]
+  pull_request:
+
+# A new push supersedes an in-flight run for the same ref.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-gates:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17@sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: smb_requirement_agent_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d smb_requirement_agent_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/smb_requirement_agent_test
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install locked project
+        run: |
+          uv sync --locked --extra dev
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+
+      - name: pytest with coverage
+        # The floor lives in pyproject.toml ([tool.coverage.report] fail_under).
+        run: pytest --cov --cov-report=term
+
+      - name: ruff check
+        run: ruff check .
+
+      - name: ruff format --check
+        run: ruff format --check .
+
+      - name: mypy
+        run: mypy src tests
+
+      - name: lint-imports
+        run: lint-imports
+
+  postgres-architecture:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17@sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f
+        env:
+          POSTGRES_DB: smb_test
+          POSTGRES_USER: smb_test
+          POSTGRES_PASSWORD: smb_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U smb_test -d smb_test"
+          --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      TEST_DATABASE_URL: postgresql://smb_test:smb_test@localhost:5432/smb_test
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - name: Install locked project
+        run: |
+          uv sync --locked --extra dev
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+      - name: PostgreSQL and pgvector integration
+        run: >-
+          pytest tests/integration/test_postgres_architecture.py
+          tests/integration/test_postgres_persistence.py
+          tests/integration/test_postgres_organisation.py
+          tests/integration/test_postgres_catalogue_candidates.py
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend
+        run: npm ci --loglevel verbose
+
+      - name: OpenAPI type drift
+        run: npm run api:check
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: TypeScript
+        run: npm run typecheck
+
+      - name: Component tests with coverage
+        # Floors live in vitest.config.ts (coverage.thresholds).
+        run: npm run test:coverage
+
+      - name: Build
+        run: npm run build
+
+  supply-chain:
+    # Known-vulnerable dependencies fail the build. Python audits what the
+    # image ships (no dev tools); npm audits everything, since its dev tooling
+    # runs in CI and builds the served bundle.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.12"
+
+      - name: Python dependency audit
+        run: |
+          uv export --frozen --no-dev --no-emit-project --format requirements-txt > requirements.txt
+          uvx pip-audit==2.10.1 --strict --disable-pip --no-deps -r requirements.txt
+
+      - name: Python dependency audit (document-ocr extra)
+        # Not in the image, but an operator who extends it for OCR installs
+        # this tree (docling and its model stack), so it is audited too.
+        run: |
+          uv export --frozen --no-dev --no-emit-project --extra document-ocr --format requirements-txt > requirements-ocr.txt
+          uvx pip-audit==2.10.1 --strict --disable-pip --no-deps -r requirements-ocr.txt
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+
+      - name: npm audit
+        working-directory: frontend
+        run: npm audit --audit-level=high
+
+  deployment:
+    # Builds both images and brings the reference manifest up offline, so a
+    # broken Dockerfile, nginx template or entrypoint fails here, not in a deploy.
+    runs-on: ubuntu-latest
+    env:
+      POSTGRES_PASSWORD: ci-only
+      GRAFANA_ADMIN_PASSWORD: ci-only
+      COMPOSE: docker compose -f deploy/compose.production.yaml
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Offline deployment settings
+        run: |
+          cat > deploy/production.env <<'SETTINGS'
+          APP_ENV=development
+          IDENTITY_PROVIDER=fake
+          LLM_PROVIDER=fake
+          LIBRARY_SCAN_MODE=clamav
+          SETTINGS
+
+      - name: Build images
+        run: $COMPOSE build
+
+      - name: Scan images for fixable HIGH and CRITICAL vulnerabilities
+        run: |
+          for image in requirement-ai/api:local requirement-ai/web:local; do
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+              aquasec/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969 \
+              image --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed \
+              --exit-code 1 "$image"
+          done
+
+      - name: First install, then start
+        run: |
+          $COMPOSE run --rm maintenance
+          $COMPOSE up -d --wait web worker
+
+      - name: Ready through the proxy, with security headers
+        run: |
+          curl --fail --silent http://127.0.0.1:8080/api/ready
+          curl --fail --silent --head http://127.0.0.1:8080/ | grep -i "frame-ancestors 'none'"
+          curl --fail --silent http://127.0.0.1:8080/ | grep -q 'http-equiv="Content-Security-Policy"'
+
+      - name: Model files are mounted read-only
+        run: |
+          $COMPOSE exec -T api test -r /app/config/llm.yaml
+          $COMPOSE exec -T worker test -r /app/config/llm.yaml
+          ! $COMPOSE exec -T api touch /app/config/written
+
+      - name: Monitoring add-on scrapes both exporters and serves its dashboard
+        run: |
+          MONITORING="$COMPOSE -f deploy/compose.monitoring.yaml"
+          $MONITORING up -d --wait prometheus grafana
+          $MONITORING exec -T prometheus promtool check config /etc/prometheus/prometheus.yml
+          for attempt in $(seq 1 30); do
+            up=$($MONITORING exec -T prometheus wget -qO- \
+              'http://127.0.0.1:9090/api/v1/query?query=count(up%7Bjob%3D~%22api%7Cworker%22%7D%3D%3D1)' |
+              python3 -c 'import json, sys; r = json.load(sys.stdin)["data"]["result"]; print(r[0]["value"][1] if r else 0)')
+            [ "$up" = "2" ] && break
+            sleep 2
+          done
+          [ "$up" = "2" ] || { echo "Prometheus scrapes $up of 2 exporters"; exit 1; }
+          curl --fail --silent -u admin:ci-only \
+            'http://127.0.0.1:3000/api/dashboards/uid/requirement-ai-overview' > /dev/null
+          curl --fail --silent -u admin:ci-only \
+            'http://127.0.0.1:3000/api/datasources/uid/prometheus/health' | grep -q '"status":"OK"'
+
+      - name: Container logs
+        if: failure()
+        run: $COMPOSE -f deploy/compose.monitoring.yaml logs
+
+  recovery:
+    # A nonempty backup/restore rehearsal (docs/operations/release-qualification.md):
+    # seed reviewed content and history, pg_dump, pg_restore into a new database,
+    # then verify checksums, history, access, search and maintenance. Same pinned
+    # PostgreSQL image as everywhere else (tests/architecture/test_image_pins.py).
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17@sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install locked project
+        run: |
+          uv sync --locked --extra dev
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+
+      - name: Seed reviewed content and immutable history
+        run: |
+          docker exec ${{ job.services.postgres.id }} createdb -U postgres codex_qualification_test_source
+          python -m tests.release_recovery seed --database-url postgresql://postgres:postgres@127.0.0.1:5432/codex_qualification_test_source --manifest recovery-manifest.json
+
+      - name: Back up and restore into a new database
+        run: |
+          docker exec ${{ job.services.postgres.id }} pg_dump -U postgres -Fc -d codex_qualification_test_source -f /tmp/recovery.dump
+          docker exec ${{ job.services.postgres.id }} createdb -U postgres codex_qualification_test_restored
+          docker exec ${{ job.services.postgres.id }} pg_restore -U postgres --exit-on-error --no-owner -d codex_qualification_test_restored /tmp/recovery.dump
+
+      - name: Verify checksums, history, access, search and maintenance
+        run: |
+          python -m tests.release_recovery verify --database-url postgresql://postgres:postgres@127.0.0.1:5432/codex_qualification_test_restored --manifest recovery-manifest.json > recovery-result.json
+          cat recovery-result.json
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: recovery-pg17
+          path: recovery-*.json
+
+  smoke:
+    needs: frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install locked project
+        run: |
+          uv sync --locked --extra dev
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install and build frontend
+        working-directory: frontend
+        run: |
+          npm ci --loglevel verbose
+          npm run build
+
+      - name: Install Chromium
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser smoke test
+        working-directory: frontend
+        env:
+          LLM_PROVIDER: fake
+        run: npm run test:smoke
+
+  lineage-postgres-browser:
+    needs: frontend
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17@sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: lineage_browser_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d lineage_browser_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - name: Install locked project
+        run: |
+          uv sync --locked --extra dev
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install and build frontend
+        working-directory: frontend
+        run: |
+          npm ci --loglevel verbose
+          npm run build
+          npx playwright install --with-deps chromium
+      - name: PostgreSQL source lineage browser flow
+        working-directory: frontend
+        env:
+          SMOKE_LINEAGE_POSTGRES: "1"
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/lineage_browser_test
+        run: npm run test:smoke -- source-lineage.spec.ts
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: failure()
+        with:
+          name: lineage-browser-failure
+          path: frontend/test-results

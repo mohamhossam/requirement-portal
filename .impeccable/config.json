@@ -1,0 +1,72 @@
+{
+  "buildPath": "comp",
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "frontend/src/styles/01-foundation.css"
+        ],
+        "createdAt": "2026-09-19T18:25:35.933Z",
+        "reason": "DESIGN.md Shapes: The Accent Edge Rule makes a 3-4px accent left border this system's one emphasis device (accent for the current or next thing, a status colour for a flagged one). Scoped to files where every side-tab is now token-based; the legacy layers 04/05/06 keep their hardcoded one-offs flagged as real drift."
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "frontend/src/styles/03-identity.css"
+        ],
+        "createdAt": "2026-09-19T18:25:36.087Z",
+        "reason": "DESIGN.md Shapes: The Accent Edge Rule makes a 3-4px accent left border this system's one emphasis device (accent for the current or next thing, a status colour for a flagged one). Scoped to files where every side-tab is now token-based; the legacy layers 04/05/06 keep their hardcoded one-offs flagged as real drift."
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "frontend/src/styles/08-stitch-foundation.css"
+        ],
+        "createdAt": "2026-09-19T18:25:36.243Z",
+        "reason": "DESIGN.md Shapes: The Accent Edge Rule makes a 3-4px accent left border this system's one emphasis device (accent for the current or next thing, a status colour for a flagged one). Scoped to files where every side-tab is now token-based; the legacy layers 04/05/06 keep their hardcoded one-offs flagged as real drift."
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "frontend/src/styles/09-breakdown-review.css"
+        ],
+        "createdAt": "2026-09-19T18:25:36.388Z",
+        "reason": "DESIGN.md Shapes: The Accent Edge Rule makes a 3-4px accent left border this system's one emphasis device (accent for the current or next thing, a status colour for a flagged one). Scoped to files where every side-tab is now token-based; the legacy layers 04/05/06 keep their hardcoded one-offs flagged as real drift."
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "frontend/src/styles/10-portfolio-reports.css"
+        ],
+        "createdAt": "2026-09-19T18:25:36.541Z",
+        "reason": "DESIGN.md Shapes: The Accent Edge Rule makes a 3-4px accent left border this system's one emphasis device (accent for the current or next thing, a status colour for a flagged one). Scoped to files where every side-tab is now token-based; the legacy layers 04/05/06 keep their hardcoded one-offs flagged as real drift."
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "frontend/src/styles/15-journey.css"
+        ],
+        "createdAt": "2026-09-19T18:25:36.703Z",
+        "reason": "DESIGN.md Shapes: The Accent Edge Rule makes a 3-4px accent left border this system's one emphasis device (accent for the current or next thing, a status colour for a flagged one). Scoped to files where every side-tab is now token-based; the legacy layers 04/05/06 keep their hardcoded one-offs flagged as real drift."
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "frontend/src/components/Toaster.tsx"
+        ],
+        "createdAt": "2026-09-19T18:25:36.856Z",
+        "reason": "DESIGN.md Shapes: The Accent Edge Rule makes a 3-4px accent left border this system's one emphasis device (accent for the current or next thing, a status colour for a flagged one). Scoped to files where every side-tab is now token-based; the legacy layers 04/05/06 keep their hardcoded one-offs flagged as real drift."
+      }
+    ]
+  }
+}

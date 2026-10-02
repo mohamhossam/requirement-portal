@@ -1,0 +1,8 @@
+/* Portfolio screens.
+ *
+ * Activity and Reports were redesigned in docs/ux-plan.md Phase 8 onto the
+ * shared primitives (Table, Select, Pill, Combobox) and carry their own
+ * utilities; the timeline, filter bar, range selector, summary and blocker rules
+ * that lived here went with the markup they styled. What remains is used by the
+ * architecture knowledge page. */
+.knowledge-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin-top: var(--space-3); }
