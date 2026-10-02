@@ -28,8 +28,22 @@ if TYPE_CHECKING:
 def validate_settings(settings: Settings) -> None:
     if settings.request_max_body_bytes < 1024:
         raise ConfigurationError("REQUEST_MAX_BODY_BYTES must be at least 1024.")
-    if settings.knowledge_service_token is not None and len(settings.knowledge_service_token) < 32:
-        raise ConfigurationError("KNOWLEDGE_SERVICE_TOKEN must be at least 32 characters.")
+    for name, token in (
+        ("KNOWLEDGE_SERVICE_TOKEN", settings.knowledge_service_token),
+        ("REQUIREMENT_SERVICE_TOKEN", settings.requirement_service_token),
+    ):
+        if token is not None and len(token) < 32:
+            raise ConfigurationError(f"{name} must be at least 32 characters.")
+    if (settings.knowledge_api_base_url is None) != (settings.requirement_service_token is None):
+        raise ConfigurationError(
+            "KNOWLEDGE_API_BASE_URL and REQUIREMENT_SERVICE_TOKEN are set together: both to "
+            "use the knowledge service, or neither to keep the knowledge code in this process."
+        )
+    if (
+        settings.knowledge_api_base_url is not None
+        and not settings.knowledge_api_base_url.startswith(("http://", "https://"))
+    ):
+        raise ConfigurationError("KNOWLEDGE_API_BASE_URL must be an http(s) URL.")
     if settings.provider_rate_limit_per_minute < 0:
         raise ConfigurationError(
             "PROVIDER_RATE_LIMIT_PER_MINUTE must be 0 (unlimited) or a positive number."

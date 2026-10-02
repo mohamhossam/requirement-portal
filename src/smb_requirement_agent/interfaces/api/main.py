@@ -51,6 +51,9 @@ from smb_requirement_agent.interfaces.api.routes.jobs import (
     router as jobs_router,
 )
 from smb_requirement_agent.interfaces.api.routes.knowledge import router as knowledge_router
+from smb_requirement_agent.interfaces.api.routes.knowledge_views import (
+    router as knowledge_views_router,
+)
 from smb_requirement_agent.interfaces.api.routes.library import router as library_router
 from smb_requirement_agent.interfaces.api.routes.library import search_router
 from smb_requirement_agent.interfaces.api.routes.organisation import (
@@ -251,6 +254,7 @@ def create_app(container_factory: Callable[[], Container] = build_container) -> 
         jobs_router,
         notification_router,
         knowledge_router,
+        knowledge_views_router,
         library_router,
         search_router,
         source_impact_router,

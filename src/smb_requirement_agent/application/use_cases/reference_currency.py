@@ -15,6 +15,7 @@ from smb_requirement_agent.application.errors import (
     RequirementAnalysisConflictError,
 )
 from smb_requirement_agent.application.ports.architecture_knowledge import (
+    ActiveRelease,
     ArchitectureReleaseStatePort,
 )
 from smb_requirement_agent.application.ports.knowledge_events import (
@@ -161,7 +162,7 @@ class ProjectKnowledgeEvents:
                         event.seq, ReferenceDocumentState.from_payload(event.payload)
                     )
                 elif event.kind == ARCHITECTURE_RELEASE_ACTIVATED:
-                    self._releases.apply(event.seq, _release_id(event.payload))
+                    self._releases.apply(event.seq, _release(event.payload))
             reached = cursor
             now = self._clock.now()
             for event in events:
@@ -191,8 +192,14 @@ class CurrentArchitectureRelease:
             raise PersistenceError("No active architecture release is known yet.")
         return release_id
 
+    def active_release(self) -> ActiveRelease | None:
+        """The release in use with its name, or nothing before the first activation arrives."""
+        return self._releases.active_release()
 
-def _release_id(payload: object) -> str:
+
+def _release(payload: object) -> ActiveRelease:
+    """An activation: the release id, and its name once the knowledge side sends one."""
     if isinstance(payload, dict) and isinstance(payload.get("release_id"), str):
-        return str(payload["release_id"])
+        name = payload.get("name")
+        return ActiveRelease(str(payload["release_id"]), name if isinstance(name, str) else None)
     raise PersistenceError("Architecture release event is malformed.")

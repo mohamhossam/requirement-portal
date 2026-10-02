@@ -10,9 +10,10 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
+from urllib.parse import quote
 
 from pydantic import TypeAdapter
-from smb_kernel.errors import ServiceUnavailableError
+from smb_kernel.errors import ServiceResponseError, ServiceUnavailableError
 from smb_kernel.http.client import InternalHttpClient
 
 from smb_requirement_agent.application.ports.architecture_knowledge import (
@@ -20,11 +21,20 @@ from smb_requirement_agent.application.ports.architecture_knowledge import (
     ArchitectureQuery,
 )
 from smb_requirement_agent.application.ports.knowledge_events import KnowledgeEvent
+from smb_requirement_agent.application.ports.knowledge_views import (
+    ArchitectureEvidence,
+    CitedPassage,
+    PassageCitation,
+)
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidence
 
 _QUERY = TypeAdapter(ArchitectureQuery)
 _MATCH = TypeAdapter(ArchitectureKnowledgeMatch)
 _EVIDENCE = TypeAdapter(tuple[ReferenceEvidence, ...])
+_PASSAGE = TypeAdapter(CitedPassage)
+_ARCHITECTURE_EVIDENCE = TypeAdapter(ArchitectureEvidence)
+# What the knowledge service answers when a view is absent: not found, or no longer live.
+_ABSENT = frozenset({404, 409})
 
 
 def _decode[T](adapter: TypeAdapter[T], body: Any, what: str) -> T:
@@ -105,6 +115,42 @@ class HttpKnowledgeEvents:
         return tuple(events)
 
 
+class HttpKnowledgeViews:
+    """The read-only viewers' reads; an absent passage or evidence is `None`, not an error."""
+
+    def __init__(self, client: InternalHttpClient) -> None:
+        self._client = client
+
+    def passage(self, citation: PassageCitation) -> CitedPassage | None:
+        body = self._absent_or(
+            "/internal/library/passages",
+            {
+                "document_id": citation.document_id,
+                "publication_id": citation.publication_id,
+                "version_id": citation.version_id,
+                "revision_id": citation.revision_id,
+                "block_id": citation.block_id,
+            },
+        )
+        return None if body is None else _decode(_PASSAGE, body, "a cited passage")
+
+    def evidence(self, release_id: str, chunk_id: str) -> ArchitectureEvidence | None:
+        body = self._absent_or(
+            f"/internal/architecture/releases/{quote(release_id, safe='')}"
+            f"/evidence/{quote(chunk_id, safe='')}",
+            None,
+        )
+        return None if body is None else _decode(_ARCHITECTURE_EVIDENCE, body, "evidence")
+
+    def _absent_or(self, path: str, params: dict[str, str] | None) -> Any:
+        try:
+            return self._client.get_json(path, params)
+        except ServiceResponseError as refused:
+            if refused.status_code in _ABSENT:
+                return None
+            raise
+
+
 def _whole(value: object) -> int:
     if not isinstance(value, int) or isinstance(value, bool) or value < 1:
         raise TypeError("expected a positive whole number")
@@ -148,3 +194,13 @@ class FakeKnowledgeEvents:
 
     def after(self, seq: int, limit: int) -> tuple[KnowledgeEvent, ...]:
         return ()
+
+
+class FakeKnowledgeViews:
+    """Nothing to show: offline, no passage or evidence is published."""
+
+    def passage(self, citation: PassageCitation) -> CitedPassage | None:
+        return None
+
+    def evidence(self, release_id: str, chunk_id: str) -> ArchitectureEvidence | None:
+        return None

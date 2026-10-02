@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.application.ports.reference_grounding import ReferenceKnowledgePort
 from smb_requirement_agent.application.use_cases.ai_job_scheduling import (
     AnswerSuggestionScheduler,
     KnowledgeScreenScheduler,
@@ -48,6 +49,7 @@ from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import (
     RequirementIndexWorker,
 )
 from smb_requirement_agent.infrastructure.persistence.reference_index import Utf8BudgetCounter
+from smb_requirement_agent.interfaces.api.composition.knowledge_service import KnowledgeService
 from smb_requirement_agent.interfaces.api.composition.llm import LLMAdapters
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
 
@@ -68,6 +70,8 @@ class RequirementKnowledgeWiring:
     indexer: IndexRequirementKnowledge
     index_worker: RequirementIndexWorker
     reference_knowledge: ReferenceKnowledge
+    # What requirement work searches and cites: this process's library, or the service's.
+    references: ReferenceKnowledgePort
     reference_currency: ReferenceCurrency
     current_references: CurrentReferences
     current_release: CurrentArchitectureRelease
@@ -86,6 +90,7 @@ def build_requirement_knowledge(
     llm: LLMAdapters,
     clock: ClockPort,
     access: RequirementAccessService,
+    service: KnowledgeService,
 ) -> RequirementKnowledgeWiring:
     embedding_identity = _embedding_identity(settings)
     corpus = RequirementKnowledgeCorpus(
@@ -126,18 +131,21 @@ def build_requirement_knowledge(
     reference_currency = ReferenceCurrency(
         persistence.reference_publications, persistence.transaction_manager
     )
-    current_references = CurrentReferences(reference_knowledge, reference_currency)
+    references = service.references or reference_knowledge
+    current_references = CurrentReferences(references, reference_currency)
     projector = ProjectKnowledgeEvents(
-        persistence.knowledge_events,
+        service.events or persistence.knowledge_events,
         persistence.reference_publications,
         persistence.architecture_releases,
         persistence.transaction_manager,
         clock,
     )
-    # While both sides share this process, a catalogue write drains the outbox
-    # straight after it commits; drain once now for anything written before start.
-    persistence.knowledge_relay.bind(projector.drain)
-    projector.drain()
+    if not service.remote:
+        # While both sides share this process, a catalogue write drains the outbox
+        # straight after it commits; drain once now for anything written before start.
+        # A remote service's events are polled by the knowledge event worker instead.
+        persistence.knowledge_relay.bind(projector.drain)
+        projector.drain()
     return RequirementKnowledgeWiring(
         corpus=corpus,
         review=review,
@@ -156,6 +164,7 @@ def build_requirement_knowledge(
         indexer=indexer,
         index_worker=RequirementIndexWorker(indexer),
         reference_knowledge=reference_knowledge,
+        references=references,
         reference_currency=reference_currency,
         current_references=current_references,
         current_release=CurrentArchitectureRelease(persistence.architecture_releases),

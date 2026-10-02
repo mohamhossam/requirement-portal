@@ -108,6 +108,7 @@ from smb_requirement_agent.application.use_cases.identity_access import (
     SearchKnownActors,
 )
 from smb_requirement_agent.application.use_cases.internal_reads import InternalReads
+from smb_requirement_agent.application.use_cases.knowledge_views import KnowledgeViews
 from smb_requirement_agent.application.use_cases.library_governance import LibraryGovernance
 from smb_requirement_agent.application.use_cases.organisation_catalogue import (
     ManageOrganisationCatalogue,
@@ -119,6 +120,9 @@ from smb_requirement_agent.application.use_cases.owned_requirements import (
     ListOwnedRequirementDrafts,
     PromoteOwnedRequirementDraft,
     SaveOwnedRequirementDraft,
+)
+from smb_requirement_agent.application.use_cases.reference_currency import (
+    CurrentArchitectureRelease,
 )
 from smb_requirement_agent.application.use_cases.reference_knowledge import ReferenceKnowledge
 from smb_requirement_agent.application.use_cases.requirement_commands import RequirementCommands
@@ -538,6 +542,14 @@ def get_attachment_ingestion(container: ContainerDep) -> AttachmentIngestion:
 
 def get_source_impact(container: ContainerDep) -> SourceImpactReview:
     return container.source_impact
+
+
+def get_knowledge_views(container: ContainerDep) -> KnowledgeViews:
+    return container.knowledge_views
+
+
+def get_current_release(container: ContainerDep) -> CurrentArchitectureRelease:
+    return container.current_release
 
 
 def get_internal_reads(container: ContainerDep) -> InternalReads:

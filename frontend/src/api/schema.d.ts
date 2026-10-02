@@ -21,6 +21,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/architecture-evidence/{release_id}/{chunk_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Architecture Evidence
+         * @description The catalogue evidence behind an architecture impact, from a published version.
+         */
+        get: operations["architecture_evidence_architecture_evidence__release_id___chunk_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/architecture-knowledge/catalogue-template.xlsx": {
         parameters: {
             query?: never;
@@ -556,6 +576,26 @@ export interface paths {
         get: operations["sample_requirements_architecture_knowledge_sample_requirements_get"];
         /** Replace Sample Requirements */
         put: operations["replace_sample_requirements_architecture_knowledge_sample_requirements_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/architecture/active-release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Active Release
+         * @description The catalogue version new mappings use; null until the first one is known.
+         */
+        get: operations["active_release_architecture_active_release_get"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -1434,6 +1474,26 @@ export interface paths {
         };
         /** Ready */
         get: operations["ready_ready_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/references/passage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Cited Passage
+         * @description The exact published passage a Requirement cites, while it is still published.
+         */
+        get: operations["cited_passage_references_passage_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2925,6 +2985,16 @@ export interface components {
             rationale: string;
         };
         /**
+         * ActiveRelease
+         * @description The catalogue release in use, and the name people know it by, when it has one.
+         */
+        ActiveRelease: {
+            /** Id */
+            id: string;
+            /** Name */
+            name?: string | null;
+        };
+        /**
          * ActivityAction
          * @enum {string}
          */
@@ -3382,6 +3452,19 @@ export interface components {
             source_system_id: string;
             /** Target System Id */
             target_system_id: string;
+        };
+        /** ArchitectureEvidence */
+        ArchitectureEvidence: {
+            /** Document Version Id */
+            document_version_id?: string | null;
+            /** Id */
+            id: string;
+            /** Location */
+            location: string;
+            /** Source Label */
+            source_label: string;
+            /** Text */
+            text: string;
         };
         /** ArchitectureImpactResponse */
         ArchitectureImpactResponse: {
@@ -4010,6 +4093,29 @@ export interface components {
          * @enum {string}
          */
         ChangedItem: "system" | "capability" | "relationship" | "document" | "domain" | "component" | "landscape_domain" | "product" | "journey";
+        /** CitedPassage */
+        CitedPassage: {
+            /** Block Id */
+            block_id: string;
+            /** Document Id */
+            document_id: string;
+            /** Label */
+            label: string;
+            /** Publication Id */
+            publication_id: string;
+            /** Revision Id */
+            revision_id: string;
+            /** Section Path */
+            section_path: string[];
+            /** Text */
+            text: string;
+            /** Title */
+            title: string;
+            /** Version Id */
+            version_id: string;
+            /** Version Number */
+            version_number: number;
+        };
         /** ClarificationAnswerRequest */
         ClarificationAnswerRequest: {
             /** Answer */
@@ -7580,6 +7686,40 @@ export interface operations {
             };
         };
     };
+    architecture_evidence_architecture_evidence__release_id___chunk_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Fake-Actor-Id"?: string | null;
+            };
+            path: {
+                release_id: string;
+                chunk_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArchitectureEvidence"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     catalogue_template_architecture_knowledge_catalogue_template_xlsx_get: {
         parameters: {
             query?: never;
@@ -8899,6 +9039,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SampleRequirementsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    active_release_architecture_active_release_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Fake-Actor-Id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActiveRelease"] | null;
                 };
             };
             /** @description Validation Error */
@@ -10793,6 +10964,43 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    cited_passage_references_passage_get: {
+        parameters: {
+            query: {
+                document_id: string;
+                publication_id: string;
+                version_id: string;
+                revision_id: string;
+                block_id: string;
+            };
+            header?: {
+                "X-Fake-Actor-Id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CitedPassage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

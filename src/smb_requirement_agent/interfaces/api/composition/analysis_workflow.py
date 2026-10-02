@@ -83,7 +83,7 @@ def build_analysis_workflow(
         contexts=contexts,
         authorization=access,
         reference_grounding=ReferenceGrounding(
-            knowledge.reference_knowledge,
+            knowledge.references,
             reference_proposer,
             Utf8BudgetCounter(),
             clock,

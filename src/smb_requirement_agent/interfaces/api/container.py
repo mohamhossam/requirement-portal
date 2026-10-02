@@ -192,6 +192,7 @@ from smb_requirement_agent.application.use_cases.invalidate_approval_workflow im
 from smb_requirement_agent.application.use_cases.invalidate_derived_artifacts import (
     InvalidateDerivedArtifacts,
 )
+from smb_requirement_agent.application.use_cases.knowledge_views import KnowledgeViews
 from smb_requirement_agent.application.use_cases.library_governance import LibraryGovernance
 from smb_requirement_agent.application.use_cases.organisation_catalogue import (
     ManageOrganisationCatalogue,
@@ -209,6 +210,7 @@ from smb_requirement_agent.application.use_cases.rebuild_knowledge_index import 
     RebuildKnowledgeIndex,
 )
 from smb_requirement_agent.application.use_cases.reference_currency import (
+    CurrentArchitectureRelease,
     CurrentReferences,
     ReferenceCurrency,
 )
@@ -285,6 +287,9 @@ from smb_requirement_agent.interfaces.api.composition.documents import build_doc
 from smb_requirement_agent.interfaces.api.composition.identity import build_identity
 from smb_requirement_agent.interfaces.api.composition.jobs import build_ai_jobs
 from smb_requirement_agent.interfaces.api.composition.knowledge import build_requirement_knowledge
+from smb_requirement_agent.interfaces.api.composition.knowledge_service import (
+    build_knowledge_service,
+)
 from smb_requirement_agent.interfaces.api.composition.llm import build_llm_adapters
 from smb_requirement_agent.interfaces.api.composition.persistence import build_persistence
 from smb_requirement_agent.interfaces.api.composition.requirements import build_requirement_intake
@@ -326,6 +331,8 @@ class Container:
     source_impact: SourceImpactReview
     internal_reads: InternalReads
     knowledge_events: KnowledgeEventOutboxPort
+    knowledge_views: KnowledgeViews
+    current_release: CurrentArchitectureRelease
     library_governance: LibraryGovernance
     unified_knowledge_search: UnifiedKnowledgeSearch
     reference_knowledge: ReferenceKnowledge
@@ -521,6 +528,7 @@ def _build_container(
     persistence = build_persistence(
         settings, resources, resolved_clock, retrieval.embeddings, retrieval.tokenizer
     )
+    knowledge_service = build_knowledge_service(settings, resources, metrics)
     resolved_identity = build_identity(
         settings, resources, persistence.actor_directory, identity_provider
     )
@@ -546,7 +554,9 @@ def _build_container(
         persistence,
         retrieval,
         defaults.architecture_reasoner,
-        architecture_knowledge,
+        architecture_knowledge
+        if architecture_knowledge is not None
+        else knowledge_service.architecture,
         defaults.catalogue_extractor,
         defaults.system_matcher,
         resolved_clock,
@@ -572,7 +582,7 @@ def _build_container(
         persistence.analysis_audit_repository,
     )
     knowledge = build_requirement_knowledge(
-        settings, persistence, defaults, resolved_clock, access_service
+        settings, persistence, defaults, resolved_clock, access_service, knowledge_service
     )
     documents = build_documents(
         settings,
@@ -666,6 +676,8 @@ def _build_container(
         document_library=documents.library,
         attachment_ingestion=documents.attachment_ingestion,
         source_impact=knowledge.source_impact,
+        knowledge_views=KnowledgeViews(knowledge_service.views),
+        current_release=knowledge.current_release,
         knowledge_events=persistence.knowledge_events,
         internal_reads=InternalReads(
             persistence.dependency_index,

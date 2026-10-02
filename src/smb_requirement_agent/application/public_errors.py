@@ -44,6 +44,7 @@ from smb_requirement_agent.application.errors import (
     KnowledgeGenerationError,
     KnowledgeIndexPendingError,
     KnowledgeScreenConflictError,
+    KnowledgeViewUnavailableError,
     ModelTransportError,
     NotificationNotFoundError,
     PersistenceError,
@@ -216,6 +217,11 @@ ERROR_CATALOGUE: tuple[tuple[type[Exception], str, FailureCategory], ...] = (
     (
         ArchitectureJobNotFoundError,
         "architecture_job_not_found",
+        FailureCategory.NOT_FOUND,
+    ),
+    (
+        KnowledgeViewUnavailableError,
+        "knowledge_view_unavailable",
         FailureCategory.NOT_FOUND,
     ),
     (

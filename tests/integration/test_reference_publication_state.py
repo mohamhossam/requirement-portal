@@ -22,6 +22,7 @@ from smb_kernel.persistence.connector import DirectPostgresConnector
 from smb_kernel.time.fixed import FixedClock
 from smb_kernel.time.system import SystemClock
 
+from smb_requirement_agent.application.ports.architecture_knowledge import ActiveRelease
 from smb_requirement_agent.application.use_cases.document_library import (
     CHUNKING_POLICY,
     DocumentLibrary,
@@ -257,3 +258,18 @@ def test_the_migration_seeds_the_release_active_now(
             "SELECT release_id, seq FROM active_architecture_release"
         ).fetchone()
     assert row == ("live", 0)
+
+
+def test_the_local_copy_keeps_the_version_s_name(isolated_url: str) -> None:
+    migration_runner.run_migrations(isolated_url)
+    store = PostgresStore(DirectPostgresConnector(isolated_url), lambda *_: None, lambda *_: None)
+    releases = PostgresArchitectureReleaseState(store)
+
+    releases.apply(5, ActiveRelease("named-release", "Q4 catalogue"))
+    releases.apply(4, ActiveRelease("older-release"))
+
+    assert PostgresArchitectureReleaseState(store).active_release() == ActiveRelease(
+        "named-release", "Q4 catalogue"
+    )
+    releases.apply(6, ActiveRelease("unnamed-release"))
+    assert releases.active_release() == ActiveRelease("unnamed-release", None)

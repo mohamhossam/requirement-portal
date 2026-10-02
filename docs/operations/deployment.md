@@ -240,6 +240,22 @@ The knowledge service reads a few things from this service over `/internal`
 - **Never public.** The bundled nginx answers 404 for `/api/internal` whatever the token
   holds, and the CI deployment job checks it.
 
+## Reaching the knowledge service
+
+This service reads from the knowledge service over its internal API (ADR-0099): library search
+and retrieval, architecture matching, the knowledge event feed, and the read-only viewers'
+passages and evidence.
+
+- **Configure both or neither:** `KNOWLEDGE_API_BASE_URL` (for example
+  `http://knowledge-api:8000`) and `REQUIREMENT_SERVICE_TOKEN`, the secret this service
+  presents. It is 32+ characters, and the knowledge service holds the same value. Startup
+  refuses one without the other.
+- **Neither set:** the knowledge code still in this process answers, and the viewers have
+  nothing to show. This lasts until Stage 4.2b removes that code.
+- **Catalogue version names:** the local copy of the active catalogue release now records
+  its name too (`202610021500_active_release_name.sql`). The read-only views read
+  `GET /architecture/active-release`.
+
 ## Image updates
 
 - **Pinning.** Base and service images are pinned by digest. Dependabot opens
