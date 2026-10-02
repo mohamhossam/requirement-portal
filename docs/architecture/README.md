@@ -119,3 +119,6 @@ Search and AI grounding: [ADR-0064](adr-0064-unified-search-and-reference-answer
 - [ADR-0095: Product offerings](adr-0095-product-offerings.md)
 - [ADR-0096: Journeys and their derived flow](adr-0096-journeys.md)
 - [ADR-0097: Product and journey context on impacts](adr-0097-product-and-journey-context-on-impacts.md)
+- [ADR-0098: A three-repository platform beside the original application](adr-0098-three-repo-platform.md)
+- [ADR-0099: The knowledge service boundary and its own database](adr-0099-knowledge-service-boundary.md)
+- [ADR-0100: The platform kernel holds mechanisms, never meaning](adr-0100-platform-kernel.md)

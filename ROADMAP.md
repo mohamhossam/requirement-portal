@@ -32,6 +32,7 @@ this ledger.
 | Capability domains (`docs/slices/enhancement-capability-domains.md`, ADR-0089) | Implemented 2026-09-30 on `claude/capability-domains`, stacked on slice B; not merged. Slice C of three | PR, CI and merge after slices A and B |
 | Structured architecture documents, slices 1a–3e (`docs/slices/enhancement-catalogue-output-aware-reading.md`, `docs/slices/enhancement-markdown-structured-passages.md`, `docs/slices/enhancement-catalogue-table-reading-rules.md`, `docs/slices/enhancement-catalogue-table-reader.md`, `docs/slices/enhancement-system-landscape-domains.md`, `docs/slices/enhancement-catalogue-landscape-suggestions.md`, `docs/slices/enhancement-product-offerings.md`, `docs/slices/enhancement-catalogue-offering-suggestions.md`, `docs/slices/enhancement-journeys.md`, `docs/slices/enhancement-catalogue-journey-suggestions.md`, `docs/slices/enhancement-impact-product-context.md`, ADR-0091, ADR-0093, ADR-0094, ADR-0095, ADR-0096 and its amendment, ADR-0097, ADR-0090/0085/0088 amendments) | 1a–3d merged; 1a as [#83](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/83), 3d as [#99](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/99). 3e (product and journey context on impacts, ADR-0097) implemented 2026-10-01 on `claude/impact-product-context`; not merged | PR, CI and merge for 3e; a live-model replay of the reported file |
 | System components (`docs/slices/enhancement-system-components.md`, ADR-0092) | Implemented 2026-10-01 on `claude/system-components`; not merged | PR, CI and merge; live-model extraction check |
+| Three-repository platform split (ADR-0098, ADR-0099, ADR-0100; plan `docs/slices/enhancement-platform-split.md`) | **Scheduled 2026-10-02.** Stage 0 in progress: this repository imported from `smb-ai-requirement-agent@d5cfb57` | Stages 1–5: `platform-kernel` v1.0.0, untangle and seams here, `knowledge-portal`, cutover, data seeding |
 | Knowledge Center, sub-slices A–F | Specified 2026-09-26; not scheduled (F delivered early by the squad/architecture catalogue enhancement) | Sequencing; sub-slice E also needs an explicit roadmap change (read-only ADO) and four open answers |
 | ADO publication and safe republish (12–13) | Planned; not implemented | Implementation |
 | Advanced workflow optimization (15) | Planned; evidence-gated | Demonstrate a need and measurable benefit before implementation |
@@ -1850,6 +1851,8 @@ implementation, production-readiness remediation and the UI/UX redesign (Phases 
 already merged. They are not a new implementation queue. The remaining order preserves the
 approved future-slice sequence:
 
+0. **Three-repository platform split** (ADR-0098): explicitly scheduled 2026-10-02 ahead of the items below. It
+   moves the library and catalogues to `knowledge-portal`, and the Knowledge Center sub-slices follow it there.
 1. Merge the pending human-answer citation salvage (`0d42039`) from
    `claude/fix-analysis-citations-and-proxy`.
 2. Close production release qualification: complete the environment, quality and capacity
