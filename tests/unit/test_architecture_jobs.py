@@ -164,9 +164,7 @@ def _index_jobs() -> tuple[
         cast(Any, None),
         cast(Any, indexer),
         cast(Any, None),
-        cast(Any, None),
         ArchitectureJobExecution.QUEUED,
-        "reasoning-profile",
         clock,
     )
     return jobs, repository, indexer, clock

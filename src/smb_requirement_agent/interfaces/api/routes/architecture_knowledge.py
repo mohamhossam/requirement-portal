@@ -28,6 +28,9 @@ from smb_requirement_agent.application.use_cases.architecture_knowledge import (
 from smb_requirement_agent.application.use_cases.architecture_mapping_impact import (
     ReportMappingImpact,
 )
+from smb_requirement_agent.application.use_cases.architecture_mapping_jobs import (
+    ArchitectureMappingJobs,
+)
 from smb_requirement_agent.application.use_cases.architecture_preview import (
     PreviewArchitectureImpact,
 )
@@ -38,6 +41,7 @@ from smb_requirement_agent.domain.architecture.knowledge import InvalidKnowledge
 from smb_requirement_agent.interfaces.api.dependencies import (
     KnowledgeActorDep,
     get_architecture_jobs,
+    get_architecture_mapping_jobs,
     get_clock,
     get_compare_architecture_impact,
     get_decide_catalogue_candidates,
@@ -84,6 +88,16 @@ job_router = APIRouter(prefix="/jobs", tags=["architecture jobs"])
 
 KnowledgeDep = Annotated[ManageArchitectureKnowledge, Depends(get_manage_architecture_knowledge)]
 JobsDep = Annotated[ArchitectureJobs, Depends(get_architecture_jobs)]
+MappingJobsDep = Annotated[ArchitectureMappingJobs, Depends(get_architecture_mapping_jobs)]
+
+
+def _queue(
+    job_id: str, jobs: ArchitectureJobs, mapping: ArchitectureMappingJobs
+) -> ArchitectureJobs | ArchitectureMappingJobs:
+    """Mapping jobs have their own queue (ADR-0099); one job URL serves both."""
+    return mapping if mapping.owns(job_id) else jobs
+
+
 SuggestionsDep = Annotated[DecideCatalogueCandidate, Depends(get_decide_catalogue_candidates)]
 ClockDep = Annotated[ClockPort, Depends(get_clock)]
 ReadDocumentDep = Annotated[ReadKnowledgeDocument, Depends(get_read_knowledge_document)]
@@ -604,13 +618,19 @@ def activate_release(
 
 
 @job_router.get("/{job_id}", response_model=ArchitectureJobResponse)
-def get_job(job_id: str, jobs: JobsDep, actor: KnowledgeActorDep) -> ArchitectureJobResponse:
-    return ArchitectureJobResponse.from_domain(jobs.get_for_actor(job_id, actor))
+def get_job(
+    job_id: str, jobs: JobsDep, mapping: MappingJobsDep, actor: KnowledgeActorDep
+) -> ArchitectureJobResponse:
+    return ArchitectureJobResponse.from_domain(
+        _queue(job_id, jobs, mapping).get_for_actor(job_id, actor)
+    )
 
 
 @job_router.post("/{job_id}/cancel", response_model=ArchitectureJobResponse)
-def cancel_job(job_id: str, jobs: JobsDep, actor: KnowledgeActorDep) -> ArchitectureJobResponse:
-    return ArchitectureJobResponse.from_domain(jobs.cancel(job_id, actor))
+def cancel_job(
+    job_id: str, jobs: JobsDep, mapping: MappingJobsDep, actor: KnowledgeActorDep
+) -> ArchitectureJobResponse:
+    return ArchitectureJobResponse.from_domain(_queue(job_id, jobs, mapping).cancel(job_id, actor))
 
 
 @job_router.post(
@@ -618,5 +638,7 @@ def cancel_job(job_id: str, jobs: JobsDep, actor: KnowledgeActorDep) -> Architec
     response_model=ArchitectureJobResponse,
     dependencies=[Depends(limit_provider_calls)],
 )
-def retry_job(job_id: str, jobs: JobsDep, actor: KnowledgeActorDep) -> ArchitectureJobResponse:
-    return ArchitectureJobResponse.from_domain(jobs.retry(job_id, actor))
+def retry_job(
+    job_id: str, jobs: JobsDep, mapping: MappingJobsDep, actor: KnowledgeActorDep
+) -> ArchitectureJobResponse:
+    return ArchitectureJobResponse.from_domain(_queue(job_id, jobs, mapping).retry(job_id, actor))

@@ -8,6 +8,9 @@ from smb_kernel.documents.text_extractor import SafeDocumentTextExtractor
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.ports.architecture_knowledge import ArchitectureKnowledgePort
+from smb_requirement_agent.application.ports.architecture_knowledge_repository import (
+    ArchitectureKnowledgeRepositoryPort,
+)
 from smb_requirement_agent.application.ports.architecture_rag import (
     ArchitectureReasonerPort,
     EmbeddingPort,
@@ -32,6 +35,9 @@ from smb_requirement_agent.application.use_cases.architecture_knowledge import (
 )
 from smb_requirement_agent.application.use_cases.architecture_mapping import (
     MapBreakdownArchitecture,
+)
+from smb_requirement_agent.application.use_cases.architecture_mapping_jobs import (
+    ArchitectureMappingJobs,
 )
 from smb_requirement_agent.application.use_cases.architecture_preview import (
     PreviewArchitectureImpact,
@@ -90,8 +96,20 @@ class ArchitectureKnowledgeWiring:
 @dataclass(frozen=True)
 class ArchitectureJobWiring:
     jobs: ArchitectureJobs
+    mapping_jobs: ArchitectureMappingJobs
     # Present only when jobs are queued; inline jobs finish inside the request.
     worker: ArchitectureJobWorker | None
+    mapping_worker: ArchitectureJobWorker | None
+
+
+class _CatalogueActiveRelease:
+    """The active release id, read from the catalogue until a local projection replaces it."""
+
+    def __init__(self, repository: ArchitectureKnowledgeRepositoryPort) -> None:
+        self._repository = repository
+
+    def active_release_id(self) -> str:
+        return self._repository.active().id
 
 
 def build_architecture_retrieval(embeddings: KnowledgeEmbeddingPort) -> ArchitectureRetrieval:
@@ -185,19 +203,37 @@ def build_architecture_jobs(
         persistence.architecture_job_repository,
         persistence.architecture_repository,
         architecture.build_index,
-        map_breakdown_architecture,
         architecture.propose_changes,
         architecture.job_execution,
+        clock,
+    )
+    mapping_jobs = ArchitectureMappingJobs(
+        persistence.mapping_job_repository,
+        _CatalogueActiveRelease(persistence.architecture_repository),
+        map_breakdown_architecture,
+        architecture.job_execution,
+        architecture.build_index.profile,
         f"{architecture.reasoner.model}:architecture-impact-v1",
         clock,
     )
-    worker = (
-        ArchitectureJobWorker(
-            jobs,
-            poll_interval_seconds=settings.ai_job_poll_interval_seconds,
-            shutdown_grace_seconds=settings.ai_job_shutdown_grace_seconds,
+    queued = architecture.job_execution is ArchitectureJobExecution.QUEUED
+    worker, mapping_worker = (
+        (
+            ArchitectureJobWorker(
+                jobs,
+                poll_interval_seconds=settings.ai_job_poll_interval_seconds,
+                shutdown_grace_seconds=settings.ai_job_shutdown_grace_seconds,
+            ),
+            ArchitectureJobWorker(
+                mapping_jobs,
+                poll_interval_seconds=settings.ai_job_poll_interval_seconds,
+                shutdown_grace_seconds=settings.ai_job_shutdown_grace_seconds,
+                name="architecture-mapping-jobs",
+            ),
         )
-        if architecture.job_execution is ArchitectureJobExecution.QUEUED
-        else None
+        if queued
+        else (None, None)
     )
-    return ArchitectureJobWiring(jobs=jobs, worker=worker)
+    return ArchitectureJobWiring(
+        jobs=jobs, mapping_jobs=mapping_jobs, worker=worker, mapping_worker=mapping_worker
+    )

@@ -55,6 +55,9 @@ from smb_requirement_agent.application.use_cases.architecture_mapping import (
 from smb_requirement_agent.application.use_cases.architecture_mapping_impact import (
     ReportMappingImpact,
 )
+from smb_requirement_agent.application.use_cases.architecture_mapping_jobs import (
+    ArchitectureMappingJobs,
+)
 from smb_requirement_agent.application.use_cases.architecture_preview import (
     PreviewArchitectureImpact,
 )
@@ -549,6 +552,10 @@ def get_decide_catalogue_candidates(container: ContainerDep) -> DecideCatalogueC
 
 def get_architecture_jobs(container: ContainerDep) -> ArchitectureJobs:
     return container.architecture_jobs
+
+
+def get_architecture_mapping_jobs(container: ContainerDep) -> ArchitectureMappingJobs:
+    return container.architecture_mapping_jobs
 
 
 def get_upload_knowledge_document(container: ContainerDep) -> UploadKnowledgeDocument:

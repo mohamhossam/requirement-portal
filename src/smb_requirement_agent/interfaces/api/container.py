@@ -132,6 +132,9 @@ from smb_requirement_agent.application.use_cases.architecture_mapping import (
 from smb_requirement_agent.application.use_cases.architecture_mapping_impact import (
     ReportMappingImpact,
 )
+from smb_requirement_agent.application.use_cases.architecture_mapping_jobs import (
+    ArchitectureMappingJobs,
+)
 from smb_requirement_agent.application.use_cases.architecture_preview import (
     PreviewArchitectureImpact,
 )
@@ -350,6 +353,7 @@ class Container:
     read_knowledge_document: ReadKnowledgeDocument
     decide_catalogue_candidates: DecideCatalogueCandidate
     architecture_jobs: ArchitectureJobs
+    architecture_mapping_jobs: ArchitectureMappingJobs
     clock: ClockPort
     breakdown_repository: BreakdownRepositoryPort
     transaction_manager: TransactionManagerPort
@@ -623,6 +627,8 @@ def _build_container(
     }
     if architecture_jobs.worker is not None:
         background_workers["architecture_job_worker"] = architecture_jobs.worker
+    if architecture_jobs.mapping_worker is not None:
+        background_workers["architecture_mapping_job_worker"] = architecture_jobs.mapping_worker
 
     return Container(
         requirement_repository=persistence.requirement_repository,
@@ -680,6 +686,7 @@ def _build_container(
         read_knowledge_document=architecture.read_document,
         decide_catalogue_candidates=architecture.decide_candidates,
         architecture_jobs=architecture_jobs.jobs,
+        architecture_mapping_jobs=architecture_jobs.mapping_jobs,
         clock=resolved_clock,
         breakdown_repository=persistence.revision_repository,
         transaction_manager=persistence.transaction_manager,
