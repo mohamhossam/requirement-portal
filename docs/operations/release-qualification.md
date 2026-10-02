@@ -48,6 +48,10 @@ not replace a rehearsal using the intended production backup, legacy files, vers
 
 ## HTTP search measurement
 
+The load script measures `POST /knowledge/search/unified`: a member's own Requirement knowledge
+and the published library passages the knowledge service returns. Library-only search load is
+measured against the knowledge portal.
+
 Prepare a UTF-8 JSON array of query strings, for example `["XGPON coverage", "high-speed orders"]`.
 Use real representative queries for release qualification; the example is synthetic. Select the
 environment explicitly and run:
