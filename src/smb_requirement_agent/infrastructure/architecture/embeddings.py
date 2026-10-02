@@ -7,7 +7,7 @@ import math
 
 from smb_requirement_agent.application.errors import KnowledgeGenerationError, ModelTransportError
 from smb_requirement_agent.application.ports.architecture_rag import ArchitectureEvidenceError
-from smb_requirement_agent.application.ports.requirement_knowledge import KnowledgeEmbeddingPort
+from smb_requirement_agent.application.ports.embedding import KnowledgeEmbeddingPort
 
 DIMENSIONS = 768
 BATCH_SIZE = 32

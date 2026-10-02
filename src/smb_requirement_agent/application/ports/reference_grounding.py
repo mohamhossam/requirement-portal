@@ -73,6 +73,21 @@ class ReferenceSearchPort(ReferenceEvidencePort, Protocol):
     def retrieve(self, query: str) -> tuple[ReferenceEvidence, ...]: ...
 
 
+class ReferenceKnowledgePort(ReferenceSearchPort, Protocol):
+    """What requirement work reads from the shared reference library (ADR-0099).
+
+    Everything crosses as this application's own values (`ReferenceEvidence`,
+    `PublishedReference`), never the library's chunks, so the library can move to
+    its own service behind an HTTP adapter.
+    """
+
+    def has_published(self) -> bool: ...
+
+    def search_evidence(self, query: str) -> tuple[ReferenceEvidence, ...]:
+        """Every ranked hit for `query`, unbudgeted, each with its citation and context."""
+        ...
+
+
 def require_analysis_references(
     port: ReferenceEvidencePort, analysis: RequirementAnalysis, *, target_ids: Sequence[str] = ()
 ) -> None:
