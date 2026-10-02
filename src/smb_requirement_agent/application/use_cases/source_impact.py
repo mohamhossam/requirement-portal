@@ -123,10 +123,13 @@ class SourceImpactReview:
         expected_version: int,
         decision: ImpactDecisionKind,
         reason: str,
+        *,
+        requirement_id: str | None = None,
     ) -> DependencyImpact:
+        """Record a decision; through a Requirement's URL, only for that Requirement's content."""
         with self._transactions.transaction():
             row = self._index.get(dependency_id)
-            if row is None:
+            if row is None or (requirement_id is not None and row.requirement_id != requirement_id):
                 raise DocumentNotFoundError("Dependency was not found.")
             self._transactions.lock_requirement(RequirementId(row.requirement_id))
             self._authorization.require(

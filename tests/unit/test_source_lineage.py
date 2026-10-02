@@ -262,3 +262,50 @@ def test_source_impact_api_permissions_cas_and_private_counts(
         )
         assert client.post(decision_path, json=body).status_code == 200
         assert client.post(decision_path, json=body).status_code == 409
+
+
+def test_source_impact_lives_under_the_requirement_with_the_library_paths_as_aliases(
+    grounded: tuple[Container, LibraryView],
+) -> None:
+    """Source impact is requirement work (ADR-0099); the old library paths still answer."""
+    container, document = grounded
+    owner = FAKE_ACTORS[0]
+    mine = container.create_requirement.execute(
+        CreateRequirementInput("Mine", "XGPON coverage for bundles."), owner
+    )
+    container.analyze_requirement.execute(owner, mine.id)
+    other = container.create_requirement.execute(
+        CreateRequirementInput("Other", "Unrelated wording."), owner
+    )
+    container.document_library.withdraw(document.id, document.version, owner, "Retired")
+    with TestClient(create_app(lambda: container)) as client:
+        path = f"/requirements/{mine.id.value}/source-impact?active_only=true&limit=100"
+        page = client.get(path)
+        assert page.status_code == 200
+        assert page.headers["Cache-Control"] == "private, no-store"
+        legacy = client.get(
+            f"/library/requirements/{mine.id.value}/source-impact?active_only=true&limit=100"
+        )
+        assert legacy.json() == page.json()
+
+        item = page.json()["items"][0]
+        dependency = item["dependency"]["id"]
+        body = dict(
+            publication_state=item["publication_state"],
+            expected_version=0,
+            decision="retain_historical",
+            reason="Reviewed retained historical applicability",
+        )
+        elsewhere = f"/requirements/{other.id.value}/source-impact/{dependency}/decisions"
+        assert client.post(elsewhere, json=body).status_code == 404
+        here = f"/requirements/{mine.id.value}/source-impact/{dependency}/decisions"
+        decided = client.post(here, json=body)
+        assert decided.status_code == 200
+        assert decided.json()["decisions"][-1]["decision"] == "retain_historical"
+
+        operations = client.get("/openapi.json").json()["paths"]
+        assert operations["/library/requirements/{requirement_id}/source-impact"]["get"][
+            "deprecated"
+        ]
+        assert operations["/library/source-impact/{dependency_id}/decisions"]["post"]["deprecated"]
+        assert "deprecated" not in operations["/requirements/{requirement_id}/source-impact"]["get"]
