@@ -132,6 +132,18 @@ passage and evidence views.
 - **Offline (fake identity):** Amina Owner and Ravi Reviewer are knowledge
   admins in both portals; Omar Observer is not.
 
+Architecture mapping in requirement work checks two more roles, also granted by
+group in the Keycloak realm:
+
+| Group | Roles | Allows |
+|---|---|---|
+| `knowledge-readers` | `knowledge_reader` | Starting and reading architecture mapping jobs on Requirements the person works on |
+| `knowledge-maintainers` | `knowledge_reader`, `knowledge_maintainer` | Also cancelling and retrying other people's mapping jobs |
+
+Without `knowledge_reader`, a signed-in member cannot map a Requirement's
+architecture. Offline, Amina Owner has both roles, Ravi Reviewer is a reader,
+and Omar Observer has neither.
+
 ## Model files
 
 The backend image holds no configuration files, and its root filesystem is
