@@ -67,9 +67,9 @@ server {
         proxy_send_timeout 600s;
     }
 
-    # The knowledge portal's browser app, served by its own image. Until that
-    # image is deployed the name does not resolve, and admins get a page that
-    # says so instead of a bare 502.
+    # The knowledge portal's browser app, served by its own image (`knowledge-web`).
+    # While that container is down the name does not resolve, and admins get a
+    # page that says so instead of a bare 502.
     location /knowledge/ {
         include /etc/nginx/snippets/security-headers.conf;
         # A variable in proxy_pass makes nginx resolve the host per request, so

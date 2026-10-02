@@ -14,7 +14,11 @@ PINNED = re.compile(r"^[\w./:-]+@sha256:[0-9a-f]{64}$")
 # The platform's own images: the two this repository builds, tagged rather than
 # pulled, and knowledge-portal's, pinned by the release tag its workflow
 # publishes only after CI passes (ADR-0098).
-OWN_IMAGES = ("requirement-platform/", "ghcr.io/mohamhossam/knowledge-api:")
+OWN_IMAGES = (
+    "requirement-platform/",
+    "ghcr.io/mohamhossam/knowledge-api:",
+    "ghcr.io/mohamhossam/knowledge-web:",
+)
 
 
 def _references() -> list[tuple[str, str]]:

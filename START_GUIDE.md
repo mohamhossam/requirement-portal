@@ -43,6 +43,7 @@ knowledge service, from the image knowledge-portal publishes.
 | `knowledge-migrate` | Applies the knowledge service's migrations, then exits |
 | `knowledge-api` | The knowledge service: shared library, architecture and squad catalogues |
 | `knowledge-worker` | Library ingestion and catalogue jobs |
+| `knowledge-web` | The knowledge portal's browser app, served under `/knowledge/` |
 | `web` | nginx serving the review UI on port `8080`, forwarding `/api` to the API and `/knowledge-api` to the knowledge service |
 
 The Compose project is `requirement-platform`, so it can run beside an earlier
@@ -135,13 +136,13 @@ set it in every new terminal before running any `docker compose` command.
 ### Step 2: build and start
 
 ```bash
-docker compose -f deploy/compose.production.yaml pull knowledge-api
+docker compose -f deploy/compose.production.yaml pull knowledge-api knowledge-web
 docker compose -f deploy/compose.production.yaml build
 docker compose -f deploy/compose.production.yaml run --rm maintenance
 docker compose -f deploy/compose.production.yaml up -d
 ```
 
-- `pull` fetches the knowledge service's pinned release (`KNOWLEDGE_IMAGE_TAG`).
+- `pull` fetches the knowledge service's pinned release (`KNOWLEDGE_IMAGE_TAG`), its API and its browser app.
 - `build` creates the `requirement-platform/api` and `requirement-platform/web` images. It
   takes several minutes the first time.
 - `run --rm maintenance` starts PostgreSQL, applies the migrations and records
@@ -166,7 +167,7 @@ After up to a minute, `api` and `knowledge-api` show `(healthy)`, and `web`,
 | `http://localhost:8080/api/health` | The API is serving; returns `{"status":"ok"}` |
 | `http://localhost:8080/api/ready` | The API is ready: database migrated and maintenance recorded |
 | `http://localhost:8080/knowledge-api/ready` | The knowledge service is ready |
-| `http://localhost:8080/knowledge/` | The knowledge portal, for knowledge admins (Amina Owner and Ravi Reviewer in the demo). Until its browser app is deployed, a page says it is not available. |
+| `http://localhost:8080/knowledge/` | The knowledge portal, for knowledge admins (Amina Owner and Ravi Reviewer in the demo) |
 
 Port `8080` is the only one the stack publishes. The API, worker, database and
 scanner are reachable only from inside the stack. Continue with section 5 to
@@ -333,7 +334,7 @@ ghcr.io (`docker login ghcr.io`) with a token that can read the knowledge
 service's package. Then fetch, build, prepare the database and start:
 
 ```bash
-docker compose -f deploy/compose.production.yaml pull knowledge-api
+docker compose -f deploy/compose.production.yaml pull knowledge-api knowledge-web
 docker compose -f deploy/compose.production.yaml build
 docker compose -f deploy/compose.production.yaml run --rm maintenance
 docker compose -f deploy/compose.production.yaml up -d
