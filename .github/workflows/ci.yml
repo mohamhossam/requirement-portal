@@ -224,6 +224,9 @@ jobs:
           curl --fail --silent http://127.0.0.1:8080/api/ready
           curl --fail --silent --head http://127.0.0.1:8080/ | grep -i "frame-ancestors 'none'"
           curl --fail --silent http://127.0.0.1:8080/ | grep -q 'http-equiv="Content-Security-Policy"'
+          # Service-to-service routes never pass the edge (ADR-0099).
+          code=$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:8080/api/internal/actors/x)
+          test "$code" = 404
 
       - name: Model files are mounted read-only
         run: |

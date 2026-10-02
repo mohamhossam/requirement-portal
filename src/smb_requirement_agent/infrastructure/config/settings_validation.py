@@ -28,6 +28,8 @@ if TYPE_CHECKING:
 def validate_settings(settings: Settings) -> None:
     if settings.request_max_body_bytes < 1024:
         raise ConfigurationError("REQUEST_MAX_BODY_BYTES must be at least 1024.")
+    if settings.knowledge_service_token is not None and len(settings.knowledge_service_token) < 32:
+        raise ConfigurationError("KNOWLEDGE_SERVICE_TOKEN must be at least 32 characters.")
     if settings.provider_rate_limit_per_minute < 0:
         raise ConfigurationError(
             "PROVIDER_RATE_LIMIT_PER_MINUTE must be 0 (unlimited) or a positive number."

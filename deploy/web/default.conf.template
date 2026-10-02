@@ -33,6 +33,12 @@ server {
         try_files $uri =404;
     }
 
+    # Service-to-service routes are never reachable from a browser (ADR-0099).
+    location ^~ /api/internal {
+        include /etc/nginx/snippets/security-headers.conf;
+        return 404;
+    }
+
     location /api/ {
         include /etc/nginx/snippets/security-headers.conf;
         # A variable in proxy_pass makes nginx resolve the host per request.
