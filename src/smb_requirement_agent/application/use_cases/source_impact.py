@@ -3,11 +3,12 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.errors import (
     ArtifactVersionConflictError,
     DocumentNotFoundError,
 )
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.document_library import DocumentLibraryPort
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidencePort
 from smb_requirement_agent.application.ports.source_dependencies import (

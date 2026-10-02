@@ -14,25 +14,25 @@ import yaml
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pydantic import BaseModel, ValidationError
-
-from smb_requirement_agent.application.errors import KnowledgeGenerationError, ModelTransportError
-from smb_requirement_agent.application.public_errors import describe_public_error
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
-from smb_requirement_agent.infrastructure.config.llm_profiles import (
+from smb_kernel.diagnostics import JsonLinesDebugTrace, NullDebugTrace
+from smb_kernel.llm.compatible_transport import (
+    CompatibleOutputError,
+    CompatibleStructuredOutputClient,
+    ConfiguredKnowledgeEmbedding,
+)
+from smb_kernel.llm.profiles import (
     EmbeddingProfile,
     ModelProfile,
     ProfileConfigurationError,
     load_profiles,
 )
+from smb_kernel.llm.structured_output import truncated
+
+from smb_requirement_agent.application.errors import KnowledgeGenerationError, ModelTransportError
+from smb_requirement_agent.application.public_errors import describe_public_error
+from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.infrastructure.config.options import ConfigurationError, LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.diagnostics import JsonLinesDebugTrace, NullDebugTrace
-from smb_requirement_agent.infrastructure.llm.compatible_transport import (
-    CompatibleOutputError,
-    CompatibleStructuredOutputClient,
-    ConfiguredKnowledgeEmbedding,
-)
-from smb_requirement_agent.infrastructure.llm.structured_output import truncated
 from smb_requirement_agent.infrastructure.persistence.knowledge_index_generations import (
     InMemoryKnowledgeIndexGenerations,
 )
@@ -318,9 +318,7 @@ def test_bounded_retries_and_safe_error_kinds(
     status: int, attempts: int, kind: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     delays: list[float] = []
-    monkeypatch.setattr(
-        "smb_requirement_agent.infrastructure.llm.compatible_transport.time.sleep", delays.append
-    )
+    monkeypatch.setattr("smb_kernel.llm.compatible_transport.time.sleep", delays.append)
     requests: list[httpx.Request] = []
 
     def handler(request: httpx.Request) -> httpx.Response:

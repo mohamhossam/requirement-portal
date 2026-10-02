@@ -6,6 +6,7 @@ from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.application.errors import (
     AnalysisConfirmationRequiredError,
@@ -83,7 +84,6 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_story_repository
     InMemoryStoryChangeProposalRepository,
     InMemoryStoryRepository,
 )
-from smb_requirement_agent.infrastructure.time.fixed_clock import FixedClock
 from tests.conftest import (
     AcceptAllSuggestionValidator,
     NoOpAnswerSuggestionScheduler,

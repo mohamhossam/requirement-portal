@@ -13,6 +13,13 @@ from contextlib import ExitStack
 from dataclasses import dataclass, replace
 from typing import Protocol
 
+from smb_kernel.diagnostics import DebugTrace
+from smb_kernel.documents.ports import DocumentStoragePort
+from smb_kernel.identity.ports import IdentityProviderPort
+from smb_kernel.observability.metrics import Metrics
+from smb_kernel.time.clock import ClockPort
+from smb_kernel.time.system import SystemClock
+
 from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.application.ports.activity import ActivityReadPort, ReportingReadPort
 from smb_requirement_agent.application.ports.actor_directory import ActorDirectoryPort
@@ -33,14 +40,11 @@ from smb_requirement_agent.application.ports.breakdown_repository import Breakdo
 from smb_requirement_agent.application.ports.breakdown_review_repository import (
     BreakdownReviewRepositoryPort,
 )
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.document_repository import DocumentRepositoryPort
-from smb_requirement_agent.application.ports.document_storage import DocumentStoragePort
 from smb_requirement_agent.application.ports.epic_generator import EpicGeneratorPort
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_generator import FeatureGeneratorPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
-from smb_requirement_agent.application.ports.identity_provider import IdentityProviderPort
 from smb_requirement_agent.application.ports.knowledge_index_generations import (
     KnowledgeIndexGenerationsPort,
 )
@@ -246,7 +250,6 @@ from smb_requirement_agent.application.use_cases.unified_knowledge_search import
 from smb_requirement_agent.infrastructure.config.settings import (
     Settings,
 )
-from smb_requirement_agent.infrastructure.diagnostics import DebugTrace
 from smb_requirement_agent.infrastructure.documents.library_worker import (
     DocumentIngestionWorker,
 )
@@ -255,8 +258,6 @@ from smb_requirement_agent.infrastructure.exports.xlsx_exporter import XlsxBackl
 from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import (
     RequirementIndexWorker,
 )
-from smb_requirement_agent.infrastructure.observability.metrics import Metrics
-from smb_requirement_agent.infrastructure.time.system_clock import SystemClock
 from smb_requirement_agent.interfaces.api.composition.analysis import build_requirement_analyzer
 from smb_requirement_agent.interfaces.api.composition.analysis_workflow import (
     build_analysis_workflow,

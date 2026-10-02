@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 
 import psycopg
+from smb_kernel.persistence.connector import PostgresConnector
 
 from smb_requirement_agent.application.errors import PersistenceError
 from smb_requirement_agent.application.ports.architecture_rag import (
@@ -12,7 +13,6 @@ from smb_requirement_agent.application.ports.architecture_rag import (
     EvidenceChunk,
 )
 from smb_requirement_agent.application.ports.architecture_tokenizer import ArchitectureTokenizerPort
-from smb_requirement_agent.infrastructure.persistence.postgres_connector import PostgresConnector
 
 
 def _hash(text: str) -> str:

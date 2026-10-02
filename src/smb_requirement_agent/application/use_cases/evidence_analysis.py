@@ -9,8 +9,9 @@ from collections.abc import Callable, Mapping, Sequence
 from copy import deepcopy
 from dataclasses import asdict, dataclass
 
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.requirement_analyzer import (
     ActiveQuestionContext,
     AnalysisDocumentContext,

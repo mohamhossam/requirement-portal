@@ -11,12 +11,12 @@ import re
 from pathlib import Path
 
 import yaml
+from smb_kernel.observability import metrics
 
 ROOT = Path(__file__).resolve().parents[2]
 MONITORING = ROOT / "deploy" / "monitoring"
-METRICS_MODULE = (
-    ROOT / "src" / "smb_requirement_agent" / "infrastructure" / "observability" / "metrics.py"
-)
+# The instruments are platform-kernel's (ADR-0100); this app's dashboard and alerts use them.
+METRICS_MODULE = Path(metrics.__file__)
 METRIC_NAME = re.compile(r"\bsmb_[a-z0-9_]+")
 # Series Prometheus derives from a histogram's single declared name.
 DERIVED_SUFFIXES = ("_bucket", "_count", "_sum")

@@ -16,6 +16,13 @@ from typing import Any
 import httpx
 import pytest
 from fastapi.testclient import TestClient
+from smb_kernel.llm.local_structured_output import (
+    LocalStructuredOutputClient,
+)
+from smb_kernel.llm.structured_output import (
+    OutputTruncatedError,
+    StructuredOutputError,
+)
 
 from smb_requirement_agent.application.errors import ModelTransportError
 from smb_requirement_agent.application.ports.architecture_jobs import (
@@ -38,13 +45,6 @@ from smb_requirement_agent.infrastructure.llm.catalogue_extraction import (
     ChangeOutput,
     ExtractionOutput,
     StructuredCatalogueExtractor,
-)
-from smb_requirement_agent.infrastructure.llm.local_structured_output import (
-    LocalStructuredOutputClient,
-)
-from smb_requirement_agent.infrastructure.llm.structured_output import (
-    OutputTruncatedError,
-    StructuredOutputError,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_architecture_jobs import (
     InMemoryArchitectureJobs,

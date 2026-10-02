@@ -13,6 +13,9 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 from pydantic import TypeAdapter
+from smb_kernel.documents.text_extractor import SafeDocumentTextExtractor
+from smb_kernel.llm.structured_output import StructuredOutputError
+from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.application.errors import ModelTransportError
 from smb_requirement_agent.application.ports.architecture_rag import ArchitectureEvidenceError
@@ -64,7 +67,6 @@ from smb_requirement_agent.infrastructure.architecture.located_extractor import 
     LocatedDocumentExtractor,
 )
 from smb_requirement_agent.infrastructure.architecture.tokenizer import FakeWordTokenizer
-from smb_requirement_agent.infrastructure.documents.text_extractor import SafeDocumentTextExtractor
 from smb_requirement_agent.infrastructure.llm.catalogue_extraction import (
     ChangeOutput,
     ExtractionOutput,
@@ -79,7 +81,6 @@ from smb_requirement_agent.infrastructure.llm.catalogue_matching import (
     name_likeness,
     shortlists,
 )
-from smb_requirement_agent.infrastructure.llm.structured_output import StructuredOutputError
 from smb_requirement_agent.infrastructure.persistence.in_memory_architecture_knowledge import (
     InMemoryArchitectureKnowledgeRepository,
 )
@@ -89,7 +90,6 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_catalogue_candid
 from smb_requirement_agent.infrastructure.persistence.in_memory_document_repository import (
     InMemoryDocumentStorage,
 )
-from smb_requirement_agent.infrastructure.time.fixed_clock import FixedClock
 
 NOW = datetime(2026, 9, 30, 9, 0, tzinfo=UTC)
 MAINTAINER = Actor("amina", frozenset({"knowledge_maintainer"}))

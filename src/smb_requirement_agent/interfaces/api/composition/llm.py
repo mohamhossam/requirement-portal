@@ -9,6 +9,25 @@ from typing import TypedDict
 import httpx as httpx
 import httpx2
 from openai import DefaultHttpxClient, OpenAI
+from smb_kernel.diagnostics import DebugTrace, build_debug_trace
+from smb_kernel.llm.compatible_transport import (
+    CompatibleStructuredOutputClient,
+    ConfiguredKnowledgeEmbedding,
+)
+from smb_kernel.llm.local_structured_output import (
+    LocalStructuredOutputClient,
+)
+from smb_kernel.llm.openai_structured_output import (
+    OpenAIStructuredOutputClient,
+)
+from smb_kernel.llm.openrouter_structured_output import (
+    OpenRouterStructuredOutputClient,
+)
+from smb_kernel.observability.metrics import (
+    MeteredTransport,
+    MeteredTransport2,
+    Metrics,
+)
 
 from smb_requirement_agent.application.ports.architecture_rag import ArchitectureReasonerPort
 from smb_requirement_agent.application.ports.catalogue_extractor import CatalogueExtractorPort
@@ -33,7 +52,6 @@ from smb_requirement_agent.infrastructure.architecture.reasoning import (
 )
 from smb_requirement_agent.infrastructure.config.options import ConfigurationError, LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.diagnostics import DebugTrace, build_debug_trace
 from smb_requirement_agent.infrastructure.llm.catalogue_extraction import (
     FakeCatalogueExtractor,
     StructuredCatalogueExtractor,
@@ -41,10 +59,6 @@ from smb_requirement_agent.infrastructure.llm.catalogue_extraction import (
 from smb_requirement_agent.infrastructure.llm.catalogue_matching import (
     FakeSystemMatcher,
     StructuredSystemMatcher,
-)
-from smb_requirement_agent.infrastructure.llm.compatible_transport import (
-    CompatibleStructuredOutputClient,
-    ConfiguredKnowledgeEmbedding,
 )
 from smb_requirement_agent.infrastructure.llm.fake_epic_generator import FakeEpicGenerator
 from smb_requirement_agent.infrastructure.llm.fake_feature_generator import FakeFeatureGenerator
@@ -80,9 +94,6 @@ from smb_requirement_agent.infrastructure.llm.local_story_quality_evaluator impo
     LocalStoryQualityEvaluator,
     StructuredStoryQualityEvaluatorAdapter,
 )
-from smb_requirement_agent.infrastructure.llm.local_structured_output import (
-    LocalStructuredOutputClient,
-)
 from smb_requirement_agent.infrastructure.llm.openai_adapters import (
     OpenAIClarificationAnswerSuggester,
     OpenAIEpicGenerator,
@@ -91,9 +102,6 @@ from smb_requirement_agent.infrastructure.llm.openai_adapters import (
     OpenAIRequirementRelationshipClassifier,
     OpenAIStoryGenerator,
     OpenAIStoryQualityEvaluator,
-)
-from smb_requirement_agent.infrastructure.llm.openai_structured_output import (
-    OpenAIStructuredOutputClient,
 )
 from smb_requirement_agent.infrastructure.llm.openrouter_adapters import (
     OpenRouterAdapterSettings,
@@ -104,9 +112,6 @@ from smb_requirement_agent.infrastructure.llm.openrouter_adapters import (
     OpenRouterRequirementRelationshipClassifier,
     OpenRouterStoryGenerator,
     OpenRouterStoryQualityEvaluator,
-)
-from smb_requirement_agent.infrastructure.llm.openrouter_structured_output import (
-    OpenRouterStructuredOutputClient,
 )
 from smb_requirement_agent.infrastructure.llm.reference_proposals import (
     FakeReferenceProposer,
@@ -120,11 +125,6 @@ from smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters imp
     OpenRouterKnowledgeEmbedding,
     StructuredClarificationAnswerSuggesterAdapter,
     StructuredRequirementRelationshipClassifierAdapter,
-)
-from smb_requirement_agent.infrastructure.observability.metrics import (
-    MeteredTransport,
-    MeteredTransport2,
-    Metrics,
 )
 
 # Hosted models configured without a profile declare no context window; this is

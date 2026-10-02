@@ -1,6 +1,14 @@
 """Feature generator backed by a local OpenAI-compatible model server."""
 
 import httpx
+from smb_kernel.diagnostics import DebugTrace, NullDebugTrace
+from smb_kernel.llm.local_structured_output import (
+    LocalStructuredOutputClient,
+)
+from smb_kernel.llm.structured_output import (
+    StructuredOutputClient,
+    StructuredOutputError,
+)
 
 from smb_requirement_agent.application.errors import FeatureGenerationError
 from smb_requirement_agent.application.ports.feature_generator import FeatureCandidate
@@ -11,21 +19,13 @@ from smb_requirement_agent.application.ports.generation_guidance import (
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.infrastructure.diagnostics import DebugTrace, NullDebugTrace
 from smb_requirement_agent.infrastructure.llm.candidate_mappers import to_feature_candidates
-from smb_requirement_agent.infrastructure.llm.local_structured_output import (
-    LocalStructuredOutputClient,
-)
 from smb_requirement_agent.infrastructure.llm.prompts.feature_prompt import (
     FEATURE_SYSTEM_PROMPT,
     PROMPT_VERSION,
     build_feature_user_prompt,
 )
 from smb_requirement_agent.infrastructure.llm.schemas.feature_schema import FeatureSetSchema
-from smb_requirement_agent.infrastructure.llm.structured_output import (
-    StructuredOutputClient,
-    StructuredOutputError,
-)
 
 
 class StructuredFeatureGeneratorAdapter:

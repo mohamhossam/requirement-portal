@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass, replace
 
+from smb_kernel.documents.ports import DocumentStoragePort, ExtractedDocument
+
 from smb_requirement_agent.application.errors import (
     DocumentNotFoundError,
     DocumentVersionConflictError,
@@ -9,9 +11,7 @@ from smb_requirement_agent.application.errors import (
     RequirementDraftNotFoundError,
     RequirementNotFoundError,
 )
-from smb_requirement_agent.application.ports.document_extractor import ExtractedDocument
 from smb_requirement_agent.application.ports.document_library import DocumentLibraryPort
-from smb_requirement_agent.application.ports.document_storage import DocumentStoragePort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.document_library import DocumentLibrary
 from smb_requirement_agent.application.use_cases.documents import (

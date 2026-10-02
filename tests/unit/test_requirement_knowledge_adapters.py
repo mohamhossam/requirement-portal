@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import httpx
 import pytest
+from smb_kernel.llm.structured_output import StructuredOutputError
 
 from smb_requirement_agent.application.errors import KnowledgeGenerationError
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidence
@@ -45,7 +46,6 @@ from smb_requirement_agent.infrastructure.llm.schemas.knowledge_schema import (
     AnswerSuggestionListSchema,
     AnswerSuggestionSchema,
 )
-from smb_requirement_agent.infrastructure.llm.structured_output import StructuredOutputError
 
 
 def _requirement() -> Requirement:

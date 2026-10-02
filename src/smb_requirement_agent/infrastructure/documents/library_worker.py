@@ -1,56 +1,16 @@
-"""Independent document worker and fail-closed local malware scanning."""
+"""Independent document worker. Scanning is platform-kernel's (ADR-0100)."""
 
 from __future__ import annotations
 
 import logging
-import socket
-import struct
 from threading import Event, Thread
 
-from smb_requirement_agent.application.errors import DocumentExtractionError
+from smb_kernel.documents.scanner import ClamAvDocumentScanner as ClamAvDocumentScanner
+from smb_kernel.documents.scanner import OfflineDocumentScanner as OfflineDocumentScanner
+
 from smb_requirement_agent.application.use_cases.attachment_ingestion import AttachmentIngestion
 from smb_requirement_agent.application.use_cases.document_library import DocumentLibrary
 from smb_requirement_agent.application.use_cases.reference_knowledge import ReferenceKnowledge
-
-
-class ClamAvDocumentScanner:
-    def __init__(self, host: str, port: int) -> None:
-        self._host, self._port = host, port
-
-    def scan(self, content: bytes) -> bool:
-        try:
-            with socket.create_connection((self._host, self._port), timeout=30) as connection:
-                connection.sendall(b"zINSTREAM\x00")
-                for start in range(0, len(content), 65536):
-                    chunk = content[start : start + 65536]
-                    connection.sendall(struct.pack("!I", len(chunk)) + chunk)
-                connection.sendall(struct.pack("!I", 0))
-                reply = b""
-                while b"\x00" not in reply and len(reply) < 4096:
-                    part = connection.recv(4096 - len(reply))
-                    if not part:
-                        break
-                    reply += part
-        except OSError as exc:
-            raise DocumentExtractionError(
-                "Malware scanner unavailable. Restore the local scanner and retry."
-            ) from exc
-        result = reply.split(b"\x00", 1)[0]
-        if result == b"stream: OK" and b"\x00" in reply:
-            return True
-        if result.startswith(b"stream: ") and result.endswith(b" FOUND"):
-            return False
-        raise DocumentExtractionError(
-            "Malware scanner did not return a complete clean verdict. "
-            "Retry after checking its limits."
-        )
-
-
-class OfflineDocumentScanner:
-    """Explicit deterministic development adapter, never selected for durable/OIDC deployments."""
-
-    def scan(self, content: bytes) -> bool:
-        return b"EICAR-STANDARD-ANTIVIRUS-TEST-FILE" not in content
 
 
 class DocumentIngestionWorker:

@@ -8,7 +8,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from smb_requirement_agent.application.ports.clock import ClockPort
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceProposerPort
 from smb_requirement_agent.application.ports.requirement_analyzer import RequirementAnalyzerPort
 from smb_requirement_agent.application.use_cases.analysis_collaboration import (

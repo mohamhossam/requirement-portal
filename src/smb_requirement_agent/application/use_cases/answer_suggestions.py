@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import uuid
 
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.errors import (
     AnswerSuggestionNotFoundError,
     ClarificationQuestionNotFoundError,
@@ -15,7 +17,6 @@ from smb_requirement_agent.application.ports.access_repository import AccessRepo
 from smb_requirement_agent.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceSearchPort
 from smb_requirement_agent.application.ports.requirement_knowledge import (
     ClarificationAnswerSuggesterPort,

@@ -13,11 +13,11 @@ from typing import Annotated
 from fastapi import Depends, Header, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from smb_kernel.identity.ports import IdentityCredential
+from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.errors import AuthenticationRequiredError
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.identity import Actor
-from smb_requirement_agent.application.ports.identity_provider import IdentityCredential
 from smb_requirement_agent.application.use_cases.activity_reporting import (
     GetOperationalReport,
     ListActivity,

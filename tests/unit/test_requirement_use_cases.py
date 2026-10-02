@@ -5,6 +5,7 @@ No live network, database, or LLM calls.
 """
 
 import pytest
+from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.application.errors import RequirementNotFoundError
 from smb_requirement_agent.application.use_cases.create_requirement import (
@@ -31,7 +32,6 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_identity import 
 from smb_requirement_agent.infrastructure.persistence.in_memory_requirement_repository import (
     InMemoryRequirementRepository,
 )
-from smb_requirement_agent.infrastructure.time.fixed_clock import FixedClock
 from tests.conftest import TEST_NOW, make_invalidation
 from tests.unit.access_service import access_service_for
 from tests.unit.owned_requirement_creator import OwnedRequirementCreator

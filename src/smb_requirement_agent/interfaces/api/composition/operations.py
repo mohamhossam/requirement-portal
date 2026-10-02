@@ -15,6 +15,19 @@ from time import monotonic
 import httpx as httpx
 from PIL import Image
 from pydantic import BaseModel, Field
+from smb_kernel.diagnostics import build_debug_trace
+from smb_kernel.documents.text_extractor import (
+    SafeDocumentTextExtractor,
+)
+from smb_kernel.llm.compatible_transport import (
+    CompatibleStructuredOutputClient,
+    ConfiguredKnowledgeEmbedding,
+    GoogleEmbeddingTokenCounter,
+)
+from smb_kernel.persistence.connector import (
+    DirectPostgresConnector,
+)
+from smb_kernel.time.system import SystemClock
 
 from smb_requirement_agent.application.errors import ModelTransportError
 from smb_requirement_agent.application.use_cases.dependency_projection import DependencyProjection
@@ -30,17 +43,8 @@ from smb_requirement_agent.application.use_cases.retention import PruneReadNotif
 from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.infrastructure.config.options import ConfigurationError
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.diagnostics import build_debug_trace
 from smb_requirement_agent.infrastructure.documents.library_worker import (
     OfflineDocumentScanner,
-)
-from smb_requirement_agent.infrastructure.documents.text_extractor import (
-    SafeDocumentTextExtractor,
-)
-from smb_requirement_agent.infrastructure.llm.compatible_transport import (
-    CompatibleStructuredOutputClient,
-    ConfiguredKnowledgeEmbedding,
-    GoogleEmbeddingTokenCounter,
 )
 from smb_requirement_agent.infrastructure.persistence.document_library import (
     InMemoryDocumentLibrary,
@@ -53,9 +57,6 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_transaction impo
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_ai_jobs import (
     PostgresNotificationRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_connector import (
-    DirectPostgresConnector,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_revisions import (
     PostgresRevisionRepository,
@@ -75,7 +76,6 @@ from smb_requirement_agent.infrastructure.persistence.reference_index import (
 from smb_requirement_agent.infrastructure.persistence.source_dependencies import (
     PostgresSourceDependencies,
 )
-from smb_requirement_agent.infrastructure.time.system_clock import SystemClock
 from smb_requirement_agent.interfaces.api.composition.projections import (
     refresh_postgres_projections,
 )

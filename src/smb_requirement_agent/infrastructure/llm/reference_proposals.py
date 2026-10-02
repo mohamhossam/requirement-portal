@@ -6,6 +6,10 @@ from collections.abc import Sequence
 from typing import Literal
 
 from pydantic import BaseModel, Field, ValidationError
+from smb_kernel.llm.structured_output import (
+    StructuredOutputClient,
+    StructuredOutputError,
+)
 
 from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
 from smb_requirement_agent.application.ports.reference_grounding import (
@@ -18,10 +22,6 @@ from smb_requirement_agent.application.ports.requirement_analyzer import (
 )
 from smb_requirement_agent.domain.analysis.value_objects import IntentProposal, IntentProposalKind
 from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.infrastructure.llm.structured_output import (
-    StructuredOutputClient,
-    StructuredOutputError,
-)
 
 
 class ProposalOutput(BaseModel):

@@ -8,6 +8,10 @@ import httpx
 import pytest
 from openai import OpenAIError
 from pydantic import ValidationError
+from smb_kernel.llm.local_structured_output import (
+    LocalLLMError,
+    LocalStructuredOutputClient,
+)
 
 from smb_requirement_agent.application.errors import StoryGenerationError
 from smb_requirement_agent.application.ports.generation_guidance import GenerationGuidance
@@ -15,10 +19,6 @@ from smb_requirement_agent.application.ports.story_quality_evaluator import Stor
 from smb_requirement_agent.domain.story.quality import InvestCriterion
 from smb_requirement_agent.infrastructure.llm.candidate_mappers import to_story_candidates
 from smb_requirement_agent.infrastructure.llm.local_story_generator import LocalStoryGenerator
-from smb_requirement_agent.infrastructure.llm.local_structured_output import (
-    LocalLLMError,
-    LocalStructuredOutputClient,
-)
 from smb_requirement_agent.infrastructure.llm.openai_adapters import OpenAIStoryGenerator
 from smb_requirement_agent.infrastructure.llm.prompts.story_prompt import PROMPT_VERSION
 from smb_requirement_agent.infrastructure.llm.prompts.story_quality_prompt import (

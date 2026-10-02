@@ -7,6 +7,7 @@ from dataclasses import replace
 from datetime import UTC, datetime
 
 import pytest
+from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.application.ports.architecture_knowledge import (
     ArchitectureKnowledgeMatch,
@@ -53,7 +54,6 @@ from smb_requirement_agent.infrastructure.persistence.shared_payloads import (
     architecture_from_payload,
     architecture_to_payload,
 )
-from smb_requirement_agent.infrastructure.time.fixed_clock import FixedClock
 from tests.unit.test_feature_domain import make_feature
 
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=UTC)

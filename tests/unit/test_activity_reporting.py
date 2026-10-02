@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
+from smb_kernel.time.fixed import FixedClock
+
 from smb_requirement_agent.application.ports.activity import (
     ActivityAction,
     ActivityCategory,
@@ -20,7 +22,6 @@ from smb_requirement_agent.application.use_cases.activity_reporting import (
 )
 from smb_requirement_agent.domain.identity.entities import ActorId, ActorSnapshot
 from smb_requirement_agent.domain.requirement.value_objects import RequirementId
-from smb_requirement_agent.infrastructure.time.fixed_clock import FixedClock
 
 NOW = datetime(2026, 9, 4, 12, tzinfo=UTC)
 REQUIREMENT_ID = RequirementId("req-1")

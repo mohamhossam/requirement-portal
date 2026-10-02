@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 
 import pytest
 from fastapi.testclient import TestClient
+from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.application.ports.architecture_knowledge import ArchitectureQuery
 from smb_requirement_agent.application.ports.identity import Actor
@@ -43,7 +44,6 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_architecture_kno
 from smb_requirement_agent.infrastructure.persistence.in_memory_organisation import (
     InMemoryOrganisationRepository,
 )
-from smb_requirement_agent.infrastructure.time.fixed_clock import FixedClock
 
 MAINTAINER = Actor("amina", frozenset({"knowledge_maintainer"}))
 READER = Actor("ravi", frozenset({"knowledge_reader"}))

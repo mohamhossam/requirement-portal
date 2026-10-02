@@ -1,5 +1,8 @@
 [importlinter]
-root_package = smb_requirement_agent
+# platform-kernel is a root too, so contracts can name its adapter subpackages.
+root_packages =
+    smb_requirement_agent
+    smb_kernel
 include_external_packages = True
 
 [importlinter:contract:domain_independence]
@@ -75,3 +78,46 @@ source_modules =
     smb_requirement_agent.infrastructure
 forbidden_modules =
     smb_requirement_agent.interfaces
+
+[importlinter:contract:kernel_contracts_only_inward]
+name = Domain and application use only platform-kernel's pure contract modules (ADR-0100)
+type = forbidden
+source_modules =
+    smb_requirement_agent.domain
+    smb_requirement_agent.application
+forbidden_modules =
+    smb_kernel.identity.oidc
+    smb_kernel.identity.fake
+    smb_kernel.documents.bounded_extractor
+    smb_kernel.documents.extraction_base
+    smb_kernel.documents.local_ocr
+    smb_kernel.documents.office_preview
+    smb_kernel.documents.pdf_image_extraction
+    smb_kernel.documents.plain_text_extraction
+    smb_kernel.documents.presentation_extraction
+    smb_kernel.documents.process_resources
+    smb_kernel.documents.scanner
+    smb_kernel.documents.spreadsheet_extraction
+    smb_kernel.documents.text_extractor
+    smb_kernel.documents.word_extraction
+    smb_kernel.llm
+    smb_kernel.persistence
+    smb_kernel.observability
+    smb_kernel.http
+    smb_kernel.diagnostics
+
+[importlinter:contract:routes_no_kernel_adapters]
+name = Routes and dependency providers do not select platform-kernel adapters
+type = forbidden
+source_modules =
+    smb_requirement_agent.interfaces.api.routes
+    smb_requirement_agent.interfaces.api.dependencies
+forbidden_modules =
+    smb_kernel.identity.oidc
+    smb_kernel.identity.fake
+    smb_kernel.documents.text_extractor
+    smb_kernel.documents.bounded_extractor
+    smb_kernel.documents.scanner
+    smb_kernel.llm
+    smb_kernel.persistence
+allow_indirect_imports = True

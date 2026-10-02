@@ -9,6 +9,7 @@ from types import SimpleNamespace
 from typing import Any, cast
 
 import pytest
+from smb_kernel.observability.metrics import Metrics
 
 from smb_requirement_agent.application.use_cases.architecture_jobs import ArchitectureJobs
 from smb_requirement_agent.infrastructure.config.options import LLMProvider, PersistenceProvider
@@ -16,7 +17,6 @@ from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.jobs.architecture_job_worker import (
     ArchitectureJobWorker,
 )
-from smb_requirement_agent.infrastructure.observability.metrics import Metrics
 from smb_requirement_agent.interfaces import worker as worker_process
 
 

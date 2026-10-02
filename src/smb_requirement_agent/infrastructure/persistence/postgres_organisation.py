@@ -7,14 +7,14 @@ from collections.abc import Callable
 import psycopg
 from psycopg.types.json import Jsonb
 from pydantic import TypeAdapter, ValidationError
+from smb_kernel.persistence.connector import PostgresConnector
+from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.errors import PersistenceError
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.domain.organisation.catalogue import (
     OrganisationAuditEvent,
     OrganisationCatalogue,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_connector import PostgresConnector
 from smb_requirement_agent.infrastructure.persistence.postgres_values import _datetime
 
 _ADAPTER: TypeAdapter[OrganisationCatalogue] = TypeAdapter(OrganisationCatalogue)

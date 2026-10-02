@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.errors import (
     RequirementNotFoundError,
     RequirementVersionConflictError,
 )
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.document_repository import DocumentRepositoryPort
 from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort

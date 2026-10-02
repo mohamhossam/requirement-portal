@@ -7,6 +7,8 @@ import json
 import uuid
 from dataclasses import asdict
 
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.errors import (
     KnowledgeFindingNotFoundError,
     KnowledgeGenerationError,
@@ -18,7 +20,6 @@ from smb_requirement_agent.application.ports.access_repository import AccessRepo
 from smb_requirement_agent.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )

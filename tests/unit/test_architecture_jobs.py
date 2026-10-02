@@ -8,6 +8,7 @@ from typing import Any, cast
 
 import pytest
 from fastapi.testclient import TestClient
+from smb_kernel.identity.ports import IdentityCredential
 
 from smb_requirement_agent.application.errors import AuthenticationRequiredError, PersistenceError
 from smb_requirement_agent.application.ports.architecture_jobs import (
@@ -17,7 +18,6 @@ from smb_requirement_agent.application.ports.architecture_jobs import (
     IndexJobInput,
     MappingJobInput,
 )
-from smb_requirement_agent.application.ports.identity_provider import IdentityCredential
 from smb_requirement_agent.application.use_cases.architecture_jobs import (
     ArchitectureJobExecution,
     ArchitectureJobs,

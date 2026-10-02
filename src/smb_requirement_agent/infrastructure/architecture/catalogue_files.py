@@ -20,6 +20,11 @@ import yaml
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font
 from openpyxl.utils.exceptions import InvalidFileException
+from smb_kernel.documents.extraction_base import (
+    MAX_OFFICE_PARTS,
+    MAX_OFFICE_UNCOMPRESSED_BYTES,
+    MAX_WORKBOOK_ROWS,
+)
 
 from smb_requirement_agent.application.ports.catalogue_file import (
     CatalogueContent,
@@ -50,11 +55,6 @@ from smb_requirement_agent.domain.architecture.products import (
     OrderType,
     ProductOffering,
     SourceConfidence,
-)
-from smb_requirement_agent.infrastructure.documents.extraction_base import (
-    MAX_OFFICE_PARTS,
-    MAX_OFFICE_UNCOMPRESSED_BYTES,
-    MAX_WORKBOOK_ROWS,
 )
 
 SYSTEMS = "Systems"

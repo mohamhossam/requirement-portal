@@ -7,6 +7,13 @@ import uuid
 from dataclasses import dataclass, replace
 from pathlib import PurePosixPath, PureWindowsPath
 
+from smb_kernel.documents.ports import (
+    DocumentExtractorPort,
+    DocumentStoragePort,
+    ExtractedDocument,
+)
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.errors import (
     DocumentContextTooLargeError,
     DocumentExtractionError,
@@ -14,13 +21,7 @@ from smb_requirement_agent.application.errors import (
     DocumentVersionConflictError,
     UnsupportedDocumentError,
 )
-from smb_requirement_agent.application.ports.clock import ClockPort
-from smb_requirement_agent.application.ports.document_extractor import (
-    DocumentExtractorPort,
-    ExtractedDocument,
-)
 from smb_requirement_agent.application.ports.document_repository import DocumentRepositoryPort
-from smb_requirement_agent.application.ports.document_storage import DocumentStoragePort
 from smb_requirement_agent.application.ports.requirement_analyzer import AnalysisDocumentContext
 from smb_requirement_agent.application.ports.requirement_draft_repository import (
     RequirementDraftRepositoryPort,

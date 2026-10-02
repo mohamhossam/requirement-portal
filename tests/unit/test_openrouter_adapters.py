@@ -9,6 +9,12 @@ from unittest.mock import MagicMock, patch
 
 import httpx
 import pytest
+from smb_kernel.diagnostics import JsonLinesDebugTrace
+from smb_kernel.llm.openrouter_structured_output import (
+    OpenRouterError,
+    OpenRouterStructuredOutputClient,
+)
+from smb_kernel.llm.structured_output import truncated
 
 from smb_requirement_agent.application.errors import (
     EpicGenerationError,
@@ -23,17 +29,11 @@ from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementStatus,
     RequirementTitle,
 )
-from smb_requirement_agent.infrastructure.diagnostics import JsonLinesDebugTrace
 from smb_requirement_agent.infrastructure.llm.openrouter_adapters import OpenRouterEpicGenerator
-from smb_requirement_agent.infrastructure.llm.openrouter_structured_output import (
-    OpenRouterError,
-    OpenRouterStructuredOutputClient,
-)
 from smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters import (
     OpenRouterKnowledgeEmbedding,
 )
 from smb_requirement_agent.infrastructure.llm.schemas.epic_schema import EpicSchema
-from smb_requirement_agent.infrastructure.llm.structured_output import truncated
 
 
 def _client(*, trace: JsonLinesDebugTrace | None = None) -> OpenRouterStructuredOutputClient:
@@ -80,7 +80,7 @@ def test_openrouter_client_sends_authenticated_privacy_first_json_mode_with_imag
     )
 
     with patch(
-        "smb_requirement_agent.infrastructure.llm.openrouter_structured_output.httpx.Client.post",
+        "smb_kernel.llm.openrouter_structured_output.httpx.Client.post",
         return_value=response,
     ) as post:
         result = _client().parse(
@@ -125,8 +125,7 @@ def test_openrouter_client_sends_authenticated_privacy_first_json_mode_with_imag
 def test_openrouter_client_rejects_unusable_responses(payload: object, message: str) -> None:
     with (
         patch(
-            "smb_requirement_agent.infrastructure.llm.openrouter_structured_output."
-            "httpx.Client.post",
+            "smb_kernel.llm.openrouter_structured_output.httpx.Client.post",
             return_value=_response(payload),
         ),
         pytest.raises(OpenRouterError, match=message) as raised,
@@ -151,11 +150,10 @@ def test_openrouter_client_maps_http_failures(status_code: int) -> None:
 
     with (
         patch(
-            "smb_requirement_agent.infrastructure.llm.openrouter_structured_output."
-            "httpx.Client.post",
+            "smb_kernel.llm.openrouter_structured_output.httpx.Client.post",
             return_value=response,
         ),
-        patch("smb_requirement_agent.infrastructure.llm.openrouter_structured_output.time.sleep"),
+        patch("smb_kernel.llm.openrouter_structured_output.time.sleep"),
         pytest.raises(OpenRouterError, match="request failed"),
     ):
         _client().parse(
@@ -174,13 +172,10 @@ def test_openrouter_client_retries_short_rate_limit_then_succeeds() -> None:
 
     with (
         patch(
-            "smb_requirement_agent.infrastructure.llm.openrouter_structured_output."
-            "httpx.Client.post",
+            "smb_kernel.llm.openrouter_structured_output.httpx.Client.post",
             side_effect=[rate_limited, succeeded],
         ) as post,
-        patch(
-            "smb_requirement_agent.infrastructure.llm.openrouter_structured_output.time.sleep"
-        ) as sleep,
+        patch("smb_kernel.llm.openrouter_structured_output.time.sleep") as sleep,
     ):
         result = _client().parse(
             system_prompt="System rules",
@@ -207,13 +202,10 @@ def test_openrouter_client_reports_long_rate_limit_without_waiting() -> None:
 
     with (
         patch(
-            "smb_requirement_agent.infrastructure.llm.openrouter_structured_output."
-            "httpx.Client.post",
+            "smb_kernel.llm.openrouter_structured_output.httpx.Client.post",
             return_value=response,
         ) as post,
-        patch(
-            "smb_requirement_agent.infrastructure.llm.openrouter_structured_output.time.sleep"
-        ) as sleep,
+        patch("smb_kernel.llm.openrouter_structured_output.time.sleep") as sleep,
         pytest.raises(OpenRouterError, match="Retry after 120 seconds"),
     ):
         _client().parse(
@@ -236,13 +228,10 @@ def test_openrouter_client_does_not_multiply_rate_limit_without_retry_after() ->
 
     with (
         patch(
-            "smb_requirement_agent.infrastructure.llm.openrouter_structured_output."
-            "httpx.Client.post",
+            "smb_kernel.llm.openrouter_structured_output.httpx.Client.post",
             return_value=response,
         ) as post,
-        patch(
-            "smb_requirement_agent.infrastructure.llm.openrouter_structured_output.time.sleep"
-        ) as sleep,
+        patch("smb_kernel.llm.openrouter_structured_output.time.sleep") as sleep,
         pytest.raises(OpenRouterError, match="Retry later"),
     ):
         _client().parse(
@@ -261,8 +250,7 @@ def test_openrouter_client_rejects_non_json_http_response() -> None:
 
     with (
         patch(
-            "smb_requirement_agent.infrastructure.llm.openrouter_structured_output."
-            "httpx.Client.post",
+            "smb_kernel.llm.openrouter_structured_output.httpx.Client.post",
             return_value=response,
         ),
         pytest.raises(OpenRouterError, match="non-JSON"),
@@ -283,7 +271,7 @@ def test_openrouter_trace_redacts_authorization_and_image_bytes(tmp_path: Path) 
     response = _response({"choices": [{"message": {"content": completion}}]})
 
     with patch(
-        "smb_requirement_agent.infrastructure.llm.openrouter_structured_output.httpx.Client.post",
+        "smb_kernel.llm.openrouter_structured_output.httpx.Client.post",
         return_value=response,
     ):
         _client(trace=trace).parse(

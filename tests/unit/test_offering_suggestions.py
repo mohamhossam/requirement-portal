@@ -11,6 +11,8 @@ from pathlib import Path
 from typing import Any
 
 from fastapi.testclient import TestClient
+from smb_kernel.documents.text_extractor import SafeDocumentTextExtractor
+from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.application.ports.catalogue_extractor import (
     CatalogueProposal,
@@ -61,7 +63,6 @@ from smb_requirement_agent.infrastructure.architecture.located_extractor import 
 )
 from smb_requirement_agent.infrastructure.architecture.markdown_passages import markdown_passages
 from smb_requirement_agent.infrastructure.architecture.tokenizer import FakeWordTokenizer
-from smb_requirement_agent.infrastructure.documents.text_extractor import SafeDocumentTextExtractor
 from smb_requirement_agent.infrastructure.llm.catalogue_extraction import (
     ChangeOutput,
     ComponentOutput,
@@ -81,7 +82,6 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_catalogue_candid
 from smb_requirement_agent.infrastructure.persistence.in_memory_document_repository import (
     InMemoryDocumentStorage,
 )
-from smb_requirement_agent.infrastructure.time.fixed_clock import FixedClock
 
 FIXTURE = Path(__file__).parent.parent / "fixtures" / "catalogue" / "synthetic_landscape.md"
 OWNER = {"X-Fake-Actor-Id": "fake-owner"}

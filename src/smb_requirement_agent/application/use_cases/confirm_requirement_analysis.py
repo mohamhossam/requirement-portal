@@ -1,5 +1,7 @@
 """Explicit human confirmation of a fully resolved analysis."""
 
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.errors import (
     RequirementAnalysisConflictError,
     RequirementAnalysisNotFoundError,
@@ -8,7 +10,6 @@ from smb_requirement_agent.application.errors import (
 from smb_requirement_agent.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.reference_grounding import (
     ReferenceEvidencePort,
     require_analysis_references,

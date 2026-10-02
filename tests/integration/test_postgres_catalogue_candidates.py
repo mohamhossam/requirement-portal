@@ -7,6 +7,9 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
+from smb_kernel.persistence.connector import (
+    DirectPostgresConnector,
+)
 
 from smb_requirement_agent.application.ports.catalogue_candidates import ExtractionRun
 from smb_requirement_agent.domain.architecture.candidates import (
@@ -20,9 +23,6 @@ from smb_requirement_agent.domain.architecture.candidates import (
 from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
 from smb_requirement_agent.infrastructure.persistence.postgres_catalogue_candidates import (
     PostgresCatalogueCandidates,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_connector import (
-    DirectPostgresConnector,
 )
 
 DATABASE_URL = os.getenv("TEST_DATABASE_URL")

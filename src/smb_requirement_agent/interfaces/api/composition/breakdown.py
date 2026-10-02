@@ -8,8 +8,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.ports.architecture_knowledge import ArchitectureKnowledgePort
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.epic_generator import EpicGeneratorPort
 from smb_requirement_agent.application.ports.feature_generator import FeatureGeneratorPort
 from smb_requirement_agent.application.ports.story_generator import StoryGeneratorPort

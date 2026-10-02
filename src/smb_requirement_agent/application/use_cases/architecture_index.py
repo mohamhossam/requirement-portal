@@ -7,12 +7,13 @@ import re
 from collections.abc import Callable
 from uuid import uuid4
 
+from smb_kernel.documents.ports import DocumentStoragePort
+
 from smb_requirement_agent.application.ports.architecture_rag import (
     ArchitectureEvidenceIndexPort,
     EvidenceChunk,
 )
 from smb_requirement_agent.application.ports.architecture_tokenizer import ArchitectureTokenizerPort
-from smb_requirement_agent.application.ports.document_storage import DocumentStoragePort
 from smb_requirement_agent.application.ports.located_document_extractor import (
     LocatedDocumentExtractorPort,
     LocatedText,

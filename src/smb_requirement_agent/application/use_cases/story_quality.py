@@ -7,12 +7,13 @@ import json
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING
 
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.errors import (
     StoryNotFoundError,
     StoryQualitySnapshotConflictError,
     StoryQualitySnapshotNotFoundError,
 )
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.story_quality_evaluator import (
     StoryQualityEvaluatorPort,
     StoryQualityEvidence,

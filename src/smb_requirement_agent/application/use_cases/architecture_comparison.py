@@ -10,11 +10,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from uuid import uuid4
 
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.ports.architecture_knowledge import (
     ArchitectureKnowledgePort,
     ArchitectureQuery,
 )
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.identity import Actor, require_maintainer
 from smb_requirement_agent.application.ports.sample_requirements import SampleRequirementsPort
 from smb_requirement_agent.application.use_cases.architecture_knowledge import (

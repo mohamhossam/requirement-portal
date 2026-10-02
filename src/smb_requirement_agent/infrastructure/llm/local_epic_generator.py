@@ -1,26 +1,26 @@
 """Epic generator backed by a local OpenAI-compatible model server."""
 
 import httpx
+from smb_kernel.diagnostics import DebugTrace, NullDebugTrace
+from smb_kernel.llm.local_structured_output import (
+    LocalStructuredOutputClient,
+)
+from smb_kernel.llm.structured_output import (
+    StructuredOutputClient,
+    StructuredOutputError,
+)
 
 from smb_requirement_agent.application.errors import EpicGenerationError
 from smb_requirement_agent.application.ports.epic_generator import EpicCandidate
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
 from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.infrastructure.diagnostics import DebugTrace, NullDebugTrace
 from smb_requirement_agent.infrastructure.llm.candidate_mappers import to_epic_candidate
-from smb_requirement_agent.infrastructure.llm.local_structured_output import (
-    LocalStructuredOutputClient,
-)
 from smb_requirement_agent.infrastructure.llm.prompts.epic_prompt import (
     EPIC_SYSTEM_PROMPT,
     PROMPT_VERSION,
     build_epic_user_prompt,
 )
 from smb_requirement_agent.infrastructure.llm.schemas.epic_schema import EpicSchema
-from smb_requirement_agent.infrastructure.llm.structured_output import (
-    StructuredOutputClient,
-    StructuredOutputError,
-)
 
 
 class StructuredEpicGeneratorAdapter:

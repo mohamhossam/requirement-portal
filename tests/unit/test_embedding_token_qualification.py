@@ -5,14 +5,14 @@ from pathlib import Path
 
 import httpx
 import pytest
+from smb_kernel.diagnostics import NullDebugTrace
+from smb_kernel.llm.compatible_transport import (
+    GoogleEmbeddingTokenCounter,
+)
+from smb_kernel.llm.profiles import EmbeddingProfile
 
 from smb_requirement_agent.application.errors import ModelTransportError
 from smb_requirement_agent.application.use_cases.qualify_chunk_tokens import qualify_chunk_tokens
-from smb_requirement_agent.infrastructure.config.llm_profiles import EmbeddingProfile
-from smb_requirement_agent.infrastructure.diagnostics import NullDebugTrace
-from smb_requirement_agent.infrastructure.llm.compatible_transport import (
-    GoogleEmbeddingTokenCounter,
-)
 
 
 def test_qualification_fixture_matches_actual_reviewed_chunk_output() -> None:

@@ -5,8 +5,9 @@ import json
 from collections.abc import Sequence
 from dataclasses import asdict
 
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.reference_grounding import (
     ReferenceEvidence,
     ReferenceProposerPort,

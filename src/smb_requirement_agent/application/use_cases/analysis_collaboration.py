@@ -5,6 +5,8 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass
 
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.errors import (
     ActorNotFoundError,
     AnalysisRoundNotFoundError,
@@ -20,7 +22,6 @@ from smb_requirement_agent.application.ports.actor_directory import ActorDirecto
 from smb_requirement_agent.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.reference_grounding import (
     ReferenceAnalysisPort,
     ReferenceEvidencePort,

@@ -10,16 +10,16 @@ from unittest.mock import MagicMock, patch
 
 import httpx
 import pytest
-
-from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
-from smb_requirement_agent.infrastructure.diagnostics import (
+from smb_kernel.diagnostics import (
     JsonLinesDebugTrace,
     NullDebugTrace,
 )
-from smb_requirement_agent.infrastructure.llm.candidate_mappers import to_analysis_candidate
-from smb_requirement_agent.infrastructure.llm.local_structured_output import (
+from smb_kernel.llm.local_structured_output import (
     LocalStructuredOutputClient,
 )
+
+from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
+from smb_requirement_agent.infrastructure.llm.candidate_mappers import to_analysis_candidate
 from smb_requirement_agent.infrastructure.llm.schemas.analysis_schema import (
     AnalysisEvidenceCitationSchema,
     RequirementAnalysisSchema,
@@ -100,7 +100,7 @@ def test_local_client_traces_request_raw_response_and_parsed_model(tmp_path: Pat
     )
 
     with patch(
-        "smb_requirement_agent.infrastructure.llm.local_structured_output.httpx.Client.post",
+        "smb_kernel.llm.local_structured_output.httpx.Client.post",
         return_value=response,
     ):
         result = client.parse(

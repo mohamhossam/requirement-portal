@@ -10,8 +10,11 @@ repair never reached OpenAI users).
 from __future__ import annotations
 
 from openai import OpenAI
+from smb_kernel.diagnostics import DebugTrace, NullDebugTrace
+from smb_kernel.llm.openai_structured_output import (
+    OpenAIStructuredOutputClient,
+)
 
-from smb_requirement_agent.infrastructure.diagnostics import DebugTrace, NullDebugTrace
 from smb_requirement_agent.infrastructure.llm.local_epic_generator import (
     StructuredEpicGeneratorAdapter,
 )
@@ -26,9 +29,6 @@ from smb_requirement_agent.infrastructure.llm.local_story_generator import (
 )
 from smb_requirement_agent.infrastructure.llm.local_story_quality_evaluator import (
     StructuredStoryQualityEvaluatorAdapter,
-)
-from smb_requirement_agent.infrastructure.llm.openai_structured_output import (
-    OpenAIStructuredOutputClient,
 )
 from smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters import (
     StructuredClarificationAnswerSuggesterAdapter,

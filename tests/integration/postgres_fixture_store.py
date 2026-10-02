@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from smb_kernel.persistence.connector import (
+    DirectPostgresConnector,
+)
+
 from smb_requirement_agent.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )
@@ -42,9 +46,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader i
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_activity_sources import (
     PostgresActivitySources,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_connector import (
-    DirectPostgresConnector,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_document_metadata import (
     PostgresDocumentRepository,

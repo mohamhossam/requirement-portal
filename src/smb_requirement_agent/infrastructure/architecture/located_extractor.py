@@ -8,8 +8,8 @@ import zipfile
 from xml.etree import ElementTree
 
 from pypdf import PdfReader
+from smb_kernel.documents.ports import DocumentExtractorPort
 
-from smb_requirement_agent.application.ports.document_extractor import DocumentExtractorPort
 from smb_requirement_agent.application.ports.located_document_extractor import LocatedText
 from smb_requirement_agent.domain.document.value_objects import EvidenceBlockKind
 from smb_requirement_agent.infrastructure.architecture.markdown_passages import (

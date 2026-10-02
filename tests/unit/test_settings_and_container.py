@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 import pytest
+from smb_kernel.observability.metrics import Metrics
 
 from smb_requirement_agent.infrastructure.config.options import (
     DEFAULT_LOCAL_LLM_BASE_URL,
@@ -56,7 +57,6 @@ from smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters imp
     OpenAIKnowledgeEmbedding,
     OpenRouterKnowledgeEmbedding,
 )
-from smb_requirement_agent.infrastructure.observability.metrics import Metrics
 from smb_requirement_agent.interfaces.api.composition import llm as composition
 from smb_requirement_agent.interfaces.api.composition.llm import build_llm_adapters
 from smb_requirement_agent.interfaces.api.container import build_container

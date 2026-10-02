@@ -20,11 +20,12 @@ loose shared library, on the other hand, would turn into a back door for couplin
 ## Decision
 
 **`mohamhossam/platform-kernel` publishes the Python package `smb_kernel`.** Both services pin it
-by git tag through uv:
+by release tag, as a standard direct reference that pip (used by the launchers) and uv both read:
 
 ```toml
-[tool.uv.sources]
-smb-platform-kernel = { git = "https://github.com/mohamhossam/platform-kernel", tag = "v1.0.0" }
+dependencies = [
+    "smb-platform-kernel @ git+https://github.com/mohamhossam/platform-kernel@v1.0.0",
+]
 ```
 
 **The rule: mechanisms only, never meaning.**

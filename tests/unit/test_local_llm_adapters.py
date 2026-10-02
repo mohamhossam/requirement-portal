@@ -9,6 +9,11 @@ from unittest.mock import MagicMock, patch
 
 import httpx
 import pytest
+from smb_kernel.llm.local_structured_output import (
+    LocalLLMError,
+    LocalStructuredOutputClient,
+)
+from smb_kernel.llm.structured_output import truncated
 
 from smb_requirement_agent.application.errors import (
     EpicGenerationError,
@@ -52,10 +57,6 @@ from smb_requirement_agent.infrastructure.llm.local_feature_generator import Loc
 from smb_requirement_agent.infrastructure.llm.local_requirement_analyzer import (
     LocalRequirementAnalyzer,
 )
-from smb_requirement_agent.infrastructure.llm.local_structured_output import (
-    LocalLLMError,
-    LocalStructuredOutputClient,
-)
 from smb_requirement_agent.infrastructure.llm.schemas.analysis_schema import (
     ActiveQuestionReviewSchema,
     AnalysisEvidenceCitationSchema,
@@ -76,7 +77,6 @@ from smb_requirement_agent.infrastructure.llm.schemas.feature_schema import (
     FeatureItemSchema,
     FeatureSetSchema,
 )
-from smb_requirement_agent.infrastructure.llm.structured_output import truncated
 
 
 @pytest.fixture
@@ -165,7 +165,7 @@ def test_local_client_sends_json_schema_and_parses_content() -> None:
         }
     )
     with patch(
-        "smb_requirement_agent.infrastructure.llm.local_structured_output.httpx.Client.post",
+        "smb_kernel.llm.local_structured_output.httpx.Client.post",
         return_value=_response({"choices": [{"message": {"content": parsed_json}}]}),
     ) as post:
         client = LocalStructuredOutputClient(
@@ -202,7 +202,7 @@ def test_local_client_disables_reasoning_and_accepts_ollama_reasoning_fallback()
         }
     )
     with patch(
-        "smb_requirement_agent.infrastructure.llm.local_structured_output.httpx.Client.post",
+        "smb_kernel.llm.local_structured_output.httpx.Client.post",
         return_value=_response(
             {"choices": [{"message": {"content": "", "reasoning": parsed_json}}]}
         ),
@@ -226,7 +226,7 @@ def test_local_client_disables_reasoning_and_accepts_ollama_reasoning_fallback()
 
 def test_local_client_reports_output_token_truncation_explicitly() -> None:
     with patch(
-        "smb_requirement_agent.infrastructure.llm.local_structured_output.httpx.Client.post",
+        "smb_kernel.llm.local_structured_output.httpx.Client.post",
         return_value=_response(
             {
                 "choices": [
@@ -499,7 +499,7 @@ def test_analysis_mapper_rejects_reviews_or_duplicates_of_human_questions() -> N
 )
 def test_local_client_rejects_malformed_responses(payload: object, message: str) -> None:
     with patch(
-        "smb_requirement_agent.infrastructure.llm.local_structured_output.httpx.Client.post",
+        "smb_kernel.llm.local_structured_output.httpx.Client.post",
         return_value=_response(payload),
     ):
         client = LocalStructuredOutputClient(
@@ -515,7 +515,7 @@ def test_local_client_rejects_malformed_responses(payload: object, message: str)
 
 def test_local_client_maps_connection_failures() -> None:
     with patch(
-        "smb_requirement_agent.infrastructure.llm.local_structured_output.httpx.Client.post",
+        "smb_kernel.llm.local_structured_output.httpx.Client.post",
         side_effect=httpx.ConnectError("server is offline"),
     ):
         client = LocalStructuredOutputClient(
@@ -533,7 +533,7 @@ def test_local_client_rejects_non_json_http_response() -> None:
     response = MagicMock()
     response.json.side_effect = ValueError("not json")
     with patch(
-        "smb_requirement_agent.infrastructure.llm.local_structured_output.httpx.Client.post",
+        "smb_kernel.llm.local_structured_output.httpx.Client.post",
         return_value=response,
     ):
         client = LocalStructuredOutputClient(

@@ -8,14 +8,14 @@ import httpx2
 import openai
 import pytest
 from pydantic import BaseModel
+from smb_kernel.llm.openai_structured_output import (
+    OpenAIStructuredOutputClient,
+)
+from smb_kernel.llm.structured_output import StructuredOutputError
 
 from smb_requirement_agent.application.public_errors import describe_public_error
 from smb_requirement_agent.infrastructure.config.options import ConfigurationError, LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.llm.openai_structured_output import (
-    OpenAIStructuredOutputClient,
-)
-from smb_requirement_agent.infrastructure.llm.structured_output import StructuredOutputError
 
 REQUEST = httpx2.Request("POST", "https://api.openai.test/v1/chat/completions")
 

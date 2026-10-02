@@ -6,8 +6,9 @@ from dataclasses import dataclass, replace
 from datetime import timedelta
 from uuid import uuid4
 
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.errors import KnowledgeGenerationError, ModelTransportError
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.requirement_indexing import (
     RequirementIndexProgressPort,
 )

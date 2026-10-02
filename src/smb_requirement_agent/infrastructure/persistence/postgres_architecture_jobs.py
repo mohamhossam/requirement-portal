@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 
 import psycopg
+from smb_kernel.persistence.connector import PostgresConnector
 
 from smb_requirement_agent.application.errors import PersistenceError
 from smb_requirement_agent.application.ports.architecture_jobs import (
@@ -13,7 +14,6 @@ from smb_requirement_agent.application.ports.architecture_jobs import (
     ArchitectureJobStatus,
 )
 from smb_requirement_agent.domain.architecture.knowledge import KnowledgeConflictError
-from smb_requirement_agent.infrastructure.persistence.postgres_connector import PostgresConnector
 
 
 class PostgresArchitectureJobs:
