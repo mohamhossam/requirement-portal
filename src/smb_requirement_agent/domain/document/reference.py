@@ -1,8 +1,24 @@
 """Immutable published-reference evidence; applicability is a separate human decision."""
 
+import unicodedata
 from dataclasses import dataclass
 
 from smb_requirement_agent.domain.document.errors import InvalidDocumentError
+
+
+def normalize_search(text: str) -> str:
+    """The normal form a citation's `lineage_hash` and reference search are computed over.
+
+    It is part of the citation contract both contexts share (ADR-0099).
+    """
+    # Preserve original citation text. Search normalization removes Arabic tatweel/diacritics.
+    return " ".join(
+        "".join(
+            c
+            for c in unicodedata.normalize("NFKC", text).casefold()
+            if c != "ـ" and not ("ً" <= c <= "ٟ") and c != "ٰ"
+        ).split()
+    )
 
 
 @dataclass(frozen=True)

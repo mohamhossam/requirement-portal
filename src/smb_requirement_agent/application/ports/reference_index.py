@@ -3,7 +3,9 @@
 from dataclasses import dataclass
 from typing import Protocol
 
-from smb_requirement_agent.application.ports.requirement_knowledge import Embedding
+from smb_kernel.embeddings import Embedding
+
+from smb_requirement_agent.application.ports.embedding import TokenCounterPort as TokenCounterPort
 
 
 @dataclass(frozen=True)
@@ -33,12 +35,6 @@ class ReferenceChunk:
     context_token_count: int = 0
     child_strategy: str = "passage"
     field_context: str = ""
-
-
-class TokenCounterPort(Protocol):
-    @property
-    def identity(self) -> str: ...
-    def count(self, text: str) -> int: ...
 
 
 class ReferenceIndexPort(Protocol):

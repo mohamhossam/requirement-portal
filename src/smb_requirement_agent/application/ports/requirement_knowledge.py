@@ -8,6 +8,9 @@ from typing import Protocol
 
 from smb_kernel.embeddings import Embedding as Embedding
 
+from smb_requirement_agent.application.ports.embedding import (
+    KnowledgeEmbeddingPort as KnowledgeEmbeddingPort,
+)
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidence
 from smb_requirement_agent.domain.analysis.entities import ClarificationQuestion
 from smb_requirement_agent.domain.analysis.value_objects import QuestionId
@@ -77,12 +80,6 @@ class AnswerSuggestionCandidate:
     answer: str
     rationale: str
     cited_chunk_ids: tuple[str, ...]
-
-
-class KnowledgeEmbeddingPort(Protocol):
-    model: str
-
-    def embed(self, texts: tuple[str, ...]) -> tuple[Embedding, ...]: ...
 
 
 class RequirementKnowledgeIndexPort(Protocol):

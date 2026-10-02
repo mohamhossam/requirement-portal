@@ -8,16 +8,16 @@ from dataclasses import asdict
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
+from smb_requirement_agent.application.ports.embedding import TokenCounterPort
 from smb_requirement_agent.application.ports.reference_grounding import (
     ReferenceEvidence,
+    ReferenceKnowledgePort,
     ReferenceProposerPort,
 )
-from smb_requirement_agent.application.ports.reference_index import TokenCounterPort
 from smb_requirement_agent.application.ports.requirement_analyzer import (
     IntentProposalCandidate,
     RequirementAnalysisCandidate,
 )
-from smb_requirement_agent.application.use_cases.reference_knowledge import ReferenceKnowledge
 from smb_requirement_agent.domain.analysis.value_objects import IntentProposal
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.shared.generation import Provenance
@@ -26,7 +26,7 @@ from smb_requirement_agent.domain.shared.generation import Provenance
 class ReferenceGrounding:
     def __init__(
         self,
-        knowledge: ReferenceKnowledge,
+        knowledge: ReferenceKnowledgePort,
         proposer: ReferenceProposerPort,
         tokens: TokenCounterPort,
         clock: ClockPort,
@@ -57,9 +57,8 @@ class ReferenceGrounding:
         budget = 0
         for topic in topics:
             query = f"{requirement.title.value}\n{topic}"[:2000]
-            for chunk in self._knowledge.search(query):
-                citation = self._knowledge.citation(chunk)
-                context = chunk.context_text or f"{citation.location}\n{citation.excerpt}"
+            for item in self._knowledge.search_evidence(query):
+                citation, context = item.citation, item.context_text
                 cost = self._tokens.count(f"{citation.title}\n{citation.location}\n{context}")
                 if (
                     citation.lineage_hash in seen
@@ -68,13 +67,7 @@ class ReferenceGrounding:
                     or budget + cost > 8000
                 ):
                     continue
-                evidence.append(
-                    ReferenceEvidence(
-                        citation,
-                        context,
-                        chunk.context_locations or (chunk.location,),
-                    )
-                )
+                evidence.append(item)
                 seen.add(citation.lineage_hash)
                 counts[citation.document_id] = counts.get(citation.document_id, 0) + 1
                 budget += cost

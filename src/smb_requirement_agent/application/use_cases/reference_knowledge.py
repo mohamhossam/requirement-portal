@@ -6,12 +6,12 @@ import hashlib
 import json
 import math
 import re
-import unicodedata
 import uuid
 from collections.abc import Sequence
 from dataclasses import dataclass, replace
 from datetime import timedelta
 
+from smb_kernel.embeddings import Embedding
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.errors import (
@@ -23,15 +23,14 @@ from smb_requirement_agent.application.errors import (
     UnsupportedDocumentError,
 )
 from smb_requirement_agent.application.ports.document_library import DocumentLibraryPort
+from smb_requirement_agent.application.ports.embedding import (
+    KnowledgeEmbeddingPort,
+    TokenCounterPort,
+)
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidence
 from smb_requirement_agent.application.ports.reference_index import (
     ReferenceChunk,
     ReferenceIndexPort,
-    TokenCounterPort,
-)
-from smb_requirement_agent.application.ports.requirement_knowledge import (
-    Embedding,
-    KnowledgeEmbeddingPort,
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.document_library import (
@@ -42,22 +41,13 @@ from smb_requirement_agent.application.use_cases.source_lineage import analysis_
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
 from smb_requirement_agent.domain.analysis.value_objects import IntentProposal, IntentProposalStatus
 from smb_requirement_agent.domain.document.library import LibraryDocument, Publication
-from smb_requirement_agent.domain.document.reference import PublishedReference
+from smb_requirement_agent.domain.document.reference import (
+    PublishedReference,
+    normalize_search,
+)
 from smb_requirement_agent.domain.document.value_objects import EvidenceBlockKind
 from smb_requirement_agent.domain.identity.entities import ActorProfile
 from smb_requirement_agent.domain.identity.errors import AuthorizationDeniedError
-
-
-def normalize_search(text: str) -> str:
-    # Preserve original citation text. Search normalization removes Arabic tatweel/diacritics.
-    return " ".join(
-        "".join(
-            c
-            for c in unicodedata.normalize("NFKC", text).casefold()
-            if c != "\u0640" and not ("\u064b" <= c <= "\u065f") and c != "\u0670"
-        ).split()
-    )
-
 
 CONTEXT_MAX_BUDGET = 1536
 
@@ -285,6 +275,19 @@ class ReferenceKnowledge:
 
     def has_published(self) -> bool:
         return self._documents.has_published()
+
+    def search_evidence(self, query: str) -> tuple[ReferenceEvidence, ...]:
+        evidence: list[ReferenceEvidence] = []
+        for chunk in self.search(query):
+            citation = self.citation(chunk)
+            evidence.append(
+                ReferenceEvidence(
+                    citation,
+                    chunk.context_text or f"{citation.location}\n{citation.excerpt}",
+                    chunk.context_locations or (chunk.location,),
+                )
+            )
+        return tuple(evidence)
 
     @staticmethod
     def citation(chunk: ReferenceChunk) -> PublishedReference:
