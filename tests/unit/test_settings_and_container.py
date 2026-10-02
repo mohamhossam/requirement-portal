@@ -742,3 +742,77 @@ class TestOperabilitySettings:
 
         with pytest.raises(ConfigurationError, match=message):
             Settings.from_env()
+
+
+class TestKnowledgeService:
+    """Where requirement work's knowledge comes from (ADR-0099)."""
+
+    TOKEN = "s" * 40
+
+    @pytest.mark.parametrize(
+        ("changes", "message"),
+        [
+            ({"knowledge_api_base_url": "http://knowledge"}, "set together"),
+            ({"requirement_service_token": "s" * 40}, "set together"),
+            (
+                {"knowledge_api_base_url": "http://knowledge", "requirement_service_token": "x"},
+                "REQUIREMENT_SERVICE_TOKEN must be at least 32",
+            ),
+            (
+                {"knowledge_api_base_url": "knowledge:8000", "requirement_service_token": "s" * 40},
+                r"http\(s\) URL",
+            ),
+        ],
+    )
+    def test_its_settings_are_checked_at_startup(
+        self, changes: dict[str, str], message: str
+    ) -> None:
+        with pytest.raises(ConfigurationError, match=message):
+            Settings(llm_provider=LLMProvider.FAKE, **changes)  # type: ignore[arg-type]
+
+    def test_its_settings_are_read_from_the_environment(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("LLM_PROVIDER", "fake")
+        monkeypatch.setenv("KNOWLEDGE_API_BASE_URL", "http://knowledge-api:8000")
+        monkeypatch.setenv("REQUIREMENT_SERVICE_TOKEN", self.TOKEN)
+
+        settings = Settings.from_env()
+
+        assert settings.knowledge_api_base_url == "http://knowledge-api:8000"
+        assert settings.requirement_service_token == self.TOKEN
+        assert self.TOKEN not in repr(settings)
+
+    def test_configured_it_answers_over_http(self) -> None:
+        from smb_requirement_agent.infrastructure.knowledge_client import (
+            HttpArchitectureKnowledge,
+            HttpKnowledgeViews,
+            HttpReferenceKnowledge,
+        )
+
+        container = build_container(
+            Settings(
+                llm_provider=LLMProvider.FAKE,
+                knowledge_api_base_url="http://knowledge",
+                requirement_service_token=self.TOKEN,
+            )
+        )
+        try:
+            assert isinstance(container.knowledge_views._views, HttpKnowledgeViews)
+            assert isinstance(container.current_references._knowledge, HttpReferenceKnowledge)
+            assert isinstance(container.architecture_knowledge, HttpArchitectureKnowledge)
+        finally:
+            container.close_resources()
+
+    def test_unconfigured_the_knowledge_in_this_process_answers(self) -> None:
+        from smb_requirement_agent.application.use_cases.reference_knowledge import (
+            ReferenceKnowledge,
+        )
+        from smb_requirement_agent.infrastructure.knowledge_client import FakeKnowledgeViews
+
+        container = build_container(Settings(llm_provider=LLMProvider.FAKE))
+        try:
+            assert isinstance(container.knowledge_views._views, FakeKnowledgeViews)
+            assert isinstance(container.current_references._knowledge, ReferenceKnowledge)
+        finally:
+            container.close_resources()

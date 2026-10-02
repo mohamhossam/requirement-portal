@@ -14,6 +14,7 @@ from smb_requirement_agent.application.errors import (
     PersistenceError,
     RequirementAnalysisConflictError,
 )
+from smb_requirement_agent.application.ports.architecture_knowledge import ActiveRelease
 from smb_requirement_agent.application.ports.knowledge_events import (
     ARCHITECTURE_RELEASE_ACTIVATED,
     REFERENCE_DOCUMENT_CHANGED,
@@ -205,10 +206,14 @@ def test_the_active_release_follows_activation_events_and_never_goes_back() -> N
         current.active_release_id()
 
     events.append(ARCHITECTURE_RELEASE_ACTIVATED, "r1", {"release_id": "r1"})
-    events.append(ARCHITECTURE_RELEASE_ACTIVATED, "r2", {"release_id": "r2"})
+    events.append(
+        ARCHITECTURE_RELEASE_ACTIVATED, "r2", {"release_id": "r2", "name": "Q4 catalogue"}
+    )
     projector.drain()
     assert current.active_release_id() == "r2"
-    releases.apply(1, "r1")
+    # The knowledge service names the version; an older event without a name still applies.
+    assert current.active_release() == ActiveRelease("r2", "Q4 catalogue")
+    releases.apply(1, ActiveRelease("r1"))
     assert current.active_release_id() == "r2"
 
     events.append(ARCHITECTURE_RELEASE_ACTIVATED, "r3", {"release": "malformed"})

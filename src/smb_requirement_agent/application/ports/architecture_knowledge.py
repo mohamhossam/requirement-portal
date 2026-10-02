@@ -55,11 +55,21 @@ class ActiveArchitectureReleasePort(Protocol):
     def active_release_id(self) -> str: ...
 
 
+@dataclass(frozen=True)
+class ActiveRelease:
+    """The catalogue release in use, and the name people know it by, when it has one."""
+
+    id: str
+    name: str | None = None
+
+
 class ArchitectureReleaseStatePort(Protocol):
     """Requirement work's local copy of which catalogue release is active (ADR-0099)."""
 
     def active_release_id(self) -> str | None: ...
 
-    def apply(self, seq: int, release_id: str) -> None:
-        """Record `release_id` unless a newer activation was already applied."""
+    def active_release(self) -> ActiveRelease | None: ...
+
+    def apply(self, seq: int, release: ActiveRelease) -> None:
+        """Record `release` unless a newer activation was already applied."""
         ...

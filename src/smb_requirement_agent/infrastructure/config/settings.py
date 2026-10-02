@@ -215,6 +215,10 @@ class Settings:
     # The token the knowledge service presents on /internal routes (ADR-0099).
     # Unset, the internal API is not served at all.
     knowledge_service_token: str | None = field(default=None, repr=False)
+    # Where the knowledge service's internal API is, and the token this service
+    # presents there (ADR-0099). Unset, the knowledge code in this process answers.
+    knowledge_api_base_url: str | None = None
+    requirement_service_token: str | None = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
         validate_settings(self)
@@ -560,4 +564,6 @@ def _operability_from_env() -> dict[str, Any]:
         "metrics_host": os.getenv("METRICS_HOST", "127.0.0.1").strip(),
         "request_max_body_bytes": body,
         "knowledge_service_token": os.getenv("KNOWLEDGE_SERVICE_TOKEN", "").strip() or None,
+        "knowledge_api_base_url": os.getenv("KNOWLEDGE_API_BASE_URL", "").strip() or None,
+        "requirement_service_token": os.getenv("REQUIREMENT_SERVICE_TOKEN", "").strip() or None,
     }

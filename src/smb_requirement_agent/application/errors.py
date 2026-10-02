@@ -48,6 +48,10 @@ class ArchitectureJobNotFoundError(Exception):
     """An architecture job does not exist."""
 
 
+class KnowledgeViewUnavailableError(Exception):
+    """A cited passage or architecture evidence is no longer published (ADR-0099)."""
+
+
 class ProviderRateLimitExceededError(Exception):
     """An actor started more provider-calling operations than the rate limit allows."""
 
