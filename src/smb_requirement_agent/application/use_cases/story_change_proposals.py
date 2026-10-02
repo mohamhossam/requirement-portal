@@ -5,12 +5,13 @@ from __future__ import annotations
 import uuid
 from dataclasses import replace
 
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.errors import (
     ArtifactVersionConflictError,
     StoryGenerationError,
     StoryProposalNotFoundError,
 )
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
 from smb_requirement_agent.application.ports.generation_guidance import GenerationGuidance

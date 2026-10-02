@@ -6,6 +6,8 @@ from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from threading import RLock
 
+from smb_kernel.time.fixed import FixedClock
+
 from smb_requirement_agent.application.ports.activity import (
     ActivityEvent,
     ActivityQuery,
@@ -98,7 +100,6 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_story_repository
 from smb_requirement_agent.infrastructure.persistence.in_memory_worklist import (
     InMemoryRequirementWorklistSnapshotAdapter,
 )
-from smb_requirement_agent.infrastructure.time.fixed_clock import FixedClock
 from tests.conftest import AlwaysReadyKnowledgeReview
 
 NOW = datetime(2026, 9, 2, 12, tzinfo=UTC)

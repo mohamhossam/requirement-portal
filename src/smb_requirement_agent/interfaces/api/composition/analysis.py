@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from typing import cast
 
-from smb_requirement_agent.application.ports.clock import ClockPort
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.ports.requirement_analyzer import RequirementAnalyzerPort
 from smb_requirement_agent.application.ports.requirement_evidence_analyzer import (
     RequirementEvidenceAnalyzerPort,

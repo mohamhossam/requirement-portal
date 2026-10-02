@@ -10,7 +10,8 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from smb_requirement_agent.application.ports.clock import ClockPort
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.ports.notifications import NotificationRepositoryPort
 
 

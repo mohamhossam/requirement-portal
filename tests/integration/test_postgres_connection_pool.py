@@ -14,12 +14,12 @@ from collections.abc import Iterator
 import psycopg
 import pytest
 from psycopg.pq import TransactionStatus
+from smb_kernel.persistence.connector import (
+    PooledPostgresConnector,
+)
 
 from smb_requirement_agent.application.errors import PersistenceError
 from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
-from smb_requirement_agent.infrastructure.persistence.postgres_connector import (
-    PooledPostgresConnector,
-)
 from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
 
 DATABASE_URL = os.getenv("TEST_DATABASE_URL")

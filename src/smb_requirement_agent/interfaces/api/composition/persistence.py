@@ -14,6 +14,12 @@ from dataclasses import dataclass
 from threading import RLock
 
 import httpx as httpx
+from smb_kernel.documents.ports import DocumentStoragePort
+from smb_kernel.persistence.connector import (
+    POOL_MAX_IDLE_SECONDS,
+    PooledPostgresConnector,
+)
+from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.application.ports.activity import ActivityReadPort, ReportingReadPort
@@ -48,10 +54,8 @@ from smb_requirement_agent.application.ports.breakdown_review_repository import 
 from smb_requirement_agent.application.ports.catalogue_candidates import (
     CatalogueCandidateRepositoryPort,
 )
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.document_library import DocumentLibraryPort
 from smb_requirement_agent.application.ports.document_repository import DocumentRepositoryPort
-from smb_requirement_agent.application.ports.document_storage import DocumentStoragePort
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
 from smb_requirement_agent.application.ports.knowledge_index_generations import (
@@ -217,10 +221,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_ai_jobs import (
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_architecture_jobs import (
     PostgresArchitectureJobs,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_connector import (
-    POOL_MAX_IDLE_SECONDS,
-    PooledPostgresConnector,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_document_repository import (
     PostgresDocumentRepository,

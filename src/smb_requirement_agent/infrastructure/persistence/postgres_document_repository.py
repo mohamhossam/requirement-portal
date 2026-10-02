@@ -2,8 +2,9 @@
 
 import hashlib
 
+from smb_kernel.documents.ports import DocumentStoragePort
+
 from smb_requirement_agent.application.errors import DocumentNotFoundError, DocumentStorageError
-from smb_requirement_agent.application.ports.document_storage import DocumentStoragePort
 from smb_requirement_agent.domain.document.value_objects import DocumentVersionId
 from smb_requirement_agent.infrastructure.persistence.postgres_document_metadata import (
     PostgresDocumentRepository as PostgresDocumentRepository,

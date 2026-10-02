@@ -5,6 +5,8 @@ from datetime import UTC, datetime, timedelta
 from threading import RLock
 
 import pytest
+from smb_kernel.documents.text_extractor import SafeDocumentTextExtractor
+from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.application.errors import (
     DocumentNotFoundError,
@@ -31,7 +33,6 @@ from smb_requirement_agent.domain.document.library import (
 from smb_requirement_agent.domain.identity.entities import ActorId, ActorProfile
 from smb_requirement_agent.domain.identity.errors import AuthorizationDeniedError
 from smb_requirement_agent.infrastructure.documents.library_worker import OfflineDocumentScanner
-from smb_requirement_agent.infrastructure.documents.text_extractor import SafeDocumentTextExtractor
 from smb_requirement_agent.infrastructure.persistence.document_library import (
     InMemoryDocumentLibrary,
 )
@@ -45,7 +46,6 @@ from smb_requirement_agent.infrastructure.persistence.reference_index import (
     InMemoryReferenceIndex,
     Utf8BudgetCounter,
 )
-from smb_requirement_agent.infrastructure.time.fixed_clock import FixedClock
 from tests.delimited_fixtures import reviewed_delimited_table
 from tests.presentation_fixtures import PPTX_MIME, reviewed_table_presentation
 from tests.spreadsheet_fixtures import (

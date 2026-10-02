@@ -6,6 +6,7 @@ from unittest.mock import Mock
 
 import pytest
 from fastapi.testclient import TestClient
+from smb_kernel.llm.structured_output import StructuredOutputError
 
 from smb_requirement_agent.application.errors import (
     RequirementAnalysisConflictError,
@@ -31,7 +32,6 @@ from smb_requirement_agent.infrastructure.llm.reference_proposals import (
     ReferenceOutput,
     StructuredReferenceProposer,
 )
-from smb_requirement_agent.infrastructure.llm.structured_output import StructuredOutputError
 from smb_requirement_agent.infrastructure.persistence.analysis_payloads import (
     analysis_from_payload,
     analysis_to_payload,

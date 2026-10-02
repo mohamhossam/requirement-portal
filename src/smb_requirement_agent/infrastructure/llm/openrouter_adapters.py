@@ -5,8 +5,11 @@ from __future__ import annotations
 from typing import TypedDict, Unpack
 
 import httpx
+from smb_kernel.diagnostics import DebugTrace, NullDebugTrace
+from smb_kernel.llm.openrouter_structured_output import (
+    OpenRouterStructuredOutputClient,
+)
 
-from smb_requirement_agent.infrastructure.diagnostics import DebugTrace, NullDebugTrace
 from smb_requirement_agent.infrastructure.llm.local_epic_generator import (
     StructuredEpicGeneratorAdapter,
 )
@@ -21,9 +24,6 @@ from smb_requirement_agent.infrastructure.llm.local_story_generator import (
 )
 from smb_requirement_agent.infrastructure.llm.local_story_quality_evaluator import (
     StructuredStoryQualityEvaluatorAdapter,
-)
-from smb_requirement_agent.infrastructure.llm.openrouter_structured_output import (
-    OpenRouterStructuredOutputClient,
 )
 from smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters import (
     StructuredClarificationAnswerSuggesterAdapter,

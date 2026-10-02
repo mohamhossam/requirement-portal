@@ -5,6 +5,10 @@ from __future__ import annotations
 import json
 
 from pydantic import BaseModel
+from smb_kernel.llm.structured_output import (
+    StructuredOutputClient,
+    StructuredOutputError,
+)
 
 from smb_requirement_agent.application.ports.architecture_knowledge import ArchitectureQuery
 from smb_requirement_agent.application.ports.architecture_rag import (
@@ -14,10 +18,6 @@ from smb_requirement_agent.application.ports.architecture_rag import (
 )
 from smb_requirement_agent.domain.architecture.entities import ArchitectureCitation
 from smb_requirement_agent.domain.architecture.knowledge import ArchitectureKnowledge
-from smb_requirement_agent.infrastructure.llm.structured_output import (
-    StructuredOutputClient,
-    StructuredOutputError,
-)
 
 
 class _QuotedCitation(BaseModel):

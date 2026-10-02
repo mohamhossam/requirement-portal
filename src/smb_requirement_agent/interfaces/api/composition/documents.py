@@ -5,7 +5,15 @@ from __future__ import annotations
 import multiprocessing
 from dataclasses import dataclass
 
-from smb_requirement_agent.application.ports.clock import ClockPort
+from smb_kernel.documents.bounded_extractor import (
+    BoundedSubprocessDocumentExtractor,
+    ExtractionLimits,
+)
+from smb_kernel.documents.process_resources import (
+    child_process_resource_limiter,
+)
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.use_cases.attachment_ingestion import AttachmentIngestion
 from smb_requirement_agent.application.use_cases.document_library import DocumentLibrary
 from smb_requirement_agent.application.use_cases.documents import (
@@ -24,17 +32,10 @@ from smb_requirement_agent.application.use_cases.invalidate_derived_artifacts im
 from smb_requirement_agent.application.use_cases.library_governance import LibraryGovernance
 from smb_requirement_agent.application.use_cases.reference_knowledge import ReferenceKnowledge
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.documents.bounded_extractor import (
-    BoundedSubprocessDocumentExtractor,
-    ExtractionLimits,
-)
 from smb_requirement_agent.infrastructure.documents.library_worker import (
     ClamAvDocumentScanner,
     DocumentIngestionWorker,
     OfflineDocumentScanner,
-)
-from smb_requirement_agent.infrastructure.documents.process_resources import (
-    child_process_resource_limiter,
 )
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
 

@@ -7,6 +7,8 @@ from collections.abc import Callable
 from enum import Enum
 from uuid import uuid4
 
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.errors import ArchitectureJobNotFoundError
 from smb_requirement_agent.application.ports.architecture_jobs import (
     ArchitectureJob,
@@ -20,7 +22,6 @@ from smb_requirement_agent.application.ports.architecture_jobs import (
 from smb_requirement_agent.application.ports.architecture_knowledge_repository import (
     ArchitectureKnowledgeRepositoryPort,
 )
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.identity import (
     Actor,
     require_maintainer,

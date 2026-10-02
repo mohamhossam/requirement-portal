@@ -1,10 +1,7 @@
 """Deterministic offline identity provider."""
 
-from smb_requirement_agent.application.errors import AuthenticationRequiredError
-from smb_requirement_agent.application.ports.identity_provider import (
-    IdentityCredential,
-    IdentityProviderPort,
-)
+from smb_kernel.identity.fake import FakeIdentityProvider as KernelFakeIdentityProvider
+
 from smb_requirement_agent.domain.identity.entities import ActorId, ActorProfile
 
 FAKE_ACTORS = (
@@ -24,13 +21,8 @@ FAKE_ACTORS = (
 )
 
 
-class FakeIdentityProvider(IdentityProviderPort):
-    def __init__(self, actors: tuple[ActorProfile, ...] = FAKE_ACTORS) -> None:
-        self.actors = actors
+class FakeIdentityProvider(KernelFakeIdentityProvider):
+    """The kernel's offline provider with this application's personas."""
 
-    def authenticate(self, credential: IdentityCredential) -> ActorProfile:
-        actor_id = (credential.actor_hint or self.actors[0].id.value).strip()
-        actor = next((item for item in self.actors if item.id.value == actor_id), None)
-        if actor is None:
-            raise AuthenticationRequiredError("Unknown fake actor identity.")
-        return actor
+    def __init__(self, actors: tuple[ActorProfile, ...] = FAKE_ACTORS) -> None:
+        super().__init__(actors)

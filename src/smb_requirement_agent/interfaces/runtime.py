@@ -6,7 +6,8 @@ import logging
 import threading
 from collections.abc import Callable, Mapping
 
-from smb_requirement_agent.infrastructure.observability.metrics import serve_metrics
+from smb_kernel.observability.metrics import serve_metrics
+
 from smb_requirement_agent.interfaces.api.container import BackgroundWorker, Container
 
 _LOGGER = logging.getLogger(__name__)

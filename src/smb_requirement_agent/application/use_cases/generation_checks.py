@@ -3,12 +3,13 @@
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.errors import FeatureGenerationError, StoryGenerationError
 from smb_requirement_agent.application.ports.architecture_knowledge import (
     ArchitectureKnowledgePort,
     ArchitectureQuery,
 )
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.generation_guidance import GenerationGuidance
 from smb_requirement_agent.application.ports.requirement_evidence_analyzer import (
     AnalysisProgressPort,

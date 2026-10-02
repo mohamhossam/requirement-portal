@@ -10,9 +10,9 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, Form, Query, Response, UploadFile
 from pydantic import BaseModel
+from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.ports.catalogue_file import CatalogueFileFormat
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.use_cases.architecture_comparison import (
     CompareArchitectureImpact,
     ManageSampleRequirements,

@@ -14,6 +14,9 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 from openpyxl import Workbook
+from smb_kernel.documents.text_extractor import SafeDocumentTextExtractor
+from smb_kernel.observability.metrics import Metrics
+from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.application.errors import (
     DocumentExtractionError,
@@ -62,8 +65,6 @@ from smb_requirement_agent.infrastructure.architecture.tokenizer import (
 )
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.documents.text_extractor import SafeDocumentTextExtractor
-from smb_requirement_agent.infrastructure.observability.metrics import Metrics
 from smb_requirement_agent.infrastructure.persistence.in_memory_architecture_knowledge import (
     InMemoryArchitectureKnowledgeRepository,
 )
@@ -73,7 +74,6 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_document_reposit
 from smb_requirement_agent.infrastructure.persistence.in_memory_organisation import (
     InMemoryOrganisationRepository,
 )
-from smb_requirement_agent.infrastructure.time.fixed_clock import FixedClock
 from smb_requirement_agent.interfaces.api.composition.llm import build_llm_adapters
 from tests.spreadsheet_fixtures import XLSX_MIME
 

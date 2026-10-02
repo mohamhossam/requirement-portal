@@ -12,6 +12,8 @@ from collections.abc import Sequence
 from dataclasses import dataclass, replace
 from datetime import timedelta
 
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.errors import (
     DocumentNotFoundError,
     DocumentVersionConflictError,
@@ -20,7 +22,6 @@ from smb_requirement_agent.application.errors import (
     RequirementAnalysisConflictError,
     UnsupportedDocumentError,
 )
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.document_library import DocumentLibraryPort
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidence
 from smb_requirement_agent.application.ports.reference_index import (

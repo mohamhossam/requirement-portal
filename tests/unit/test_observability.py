@@ -18,6 +18,22 @@ import httpx
 import httpx2
 import pytest
 from fastapi.testclient import TestClient
+from smb_kernel.observability.correlation import (
+    correlation_scope,
+    current_correlation_id,
+)
+from smb_kernel.observability.logging import (
+    JsonLogFormatter,
+    configure_logging,
+)
+from smb_kernel.observability.metrics import (
+    MeteredTransport,
+    MeteredTransport2,
+    Metrics,
+    provider_operation,
+    provider_usage,
+)
+from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.application.ports.ai_jobs import (
     AiJobCommand,
@@ -28,22 +44,6 @@ from smb_requirement_agent.application.use_cases.ai_job_execution import Execute
 from smb_requirement_agent.domain.jobs.entities import AiJob
 from smb_requirement_agent.infrastructure.config.options import LogFormat
 from smb_requirement_agent.infrastructure.jobs.polling_worker import PollingAiJobWorker
-from smb_requirement_agent.infrastructure.observability.correlation import (
-    correlation_scope,
-    current_correlation_id,
-)
-from smb_requirement_agent.infrastructure.observability.logging import (
-    JsonLogFormatter,
-    configure_logging,
-)
-from smb_requirement_agent.infrastructure.observability.metrics import (
-    MeteredTransport,
-    MeteredTransport2,
-    Metrics,
-    provider_operation,
-    provider_usage,
-)
-from smb_requirement_agent.infrastructure.time.fixed_clock import FixedClock
 from smb_requirement_agent.interfaces.api.container import build_container
 from smb_requirement_agent.interfaces.api.main import create_app
 from smb_requirement_agent.interfaces.runtime import start_metrics

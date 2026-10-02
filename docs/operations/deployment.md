@@ -32,6 +32,15 @@ image installs dependencies from `uv.lock` (`uv sync --locked --no-dev`).
 
 ## First install
 
+The backend image installs `smb-platform-kernel` (ADR-0100) from its private repository.
+Before any `build`, export a fine-grained, read-only token for `mohamhossam/platform-kernel`
+as `KERNEL_READ_TOKEN`. Compose passes it to the build as a BuildKit secret, so it is never
+stored in an image layer:
+
+```bash
+export KERNEL_READ_TOKEN=...   # Contents: read-only on platform-kernel
+```
+
 ```bash
 cp deploy/production.env.example deploy/production.env   # fill in every blank; git-ignored
 export POSTGRES_PASSWORD=...                              # or put it in deploy/.env

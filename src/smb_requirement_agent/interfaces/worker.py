@@ -15,12 +15,13 @@ import sys
 import threading
 from collections.abc import Sequence
 
+from smb_kernel.observability.logging import configure_logging
+
 from smb_requirement_agent.infrastructure.config.options import (
     ConfigurationError,
     PersistenceProvider,
 )
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.observability.logging import configure_logging
 from smb_requirement_agent.interfaces.api.container import build_container
 from smb_requirement_agent.interfaces.runtime import (
     start_metrics,

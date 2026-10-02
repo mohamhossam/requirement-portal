@@ -9,10 +9,11 @@ from dataclasses import asdict
 from time import perf_counter
 
 from fastapi import FastAPI, Request, Response
+from smb_kernel.http.body_limit import BodyLimits, RequestBodyLimit
+from smb_kernel.observability.correlation import correlation_scope
 from starlette.middleware.base import RequestResponseEndpoint
+from starlette.types import Scope
 
-from smb_requirement_agent.infrastructure.observability.correlation import correlation_scope
-from smb_requirement_agent.interfaces.api.body_limit import RequestBodyLimit
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.interfaces.api.error_handlers import register_error_handlers
 from smb_requirement_agent.interfaces.api.routes.activity import (
@@ -72,6 +73,15 @@ def _route_template(request: Request) -> str:
     return str(getattr(route, "path", "unmatched"))
 
 
+def _body_limits(scope: Scope) -> BodyLimits:
+    """The request and per-file ceilings, read from this app's settings per request."""
+    settings = scope["app"].state.container.settings
+    return BodyLimits(
+        request_max_body_bytes=settings.request_max_body_bytes,
+        document_max_file_bytes=settings.document_max_file_bytes,
+    )
+
+
 def create_app(container_factory: Callable[[], Container] = build_container) -> FastAPI:
     """Create one application whose complete lifecycle shares one object graph."""
 
@@ -105,7 +115,7 @@ def create_app(container_factory: Callable[[], Container] = build_container) -> 
     register_error_handlers(application)
     # Registered before the trace middleware, so it runs inside it: a refused
     # body still gets a correlation ID, a log line and a metric.
-    application.add_middleware(RequestBodyLimit)
+    application.add_middleware(RequestBodyLimit, limits=_body_limits)
 
     @application.middleware("http")
     async def trace_request(request: Request, call_next: RequestResponseEndpoint) -> Response:

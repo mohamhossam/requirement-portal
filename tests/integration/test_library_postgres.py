@@ -6,6 +6,11 @@ from datetime import UTC, datetime
 
 import psycopg
 import pytest
+from smb_kernel.documents.text_extractor import SafeDocumentTextExtractor
+from smb_kernel.persistence.connector import (
+    DirectPostgresConnector,
+)
+from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.application.use_cases.document_library import (
     CHUNKING_POLICY,
@@ -19,14 +24,10 @@ from smb_requirement_agent.application.use_cases.reference_knowledge import (
 from smb_requirement_agent.domain.document.library import OwnershipTransfer, ReviewedPassage
 from smb_requirement_agent.domain.identity.entities import ActorId, ActorProfile
 from smb_requirement_agent.infrastructure.documents.library_worker import OfflineDocumentScanner
-from smb_requirement_agent.infrastructure.documents.text_extractor import SafeDocumentTextExtractor
 from smb_requirement_agent.infrastructure.persistence.document_library import (
     PostgresDocumentLibrary,
 )
 from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
-from smb_requirement_agent.infrastructure.persistence.postgres_connector import (
-    DirectPostgresConnector,
-)
 from smb_requirement_agent.infrastructure.persistence.postgres_document_repository import (
     PostgresDocumentStorage,
 )
@@ -35,7 +36,6 @@ from smb_requirement_agent.infrastructure.persistence.reference_index import (
     PostgresReferenceIndex,
     Utf8BudgetCounter,
 )
-from smb_requirement_agent.infrastructure.time.fixed_clock import FixedClock
 from tests.delimited_fixtures import reviewed_delimited_table
 from tests.presentation_fixtures import PPTX_MIME, reviewed_table_presentation
 from tests.spreadsheet_fixtures import (

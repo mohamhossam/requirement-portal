@@ -11,10 +11,10 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
+from smb_kernel.documents.text_extractor import SafeDocumentTextExtractor
 
 from smb_requirement_agent.application.errors import UnsupportedDocumentError
 from smb_requirement_agent.domain.document.value_objects import DocumentId
-from smb_requirement_agent.infrastructure.documents.text_extractor import SafeDocumentTextExtractor
 from smb_requirement_agent.infrastructure.persistence.document_payloads import (
     document_from_payload,
     document_to_payload,

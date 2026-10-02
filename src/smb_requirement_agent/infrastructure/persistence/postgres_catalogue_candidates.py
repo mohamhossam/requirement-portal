@@ -7,6 +7,7 @@ from dataclasses import replace
 import psycopg
 from psycopg.types.json import Jsonb
 from pydantic import TypeAdapter, ValidationError
+from smb_kernel.persistence.connector import PostgresConnector
 
 from smb_requirement_agent.application.errors import PersistenceError
 from smb_requirement_agent.application.ports.catalogue_candidates import ExtractionRun
@@ -15,7 +16,6 @@ from smb_requirement_agent.domain.architecture.candidates import (
     CandidateStatus,
     CatalogueCandidate,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_connector import PostgresConnector
 
 _CANDIDATE: TypeAdapter[CatalogueCandidate] = TypeAdapter(CatalogueCandidate)
 _RUN: TypeAdapter[ExtractionRun] = TypeAdapter(ExtractionRun)

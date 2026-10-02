@@ -7,6 +7,10 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
+from smb_kernel.documents.text_extractor import SafeDocumentTextExtractor
+from smb_kernel.persistence.connector import (
+    DirectPostgresConnector,
+)
 
 from smb_requirement_agent.application.ports.architecture_jobs import (
     ArchitectureJob,
@@ -38,7 +42,6 @@ from smb_requirement_agent.infrastructure.architecture.postgres_evidence_index i
     PostgresEvidenceIndex,
 )
 from smb_requirement_agent.infrastructure.architecture.tokenizer import FakeWordTokenizer
-from smb_requirement_agent.infrastructure.documents.text_extractor import SafeDocumentTextExtractor
 from smb_requirement_agent.infrastructure.persistence.architecture_mapping_stats import (
     PostgresArchitectureMappingStats,
 )
@@ -51,9 +54,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_architecture_jobs
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_architecture_knowledge import (
     PostgresArchitectureKnowledgeRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_connector import (
-    DirectPostgresConnector,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_sample_requirements import (
     PostgresSampleRequirements,

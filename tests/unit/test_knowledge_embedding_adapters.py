@@ -18,6 +18,7 @@ import httpx
 import pytest
 from openai import OpenAI, OpenAIError
 from pydantic import BaseModel
+from smb_kernel.llm.structured_output import StructuredOutputError
 
 from smb_requirement_agent.application.errors import KnowledgeGenerationError
 from smb_requirement_agent.domain.analysis.entities import ClarificationQuestion
@@ -54,7 +55,6 @@ from smb_requirement_agent.infrastructure.llm.schemas.knowledge_schema import (
     RelationshipFindingSchema,
     RelationshipScreenSchema,
 )
-from smb_requirement_agent.infrastructure.llm.structured_output import StructuredOutputError
 
 SchemaT = TypeVar("SchemaT", bound=BaseModel)
 VECTOR = [0.5] * EMBEDDING_DIMENSIONS

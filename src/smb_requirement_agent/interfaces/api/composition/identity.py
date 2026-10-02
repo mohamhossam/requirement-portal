@@ -6,16 +6,16 @@ from contextlib import ExitStack
 from time import monotonic
 
 import httpx as httpx
+from smb_kernel.identity.oidc import OidcIdentityProvider
+from smb_kernel.identity.ports import IdentityProviderPort
 
 from smb_requirement_agent.application.ports.actor_directory import ActorDirectoryPort
-from smb_requirement_agent.application.ports.identity_provider import IdentityProviderPort
 from smb_requirement_agent.infrastructure.config.options import IdentityProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.identity.fake_identity import (
     FAKE_ACTORS,
     FakeIdentityProvider,
 )
-from smb_requirement_agent.infrastructure.identity.oidc_identity import OidcIdentityProvider
 
 
 def build_identity(

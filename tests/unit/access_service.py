@@ -7,6 +7,8 @@ already set up, so authorization is exercised, never stubbed.
 
 from __future__ import annotations
 
+from smb_kernel.time.fixed import FixedClock
+
 from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
@@ -21,7 +23,6 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_audit_r
 from smb_requirement_agent.infrastructure.persistence.in_memory_identity import (
     InMemoryActorDirectory,
 )
-from smb_requirement_agent.infrastructure.time.fixed_clock import FixedClock
 from tests.conftest import TEST_NOW
 from tests.unit.transaction_stub import NoOpTransactionManager
 

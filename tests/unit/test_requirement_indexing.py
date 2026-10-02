@@ -5,6 +5,7 @@ from threading import RLock
 
 import pytest
 from fastapi.testclient import TestClient
+from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.application.errors import (
     KnowledgeGenerationError,
@@ -35,7 +36,6 @@ from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import 
 from smb_requirement_agent.infrastructure.persistence.requirement_indexing import (
     MemoryRequirementIndexProgress,
 )
-from smb_requirement_agent.infrastructure.time.fixed_clock import FixedClock
 from smb_requirement_agent.interfaces.api.container import Container
 from tests.unit.workflow_helpers import drain_requirement_index
 

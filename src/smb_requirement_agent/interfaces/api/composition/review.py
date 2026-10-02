@@ -9,8 +9,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.ports.backlog_export import BacklogExportPort
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.use_cases.approval_policy import ApprovalPolicy
 from smb_requirement_agent.application.use_cases.approval_workflow import (
     AddReviewComment,

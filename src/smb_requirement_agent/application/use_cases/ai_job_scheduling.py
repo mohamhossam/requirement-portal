@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import uuid
 
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.errors import (
     RequirementNotFoundError,
 )
@@ -13,7 +15,6 @@ from smb_requirement_agent.application.ports.ai_jobs import (
     AiJobRepositoryPort,
     JsonValue,
 )
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.requirement_knowledge import (
     AnswerSuggestionSchedulerPort,
     KnowledgeReviewPort,

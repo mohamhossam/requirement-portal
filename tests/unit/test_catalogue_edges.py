@@ -11,6 +11,8 @@ from typing import Any
 import psycopg
 import pytest
 from fastapi.testclient import TestClient
+from smb_kernel.documents.text_extractor import SafeDocumentTextExtractor
+from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.application.errors import PersistenceError
 from smb_requirement_agent.application.ports.architecture_knowledge import ArchitectureQuery
@@ -74,7 +76,6 @@ from smb_requirement_agent.infrastructure.architecture.yaml_knowledge import (
     YamlArchitectureKnowledge,
     default_knowledge_path,
 )
-from smb_requirement_agent.infrastructure.documents.text_extractor import SafeDocumentTextExtractor
 from smb_requirement_agent.infrastructure.llm.catalogue_extraction import (
     FakeCatalogueExtractor,
     slug,
@@ -98,7 +99,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_catalogue_candida
 from smb_requirement_agent.infrastructure.persistence.postgres_organisation import (
     PostgresOrganisationRepository,
 )
-from smb_requirement_agent.infrastructure.time.fixed_clock import FixedClock
 
 NOW = datetime(2026, 9, 29, 9, 0, tzinfo=UTC)
 MAINTAINER = Actor("amina", frozenset({"knowledge_maintainer"}))

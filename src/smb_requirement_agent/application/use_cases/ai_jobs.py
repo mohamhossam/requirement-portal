@@ -7,6 +7,8 @@ import json
 import uuid
 from dataclasses import dataclass, replace
 
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.errors import (
     AiJobNotFoundError,
     NotificationNotFoundError,
@@ -17,7 +19,6 @@ from smb_requirement_agent.application.ports.ai_jobs import (
     AiJobRecord,
     AiJobRepositoryPort,
 )
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.notifications import NotificationRepositoryPort
 from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort

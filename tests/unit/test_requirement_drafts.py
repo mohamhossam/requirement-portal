@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 
 import pytest
 from fastapi.testclient import TestClient
+from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.application.errors import RequirementVersionConflictError
 from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirement
@@ -25,7 +26,6 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_requirement_draf
 from smb_requirement_agent.infrastructure.persistence.in_memory_requirement_repository import (
     InMemoryRequirementRepository,
 )
-from smb_requirement_agent.infrastructure.time.fixed_clock import FixedClock
 from tests.unit.transaction_stub import NoOpTransactionManager
 from tests.unit.workflow_helpers import post_analysis
 

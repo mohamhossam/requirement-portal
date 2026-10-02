@@ -10,6 +10,9 @@ from dataclasses import dataclass, replace
 from datetime import timedelta
 from pathlib import PurePosixPath, PureWindowsPath
 
+from smb_kernel.documents.ports import DocumentExtractorPort, DocumentStoragePort
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.errors import (
     DocumentExtractionError,
     DocumentExtractionTimeoutError,
@@ -17,13 +20,10 @@ from smb_requirement_agent.application.errors import (
     DocumentVersionConflictError,
     UnsupportedDocumentError,
 )
-from smb_requirement_agent.application.ports.clock import ClockPort
-from smb_requirement_agent.application.ports.document_extractor import DocumentExtractorPort
 from smb_requirement_agent.application.ports.document_library import (
     DocumentLibraryPort,
     DocumentScannerPort,
 )
-from smb_requirement_agent.application.ports.document_storage import DocumentStoragePort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.documents import (
     SUPPORTED_EXTENSIONS,

@@ -5,6 +5,7 @@ from __future__ import annotations
 import psycopg
 from psycopg.types.json import Jsonb
 from pydantic import TypeAdapter, ValidationError
+from smb_kernel.persistence.connector import PostgresConnector
 
 from smb_requirement_agent.application.errors import PersistenceError
 from smb_requirement_agent.domain.architecture.knowledge import (
@@ -14,7 +15,6 @@ from smb_requirement_agent.domain.architecture.knowledge import (
     KnowledgeDocumentVersion,
     KnowledgeReleaseStatus,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_connector import PostgresConnector
 from smb_requirement_agent.infrastructure.persistence.postgres_values import _datetime, _integer
 
 _DOCUMENT: TypeAdapter[KnowledgeDocumentVersion] = TypeAdapter(KnowledgeDocumentVersion)

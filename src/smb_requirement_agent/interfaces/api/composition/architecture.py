@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from smb_kernel.documents.text_extractor import SafeDocumentTextExtractor
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.ports.architecture_knowledge import ArchitectureKnowledgePort
 from smb_requirement_agent.application.ports.architecture_rag import (
     ArchitectureReasonerPort,
@@ -13,7 +16,6 @@ from smb_requirement_agent.application.ports.architecture_tokenizer import (
     ArchitectureTokenizerPort,
 )
 from smb_requirement_agent.application.ports.catalogue_extractor import CatalogueExtractorPort
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.requirement_knowledge import KnowledgeEmbeddingPort
 from smb_requirement_agent.application.ports.system_matcher import SystemMatcherPort
 from smb_requirement_agent.application.use_cases.architecture_documents import (
@@ -59,7 +61,6 @@ from smb_requirement_agent.infrastructure.architecture.yaml_knowledge import (
 )
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.documents.text_extractor import SafeDocumentTextExtractor
 from smb_requirement_agent.infrastructure.jobs.architecture_job_worker import ArchitectureJobWorker
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
 

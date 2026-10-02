@@ -6,6 +6,10 @@ import os
 from datetime import UTC, datetime
 
 import pytest
+from smb_kernel.persistence.connector import (
+    DirectPostgresConnector,
+)
+from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.domain.organisation.catalogue import (
     OrganisationConflictError,
@@ -15,13 +19,9 @@ from smb_requirement_agent.domain.organisation.catalogue import (
     ValueStream,
 )
 from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
-from smb_requirement_agent.infrastructure.persistence.postgres_connector import (
-    DirectPostgresConnector,
-)
 from smb_requirement_agent.infrastructure.persistence.postgres_organisation import (
     PostgresOrganisationRepository,
 )
-from smb_requirement_agent.infrastructure.time.fixed_clock import FixedClock
 
 DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 pytestmark = pytest.mark.skipif(not DATABASE_URL, reason="TEST_DATABASE_URL is not configured")

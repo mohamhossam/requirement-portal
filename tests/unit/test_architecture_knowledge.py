@@ -14,6 +14,10 @@ from typing import cast
 import httpx
 import pytest
 from fastapi.testclient import TestClient
+from smb_kernel.documents.text_extractor import SafeDocumentTextExtractor
+from smb_kernel.llm.local_structured_output import (
+    LocalStructuredOutputClient,
+)
 
 from smb_requirement_agent.application.ports.architecture_knowledge import ArchitectureQuery
 from smb_requirement_agent.application.ports.architecture_rag import (
@@ -66,10 +70,6 @@ from smb_requirement_agent.infrastructure.config.options import (
     PersistenceProvider,
 )
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.documents.text_extractor import SafeDocumentTextExtractor
-from smb_requirement_agent.infrastructure.llm.local_structured_output import (
-    LocalStructuredOutputClient,
-)
 from smb_requirement_agent.infrastructure.persistence.in_memory_architecture_knowledge import (
     InMemoryArchitectureKnowledgeRepository,
 )

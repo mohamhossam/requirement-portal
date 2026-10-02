@@ -13,6 +13,9 @@ from dataclasses import dataclass, replace
 from datetime import datetime
 from uuid import uuid4
 
+from smb_kernel.documents.ports import DocumentExtractorPort, DocumentStoragePort
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.errors import PersistenceError
 from smb_requirement_agent.application.ports.architecture_knowledge_repository import (
     ArchitectureKnowledgeRepositoryPort,
@@ -29,9 +32,6 @@ from smb_requirement_agent.application.ports.catalogue_extractor import (
     KnownSystem,
     ProposedChange,
 )
-from smb_requirement_agent.application.ports.clock import ClockPort
-from smb_requirement_agent.application.ports.document_extractor import DocumentExtractorPort
-from smb_requirement_agent.application.ports.document_storage import DocumentStoragePort
 from smb_requirement_agent.application.ports.identity import Actor, require_maintainer
 from smb_requirement_agent.application.ports.located_document_extractor import (
     LocatedDocumentExtractorPort,

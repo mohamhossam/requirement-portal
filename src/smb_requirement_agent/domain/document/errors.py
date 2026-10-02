@@ -1,12 +1,11 @@
-"""Document domain errors."""
+"""Document domain errors.
 
+`DocumentError` and `InvalidDocumentError` are platform-kernel's, re-exported
+(ADR-0100), so extraction failures and lifecycle failures share one hierarchy.
+"""
 
-class DocumentError(Exception):
-    """Base error for source-document behavior."""
-
-
-class InvalidDocumentError(DocumentError):
-    """Document metadata or lifecycle state is invalid."""
+from smb_kernel.documents.model import DocumentError as DocumentError
+from smb_kernel.documents.model import InvalidDocumentError as InvalidDocumentError
 
 
 class DocumentInclusionError(DocumentError):

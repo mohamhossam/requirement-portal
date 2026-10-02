@@ -10,8 +10,8 @@ from typing import Any, cast
 
 import pytest
 from fastapi.testclient import TestClient
+from smb_kernel.observability.metrics import Metrics
 
-from smb_requirement_agent.infrastructure.observability.metrics import Metrics
 from smb_requirement_agent.interfaces.api import main as api_main
 
 

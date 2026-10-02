@@ -13,12 +13,12 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from dotenv import load_dotenv
-
-from smb_requirement_agent.infrastructure.config.llm_profiles import (
+from smb_kernel.llm.profiles import (
     LLMProfileConfiguration,
     ProfileConfigurationError,
     load_profiles,
 )
+
 from smb_requirement_agent.infrastructure.config.options import (
     DEFAULT_AI_JOB_HEARTBEAT_SECONDS,
     DEFAULT_AI_JOB_LEASE_SECONDS,

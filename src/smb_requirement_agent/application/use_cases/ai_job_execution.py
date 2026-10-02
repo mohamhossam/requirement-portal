@@ -5,6 +5,8 @@ from __future__ import annotations
 import logging
 import uuid
 
+from smb_kernel.time.clock import ClockPort
+
 from smb_requirement_agent.application.errors import (
     ActorNotFoundError,
     AiJobNotFoundError,
@@ -18,7 +20,6 @@ from smb_requirement_agent.application.ports.ai_jobs import (
     AiJobRepositoryPort,
     JsonValue,
 )
-from smb_requirement_agent.application.ports.clock import ClockPort
 from smb_requirement_agent.application.ports.external_work import guard_external_work
 from smb_requirement_agent.application.ports.notifications import NotificationRepositoryPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort

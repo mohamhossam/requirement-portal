@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 import pytest
+from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
 from smb_requirement_agent.application.ports.requirement_analyzer import (
@@ -41,7 +42,6 @@ from smb_requirement_agent.domain.requirement.value_objects import (
 from smb_requirement_agent.infrastructure.persistence.in_memory_evidence_fragment_cache import (
     InMemoryEvidenceFragmentCache,
 )
-from smb_requirement_agent.infrastructure.time.fixed_clock import FixedClock
 
 NOW = datetime(2026, 9, 7, tzinfo=UTC)
 

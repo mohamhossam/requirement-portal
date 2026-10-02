@@ -15,6 +15,11 @@ from typing import Never
 import psycopg
 import pytest
 from psycopg import sql
+from smb_kernel.documents.text_extractor import SafeDocumentTextExtractor
+from smb_kernel.persistence.connector import (
+    DirectPostgresConnector,
+)
+from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.application.errors import DocumentStorageError
 from smb_requirement_agent.application.exports import ExportFormat
@@ -174,7 +179,6 @@ from smb_requirement_agent.domain.story.value_objects import (
     StoryProposalId,
     UserRole,
 )
-from smb_requirement_agent.infrastructure.documents.text_extractor import SafeDocumentTextExtractor
 from smb_requirement_agent.infrastructure.exports.json_exporter import JsonBacklogExporter
 from smb_requirement_agent.infrastructure.exports.xlsx_exporter import XlsxBacklogExporter
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
@@ -195,9 +199,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader i
     PostgresActivityReadAdapter,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_ai_jobs import PostgresAiJobStore
-from smb_requirement_agent.infrastructure.persistence.postgres_connector import (
-    DirectPostgresConnector,
-)
 from smb_requirement_agent.infrastructure.persistence.postgres_document_repository import (
     PostgresDocumentStorage,
 )
@@ -225,7 +226,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_store import (
 from smb_requirement_agent.infrastructure.persistence.postgres_store import (
     PostgresStore as UnitOfWorkStore,
 )
-from smb_requirement_agent.infrastructure.time.fixed_clock import FixedClock
 from tests.integration.postgres_fixture_store import (
     FixturePostgresStore as _PostgresStore,
 )

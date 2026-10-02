@@ -9,6 +9,7 @@ import uuid
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from smb_kernel.http.body_limit import RequestBodyTooLargeError
 
 from smb_requirement_agent.application.errors import (
     DocumentExtractionBusyError,
@@ -20,7 +21,6 @@ from smb_requirement_agent.application.public_errors import (
     FailureCategory,
     describe_public_error,
 )
-from smb_requirement_agent.interfaces.api.body_limit import RequestBodyTooLargeError
 
 logger = logging.getLogger("smb_requirement_agent.api.errors")
 
