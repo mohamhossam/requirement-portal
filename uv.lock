@@ -3192,8 +3192,8 @@ wheels = [
 
 [[package]]
 name = "smb-platform-kernel"
-version = "1.0.1"
-source = { git = "https://github.com/mohamhossam/platform-kernel?rev=v1.0.1#961efe3f386e2d4f3f6ef1b0f2ef316e1e151599" }
+version = "1.0.2"
+source = { git = "https://github.com/mohamhossam/platform-kernel?rev=v1.0.2#4f87696edd9106bb72999eee507c25d34eefea03" }
 dependencies = [
     { name = "httpx" },
     { name = "httpx2" },
@@ -3270,7 +3270,7 @@ requires-dist = [
     { name = "python-multipart", specifier = ">=0.0.18,<1" },
     { name = "pyyaml", specifier = ">=6,<7" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.8,<1" },
-    { name = "smb-platform-kernel", git = "https://github.com/mohamhossam/platform-kernel?rev=v1.0.1" },
+    { name = "smb-platform-kernel", git = "https://github.com/mohamhossam/platform-kernel?rev=v1.0.2" },
     { name = "tokenizers", specifier = ">=0.21,<1" },
     { name = "types-openpyxl", marker = "extra == 'dev'", specifier = ">=3.1,<4" },
     { name = "types-pyyaml", marker = "extra == 'dev'", specifier = ">=6,<7" },
