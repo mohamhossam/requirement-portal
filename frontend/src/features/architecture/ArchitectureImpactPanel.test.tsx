@@ -1,6 +1,8 @@
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import { AuthContext, type AuthState } from "../../auth/authContext";
+
 import { architectureFixture } from "../../test/fixtures";
 import { renderWithKnowledge as render } from "../../test/renderWithKnowledge";
 import { ArchitectureImpactPanel } from "./ArchitectureImpactPanel";
@@ -12,7 +14,7 @@ describe("ArchitectureImpactPanel", () => {
         chunk_id: "source", quote: "Exact source-language quotation" }] }} />);
     expect(screen.getByText("Exact source-language quotation")).toBeVisible();
     expect(screen.getByRole("link", { name: "View supporting evidence" }))
-      .toHaveAttribute("href", expect.stringContaining("/evidence/source"));
+      .toHaveAttribute("href", `/architecture-evidence/${architectureFixture.knowledge_version}/source`);
   });
   it("distinguishes not mapped from a completed empty mapping", () => {
     const { rerender } = render(<ArchitectureImpactPanel impact={null} />);
@@ -91,8 +93,23 @@ describe("ArchitectureImpactPanel", () => {
     expect(connected).toHaveTextContent("Linked to BCRM (1 system)");
     expect(connected).toHaveTextContent("Used by BCRM: Reads customer eligibility. (Data transfer)");
     expect(connected).toHaveTextContent("2 more connected systems are in the architecture catalogue.");
-    expect(screen.getByRole("link", { name: "architecture catalogue" })).toHaveAttribute("href", "/architecture-knowledge");
+    // The catalogue is curated in the knowledge portal; only its admins get a link there.
+    expect(screen.queryByRole("link", { name: "architecture catalogue" })).not.toBeInTheDocument();
     expect(screen.getAllByRole("listitem").filter((item) => item.textContent?.startsWith("CBCM"))).toHaveLength(1);
+  });
+
+  it("links the catalogue to the knowledge portal for its admins", () => {
+    const admin = { actor: { id: "fake-owner", display_name: "Amina", email: null, roles: ["knowledge_admin"] } } as unknown as AuthState;
+    render(
+      <AuthContext.Provider value={admin}>
+        <ArchitectureImpactPanel
+          impact={{ ...architectureFixture, systems: [], dependencies: [], cross_system: false,
+            suggested_domains: [{ domain_id: "billing", path: ["Billing"], system_ids: [],
+              system_names: [], matched_terms: ["billing"] }] }}
+        />
+      </AuthContext.Provider>,
+    );
+    expect(screen.getByRole("link", { name: "architecture catalogue" })).toHaveAttribute("href", "/knowledge/");
   });
 
   it("names connected systems in one line on a Story", () => {

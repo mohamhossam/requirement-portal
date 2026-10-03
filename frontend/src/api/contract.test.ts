@@ -66,9 +66,7 @@ const clients: [string, Record<string, unknown>][] = [
 ];
 
 /** Functions whose literal argument is a path segment, called with each value. */
-const literalArguments: Record<string, unknown[][]> = {
-  "api.controlLibrary": [[anything, "retry"], [anything, "cancellation"]],
-};
+const literalArguments: Record<string, unknown[][]> = {};
 
 const functions = clients.flatMap(([owner, client]) =>
   Object.entries(client)
@@ -81,7 +79,7 @@ const standIn = (call: (...args: unknown[]) => unknown) =>
   Array.from({ length: Math.max(call.length, 6) }, () => anything);
 
 it("covers a meaningful share of the client", () => {
-  expect(functions.length).toBeGreaterThan(140);
+  expect(functions.length).toBeGreaterThan(100);
 });
 
 it.each(functions)("$name calls only operations the API defines", async ({ name, call }) => {

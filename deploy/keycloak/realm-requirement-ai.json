@@ -48,7 +48,9 @@
         "${REQUIREMENT_APP_ORIGIN}/auth/callback",
         "${REQUIREMENT_APP_ORIGIN}/auth/silent-callback"
       ],
-      "webOrigins": ["${REQUIREMENT_APP_ORIGIN}"],
+      "webOrigins": [
+        "${REQUIREMENT_APP_ORIGIN}"
+      ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
         "post.logout.redirect.uris": "${REQUIREMENT_APP_ORIGIN}/*"
@@ -64,7 +66,113 @@
             "id.token.claim": "false",
             "access.token.claim": "true"
           }
+        },
+        {
+          "name": "realm-roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "false"
+          }
         }
+      ]
+    },
+    {
+      "clientId": "knowledge-spa",
+      "name": "Knowledge portal browser",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "frontchannelLogout": true,
+      "rootUrl": "${KNOWLEDGE_APP_ORIGIN}",
+      "baseUrl": "${KNOWLEDGE_APP_ORIGIN}/knowledge/",
+      "redirectUris": [
+        "${KNOWLEDGE_APP_ORIGIN}/knowledge/auth/callback",
+        "${KNOWLEDGE_APP_ORIGIN}/knowledge/auth/silent-callback"
+      ],
+      "webOrigins": [
+        "${KNOWLEDGE_APP_ORIGIN}"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "${KNOWLEDGE_APP_ORIGIN}/knowledge/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "knowledge-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "knowledge-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "realm-roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "false"
+          }
+        }
+      ]
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "knowledge_admin",
+        "description": "Curates the shared library and the architecture and squad catalogues in the knowledge portal."
+      },
+      {
+        "name": "knowledge_reader",
+        "description": "Starts and reads architecture mapping for the Requirements they work on."
+      },
+      {
+        "name": "knowledge_maintainer",
+        "description": "Also cancels and retries other people's architecture mapping jobs."
+      }
+    ]
+  },
+  "groups": [
+    {
+      "name": "knowledge-admins",
+      "path": "/knowledge-admins",
+      "realmRoles": [
+        "knowledge_admin"
+      ]
+    },
+    {
+      "name": "knowledge-readers",
+      "path": "/knowledge-readers",
+      "realmRoles": [
+        "knowledge_reader"
+      ]
+    },
+    {
+      "name": "knowledge-maintainers",
+      "path": "/knowledge-maintainers",
+      "realmRoles": [
+        "knowledge_reader",
+        "knowledge_maintainer"
       ]
     }
   ],

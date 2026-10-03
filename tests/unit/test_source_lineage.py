@@ -151,6 +151,7 @@ def test_derived_backlog_lineage_and_content_bound_review(grounded: Grounded) ->
             0,
             ImpactDecisionKind.RETAIN,
             "This rollout intentionally retains the reviewed historical rule.",
+            requirement_id=item.dependency.requirement_id,
         )
     assert not container.source_impact.stale_analysis(confirmed)
     assert container.breakdown_repository.list_breakdown_revisions(requirement.id) == before
@@ -163,6 +164,7 @@ def test_derived_backlog_lineage_and_content_bound_review(grounded: Grounded) ->
             0,
             ImpactDecisionKind.RETAIN,
             "Stale form",
+            requirement_id=selected.dependency.requirement_id,
         )
     # Content change invalidates its prior reconciliation without deleting that decision.
     container.epic_repository.save(
@@ -187,6 +189,7 @@ def test_derived_backlog_lineage_and_content_bound_review(grounded: Grounded) ->
         0,
         ImpactDecisionKind.REVISE,
         "Replace the old policy inputs and regenerate.",
+        requirement_id=affected.dependency.requirement_id,
     )
     current = container.analyze_requirement.execute(owner, requirement.id, force=True)
     old_proposal = next(p for p in current.intent_proposals if p.id == proposal.id)
@@ -255,7 +258,10 @@ def test_source_impact_api_permissions_cas_and_private_counts(
         )
         assert too_many.status_code == 422
         item = page.json()["items"][0]
-        decision_path = f"/library/source-impact/{item['dependency']['id']}/decisions"
+        decision_path = (
+            f"/requirements/{item['dependency']['requirement_id']}"
+            f"/source-impact/{item['dependency']['id']}/decisions"
+        )
         body = dict(
             publication_state=item["publication_state"],
             expected_version=0,
@@ -277,10 +283,10 @@ def test_source_impact_api_permissions_cas_and_private_counts(
         assert client.post(decision_path, json=body).status_code == 409
 
 
-def test_source_impact_lives_under_the_requirement_with_the_library_paths_as_aliases(
+def test_source_impact_lives_under_the_requirement_and_the_library_paths_are_gone(
     grounded: Grounded,
 ) -> None:
-    """Source impact is requirement work (ADR-0099); the old library paths still answer."""
+    """Source impact is requirement work (ADR-0099); the old library paths no longer answer."""
     container = grounded.container
     owner = FAKE_ACTORS[0]
     mine = container.create_requirement.execute(
@@ -296,10 +302,8 @@ def test_source_impact_lives_under_the_requirement_with_the_library_paths_as_ali
         page = client.get(path)
         assert page.status_code == 200
         assert page.headers["Cache-Control"] == "private, no-store"
-        legacy = client.get(
-            f"/library/requirements/{mine.id.value}/source-impact?active_only=true&limit=100"
-        )
-        assert legacy.json() == page.json()
+        legacy = client.get(f"/library/requirements/{mine.id.value}/source-impact")
+        assert legacy.status_code == 404
 
         item = page.json()["items"][0]
         dependency = item["dependency"]["id"]
@@ -315,10 +319,11 @@ def test_source_impact_lives_under_the_requirement_with_the_library_paths_as_ali
         decided = client.post(here, json=body)
         assert decided.status_code == 200
         assert decided.json()["decisions"][-1]["decision"] == "retain_historical"
+        assert (
+            client.post(f"/library/source-impact/{dependency}/decisions", json=body).status_code
+            == 404
+        )
 
         operations = client.get("/openapi.json").json()["paths"]
-        assert operations["/library/requirements/{requirement_id}/source-impact"]["get"][
-            "deprecated"
-        ]
-        assert operations["/library/source-impact/{dependency_id}/decisions"]["post"]["deprecated"]
+        assert not [path for path in operations if path.startswith("/library/")]
         assert "deprecated" not in operations["/requirements/{requirement_id}/source-impact"]["get"]

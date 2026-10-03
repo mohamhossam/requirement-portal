@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { Check, CircleAlert, Search } from "lucide-react";
+import { Check, CircleAlert, ExternalLink, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { api, type DocumentSummary } from "../api/client";
 import { errorMessage } from "../api/errors";
+import { KNOWLEDGE_PORTAL_URL } from "../api/knowledge";
+import { useIsKnowledgeAdmin } from "../auth/useIsKnowledgeAdmin";
 import { PageHeader } from "../components/shell";
 import { AsyncState, asyncStatus } from "../components/states";
 import { Badge, Pill } from "../components/ui/Badge";
@@ -123,6 +125,7 @@ function added(document: DocumentSummary) {
  * whole catalogue in one read.
  */
 export function DocumentsPage() {
+  const knowledgeAdmin = useIsKnowledgeAdmin();
   useDocumentTitle("Documents");
   const documents = useQuery({ queryKey: queryKeys.documents(), queryFn: api.listDocuments });
   const ownerOf = useDocumentOwners(documents.data);
@@ -181,11 +184,15 @@ export function DocumentsPage() {
       <PageHeader
         title="Documents"
         description="Every file attached to a requirement or a draft. Open one to see what was read from it and whether analysis uses it."
-        actions={<>
-          <ButtonLink variant="secondary" to="/documents/library">Shared library</ButtonLink>
-          <ButtonLink variant="secondary" to="/architecture-knowledge">Architecture catalogue</ButtonLink>
-          <ButtonLink variant="secondary" to="/architecture-knowledge/squads">Squad catalogue</ButtonLink>
-        </>}
+        actions={knowledgeAdmin
+          ? (
+            // The shared library and the catalogues are curated in the knowledge portal (ADR-0099).
+            <ButtonLink variant="secondary" to={KNOWLEDGE_PORTAL_URL} reloadDocument
+              icon={<ExternalLink size={16} aria-hidden="true" />}>
+              Open knowledge portal
+            </ButtonLink>
+          )
+          : undefined}
       />
       <AsyncState
         status={asyncStatus(documents, documents.data?.length === 0)}

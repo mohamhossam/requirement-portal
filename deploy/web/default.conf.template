@@ -4,17 +4,25 @@ map $request_uri $api_request_uri {
     ~^/api(?<api_path>/.*)$ $api_path;
 }
 
+# The same for the knowledge service's API under /knowledge-api (ADR-0099).
+map $request_uri $knowledge_api_request_uri {
+    ~^/knowledge-api(?<knowledge_api_path>/.*)$ $knowledge_api_path;
+}
+
 server {
     listen 8080;
     server_tokens off;
+    # Redirects name a path, not this container's port: the published port
+    # (WEB_PORT) or a TLS proxy in front decides the origin.
+    absolute_redirect off;
     root /usr/share/nginx/html;
 
-    # Docker's embedded DNS. The API name is re-resolved at request time, so a
-    # recreated api container (new IP) is reached without restarting this proxy.
+    # Docker's embedded DNS. Upstream names are re-resolved at request time, so
+    # a recreated container (new IP) is reached without restarting this proxy.
     resolver 127.0.0.11 valid=10s ipv6=off;
 
-    # Requirement documents are capped at 10 MiB (DOCUMENT_MAX_FILE_BYTES); the
-    # extra headroom is multipart framing. Keep the two in step.
+    # Documents are capped at 10 MiB (DOCUMENT_MAX_FILE_BYTES) in both services;
+    # the extra headroom is multipart framing. Keep the three in step.
     client_max_body_size 12m;
 
     # Compress the static app only. Proxied API responses stay uncompressed
@@ -33,10 +41,56 @@ server {
         try_files $uri =404;
     }
 
-    # Service-to-service routes are never reachable from a browser (ADR-0099).
+    # Service-to-service routes are never reachable from a browser (ADR-0099),
+    # on either service. A path that only normalises to /internal is caught too:
+    # the location match runs on the decoded, merged path.
     location ^~ /api/internal {
         include /etc/nginx/snippets/security-headers.conf;
         return 404;
+    }
+
+    location ^~ /knowledge-api/internal {
+        include /etc/nginx/snippets/security-headers.conf;
+        return 404;
+    }
+
+    location /knowledge-api/ {
+        include /etc/nginx/snippets/security-headers.conf;
+        proxy_pass ${KNOWLEDGE_API_UPSTREAM}$knowledge_api_request_uri;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Request-ID $request_id;
+        # Catalogue reading and impact previews can run for minutes on a slow model.
+        proxy_read_timeout 600s;
+        proxy_send_timeout 600s;
+    }
+
+    # The knowledge portal's browser app, served by its own image (`knowledge-web`).
+    # While that container is down the name does not resolve, and admins get a
+    # page that says so instead of a bare 502.
+    location /knowledge/ {
+        include /etc/nginx/snippets/security-headers.conf;
+        # A variable in proxy_pass makes nginx resolve the host per request, so
+        # this proxy starts while the knowledge web image is not deployed.
+        proxy_pass ${KNOWLEDGE_WEB_UPSTREAM}$request_uri;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Request-ID $request_id;
+        error_page 502 503 504 =503 /knowledge-unavailable.html;
+    }
+
+    location = /knowledge {
+        return 301 /knowledge/;
+    }
+
+    location = /knowledge-unavailable.html {
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Cache-Control "no-store" always;
+        internal;
     }
 
     location /api/ {

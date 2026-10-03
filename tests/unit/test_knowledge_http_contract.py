@@ -577,9 +577,20 @@ def test_the_fakes_stand_in_for_each_port_deterministically() -> None:
     references: ReferenceKnowledgePort = FakeReferenceKnowledge()
     events: KnowledgeEventSourcePort = FakeKnowledgeEvents()
 
-    pinned = architecture.match(ArchitectureQuery(("text",), ("BCRM",), release_id="r1"))
-    assert (pinned.knowledge_version, pinned.systems, pinned.dependencies) == ("r1", (), ())
-    assert pinned == architecture.match(ArchitectureQuery(("text",), ("BCRM",), release_id="r1"))
+    pinned = architecture.match(
+        ArchitectureQuery(("BCRM and CPP",), ("BCRM", " CPP ", "bcrm", ""), release_id="r1")
+    )
+    assert (pinned.knowledge_version, pinned.dependencies) == ("r1", ())
+    # Only what the Requirement declares, once each and never catalogued: the
+    # text names systems too, but there is no catalogue to match it against.
+    assert [(item.name, item.catalogued) for item in pinned.systems] == [
+        ("BCRM", False),
+        ("CPP", False),
+    ]
+    assert pinned == architecture.match(
+        ArchitectureQuery(("BCRM and CPP",), ("BCRM", " CPP ", "bcrm", ""), release_id="r1")
+    )
+    assert architecture.match(ArchitectureQuery(("BCRM",))).systems == ()
     unpinned = architecture.match(ArchitectureQuery(("text",)))
     assert unpinned.knowledge_version == OFFLINE_RELEASE_ID
     # Nothing was inferred, and the empty answer is one a backlog item can carry.

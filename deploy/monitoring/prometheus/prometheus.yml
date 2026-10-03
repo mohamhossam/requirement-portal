@@ -1,4 +1,5 @@
-# Scrapes the exporters of deploy/compose.production.yaml (METRICS_PORT=9464).
+# Scrapes the exporters of deploy/compose.production.yaml (METRICS_PORT=9464):
+# requirement work's and the knowledge service's.
 # Docker's DNS returns one address per replica, so `--scale api=N` and
 # `--scale worker=N` are picked up without editing this file.
 
@@ -20,6 +21,20 @@ scrape_configs:
   - job_name: worker
     dns_sd_configs:
       - names: [worker]
+        type: A
+        port: 9464
+        refresh_interval: 30s
+
+  - job_name: knowledge-api
+    dns_sd_configs:
+      - names: [knowledge-api]
+        type: A
+        port: 9464
+        refresh_interval: 30s
+
+  - job_name: knowledge-worker
+    dns_sd_configs:
+      - names: [knowledge-worker]
         type: A
         port: 9464
         refresh_interval: 30s

@@ -407,13 +407,13 @@ The HTTP surface is grouped by resource:
 | Requirements and drafts | `/requirements`, `/requirements/{id}`, `/requirements/drafts/...`, ownership, assignments and reviewers |
 | Attachments | `/requirements/{id}/attachments/...`, `/requirement-drafts/{draft_id}/attachments/...`, `/documents/...` |
 | Analysis and clarification | `/requirements/{id}/analysis`, `.../analysis/rounds`, `.../analysis/questions/...`, `.../analysis/proposals/{proposal_id}`, `.../analysis/confirmation` |
-| Requirement knowledge | `/requirements/{id}/knowledge-review`, `.../knowledge-findings/...`, `.../knowledge-index`, `/knowledge/search`, `/knowledge/search/unified` |
+| Requirement knowledge | `/requirements/{id}/knowledge-review`, `.../knowledge-findings/...`, `.../knowledge-index`, `/knowledge/search/unified` |
 | Backlog | `/requirements/{id}/epic`, `.../features/...`, `.../features/{feature_id}/stories/...` (quality, split, merge, change proposals, regeneration) |
-| Architecture | `/requirements/{id}/architecture-mapping`, `/architecture-knowledge/...` |
+| Architecture | `/requirements/{id}/architecture-mapping`, `.../architecture-mapping/jobs/{job_id}`, `/architecture/active-release` |
 | Review and approval | `/requirements/{id}/breakdown-review/...`, `.../review-submission`, `.../approval-workflow`, `.../breakdown-approval`, `.../impact-preview` |
 | Revisions and export | `/requirements/{id}/revisions`, `.../revisions/compare`, `.../revisions/{revision_number}/export` |
-| Shared knowledge library | `/library/ingestions`, `/library/documents/...`, `/library/source-impact/...` |
-| Background jobs | `/jobs/{job_id}`, `/requirements/{id}/ai-jobs/...` |
+| Cited sources (read-only; curated in the knowledge portal) | `/requirements/{id}/source-impact/...`, `/references/passage`, `/architecture-evidence/{release_id}/{chunk_id}` |
+| Background jobs | `/requirements/{id}/ai-jobs/...` |
 | Portfolio | `/activity`, `/reports/operational`, `/saved-views`, `/notifications` |
 
 Use `http://127.0.0.1:8000/docs` for request schemas and interactive calls, or

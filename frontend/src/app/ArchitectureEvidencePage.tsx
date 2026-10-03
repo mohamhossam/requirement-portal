@@ -1,30 +1,42 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { useParams } from "react-router-dom";
 
 import { errorMessage } from "../api/errors";
-import { knowledgeRequest, type Evidence } from "../api/knowledge";
+import { KNOWLEDGE_PORTAL_URL, knowledgeApi } from "../api/knowledge";
+import { useIsKnowledgeAdmin } from "../auth/useIsKnowledgeAdmin";
 import { PageHeader } from "../components/shell";
 import { AsyncState, asyncStatus } from "../components/states";
 import { ButtonLink, Card } from "../components/ui";
 import { useDocumentTitle } from "./useDocumentTitle";
 
+/**
+ * The catalogue passage an architecture mapping cited, read-only (ADR-0099).
+ *
+ * The catalogue is curated in the knowledge portal; anyone reviewing a
+ * Requirement's architecture impact can still read the evidence behind it,
+ * from the published catalogue version the mapping used.
+ */
 export function ArchitectureEvidencePage() {
   useDocumentTitle("Architecture evidence");
   const { releaseId = "", chunkId = "" } = useParams();
-  const evidence = useQuery({ queryKey: ["knowledge", releaseId, chunkId],
-    queryFn: () => knowledgeRequest<Evidence>(
-      `/architecture-knowledge/releases/${encodeURIComponent(releaseId)}/evidence/${encodeURIComponent(chunkId)}`,
-    ), enabled: Boolean(releaseId && chunkId) });
+  const admin = useIsKnowledgeAdmin();
+  const evidence = useQuery({
+    queryKey: ["architecture-evidence", releaseId, chunkId],
+    queryFn: () => knowledgeApi.evidence(releaseId, chunkId),
+    enabled: Boolean(releaseId && chunkId),
+    retry: false,
+  });
   return (
     <>
       <PageHeader
         eyebrow="Architecture catalogue"
         title="Mapping evidence"
         description="The catalogue passage an architecture mapping cited."
-        actions={<ButtonLink variant="ghost" to="/architecture-knowledge" icon={<ArrowLeft size={16} aria-hidden="true" />}>
-          Architecture catalogue
-        </ButtonLink>}
+        actions={admin
+          ? <ButtonLink variant="ghost" to={KNOWLEDGE_PORTAL_URL} reloadDocument
+              icon={<ExternalLink size={16} aria-hidden="true" />}>Knowledge portal</ButtonLink>
+          : undefined}
       />
       <AsyncState
         status={asyncStatus(evidence)}

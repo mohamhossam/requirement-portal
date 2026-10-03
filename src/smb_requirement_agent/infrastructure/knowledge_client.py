@@ -8,6 +8,8 @@ The fakes are deterministic stand-ins for running without the knowledge service.
 
 from __future__ import annotations
 
+import hashlib
+import re
 from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import quote
@@ -27,6 +29,7 @@ from smb_requirement_agent.application.ports.knowledge_views import (
     PassageCitation,
 )
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidence
+from smb_requirement_agent.domain.architecture.entities import SystemReference
 
 _QUERY = TypeAdapter(ArchitectureQuery)
 _MATCH = TypeAdapter(ArchitectureKnowledgeMatch)
@@ -169,12 +172,24 @@ OFFLINE_RELEASE_NAME = "Offline catalogue"
 
 
 class FakeArchitectureKnowledge:
-    """Maps nothing: offline, requirement work runs without catalogue impact."""
+    """An empty catalogue: offline, only the systems a Requirement declares are mapped.
+
+    Each declared system is reported as not catalogued, the way the knowledge
+    service reports a declared system it does not know. Nothing is matched from
+    the text, so cross-system review still works offline without inventing a
+    catalogue.
+    """
 
     def match(self, query: ArchitectureQuery) -> ArchitectureKnowledgeMatch:
+        declared: dict[str, SystemReference] = {}
+        for raw in query.declared_systems:
+            key = _normalise(raw)
+            if key and key not in declared:
+                identity = hashlib.sha256(key.encode()).hexdigest()[:12]
+                declared[key] = SystemReference(f"declared-{identity}", raw.strip(), False)
         return ArchitectureKnowledgeMatch(
             query.release_id or OFFLINE_RELEASE_ID,
-            (),
+            tuple(declared.values()),
             (),
             uncertainty="No architecture catalogue is connected.",
             # Nothing was inferred: offline there is no model behind the empty answer.
@@ -222,3 +237,8 @@ class FakeKnowledgeViews:
 
     def evidence(self, release_id: str, chunk_id: str) -> ArchitectureEvidence | None:
         return None
+
+
+def _normalise(value: str) -> str:
+    """The same spelling of a system name, whatever its case and punctuation."""
+    return " ".join(re.sub(r"[^a-z0-9]+", " ", value.casefold()).split())
