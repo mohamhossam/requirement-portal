@@ -110,10 +110,11 @@ jobs:
           echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
       - name: PostgreSQL and pgvector integration
         run: >-
-          pytest tests/integration/test_postgres_architecture.py
-          tests/integration/test_postgres_persistence.py
-          tests/integration/test_postgres_organisation.py
-          tests/integration/test_postgres_catalogue_candidates.py
+          pytest tests/integration/test_postgres_persistence.py
+          tests/integration/test_postgres_architecture_jobs.py
+          tests/integration/test_requirement_mapping_jobs.py
+          tests/integration/test_architecture_mapping_stats_postgres.py
+          tests/integration/test_reference_publication_state.py
 
   frontend:
     runs-on: ubuntu-latest
