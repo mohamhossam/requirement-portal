@@ -71,3 +71,15 @@ def test_every_dashboard_panel_uses_the_provisioned_datasource() -> None:
 
     assert queried
     assert all(panel["datasource"]["uid"] == uid for panel in queried)
+
+
+def test_a_read_only_grafana_never_updates_its_plugins_online() -> None:
+    compose = yaml.safe_load(
+        (MONITORING.parent / "compose.monitoring.yaml").read_text(encoding="utf-8")
+    )
+    grafana = compose["services"]["grafana"]
+
+    assert grafana["read_only"] is True
+    # The preinstaller stops a bundled plugin before replacing it, so on a read-only
+    # root an update online leaves the Prometheus data source unavailable.
+    assert grafana["environment"]["GF_PLUGINS_PREINSTALL_DISABLED"] == "true"

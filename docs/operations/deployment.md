@@ -283,7 +283,9 @@ docker compose -f deploy/compose.production.yaml -f deploy/compose.monitoring.ya
 
 Pass both `-f` files to every command for these containers (`ps`, `logs`,
 `down`). The dashboard and data source are read-only in the UI: change
-`deploy/monitoring/` and restart Grafana. `tests/architecture/test_monitoring_metrics.py`
+`deploy/monitoring/` and restart Grafana. Grafana runs on a read-only root with its plugin
+preinstaller off, so it uses the plugins in the pinned image and never updates them online.
+`tests/architecture/test_monitoring_metrics.py`
 fails when a panel or alert names a metric the application does not export,
 and CI starts the overlay and checks that all four exporters are scraped.
 
