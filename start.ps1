@@ -431,6 +431,8 @@ try {
     Write-Host "  API docs:   http://127.0.0.1:8000/docs"
     Write-Host "  Health:     http://127.0.0.1:8000/health"
     Write-Host "  Provider:   $Provider"
+    $knowledgeTarget = & $pythonPath -m smb_requirement_agent.interfaces.knowledge_target
+    Write-Host "  Knowledge:  $knowledgeTarget"
     Write-Host "  API log:    $apiOutputLog"
     Write-Host "  API errors: $apiErrorLog"
     Write-Host "  UI log:     $uiOutputLog"

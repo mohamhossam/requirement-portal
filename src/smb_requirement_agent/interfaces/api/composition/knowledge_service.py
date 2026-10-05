@@ -45,7 +45,8 @@ class KnowledgeService:
 def build_knowledge_service(
     settings: Settings, resources: ExitStack, metrics: Metrics
 ) -> KnowledgeService:
-    if settings.knowledge_api_base_url is None or settings.requirement_service_token is None:
+    url, token = settings.knowledge_service_url, settings.requirement_service_token
+    if url is None or token is None:
         return KnowledgeService(
             FakeReferenceKnowledge(),
             FakeArchitectureKnowledge(),
@@ -57,8 +58,8 @@ def build_knowledge_service(
         httpx.Client(transport=MeteredTransport(metrics, "knowledge", httpx.HTTPTransport()))
     )
     client = InternalHttpClient(
-        settings.knowledge_api_base_url,
-        settings.requirement_service_token,
+        url,
+        token,
         service="knowledge",
         http=http,
     )

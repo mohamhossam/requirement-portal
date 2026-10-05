@@ -110,12 +110,8 @@ KNOWLEDGE_SERVICE_TOKEN=$(openssl rand -hex 32)
 EOF
 ```
 
-The knowledge service's image is private on ghcr.io. Sign in once with a
-GitHub token that can read packages:
-
-```bash
-docker login ghcr.io -u <github-user>
-```
+The knowledge service's images are public on ghcr.io, so Docker pulls them
+without signing in.
 
 Open `deploy/production.env` and `deploy/knowledge.env` and set your OpenRouter key in both:
 
@@ -329,9 +325,8 @@ CSP_IDENTITY_ORIGINS=https://login.example.com
 ```
 
 Restrict the three files to the deployment account, for example
-`chmod 600 deploy/.env deploy/production.env deploy/knowledge.env`. Sign in to
-ghcr.io (`docker login ghcr.io`) with a token that can read the knowledge
-service's package. Then fetch, build, prepare the database and start:
+`chmod 600 deploy/.env deploy/production.env deploy/knowledge.env`. The knowledge
+service's images are public on ghcr.io. Then fetch, build, prepare the database and start:
 
 ```bash
 docker compose -f deploy/compose.production.yaml pull knowledge-api knowledge-web
@@ -388,7 +383,7 @@ Install:
 Optional, only for the features that need them:
 
 - Docker Desktop (or Docker Engine) for durable PostgreSQL storage
-- ClamAV for uploads to the shared knowledge library (see section 6)
+- ClamAV for scanning Requirement attachments (see section 6)
 - an API key or a local OpenAI-compatible model server for real AI output
 
 Confirm the tools are available:
@@ -545,6 +540,36 @@ To verify prerequisites, configuration and database readiness without
 starting servers, use `-CheckOnly` / `--check-only`. It never starts or
 migrates a database.
 
+### Run with the knowledge service (development)
+
+On its own, the launcher runs requirement work with offline stand-ins for the
+knowledge service: library search finds nothing, architecture mapping covers
+only the systems a Requirement declares, and the read-only passage and evidence
+views have nothing to show.
+To work against the real knowledge service, run
+[knowledge-portal](https://github.com/mohamhossam/knowledge-portal) beside it.
+Clone it next to this repository and follow its README; its API listens on
+`8100` and its browser app on `5174`.
+
+The two services call each other's internal API with two shared tokens, each
+32 or more characters. Use the same two values on both sides:
+
+| Setting | requirement work (`.env` here) | knowledge-portal (its `.env`) |
+|---|---|---|
+| Where the other service is | `KNOWLEDGE_API_BASE_URL=http://127.0.0.1:8100` | `REQUIREMENT_API_BASE_URL=http://127.0.0.1:8000` |
+| The token requirement work presents | `REQUIREMENT_SERVICE_TOKEN=<token A>` | `REQUIREMENT_SERVICE_TOKEN=<token A>` |
+| The token the knowledge service presents | `KNOWLEDGE_SERVICE_TOKEN=<token B>` | `KNOWLEDGE_SERVICE_TOKEN=<token B>` |
+
+Start knowledge-portal's API first, then this launcher. The launcher's ready
+banner names the knowledge service it is connected to. Each side keeps working
+if the other is stopped, and reports the other as unavailable where it needs it.
+
+With fake sign-in on both sides, Amina Owner and Ravi Reviewer are knowledge
+admins in both portals. In development the review UI's **Open knowledge
+portal** link points at `/knowledge/` on its own server, which does not serve
+the portal: open `http://localhost:5174/knowledge/` directly. The Docker stack
+(section 2) serves both under one address, so the link works there.
+
 ## 5. Walk through the first requirement
 
 Open the review UI: `http://localhost:8080` with Docker, or
@@ -632,12 +657,11 @@ docker compose up -d postgres
 
 The API never changes the schema during its own startup.
 
-### Shared knowledge library uploads
+### Scanning Requirement attachments
 
-Files attached to a Requirement work out of the box. Uploads to the shared
-knowledge library (**Documents → Open shared knowledge library**) are scanned
-for malware first, and fail with "Malware scanner unavailable" until a scanner
-is reachable. The Docker stack includes one. With a launcher, choose one:
+Files attached to a Requirement are scanned for malware before they are read,
+and stay at "Malware scanner unavailable" until a scanner is reachable. The
+Docker stack includes one. With a launcher, choose one:
 
 - **Offline trial only:** set `LIBRARY_SCAN_MODE=offline` in `.env`. This is a
   deterministic development adapter, not malware protection, and startup
@@ -650,6 +674,10 @@ is reachable. The Docker stack includes one. With a launcher, choose one:
   ```
 
   ClamAV needs a few minutes to load its signatures after starting.
+
+The shared knowledge library and the architecture and squad catalogues are not
+in this application any more: they belong to the knowledge portal (section 4,
+"Run with the knowledge service"), which scans its own uploads.
 
 ## 7. Use a real AI provider
 

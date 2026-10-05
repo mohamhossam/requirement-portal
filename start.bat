@@ -185,6 +185,9 @@ echo   Review UI:  http://127.0.0.1:5173
 echo   API docs:   http://127.0.0.1:8000/docs
 echo   Health:     http://127.0.0.1:8000/health
 echo   Provider:   %PROVIDER%
+set "KNOWLEDGE_TARGET=unknown"
+for /f "usebackq delims=" %%T in (`"%PYTHON_PATH%" -m smb_requirement_agent.interfaces.knowledge_target`) do set "KNOWLEDGE_TARGET=%%T"
+echo   Knowledge:  %KNOWLEDGE_TARGET%
 if "%DEBUGTRACE%"=="1" (
     echo   Debug trace: %DEBUG_TRACE_FILE%
     echo   WARNING: includes requirement text and final LLM completions.
