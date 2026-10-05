@@ -130,7 +130,7 @@ def drop_moved_tables(
                 for table in MOVED_TABLES
             )
             result = DropResult(reports, dropped=False)
-            if result.refused or dry_run:
+            if result.refused or dry_run or not present:
                 return result
             # Children first. No CASCADE: an unexpected dependent fails the drop
             # instead of being removed with it.
