@@ -206,6 +206,25 @@ def test_a_member_opens_impact_evidence(viewer: TestClient) -> None:
     assert viewer.get("/architecture-evidence/draft/chunk-1").status_code == 404
 
 
+def test_someone_who_is_not_a_knowledge_admin_still_reads_citations_and_evidence(
+    viewer: TestClient,
+) -> None:
+    # fake-observer holds no knowledge role: the views are read-only, open to every member.
+    observer = {"X-Fake-Actor-Id": "fake-observer"}
+    params = {
+        "document_id": "doc/1",
+        "publication_id": "pub-1",
+        "version_id": "ver-1",
+        "revision_id": "rev-1",
+        "block_id": "block-1",
+    }
+
+    assert viewer.get("/references/passage", params=params, headers=observer).status_code == 200
+    assert viewer.get("/architecture-evidence/rel-1/chunk-1", headers=observer).status_code == 200
+    # Read-only: nothing here writes.
+    assert viewer.post("/references/passage", params=params, headers=observer).status_code == 405
+
+
 def test_the_version_in_use_is_named_from_the_local_copy(
     container: Container, viewer: TestClient
 ) -> None:
