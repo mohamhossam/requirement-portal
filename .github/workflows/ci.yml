@@ -238,8 +238,12 @@ jobs:
           done
 
       - name: First install, then start
+        # The moved knowledge tables are dropped before anything starts, so every
+        # check below runs on a platform without them (ADR-0099).
         run: |
           $COMPOSE run --rm maintenance
+          $COMPOSE run --rm drop-knowledge-tables --dry-run
+          $COMPOSE run --rm drop-knowledge-tables
           $COMPOSE up -d --wait web worker knowledge-worker
 
       - name: Ready through the proxy, with security headers

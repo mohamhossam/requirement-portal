@@ -117,8 +117,29 @@ docker compose -f deploy/compose.production.yaml run --rm knowledge-import
 the library tables. `knowledge-import` copies the library, the architecture and
 squad catalogues and their blobs into the knowledge database, keeping every id,
 then compares every table (`--verify`). It is safe to repeat. Run it before the
-APIs and workers start; the copied tables stay in the requirements database
-until a later release drops them.
+APIs and workers start.
+
+## Dropping the moved knowledge tables
+
+Requirement work's earlier migrations still create the library, catalogue and
+event tables the knowledge service now owns; nothing here reads or writes them.
+Once the knowledge service runs (and, when moving an earlier system, once
+`knowledge-import` has finished), drop them, with the platform stopped:
+
+```bash
+docker compose -f deploy/compose.production.yaml run --rm drop-knowledge-tables
+```
+
+It checks every table first and drops all of them or none. An empty table is
+dropped. A table holding rows is dropped only when the knowledge database holds
+an identical copy (the same row count and content checksum); otherwise the
+command lists what would be lost, drops nothing and exits non-zero. Tables
+already gone are skipped, so it is safe to repeat. To see the report without
+dropping anything:
+
+```bash
+docker compose -f deploy/compose.production.yaml run --rm drop-knowledge-tables --dry-run
+```
 
 ## Knowledge admins
 

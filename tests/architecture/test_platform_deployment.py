@@ -26,7 +26,14 @@ EDGE = (DEPLOY / "web" / "default.conf.template").read_text(encoding="utf-8")
 REALM: dict[str, Any] = json.loads(
     (DEPLOY / "keycloak" / "realm-requirement-ai.json").read_text(encoding="utf-8")
 )
-REQUIREMENT_PROCESSES = ("api", "worker", "migrate", "maintenance", "retention")
+REQUIREMENT_PROCESSES = (
+    "api",
+    "worker",
+    "migrate",
+    "maintenance",
+    "retention",
+    "drop-knowledge-tables",
+)
 KNOWLEDGE_PROCESSES = ("knowledge-api", "knowledge-worker", "knowledge-migrate", "knowledge-import")
 TOKENS = ("REQUIREMENT_SERVICE_TOKEN", "KNOWLEDGE_SERVICE_TOKEN")
 
@@ -86,6 +93,28 @@ def test_the_import_runs_only_on_request_after_both_schemas_exist() -> None:
     assert set(importer["depends_on"]) == {"migrate", "knowledge-migrate"}
     assert "--verify" in importer["command"]
     assert any("@postgres:5432/smb_requirements" in part for part in importer["command"])
+
+
+def test_the_knowledge_tables_drop_only_on_request_checked_against_the_knowledge_database() -> None:
+    dropper = SERVICES["drop-knowledge-tables"]
+
+    assert dropper["profiles"] == ["drop-knowledge-tables"]
+    assert set(dropper["depends_on"]) == {"migrate", "knowledge-migrate"}
+    # An entrypoint, not a command, so `run --rm drop-knowledge-tables --dry-run`
+    # appends the flag instead of replacing the command.
+    entrypoint = dropper["entrypoint"]
+    assert "command" not in dropper
+    assert entrypoint[:3] == [
+        "python",
+        "-m",
+        "smb_requirement_agent.interfaces.drop_knowledge_tables",
+    ]
+    assert any(
+        part.startswith("--knowledge-database-url=")
+        and "@knowledge-postgres:5432/smb_knowledge" in part
+        for part in entrypoint
+    )
+    assert "--dry-run" not in entrypoint
 
 
 def test_the_edge_waits_for_both_apis_and_the_portal_app() -> None:

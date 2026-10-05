@@ -14,7 +14,14 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 DEPLOY = ROOT / "deploy"
 MANIFEST = yaml.safe_load((DEPLOY / "compose.production.yaml").read_text(encoding="utf-8"))
-BACKEND_SERVICES = ("api", "worker", "migrate", "maintenance", "retention")
+BACKEND_SERVICES = (
+    "api",
+    "worker",
+    "migrate",
+    "maintenance",
+    "retention",
+    "drop-knowledge-tables",
+)
 TARGETS = {"/app/config"}
 
 
