@@ -21,19 +21,19 @@ this ledger.
 | Architecture knowledge administration (14) | Implemented; merged into `main` | Deployment-specific local-model qualification |
 | UI/UX redesign, Phases 0–10 (`docs/ux-plan.md`) | Implemented; merged into `main` ([#46](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/46)–[#52](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/52), [#54](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/54), [#56](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/56)–[#60](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/60)) | Two open product decisions and the raised follow-ups under *UI/UX Redesign* below |
 | Docker run-everything path, monitoring add-on and OpenRouter demo | Implemented; merged into `main` ([#53](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/53), [#62](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/62)–[#65](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/65)) | Live OpenRouter acceptance; free-model quota and availability are external |
-| Human-answer citation salvage (`0d42039`, `docs/slices/fix-human-answer-analysis-citations.md`) | Pushed on `claude/fix-analysis-citations-and-proxy`; **not merged**. [#65](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/65) merged the two commits before it | Open a PR, pass CI and merge |
+| Human-answer citation salvage (`0d42039`, `docs/slices/fix-human-answer-analysis-citations.md`) | Implemented; merged in `smb-ai-requirement-agent` as [#67](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/67) before the `d5cfb57` snapshot, so it is part of this repository | — |
 | Maintained template/example library (5D.1) | Deferred; requires explicit scheduling | Implementation |
 | Enhancement 8A.2 — AD login with Keycloak-managed roles | Specified 2026-09-26; not scheduled | Sequencing, AD-team prerequisites, implementation and staging acceptance |
 | Centralized logging in Graylog | Specified 2026-09-26; not scheduled | Sequencing and implementation |
 | Administration portal, sub-slices A–F | Specified 2026-09-26 (F on 2026-09-28); not scheduled | Sequencing, an ADR amending `AGENTS.md` §4.5, and implementation |
-| Squad catalogue and architecture catalogue from documents (`docs/slices/enhancement-squad-and-architecture-catalogues.md`, ADR-0080/0081) | Implemented 2026-09-29 on `claude/compassionate-bohr-yv36zv`; not merged. Pulls Knowledge Center F forward | PR, CI and merge; live vision-model acceptance |
-| Connected systems in impact mapping (`docs/slices/enhancement-architecture-impact-neighbours.md`, ADR-0087) | Implemented 2026-09-30 on `claude/architecture-impact-neighbours`; not merged. Slice A of three (B: typed relationships, C: capability domains) | PR, CI and merge |
-| Typed system relationships (`docs/slices/enhancement-typed-system-relationships.md`, ADR-0088) | Implemented 2026-09-30 on `claude/typed-system-relationships`, stacked on slice A; not merged. Slice B of three | PR, CI and merge after slice A |
-| Capability domains (`docs/slices/enhancement-capability-domains.md`, ADR-0089) | Implemented 2026-09-30 on `claude/capability-domains`, stacked on slice B; not merged. Slice C of three | PR, CI and merge after slices A and B |
-| Structured architecture documents, slices 1a–3e (`docs/slices/enhancement-catalogue-output-aware-reading.md`, `docs/slices/enhancement-markdown-structured-passages.md`, `docs/slices/enhancement-catalogue-table-reading-rules.md`, `docs/slices/enhancement-catalogue-table-reader.md`, `docs/slices/enhancement-system-landscape-domains.md`, `docs/slices/enhancement-catalogue-landscape-suggestions.md`, `docs/slices/enhancement-product-offerings.md`, `docs/slices/enhancement-catalogue-offering-suggestions.md`, `docs/slices/enhancement-journeys.md`, `docs/slices/enhancement-catalogue-journey-suggestions.md`, `docs/slices/enhancement-impact-product-context.md`, ADR-0091, ADR-0093, ADR-0094, ADR-0095, ADR-0096 and its amendment, ADR-0097, ADR-0090/0085/0088 amendments) | 1a–3d merged; 1a as [#83](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/83), 3d as [#99](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/99). 3e (product and journey context on impacts, ADR-0097) implemented 2026-10-01 on `claude/impact-product-context`; not merged | PR, CI and merge for 3e; a live-model replay of the reported file |
-| System components (`docs/slices/enhancement-system-components.md`, ADR-0092) | Implemented 2026-10-01 on `claude/system-components`; not merged | PR, CI and merge; live-model extraction check |
-| Three-repository platform split (ADR-0098, ADR-0099, ADR-0100; plan `docs/slices/enhancement-platform-split.md`) | **In progress.** Stages 0–3 done (`platform-kernel` v1.0.0, untangling and seams here, the knowledge service). Stage 4: the knowledge service is reached over HTTP (4.2a) and the knowledge code is removed from this repository (4.2b) | Stage 4.3 deployment, 4.4 frontend, 4.5 alias removal; Stage 5 data seeding |
-| Knowledge Center, sub-slices A–F | Specified 2026-09-26; not scheduled (F delivered early by the squad/architecture catalogue enhancement) | Sequencing; sub-slice E also needs an explicit roadmap change (read-only ADO) and four open answers |
+| Squad catalogue and architecture catalogue from documents (`docs/slices/enhancement-squad-and-architecture-catalogues.md`, ADR-0080/0081) | Implemented; merged in `smb-ai-requirement-agent` as [#73](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/73) before the `d5cfb57` snapshot. Both catalogues now live in [knowledge-portal](https://github.com/mohamhossam/knowledge-portal). Pulls Knowledge Center F forward | Live vision-model acceptance, in knowledge-portal |
+| Connected systems in impact mapping (`docs/slices/enhancement-architecture-impact-neighbours.md`, ADR-0087) | Implemented; merged in `smb-ai-requirement-agent` as [#77](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/77) before the `d5cfb57` snapshot. Slice A of three. The impact view is here; the catalogue's connections are matched in [knowledge-portal](https://github.com/mohamhossam/knowledge-portal) | — |
+| Typed system relationships (`docs/slices/enhancement-typed-system-relationships.md`, ADR-0088) | Implemented; merged in `smb-ai-requirement-agent` as [#78](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/78) before the `d5cfb57` snapshot. Slice B of three; the catalogue now lives in [knowledge-portal](https://github.com/mohamhossam/knowledge-portal) | — |
+| Capability domains (`docs/slices/enhancement-capability-domains.md`, ADR-0089) | Implemented; merged in `smb-ai-requirement-agent` as [#79](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/79) before the `d5cfb57` snapshot. Slice C of three; the catalogue now lives in [knowledge-portal](https://github.com/mohamhossam/knowledge-portal) | — |
+| Structured architecture documents, slices 1a–3e (`docs/slices/enhancement-catalogue-output-aware-reading.md`, `docs/slices/enhancement-markdown-structured-passages.md`, `docs/slices/enhancement-catalogue-table-reading-rules.md`, `docs/slices/enhancement-catalogue-table-reader.md`, `docs/slices/enhancement-system-landscape-domains.md`, `docs/slices/enhancement-catalogue-landscape-suggestions.md`, `docs/slices/enhancement-product-offerings.md`, `docs/slices/enhancement-catalogue-offering-suggestions.md`, `docs/slices/enhancement-journeys.md`, `docs/slices/enhancement-catalogue-journey-suggestions.md`, `docs/slices/enhancement-impact-product-context.md`, ADR-0091, ADR-0093, ADR-0094, ADR-0095, ADR-0096 and its amendment, ADR-0097, ADR-0090/0085/0088 amendments) | Implemented; 1a–3e merged in `smb-ai-requirement-agent`, 1a as [#83](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/83) and 3e as [#100](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/100), which is the `d5cfb57` snapshot itself. Document reading and the catalogue now live in [knowledge-portal](https://github.com/mohamhossam/knowledge-portal); 3e's product and journey context on impacts is shown here | A live-model replay of the reported file, in knowledge-portal |
+| System components (`docs/slices/enhancement-system-components.md`, ADR-0092) | Implemented; merged in `smb-ai-requirement-agent` as [#84](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/84) before the `d5cfb57` snapshot. Now lives in [knowledge-portal](https://github.com/mohamhossam/knowledge-portal) | Live-model extraction check, in knowledge-portal |
+| Three-repository platform split (ADR-0098, ADR-0099, ADR-0100; plan `docs/slices/enhancement-platform-split.md`) | **In progress.** Stages 0–4 done as of 2026-10-03: `platform-kernel` v1.0.2, the untangling and seams here, knowledge-portal v0.1.0, and the cutover. The knowledge service is reached over HTTP (4.2a), the knowledge code is removed (4.2b), the reference deployment runs the knowledge service and `knowledge-web` (4.3), the browser is cut over (4.4), and the library source-impact aliases are removed (4.5); CI deploys and smoke-tests the whole platform | Stage 5: seed from a backup of the old database and run `knowledge-portal import --verify`, drop the moved tables, end-to-end checks on `deploy/`, and the run guides |
+| Knowledge Center, sub-slices A–F | Specified 2026-09-26; not scheduled (F delivered early by the squad/architecture catalogue enhancement). Moves to [knowledge-portal](https://github.com/mohamhossam/knowledge-portal) with the platform split | Sequencing in knowledge-portal; sub-slice E also needs an explicit roadmap change (read-only ADO) and four open answers |
 | ADO publication and safe republish (12–13) | Planned; not implemented | Implementation |
 | Advanced workflow optimization (15) | Planned; evidence-gated | Demonstrate a need and measurable benefit before implementation |
 
@@ -1939,7 +1939,7 @@ the only slice authorized to add it.
 
 ## Enhancement — Product and journey context on impacts
 
-**Status:** Implemented on `claude/impact-product-context`; not merged. See `docs/slices/enhancement-impact-product-context.md` and ADR-0097. Slice 3e, the last of the structured-architecture-document plan; includes declared frontend feature work.
+**Status:** Implemented; merged in `smb-ai-requirement-agent` as [#100](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/100) before the `d5cfb57` snapshot. See `docs/slices/enhancement-impact-product-context.md` and ADR-0097. Slice 3e, the last of the structured-architecture-document plan; includes declared frontend feature work.
 
 ### Domain
 - `ProductContext` (with `OfferingDuty`) and `JourneyStep` (with `JourneyNeighbour`) on `ArchitectureImpact`; a journey step must be of a mapped system.
@@ -1959,7 +1959,7 @@ the only slice authorized to add it.
 
 ## Enhancement — Journeys from documents
 
-**Status:** Implemented on `claude/journey-suggestions` (stacked on 3c); not merged. See `docs/slices/enhancement-catalogue-journey-suggestions.md` and the ADR-0096 amendment. Slice 3d of the structured-architecture-document plan; includes declared frontend feature work.
+**Status:** Implemented; merged in `smb-ai-requirement-agent` as [#99](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/99) before the `d5cfb57` snapshot. See `docs/slices/enhancement-catalogue-journey-suggestions.md` and the ADR-0096 amendment. Slice 3d of the structured-architecture-document plan; includes declared frontend feature work.
 
 ### Domain
 - A journey suggestion holds one whole journey, resolves its systems, offering, order type and components at classify and accept (`needs_offering` when its offering is missing), and replaces an existing journey only one by one; journeys merge across readings; offerings and their parts are found by id, code or name.
@@ -1979,7 +1979,7 @@ the only slice authorized to add it.
 
 ## Enhancement — Journeys
 
-**Status:** Implemented on `claude/journeys` (stacked on 3b); not merged. See `docs/slices/enhancement-journeys.md` and ADR-0096. Slice 3c of the structured-architecture-document plan; includes declared frontend feature work.
+**Status:** Implemented; merged in `smb-ai-requirement-agent` as [#93](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/93) before the `d5cfb57` snapshot. See `docs/slices/enhancement-journeys.md` and ADR-0096. Slice 3c of the structured-architecture-document plan; includes declared frontend feature work.
 
 ### Domain
 - `Journey` with numbered activities, flow rules (decision, loop, parallel with rejoin) and activity integrations on the release; the flow is derived by `journey_edges`, never stored; named systems, offerings, order types and components cannot be removed.
@@ -1999,7 +1999,7 @@ the only slice authorized to add it.
 
 ## Enhancement — Product offerings from documents
 
-**Status:** Implemented on `claude/catalogue-offering-suggestions` (stacked on 3a); not merged. See `docs/slices/enhancement-catalogue-offering-suggestions.md` and the ADR-0095 amendment. Slice 3b of the structured-architecture-document plan; includes declared frontend feature work.
+**Status:** Implemented; merged in `smb-ai-requirement-agent` as [#92](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/92) before the `d5cfb57` snapshot. See `docs/slices/enhancement-catalogue-offering-suggestions.md` and the ADR-0095 amendment. Slice 3b of the structured-architecture-document plan; includes declared frontend feature work.
 
 ### Domain
 - A product suggestion holds one whole offering, resolves its systems at classify and accept, and replaces an existing offering only one by one; offerings merge across readings.
@@ -2019,7 +2019,7 @@ the only slice authorized to add it.
 
 ## Enhancement — Product offerings
 
-**Status:** Implemented on `claude/product-offerings` (stacked on 2b); not merged. See `docs/slices/enhancement-product-offerings.md` and ADR-0095. Slice 3a of the structured-architecture-document plan; includes declared frontend feature work.
+**Status:** Implemented; merged in `smb-ai-requirement-agent` as [#91](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/91) before the `d5cfb57` snapshot. See `docs/slices/enhancement-product-offerings.md` and ADR-0095. Slice 3a of the structured-architecture-document plan; includes declared frontend feature work.
 
 ### Domain
 - `ProductOffering` with order types, components, component → system responsibilities (role codes, order types, source confidence), customer value and audiences on the release; a named system cannot be removed; shared invariants module.
@@ -2039,7 +2039,7 @@ the only slice authorized to add it.
 
 ## Enhancement — Landscape domains, placements and descriptions from documents
 
-**Status:** Implemented on `claude/catalogue-landscape-suggestions` (stacked on 2a); not merged. See `docs/slices/enhancement-catalogue-landscape-suggestions.md` and the ADR-0094 amendment. Slice 2b of the structured-architecture-document plan; includes declared frontend feature work.
+**Status:** Implemented; merged in `smb-ai-requirement-agent` as [#90](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/90) before the `d5cfb57` snapshot. See `docs/slices/enhancement-catalogue-landscape-suggestions.md` and the ADR-0094 amendment. Slice 2b of the structured-architecture-document plan; includes declared frontend feature work.
 
 ### Domain
 - `landscape_domain` and `placement` suggestions and a system description: matched, classified (`needs_domain`) and applied without replacing anything; moving a placed system is decided one by one.
@@ -2059,7 +2059,7 @@ the only slice authorized to add it.
 
 ## Enhancement — Landscape domains and system descriptions
 
-**Status:** Implemented on `claude/system-landscape-domains` (stacked on 1d); not merged. See `docs/slices/enhancement-system-landscape-domains.md` and ADR-0094. Slice 2a of the structured-architecture-document plan; includes declared frontend feature work.
+**Status:** Implemented; merged in `smb-ai-requirement-agent` as [#89](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/89) before the `d5cfb57` snapshot. See `docs/slices/enhancement-system-landscape-domains.md` and ADR-0094. Slice 2a of the structured-architecture-document plan; includes declared frontend feature work.
 
 ### Domain
 - `LandscapeDomain` tree apart from capability domains; systems gain `description` and `landscape_domain_id`; diff reports landscape domains and placement.
@@ -2079,7 +2079,7 @@ the only slice authorized to add it.
 
 ## Enhancement — Reading catalogue tables without a model
 
-**Status:** Implemented on `claude/catalogue-table-reader` (stacked on 1c); not merged. See `docs/slices/enhancement-catalogue-table-reader.md` and ADR-0093. Slice 1d of the structured-architecture-document plan.
+**Status:** Implemented; merged in `smb-ai-requirement-agent` as [#88](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/88) before the `d5cfb57` snapshot. See `docs/slices/enhancement-catalogue-table-reader.md` and ADR-0093. Slice 1d of the structured-architecture-document plan.
 
 ### Domain
 - No change.
@@ -2099,7 +2099,7 @@ the only slice authorized to add it.
 
 ## Enhancement — Prompt rules for catalogue tables and one id per system
 
-**Status:** Implemented on `claude/catalogue-table-reading-rules` (stacked on 1b); not merged. See `docs/slices/enhancement-catalogue-table-reading-rules.md` and the ADR-0085 and ADR-0088 amendments. Slice 1c of the structured-architecture-document plan.
+**Status:** Implemented; merged in `smb-ai-requirement-agent` as [#87](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/87) before the `d5cfb57` snapshot. See `docs/slices/enhancement-catalogue-table-reading-rules.md` and the ADR-0085 and ADR-0088 amendments. Slice 1c of the structured-architecture-document plan.
 
 ### Domain
 - `find_system` compares names with their words run together as a last, unambiguous fallback.
@@ -2119,7 +2119,7 @@ the only slice authorized to add it.
 
 ## Enhancement — Heading- and table-aware Markdown passages
 
-**Status:** Implemented on `claude/markdown-structured-passages`; not merged. See `docs/slices/enhancement-markdown-structured-passages.md` and the ADR-0090 amendment. Slice 1b of the structured-architecture-document plan (1a merged; 1c–3e follow).
+**Status:** Implemented; merged in `smb-ai-requirement-agent` as [#86](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/86) before the `d5cfb57` snapshot. See `docs/slices/enhancement-markdown-structured-passages.md` and the ADR-0090 amendment. Slice 1b of the structured-architecture-document plan (1a merged; 1c–3e follow).
 
 ### Domain
 - No change.
@@ -2159,7 +2159,7 @@ the only slice authorized to add it.
 
 ## Enhancement — Capability domains
 
-**Status:** Implemented on `claude/capability-domains` (stacked on slice B); not merged. See `docs/slices/enhancement-capability-domains.md` and ADR-0089. Third of three slices from the ontology/taxonomy/GraphRAG review.
+**Status:** Implemented; merged in `smb-ai-requirement-agent` as [#79](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/79) before the `d5cfb57` snapshot. See `docs/slices/enhancement-capability-domains.md` and ADR-0089. Third of three slices from the ontology/taxonomy/GraphRAG review.
 
 ### Domain
 - A shallow, maintained tree of capability domains on the release; capabilities placed by `domain_id`; advisory `DomainSuggestion`s on impacts with no catalogued system.
@@ -2179,7 +2179,7 @@ the only slice authorized to add it.
 
 ## Enhancement — Typed system relationships
 
-**Status:** Implemented on `claude/typed-system-relationships` (stacked on slice A); not merged. See `docs/slices/enhancement-typed-system-relationships.md` and ADR-0088. Second of three slices; capability domains (ADR-0089) follow.
+**Status:** Implemented; merged in `smb-ai-requirement-agent` as [#78](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/78) before the `d5cfb57` snapshot. See `docs/slices/enhancement-typed-system-relationships.md` and ADR-0088. Second of three slices; capability domains (ADR-0089) follow.
 
 ### Domain
 - `RelationshipKind` on relationships and dependencies, an attribute not identity; kind edits diff as `changed`; suggestions set a stated kind and never clear one.
@@ -2199,7 +2199,7 @@ the only slice authorized to add it.
 
 ## Enhancement — Connected systems in architecture impact mapping
 
-**Status:** Implemented on `claude/architecture-impact-neighbours`; not merged. See `docs/slices/enhancement-architecture-impact-neighbours.md` and ADR-0087. First of three slices: typed relationships (ADR-0088) and capability domains (ADR-0089) follow.
+**Status:** Implemented; merged in `smb-ai-requirement-agent` as [#77](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/77) before the `d5cfb57` snapshot. See `docs/slices/enhancement-architecture-impact-neighbours.md` and ADR-0087. First of three slices: typed relationships (ADR-0088) and capability domains (ADR-0089) follow.
 
 ### Domain
 - One-hop, both-direction adjacency over published relationships, capped with an omitted count; connected systems kept apart from mapped ones by impact invariants.
@@ -2389,5 +2389,5 @@ Each record keeps its own dated validation history; the ledger at the top govern
 | `docs/slices/fix-analysis-source-presentation.md` | Quieter citations in the clarification workspace | Merged into `main` |
 | `docs/slices/fix-focused-breakdown-workspace.md` | Focused Epic → Feature → Story workspace | Merged into `main` |
 | `docs/slices/fix-workspace-request-loading.md` | Scoped workspace requests and shared AI jobs | Merged into `main` |
-| `docs/slices/fix-human-answer-analysis-citations.md` | Human-answer citations during question resolution | Merged into `main`; #65 added the no-evidence case; the salvage commit `0d42039` is not merged (ledger above) |
+| `docs/slices/fix-human-answer-analysis-citations.md` | Human-answer citations during question resolution | Merged into `main`; #65 added the no-evidence case, and #67 merged the salvage commit `0d42039` (all in `smb-ai-requirement-agent`, before the snapshot) |
 | `docs/slices/enhancement-review-remediation*.md` | Four whole-workspace review remediations | Merged into `main`; human review open (ledger above) |
