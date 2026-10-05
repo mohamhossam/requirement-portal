@@ -50,6 +50,7 @@ from smb_requirement_agent.application.ports.breakdown_review_repository import 
 from smb_requirement_agent.application.ports.document_repository import DocumentRepositoryPort
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
+from smb_requirement_agent.application.ports.knowledge_handoff import ApprovedBacklogOutboxPort
 from smb_requirement_agent.application.ports.knowledge_index_generations import (
     KnowledgeIndexGenerationsPort,
 )
@@ -121,6 +122,10 @@ from smb_requirement_agent.infrastructure.persistence.architecture_release_state
 from smb_requirement_agent.infrastructure.persistence.attachment_ingestions import (
     InMemoryAttachmentIngestions,
     PostgresAttachmentIngestions,
+)
+from smb_requirement_agent.infrastructure.persistence.backlog_handoffs import (
+    InMemoryBacklogHandoffs,
+    PostgresBacklogHandoffs,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_ai_jobs import (
     InMemoryAiJobStore,
@@ -298,6 +303,8 @@ class PersistenceAdapters:
     reference_publications: ReferencePublicationStatePort
     architecture_releases: ArchitectureReleaseStatePort
     attachment_ingestions: AttachmentIngestionRepositoryPort
+    # Approved backlogs on their way to the knowledge service (ADR-0101 Amendment 2).
+    backlog_handoffs: ApprovedBacklogOutboxPort
     revision_repository: BreakdownRepositoryPort
     transaction_manager: TransactionManagerPort
     dependency_index: SourceDependencyPort
@@ -350,6 +357,7 @@ def _postgres(
     attachment_ingestions: AttachmentIngestionRepositoryPort = PostgresAttachmentIngestions(
         postgres
     )
+    backlog_handoffs: ApprovedBacklogOutboxPort = PostgresBacklogHandoffs(postgres)
     analysis_repository = PostgresAnalysisRepository(postgres)
     analysis_audit_repository = PostgresAnalysisAuditRepository(postgres)
     epic_repository = PostgresEpicRepository(postgres)
@@ -437,6 +445,7 @@ def _postgres(
         reference_publications=reference_publications,
         architecture_releases=architecture_releases,
         attachment_ingestions=attachment_ingestions,
+        backlog_handoffs=backlog_handoffs,
         revision_repository=revision_repository,
         transaction_manager=transaction_manager,
         dependency_index=dependency_index,
@@ -463,6 +472,7 @@ def _memory(
     mapping_job_repository = InMemoryArchitectureJobs()
     memory_attachments = InMemoryAttachmentIngestions(memory_lock)
     attachment_ingestions = memory_attachments
+    memory_handoffs = InMemoryBacklogHandoffs(memory_lock)
     memory_publications = InMemoryReferencePublications(memory_lock)
     reference_publications = memory_publications
     architecture_releases = memory_releases
@@ -564,6 +574,7 @@ def _memory(
         memory_publications,
         memory_releases,
         memory_attachments,
+        memory_handoffs,
         base_requirements,
         requirement_draft_repository,
         document_repository,
@@ -630,6 +641,7 @@ def _memory(
         reference_publications=reference_publications,
         architecture_releases=architecture_releases,
         attachment_ingestions=attachment_ingestions,
+        backlog_handoffs=memory_handoffs,
         revision_repository=revision_repository,
         transaction_manager=transaction_manager,
         dependency_index=dependency_index,

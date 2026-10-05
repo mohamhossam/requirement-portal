@@ -15,6 +15,7 @@ from smb_requirement_agent.application.ports.architecture_knowledge import (
     ActiveArchitectureReleasePort,
 )
 from smb_requirement_agent.application.ports.backlog_export import BacklogExportPort
+from smb_requirement_agent.application.ports.knowledge_handoff import ApprovedBacklogOutboxPort
 from smb_requirement_agent.application.use_cases.approval_policy import ApprovalPolicy
 from smb_requirement_agent.application.use_cases.approval_workflow import (
     AddReviewComment,
@@ -63,6 +64,7 @@ def build_review(
     source_impact: SourceImpactReview,
     exporters: tuple[BacklogExportPort, ...],
     current_release: ActiveArchitectureReleasePort,
+    handoffs: ApprovedBacklogOutboxPort | None = None,
 ) -> ReviewWiring:
     reviews = persistence.breakdown_review_repository
     transactions = persistence.transaction_manager
@@ -89,7 +91,7 @@ def build_review(
         ),
         resolve_flag=ResolveFlag(get_review, reviews, clock, transactions, authorization=access),
         submit_for_review=SubmitForReview(workflow, reviews, recorder, transactions),
-        approve_breakdown=ApproveBreakdown(workflow, reviews, recorder, transactions),
+        approve_breakdown=ApproveBreakdown(workflow, reviews, recorder, transactions, handoffs),
         add_review_comment=AddReviewComment(workflow, reviews, recorder, transactions, clock),
         get_revision_history=GetRevisionHistory(
             persistence.requirement_repository, persistence.revision_repository

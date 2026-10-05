@@ -23,6 +23,10 @@ from smb_requirement_agent.application.ports.breakdown_review_repository import 
 )
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
+from smb_requirement_agent.application.ports.knowledge_handoff import (
+    ApprovedBacklogOutboxPort,
+    BacklogHandoff,
+)
 from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.ports.story_repository import StoryRepositoryPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
@@ -416,11 +420,15 @@ class ApproveBreakdown:
         reviews: BreakdownReviewRepositoryPort,
         recorder: ApprovalRecorder,
         transactions: TransactionManagerPort,
+        handoffs: ApprovedBacklogOutboxPort | None = None,
     ) -> None:
         self._current = current
         self._reviews = reviews
         self._recorder = recorder
         self._transactions = transactions
+        # Set when a knowledge service is configured: the approved backlog is handed to it
+        # (ADR-0101 Amendment 2), queued with the approval, in the same transaction.
+        self._handoffs = handoffs
 
     def execute(
         self,
@@ -460,6 +468,16 @@ class ApproveBreakdown:
                 rationale,
             )
             self._reviews.save(view.review.approve_breakdown(approval))
+            if self._handoffs is not None:
+                self._handoffs.enqueue(
+                    BacklogHandoff(
+                        approval_id=approval.id.value,
+                        requirement_id=requirement_id.value,
+                        subject_fingerprint=approval.subject_fingerprint,
+                        created_at=approval.recorded_at,
+                        next_attempt_at=approval.recorded_at,
+                    )
+                )
             return self._current.execute(requirement_id, actor)
 
 

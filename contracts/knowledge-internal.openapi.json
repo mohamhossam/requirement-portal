@@ -1,6 +1,30 @@
 {
   "components": {
     "schemas": {
+      "ApprovedBacklogRequest": {
+        "description": "requirement-portal's approved-backlog export, schema 1.x, as delivered.",
+        "properties": {
+          "epic": {
+            "$ref": "#/components/schemas/ExportEpic"
+          },
+          "manifest": {
+            "$ref": "#/components/schemas/ExportManifest"
+          },
+          "schema_version": {
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Schema Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "manifest",
+          "epic"
+        ],
+        "title": "ApprovedBacklogRequest",
+        "type": "object"
+      },
       "ArchitectureCitation": {
         "properties": {
           "chunk_id": {
@@ -237,6 +261,29 @@
         "title": "ArchitectureQuery",
         "type": "object"
       },
+      "ChangeRequestReceipt": {
+        "properties": {
+          "approval_id": {
+            "title": "Approval Id",
+            "type": "string"
+          },
+          "change_request_id": {
+            "title": "Change Request Id",
+            "type": "string"
+          },
+          "created": {
+            "title": "Created",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "change_request_id",
+          "approval_id",
+          "created"
+        ],
+        "title": "ChangeRequestReceipt",
+        "type": "object"
+      },
       "CitedPassage": {
         "properties": {
           "block_id": {
@@ -381,6 +428,341 @@
           "text"
         ],
         "title": "EvidenceChunk",
+        "type": "object"
+      },
+      "ExportApproval": {
+        "properties": {
+          "id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "recorded_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recorded At"
+          },
+          "recorded_by": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExportPerson"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "subject_fingerprint": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Subject Fingerprint",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "subject_fingerprint"
+        ],
+        "title": "ExportApproval",
+        "type": "object"
+      },
+      "ExportArchitecture": {
+        "properties": {
+          "knowledge_version": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Knowledge Version"
+          },
+          "product_contexts": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ExportProductContext"
+            },
+            "maxItems": 5000,
+            "title": "Product Contexts",
+            "type": "array"
+          },
+          "systems": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ExportSystem"
+            },
+            "maxItems": 5000,
+            "title": "Systems",
+            "type": "array"
+          }
+        },
+        "title": "ExportArchitecture",
+        "type": "object"
+      },
+      "ExportEpic": {
+        "properties": {
+          "business_case": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Business Case"
+          },
+          "features": {
+            "items": {
+              "$ref": "#/components/schemas/ExportFeature"
+            },
+            "maxItems": 5000,
+            "minItems": 1,
+            "title": "Features",
+            "type": "array"
+          },
+          "id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "features"
+        ],
+        "title": "ExportEpic",
+        "type": "object"
+      },
+      "ExportFeature": {
+        "properties": {
+          "architecture": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExportArchitecture"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          },
+          "sequence": {
+            "minimum": 0.0,
+            "title": "Sequence",
+            "type": "integer"
+          },
+          "stories": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ExportStory"
+            },
+            "maxItems": 5000,
+            "title": "Stories",
+            "type": "array"
+          }
+        },
+        "required": [
+          "sequence",
+          "id",
+          "name"
+        ],
+        "title": "ExportFeature",
+        "type": "object"
+      },
+      "ExportManifest": {
+        "properties": {
+          "breakdown_revision": {
+            "minimum": 1.0,
+            "title": "Breakdown Revision",
+            "type": "integer"
+          },
+          "final_approval": {
+            "$ref": "#/components/schemas/ExportApproval"
+          },
+          "requirement_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Requirement Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "requirement_id",
+          "breakdown_revision",
+          "final_approval"
+        ],
+        "title": "ExportManifest",
+        "type": "object"
+      },
+      "ExportPerson": {
+        "properties": {
+          "display_name": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          }
+        },
+        "title": "ExportPerson",
+        "type": "object"
+      },
+      "ExportProductContext": {
+        "properties": {
+          "order_type": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Type"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
+          },
+          "product_name": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Name"
+          }
+        },
+        "title": "ExportProductContext",
+        "type": "object"
+      },
+      "ExportStory": {
+        "properties": {
+          "architecture": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExportArchitecture"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "ExportStory",
+        "type": "object"
+      },
+      "ExportSystem": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "name": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ExportSystem",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -998,6 +1380,48 @@
           }
         },
         "summary": "Evidence"
+      }
+    },
+    "/internal/change-requests": {
+      "post": {
+        "description": "An approved backlog, kept once per final approval for a knowledge admin to read into a\ndraft (requirement-portal ADR-0101, step 7). Delivering the same approval again answers\n200 with the first change request; the same approval for another subject is a 409.",
+        "operationId": "receive_change_request_internal_change_requests_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovedBacklogRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The same approval was delivered before."
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeRequestReceipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Receive Change Request"
       }
     },
     "/internal/events": {

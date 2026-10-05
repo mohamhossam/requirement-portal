@@ -154,6 +154,25 @@ class HttpKnowledgeViews:
             raise
 
 
+class HttpChangeRequestInbox:
+    """The knowledge service's inbox of change requests (ADR-0101 Amendment 2)."""
+
+    def __init__(self, client: InternalHttpClient) -> None:
+        self._client = client
+
+    def deliver(self, export: dict[str, Any]) -> str:
+        # Idempotent by approval: the same export delivered twice is one change request.
+        body = self._client.post_json("/internal/change-requests", export, idempotent=True)
+        if not isinstance(body, dict):
+            raise ServiceUnavailableError("The knowledge service returned an unusable receipt.")
+        try:
+            return _text(body["change_request_id"])
+        except (KeyError, TypeError) as exc:
+            raise ServiceUnavailableError(
+                "The knowledge service returned an unusable receipt."
+            ) from exc
+
+
 def _whole(value: object) -> int:
     if not isinstance(value, int) or isinstance(value, bool) or value < 1:
         raise TypeError("expected a positive whole number")
