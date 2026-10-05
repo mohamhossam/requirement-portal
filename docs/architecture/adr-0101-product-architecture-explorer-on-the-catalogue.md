@@ -76,9 +76,9 @@ editor and the explorer view together:
   change together.
 - At most, a link to the explorer in knowledge-portal.
 
-**Access** is knowledge-portal's: `knowledge_admin` today. Opening read-only explorer access to
-other signed-in users is a separate decision. Anonymous access, which the original branch had for
-its MVP, is not carried over.
+**Access.** Curation stays with `knowledge_admin`. Reading the explorer is open to anyone signed
+in (Amendment 1). Anonymous access, which the original branch had for its MVP, is not carried
+over.
 
 ## Consequences
 
@@ -90,8 +90,8 @@ its MVP, is not carried over.
   matrix, run against the seeded release.
 - **No offline single file.** Architects lose the "open the HTML file anywhere" delivery. The
   Solution Architecture document is still downloadable.
-- **Narrower audience for now.** Business users who opened the public MVP need an account and a
-  role, until the access decision above is made.
+- **Sign-in replaces the public MVP.** Business users who opened the public MVP now sign in
+  with the platform account they already have; no role is needed to read (Amendment 1).
 - **Porting record.** Each repository's `UPSTREAM.md` records a decision for all 14 original
   commits.
 
@@ -107,3 +107,25 @@ its MVP, is not carried over.
   would drift, and the catalogue's review and publish gate would be bypassed.
 - **Put the engine or the document generator in platform-kernel.** Rejected: they carry business
   meaning (products, journeys, roles), which ADR-0100 keeps out of the kernel.
+
+## Amendment 1 — read access for anyone signed in (2026-10-05)
+
+The product owner decided that the explorer is for everyone who works on the platform, not only
+knowledge admins.
+
+- **What is open.** knowledge-portal's `GET /explorer/release` returns the catalogue version in
+  service as content only: systems, connections, landscape, offerings and journeys. It never
+  returns a draft, documents, the index or who curated. `GET /explorer/me` names the reader. Both
+  are open to any authenticated user, with or without a role. Everything else in knowledge-portal
+  still requires `knowledge_admin`.
+- **How it is held.** A separate resolver (`ResolveSignedInActor`) authenticates without the
+  admin check and does not record the reader in the admin directory, so documents can still be
+  handed over only to admins. knowledge-portal's route-authentication architecture test lists
+  these two GET operations as the only ones open without the role. Opening another one is a
+  deliberate change to that list.
+- **On screen.** A signed-in reader who is not an admin sees the explorer in a reader's binding:
+  the masthead and their account, no index of tables, and system names as text rather than links
+  into the catalogue. Admins read the same page inside the portal, with those links.
+- **Not changed.** Anonymous access stays closed, and requirement-portal's edge routing and Content
+  Security Policy are unchanged. The explorer is served at `/knowledge/explorer` like any other
+  knowledge-portal page.
