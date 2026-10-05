@@ -122,3 +122,4 @@ Search and AI grounding: [ADR-0064](adr-0064-unified-search-and-reference-answer
 - [ADR-0098: A three-repository platform beside the original application](adr-0098-three-repo-platform.md)
 - [ADR-0099: The knowledge service boundary and its own database](adr-0099-knowledge-service-boundary.md)
 - [ADR-0100: The platform kernel holds mechanisms, never meaning](adr-0100-platform-kernel.md)
+- [ADR-0101: The product architecture explorer lives on the knowledge catalogue](adr-0101-product-architecture-explorer-on-the-catalogue.md)
