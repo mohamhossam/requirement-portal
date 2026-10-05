@@ -198,7 +198,7 @@ is not changed and keeps running in parallel.
   the knowledge event feed (unit-tested in `test_reference_currency.py` and
   `test_reference_publication_state.py`). On the running platform, CI's deployment job
   (`tests/platform_withdrawal.py`) publishes and withdraws a library document and requires the
-  copy to follow within 15 seconds. The rehearsal took 1.1 seconds.
+  copy to follow within 15 seconds (CI run 37351321727). The rehearsal took 1.1 seconds.
 - [x] `/knowledge-api/internal/*` is refused at the edge: **404, not 403** (amended 2026-10-05).
   The edge answers 404 for `/api/internal` and `/knowledge-api/internal`, so it doesn't reveal
   that the route exists. `test_platform_deployment.py`, the CI deployment job and
@@ -223,7 +223,9 @@ is not changed and keeps running in parallel.
   - `npx playwright test -c playwright.platform.config.ts` behind a stand-in for the edge — PASS,
     3 tests. The compose stack itself runs in CI: this workspace's network refuses GitHub's
     image-blob storage, so it could not pull the knowledge images;
-  - CI on the close-out pull request — recorded there.
+  - CI on [#36](https://github.com/mohamhossam/requirement-portal/pull/36) — PASS, run 37351321727:
+    all 7 jobs, including the deployment job's withdrawal step (7 seconds on the real compose
+    stack, the scanner wait included) and the platform in a browser (3 tests).
 
 ## Deferred
 - Retiring the original repository is a separate decision.
