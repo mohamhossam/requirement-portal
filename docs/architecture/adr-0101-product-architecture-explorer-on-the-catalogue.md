@@ -129,3 +129,37 @@ knowledge admins.
 - **Not changed.** Anonymous access stays closed, and requirement-portal's edge routing and Content
   Security Policy are unchanged. The explorer is served at `/knowledge/explorer` like any other
   knowledge-portal page.
+
+## Amendment 2 — approved backlogs are pushed to the catalogue (2026-10-05)
+
+Step 7 ("change requests from Requirement AI exports") is decided in both repositories. In the
+original explorer a person downloaded the approved-backlog export and loaded it; here
+requirement-portal hands it over itself.
+
+- **When.** When a breakdown's formal final approval is recorded, `ApproveBreakdown` writes one
+  row to `approved_backlog_handoffs` in the approval's own transaction (a transactional outbox,
+  one row per approval). A replayed approval writes nothing. Without a knowledge service
+  configured, nothing is queued and approvals behave as before.
+- **What.** A worker (`approved_backlog_worker`, registered only with a knowledge service) leases
+  due rows, finds the revision the approval attests, and renders it once as the neutral backlog
+  export (schema 1.x), the same document the JSON download gives. The rendered body is stored on
+  the row, so every retry sends the same bytes. A revision that is not exportable is skipped,
+  unsent.
+- **The approver's email is never sent.** `recorded_by.email` is set to null before the export
+  leaves. knowledge-portal declares only what it reads and keeps display names only: the
+  approver's and, as the change request's requester, the same name. Both are shown in the
+  explorer's change history and the Solution Architecture document, which any signed-in reader
+  can open (Amendment 1).
+- **Where.** `POST /internal/change-requests` on knowledge-portal, with the service token
+  (ADR-0099). It is idempotent by approval id: 201 the first time, 200 with the same change
+  request after. A 404 (route not deployed yet), 429, 5xx or an unreachable service is retried
+  with a growing pause (1 minute doubling to 1 hour, at most 48 attempts); 400, 409, 413 and 422
+  are refused as they are and the row fails, logged and counted
+  (`smb_ai_jobs_total{operation="approved_backlog_handoff"}`).
+- **What knowledge-portal does with it.** It waits in an inbox until a knowledge admin reads it
+  into a draft or dismisses it with a reason. Reading turns each approved feature into a
+  suggested open question on the offering it names. Accepting one registers the change request
+  as an L2 source and records it in the version's change history. Nothing reaches the catalogue
+  without a person accepting it.
+- **Not changed.** requirement-portal's screens and the export's schema. The pinned
+  `contracts/knowledge-internal.openapi.json` gains the route, additively.

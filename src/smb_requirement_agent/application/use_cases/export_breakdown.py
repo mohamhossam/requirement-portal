@@ -87,6 +87,14 @@ def is_exportable_revision(revision: BreakdownRevision) -> bool:
     return formal_final_approval(revision) is not None and _has_complete_tree(revision)
 
 
+def approved_backlog_document(revision: BreakdownRevision) -> NeutralBacklogExport | None:
+    """The export of a formally approved, complete revision; None when it is not exportable."""
+    approval = formal_final_approval(revision)
+    if approval is None or not _has_complete_tree(revision):
+        return None
+    return _document(revision, approval)
+
+
 class ExportBreakdown:
     def __init__(
         self,

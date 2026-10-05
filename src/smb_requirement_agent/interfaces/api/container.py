@@ -20,6 +20,7 @@ from smb_kernel.observability.metrics import Metrics
 from smb_kernel.time.clock import ClockPort
 from smb_kernel.time.system import SystemClock
 
+from smb_requirement_agent.application.exports import ExportFormat
 from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.application.ports.activity import ActivityReadPort, ReportingReadPort
 from smb_requirement_agent.application.ports.actor_directory import ActorDirectoryPort
@@ -42,6 +43,7 @@ from smb_requirement_agent.application.ports.epic_generator import EpicGenerator
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_generator import FeatureGeneratorPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
+from smb_requirement_agent.application.ports.knowledge_handoff import ApprovedBacklogOutboxPort
 from smb_requirement_agent.application.ports.knowledge_index_generations import (
     KnowledgeIndexGenerationsPort,
 )
@@ -251,6 +253,7 @@ from smb_requirement_agent.interfaces.api.composition.jobs import build_ai_jobs
 from smb_requirement_agent.interfaces.api.composition.knowledge import build_requirement_knowledge
 from smb_requirement_agent.interfaces.api.composition.knowledge_service import (
     KnowledgeService,
+    build_backlog_handoff_worker,
     build_knowledge_service,
 )
 from smb_requirement_agent.interfaces.api.composition.llm import build_llm_adapters
@@ -321,6 +324,8 @@ class Container:
     clock: ClockPort
     breakdown_repository: BreakdownRepositoryPort
     transaction_manager: TransactionManagerPort
+    # Approved backlogs on their way to the knowledge service (ADR-0101 Amendment 2).
+    backlog_handoffs: ApprovedBacklogOutboxPort
     ai_job_repository: AiJobRepositoryPort
     ai_job_queue: AiJobQueuePort
     notification_repository: NotificationRepositoryPort
@@ -553,6 +558,8 @@ def _build_container(
         knowledge.source_impact,
         backlog_exporters,
         knowledge.current_release,
+        # Approvals hand their backlog over only when there is an inbox to deliver to.
+        persistence.backlog_handoffs if knowledge_service.change_requests is not None else None,
     )
     breakdown = build_breakdown(
         persistence,
@@ -597,6 +604,14 @@ def _build_container(
     }
     if architecture_jobs.mapping_worker is not None:
         background_workers["architecture_mapping_job_worker"] = architecture_jobs.mapping_worker
+    if knowledge_service.change_requests is not None:
+        background_workers["approved_backlog_worker"] = build_backlog_handoff_worker(
+            persistence,
+            next(item for item in backlog_exporters if item.format is ExportFormat.JSON),
+            knowledge_service.change_requests,
+            resolved_clock,
+            metrics,
+        )
 
     return Container(
         requirement_repository=persistence.requirement_repository,
@@ -645,6 +660,7 @@ def _build_container(
         clock=resolved_clock,
         breakdown_repository=persistence.revision_repository,
         transaction_manager=persistence.transaction_manager,
+        backlog_handoffs=persistence.backlog_handoffs,
         ai_job_repository=persistence.ai_job_repository,
         ai_job_queue=persistence.ai_job_queue,
         notification_repository=persistence.notification_repository,

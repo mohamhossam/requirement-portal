@@ -18,6 +18,7 @@ from typing import Any
 
 import httpx
 import pytest
+from fastapi.testclient import TestClient
 from smb_kernel.errors import ServiceResponseError, ServiceUnavailableError
 from smb_kernel.http.client import InternalHttpClient
 
@@ -58,9 +59,11 @@ from smb_requirement_agent.infrastructure.knowledge_client import (
     FakeKnowledgeEvents,
     FakeReferenceKnowledge,
     HttpArchitectureKnowledge,
+    HttpChangeRequestInbox,
     HttpKnowledgeEvents,
     HttpReferenceKnowledge,
 )
+from tests.unit.workflow_helpers import approve_fake_breakdown
 
 CONTRACT = json.loads(
     (Path(__file__).parents[2] / "contracts" / "knowledge-internal.openapi.json").read_text(
@@ -94,12 +97,17 @@ def _answering(body: Any, status: int = 200) -> Handler:
     return lambda _request: httpx.Response(status, json=body)
 
 
-def _violations(value: Any, schema: dict[str, Any], at: str = "body") -> list[str]:
-    """Where `value` departs from a contract schema, including fields it does not list."""
+def _violations(
+    value: Any, schema: dict[str, Any], at: str = "body", *, open_objects: bool = False
+) -> list[str]:
+    """Where `value` departs from a contract schema, including fields it does not list
+    (unless `open_objects`: a route that reads a subset and ignores the rest)."""
     if "$ref" in schema:
         schema = SCHEMAS[schema["$ref"].rsplit("/", 1)[-1]]
     if "anyOf" in schema:
-        options = [_violations(value, option, at) for option in schema["anyOf"]]
+        options = [
+            _violations(value, option, at, open_objects=open_objects) for option in schema["anyOf"]
+        ]
         return [] if any(not found for found in options) else [f"{at}: matches no option"]
     if "enum" in schema:
         return [] if value in schema["enum"] else [f"{at}: {value!r} is not allowed"]
@@ -121,7 +129,9 @@ def _violations(value: Any, schema: dict[str, Any], at: str = "body") -> list[st
         found.append(f"{at}: length out of bounds")
     if kind == "array":
         for index, item in enumerate(value):
-            found += _violations(item, schema.get("items", {}), f"{at}[{index}]")
+            found += _violations(
+                item, schema.get("items", {}), f"{at}[{index}]", open_objects=open_objects
+            )
     if kind == "object":
         properties = schema.get("properties", {})
         found += [
@@ -129,8 +139,10 @@ def _violations(value: Any, schema: dict[str, Any], at: str = "body") -> list[st
         ]
         for name, item in value.items():
             if name in properties:
-                found += _violations(item, properties[name], f"{at}.{name}")
-            elif not schema.get("additionalProperties"):
+                found += _violations(
+                    item, properties[name], f"{at}.{name}", open_objects=open_objects
+                )
+            elif not (open_objects or schema.get("additionalProperties")):
                 found.append(f"{at}.{name}: not in the contract")
     return found
 
@@ -617,3 +629,44 @@ def test_the_fakes_stand_in_for_each_port_deterministically() -> None:
     assert events.after(0, 10) == (activation,)
     assert events.after(1, 10) == ()
     assert events.after(0, 0) == ()
+
+
+def test_an_approved_backlog_is_delivered_as_the_contract_describes(client: TestClient) -> None:
+    requirement_id, _, revision = approve_fake_breakdown(client)
+    export = json.loads(
+        client.get(
+            f"/requirements/{requirement_id}/revisions/{revision}/export?format=json"
+        ).content
+    )
+    export["manifest"]["final_approval"]["recorded_by"]["email"] = None
+    receipt = {
+        "change_request_id": "CR-20261005-Portable_backlog",
+        "approval_id": export["manifest"]["final_approval"]["id"],
+        "created": True,
+    }
+    seen: list[httpx.Request] = []
+
+    delivered = HttpChangeRequestInbox(_client(_answering(receipt, 201), seen)).deliver(export)
+
+    assert delivered == "CR-20261005-Portable_backlog"
+    (request,) = seen
+    assert (request.method, request.url.path) == ("POST", "/internal/change-requests")
+    assert request.headers["authorization"] == f"Bearer {TOKEN}"
+    operation = _operation(request)
+    schema = operation["requestBody"]["content"]["application/json"]["schema"]
+    # The route reads a bounded subset of the export (schema 1.x) and ignores the rest.
+    assert _violations(json.loads(request.content), schema, open_objects=True) == []
+    answer = operation["responses"]["201"]["content"]["application/json"]["schema"]
+    assert _violations(receipt, answer, "answer") == []
+    # A replay of the same approval answers 200 with the same change request.
+    assert "200" in operation["responses"]
+
+
+def test_a_refused_or_unusable_delivery_is_an_explicit_failure() -> None:
+    refused = HttpChangeRequestInbox(_client(_answering({"detail": "Another subject."}, 409)))
+    with pytest.raises(ServiceResponseError) as raised:
+        refused.deliver({"schema_version": "1.5"})
+    assert raised.value.status_code == 409
+    for answer in ({"approval_id": "apr-1"}, ["CR-1"], {"change_request_id": 7}):
+        with pytest.raises(ServiceUnavailableError):
+            HttpChangeRequestInbox(_client(_answering(answer, 201))).deliver({})
