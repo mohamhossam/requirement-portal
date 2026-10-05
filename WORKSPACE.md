@@ -16,6 +16,17 @@ The workspace must make it easy to:
 
 ## 2. Repository Layout
 
+This repository is one of three that make up the platform (ADR-0098):
+
+| Repository | Holds |
+|---|---|
+| `requirement-portal` (this one) | Requirement work: intake, clarification, review, backlog, attachments, architecture mapping of Requirements, and the reference deployment in `deploy/` that runs the whole platform |
+| [`knowledge-portal`](https://github.com/mohamhossam/knowledge-portal) | The knowledge service: the shared library, the architecture and squad catalogues, its own database and its own browser app under `/knowledge/` (ADR-0099) |
+| [`platform-kernel`](https://github.com/mohamhossam/platform-kernel) | `smb_kernel`: shared mechanisms only, such as identity, document extraction, model transports and internal HTTP (ADR-0100) |
+
+Each runs alone in development with offline stand-ins for the other; START_GUIDE.md section 4,
+"Run with the knowledge service", connects the two.
+
 Initial structure:
 
 ```text
@@ -127,9 +138,8 @@ After activation, all standard quality gate commands (`pytest`, `ruff`, `mypy`,
 
 ### The platform kernel
 
-`smb-platform-kernel` (ADR-0100) is a private git dependency, pinned by tag in
-`pyproject.toml`. pip and uv fetch it with your own git credentials, so you need read
-access to `mohamhossam/platform-kernel`.
+`smb-platform-kernel` (ADR-0100) is a git dependency, pinned by tag in
+`pyproject.toml`. The repository is public, so pip and uv fetch it without credentials.
 
 To work on the kernel and this application together, install your local checkout over
 the pinned one. Never commit that change:
@@ -820,27 +830,31 @@ Test fixtures should cover:
 
 ---
 
-## 15. Architecture Knowledge Workspace
+## 15. Architecture Mapping and the Knowledge Service
 
-Slice 7's packaged YAML is seeded once into the administered release store.
-Slice 14 maintains drafts and immutable published releases through the browser
-at `/architecture-knowledge`; restarting never replaces edited knowledge.
-Catalogue YAML can be imported into a draft or exported from a release.
+The architecture catalogue, its drafts, documents and published releases moved to
+[knowledge-portal](https://github.com/mohamhossam/knowledge-portal) with the platform split
+(ADR-0099); curate them there. Requirement work keeps:
 
-For a durable deployment, use PostgreSQL with the `vector` extension, set
-`PERSISTENCE_PROVIDER=postgres`, `DATABASE_URL`, and back up the database and
-`DOCUMENT_STORAGE_PATH` together. Architecture mapping uses the configured
-models (`LLM_PROVIDER` or the model profiles: the `knowledge` task and the
-embedding), as ADR-0082 records. Production also requires
-`KNOWLEDGE_EVALUATION_APPROVED=true` after the deployment-specific evaluation
-passes on those models. `LLM_PROVIDER=fake` and memory persistence remain the
-offline path. Production requires PostgreSQL persistence; fake identity is
-rejected at startup.
-By default the API process also runs every background worker (AI jobs,
-document ingestion, requirement indexing and, with any provider but `fake`,
-architecture build/mapping jobs). To scale HTTP and
-workers independently, run API replicas with `API_BACKGROUND_WORKERS=false`
-(PostgreSQL required) and one or more worker processes:
+- **Mapping.** Features and Stories are mapped against the catalogue release in service, which
+  the knowledge service matches (`POST /internal/architecture/match`). Mapping jobs run in this
+  repository's `requirement_mapping_jobs` queue. The worker leases them, heartbeats during model
+  calls and records failure categories; failed jobs need an explicit retry. Publishing a new
+  release does not remap existing Features or Stories: reviewers refresh their mapping and review.
+- **The read-only views.** Cited library passages and architecture evidence open read-only here,
+  fetched from the knowledge service. Curation stays in the knowledge portal, open to
+  `knowledge_admin` only.
+- **The roles.** Assign `knowledge_reader` or `knowledge_maintainer` for architecture mapping;
+  maintainers inherit reader access.
+
+Mapping uses the configured models (`LLM_PROVIDER` or the model profiles: the `knowledge` task and
+the embedding), as ADR-0082 records. `LLM_PROVIDER=fake` and memory persistence remain the
+offline path. Production requires PostgreSQL persistence; fake identity is rejected at startup.
+
+By default the API process also runs every background worker (AI jobs, attachment ingestion,
+requirement indexing, the knowledge event feed and, with any provider but `fake`, architecture
+mapping jobs). To scale HTTP and workers independently, run API replicas with
+`API_BACKGROUND_WORKERS=false` (PostgreSQL required) and one or more worker processes:
 
 ```bash
 python -m smb_requirement_agent.interfaces.worker
@@ -850,28 +864,15 @@ The worker process exits non-zero if a worker becomes unhealthy, so run it under
 a supervisor that restarts it. Size `DATABASE_POOL_MAX_SIZE` per process for its
 concurrent requests plus workers; every API and worker process has its own pool.
 
-The architecture worker leases build/mapping jobs, heartbeats during model calls, and records
-failure categories. Failed jobs require explicit retry. A maintainer uploads
-text-bearing PDF/DOCX/TXT files, builds a draft, previews English/Arabic
-retrieval, and publishes it with a rationale. Publishing does not remap existing
-Features or Stories; reviewers explicitly refresh their mapping and review.
-Draft evidence remains maintainer-only.
-
 Production identity uses `APP_ENV=production`, `IDENTITY_PROVIDER=oidc`,
 `OIDC_ISSUER_URL`, `OIDC_AUDIENCE`, `OIDC_CLIENT_ID`, and `OIDC_ROLES_CLAIM`.
 Register `${origin}/auth/callback` as the browser redirect URI and configure
 the delegated API scope with `OIDC_SCOPES`; the browser reads public identity
-configuration from `/identity/config` at runtime.
-Assign `knowledge_reader` or `knowledge_maintainer` roles; maintainers inherit
-reader access. All application data endpoints require a validated bearer token
-in OIDC mode. Health stays public.
+configuration from `/identity/config` at runtime. All application data endpoints
+require a validated bearer token in OIDC mode. Health stays public.
 
-Before enabling local RAG for a deployment, run the 30-case curated retrieval
-fixture plus a real-model evaluation on that deployment's English/Arabic
-corpus. Confirm at least 90% of answerable queries have relevant evidence in
-the top eight, every citation resolves, and no ownership is invented. The CI
-fixture uses deterministic embeddings and does not substitute for this check.
-Approximate indexes and GraphRAG are deferred until measured need.
+The knowledge service's own build, retrieval evaluation and release qualification are
+documented in knowledge-portal.
 
 ---
 
@@ -1034,6 +1035,11 @@ See `docs/slices/enhancement-chunking-indexing.md` for actual local evidence and
 
 ### Library ownership and dependencies (ADR-0063)
 
+Moved to knowledge-portal with the platform split (ADR-0099): ownership handover and the
+dependencies view are its Ownership and Who cites it pages. Requirement work answers the
+dependents query over its internal API (`/internal/references/{id}/dependents`). The record of
+the original design follows.
+
 The document workspace exposes Manage ownership and View dependencies to the current owner.
 Handover selects a known user, records a rationale and requires acknowledgement of losing private
 access. The new owner receives every private file/review/publication control; original upload and
@@ -1049,8 +1055,8 @@ no rewrite or external publication. See `docs/slices/enhancement-library-governa
 
 ### Search and AI grounding (ADR-0064)
 
-The library's Search in control can search published documents alone or combine them with
-Requirements the current actor owns/reviews. `POST /knowledge/search/unified` returns labelled,
+Unified search combines published library documents, which it asks the knowledge service for,
+with Requirements the current actor owns/reviews. `POST /knowledge/search/unified` returns labelled,
 bounded, source-balanced evidence; the original document-only endpoint remains compatible.
 Unified search waits for the dedicated Requirement index to be current and explains retry through
 the existing mapped index error. No vector distances are compared across index generations.
@@ -1072,8 +1078,9 @@ from the synthetic fixture. See `docs/slices/enhancement-search-ai-grounding.md`
 
 Requirement and draft browser attachments now submit durable 202 ingestion records, poll status,
 and offer retry/cancel. The document worker scans/extracts then atomically attaches the result;
-existing synchronous upload endpoints remain supported. Library owners can compare source raster
-previews and resolve only block-scoped warnings through saved exclusions with reasons.
+existing synchronous upload endpoints remain supported. In knowledge-portal, library owners can
+compare source raster previews and resolve only block-scoped warnings through saved exclusions
+with reasons.
 
 `DOCUMENT_OFFICE_PREVIEW_EXECUTABLE` optionally names an installed local LibreOffice executable.
 When unset, slide previews explain their unavailability and suggest a PDF export; PDF pages and

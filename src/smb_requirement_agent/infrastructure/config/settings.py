@@ -215,12 +215,22 @@ class Settings:
     # Unset, the internal API is not served at all.
     knowledge_service_token: str | None = field(default=None, repr=False)
     # Where the knowledge service's internal API is, and the token this service
-    # presents there (ADR-0099). Unset, the knowledge code in this process answers.
+    # presents there (ADR-0099). Unset, offline stand-ins answer for it.
     knowledge_api_base_url: str | None = None
     requirement_service_token: str | None = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
         validate_settings(self)
+
+    @property
+    def knowledge_service_url(self) -> str | None:
+        """The knowledge service this process calls, or None when offline stand-ins answer.
+
+        It is called only with both its address and the token to present there.
+        """
+        if self.requirement_service_token is None:
+            return None
+        return self.knowledge_api_base_url
 
     @classmethod
     def from_env(cls, *, config_path: str | None = None) -> Settings:
