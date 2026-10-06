@@ -548,8 +548,8 @@ only the systems a Requirement declares, and the read-only passage and evidence
 views have nothing to show.
 To work against the real knowledge service, run
 [knowledge-portal](https://github.com/mohamhossam/knowledge-portal) beside it.
-Clone it next to this repository and follow its README; its API listens on
-`8100` and its browser app on `5174`.
+Clone it next to this repository and follow its `START_GUIDE.md`; its API
+listens on `8100` and its browser app on `5174`.
 
 The two services call each other's internal API with two shared tokens, each
 32 or more characters. Use the same two values on both sides:
