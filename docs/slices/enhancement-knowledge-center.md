@@ -193,6 +193,9 @@ Delivery order: **B1 → A′ → B2 → B3 → C → D**, then E once it is sch
   `/internal/knowledge/reindex`). Knowledge-portal offers them as actions on the B2 screens.
 
 ### C — Library and catalogue curation (knowledge-portal)
+> In progress ([enhancement-knowledge-center-c-library-curation.md](enhancement-knowledge-center-c-library-curation.md)):
+> requirement-portal's citation counts on `feat/library-citation-counts`. Agreed 2026-10-06:
+> admins may also review and approve on the owner's behalf, under a recorded grant.
 - **Admin overrides on any library document:** reassign ownership and withdraw, each with a
   reason, recording the admin. Today both are owner-only.
 - **Bulk retry and rebuild** for failed library readings and index builds.

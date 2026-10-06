@@ -73,6 +73,11 @@ def test_postgres_lineage_restart_rebuild_concurrency_and_rollback(isolated_url:
             owner,
             rationale="Applies to rollout",
         )
+        # Counted across the portfolio: the document's owner does not own the Requirement.
+        assert container.internal_reads.citation_counts((citation.document_id, "unknown")) == {
+            citation.document_id: 1,
+            "unknown": 0,
+        }
         library.withdraw(citation.document_id)
         sync(container)
         rows = container.source_impact.page(

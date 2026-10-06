@@ -110,6 +110,48 @@ def test_another_persons_dependents_stay_private(
     assert observer.json()["items"] == []
 
 
+def test_citation_counts_count_requirements_across_the_portfolio(grounded: Grounded) -> None:
+    """A number per document, whoever owns the Requirements, and never which ones."""
+    container = grounded.container
+    for owner, title in ((FAKE_ACTORS[0], "Cites the policy"), (FAKE_ACTORS[1], "Cites it too")):
+        requirement = container.create_requirement.execute(
+            CreateRequirementInput(title, "XGPON coverage for bundles."), owner
+        )
+        container.analyze_requirement.execute(owner, requirement.id)
+        # Analysing again supersedes the rows; it does not cite the document twice.
+        container.analyze_requirement.execute(owner, requirement.id, force=True)
+    serving = replace(
+        container, settings=replace(container.settings, knowledge_service_token=TOKEN)
+    )
+    document_id = grounded.citation.document_id
+    with TestClient(create_app(lambda: serving)) as client:
+        response = client.get(
+            "/internal/references/citation-counts",
+            params={"document_id": [document_id, "unknown"]},
+            headers=SERVICE,
+        )
+        assert response.status_code == 200
+        assert response.json() == {"counts": {document_id: 2, "unknown": 0}}
+        assert client.get("/internal/references/citation-counts").status_code == 401
+        assert (
+            client.get("/internal/references/citation-counts", headers=SERVICE).status_code == 422
+        )
+        too_many = {"document_id": [f"d{n}" for n in range(101)]}
+        assert (
+            client.get(
+                "/internal/references/citation-counts", params=too_many, headers=SERVICE
+            ).status_code
+            == 422
+        )
+        too_long = {"document_id": ["d" * 201]}
+        assert (
+            client.get(
+                "/internal/references/citation-counts", params=too_long, headers=SERVICE
+            ).status_code
+            == 422
+        )
+
+
 def test_mapping_counts_and_bounded_actor_ids(internal: tuple[TestClient, str]) -> None:
     client, _ = internal
     stats = client.get("/internal/architecture-mapping/stats", headers=SERVICE).json()

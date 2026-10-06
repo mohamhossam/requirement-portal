@@ -3,7 +3,8 @@
 The knowledge service authenticates as a service; the person it acts for is named
 by id. Every read here keeps the same privacy as the in-process read it
 replaces: a document owner sees dependents only on Requirements they may see,
-and mapping statistics and the corpus summary are counts, never which Requirements.
+and mapping statistics, citation counts and the corpus summary are counts, never which
+Requirements.
 """
 
 from __future__ import annotations
@@ -119,6 +120,11 @@ class InternalReads:
                 limit=limit + 1,
             )
         return DependentsPage(rows[:limit], offset + limit if len(rows) > limit else None)
+
+    def citation_counts(self, document_ids: tuple[str, ...]) -> dict[str, int]:
+        """Requirements citing each library document now, counted across the portfolio."""
+        with self._transactions.transaction():
+            return self._dependencies.citation_counts(tuple(dict.fromkeys(document_ids)))
 
     def mapping_counts(self) -> tuple[MappingCount, ...]:
         return self._mapping_stats.by_release()

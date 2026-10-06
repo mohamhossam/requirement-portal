@@ -26,6 +26,7 @@ def test_the_internal_api_matches_its_committed_contract() -> None:
 def test_the_contract_covers_what_the_knowledge_service_reads_and_stays_private() -> None:
     paths = set(json.loads(CONTRACT.read_text(encoding="utf-8"))["paths"])
     assert paths == {
+        "/internal/references/citation-counts",
         "/internal/references/{document_id}/impact",
         "/internal/references/{document_id}/dependents",
         "/internal/architecture-mapping/stats",

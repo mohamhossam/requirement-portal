@@ -55,6 +55,23 @@
         "title": "BulkResult",
         "type": "object"
       },
+      "CitationCounts": {
+        "description": "Requirements citing each library document now; 0 when none does.",
+        "properties": {
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counts",
+            "type": "object"
+          }
+        },
+        "required": [
+          "counts"
+        ],
+        "title": "CitationCounts",
+        "type": "object"
+      },
       "CorpusActionRequest": {
         "description": "The knowledge admin acting, and why: recorded with the action and told to the owner.",
         "properties": {
@@ -1524,6 +1541,55 @@
           }
         },
         "summary": "Retire From Corpus",
+        "tags": [
+          "internal"
+        ]
+      }
+    },
+    "/internal/references/citation-counts": {
+      "get": {
+        "operationId": "citation_counts_internal_references_citation_counts_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "items": {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              "maxItems": 100,
+              "minItems": 1,
+              "title": "Document Id",
+              "type": "array"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CitationCounts"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Citation Counts",
         "tags": [
           "internal"
         ]
