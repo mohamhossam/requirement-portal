@@ -19,13 +19,13 @@ Azure DevOps.
 | Part | What the curator gets |
 |---|---|
 | Import | Up to 20 BRDs at once (Word .docx or PDF, 10 MB each). Each starts its own draft and is read by the document pipeline, or is refused with why (a Word 97–2003 `.doc` is refused with "save it as .docx"; a file already imported names the record that holds it). |
-| Work-item ids | Ids the BRD mentions (`#48213`, `AB#48213`, "Epic 48213", `_workitems/edit/48213`) are suggested with the passage they came from, for the curator to confirm. They are never linked on their own (decision 10). |
+| Work-item ids | Ids the BRD mentions (`#48213`, `AB#48213`, "Epic 48213", `_workitems/edit/48213`) are suggested with the words they were found in, for the curator to confirm. They are never linked on their own (decision 10). An id that is already another record's root is said beside it, never refused (decision 7). |
 | Breakdown | The curator names 1–50 root work items and the breakdown beneath them is read from Azure DevOps on a durable job, with progress ("140 of 212 work items") and a per-item report (not found, no access, not an Agile type, over the limit). Only Epic, Feature and User Story are imported; Tasks and Bugs beneath are counted. At most 2,000 work items (`ADO_IMPORT_MAX_ITEMS`). |
 | Lineage | BRD → Epic → Feature → User Story as numbered rows (1, 1.1, 1.1.1), each linking to its work item in Azure DevOps, with state, iteration and area, and its description and acceptance criteria on request. |
 | Publish | Once a BRD is read and at least one root's breakdown is read. It records a `historic_requirement_changed` event with the whole published state. |
-| Refresh | A published record is read again; the changes wait, field by field, to be accepted (published again, another event) or discarded. |
+| Refresh | A published record is read again; the changes wait, field by field (before → after), to be accepted (published again, another event) or discarded. |
 | Withdraw | With a reason; the event then carries no state, so requirement work stops reading it. |
-| Table 4 | A fourth page, Historic, with the list by state; the front page counts drafts and published records. |
+| Table 4 | A fourth page, Historic, with the list by state; the front page counts drafts, records with a refresh waiting, and published records, and its next decision falls to them. |
 
 ## Decisions
 
@@ -37,6 +37,8 @@ Azure DevOps.
 | 4 | Any knowledge admin curates; each BRD starts its own draft, and more BRDs can be added to a draft. | Defaults, as with Table 4's corpus actions. |
 | 5 | Reading a BRD and reading a breakdown run on their own queue (`historic_import_jobs`), never in a request. | The bounded extractor is slow and shared with the library; a queue that `claim`s any kind must not be shared. |
 | 6 | Draft titles come from the file name, keeping hyphens ("BRD-2025-014 …"). | BRD references are what people search by. |
+| 7 | A root that is already another historic Requirement's root is warned about, never refused. | Agreed in session (2026-10-06): one Epic can serve two BRDs. |
+| 8 | Withdrawal is final; a withdrawn record's BRDs cannot be imported again. | The duplicate-checksum rule holds across states, and the withdrawal event is the last word requirement work reads. |
 
 ## Tests (knowledge-portal)
 
@@ -53,6 +55,7 @@ Azure DevOps.
   - read again;
   - an architecture test that nothing can write to ADO;
   - settings;
-  - the routes' bounds and roles.
-- `tests/integration/test_historic_requirements_postgres.py`: the record's round trip, a publication committing with its event, optimistic versions, and the import queue on its own table.
-- `frontend/src/historic/historic.test.tsx`: wording and ranks, Table 4's counts, the list and import results, suggestions and id validation, the numbered lineage, refresh acceptance and withdrawal with focus handling.
+  - the routes' bounds and roles;
+  - shared roots and the refresh-waiting count.
+- `tests/integration/test_historic_requirements_postgres.py`: the record's round trip, a publication committing with its event, optimistic versions, records found by root, the refresh-waiting count, and the import queue on its own table.
+- `frontend/src/historic/historic.test.tsx`: wording and ranks, Table 4's counts and next decision, the record's next-decision line, the list and import results, suggestions with their words and shared roots, id validation, the numbered lineage, the refresh's before → after values and acceptance, and withdrawal with focus handling.
