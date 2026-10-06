@@ -102,19 +102,20 @@ def test_knowledge_blobs_move_and_requirement_blobs_stay(
     assert requirement == {"attachment-1"}
 
 
-def test_the_two_stores_are_separate_and_only_known_tables_reach_sql() -> None:
+def test_requirement_bytes_stay_in_their_own_store_and_only_it_reaches_sql() -> None:
     assert DATABASE_URL is not None
     migration_runner.run_migrations(DATABASE_URL)
     store = PostgresStore(
         DirectPostgresConnector(DATABASE_URL), lambda _id, _conn: None, lambda _c, _i: None
     )
     requirement = PostgresDocumentStorage(store)
-    knowledge = PostgresDocumentStorage(store, "knowledge_document_blobs")
     key = DocumentVersionId(uuid.uuid4().hex)
     with store.transaction():
-        knowledge.put(key, b"library bytes")
-    assert knowledge.get(key) == b"library bytes"
+        requirement.put(key, b"attachment bytes")
+    assert requirement.get(key) == b"attachment bytes"
     with pytest.raises(DocumentNotFoundError):
-        requirement.get(key)
-    with pytest.raises(ValueError, match="Unknown blob table"):
-        PostgresDocumentStorage(store, "document_blobs; DROP")
+        requirement.get(DocumentVersionId(uuid.uuid4().hex))
+    # The knowledge blob store belongs to the knowledge service now (ADR-0099).
+    for table in ("knowledge_document_blobs", "document_blobs; DROP"):
+        with pytest.raises(ValueError, match="Unknown blob table"):
+            PostgresDocumentStorage(store, table)

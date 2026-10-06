@@ -1,7 +1,8 @@
 # Enhancement — Three-repository platform split
 
-> Status: **scheduled 2026-10-02; Stage 0 in progress.** Decisions: ADR-0098, ADR-0099,
-> ADR-0100. This is feature and architecture work. It is outside the `CLAUDE.md`
+> Status: **done 2026-10-05: Stages 0–5 delivered, and the acceptance criteria checked below
+> with their evidence.** Outstanding is one owner setting, branch protection on `main` (see
+> Deferred). Decisions: ADR-0098, ADR-0099, ADR-0100. This is feature and architecture work. It is outside the `CLAUDE.md`
 > presentation-only redesign rule, so the hook, service and API changes below are in scope.
 
 ## Objective
@@ -74,6 +75,24 @@ is not changed and keeps running in parallel.
 - Remove the import-linter baseline.
 - Update the run and deployment docs.
 
+**As delivered.**
+- **No data moved, by decision.** The platform is still in development, so nothing is seeded from
+  a backup ([#31](https://github.com/mohamhossam/requirement-portal/pull/31)). The path for an
+  earlier system's data stays documented and tested: restore its backup, run `maintenance`, then
+  `knowledge-import`, which copies and verifies every table (`docs/operations/deployment.md`,
+  "Moving knowledge from an earlier system").
+- **The moved tables are dropped by a guarded command**, `drop-knowledge-tables`
+  ([#31](https://github.com/mohamhossam/requirement-portal/pull/31)). It drops all 18 or none, and
+  only when that loses nothing. CI's deployment job drops them before the platform starts.
+- **The import-linter baseline went earlier than planned**, with the knowledge code itself in
+  Stage 4.2b ([#17](https://github.com/mohamhossam/requirement-portal/pull/17)). `.importlinter`
+  has no `ignore_imports`.
+- **The run and deployment docs** were updated in
+  [#32](https://github.com/mohamhossam/requirement-portal/pull/32).
+- **Closing checks** added here: requirement code names no knowledge table (an architecture
+  test); a withdrawal reaches requirement work on the running platform; and the platform in a
+  browser, with Playwright on the combined stack.
+
 ## Out of Scope
 - Any change to `smb-ai-requirement-agent`.
 - Knowledge Center sub-slices B–E. They come later, in knowledge-portal.
@@ -145,19 +164,70 @@ is not changed and keeps running in parallel.
 - **End to end:** Playwright on the combined compose stack.
 
 ## Acceptance Criteria
-- [ ] `smb-ai-requirement-agent` has no commits from this work.
-- [ ] `platform-kernel` v1.0.0 is tagged on green CI.
-- [ ] This repository passes its full gates on the kernel, before any knowledge code is removed.
-- [ ] Attachments no longer use `library_documents`, and requirement transactions lock no
-  knowledge rows.
-- [ ] knowledge-portal runs alone offline and serves `/knowledge/` to `knowledge_admin` only.
-- [ ] Citations and impact evidence open read-only for non-admins.
-- [ ] A withdrawal in the portal marks dependent requirements stale within one poll.
-- [ ] `/knowledge-api/internal/*` returns 403 at the edge.
-- [ ] The import `--verify` matches row counts and blob checksums.
+- [x] `smb-ai-requirement-agent` has no commits from this work. Its `main` ends at `d5cfb57`
+  (2026-10-01). The only later commits are the 14 Product Architecture Explorer commits on
+  `smb-product-flow-architecture` (2026-10-03/04), which are separate work, not the split's.
+- [x] `platform-kernel` v1.0.0 is tagged on green CI. The tag is `f0b30a6`; its CI run
+  36992055593 and release run 36992330650 both succeeded. v1.0.1 and v1.0.2 were also released
+  green.
+- [x] This repository passes its full gates on the kernel, before any knowledge code is removed.
+  **Locally, not in CI.** The gates passed on the kernel switch
+  ([#2](https://github.com/mohamhossam/requirement-portal/pull/2): 1,923 tests and the kernel's 114),
+  at the Stage 2 landing ([#13](https://github.com/mohamhossam/requirement-portal/pull/13): 1,997
+  passed, 94.22% coverage) and before the removal
+  ([#16](https://github.com/mohamhossam/requirement-portal/pull/16): 2,021 passed), as recorded in
+  each pull request. CI could not run then: every run up to and including the removal
+  ([#17](https://github.com/mohamhossam/requirement-portal/pull/17)) stopped at "Read access to
+  platform-kernel", because the `KERNEL_READ_TOKEN` secret did not exist yet. The first green CI on
+  `main` came after the removal (run 37133972998,
+  [#27](https://github.com/mohamhossam/requirement-portal/pull/27)).
+- [x] Attachments no longer use `library_documents`, and requirement transactions lock no
+  knowledge rows. Attachments live in `requirement_attachment_ingestions` (migration
+  `202610021000`). The only `FOR SHARE` reads the local projection `reference_publication_state`.
+  `tests/architecture/test_knowledge_tables.py` now holds that no requirement code outside the
+  guarded drop command names a knowledge table.
+- [x] knowledge-portal runs alone offline and serves `/knowledge/` to `knowledge_admin` only. Its
+  route-authentication architecture test requires the role on every public operation. The one
+  exception is the explorer's read routes, which ADR-0101 Amendment 1 opened to anyone signed in.
+  The offline fakes stand in for requirement work (`test_without_requirement_work_the_fakes_stand_in`).
+- [x] Citations and impact evidence open read-only for non-admins. `test_knowledge_views.py` reads
+  both as `fake-observer`, who holds no knowledge role. The platform's browser check opens a
+  citation as that member, with no link into the portal.
+- [x] A withdrawal in the portal marks dependent requirements stale within one poll. Citations are
+  judged current against requirement work's copy, `reference_publication_state`, which follows
+  the knowledge event feed (unit-tested in `test_reference_currency.py` and
+  `test_reference_publication_state.py`). On the running platform, CI's deployment job
+  (`tests/platform_withdrawal.py`) publishes and withdraws a library document and requires the
+  copy to follow within 15 seconds (CI run 37351321727). The rehearsal took 1.1 seconds.
+- [x] `/knowledge-api/internal/*` is refused at the edge: **404, not 403** (amended 2026-10-05).
+  The edge answers 404 for `/api/internal` and `/knowledge-api/internal`, so it doesn't reveal
+  that the route exists. `test_platform_deployment.py`, the CI deployment job and
+  `docs/operations/deployment.md` all hold to 404.
+- [x] The import `--verify` matches row counts and blob checksums. `verify_knowledge` compares
+  each table's row count and a checksum over its rows. The blob bytes and their sha256 are
+  `knowledge_document_blobs` rows, so they are compared too. Covered by knowledge-portal's
+  `test_knowledge_import.py` (`test_every_table_arrives_unchanged_and_verifies`,
+  `test_verification_names_a_table_that_drifted`).
 
 ## Validation Evidence
 - Stage 0: the repository was imported at `40c56d0` from `d5cfb57`.
+- Stages 1–4: the pull requests named in the acceptance criteria above, and knowledge-portal
+  v0.1.0.
+- Stage 5 and the close-out (2026-10-05):
+  - `pytest` with `TEST_DATABASE_URL` (local PostgreSQL 16 with pgvector) — PASS, 1690 passed;
+  - `ruff check .` and `ruff format --check .` (1053 files) — PASS; `mypy src tests` — PASS, 511
+    source files; `lint-imports` — PASS, 9 contracts kept;
+  - frontend `eslint .`, `tsc -b` and `npm run build` — PASS;
+  - `tests/platform_withdrawal.py` against both services run from source, requirement work on
+    PostgreSQL — PASS, the copy followed the withdrawal in 1.1 seconds;
+  - `npx playwright test -c playwright.platform.config.ts` behind a stand-in for the edge — PASS,
+    3 tests. The compose stack itself runs in CI: this workspace's network refuses GitHub's
+    image-blob storage, so it could not pull the knowledge images;
+  - CI on [#36](https://github.com/mohamhossam/requirement-portal/pull/36) — PASS, run 37351321727:
+    all 7 jobs, including the deployment job's withdrawal step (7 seconds on the real compose
+    stack, the scanner wait included) and the platform in a browser (3 tests).
 
 ## Deferred
 - Retiring the original repository is a separate decision.
+- Branch protection on `main` in each repository (Stage 0): an owner setting in GitHub, still
+  listed as outstanding in knowledge-portal's roadmap.

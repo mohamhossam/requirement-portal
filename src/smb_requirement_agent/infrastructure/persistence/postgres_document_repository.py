@@ -12,9 +12,9 @@ from smb_requirement_agent.infrastructure.persistence.postgres_document_metadata
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 from smb_requirement_agent.infrastructure.persistence.postgres_values import _integer
 
-# Requirement documents and the knowledge side keep separate blob stores (ADR-0099).
-# The table name reaches SQL text, so only these are accepted.
-BLOB_TABLES = frozenset({"document_blobs", "knowledge_document_blobs"})
+# Requirement documents keep their own blob store; the knowledge service keeps its own, in
+# its own database (ADR-0099). The table name reaches SQL text, so only these are accepted.
+BLOB_TABLES = frozenset({"document_blobs"})
 
 
 class PostgresDocumentStorage(DocumentStoragePort):
