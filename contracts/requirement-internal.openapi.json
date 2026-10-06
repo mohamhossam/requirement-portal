@@ -42,6 +42,90 @@
         "title": "ActorSnapshot",
         "type": "object"
       },
+      "CorpusPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CorpusRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Offset"
+          }
+        },
+        "required": [
+          "items",
+          "next_offset"
+        ],
+        "title": "CorpusPage",
+        "type": "object"
+      },
+      "CorpusRow": {
+        "properties": {
+          "duplicate": {
+            "title": "Duplicate",
+            "type": "boolean"
+          },
+          "index_state": {
+            "$ref": "#/components/schemas/IndexState"
+          },
+          "last_screened_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Screened At"
+          },
+          "open_findings": {
+            "title": "Open Findings",
+            "type": "integer"
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonName"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "requirement_id": {
+            "title": "Requirement Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "requirement_id",
+          "title",
+          "duplicate",
+          "owner",
+          "index_state",
+          "last_screened_at",
+          "open_findings"
+        ],
+        "title": "CorpusRow",
+        "type": "object"
+      },
       "CorpusSummary": {
         "description": "The Requirement knowledge corpus's health for the Knowledge Center (A\u2032).",
         "properties": {
@@ -182,6 +266,136 @@
         "title": "DependentsPage",
         "type": "object"
       },
+      "FindingAge": {
+        "enum": [
+          "under_7_days",
+          "from_7_to_30_days",
+          "over_30_days"
+        ],
+        "title": "FindingAge",
+        "type": "string"
+      },
+      "FindingRow": {
+        "properties": {
+          "age": {
+            "$ref": "#/components/schemas/FindingAge"
+          },
+          "finding_id": {
+            "title": "Finding Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/KnowledgeRelationshipKind"
+          },
+          "last_nudge": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NudgeMark"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "next_nudge_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Nudge At"
+          },
+          "raised_at": {
+            "format": "date-time",
+            "title": "Raised At",
+            "type": "string"
+          },
+          "rationale": {
+            "title": "Rationale",
+            "type": "string"
+          },
+          "related": {
+            "$ref": "#/components/schemas/FindingSide"
+          },
+          "subject": {
+            "$ref": "#/components/schemas/FindingSide"
+          }
+        },
+        "required": [
+          "finding_id",
+          "kind",
+          "rationale",
+          "raised_at",
+          "age",
+          "subject",
+          "related",
+          "last_nudge",
+          "next_nudge_at"
+        ],
+        "title": "FindingRow",
+        "type": "object"
+      },
+      "FindingSide": {
+        "properties": {
+          "owner": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonName"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "requirement_id": {
+            "title": "Requirement Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "requirement_id",
+          "title",
+          "owner"
+        ],
+        "title": "FindingSide",
+        "type": "object"
+      },
+      "FindingsPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/FindingRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Offset"
+          }
+        },
+        "required": [
+          "items",
+          "next_offset"
+        ],
+        "title": "FindingsPage",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -245,6 +459,24 @@
         "title": "ImpactDecisionKind",
         "type": "string"
       },
+      "IndexState": {
+        "enum": [
+          "current",
+          "waiting",
+          "failed",
+          "rebuild_required"
+        ],
+        "title": "IndexState",
+        "type": "string"
+      },
+      "KnowledgeRelationshipKind": {
+        "enum": [
+          "possible_duplicate",
+          "possible_contradiction"
+        ],
+        "title": "KnowledgeRelationshipKind",
+        "type": "string"
+      },
       "MappingCount": {
         "properties": {
           "features": {
@@ -273,6 +505,81 @@
         "title": "MappingCount",
         "type": "object"
       },
+      "NudgeMark": {
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "by": {
+            "title": "By",
+            "type": "string"
+          }
+        },
+        "required": [
+          "at",
+          "by"
+        ],
+        "title": "NudgeMark",
+        "type": "object"
+      },
+      "NudgeRequest": {
+        "description": "The knowledge admin who asks: named in the record and in each owner's notification.",
+        "properties": {
+          "actor_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Actor Id",
+            "type": "string"
+          },
+          "actor_name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Actor Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "actor_id",
+          "actor_name"
+        ],
+        "title": "NudgeRequest",
+        "type": "object"
+      },
+      "NudgeResult": {
+        "properties": {
+          "finding_id": {
+            "title": "Finding Id",
+            "type": "string"
+          },
+          "next_nudge_at": {
+            "format": "date-time",
+            "title": "Next Nudge At",
+            "type": "string"
+          },
+          "nudged_at": {
+            "format": "date-time",
+            "title": "Nudged At",
+            "type": "string"
+          },
+          "recipients": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Recipients",
+            "type": "array"
+          }
+        },
+        "required": [
+          "finding_id",
+          "nudged_at",
+          "recipients",
+          "next_nudge_at"
+        ],
+        "title": "NudgeResult",
+        "type": "object"
+      },
       "OpenFindingAges": {
         "description": "Findings still in force, by how long ago they were raised.",
         "properties": {
@@ -295,6 +602,25 @@
           "over_30_days"
         ],
         "title": "OpenFindingAges",
+        "type": "object"
+      },
+      "PersonName": {
+        "description": "Someone named in a row: an id and a display name, never an email.",
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "display_name"
+        ],
+        "title": "PersonName",
         "type": "object"
       },
       "PublishedReference": {
@@ -547,6 +873,136 @@
         ]
       }
     },
+    "/internal/knowledge/corpus": {
+      "get": {
+        "description": "The corpus Requirement by Requirement: identity and state, never content.",
+        "operationId": "knowledge_corpus_internal_knowledge_corpus_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "index_state",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/IndexState"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Index State"
+            }
+          },
+          {
+            "in": "query",
+            "name": "owner_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Owner Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "open_findings_only",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Open Findings Only",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "not_screened_for_days",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 3650,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Not Screened For Days"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CorpusPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Knowledge Corpus",
+        "tags": [
+          "internal"
+        ]
+      }
+    },
     "/internal/knowledge/corpus/summary": {
       "get": {
         "description": "Requirement knowledge corpus health for the Knowledge Center: counts only.",
@@ -564,6 +1020,166 @@
           }
         },
         "summary": "Corpus Summary",
+        "tags": [
+          "internal"
+        ]
+      }
+    },
+    "/internal/knowledge/findings": {
+      "get": {
+        "description": "Findings in force across the corpus, the longest-standing first.",
+        "operationId": "knowledge_findings_internal_knowledge_findings_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/KnowledgeRelationshipKind"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "age",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/FindingAge"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Age"
+            }
+          },
+          {
+            "in": "query",
+            "name": "owner_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Owner Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FindingsPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Knowledge Findings",
+        "tags": [
+          "internal"
+        ]
+      }
+    },
+    "/internal/knowledge/findings/{finding_id}/nudge": {
+      "post": {
+        "description": "Ask both Requirements' owners to decide a finding; at most once a week.",
+        "operationId": "nudge_finding_owners_internal_knowledge_findings__finding_id__nudge_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "finding_id",
+            "required": true,
+            "schema": {
+              "title": "Finding Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NudgeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NudgeResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Nudge Finding Owners",
         "tags": [
           "internal"
         ]

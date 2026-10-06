@@ -97,7 +97,7 @@ def job_response(job: AiJob, command: AiJobCommand | None = None) -> AiJobRespon
 def notification_response(notification: ActorNotification) -> NotificationResponse:
     return NotificationResponse(
         id=notification.id.value,
-        job_id=notification.job_id.value,
+        job_id=notification.job_id.value if notification.job_id is not None else None,
         kind=notification.kind,
         message=notification.message,
         created_at=notification.created_at,

@@ -3766,7 +3766,7 @@ export interface components {
          * NotificationKind
          * @enum {string}
          */
-        NotificationKind: "ai_job_succeeded" | "ai_job_failed" | "knowledge_conflict_action_required";
+        NotificationKind: "ai_job_succeeded" | "ai_job_failed" | "knowledge_conflict_action_required" | "knowledge_findings_nudge";
         /** NotificationPreferenceRequest */
         NotificationPreferenceRequest: {
             /** Browser Enabled */
@@ -3787,7 +3787,7 @@ export interface components {
             /** Id */
             id: string;
             /** Job Id */
-            job_id: string;
+            job_id: string | null;
             kind: components["schemas"]["NotificationKind"];
             /** Message */
             message: string;

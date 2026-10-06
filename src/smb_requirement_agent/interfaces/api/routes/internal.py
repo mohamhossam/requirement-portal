@@ -11,16 +11,28 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, FastAPI, Query
+from pydantic import BaseModel, Field
 
 from smb_requirement_agent.application.ports.architecture_mapping_stats import MappingCount
+from smb_requirement_agent.application.ports.knowledge_portfolio import FindingAge, IndexState
 from smb_requirement_agent.application.use_cases.internal_reads import (
     CorpusSummary,
     DependentsPage,
     InternalReads,
 )
+from smb_requirement_agent.application.use_cases.knowledge_portfolio import (
+    CorpusPage,
+    FindingsPage,
+    KnowledgePortfolio,
+    NudgeFindingOwners,
+    NudgeResult,
+)
 from smb_requirement_agent.application.use_cases.source_impact import DependencyImpactPage
+from smb_requirement_agent.domain.knowledge.entities import KnowledgeRelationshipKind
 from smb_requirement_agent.interfaces.api.dependencies import (
     get_internal_reads,
+    get_knowledge_portfolio,
+    get_nudge_finding_owners,
     require_service_caller,
 )
 
@@ -33,6 +45,15 @@ router = APIRouter(
 )
 ReadsDep = Annotated[InternalReads, Depends(get_internal_reads)]
 ActorQuery = Annotated[str, Query(min_length=1, max_length=200)]
+PortfolioDep = Annotated[KnowledgePortfolio, Depends(get_knowledge_portfolio)]
+NudgeDep = Annotated[NudgeFindingOwners, Depends(get_nudge_finding_owners)]
+
+
+class NudgeRequest(BaseModel):
+    """The knowledge admin who asks: named in the record and in each owner's notification."""
+
+    actor_id: str = Field(min_length=1, max_length=200)
+    actor_name: str = Field(min_length=1, max_length=200)
 
 
 @router.get("/references/{document_id}/impact")
@@ -76,6 +97,48 @@ def mapping_stats(reads: ReadsDep) -> list[MappingCount]:
 def corpus_summary(reads: ReadsDep) -> CorpusSummary:
     """Requirement knowledge corpus health for the Knowledge Center: counts only."""
     return reads.corpus_summary()
+
+
+@router.get("/knowledge/corpus")
+def knowledge_corpus(
+    portfolio: PortfolioDep,
+    index_state: IndexState | None = None,
+    owner_id: str | None = Query(None, min_length=1, max_length=200),
+    q: str = Query("", max_length=200),
+    open_findings_only: bool = False,
+    not_screened_for_days: int | None = Query(None, ge=1, le=3650),
+    offset: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=100),
+) -> CorpusPage:
+    """The corpus Requirement by Requirement: identity and state, never content."""
+    return portfolio.corpus(
+        index_state=index_state,
+        owner_id=owner_id,
+        text=q,
+        open_findings_only=open_findings_only,
+        not_screened_for_days=not_screened_for_days,
+        offset=offset,
+        limit=limit,
+    )
+
+
+@router.get("/knowledge/findings")
+def knowledge_findings(
+    portfolio: PortfolioDep,
+    kind: KnowledgeRelationshipKind | None = None,
+    age: FindingAge | None = None,
+    owner_id: str | None = Query(None, min_length=1, max_length=200),
+    offset: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=100),
+) -> FindingsPage:
+    """Findings in force across the corpus, the longest-standing first."""
+    return portfolio.findings(kind=kind, age=age, owner_id=owner_id, offset=offset, limit=limit)
+
+
+@router.post("/knowledge/findings/{finding_id}/nudge")
+def nudge_finding_owners(finding_id: str, body: NudgeRequest, nudge: NudgeDep) -> NudgeResult:
+    """Ask both Requirements' owners to decide a finding; at most once a week."""
+    return nudge.execute(finding_id, body.actor_id, body.actor_name)
 
 
 def contract_openapi() -> dict[str, Any]:

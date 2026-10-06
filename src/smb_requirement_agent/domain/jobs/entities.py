@@ -305,13 +305,16 @@ class NotificationKind(StrEnum):
     AI_JOB_SUCCEEDED = "ai_job_succeeded"
     AI_JOB_FAILED = "ai_job_failed"
     KNOWLEDGE_CONFLICT_ACTION_REQUIRED = "knowledge_conflict_action_required"
+    # A knowledge admin asks the owners to decide a finding (Knowledge Center B2).
+    KNOWLEDGE_FINDINGS_NUDGE = "knowledge_findings_nudge"
 
 
 @dataclass(frozen=True)
 class ActorNotification:
     id: NotificationId
     recipient_id: ActorId
-    job_id: AiJobId
+    # The AI job it reports on; None for a notification no job raised, such as a nudge.
+    job_id: AiJobId | None
     kind: NotificationKind
     message: str
     created_at: datetime

@@ -152,7 +152,7 @@ def _notifications(container: Container, kind: NotificationKind) -> list[str]:
     return [
         item.job_id.value
         for item in container.notification_repository.list_for_actor(OWNER_ID)
-        if item.kind is kind
+        if item.kind is kind and item.job_id is not None
     ]
 
 

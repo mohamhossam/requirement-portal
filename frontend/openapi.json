@@ -5680,7 +5680,8 @@
         "enum": [
           "ai_job_succeeded",
           "ai_job_failed",
-          "knowledge_conflict_action_required"
+          "knowledge_conflict_action_required",
+          "knowledge_findings_nudge"
         ],
         "title": "NotificationKind",
         "type": "string"
@@ -5723,8 +5724,15 @@
             "type": "string"
           },
           "job_id": {
-            "title": "Job Id",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
           },
           "kind": {
             "$ref": "#/components/schemas/NotificationKind"

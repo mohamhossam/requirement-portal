@@ -4,9 +4,18 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { api } from "../../api/client";
+import type { components } from "../../api/schema";
 import { errorMessage } from "../../api/errors";
 import { queryKeys } from "../../app/queryKeys";
 import { Button } from "../../components/ui/Button";
+
+// The browser alert's title, by what the notification is about.
+const BROWSER_TITLES: Record<components["schemas"]["NotificationKind"], string> = {
+  ai_job_succeeded: "AI work completed",
+  ai_job_failed: "AI work failed",
+  knowledge_conflict_action_required: "A knowledge conflict needs you",
+  knowledge_findings_nudge: "A knowledge finding awaits your decision",
+};
 
 export function NotificationCenter() {
   const queryClient = useQueryClient();
@@ -46,9 +55,7 @@ export function NotificationCenter() {
     for (const item of notifications.data ?? []) {
       if (seen.current.has(item.id)) continue;
       seen.current.add(item.id);
-      new Notification(item.kind === "ai_job_succeeded" ? "AI work completed" : "AI work failed", {
-        body: item.message,
-      });
+      new Notification(BROWSER_TITLES[item.kind], { body: item.message });
     }
   }, [browserNotificationsAvailable, notifications.data, preference.data?.browser_enabled]);
 
