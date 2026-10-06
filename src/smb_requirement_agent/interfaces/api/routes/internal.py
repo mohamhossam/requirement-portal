@@ -57,6 +57,8 @@ router = APIRouter(
 )
 ReadsDep = Annotated[InternalReads, Depends(get_internal_reads)]
 ActorQuery = Annotated[str, Query(min_length=1, max_length=200)]
+# One page of the library list, with room to spare.
+CITATION_COUNTS_MAX = 100
 PortfolioDep = Annotated[KnowledgePortfolio, Depends(get_knowledge_portfolio)]
 NudgeDep = Annotated[NudgeFindingOwners, Depends(get_nudge_finding_owners)]
 
@@ -85,6 +87,23 @@ class NudgeRequest(BaseModel):
 
     actor_id: str = Field(min_length=1, max_length=200)
     actor_name: str = Field(min_length=1, max_length=200)
+
+
+class CitationCounts(BaseModel):
+    """Requirements citing each library document now; 0 when none does."""
+
+    counts: dict[str, int]
+
+
+DocumentIds = Annotated[
+    list[Annotated[str, Field(min_length=1, max_length=200)]],
+    Query(alias="document_id", min_length=1, max_length=CITATION_COUNTS_MAX),
+]
+
+
+@router.get("/references/citation-counts")
+def citation_counts(document_ids: DocumentIds, reads: ReadsDep) -> CitationCounts:
+    return CitationCounts(counts=reads.citation_counts(tuple(document_ids)))
 
 
 @router.get("/references/{document_id}/impact")

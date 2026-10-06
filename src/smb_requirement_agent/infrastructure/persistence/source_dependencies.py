@@ -84,6 +84,15 @@ class InMemorySourceDependencies:
             if row.requirement_id == requirement_id and row.active
         )
 
+    def citation_counts(self, document_ids: tuple[str, ...]) -> dict[str, int]:
+        wanted = set(document_ids)
+        citing: dict[str, set[str]] = {}
+        for row in self._rows.values():
+            document_id = row.lineage.citation.document_id
+            if document_id in wanted and row.current and row.active:
+                citing.setdefault(document_id, set()).add(row.requirement_id)
+        return {document_id: len(citing.get(document_id, ())) for document_id in wanted}
+
     def decisions(self, dependency_id: str) -> tuple[ImpactDecision, ...]:
         return self._decisions.get(dependency_id, ())
 
@@ -177,6 +186,17 @@ class PostgresSourceDependencies:
                     (requirement_id,),
                 ).fetchall()
             )
+
+    def citation_counts(self, document_ids: tuple[str, ...]) -> dict[str, int]:
+        # A count only: no titles and no membership, as for the corpus summary.
+        with self._session.connection() as connection:
+            rows = connection.execute(
+                "SELECT document_id,count(DISTINCT requirement_id) FROM source_dependencies "
+                "WHERE document_id=ANY(%s) AND current AND active GROUP BY document_id",
+                (list(document_ids),),
+            ).fetchall()
+        counts = {str(row[0]): int(str(row[1])) for row in rows}
+        return {document_id: counts.get(document_id, 0) for document_id in document_ids}
 
     def decisions(self, dependency_id: str) -> tuple[ImpactDecision, ...]:
         with self._session.connection() as connection:
