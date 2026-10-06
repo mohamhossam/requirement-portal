@@ -54,6 +54,8 @@ class CorpusSummary:
     requirements: int
     # Closed as duplicates: kept in the index with no passages.
     duplicates: int
+    # Retired from the corpus by a knowledge admin: readable, but kept out of screening.
+    retired: int
     # Indexed at their latest change.
     current: int
     # Changed and not yet indexed again.
@@ -129,7 +131,9 @@ class InternalReads:
         return CorpusSummary(
             requirements=counts.requirements,
             duplicates=counts.duplicates,
-            current=max(0, counts.requirements - backlog.waiting - backlog.failed),
+            retired=counts.retired,
+            # Retired Requirements have left the corpus: they are none of current, waiting, failed.
+            current=max(0, counts.requirements - counts.retired - backlog.waiting - backlog.failed),
             waiting=backlog.waiting,
             failed=backlog.failed,
             rebuild_required=backlog.rebuild_required,

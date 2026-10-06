@@ -130,6 +130,11 @@ from smb_requirement_agent.application.use_cases.clarify_requirement_analysis im
 from smb_requirement_agent.application.use_cases.confirm_requirement_analysis import (
     ConfirmRequirementAnalysis,
 )
+from smb_requirement_agent.application.use_cases.corpus_actions import (
+    BulkReindexRequirements,
+    ReinstateToCorpus,
+    RetireFromCorpus,
+)
 from smb_requirement_agent.application.use_cases.documents import (
     GetDocument,
     ListDocuments,
@@ -302,6 +307,9 @@ class Container:
     internal_reads: InternalReads
     knowledge_portfolio: KnowledgePortfolio
     nudge_finding_owners: NudgeFindingOwners
+    retire_from_corpus: RetireFromCorpus
+    reinstate_to_corpus: ReinstateToCorpus
+    bulk_reindex: BulkReindexRequirements
     knowledge_views: KnowledgeViews
     knowledge_projection: ProjectKnowledgeEvents
     current_release: CurrentArchitectureRelease
@@ -624,6 +632,17 @@ def _build_container(
         persistence.knowledge_index,
         persistence.requirement_index_progress,
         knowledge.indexer.identity,
+        persistence.corpus_membership,
+    )
+    corpus_action_ports = (
+        persistence.requirement_repository,
+        persistence.access_repository,
+        persistence.knowledge_repository,
+        persistence.corpus_membership,
+        persistence.corpus_actions,
+        persistence.notification_repository,
+        persistence.transaction_manager,
+        resolved_clock,
     )
     return Container(
         requirement_repository=persistence.requirement_repository,
@@ -653,6 +672,15 @@ def _build_container(
         ),
         knowledge_portfolio=KnowledgePortfolio(
             persistence.knowledge_portfolio, backlog, resolved_clock
+        ),
+        retire_from_corpus=RetireFromCorpus(*corpus_action_ports),
+        reinstate_to_corpus=ReinstateToCorpus(*corpus_action_ports),
+        bulk_reindex=BulkReindexRequirements(
+            backlog,
+            persistence.source_changes,
+            persistence.corpus_actions,
+            persistence.transaction_manager,
+            resolved_clock,
         ),
         nudge_finding_owners=NudgeFindingOwners(
             persistence.knowledge_repository,

@@ -27,6 +27,7 @@ from smb_requirement_agent.application.ports.knowledge_portfolio import (
     KnowledgePortfolioPort,
     NudgeMark,
     PersonName,
+    RetiredMark,
     finding_age,
 )
 from smb_requirement_agent.application.ports.notifications import NotificationRepositoryPort
@@ -65,6 +66,8 @@ class CorpusRow:
     index_state: IndexState
     last_screened_at: datetime | None
     open_findings: int
+    # Retired from the corpus by a knowledge admin (B3): when, by whom and why.
+    retired: RetiredMark | None
 
 
 @dataclass(frozen=True)
@@ -136,15 +139,18 @@ class KnowledgePortfolio:
         not_screened_for_days: int | None,
         offset: int,
         limit: int,
+        retired_only: bool = False,
     ) -> CorpusPage:
         pending = self._backlog.pending()
+        # An index-state filter never lists a retired Requirement: it has left the corpus.
+        retired = self._backlog.retired() if index_state is not None else frozenset[str]()
         if pending is None:
             # Until the rebuild, every Requirement waits for it; no other state applies.
             if index_state not in (None, IndexState.REBUILD_REQUIRED):
                 return CorpusPage((), None)
-            only, excluding = None, frozenset[str]()
+            only, excluding = None, retired
         elif index_state is IndexState.CURRENT:
-            only, excluding = None, frozenset(pending)
+            only, excluding = None, frozenset(pending) | retired
         elif index_state in (IndexState.WAITING, IndexState.FAILED):
             stopped = index_state is IndexState.FAILED
             only, excluding = frozenset(k for k, v in pending.items() if v is stopped), frozenset()
@@ -157,7 +163,9 @@ class KnowledgePortfolio:
             if not_screened_for_days is not None
             else None
         )
-        query = CorpusQuery(owner_id, text.strip(), open_findings_only, since, only, excluding)
+        query = CorpusQuery(
+            owner_id, text.strip(), open_findings_only, since, only, excluding, retired_only
+        )
         entries = self._portfolio.corpus(query, offset, limit + 1)
 
         def state(requirement_id: str) -> IndexState:
@@ -176,6 +184,7 @@ class KnowledgePortfolio:
                 state(item.requirement_id),
                 item.last_screened_at,
                 item.open_findings,
+                item.retired,
             )
             for item in entries[:limit]
         )

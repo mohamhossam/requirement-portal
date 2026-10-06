@@ -52,10 +52,25 @@ export function KnowledgeView({
   if (!knowledgeReview.data) return null;
 
   const conflicts = knowledgeReview.data.reference_conflict_ids?.length ?? 0;
+  const retirement = knowledgeReview.data.corpus_retirement ?? null;
 
   return (
     <>
     <RequirementIndexNotice requirementId={id} />
+    {retirement ? (
+      <Card padding="compact" as="section" tone="accent" aria-labelledby="knowledge-retired" className="grid gap-2">
+        <h2 className="text-title text-ink m-0" id="knowledge-retired">Retired from the knowledge corpus</h2>
+        <p className="text-body text-ink-soft m-0 max-w-[var(--measure-interface)]">
+          {retirement.retired_by} retired it on{" "}
+          {new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(retirement.retired_at))}:{" "}
+          {retirement.reason}
+        </p>
+        <p className="text-body text-ink-soft m-0 max-w-[var(--measure-interface)]">
+          It is not screened against other requirements, and no suggestion cites it. It stays readable here. A
+          knowledge admin can return it to the corpus.
+        </p>
+      </Card>
+    ) : null}
     {/* Both of these are decided on Clarify, where the citations are. They used
         to be bare sections with their own h2 beside the panel's; they are
         notices now, and say where the decision is made. */}

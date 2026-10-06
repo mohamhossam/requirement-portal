@@ -15,6 +15,7 @@ from smb_requirement_agent.application.ports.ai_jobs import (
     AiJobRepositoryPort,
     JsonValue,
 )
+from smb_requirement_agent.application.ports.corpus_membership import CorpusMembershipPort
 from smb_requirement_agent.application.ports.requirement_knowledge import (
     AnswerSuggestionSchedulerPort,
     KnowledgeReviewPort,
@@ -34,6 +35,7 @@ from smb_requirement_agent.domain.jobs.entities import (
     AiJobOrigin,
     AiJobStatus,
 )
+from smb_requirement_agent.domain.knowledge.errors import RequirementRetiredError
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.requirement.errors import DuplicateRequirementStateError
 from smb_requirement_agent.domain.requirement.value_objects import RequirementId, RequirementStatus
@@ -48,6 +50,8 @@ class KnowledgeScreenScheduler(KnowledgeScreenSchedulerPort):
         reviews: RequirementKnowledgeRepositoryPort,
         clock: ClockPort,
         automatic_actor: ActorProfile,
+        *,
+        membership: CorpusMembershipPort | None = None,
     ) -> None:
         self._knowledge_review = knowledge_review
         self._jobs = jobs
@@ -55,6 +59,11 @@ class KnowledgeScreenScheduler(KnowledgeScreenSchedulerPort):
         self._reviews = reviews
         self._clock = clock
         self._automatic_actor = automatic_actor
+        self._membership = membership
+
+    def _retired(self, requirement_id: RequirementId) -> bool:
+        membership = self._membership.get(requirement_id) if self._membership else None
+        return membership is not None and membership.retired
 
     def schedule(self, requirement_id: RequirementId) -> None:
         triggering_requirement = self._requirements.get(requirement_id)
@@ -66,7 +75,11 @@ class KnowledgeScreenScheduler(KnowledgeScreenSchedulerPort):
             affected.add(finding.related_requirement_id)
         for affected_id in sorted(affected, key=lambda value: value.value):
             requirement = self._requirements.get(affected_id)
-            if requirement is not None and requirement.status is not RequirementStatus.DUPLICATE:
+            if (
+                requirement is not None
+                and requirement.status is not RequirementStatus.DUPLICATE
+                and not self._retired(affected_id)
+            ):
                 self._schedule_one(
                     affected_id,
                     trigger=(
@@ -81,6 +94,10 @@ class KnowledgeScreenScheduler(KnowledgeScreenSchedulerPort):
         if requirement.status is RequirementStatus.DUPLICATE:
             raise DuplicateRequirementStateError(
                 "A duplicate Requirement cannot start a new knowledge screen."
+            )
+        if self._retired(requirement_id):
+            raise RequirementRetiredError(
+                "This Requirement is retired from the knowledge corpus, so it is not screened."
             )
         return self._schedule_one(requirement_id)
 

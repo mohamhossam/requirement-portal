@@ -94,6 +94,7 @@ export const actionLabels: Record<ActivityAction, string> = {
   conflict_resolution_proposed: "Conflict resolution proposed",
   conflict_resolution_accepted: "Conflict resolution accepted",
   conflict_resolved: "Conflict resolved",
+  finding_source_retired: "Finding closed: source retired",
 };
 
 /** Filter order: the daily loop first, housekeeping last. */
@@ -134,6 +135,7 @@ export const actionsByCategory: Array<{ category: ActivityCategory; actions: Act
       "conflict_resolution_proposed",
       "conflict_resolution_accepted",
       "conflict_resolved",
+      "finding_source_retired",
     ],
   },
   { category: "access", actions: ["owner_claimed", "owner_transferred", "reviewer_assigned", "reviewer_removed"] },

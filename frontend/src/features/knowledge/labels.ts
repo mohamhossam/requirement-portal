@@ -75,6 +75,7 @@ export const DECISION_LABEL: Record<string, string> = {
   duplicate: "Closed as a duplicate",
   resolution_proposed: "Resolution proposed",
   resolution_accepted: "Resolution accepted",
+  source_retired: "Closed: a requirement was retired from the knowledge corpus",
 };
 
 export function decisionLabel(kind: string): string {
@@ -111,6 +112,8 @@ export function findingVerdict(
       return { label: "Closed as a duplicate", tone: "neutral" };
     case "resolved":
       return { label: "Resolved", tone: "success" };
+    case "source_retired":
+      return { label: "Closed: source retired", tone: "neutral" };
   }
 }
 

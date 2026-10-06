@@ -33,6 +33,9 @@ def test_the_contract_covers_what_the_knowledge_service_reads_and_stays_private(
         "/internal/knowledge/corpus",
         "/internal/knowledge/findings",
         "/internal/knowledge/findings/{finding_id}/nudge",
+        "/internal/knowledge/requirements/{requirement_id}/retirement",
+        "/internal/knowledge/requirements/{requirement_id}/reinstatement",
+        "/internal/knowledge/reindex",
     }
     public = create_app().openapi()["paths"]
     assert not paths & set(public)

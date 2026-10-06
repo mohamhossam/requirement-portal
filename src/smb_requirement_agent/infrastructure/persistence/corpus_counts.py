@@ -9,6 +9,7 @@ import psycopg
 from smb_kernel.persistence.connector import PostgresConnector
 
 from smb_requirement_agent.application.errors import PersistenceError
+from smb_requirement_agent.application.ports.corpus_membership import CorpusMembershipPort
 from smb_requirement_agent.application.ports.corpus_summary import CorpusCounts
 from smb_requirement_agent.application.ports.requirement_repository import (
     RequirementRepositoryPort,
@@ -17,7 +18,9 @@ from smb_requirement_agent.domain.knowledge.entities import KnowledgeFinding
 from smb_requirement_agent.domain.requirement.value_objects import RequirementStatus
 
 _REQUIREMENTS = """
-SELECT count(*), count(*) FILTER (WHERE payload->>'status' = 'duplicate') FROM requirements
+SELECT count(*), count(*) FILTER (WHERE payload->>'status' = 'duplicate'),
+       (SELECT count(*) FROM requirement_corpus_membership WHERE state = 'retired')
+FROM requirements
 """
 # A finding is raised with its screen. It stays in force while it is actionable and both
 # Requirements are at the versions it judged, which is the Knowledge step's own rule.
@@ -47,11 +50,12 @@ class PostgresCorpusCounts:
                 raised = connection.execute(_OPEN_FINDINGS).fetchall()
         except psycopg.Error as exc:
             raise PersistenceError("Requirement corpus counts failed.") from exc
-        total, duplicates = requirements if requirements is not None else (0, 0)
+        total, duplicates, retired = requirements if requirements is not None else (0, 0, 0)
         return CorpusCounts(
             int(str(total or 0)),
             int(str(duplicates or 0)),
             tuple(row[0] for row in raised if isinstance(row[0], datetime)),
+            int(str(retired or 0)),
         )
 
 
@@ -62,9 +66,11 @@ class RepositoryCorpusCounts:
         self,
         requirements: RequirementRepositoryPort,
         findings: Callable[[], tuple[tuple[KnowledgeFinding, datetime], ...]],
+        membership: CorpusMembershipPort | None = None,
     ) -> None:
         self._requirements = requirements
         self._findings = findings
+        self._membership = membership
 
     def counts(self) -> CorpusCounts:
         everyone = {item.id: item for item in self._requirements.list_all()}
@@ -84,4 +90,5 @@ class RepositoryCorpusCounts:
             len(everyone),
             sum(1 for item in everyone.values() if item.status is RequirementStatus.DUPLICATE),
             tuple(sorted(raised)),
+            len(self._membership.retired()) if self._membership else 0,
         )
