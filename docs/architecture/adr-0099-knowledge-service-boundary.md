@@ -151,3 +151,19 @@ this boundary, each part is built where its data lives.
     backlogs reach knowledge-portal (ADR-0101 Amendment 2).
 
   E needs its own ADR before it starts.
+
+### What the corpus and findings reads carry (B2, 2026-10-06)
+
+Agreed in session when B2 was built:
+
+- **Identity and state, plus a finding's rationale.** A corpus row carries a Requirement's id,
+  title, whether it is closed as a duplicate, its owner's id and display name, its index state,
+  when it was last screened and how many findings in force name it. A finding row carries its
+  kind, when it was raised and its age, both Requirements' ids, titles and owners, the screening
+  judge's one-line rationale, and the last nudge.
+- **Never content.** No description, passage or evidence excerpt crosses, and no email (the
+  ADR-0101 rule). knowledge-portal reads on demand and stores none of it.
+- **A nudge notifies the owners of both Requirements**, each once, with a link to the Knowledge
+  step, and at most once every 7 days per finding. Each nudge is recorded here
+  (`knowledge_finding_nudges`: the admin's id and name, when, and who was notified). Decisions
+  stay with the owners.

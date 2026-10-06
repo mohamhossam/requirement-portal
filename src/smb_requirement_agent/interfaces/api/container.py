@@ -165,6 +165,10 @@ from smb_requirement_agent.application.use_cases.invalidate_approval_workflow im
 from smb_requirement_agent.application.use_cases.invalidate_derived_artifacts import (
     InvalidateDerivedArtifacts,
 )
+from smb_requirement_agent.application.use_cases.knowledge_portfolio import (
+    KnowledgePortfolio,
+    NudgeFindingOwners,
+)
 from smb_requirement_agent.application.use_cases.knowledge_views import KnowledgeViews
 from smb_requirement_agent.application.use_cases.owned_requirements import (
     CreateOwnedRequirement,
@@ -296,6 +300,8 @@ class Container:
     attachment_ingestion: AttachmentIngestion
     source_impact: SourceImpactReview
     internal_reads: InternalReads
+    knowledge_portfolio: KnowledgePortfolio
+    nudge_finding_owners: NudgeFindingOwners
     knowledge_views: KnowledgeViews
     knowledge_projection: ProjectKnowledgeEvents
     current_release: CurrentArchitectureRelease
@@ -614,6 +620,11 @@ def _build_container(
             metrics,
         )
 
+    backlog = IndexBacklogReader(
+        persistence.knowledge_index,
+        persistence.requirement_index_progress,
+        knowledge.indexer.identity,
+    )
     return Container(
         requirement_repository=persistence.requirement_repository,
         access_repository=persistence.access_repository,
@@ -637,11 +648,19 @@ def _build_container(
             persistence.architecture_mapping_stats,
             persistence.transaction_manager,
             persistence.corpus_counts,
-            IndexBacklogReader(
-                persistence.knowledge_index,
-                persistence.requirement_index_progress,
-                knowledge.indexer.identity,
-            ),
+            backlog,
+            resolved_clock,
+        ),
+        knowledge_portfolio=KnowledgePortfolio(
+            persistence.knowledge_portfolio, backlog, resolved_clock
+        ),
+        nudge_finding_owners=NudgeFindingOwners(
+            persistence.knowledge_repository,
+            persistence.requirement_repository,
+            persistence.access_repository,
+            persistence.notification_repository,
+            persistence.finding_nudges,
+            persistence.transaction_manager,
             resolved_clock,
         ),
         unified_knowledge_search=knowledge.unified_search,

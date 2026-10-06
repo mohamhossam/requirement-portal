@@ -56,20 +56,25 @@ class IndexBacklogReader:
 
     def backlog(self) -> IndexBacklog:
         """Sources still to index; one is failed once it stopped retrying on its current change."""
+        pending = self.pending()
+        if pending is None:
+            return IndexBacklog(0, 0, rebuild_required=True)
+        failed = sum(1 for stopped in pending.values() if stopped)
+        return IndexBacklog(len(pending) - failed, failed, rebuild_required=False)
+
+    def pending(self) -> dict[str, bool] | None:
+        """Each source still to index, True when it stopped retrying; None when a rebuild waits."""
         stopped = dict(self._progress.failed(self._identity))
-        waiting = failed = 0
+        pending: dict[str, bool] = {}
         after = ""
         try:
             while page := self._index.pending_sources(500, after):
                 for source, change in page:
-                    if stopped.get(source.value) == change:
-                        failed += 1
-                    else:
-                        waiting += 1
+                    pending[source.value] = stopped.get(source.value) == change
                 after = page[-1][0].value
         except ModelTransportError:
-            return IndexBacklog(0, 0, rebuild_required=True)
-        return IndexBacklog(waiting, failed, rebuild_required=False)
+            return None
+        return pending
 
 
 class IndexRequirementKnowledge:

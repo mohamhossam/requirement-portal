@@ -161,6 +161,8 @@ Delivery order: **B1 → A′ → B2 → B3 → C → D**, then E once it is sch
 - **Later rows on the same page:** review due and overdue (D) and import runs (E).
 
 ### B2 — Corpus and portfolio findings (requirement-portal queries, knowledge-portal screens)
+> Requirement-portal half delivered on `feat/knowledge-corpus-browser`
+> ([enhancement-knowledge-center-b2-corpus-and-findings.md](enhancement-knowledge-center-b2-corpus-and-findings.md)).
 - **Requirement-portal's internal reads**, paged and filtered, with the data that's needed and
   nothing more:
   - `/internal/knowledge/corpus`: each Requirement, what is indexed, its index status, its last

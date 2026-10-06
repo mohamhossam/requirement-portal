@@ -188,7 +188,7 @@ class AiJobResponse(BaseModel):
 
 class NotificationResponse(BaseModel):
     id: str
-    job_id: str
+    job_id: str | None
     kind: NotificationKind
     message: str
     created_at: datetime

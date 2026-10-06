@@ -86,6 +86,10 @@ from smb_requirement_agent.application.use_cases.identity_access import (
     SearchKnownActors,
 )
 from smb_requirement_agent.application.use_cases.internal_reads import InternalReads
+from smb_requirement_agent.application.use_cases.knowledge_portfolio import (
+    KnowledgePortfolio,
+    NudgeFindingOwners,
+)
 from smb_requirement_agent.application.use_cases.knowledge_views import KnowledgeViews
 from smb_requirement_agent.application.use_cases.owned_requirements import (
     CreateOwnedRequirement,
@@ -515,6 +519,14 @@ def get_current_release(container: ContainerDep) -> CurrentArchitectureRelease:
 
 def get_internal_reads(container: ContainerDep) -> InternalReads:
     return container.internal_reads
+
+
+def get_knowledge_portfolio(container: ContainerDep) -> KnowledgePortfolio:
+    return container.knowledge_portfolio
+
+
+def get_nudge_finding_owners(container: ContainerDep) -> NudgeFindingOwners:
+    return container.nudge_finding_owners
 
 
 def get_knowledge_actor(actor: CurrentActorDep) -> Actor:

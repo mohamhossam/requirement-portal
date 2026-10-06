@@ -534,7 +534,7 @@ class PostgresNotificationRepository:
                 (
                     notification.id.value,
                     notification.recipient_id.value,
-                    notification.job_id.value,
+                    notification.job_id.value if notification.job_id is not None else None,
                     notification.kind.value,
                     notification.message,
                     notification.resource_path,
@@ -696,7 +696,7 @@ def _notification(row: tuple[object, ...]) -> ActorNotification:
     return ActorNotification(
         NotificationId(str(row[0])),
         ActorId(str(row[1])),
-        AiJobId(str(row[2])),
+        AiJobId(str(row[2])) if row[2] is not None else None,
         NotificationKind(str(row[3])),
         str(row[4]),
         cast(datetime, row[6]),
