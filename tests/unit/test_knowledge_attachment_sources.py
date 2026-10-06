@@ -33,6 +33,9 @@ from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import 
 from smb_requirement_agent.infrastructure.persistence.in_memory_document_repository import (
     InMemoryDocumentRepository,
 )
+from smb_requirement_agent.infrastructure.persistence.requirement_knowledge_repository import (
+    InMemoryRequirementKnowledgeStore,
+)
 from smb_requirement_agent.interfaces.api.container import Container
 from tests.unit.workflow_helpers import drain_requirement_index
 
@@ -139,7 +142,9 @@ def test_excluding_an_attachment_takes_its_passages_out_and_staleness_follows(
     canonical, document_id = _document_only(client, "Fibre for small offices")
     candidate, _ = _document_only(client, "Q3 connectivity launch")
     finding = _screen(container, candidate).findings[0]
-    assert container.knowledge_index.pending_sources(1) == ()
+    store = container.knowledge_index
+    assert isinstance(store, InMemoryRequirementKnowledgeStore)
+    before = dict(store.source_versions())[RequirementId(canonical)]
 
     document = _document(client, canonical, document_id)
     excluded = client.put(
@@ -149,9 +154,8 @@ def test_excluding_an_attachment_takes_its_passages_out_and_staleness_follows(
 
     assert excluded.status_code == 200, excluded.text
     # The exclusion marked the Requirement for re-indexing, as an edit to a typed field does.
-    assert RequirementId(canonical) in {
-        item for item, _ in container.knowledge_index.pending_sources(10)
-    }
+    # The change number only grows; the TestClient's own indexer may already have run.
+    assert dict(store.source_versions())[RequirementId(canonical)] > before
     drain_requirement_index(container)
     assert _attachments(container, canonical) == []
     assert not _corpus(container).citations_current(finding.evidence)
