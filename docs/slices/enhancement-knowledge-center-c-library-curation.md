@@ -1,6 +1,6 @@
 # Enhancement — Knowledge Center C: library and catalogue curation
 
-> **Status:** in progress on `feat/library-citation-counts` (requirement-portal) and
+> **Status:** delivered on `feat/library-citation-counts` (requirement-portal) and
 > `feat/knowledge-center-library-curation` (knowledge-portal), 2026-10-06.
 > **Parent:** the Knowledge Center re-plan, sub-slice C
 > ([enhancement-knowledge-center.md](enhancement-knowledge-center.md)). C is built in
@@ -49,6 +49,9 @@ owner's document at a time:
 | 3 | The citations column counts Requirements across the whole portfolio, as a number only. | Agreed in session (2026-10-06). |
 | 4 | A multi-file upload starts reading each added file, within the per-minute model budget; one the budget refuses waits with a "Read it" button. | Agreed in session (2026-10-06). |
 | 5 | Last-review columns wait for D. | They need D's review dates. |
+| 6 | Every knowledge admin sees every library document's state (its newest version's stage and why a reading failed, its approvals), whoever owns it; its content stays with the owner unless a grant is open. | An admin cannot act on work waiting on someone else's document without finding it. |
+| 7 | An admin acting on a document may take it over themselves: "Take it over from Amina Owner", recorded like any handover. | Agreed in session (2026-10-06): for when an owner has left. |
+| 8 | Source impact stays the owner's to inspect, even under a grant; the proposals citing it are listed as far as the admin may see them. | Requirement work checks the owner itself (ADR-0099), so a grant cannot open it. |
 
 ## Tests
 
