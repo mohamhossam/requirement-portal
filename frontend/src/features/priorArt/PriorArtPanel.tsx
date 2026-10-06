@@ -16,7 +16,7 @@ import {
 
 const QUOTE = "font-serif text-document text-ink m-0 max-w-[var(--measure-document)] whitespace-pre-line";
 const EXTERNAL =
-  "text-accent inline-flex min-h-6 items-center gap-1 underline underline-offset-2 focus-visible:outline-none";
+  "text-accent inline-flex min-h-6 shrink-0 items-center gap-1 whitespace-nowrap underline underline-offset-2 focus-visible:outline-none";
 
 /** Epic › Feature › User Story, each id opening its work item in Azure DevOps. */
 function Lineage({ passage }: { passage: PriorArtPassage }) {
@@ -25,7 +25,7 @@ function Lineage({ passage }: { passage: PriorArtPassage }) {
       {passage.lineage.map((item, index) => (
         <li className="inline-flex min-w-0 items-center gap-1" key={item.id}>
           {index > 0 && <span aria-hidden="true">›</span>}
-          <span>{WORK_ITEM_TYPE[item.type]}</span>
+          <span className="shrink-0 whitespace-nowrap">{WORK_ITEM_TYPE[item.type]}</span>
           {item.url ? (
             <a className={EXTERNAL} href={item.url} rel="noopener noreferrer" target="_blank">
               #{item.id}{" "}
