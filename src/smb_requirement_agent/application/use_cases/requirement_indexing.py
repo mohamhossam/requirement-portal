@@ -10,6 +10,7 @@ from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.errors import KnowledgeGenerationError, ModelTransportError
 from smb_requirement_agent.application.ports.requirement_indexing import (
+    FAILED_AFTER,
     RequirementIndexProgressPort,
 )
 from smb_requirement_agent.application.ports.requirement_knowledge import (
@@ -25,11 +26,50 @@ from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 
 
 @dataclass(frozen=True)
+class IndexBacklog:
+    """What the index has still to do: counts only, never which Requirements."""
+
+    waiting: int
+    failed: int
+    # The embedding model changed and the new index has not been built yet.
+    rebuild_required: bool
+
+
+@dataclass(frozen=True)
 class RequirementIndexStatus:
     state: str
     completed_chunks: int = 0
     total_chunks: int = 0
     retryable: bool = False
+
+
+class IndexBacklogReader:
+    """What the index has still to do, read without the embedding provider."""
+
+    def __init__(
+        self,
+        index: RequirementKnowledgeIndexPort,
+        progress: RequirementIndexProgressPort,
+        identity: str,
+    ) -> None:
+        self._index, self._progress, self._identity = index, progress, identity
+
+    def backlog(self) -> IndexBacklog:
+        """Sources still to index; one is failed once it stopped retrying on its current change."""
+        stopped = dict(self._progress.failed(self._identity))
+        waiting = failed = 0
+        after = ""
+        try:
+            while page := self._index.pending_sources(500, after):
+                for source, change in page:
+                    if stopped.get(source.value) == change:
+                        failed += 1
+                    else:
+                        waiting += 1
+                after = page[-1][0].value
+        except ModelTransportError:
+            return IndexBacklog(0, 0, rebuild_required=True)
+        return IndexBacklog(waiting, failed, rebuild_required=False)
 
 
 class IndexRequirementKnowledge:
@@ -66,10 +106,10 @@ class IndexRequirementKnowledge:
             return RequirementIndexStatus("rebuild_required")
         progress = self._progress.get(self.identity, source)
         return RequirementIndexStatus(
-            "failed" if progress.failures >= 3 else "indexing",
+            "failed" if progress.failures >= FAILED_AFTER else "indexing",
             progress.completed,
             progress.total,
-            progress.failures >= 3,
+            progress.failures >= FAILED_AFTER,
         )
 
     def retry(self, source: str, actor: ActorProfile) -> None:

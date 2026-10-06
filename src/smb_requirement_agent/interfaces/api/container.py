@@ -190,6 +190,7 @@ from smb_requirement_agent.application.use_cases.requirement_impact import (
     UpdateRequirementWithImpact,
 )
 from smb_requirement_agent.application.use_cases.requirement_indexing import (
+    IndexBacklogReader,
     IndexRequirementKnowledge,
 )
 from smb_requirement_agent.application.use_cases.requirement_knowledge import (
@@ -635,6 +636,13 @@ def _build_container(
             knowledge.source_impact,
             persistence.architecture_mapping_stats,
             persistence.transaction_manager,
+            persistence.corpus_counts,
+            IndexBacklogReader(
+                persistence.knowledge_index,
+                persistence.requirement_index_progress,
+                knowledge.indexer.identity,
+            ),
+            resolved_clock,
         ),
         unified_knowledge_search=knowledge.unified_search,
         reference_currency=knowledge.reference_currency,

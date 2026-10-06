@@ -42,6 +42,55 @@
         "title": "ActorSnapshot",
         "type": "object"
       },
+      "CorpusSummary": {
+        "description": "The Requirement knowledge corpus's health for the Knowledge Center (A\u2032).",
+        "properties": {
+          "as_of": {
+            "format": "date-time",
+            "title": "As Of",
+            "type": "string"
+          },
+          "current": {
+            "title": "Current",
+            "type": "integer"
+          },
+          "duplicates": {
+            "title": "Duplicates",
+            "type": "integer"
+          },
+          "failed": {
+            "title": "Failed",
+            "type": "integer"
+          },
+          "open_findings": {
+            "$ref": "#/components/schemas/OpenFindingAges"
+          },
+          "rebuild_required": {
+            "title": "Rebuild Required",
+            "type": "boolean"
+          },
+          "requirements": {
+            "title": "Requirements",
+            "type": "integer"
+          },
+          "waiting": {
+            "title": "Waiting",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "requirements",
+          "duplicates",
+          "current",
+          "waiting",
+          "failed",
+          "rebuild_required",
+          "open_findings",
+          "as_of"
+        ],
+        "title": "CorpusSummary",
+        "type": "object"
+      },
       "DependencyImpact": {
         "properties": {
           "decisions": {
@@ -222,6 +271,30 @@
           "stories"
         ],
         "title": "MappingCount",
+        "type": "object"
+      },
+      "OpenFindingAges": {
+        "description": "Findings still in force, by how long ago they were raised.",
+        "properties": {
+          "from_7_to_30_days": {
+            "title": "From 7 To 30 Days",
+            "type": "integer"
+          },
+          "over_30_days": {
+            "title": "Over 30 Days",
+            "type": "integer"
+          },
+          "under_7_days": {
+            "title": "Under 7 Days",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "under_7_days",
+          "from_7_to_30_days",
+          "over_30_days"
+        ],
+        "title": "OpenFindingAges",
         "type": "object"
       },
       "PublishedReference": {
@@ -469,6 +542,28 @@
           }
         },
         "summary": "Mapping Stats",
+        "tags": [
+          "internal"
+        ]
+      }
+    },
+    "/internal/knowledge/corpus/summary": {
+      "get": {
+        "description": "Requirement knowledge corpus health for the Knowledge Center: counts only.",
+        "operationId": "corpus_summary_internal_knowledge_corpus_summary_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CorpusSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Corpus Summary",
         "tags": [
           "internal"
         ]

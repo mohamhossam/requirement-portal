@@ -47,6 +47,7 @@ from smb_requirement_agent.application.ports.breakdown_repository import Breakdo
 from smb_requirement_agent.application.ports.breakdown_review_repository import (
     BreakdownReviewRepositoryPort,
 )
+from smb_requirement_agent.application.ports.corpus_summary import CorpusCountsPort
 from smb_requirement_agent.application.ports.document_repository import DocumentRepositoryPort
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
@@ -126,6 +127,10 @@ from smb_requirement_agent.infrastructure.persistence.attachment_ingestions impo
 from smb_requirement_agent.infrastructure.persistence.backlog_handoffs import (
     InMemoryBacklogHandoffs,
     PostgresBacklogHandoffs,
+)
+from smb_requirement_agent.infrastructure.persistence.corpus_counts import (
+    PostgresCorpusCounts,
+    RepositoryCorpusCounts,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_ai_jobs import (
     InMemoryAiJobStore,
@@ -299,6 +304,7 @@ class PersistenceAdapters:
     knowledge_repository: RequirementKnowledgeRepositoryPort
     evidence_fragment_cache: EvidenceFragmentCachePort
     architecture_mapping_stats: ArchitectureMappingStatsPort
+    corpus_counts: CorpusCountsPort
     mapping_job_repository: ArchitectureJobRepositoryPort
     reference_publications: ReferencePublicationStatePort
     architecture_releases: ArchitectureReleaseStatePort
@@ -351,6 +357,7 @@ def _postgres(
     document_repository = PostgresDocumentRepository(postgres)
     document_storage = PostgresDocumentStorage(postgres)
     architecture_mapping_stats = PostgresArchitectureMappingStats(connector)
+    corpus_counts = PostgresCorpusCounts(connector)
     mapping_job_repository = PostgresArchitectureJobs(connector)
     reference_publications: ReferencePublicationStatePort = PostgresReferencePublications(postgres)
     architecture_releases: ArchitectureReleaseStatePort = PostgresArchitectureReleaseState(postgres)
@@ -441,6 +448,7 @@ def _postgres(
         knowledge_repository=knowledge_repository,
         evidence_fragment_cache=evidence_fragment_cache,
         architecture_mapping_stats=architecture_mapping_stats,
+        corpus_counts=corpus_counts,
         mapping_job_repository=mapping_job_repository,
         reference_publications=reference_publications,
         architecture_releases=architecture_releases,
@@ -527,6 +535,7 @@ def _memory(
         revision_repository,
         memory_transactions,
     )
+    corpus_counts = RepositoryCorpusCounts(requirement_repository, memory_knowledge.raised_findings)
     architecture_mapping_stats = RepositoryArchitectureMappingStats(
         requirement_repository, epic_repository, feature_repository, story_repository
     )
@@ -637,6 +646,7 @@ def _memory(
         knowledge_repository=knowledge_repository,
         evidence_fragment_cache=evidence_fragment_cache,
         architecture_mapping_stats=architecture_mapping_stats,
+        corpus_counts=corpus_counts,
         mapping_job_repository=mapping_job_repository,
         reference_publications=reference_publications,
         architecture_releases=architecture_releases,

@@ -29,6 +29,7 @@ def test_the_contract_covers_what_the_knowledge_service_reads_and_stays_private(
         "/internal/references/{document_id}/impact",
         "/internal/references/{document_id}/dependents",
         "/internal/architecture-mapping/stats",
+        "/internal/knowledge/corpus/summary",
     }
     public = create_app().openapi()["paths"]
     assert not paths & set(public)

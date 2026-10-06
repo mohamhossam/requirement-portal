@@ -6,6 +6,9 @@ from typing import Protocol
 
 from smb_requirement_agent.application.ports.requirement_knowledge import Embedding
 
+# A source stops retrying after this many failed batches, until someone retries it.
+FAILED_AFTER = 3
+
 
 @dataclass(frozen=True)
 class RequirementIndexProgress:
@@ -40,3 +43,7 @@ class RequirementIndexProgressPort(Protocol):
     ) -> bool: ...
 
     def retry(self, identity: str, source: str, now: datetime) -> bool: ...
+
+    def failed(self, identity: str) -> tuple[tuple[str, int], ...]:
+        """Each source that has stopped retrying, with the source change it failed on."""
+        ...
