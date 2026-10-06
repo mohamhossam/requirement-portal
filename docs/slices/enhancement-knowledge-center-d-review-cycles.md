@@ -21,7 +21,7 @@ Keep trusted knowledge honest over time:
 | Library documents | Approving the version in service counts as a review. Its owner confirms "it is still right" with an optional note; a knowledge admin confirms on the owner's behalf with a reason, recorded in C's admin record. Nothing in service means nothing to confirm (409). |
 | Catalogue systems | Any `knowledge_maintainer` confirms one system or all of them; an admin who is not a maintainer confirms with a reason. Confirmations are kept in their own append-only table, keyed by system id, because published versions are immutable. |
 | Reminders | `GET /reviews/reminders`: the signed-in person's own documents and, for a maintainer, every system in service, that are overdue or due within 14 days. Nothing is sent anywhere. |
-| Screens | A reminders page with a count in the masthead, a "Last review" column on the library list, review lines and confirm actions on documents and systems, and overdue rows on the front page. |
+| Screens | A reminders page (systems grouped by the day they fall due) with a count in the masthead, a "Last review" column on the library list, review lines and confirm actions on documents and systems, and overdue rows on the front page. |
 
 ## Requirement-portal
 
@@ -57,6 +57,8 @@ Keep trusted knowledge honest over time:
 | 5 | A system never confirmed counts from the publication of the version in service. | Publishing a version reviews what it holds. |
 | 6 | Unpublished documents and draft-only systems have no review cycle. | Nothing relies on them yet. |
 | 7 | The label reads "Review overdue since {due date}". | Requirement-portal knows only the due date, not who last reviewed it or when. |
+| 8 | Several systems are confirmed together only per due-day group, naming them, and with a required note of what was checked. There is no confirm-everything control. | Agreed in session (2026-10-06), after the design critique: one click should not attest to 26 systems unseen. The API still takes an optional note. |
+| 9 | The cycle keeps the word "review", but its statuses read "Re-confirmation overdue" and "Re-confirmation due soon". | Agreed in session (2026-10-06): kept apart from passage review's "Awaiting your review". |
 
 ## Tests
 
