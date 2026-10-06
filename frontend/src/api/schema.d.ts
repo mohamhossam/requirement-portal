@@ -1604,6 +1604,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/requirements/{requirement_id}/prior-art": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Prior Art
+         * @description Similar past requirements, from the historic corpus: reference only (ADR-0102).
+         */
+        get: operations["get_prior_art_requirements__requirement_id__prior_art_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/requirements/{requirement_id}/review-submission": {
         parameters: {
             query?: never;
@@ -1942,7 +1962,7 @@ export interface components {
          * AiJobOperation
          * @enum {string}
          */
-        AiJobOperation: "analyse_requirement" | "clarify_requirement_analysis" | "resolve_clarification_question" | "resolve_clarification_questions" | "generate_epic" | "generate_features" | "generate_stories" | "regenerate_story" | "regenerate_story_set" | "propose_story_change" | "evaluate_feature_quality" | "generate_breakdown_review" | "resolve_review_open_question" | "screen_requirement_knowledge" | "suggest_clarification_answers";
+        AiJobOperation: "analyse_requirement" | "clarify_requirement_analysis" | "resolve_clarification_question" | "resolve_clarification_questions" | "generate_epic" | "generate_features" | "generate_stories" | "regenerate_story" | "regenerate_story_set" | "propose_story_change" | "evaluate_feature_quality" | "generate_breakdown_review" | "resolve_review_open_question" | "screen_requirement_knowledge" | "suggest_clarification_answers" | "screen_prior_art";
         /**
          * AiJobOrigin
          * @enum {string}
@@ -3902,6 +3922,97 @@ export interface components {
             evidence_references: components["schemas"]["AnalysisEvidenceReferenceResponse"][];
             /** Statement */
             statement: string;
+        };
+        /** PriorArtLineageItem */
+        PriorArtLineageItem: {
+            /** Id */
+            id: number;
+            /** State */
+            state: string;
+            /** Title */
+            title: string;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "epic" | "feature" | "user_story";
+            /** Url */
+            url: string | null;
+        };
+        /** PriorArtMatchResponse */
+        PriorArtMatchResponse: {
+            /** Historic Requirement Id */
+            historic_requirement_id: string;
+            /** Passages */
+            passages: components["schemas"]["PriorArtPassageResponse"][];
+            /** Publication */
+            publication: number;
+            /** Rationale */
+            rationale: string;
+            /** Title */
+            title: string;
+            /**
+             * Verdict
+             * @constant
+             */
+            verdict: "similar_past_requirement";
+        };
+        /** PriorArtPassageResponse */
+        PriorArtPassageResponse: {
+            /** Brd Filename */
+            brd_filename?: string | null;
+            /** Excerpt */
+            excerpt: string;
+            /** Label */
+            label?: string | null;
+            /**
+             * Lineage
+             * @default []
+             */
+            lineage: components["schemas"]["PriorArtLineageItem"][];
+            /**
+             * Section Path
+             * @default []
+             */
+            section_path: string[];
+            /**
+             * Source Kind
+             * @enum {string}
+             */
+            source_kind: "historic_brd" | "historic_backlog";
+        };
+        /**
+         * PriorArtResponse
+         * @description Similar past requirements: reference only, never a finding or a blocker.
+         */
+        PriorArtResponse: {
+            /** Checked At */
+            checked_at?: string | null;
+            /** Input Key */
+            input_key: string;
+            /**
+             * Label
+             * @default historic
+             * @constant
+             */
+            label: "historic";
+            /**
+             * Matches
+             * @default []
+             */
+            matches: components["schemas"]["PriorArtMatchResponse"][];
+            provenance?: components["schemas"]["ProvenanceResponse"] | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "disabled" | "no_historic_knowledge" | "not_checked" | "checking" | "waiting" | "current" | "out_of_date" | "failed";
+            /**
+             * Trust
+             * @default reference
+             * @constant
+             */
+            trust: "reference";
         };
         /** ProductContextResponse */
         ProductContextResponse: {
@@ -8885,6 +8996,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RequirementAccessResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_prior_art_requirements__requirement_id__prior_art_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Fake-Actor-Id"?: string | null;
+            };
+            path: {
+                requirement_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PriorArtResponse"];
                 };
             };
             /** @description Validation Error */

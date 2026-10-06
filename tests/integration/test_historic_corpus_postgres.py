@@ -45,7 +45,7 @@ def isolated_url() -> Iterator[str]:
 
 
 @pytest.fixture
-def served(isolated_url: str) -> tuple[Container, PublishedLibrary, str]:
+def served(isolated_url: str) -> Iterator[tuple[Container, PublishedLibrary, str]]:
     run_migrations(isolated_url)
     container, library = container_with_library(
         Settings(
@@ -54,7 +54,8 @@ def served(isolated_url: str) -> tuple[Container, PublishedLibrary, str]:
             database_url=isolated_url,
         )
     )
-    return container, library, isolated_url
+    yield container, library, isolated_url
+    container.close_resources()
 
 
 def _search(container: Container, text: str) -> list[str]:

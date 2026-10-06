@@ -5,6 +5,7 @@
 Accepted 2026-10-06. Amends ADR-0099 Amendment 1 (where the read-only Azure DevOps connector
 lives, and how historic Requirements reach this service). Delivered in two slices: E1 in
 knowledge-portal, E2 here (`docs/slices/enhancement-knowledge-center.md`, sub-slice E).
+Amendment 1 (2026-10-07) records E2 as built.
 
 ## Context
 
@@ -105,3 +106,46 @@ Planning the import showed two problems with the amendment's placement:
   without a reason invites over-reading the similarity.
 - **Prior art as knowledge findings.** Not chosen: findings block confirmation and need a
   decision from the owner. Prior art is context, not a conflict.
+
+## Amendment 1 — E2 as built (2026-10-07)
+
+Agreed in session while planning E2. Where this amendment and the decision above differ, the
+amendment wins.
+
+1. **A light event and a paged read.** A historic Requirement with 2,000 work items could make
+   one event tens of megabytes. The event now names the publication only: its number,
+   fingerprint, title, root ids, counts, and who published it and when. This service reads the
+   content from two service-token routes on knowledge-portal,
+   `GET /internal/historic-requirements/{id}/passages` and `.../items`, at most 200 entries a
+   page. Each page carries the publication's fingerprint. An older publication answers 409 and
+   a withdrawn one 404; both mean a newer event says what to read instead. The pinned example,
+   `contracts/historic-requirement-changed.example.json`, is written by knowledge-portal's tests
+   and parsed by this service's.
+2. **The consumer reads every kind.** `/internal/events` has no kind filter, and the cursor's
+   gap handling needs contiguous sequence numbers, so the historic consumer reads every event
+   from 0 and steps over the ones it does not handle. It runs on its own loop, so a slow page of
+   historic content never holds up reference currency.
+3. **Its own judge and its own enums.** Prior art has its own port (`PriorArtJudgePort`), prompt
+   (`prior-art-v1`) and verdict enum (`PriorArtVerdict`), and historic chunks their own
+   `HistoricSourceKind`. The relationship classifier, `KnowledgeRelationshipKind` and
+   `KnowledgeSourceKind` are unchanged: that kind types `KnowledgeFinding.kind` and the
+   published `/internal/knowledge/findings?kind=` filter, and the classifier's prompt treats
+   similar topics as unrelated. An architecture test holds this.
+4. **The corpus version belongs to the index.** It advances only when a publication's chunks
+   become searchable, all at once, after every chunk is embedded. A prior-art check records the
+   version it saw; a later version makes it out of date. A withdrawal does not advance it: a
+   withdrawn match is filtered out when a check is read, at once.
+5. **Guards.** `PRIOR_ART_ENABLED` is off by default and stays off in production until an
+   operator has run `scripts/evaluate_prior_art.py` against the configured provider. The
+   historic corpus projects and indexes either way. `PRIOR_ART_JUDGE_CALLS_PER_HOUR` caps checks
+   portal-wide; the job gate holds prior-art jobs queued while the hour's checks are spent.
+   `HISTORIC_EMBED_CHUNKS_PER_HOUR` caps embedding per historic Requirement. Prior-art jobs are
+   claimed after every other queued job.
+6. **Re-checking is lazy.** A check runs when the Requirement changes or the Knowledge step is
+   opened and its prior art is missing or out of date. There is no mass re-screening when the
+   historic corpus changes, and a failed check is not queued again for the same input.
+7. **Where each historic Requirement is cited.** `GET /internal/knowledge/historic/citation-counts`
+   and `GET /internal/knowledge/historic/{id}/citations` serve knowledge-portal. Like B2's corpus
+   list, they give identity and state only (the Requirement, its owner, when it was checked,
+   whether that check is current), never a rationale or a passage.
+

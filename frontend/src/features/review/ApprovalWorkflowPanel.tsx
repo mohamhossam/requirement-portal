@@ -179,7 +179,8 @@ export function ApprovalWorkflowPanel({
   if (!workflow.data) return null;
 
   const data = workflow.data;
-  const aiBusy = jobs.active.length > 0;
+  // A similar-past-requirements check is reference only: it never holds approval up.
+  const aiBusy = jobs.active.some((job) => job.operation !== "screen_prior_art");
   const storyArtifacts = data.artifacts.filter((item) => item.target.kind === "story");
   const dialogBusy = submit.isPending || finalApproval.isPending || rejectStory.isPending;
   const completion = data.completion;

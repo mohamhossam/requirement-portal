@@ -9,6 +9,7 @@ import { Skeleton } from "../../components/Skeleton";
 import { Card } from "../../components/ui";
 import { useRequirementJobs } from "../../features/jobs/useRequirementJobs";
 import { KnowledgeReviewPanel } from "../../features/knowledge/KnowledgeReviewPanel";
+import { PriorArtPanel } from "../../features/priorArt/PriorArtPanel";
 import { RequirementIndexNotice } from "../../features/knowledge/RequirementIndexNotice";
 import type { useLazyKnowledgeScreening } from "../../features/knowledge/useLazyKnowledgeScreening";
 import type { RequirementWorkspace } from "./useRequirementWorkspace";
@@ -116,6 +117,8 @@ export function KnowledgeView({
       }}
       onDecide={(finding, decision, text) => decide.mutate({ finding, decision, text })}
     />
+    {/* Beside the review, never inside it: prior art is reference, not a decision. */}
+    {workspace.priorArt.data ? <PriorArtPanel priorArt={workspace.priorArt.data} /> : null}
     </>
   );
 }

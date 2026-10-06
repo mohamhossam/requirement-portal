@@ -50,6 +50,13 @@ export function useRequirementWorkspace(id: string) {
     enabled: Boolean(id),
     refetchOnMount: "always",
   });
+  // Similar past requirements (Knowledge Center E2): beside the review, never part of it.
+  const priorArt = useQuery({
+    queryKey: queryKeys.priorArt(id),
+    queryFn: () => api.getPriorArt(id),
+    enabled: Boolean(id),
+    refetchOnMount: "always",
+  });
 
   const access = assignments.data;
   const team = access
@@ -63,6 +70,7 @@ export function useRequirementWorkspace(id: string) {
     assignments,
     analysis,
     knowledgeReview,
+    priorArt,
     team,
     canManageContent: access?.can_manage_content ?? false,
     canGovern: access?.can_govern ?? false,

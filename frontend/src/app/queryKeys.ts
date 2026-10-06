@@ -22,6 +22,7 @@ export const queryKeys = {
   analysis: (id: string) => scoped("analysis", id),
   analysisRounds: (id: string) => scoped("analysis-rounds", id),
   knowledgeReview: (id: string) => scoped("knowledge-review", id),
+  priorArt: (id: string) => scoped("prior-art", id),
   answerSuggestions: (id: string, questionId: string) => scoped("answer-suggestions", id, questionId),
   assignments: (id: string) => scoped("assignments", id),
   epic: (id: string) => scoped("epic", id),

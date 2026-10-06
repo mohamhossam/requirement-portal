@@ -8,14 +8,20 @@ budget, and only when an operator has turned it on.
 from __future__ import annotations
 
 from datetime import timedelta
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+from pydantic import TypeAdapter
 
 from smb_requirement_agent.application.errors import KnowledgeGenerationError
 from smb_requirement_agent.application.ports.prior_art import (
     PriorArtCandidateInput,
     PriorArtJudgement,
+)
+from smb_requirement_agent.application.prior_art_evaluation import (
+    PriorArtCase,
+    evaluate_prior_art,
 )
 from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirementInput
 from smb_requirement_agent.application.use_cases.prior_art import _validated
@@ -27,6 +33,7 @@ from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.jobs.prior_art_gate import PriorArtGatedQueue
 from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import IndexReadyJobQueue
+from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import FakePriorArtJudge
 from smb_requirement_agent.interfaces.api.container import Container
 from smb_requirement_agent.interfaces.api.main import create_app
 from tests.knowledge_doubles import (
@@ -39,6 +46,7 @@ from tests.knowledge_doubles import (
 from tests.unit.workflow_helpers import drain_requirement_index
 
 WORKER = "prior-art-test-worker"
+EVALUATION = Path(__file__).resolve().parents[2] / "docs/evaluation/prior-art-synthetic.json"
 TOKEN = "k" * 40
 SERVICE = {"Authorization": f"Bearer {TOKEN}"}
 
@@ -294,3 +302,25 @@ def test_the_knowledge_portal_reads_where_each_historic_requirement_is_cited() -
         assert public["status"] == "current" and public["label"] == "historic"
         passage_kinds = {p["source_kind"] for p in public["matches"][0]["passages"]}
         assert passage_kinds <= {"historic_brd", "historic_backlog"}
+
+
+def test_the_fake_judge_passes_the_evaluation_gates_on_the_synthetic_cases() -> None:
+    cases = TypeAdapter(tuple[PriorArtCase, ...]).validate_json(EVALUATION.read_text())
+    result = evaluate_prior_art(cases, FakePriorArtJudge())
+    assert result.pairs >= 24 and result.invalid_citations == 0
+    assert result.quality_gate_passed, result
+    # A judge that calls everything similar fails on the near misses.
+
+    class _Eager:
+        model = "eager"
+        prompt_version = "prior-art-v1"
+
+        def judge(
+            self, title: str, subject_text: str, candidates: tuple[PriorArtCandidateInput, ...]
+        ) -> tuple[PriorArtJudgement, ...]:
+            return tuple(
+                PriorArtJudgement(c.number, "Same topic.", (c.evidence[0].number,))
+                for c in candidates
+            )
+
+    assert not evaluate_prior_art(cases, _Eager()).quality_gate_passed

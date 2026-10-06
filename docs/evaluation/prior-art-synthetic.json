@@ -1,0 +1,423 @@
+[
+  {
+    "case_id": "xgpon-order",
+    "reviewer": "synthetic fixture, not human qualification",
+    "title": "XGPON fibre bundles for small offices",
+    "subject": "Sales agents order XGPON fibre bundles with a static IP for small office customers in BCRM.",
+    "candidates": [
+      {
+        "number": 1,
+        "historic_requirement_id": "xgpon-order-h1",
+        "title": "BRD-2025-014 XGPON bundles",
+        "evidence": [
+          {
+            "number": 1,
+            "text": "Business customers order XGPON fibre bundles with a static IP for small offices through BCRM.",
+            "where": "BRD-2025-014 XGPON bundles.docx, Paragraph 1"
+          },
+          {
+            "number": 2,
+            "text": "Epic #48213 XGPON fibre bundles for small offices",
+            "where": "BRD-2025-014 XGPON bundles.docx, Paragraph 2"
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "historic_requirement_id": "xgpon-order-h2",
+        "title": "BRD-2023-009 Fibre fault reporting",
+        "evidence": [
+          {
+            "number": 3,
+            "text": "Customers report fibre faults through the app and track the technician visit.",
+            "where": "BRD-2023-009 Fibre fault reporting.docx, Paragraph 1"
+          }
+        ]
+      }
+    ],
+    "similar": [
+      1
+    ]
+  },
+  {
+    "case_id": "roaming-packs",
+    "reviewer": "synthetic fixture, not human qualification",
+    "title": "Gulf roaming packs for prepaid",
+    "subject": "Prepaid customers buy roaming packs for Gulf countries from the app before they travel.",
+    "candidates": [
+      {
+        "number": 1,
+        "historic_requirement_id": "roaming-packs-h1",
+        "title": "BRD-2025-007 Gulf roaming packs",
+        "evidence": [
+          {
+            "number": 1,
+            "text": "Prepaid customers buy roaming packs for Gulf countries from the app before travelling.",
+            "where": "BRD-2025-007 Gulf roaming packs.docx, Paragraph 1"
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "historic_requirement_id": "roaming-packs-h2",
+        "title": "BRD-2022-018 Prepaid top up",
+        "evidence": [
+          {
+            "number": 2,
+            "text": "Prepaid customers top up their balance from the app with a card.",
+            "where": "BRD-2022-018 Prepaid top up.docx, Paragraph 1"
+          }
+        ]
+      }
+    ],
+    "similar": [
+      1
+    ]
+  },
+  {
+    "case_id": "store-repair",
+    "reviewer": "synthetic fixture, not human qualification",
+    "title": "Store appointments for device repair",
+    "subject": "Customers book a store visit for device repair from the app and receive an SMS reminder.",
+    "candidates": [
+      {
+        "number": 1,
+        "historic_requirement_id": "store-repair-h1",
+        "title": "BRD-2025-021 Store appointments for repair",
+        "evidence": [
+          {
+            "number": 1,
+            "text": "Customers book a store visit for device repair from the app and get an SMS reminder.",
+            "where": "BRD-2025-021 Store appointments for repair.docx, Paragraph 1"
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "historic_requirement_id": "store-repair-h2",
+        "title": "BRD-2021-004 Store opening hours",
+        "evidence": [
+          {
+            "number": 2,
+            "text": "The app shows store opening hours and directions to each store.",
+            "where": "BRD-2021-004 Store opening hours.docx, Paragraph 1"
+          }
+        ]
+      }
+    ],
+    "similar": [
+      1
+    ]
+  },
+  {
+    "case_id": "billing-statement",
+    "reviewer": "synthetic fixture, not human qualification",
+    "title": "Itemised business billing statements",
+    "subject": "Business customers download itemised monthly billing statements per line as PDF.",
+    "candidates": [
+      {
+        "number": 1,
+        "historic_requirement_id": "billing-statement-h1",
+        "title": "BRD-2024-031 Billing statements",
+        "evidence": [
+          {
+            "number": 1,
+            "text": "Business customers download itemised monthly billing statements per line as PDF from the portal.",
+            "where": "BRD-2024-031 Billing statements.docx, Paragraph 1"
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "historic_requirement_id": "billing-statement-h2",
+        "title": "BRD-2020-011 Billing disputes",
+        "evidence": [
+          {
+            "number": 2,
+            "text": "Business customers raise a billing dispute and track its resolution.",
+            "where": "BRD-2020-011 Billing disputes.docx, Paragraph 1"
+          }
+        ]
+      }
+    ],
+    "similar": [
+      1
+    ]
+  },
+  {
+    "case_id": "esim-activation",
+    "reviewer": "synthetic fixture, not human qualification",
+    "title": "eSIM activation in the app",
+    "subject": "New postpaid customers activate an eSIM in the app by scanning a QR code after identity checks.",
+    "candidates": [
+      {
+        "number": 1,
+        "historic_requirement_id": "esim-activation-h1",
+        "title": "BRD-2024-002 eSIM onboarding",
+        "evidence": [
+          {
+            "number": 1,
+            "text": "New postpaid customers activate an eSIM in the app by scanning a QR code once identity is verified.",
+            "where": "BRD-2024-002 eSIM onboarding.docx, Paragraph 1"
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "historic_requirement_id": "esim-activation-h2",
+        "title": "BRD-2023-015 SIM replacement",
+        "evidence": [
+          {
+            "number": 2,
+            "text": "Customers order a physical SIM replacement for delivery to their address.",
+            "where": "BRD-2023-015 SIM replacement.docx, Paragraph 1"
+          }
+        ]
+      }
+    ],
+    "similar": [
+      1
+    ]
+  },
+  {
+    "case_id": "number-porting",
+    "reviewer": "synthetic fixture, not human qualification",
+    "title": "Port in mobile numbers online",
+    "subject": "Customers port their mobile number from another operator online and keep it active during the switch.",
+    "candidates": [
+      {
+        "number": 1,
+        "historic_requirement_id": "number-porting-h1",
+        "title": "BRD-2022-006 Online number porting",
+        "evidence": [
+          {
+            "number": 1,
+            "text": "Customers port their mobile number from another operator online and keep service during the switch.",
+            "where": "BRD-2022-006 Online number porting.docx, Paragraph 1"
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "historic_requirement_id": "number-porting-h2",
+        "title": "BRD-2021-019 Number reservation",
+        "evidence": [
+          {
+            "number": 2,
+            "text": "Customers reserve a vanity mobile number before buying a line.",
+            "where": "BRD-2021-019 Number reservation.docx, Paragraph 1"
+          }
+        ]
+      }
+    ],
+    "similar": [
+      1
+    ]
+  },
+  {
+    "case_id": "parental-controls",
+    "reviewer": "synthetic fixture, not human qualification",
+    "title": "Parental controls for family plans",
+    "subject": "Family plan owners set data limits and content filters for each child line from the app.",
+    "candidates": [
+      {
+        "number": 1,
+        "historic_requirement_id": "parental-controls-h1",
+        "title": "BRD-2023-022 Family plan controls",
+        "evidence": [
+          {
+            "number": 1,
+            "text": "Family plan owners set data limits and content filters for each child line in the app.",
+            "where": "BRD-2023-022 Family plan controls.docx, Paragraph 1"
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "historic_requirement_id": "parental-controls-h2",
+        "title": "BRD-2022-030 Family plan sharing",
+        "evidence": [
+          {
+            "number": 2,
+            "text": "Family plan members share one data bundle across lines.",
+            "where": "BRD-2022-030 Family plan sharing.docx, Paragraph 1"
+          }
+        ]
+      }
+    ],
+    "similar": [
+      1
+    ]
+  },
+  {
+    "case_id": "iot-fleet",
+    "reviewer": "synthetic fixture, not human qualification",
+    "title": "IoT SIMs for vehicle fleets",
+    "subject": "Fleet companies manage IoT SIMs for their vehicles, suspend lost devices and see usage per vehicle.",
+    "candidates": [
+      {
+        "number": 1,
+        "historic_requirement_id": "iot-fleet-h1",
+        "title": "BRD-2024-017 Fleet IoT management",
+        "evidence": [
+          {
+            "number": 1,
+            "text": "Fleet companies manage IoT SIMs for vehicles, suspend lost devices and see usage per vehicle.",
+            "where": "BRD-2024-017 Fleet IoT management.docx, Paragraph 1"
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "historic_requirement_id": "iot-fleet-h2",
+        "title": "BRD-2023-003 Vehicle insurance partner",
+        "evidence": [
+          {
+            "number": 2,
+            "text": "Customers buy vehicle insurance through a partner offer.",
+            "where": "BRD-2023-003 Vehicle insurance partner.docx, Paragraph 1"
+          }
+        ]
+      }
+    ],
+    "similar": [
+      1
+    ]
+  },
+  {
+    "case_id": "no-match-loyalty",
+    "reviewer": "synthetic fixture, not human qualification",
+    "title": "Loyalty points for bill payment",
+    "subject": "Customers earn loyalty points when they pay their bill on time and redeem them for data.",
+    "candidates": [
+      {
+        "number": 1,
+        "historic_requirement_id": "no-match-loyalty-h1",
+        "title": "BRD-2022-012 Bill payment by card",
+        "evidence": [
+          {
+            "number": 1,
+            "text": "Customers pay their bill by card in the app.",
+            "where": "BRD-2022-012 Bill payment by card.docx, Paragraph 1"
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "historic_requirement_id": "no-match-loyalty-h2",
+        "title": "BRD-2023-027 Data gifting",
+        "evidence": [
+          {
+            "number": 2,
+            "text": "Customers gift spare data to another subscriber.",
+            "where": "BRD-2023-027 Data gifting.docx, Paragraph 1"
+          }
+        ]
+      }
+    ],
+    "similar": []
+  },
+  {
+    "case_id": "no-match-5g-home",
+    "reviewer": "synthetic fixture, not human qualification",
+    "title": "5G home broadband coverage check",
+    "subject": "Prospects check 5G home broadband coverage at their address before ordering a router.",
+    "candidates": [
+      {
+        "number": 1,
+        "historic_requirement_id": "no-match-5g-home-h1",
+        "title": "BRD-2021-013 Router returns",
+        "evidence": [
+          {
+            "number": 1,
+            "text": "Customers return a broadband router at a store when they cancel.",
+            "where": "BRD-2021-013 Router returns.docx, Paragraph 1"
+          }
+        ]
+      }
+    ],
+    "similar": []
+  },
+  {
+    "case_id": "wifi-calling",
+    "reviewer": "synthetic fixture, not human qualification",
+    "title": "Wi-Fi calling for postpaid",
+    "subject": "Postpaid customers turn on Wi-Fi calling in the app and it works on supported handsets.",
+    "candidates": [
+      {
+        "number": 1,
+        "historic_requirement_id": "wifi-calling-h1",
+        "title": "BRD-2023-011 Wi-Fi calling launch",
+        "evidence": [
+          {
+            "number": 1,
+            "text": "Postpaid customers turn on Wi-Fi calling in the app on supported handsets.",
+            "where": "BRD-2023-011 Wi-Fi calling launch.docx, Paragraph 1"
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "historic_requirement_id": "wifi-calling-h2",
+        "title": "BRD-2022-024 Home Wi-Fi extender",
+        "evidence": [
+          {
+            "number": 2,
+            "text": "Broadband customers buy a home Wi-Fi extender.",
+            "where": "BRD-2022-024 Home Wi-Fi extender.docx, Paragraph 1"
+          }
+        ]
+      }
+    ],
+    "similar": [
+      1
+    ]
+  },
+  {
+    "case_id": "business-bulk-lines",
+    "reviewer": "synthetic fixture, not human qualification",
+    "title": "Bulk line orders for businesses",
+    "subject": "Business administrators order up to 50 mobile lines at once and assign them to employees.",
+    "candidates": [
+      {
+        "number": 1,
+        "historic_requirement_id": "business-bulk-lines-h1",
+        "title": "BRD-2024-008 Bulk business lines",
+        "evidence": [
+          {
+            "number": 1,
+            "text": "Business administrators order many mobile lines at once and assign each to an employee.",
+            "where": "BRD-2024-008 Bulk business lines.docx, Paragraph 1"
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "historic_requirement_id": "business-bulk-lines-h2",
+        "title": "BRD-2022-016 Business directory listing",
+        "evidence": [
+          {
+            "number": 2,
+            "text": "Businesses list their number in the public directory.",
+            "where": "BRD-2022-016 Business directory listing.docx, Paragraph 1"
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "historic_requirement_id": "business-bulk-lines-h3",
+        "title": "BRD-2023-019 Employee discount",
+        "evidence": [
+          {
+            "number": 3,
+            "text": "Employees of partner companies get a discount on personal lines.",
+            "where": "BRD-2023-019 Employee discount.docx, Paragraph 1"
+          }
+        ]
+      }
+    ],
+    "similar": [
+      1
+    ]
+  }
+]

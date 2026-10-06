@@ -1,8 +1,8 @@
 # Enhancement — Knowledge Center E1: historic BRDs and their Azure DevOps lineage
 
-> **Status:** in progress on `feat/knowledge-center-historic-import` (knowledge-portal) and
-> `docs/knowledge-center-historic-adr` (this repository, docs only), 2026-10-06. The two are
-> independent; either may merge first.
+> **Status:** delivered 2026-10-06 (knowledge-portal#46, requirement-portal#46). E2 follows in
+> [enhancement-knowledge-center-e2-prior-art.md](enhancement-knowledge-center-e2-prior-art.md);
+> its light event replaces the whole-state payload described below (ADR-0102 Amendment 1).
 > **Parent:** the Knowledge Center re-plan, sub-slice E
 > ([enhancement-knowledge-center.md](enhancement-knowledge-center.md)), decisions 10–13 and
 > [ADR-0102](../architecture/adr-0102-historic-requirements-and-ado-lineage.md). E2 follows here.

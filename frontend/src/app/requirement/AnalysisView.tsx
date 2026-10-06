@@ -152,7 +152,9 @@ export function AnalysisView({
   const analysing = analyse.isPending || running.has("analyse_requirement");
   const questionBusy = saveDraft.isPending || resolveQuestions.isPending || classifyQuestion.isPending ||
     assignQuestion.isPending || askQuestion.isPending ||
-    jobs.active.some((job) => !["screen_requirement_knowledge", "suggest_clarification_answers"].includes(job.operation));
+    jobs.active.some(
+      (job) => !["screen_requirement_knowledge", "suggest_clarification_answers", "screen_prior_art"].includes(job.operation),
+    );
   const questionError = saveDraft.error ?? resolveQuestions.error ?? classifyQuestion.error ??
     assignQuestion.error ?? askQuestion.error;
   const suggestionsByQuestion = Object.fromEntries(
