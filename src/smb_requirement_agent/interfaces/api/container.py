@@ -632,6 +632,7 @@ def _build_container(
         persistence.knowledge_index,
         persistence.requirement_index_progress,
         knowledge.indexer.identity,
+        persistence.corpus_membership,
     )
     corpus_action_ports = (
         persistence.requirement_repository,

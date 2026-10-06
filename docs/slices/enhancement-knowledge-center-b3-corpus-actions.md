@@ -42,6 +42,7 @@ All three are added to `contracts/requirement-internal.openapi.json` and need th
 | 6 | **The owner is notified** on retirement and reinstatement, with the reason (`knowledge_corpus_retired`, `knowledge_corpus_reinstated`). | Agreed in session (2026-10-07). |
 | 7 | **Bulk retry resets only sources that stopped on their current change; bulk reindex bumps only the chosen sources.** Vectors are cached by text, so unchanged passages are not embedded again. | The worker does the provider work at its own pace. |
 | 8 | **Every action is recorded** in `knowledge_corpus_actions`. | The audit trail stays with the data. |
+| 9 | **A retired Requirement has no index state.** The summary's `current` excludes it, and every index-state filter on the corpus leaves it out; its pending re-index (dropping its passages) is not counted as waiting. | Found in the knowledge-portal critique: the filter strip read "Current 9" beside "Retired 1" in a corpus of 9. |
 
 ## Changes
 

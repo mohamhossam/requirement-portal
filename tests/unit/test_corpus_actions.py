@@ -16,6 +16,7 @@ import pytest
 from fastapi.testclient import TestClient
 from smb_kernel.time.fixed import FixedClock
 
+from smb_requirement_agent.application.ports.knowledge_portfolio import IndexState
 from smb_requirement_agent.application.use_cases.corpus_actions import BulkReindexRequirements
 from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirementInput
 from smb_requirement_agent.application.use_cases.requirement_indexing import IndexBacklogReader
@@ -330,6 +331,20 @@ def test_retired_requirements_are_counted_and_filtered(timed: Container) -> None
     )
 
     assert summary.retired == 1
+    # Retired has left the corpus: it is none of current, waiting or failed.
+    drain_requirement_index(timed)
+    settled = timed.internal_reads.corpus_summary()
+    assert (settled.requirements, settled.current, settled.waiting) == (2, 1, 0)
+    current = timed.knowledge_portfolio.corpus(
+        index_state=IndexState.CURRENT,
+        owner_id=None,
+        text="",
+        open_findings_only=False,
+        not_screened_for_days=None,
+        offset=0,
+        limit=50,
+    )
+    assert canonical.value not in {item.requirement_id for item in current.items}
     (row,) = page.items
     assert row.requirement_id == canonical.value
     assert row.retired is not None

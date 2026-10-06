@@ -132,7 +132,8 @@ class InternalReads:
             requirements=counts.requirements,
             duplicates=counts.duplicates,
             retired=counts.retired,
-            current=max(0, counts.requirements - backlog.waiting - backlog.failed),
+            # Retired Requirements have left the corpus: they are none of current, waiting, failed.
+            current=max(0, counts.requirements - counts.retired - backlog.waiting - backlog.failed),
             waiting=backlog.waiting,
             failed=backlog.failed,
             rebuild_required=backlog.rebuild_required,

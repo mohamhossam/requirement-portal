@@ -9,6 +9,7 @@ from uuid import uuid4
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.errors import KnowledgeGenerationError, ModelTransportError
+from smb_requirement_agent.application.ports.corpus_membership import CorpusMembershipPort
 from smb_requirement_agent.application.ports.requirement_indexing import (
     FAILED_AFTER,
     RequirementIndexProgressPort,
@@ -51,8 +52,14 @@ class IndexBacklogReader:
         index: RequirementKnowledgeIndexPort,
         progress: RequirementIndexProgressPort,
         identity: str,
+        membership: CorpusMembershipPort | None = None,
     ) -> None:
         self._index, self._progress, self._identity = index, progress, identity
+        self._membership = membership
+
+    def retired(self) -> frozenset[str]:
+        """Requirements retired from the corpus: no index state applies to them (B3)."""
+        return frozenset(self._membership.retired()) if self._membership else frozenset()
 
     def backlog(self) -> IndexBacklog:
         """Sources still to index; one is failed once it stopped retrying on its current change."""
@@ -79,12 +86,15 @@ class IndexBacklogReader:
     def pending(self) -> dict[str, bool] | None:
         """Each source still to index, True when it stopped retrying; None when a rebuild waits."""
         stopped = dict(self._progress.failed(self._identity))
+        retired = self.retired()
         pending: dict[str, bool] = {}
         after = ""
         try:
             while page := self._index.pending_sources(500, after):
                 for source, change in page:
-                    pending[source.value] = stopped.get(source.value) == change
+                    # A retired source only waits to drop its passages; it is not indexing work.
+                    if source.value not in retired:
+                        pending[source.value] = stopped.get(source.value) == change
                 after = page[-1][0].value
         except ModelTransportError:
             return None

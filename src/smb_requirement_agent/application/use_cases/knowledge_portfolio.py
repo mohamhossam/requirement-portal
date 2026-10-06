@@ -142,13 +142,15 @@ class KnowledgePortfolio:
         retired_only: bool = False,
     ) -> CorpusPage:
         pending = self._backlog.pending()
+        # An index-state filter never lists a retired Requirement: it has left the corpus.
+        retired = self._backlog.retired() if index_state is not None else frozenset[str]()
         if pending is None:
             # Until the rebuild, every Requirement waits for it; no other state applies.
             if index_state not in (None, IndexState.REBUILD_REQUIRED):
                 return CorpusPage((), None)
-            only, excluding = None, frozenset[str]()
+            only, excluding = None, retired
         elif index_state is IndexState.CURRENT:
-            only, excluding = None, frozenset(pending)
+            only, excluding = None, frozenset(pending) | retired
         elif index_state in (IndexState.WAITING, IndexState.FAILED):
             stopped = index_state is IndexState.FAILED
             only, excluding = frozenset(k for k, v in pending.items() if v is stopped), frozenset()
