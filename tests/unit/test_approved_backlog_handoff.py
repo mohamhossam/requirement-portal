@@ -98,7 +98,15 @@ def handing_over(inbox: RecordingInbox) -> Container:
 
 @pytest.fixture
 def approving(handing_over: Container) -> Generator[TestClient, None, None]:
-    with TestClient(create_app(lambda: handing_over)) as client:
+    # The API runs every other worker, but not its own handoff worker: that would race
+    # each test's worker for the same handoff, which would then find nothing due.
+    workers = {
+        name: worker
+        for name, worker in handing_over.background_workers.items()
+        if name != "approved_backlog_worker"
+    }
+    application = create_app(lambda: replace(handing_over, background_workers=workers))
+    with TestClient(application) as client:
         yield client
 
 

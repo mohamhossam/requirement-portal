@@ -73,6 +73,7 @@ class KnowledgeSourceKind(StrEnum):
     CURRENT_ANALYSIS = "current_analysis"
     CONFIRMED_ANALYSIS = "confirmed_analysis"
     CONFLICT_RESOLUTION = "conflict_resolution"
+    ATTACHMENT = "attachment"
 
 
 class AnswerSuggestionSource(StrEnum):

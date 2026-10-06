@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { KnowledgeFinding, KnowledgeReview } from "../../api/client";
 import { AuthContext, type AuthState } from "../../auth/authContext";
+import { evidenceFieldLabel } from "../analysis/labels";
 import { KnowledgeReviewPanel } from "./KnowledgeReviewPanel";
 import { fieldLabel, findingVerdict, linkedRequirement } from "./labels";
 
@@ -223,6 +224,9 @@ describe("knowledge labels", () => {
     expect(fieldLabel("business_need")).toBe("Business need");
     expect(fieldLabel("clarification:open_question")).toBe("Clarification answer");
     expect(fieldLabel("proposal:9f2c")).toBe("Reference decision");
+    expect(fieldLabel("attachment:doc-1:block-3")).toBe("Attachment passage");
+    // Clarify's suggestions label the same evidence without its identifiers.
+    expect(evidenceFieldLabel("attachment:doc-1:block-3")).toBe("Attachment passage");
     expect(fieldLabel("something_new")).toBe("Something new");
   });
 

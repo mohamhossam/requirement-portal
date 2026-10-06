@@ -474,7 +474,7 @@ def _memory(
     memory_knowledge = InMemoryRequirementKnowledgeStore(memory_lock)
     base_requirements = InMemoryRequirementRepository()
     requirement_draft_repository = InMemoryRequirementDraftRepository()
-    document_repository = InMemoryDocumentRepository()
+    document_repository = InMemoryDocumentRepository(memory_knowledge.mark_source_changed)
     document_storage = InMemoryDocumentStorage(lock=memory_lock)
     memory_releases = InMemoryArchitectureReleaseState(memory_lock)
     mapping_job_repository = InMemoryArchitectureJobs()

@@ -109,3 +109,45 @@ repository runs alone offline with fakes for the other service.
   projection keeps requirement transactions local.
 - **Send embedding vectors instead of query text.** It was rejected because both services would
   then have to stay on the same embedding model. knowledge-portal embeds the text it receives.
+
+## Amendment 1 — the Knowledge Center across the split (2026-10-06)
+
+The Knowledge Center spec (`docs/slices/enhancement-knowledge-center.md`) was written before the
+split. Both roadmaps moved its sub-slices B–E to knowledge-portal wholesale. Re-planned against
+this boundary, each part is built where its data lives.
+
+- **The Requirement knowledge base stays here.** Its index, screening, findings and owners stay
+  in this database, and so do the rules that change them: attachment sources, corpus
+  membership (retire and reinstate) and findings closed as "source retired".
+- **Its admin screens live in knowledge-portal**, where knowledge admins already work. They call
+  new service-token routes here, each one additive to `contracts/requirement-internal.openapi.json`
+  when it is built:
+  - `GET /internal/knowledge/corpus/summary`, `GET /internal/knowledge/corpus` and
+    `GET /internal/knowledge/findings`: paged reads, with only what the screens show;
+  - `POST /internal/knowledge/findings/{id}/nudge`,
+    `POST /internal/knowledge/requirements/{id}/retirement` and `/reinstatement`, and
+    `POST /internal/knowledge/reindex`;
+  - `GET /internal/references/citation-counts`, for the library list.
+
+  A write carries the knowledge admin's actor id and reason. This service checks the token,
+  records that actor, and audits the change itself. Requirement data is never copied into the
+  knowledge database.
+- **Attachment content joins the trusted requirement corpus** under a new source kind,
+  `attachment`. It is indexed when the Requirement is promoted, and again whenever an included
+  attachment's version or inclusion changes, with citations to the document block. This closes
+  the gap where a Requirement supplied as a document barely took part in duplicate and
+  contradiction screening.
+- **Notifications here no longer require an AI job.** A finding nudge is a notification of its
+  own kind, so `actor_notifications.job_id` becomes nullable when that slice is built.
+- **Review reminders are knowledge-portal's own.** Library documents and catalogue systems are
+  reviewed there, and their reminders are a list in that portal, computed from due dates. They
+  are not sent through this service's notifications. Overdue knowledge is marked in citations
+  through an additive field on the knowledge service's internal passage and evidence responses.
+- **Historic Requirements (sub-slice E, not scheduled) are split the same way:**
+  - curation and import screens live in knowledge-portal;
+  - the historic corpus, prior-art screening and the read-only Azure DevOps connector live here,
+    next to ADO publication (Slices 12–13);
+  - published historic Requirements reach this service over a service-token route, as approved
+    backlogs reach knowledge-portal (ADR-0101 Amendment 2).
+
+  E needs its own ADR before it starts.
