@@ -120,9 +120,11 @@ from smb_requirement_agent.domain.identity.errors import (
 )
 from smb_requirement_agent.domain.jobs.errors import AiJobConflictError, InvalidAiJobError
 from smb_requirement_agent.domain.knowledge.errors import (
+    CorpusMembershipConflictError,
     InvalidKnowledgeError,
     KnowledgeFindingConflictError,
     KnowledgeReviewRequiredError,
+    RequirementRetiredError,
 )
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.requirement.errors import (
@@ -216,6 +218,8 @@ EXPECTED_STATUS_CODES: dict[type[Exception], int] = {
     BacklogExportFormatError: 422,
     AiJobConflictError: 409,
     KnowledgeFindingConflictError: 409,
+    RequirementRetiredError: 409,
+    CorpusMembershipConflictError: 409,
     KnowledgeScreenConflictError: 409,
     KnowledgeReviewRequiredError: 409,
     DuplicateRequirementStateError: 409,

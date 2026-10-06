@@ -10,6 +10,9 @@ from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     RequirementKnowledgeCorpus,
 )
 from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.infrastructure.persistence.corpus_membership import (
+    PostgresCorpusMembership,
+)
 from smb_requirement_agent.infrastructure.persistence.postgres_activity import (
     PostgresProjectedActivity,
 )
@@ -67,6 +70,7 @@ def refresh_postgres_projections(
         PostgresAccessRepository(session),
         knowledge,
         PostgresDocumentRepository(session),
+        membership=PostgresCorpusMembership(session),
     )
     sources = PostgresActivitySources(session, snapshots, revisions)
     activity = PostgresProjectedActivity(

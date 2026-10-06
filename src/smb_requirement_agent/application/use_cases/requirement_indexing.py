@@ -3,7 +3,7 @@
 import hashlib
 import math
 from dataclasses import dataclass, replace
-from datetime import timedelta
+from datetime import datetime, timedelta
 from uuid import uuid4
 
 from smb_kernel.time.clock import ClockPort
@@ -61,6 +61,20 @@ class IndexBacklogReader:
             return IndexBacklog(0, 0, rebuild_required=True)
         failed = sum(1 for stopped in pending.values() if stopped)
         return IndexBacklog(len(pending) - failed, failed, rebuild_required=False)
+
+    def retry_failed(self, now: datetime) -> tuple[str, ...] | None:
+        """Retry every source that stopped retrying; None while a rebuild waits.
+
+        Only the failure count is reset; the worker picks them up and does the provider work.
+        """
+        pending = self.pending()
+        if pending is None:
+            return None
+        return tuple(
+            source
+            for source, stopped in sorted(pending.items())
+            if stopped and self._progress.retry(self._identity, source, now)
+        )
 
     def pending(self) -> dict[str, bool] | None:
         """Each source still to index, True when it stopped retrying; None when a rebuild waits."""

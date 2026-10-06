@@ -42,6 +42,49 @@
         "title": "ActorSnapshot",
         "type": "object"
       },
+      "BulkResult": {
+        "properties": {
+          "requirements": {
+            "title": "Requirements",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "requirements"
+        ],
+        "title": "BulkResult",
+        "type": "object"
+      },
+      "CorpusActionRequest": {
+        "description": "The knowledge admin acting, and why: recorded with the action and told to the owner.",
+        "properties": {
+          "actor_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Actor Id",
+            "type": "string"
+          },
+          "actor_name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Actor Name",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "actor_id",
+          "actor_name",
+          "reason"
+        ],
+        "title": "CorpusActionRequest",
+        "type": "object"
+      },
       "CorpusPage": {
         "properties": {
           "items": {
@@ -109,6 +152,16 @@
             "title": "Requirement Id",
             "type": "string"
           },
+          "retired": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RetiredMark"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "title": {
             "title": "Title",
             "type": "string"
@@ -121,10 +174,19 @@
           "owner",
           "index_state",
           "last_screened_at",
-          "open_findings"
+          "open_findings",
+          "retired"
         ],
         "title": "CorpusRow",
         "type": "object"
+      },
+      "CorpusState": {
+        "enum": [
+          "active",
+          "retired"
+        ],
+        "title": "CorpusState",
+        "type": "string"
       },
       "CorpusSummary": {
         "description": "The Requirement knowledge corpus's health for the Knowledge Center (A\u2032).",
@@ -157,6 +219,10 @@
             "title": "Requirements",
             "type": "integer"
           },
+          "retired": {
+            "title": "Retired",
+            "type": "integer"
+          },
           "waiting": {
             "title": "Waiting",
             "type": "integer"
@@ -165,6 +231,7 @@
         "required": [
           "requirements",
           "duplicates",
+          "retired",
           "current",
           "waiting",
           "failed",
@@ -505,6 +572,46 @@
         "title": "MappingCount",
         "type": "object"
       },
+      "MembershipResult": {
+        "properties": {
+          "changed_at": {
+            "format": "date-time",
+            "title": "Changed At",
+            "type": "string"
+          },
+          "closed_findings": {
+            "title": "Closed Findings",
+            "type": "integer"
+          },
+          "notified": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notified"
+          },
+          "requirement_id": {
+            "title": "Requirement Id",
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/CorpusState"
+          }
+        },
+        "required": [
+          "requirement_id",
+          "state",
+          "changed_at",
+          "closed_findings",
+          "notified"
+        ],
+        "title": "MembershipResult",
+        "type": "object"
+      },
       "NudgeMark": {
         "properties": {
           "at": {
@@ -694,6 +801,85 @@
           "lineage_hash"
         ],
         "title": "PublishedReference",
+        "type": "object"
+      },
+      "ReindexRequest": {
+        "properties": {
+          "actor_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Actor Id",
+            "type": "string"
+          },
+          "actor_name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Actor Name",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "requirement_ids": {
+            "items": {
+              "maxLength": 200,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 500,
+            "title": "Requirement Ids",
+            "type": "array"
+          },
+          "scope": {
+            "enum": [
+              "failed",
+              "requirements"
+            ],
+            "title": "Scope",
+            "type": "string"
+          }
+        },
+        "required": [
+          "actor_id",
+          "actor_name",
+          "scope"
+        ],
+        "title": "ReindexRequest",
+        "type": "object"
+      },
+      "RetiredMark": {
+        "description": "A Requirement retired from the corpus: when, by which knowledge admin, and why.",
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "by": {
+            "title": "By",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "at",
+          "by",
+          "reason"
+        ],
+        "title": "RetiredMark",
         "type": "object"
       },
       "SourceDependency": {
@@ -953,6 +1139,16 @@
           },
           {
             "in": "query",
+            "name": "retired_only",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Retired Only",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
             "name": "offset",
             "required": false,
             "schema": {
@@ -1180,6 +1376,154 @@
           }
         },
         "summary": "Nudge Finding Owners",
+        "tags": [
+          "internal"
+        ]
+      }
+    },
+    "/internal/knowledge/reindex": {
+      "post": {
+        "description": "Retry what stopped indexing, or index chosen Requirements again; the worker does it.",
+        "operationId": "reindex_corpus_internal_knowledge_reindex_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReindexRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reindex Corpus",
+        "tags": [
+          "internal"
+        ]
+      }
+    },
+    "/internal/knowledge/requirements/{requirement_id}/reinstatement": {
+      "post": {
+        "description": "Return a retired Requirement to the corpus; it is indexed again and screened afresh.",
+        "operationId": "reinstate_to_corpus_internal_knowledge_requirements__requirement_id__reinstatement_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "requirement_id",
+            "required": true,
+            "schema": {
+              "title": "Requirement Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorpusActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MembershipResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reinstate To Corpus",
+        "tags": [
+          "internal"
+        ]
+      }
+    },
+    "/internal/knowledge/requirements/{requirement_id}/retirement": {
+      "post": {
+        "description": "Take a Requirement out of the corpus; every open finding citing it closes.",
+        "operationId": "retire_from_corpus_internal_knowledge_requirements__requirement_id__retirement_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "requirement_id",
+            "required": true,
+            "schema": {
+              "title": "Requirement Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorpusActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MembershipResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Retire From Corpus",
         "tags": [
           "internal"
         ]

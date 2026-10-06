@@ -167,3 +167,22 @@ Agreed in session when B2 was built:
   step, and at most once every 7 days per finding. Each nudge is recorded here
   (`knowledge_finding_nudges`: the admin's id and name, when, and who was notified). Decisions
   stay with the owners.
+
+### Retiring a Requirement from the corpus (B3, 2026-10-07)
+
+Agreed in session when B3 was built:
+
+- **A retired Requirement is fully out of the corpus**, as a closed duplicate is. It is never a
+  candidate and is not screened itself, and no knowledge search or suggestion cites it. It
+  stays fully readable, keeps its version and history, and its Knowledge step says who retired
+  it, when and why.
+- **Every actionable finding that cites it closes as "source retired"**, on either side, with
+  the admin and the reason recorded on the finding. Reinstating does not reopen them; the next
+  screen judges the pair afresh.
+- **The owner is notified** on retirement and on reinstatement, with the reason.
+- **Each action is recorded here**: membership in `requirement_corpus_membership`, and every
+  retire, reinstate, retry and reindex in `knowledge_corpus_actions` (the admin's id and name,
+  the reason, when, and which Requirements).
+- **Bulk retry and reindex only reset failure counts or mark sources changed.** The index
+  worker does the provider work, and re-screening follows the existing triggers, so no internal
+  route reaches a provider.

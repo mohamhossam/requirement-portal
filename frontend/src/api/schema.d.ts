@@ -1859,7 +1859,7 @@ export interface components {
          * ActivityAction
          * @enum {string}
          */
-        ActivityAction: "requirement_created" | "requirement_updated" | "analysis_generated" | "analysis_confirmed" | "intent_proposal_decided" | "question_asked" | "question_assigned" | "question_classified" | "question_resolved" | "question_superseded" | "owner_claimed" | "owner_transferred" | "reviewer_assigned" | "reviewer_removed" | "ai_succeeded" | "ai_failed" | "ai_cancelled" | "artifact_approved" | "story_rejected" | "review_flag_resolved" | "review_commented" | "breakdown_submitted" | "breakdown_needs_revision" | "breakdown_approved" | "knowledge_screened" | "requirement_marked_distinct" | "requirement_marked_duplicate" | "conflict_resolution_proposed" | "conflict_resolution_accepted" | "conflict_resolved";
+        ActivityAction: "requirement_created" | "requirement_updated" | "analysis_generated" | "analysis_confirmed" | "intent_proposal_decided" | "question_asked" | "question_assigned" | "question_classified" | "question_resolved" | "question_superseded" | "owner_claimed" | "owner_transferred" | "reviewer_assigned" | "reviewer_removed" | "ai_succeeded" | "ai_failed" | "ai_cancelled" | "artifact_approved" | "story_rejected" | "review_flag_resolved" | "review_commented" | "breakdown_submitted" | "breakdown_needs_revision" | "breakdown_approved" | "knowledge_screened" | "requirement_marked_distinct" | "requirement_marked_duplicate" | "conflict_resolution_proposed" | "conflict_resolution_accepted" | "conflict_resolved" | "finding_source_retired";
         /**
          * ActivityCategory
          * @enum {string}
@@ -2855,6 +2855,21 @@ export interface components {
             /** Statement */
             statement: string;
         };
+        /**
+         * CorpusRetirementResponse
+         * @description Retired from the knowledge corpus by a knowledge admin: when, by whom and why.
+         */
+        CorpusRetirementResponse: {
+            /** Reason */
+            reason: string;
+            /**
+             * Retired At
+             * Format: date-time
+             */
+            retired_at: string;
+            /** Retired By */
+            retired_by: string;
+        };
         /** CreateRequirementRequest */
         CreateRequirementRequest: {
             /** Business Rules */
@@ -3664,7 +3679,7 @@ export interface components {
          * KnowledgeFindingStatus
          * @enum {string}
          */
-        KnowledgeFindingStatus: "open" | "distinct" | "duplicate" | "resolution_pending" | "resolved";
+        KnowledgeFindingStatus: "open" | "distinct" | "duplicate" | "resolution_pending" | "resolved" | "source_retired";
         /**
          * KnowledgeRelationshipKind
          * @enum {string}
@@ -3672,6 +3687,7 @@ export interface components {
         KnowledgeRelationshipKind: "possible_duplicate" | "possible_contradiction";
         /** KnowledgeReviewResponse */
         KnowledgeReviewResponse: {
+            corpus_retirement?: components["schemas"]["CorpusRetirementResponse"] | null;
             /** Current */
             current: boolean;
             /** Findings */
@@ -3766,7 +3782,7 @@ export interface components {
          * NotificationKind
          * @enum {string}
          */
-        NotificationKind: "ai_job_succeeded" | "ai_job_failed" | "knowledge_conflict_action_required" | "knowledge_findings_nudge";
+        NotificationKind: "ai_job_succeeded" | "ai_job_failed" | "knowledge_conflict_action_required" | "knowledge_findings_nudge" | "knowledge_corpus_retired" | "knowledge_corpus_reinstated";
         /** NotificationPreferenceRequest */
         NotificationPreferenceRequest: {
             /** Browser Enabled */

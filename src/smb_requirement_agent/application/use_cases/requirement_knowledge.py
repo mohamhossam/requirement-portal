@@ -6,6 +6,7 @@ import hashlib
 import json
 import uuid
 from dataclasses import asdict
+from typing import Any
 
 from smb_kernel.time.clock import ClockPort
 
@@ -20,6 +21,7 @@ from smb_requirement_agent.application.ports.access_repository import AccessRepo
 from smb_requirement_agent.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
+from smb_requirement_agent.application.ports.corpus_membership import CorpusMembershipPort
 from smb_requirement_agent.application.ports.document_repository import DocumentRepositoryPort
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
@@ -68,7 +70,9 @@ from smb_requirement_agent.domain.knowledge.entities import (
 from smb_requirement_agent.domain.knowledge.errors import (
     KnowledgeFindingConflictError,
     KnowledgeReviewRequiredError,
+    RequirementRetiredError,
 )
+from smb_requirement_agent.domain.knowledge.membership import CorpusMembership
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.requirement.errors import DuplicateRequirementStateError
 from smb_requirement_agent.domain.requirement.value_objects import (
@@ -87,6 +91,8 @@ class RequirementKnowledgeCorpus:
         access: AccessRepositoryPort,
         reviews: RequirementKnowledgeRepositoryPort,
         documents: DocumentRepositoryPort,
+        *,
+        membership: CorpusMembershipPort | None = None,
     ) -> None:
         self._requirements = requirements
         self._analyses = analyses
@@ -94,6 +100,20 @@ class RequirementKnowledgeCorpus:
         self._access = access
         self._reviews = reviews
         self._documents = documents
+        # Who has been retired from the corpus (B3); None where no admin can retire anyone.
+        self._membership = membership
+
+    def retirement(self, requirement_id: RequirementId) -> CorpusMembership | None:
+        """The Requirement's retirement when it is retired from the corpus now."""
+        membership = self._membership.get(requirement_id) if self._membership else None
+        return membership if membership is not None and membership.retired else None
+
+    def in_corpus(self, requirement: Requirement) -> bool:
+        """Takes part in screening, search and suggestions: not a duplicate, not retired."""
+        return (
+            requirement.status is not RequirementStatus.DUPLICATE
+            and self.retirement(requirement.id) is None
+        )
 
     def chunks(
         self, requirement: Requirement, *, screening_subject: bool = False
@@ -226,8 +246,12 @@ class RequirementKnowledgeCorpus:
     def fingerprint(self, requirement_id: RequirementId) -> str:
         requirement = self._require(requirement_id)
         chunks = self.chunks(requirement, screening_subject=True)
-        payload = [(item.source_kind.value, item.field, item.text) for item in chunks]
+        payload: list[Any] = [(item.source_kind.value, item.field, item.text) for item in chunks]
         conflicts = self.reference_conflicts(requirement_id)
+        membership = self._membership.get(requirement_id) if self._membership else None
+        if membership is not None:
+            # A reinstated Requirement's earlier screen predates its return: it is stale.
+            payload.append(("corpus", membership.state.value, membership.changed_at.isoformat()))
         return _hash_json((payload, conflicts)) if conflicts else _hash_json(payload)
 
     def reference_conflicts(self, requirement_id: RequirementId) -> tuple[str, ...]:
@@ -276,7 +300,7 @@ class RequirementKnowledgeCorpus:
             chunk.id: chunk.fingerprint
             for requirement_id in {item.requirement_id for item in evidence}
             if (requirement := self._requirements.get(requirement_id)) is not None
-            and requirement.status is not RequirementStatus.DUPLICATE
+            and self.in_corpus(requirement)
             for chunk in self.chunks(requirement)
         }
         return all(current.get(item.chunk_id) == item.fingerprint for item in evidence)
@@ -289,7 +313,7 @@ class RequirementKnowledgeCorpus:
         current: dict[KnowledgeChunkId, str] = {}
         for source_id in {item.requirement_id for item in evidence}:
             requirement = self._requirements.get(source_id)
-            if requirement is None or requirement.status is RequirementStatus.DUPLICATE:
+            if requirement is None or not self.in_corpus(requirement):
                 continue
             chunks = self.chunks(requirement)
             if requirement.id == requirement_id:
@@ -318,9 +342,7 @@ class RequirementKnowledgeCorpus:
 
     def index_source(self, requirement_id: RequirementId) -> tuple[tuple[KnowledgeChunk, ...], str]:
         requirement = self._require(requirement_id)
-        chunks = (
-            () if requirement.status is RequirementStatus.DUPLICATE else self.chunks(requirement)
-        )
+        chunks = self.chunks(requirement) if self.in_corpus(requirement) else ()
         return chunks, _hash_json([(item.id.value, item.fingerprint) for item in chunks])
 
     @staticmethod
@@ -392,6 +414,10 @@ class ScreenRequirementKnowledge:
             raise RequirementNotFoundError(f"Requirement {requirement_id.value!r} not found.")
         if requirement.status is RequirementStatus.DUPLICATE:
             raise DuplicateRequirementStateError("Duplicate Requirements cannot be screened again.")
+        if self._corpus.retirement(requirement_id) is not None:
+            raise RequirementRetiredError(
+                "This Requirement is retired from the knowledge corpus, so it is not screened."
+            )
         current_fingerprint = self._corpus.fingerprint(requirement_id)
         if current_fingerprint != expected_fingerprint:
             return GetKnowledgeReview(self._corpus, self._reviews).execute(requirement_id)
@@ -435,6 +461,9 @@ class ScreenRequirementKnowledge:
                 raise KnowledgeGenerationError(
                     "Knowledge classifier returned an invalid related Requirement."
                 )
+            if self._corpus.retirement(related.id) is not None:
+                # Retired while this screen ran; its passages are on their way out of the index.
+                continue
             seen_requirements.add(candidate.related_requirement_id)
             if self._current_pair_finding(requirement, related) is not None:
                 continue
@@ -494,6 +523,8 @@ class ScreenRequirementKnowledge:
                 finding
                 for finding in self._reviews.list_related_findings(requirement.id)
                 if {finding.subject_requirement_id, finding.related_requirement_id} == pair
+                # Closed by a retirement, not decided: a screen after reinstatement judges anew.
+                and finding.status is not KnowledgeFindingStatus.SOURCE_RETIRED
                 and self._corpus.version(finding.subject_requirement_id) == finding.subject_version
                 and self._corpus.version(finding.related_requirement_id) == finding.related_version
             ),
@@ -533,6 +564,7 @@ class GetKnowledgeReview:
             fingerprint,
             versions_current,
             self._corpus.reference_conflicts(requirement_id),
+            self._corpus.retirement(requirement_id),
         )
 
     def _pair_current(self, finding: KnowledgeFinding) -> bool:
@@ -587,6 +619,7 @@ class DecideKnowledgeFinding:
         scheduler: KnowledgeScreenSchedulerPort,
         *,
         authorization: RequirementAccessService,
+        membership: CorpusMembershipPort | None = None,
     ) -> None:
         self._requirements = requirements
         self._access = access
@@ -595,6 +628,7 @@ class DecideKnowledgeFinding:
         self._clock = clock
         self._transactions = transactions
         self._scheduler = scheduler
+        self._membership = membership
 
     def execute(
         self,
@@ -653,6 +687,12 @@ class DecideKnowledgeFinding:
             raise KnowledgeFindingConflictError(
                 "The selected canonical Requirement is a duplicate."
             )
+        if self._membership is not None:
+            retired = self._membership.get(canonical.id)
+            if retired is not None and retired.retired:
+                raise KnowledgeFindingConflictError(
+                    "The selected canonical Requirement is retired from the knowledge corpus."
+                )
         now = self._clock.now()
         updated = finding.mark_duplicate(actor, now, expected_version)
         with self._transactions.transaction():

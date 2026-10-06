@@ -671,6 +671,11 @@ def _knowledge_decision_event(
         return ActivityAction.REQUIREMENT_MARKED_DISTINCT, "Possible duplicate marked distinct"
     if kind is KnowledgeDecisionKind.DUPLICATE:
         return ActivityAction.REQUIREMENT_MARKED_DUPLICATE, "Requirement closed as duplicate"
+    if kind is KnowledgeDecisionKind.SOURCE_RETIRED:
+        return (
+            ActivityAction.FINDING_SOURCE_RETIRED,
+            "Finding closed: a Requirement was retired from the knowledge corpus",
+        )
     if kind is KnowledgeDecisionKind.RESOLUTION_PROPOSED:
         return ActivityAction.CONFLICT_RESOLUTION_PROPOSED, "Shared conflict resolution proposed"
     if finding.status is KnowledgeFindingStatus.RESOLVED and index == len(finding.decisions) - 1:

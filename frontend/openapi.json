@@ -170,7 +170,8 @@
           "requirement_marked_duplicate",
           "conflict_resolution_proposed",
           "conflict_resolution_accepted",
-          "conflict_resolved"
+          "conflict_resolved",
+          "finding_source_retired"
         ],
         "title": "ActivityAction",
         "type": "string"
@@ -3074,6 +3075,31 @@
         "title": "ConstraintResponse",
         "type": "object"
       },
+      "CorpusRetirementResponse": {
+        "description": "Retired from the knowledge corpus by a knowledge admin: when, by whom and why.",
+        "properties": {
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "retired_at": {
+            "format": "date-time",
+            "title": "Retired At",
+            "type": "string"
+          },
+          "retired_by": {
+            "title": "Retired By",
+            "type": "string"
+          }
+        },
+        "required": [
+          "retired_at",
+          "retired_by",
+          "reason"
+        ],
+        "title": "CorpusRetirementResponse",
+        "type": "object"
+      },
       "CreateRequirementRequest": {
         "properties": {
           "business_rules": {
@@ -5393,7 +5419,8 @@
           "distinct",
           "duplicate",
           "resolution_pending",
-          "resolved"
+          "resolved",
+          "source_retired"
         ],
         "title": "KnowledgeFindingStatus",
         "type": "string"
@@ -5408,6 +5435,16 @@
       },
       "KnowledgeReviewResponse": {
         "properties": {
+          "corpus_retirement": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CorpusRetirementResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "current": {
             "title": "Current",
             "type": "boolean"
@@ -5681,7 +5718,9 @@
           "ai_job_succeeded",
           "ai_job_failed",
           "knowledge_conflict_action_required",
-          "knowledge_findings_nudge"
+          "knowledge_findings_nudge",
+          "knowledge_corpus_retired",
+          "knowledge_corpus_reinstated"
         ],
         "title": "NotificationKind",
         "type": "string"

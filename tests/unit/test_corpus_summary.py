@@ -230,6 +230,7 @@ def test_the_route_answers_the_knowledge_service_with_counts_only(timed: Contain
     assert set(body) == {
         "requirements",
         "duplicates",
+        "retired",
         "current",
         "waiting",
         "failed",

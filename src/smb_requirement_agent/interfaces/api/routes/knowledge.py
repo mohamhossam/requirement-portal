@@ -40,6 +40,7 @@ from smb_requirement_agent.interfaces.api.schemas.epic import ProvenanceResponse
 from smb_requirement_agent.interfaces.api.schemas.knowledge import (
     AnswerSuggestionResponse,
     AnswerSuggestionSetResponse,
+    CorpusRetirementResponse,
     KnowledgeDecisionResponse,
     KnowledgeEvidenceResponse,
     KnowledgeFindingDecisionRequest,
@@ -123,8 +124,18 @@ def review_response(value: KnowledgeReview) -> KnowledgeReviewResponse:
         status = "action_required"
     elif value.ready:
         status = "ready"
+    retirement = value.retirement
     return KnowledgeReviewResponse(
         reference_conflict_ids=value.reference_conflict_ids,
+        corpus_retirement=(
+            CorpusRetirementResponse(
+                retired_at=retirement.changed_at,
+                retired_by=retirement.actor.display_name,
+                reason=retirement.reason,
+            )
+            if retirement is not None
+            else None
+        ),
         status=status,
         current=value.current,
         ready=value.ready,

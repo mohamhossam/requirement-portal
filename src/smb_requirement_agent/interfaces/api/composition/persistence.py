@@ -47,6 +47,11 @@ from smb_requirement_agent.application.ports.breakdown_repository import Breakdo
 from smb_requirement_agent.application.ports.breakdown_review_repository import (
     BreakdownReviewRepositoryPort,
 )
+from smb_requirement_agent.application.ports.corpus_membership import (
+    CorpusActionsPort,
+    CorpusMembershipPort,
+    SourceChangesPort,
+)
 from smb_requirement_agent.application.ports.corpus_summary import CorpusCountsPort
 from smb_requirement_agent.application.ports.document_repository import DocumentRepositoryPort
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
@@ -135,6 +140,14 @@ from smb_requirement_agent.infrastructure.persistence.backlog_handoffs import (
 from smb_requirement_agent.infrastructure.persistence.corpus_counts import (
     PostgresCorpusCounts,
     RepositoryCorpusCounts,
+)
+from smb_requirement_agent.infrastructure.persistence.corpus_membership import (
+    InMemoryCorpusActions,
+    InMemoryCorpusMembership,
+    InMemorySourceChanges,
+    PostgresCorpusActions,
+    PostgresCorpusMembership,
+    PostgresSourceChanges,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_ai_jobs import (
     InMemoryAiJobStore,
@@ -317,6 +330,9 @@ class PersistenceAdapters:
     corpus_counts: CorpusCountsPort
     knowledge_portfolio: KnowledgePortfolioPort
     finding_nudges: FindingNudgesPort
+    corpus_membership: CorpusMembershipPort
+    corpus_actions: CorpusActionsPort
+    source_changes: SourceChangesPort
     mapping_job_repository: ArchitectureJobRepositoryPort
     reference_publications: ReferencePublicationStatePort
     architecture_releases: ArchitectureReleaseStatePort
@@ -372,6 +388,9 @@ def _postgres(
     corpus_counts = PostgresCorpusCounts(connector)
     knowledge_portfolio: KnowledgePortfolioPort = PostgresKnowledgePortfolio(connector)
     finding_nudges: FindingNudgesPort = PostgresFindingNudges(postgres)
+    corpus_membership: CorpusMembershipPort = PostgresCorpusMembership(postgres)
+    corpus_actions: CorpusActionsPort = PostgresCorpusActions(postgres)
+    source_changes: SourceChangesPort = PostgresSourceChanges(postgres)
     mapping_job_repository = PostgresArchitectureJobs(connector)
     reference_publications: ReferencePublicationStatePort = PostgresReferencePublications(postgres)
     architecture_releases: ArchitectureReleaseStatePort = PostgresArchitectureReleaseState(postgres)
@@ -465,6 +484,9 @@ def _postgres(
         corpus_counts=corpus_counts,
         knowledge_portfolio=knowledge_portfolio,
         finding_nudges=finding_nudges,
+        corpus_membership=corpus_membership,
+        corpus_actions=corpus_actions,
+        source_changes=source_changes,
         mapping_job_repository=mapping_job_repository,
         reference_publications=reference_publications,
         architecture_releases=architecture_releases,
@@ -551,7 +573,12 @@ def _memory(
         revision_repository,
         memory_transactions,
     )
-    corpus_counts = RepositoryCorpusCounts(requirement_repository, memory_knowledge.raised_findings)
+    memory_membership = InMemoryCorpusMembership(memory_lock, memory_knowledge.mark_source_changed)
+    memory_transactions.enroll(memory_membership)
+    corpus_membership = memory_membership
+    corpus_counts = RepositoryCorpusCounts(
+        requirement_repository, memory_knowledge.raised_findings, memory_membership
+    )
     architecture_mapping_stats = RepositoryArchitectureMappingStats(
         requirement_repository, epic_repository, feature_repository, story_repository
     )
@@ -565,8 +592,19 @@ def _memory(
     memory_nudges = InMemoryFindingNudges(memory_lock)
     memory_transactions.enroll(memory_nudges)
     finding_nudges = memory_nudges
+    memory_actions = InMemoryCorpusActions(memory_lock)
+    memory_transactions.enroll(memory_actions)
+    corpus_actions = memory_actions
+    source_changes = InMemorySourceChanges(
+        lambda requirement_id: requirement_repository.get(requirement_id) is not None,
+        memory_knowledge.mark_source_changed,
+    )
     knowledge_portfolio = RepositoryKnowledgePortfolio(
-        requirement_repository, access_repository, memory_knowledge, memory_nudges
+        requirement_repository,
+        access_repository,
+        memory_knowledge,
+        memory_nudges,
+        memory_membership,
     )
     worklist_snapshots = InMemoryRequirementWorklistSnapshotAdapter(
         requirement_repository,
@@ -671,6 +709,9 @@ def _memory(
         corpus_counts=corpus_counts,
         knowledge_portfolio=knowledge_portfolio,
         finding_nudges=finding_nudges,
+        corpus_membership=corpus_membership,
+        corpus_actions=corpus_actions,
+        source_changes=source_changes,
         mapping_job_repository=mapping_job_repository,
         reference_publications=reference_publications,
         architecture_releases=architecture_releases,

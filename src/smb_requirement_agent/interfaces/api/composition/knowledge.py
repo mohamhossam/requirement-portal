@@ -96,6 +96,7 @@ def build_requirement_knowledge(
         persistence.access_repository,
         persistence.knowledge_repository,
         persistence.document_repository,
+        membership=persistence.corpus_membership,
     )
     review = GetKnowledgeReview(corpus, persistence.knowledge_repository)
     screen_scheduler = KnowledgeScreenScheduler(
@@ -105,6 +106,7 @@ def build_requirement_knowledge(
         persistence.knowledge_repository,
         clock,
         _AUTOMATIC_ACTOR,
+        membership=persistence.corpus_membership,
     )
     indexer = IndexRequirementKnowledge(
         corpus,
@@ -201,6 +203,7 @@ def build_requirement_knowledge(
             persistence.transaction_manager,
             screen_scheduler,
             authorization=access,
+            membership=persistence.corpus_membership,
         ),
         unified_search=UnifiedKnowledgeSearch(
             corpus,

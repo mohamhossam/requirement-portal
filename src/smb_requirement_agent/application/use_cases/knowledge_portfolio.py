@@ -27,6 +27,7 @@ from smb_requirement_agent.application.ports.knowledge_portfolio import (
     KnowledgePortfolioPort,
     NudgeMark,
     PersonName,
+    RetiredMark,
     finding_age,
 )
 from smb_requirement_agent.application.ports.notifications import NotificationRepositoryPort
@@ -65,6 +66,8 @@ class CorpusRow:
     index_state: IndexState
     last_screened_at: datetime | None
     open_findings: int
+    # Retired from the corpus by a knowledge admin (B3): when, by whom and why.
+    retired: RetiredMark | None
 
 
 @dataclass(frozen=True)
@@ -136,6 +139,7 @@ class KnowledgePortfolio:
         not_screened_for_days: int | None,
         offset: int,
         limit: int,
+        retired_only: bool = False,
     ) -> CorpusPage:
         pending = self._backlog.pending()
         if pending is None:
@@ -157,7 +161,9 @@ class KnowledgePortfolio:
             if not_screened_for_days is not None
             else None
         )
-        query = CorpusQuery(owner_id, text.strip(), open_findings_only, since, only, excluding)
+        query = CorpusQuery(
+            owner_id, text.strip(), open_findings_only, since, only, excluding, retired_only
+        )
         entries = self._portfolio.corpus(query, offset, limit + 1)
 
         def state(requirement_id: str) -> IndexState:
@@ -176,6 +182,7 @@ class KnowledgePortfolio:
                 state(item.requirement_id),
                 item.last_screened_at,
                 item.open_findings,
+                item.retired,
             )
             for item in entries[:limit]
         )

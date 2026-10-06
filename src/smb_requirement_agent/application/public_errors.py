@@ -108,9 +108,11 @@ from smb_requirement_agent.domain.identity.errors import (
 )
 from smb_requirement_agent.domain.jobs.errors import AiJobConflictError, InvalidAiJobError
 from smb_requirement_agent.domain.knowledge.errors import (
+    CorpusMembershipConflictError,
     InvalidKnowledgeError,
     KnowledgeFindingConflictError,
     KnowledgeReviewRequiredError,
+    RequirementRetiredError,
 )
 from smb_requirement_agent.domain.requirement.errors import (
     DuplicateRequirementStateError,
@@ -251,6 +253,8 @@ ERROR_CATALOGUE: tuple[tuple[type[Exception], str, FailureCategory], ...] = (
     (KnowledgeFindingNotFoundError, "knowledge_finding_not_found", FailureCategory.NOT_FOUND),
     (AnswerSuggestionNotFoundError, "answer_suggestion_not_found", FailureCategory.NOT_FOUND),
     (KnowledgeFindingConflictError, "knowledge_finding_conflict", FailureCategory.CONFLICT),
+    (RequirementRetiredError, "requirement_retired", FailureCategory.CONFLICT),
+    (CorpusMembershipConflictError, "corpus_membership_conflict", FailureCategory.CONFLICT),
     (KnowledgeScreenConflictError, "knowledge_screen_conflict", FailureCategory.CONFLICT),
     (KnowledgeReviewRequiredError, "knowledge_review_required", FailureCategory.CONFLICT),
     (DuplicateRequirementStateError, "duplicate_requirement_state", FailureCategory.CONFLICT),

@@ -53,8 +53,17 @@ class KnowledgeFindingResponse(BaseModel):
     decisions: list[KnowledgeDecisionResponse]
 
 
+class CorpusRetirementResponse(BaseModel):
+    """Retired from the knowledge corpus by a knowledge admin: when, by whom and why."""
+
+    retired_at: datetime
+    retired_by: str
+    reason: str
+
+
 class KnowledgeReviewResponse(BaseModel):
     reference_conflict_ids: tuple[str, ...] = ()
+    corpus_retirement: CorpusRetirementResponse | None = None
     status: Literal["required", "stale", "action_required", "ready"]
     current: bool
     ready: bool

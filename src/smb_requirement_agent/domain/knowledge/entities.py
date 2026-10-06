@@ -94,6 +94,8 @@ class KnowledgeFindingStatus(StrEnum):
     DUPLICATE = "duplicate"
     RESOLUTION_PENDING = "resolution_pending"
     RESOLVED = "resolved"
+    # Closed because a knowledge admin retired one of its Requirements from the corpus.
+    SOURCE_RETIRED = "source_retired"
 
 
 class KnowledgeDecisionKind(StrEnum):
@@ -101,6 +103,7 @@ class KnowledgeDecisionKind(StrEnum):
     DUPLICATE = "duplicate"
     RESOLUTION_PROPOSED = "resolution_proposed"
     RESOLUTION_ACCEPTED = "resolution_accepted"
+    SOURCE_RETIRED = "source_retired"
 
 
 @dataclass(frozen=True)
@@ -238,12 +241,9 @@ class KnowledgeFinding:
         self, actor: ActorProfile, statement: str, at: datetime, expected_version: int
     ) -> KnowledgeFinding:
         self._require_version(expected_version)
-        if (
-            self.kind is not KnowledgeRelationshipKind.POSSIBLE_CONTRADICTION
-            or self.status is KnowledgeFindingStatus.RESOLVED
-        ):
+        if self.kind is not KnowledgeRelationshipKind.POSSIBLE_CONTRADICTION or not self.actionable:
             raise KnowledgeFindingConflictError(
-                "Only a possible contradiction accepts a shared resolution."
+                "Only an open possible contradiction accepts a shared resolution."
             )
         cleaned = _text(statement, "resolution statement")
         decision = KnowledgeDecision(
@@ -291,6 +291,23 @@ class KnowledgeFinding:
             self,
             status=(KnowledgeFindingStatus.RESOLVED if resolved else self.status),
             resolution_approvals=approvals,
+            version=self.version + 1,
+            decisions=(*self.decisions, decision),
+        )
+
+    def close_source_retired(
+        self, actor: ActorSnapshot, reason: str, at: datetime
+    ) -> KnowledgeFinding:
+        """Closed by a knowledge admin's retirement of either Requirement, with their reason.
+
+        Reinstating the Requirement does not reopen it; a new screen raises a fresh finding.
+        """
+        if not self.actionable:
+            raise KnowledgeFindingConflictError("Only an open finding can close as source retired.")
+        decision = KnowledgeDecision(KnowledgeDecisionKind.SOURCE_RETIRED, actor, at, reason)
+        return replace(
+            self,
+            status=KnowledgeFindingStatus.SOURCE_RETIRED,
             version=self.version + 1,
             decisions=(*self.decisions, decision),
         )

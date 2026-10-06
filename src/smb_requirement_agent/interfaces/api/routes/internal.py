@@ -8,13 +8,21 @@ never routes /internal.
 
 from __future__ import annotations
 
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, FastAPI, Query
 from pydantic import BaseModel, Field
 
 from smb_requirement_agent.application.ports.architecture_mapping_stats import MappingCount
 from smb_requirement_agent.application.ports.knowledge_portfolio import FindingAge, IndexState
+from smb_requirement_agent.application.use_cases.corpus_actions import (
+    REINDEX_MAX,
+    BulkReindexRequirements,
+    BulkResult,
+    MembershipResult,
+    ReinstateToCorpus,
+    RetireFromCorpus,
+)
 from smb_requirement_agent.application.use_cases.internal_reads import (
     CorpusSummary,
     DependentsPage,
@@ -29,10 +37,14 @@ from smb_requirement_agent.application.use_cases.knowledge_portfolio import (
 )
 from smb_requirement_agent.application.use_cases.source_impact import DependencyImpactPage
 from smb_requirement_agent.domain.knowledge.entities import KnowledgeRelationshipKind
+from smb_requirement_agent.domain.knowledge.membership import REASON_MAX
 from smb_requirement_agent.interfaces.api.dependencies import (
+    get_bulk_reindex,
     get_internal_reads,
     get_knowledge_portfolio,
     get_nudge_finding_owners,
+    get_reinstate_to_corpus,
+    get_retire_from_corpus,
     require_service_caller,
 )
 
@@ -47,6 +59,25 @@ ReadsDep = Annotated[InternalReads, Depends(get_internal_reads)]
 ActorQuery = Annotated[str, Query(min_length=1, max_length=200)]
 PortfolioDep = Annotated[KnowledgePortfolio, Depends(get_knowledge_portfolio)]
 NudgeDep = Annotated[NudgeFindingOwners, Depends(get_nudge_finding_owners)]
+
+
+class CorpusActionRequest(BaseModel):
+    """The knowledge admin acting, and why: recorded with the action and told to the owner."""
+
+    actor_id: str = Field(min_length=1, max_length=200)
+    actor_name: str = Field(min_length=1, max_length=200)
+    reason: str = Field(min_length=1, max_length=REASON_MAX)
+
+
+class ReindexRequest(BaseModel):
+    actor_id: str = Field(min_length=1, max_length=200)
+    actor_name: str = Field(min_length=1, max_length=200)
+    # "failed": retry every Requirement that stopped indexing; "requirements": index these again.
+    scope: Literal["failed", "requirements"]
+    requirement_ids: list[Annotated[str, Field(min_length=1, max_length=200)]] = Field(
+        default_factory=list, max_length=REINDEX_MAX
+    )
+    reason: str | None = Field(None, min_length=1, max_length=REASON_MAX)
 
 
 class NudgeRequest(BaseModel):
@@ -107,6 +138,7 @@ def knowledge_corpus(
     q: str = Query("", max_length=200),
     open_findings_only: bool = False,
     not_screened_for_days: int | None = Query(None, ge=1, le=3650),
+    retired_only: bool = False,
     offset: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
 ) -> CorpusPage:
@@ -119,6 +151,7 @@ def knowledge_corpus(
         not_screened_for_days=not_screened_for_days,
         offset=offset,
         limit=limit,
+        retired_only=retired_only,
     )
 
 
@@ -139,6 +172,37 @@ def knowledge_findings(
 def nudge_finding_owners(finding_id: str, body: NudgeRequest, nudge: NudgeDep) -> NudgeResult:
     """Ask both Requirements' owners to decide a finding; at most once a week."""
     return nudge.execute(finding_id, body.actor_id, body.actor_name)
+
+
+@router.post("/knowledge/requirements/{requirement_id}/retirement")
+def retire_from_corpus(
+    requirement_id: str,
+    body: CorpusActionRequest,
+    retire: Annotated[RetireFromCorpus, Depends(get_retire_from_corpus)],
+) -> MembershipResult:
+    """Take a Requirement out of the corpus; every open finding citing it closes."""
+    return retire.execute(requirement_id, body.actor_id, body.actor_name, body.reason)
+
+
+@router.post("/knowledge/requirements/{requirement_id}/reinstatement")
+def reinstate_to_corpus(
+    requirement_id: str,
+    body: CorpusActionRequest,
+    reinstate: Annotated[ReinstateToCorpus, Depends(get_reinstate_to_corpus)],
+) -> MembershipResult:
+    """Return a retired Requirement to the corpus; it is indexed again and screened afresh."""
+    return reinstate.execute(requirement_id, body.actor_id, body.actor_name, body.reason)
+
+
+@router.post("/knowledge/reindex")
+def reindex_corpus(
+    body: ReindexRequest,
+    bulk: Annotated[BulkReindexRequirements, Depends(get_bulk_reindex)],
+) -> BulkResult:
+    """Retry what stopped indexing, or index chosen Requirements again; the worker does it."""
+    if body.scope == "failed":
+        return bulk.retry_failed(body.actor_id, body.actor_name, body.reason)
+    return bulk.reindex(tuple(body.requirement_ids), body.actor_id, body.actor_name, body.reason)
 
 
 def contract_openapi() -> dict[str, Any]:

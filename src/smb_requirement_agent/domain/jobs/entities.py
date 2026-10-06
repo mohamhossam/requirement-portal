@@ -307,6 +307,9 @@ class NotificationKind(StrEnum):
     KNOWLEDGE_CONFLICT_ACTION_REQUIRED = "knowledge_conflict_action_required"
     # A knowledge admin asks the owners to decide a finding (Knowledge Center B2).
     KNOWLEDGE_FINDINGS_NUDGE = "knowledge_findings_nudge"
+    # A knowledge admin retires the owner's Requirement from the corpus, or reinstates it (B3).
+    KNOWLEDGE_CORPUS_RETIRED = "knowledge_corpus_retired"
+    KNOWLEDGE_CORPUS_REINSTATED = "knowledge_corpus_reinstated"
 
 
 @dataclass(frozen=True)

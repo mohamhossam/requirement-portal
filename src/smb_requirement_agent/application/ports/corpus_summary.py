@@ -14,6 +14,8 @@ class CorpusCounts:
     # When each finding still in force was raised: actionable, with both
     # Requirements at the versions it judged (the Knowledge step's own rule).
     open_findings_raised_at: tuple[datetime, ...]
+    # Retired from the corpus by a knowledge admin (B3): indexed with no passages.
+    retired: int = 0
 
 
 class CorpusCountsPort(Protocol):

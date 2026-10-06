@@ -25,6 +25,7 @@ from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeRelationshipKind,
     KnowledgeScreen,
 )
+from smb_requirement_agent.domain.knowledge.membership import CorpusMembership
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 
@@ -36,9 +37,13 @@ class KnowledgeReview:
     current_fingerprint: str
     linked_versions_current: bool = True
     reference_conflict_ids: tuple[str, ...] = ()
+    # Retired from the corpus by a knowledge admin (B3): not screened, so nothing waits on it.
+    retirement: CorpusMembership | None = None
 
     @property
     def current(self) -> bool:
+        if self.retirement is not None:
+            return True
         return (
             self.screen is not None
             and self.screen.input_fingerprint == self.current_fingerprint

@@ -15,6 +15,8 @@ const BROWSER_TITLES: Record<components["schemas"]["NotificationKind"], string> 
   ai_job_failed: "AI work failed",
   knowledge_conflict_action_required: "A knowledge conflict needs you",
   knowledge_findings_nudge: "A knowledge finding awaits your decision",
+  knowledge_corpus_retired: "Your requirement was retired from the knowledge corpus",
+  knowledge_corpus_reinstated: "Your requirement is back in the knowledge corpus",
 };
 
 export function NotificationCenter() {

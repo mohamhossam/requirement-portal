@@ -58,6 +58,11 @@ from smb_requirement_agent.application.use_cases.clarify_requirement_analysis im
 from smb_requirement_agent.application.use_cases.confirm_requirement_analysis import (
     ConfirmRequirementAnalysis,
 )
+from smb_requirement_agent.application.use_cases.corpus_actions import (
+    BulkReindexRequirements,
+    ReinstateToCorpus,
+    RetireFromCorpus,
+)
 from smb_requirement_agent.application.use_cases.documents import (
     GetDocument,
     ListDocuments,
@@ -527,6 +532,18 @@ def get_knowledge_portfolio(container: ContainerDep) -> KnowledgePortfolio:
 
 def get_nudge_finding_owners(container: ContainerDep) -> NudgeFindingOwners:
     return container.nudge_finding_owners
+
+
+def get_retire_from_corpus(container: ContainerDep) -> RetireFromCorpus:
+    return container.retire_from_corpus
+
+
+def get_reinstate_to_corpus(container: ContainerDep) -> ReinstateToCorpus:
+    return container.reinstate_to_corpus
+
+
+def get_bulk_reindex(container: ContainerDep) -> BulkReindexRequirements:
+    return container.bulk_reindex
 
 
 def get_knowledge_actor(actor: CurrentActorDep) -> Actor:

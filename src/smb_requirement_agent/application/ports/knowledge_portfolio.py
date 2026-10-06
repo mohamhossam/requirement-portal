@@ -44,6 +44,15 @@ class PersonName:
 
 
 @dataclass(frozen=True)
+class RetiredMark:
+    """A Requirement retired from the corpus: when, by which knowledge admin, and why."""
+
+    at: datetime
+    by: str
+    reason: str
+
+
+@dataclass(frozen=True)
 class CorpusEntry:
     """One Requirement as the adapter reads it; its index state is decided by the use case."""
 
@@ -53,6 +62,7 @@ class CorpusEntry:
     owner: PersonName | None
     last_screened_at: datetime | None
     open_findings: int
+    retired: RetiredMark | None = None
 
 
 @dataclass(frozen=True)
@@ -66,6 +76,8 @@ class CorpusQuery:
     # Restricts the rows to these Requirements, or keeps them out (index-state filters).
     only: frozenset[str] | None = None
     excluding: frozenset[str] = frozenset()
+    # Only Requirements retired from the corpus (B3).
+    retired_only: bool = False
 
 
 @dataclass(frozen=True)

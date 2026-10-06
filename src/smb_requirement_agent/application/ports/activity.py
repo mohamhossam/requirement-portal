@@ -51,6 +51,7 @@ class ActivityAction(StrEnum):
     CONFLICT_RESOLUTION_PROPOSED = "conflict_resolution_proposed"
     CONFLICT_RESOLUTION_ACCEPTED = "conflict_resolution_accepted"
     CONFLICT_RESOLVED = "conflict_resolved"
+    FINDING_SOURCE_RETIRED = "finding_source_retired"
 
 
 class AuditSourceKind(StrEnum):

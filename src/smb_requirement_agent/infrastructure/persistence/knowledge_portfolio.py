@@ -18,6 +18,7 @@ from smb_kernel.persistence.connector import PostgresConnector
 
 from smb_requirement_agent.application.errors import PersistenceError
 from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
+from smb_requirement_agent.application.ports.corpus_membership import CorpusMembershipPort
 from smb_requirement_agent.application.ports.knowledge_portfolio import (
     CorpusEntry,
     CorpusQuery,
@@ -27,6 +28,7 @@ from smb_requirement_agent.application.ports.knowledge_portfolio import (
     FindingSide,
     NudgeMark,
     PersonName,
+    RetiredMark,
     finding_age,
 )
 from smb_requirement_agent.application.ports.requirement_repository import (
@@ -68,17 +70,20 @@ WITH in_force AS (
 )
 SELECT r.requirement_id, r.payload->>'title', r.payload->>'status',
        a.payload->'owner'->'actor'->>'id', a.payload->'owner'->'actor'->>'display_name',
-       s.at, COALESCE(c.open_findings, 0)
+       s.at, COALESCE(c.open_findings, 0), m.changed_at, m.actor_name, m.reason
 FROM requirements r
 LEFT JOIN requirement_access a ON a.requirement_id = r.requirement_id
 LEFT JOIN screened s ON s.requirement_id = r.requirement_id
 LEFT JOIN open_counts c ON c.requirement_id = r.requirement_id
+LEFT JOIN requirement_corpus_membership m
+       ON m.requirement_id = r.requirement_id AND m.state = 'retired'
 WHERE (%(owner)s::text IS NULL OR a.payload->'owner'->'actor'->>'id' = %(owner)s)
   AND (%(text)s = '' OR r.payload->>'title' ILIKE %(pattern)s ESCAPE '\\')
   AND (NOT %(open_only)s OR COALESCE(c.open_findings, 0) > 0)
   AND (%(since)s::timestamptz IS NULL OR s.at IS NULL OR s.at < %(since)s)
   AND (%(only)s::text[] IS NULL OR r.requirement_id = ANY(%(only)s))
   AND NOT (r.requirement_id = ANY(%(excluding)s::text[]))
+  AND (NOT %(retired_only)s OR m.requirement_id IS NOT NULL)
 ORDER BY lower(r.payload->>'title'), r.requirement_id
 OFFSET %(offset)s LIMIT %(limit)s
 """
@@ -138,6 +143,7 @@ class PostgresKnowledgePortfolio:
             "since": query.not_screened_since,
             "only": sorted(query.only) if query.only is not None else None,
             "excluding": sorted(query.excluding),
+            "retired_only": query.retired_only,
             "offset": offset,
             "limit": limit,
         }
@@ -150,6 +156,9 @@ class PostgresKnowledgePortfolio:
                 _person(row[3], row[4]),
                 row[5] if isinstance(row[5], datetime) else None,
                 int(str(row[6] or 0)),
+                RetiredMark(row[7], str(row[8]), str(row[9]))
+                if isinstance(row[7], datetime)
+                else None,
             )
             for row in rows
         )
@@ -255,11 +264,13 @@ class RepositoryKnowledgePortfolio:
         access: AccessRepositoryPort,
         knowledge: InMemoryRequirementKnowledgeStore,
         nudges: InMemoryFindingNudges,
+        membership: CorpusMembershipPort | None = None,
     ) -> None:
         self._requirements = requirements
         self._access = access
         self._knowledge = knowledge
         self._nudges = nudges
+        self._membership = membership
 
     def _owner(self, requirement_id: RequirementId) -> PersonName | None:
         access = self._access.get_requirement(requirement_id)
@@ -289,9 +300,11 @@ class RepositoryKnowledgePortfolio:
         for finding, _ in self._in_force(everyone):
             for side in (finding.subject_requirement_id, finding.related_requirement_id):
                 open_counts[side] = open_counts.get(side, 0) + 1
+        retired = self._membership.retired() if self._membership else {}
         entries = []
         for requirement in everyone.values():
             screen = self._knowledge.current_screen(requirement.id)
+            membership = retired.get(requirement.id.value)
             entry = CorpusEntry(
                 requirement.id.value,
                 requirement.title.value,
@@ -299,6 +312,9 @@ class RepositoryKnowledgePortfolio:
                 self._owner(requirement.id),
                 screen.provenance.generated_at if screen is not None else None,
                 open_counts.get(requirement.id, 0),
+                RetiredMark(membership.changed_at, membership.actor.display_name, membership.reason)
+                if membership is not None
+                else None,
             )
             if self._matches(entry, query):
                 entries.append(entry)
@@ -321,6 +337,7 @@ class RepositoryKnowledgePortfolio:
             )
             and (query.only is None or entry.requirement_id in query.only)
             and entry.requirement_id not in query.excluding
+            and (not query.retired_only or entry.retired is not None)
         )
 
     def findings(self, query: FindingQuery, offset: int, limit: int) -> tuple[FindingEntry, ...]:

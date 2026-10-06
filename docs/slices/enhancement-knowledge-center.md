@@ -177,6 +177,8 @@ Delivery order: **B1 → A′ → B2 → B3 → C → D**, then E once it is sch
   added. Decisions stay with the Requirement owners.
 
 ### B3 — Admin actions on the corpus (requirement-portal rules, knowledge-portal buttons)
+> Requirement-portal half delivered on `feat/knowledge-corpus-actions`
+> ([enhancement-knowledge-center-b3-corpus-actions.md](enhancement-knowledge-center-b3-corpus-actions.md)).
 - **Retire and reinstate (decision 4):**
   - An admin retires an obsolete or cancelled Requirement, live or historic, from the corpus,
     with a reason.
