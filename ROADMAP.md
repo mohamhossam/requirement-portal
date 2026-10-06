@@ -34,7 +34,7 @@ this ledger.
 | System components (`docs/slices/enhancement-system-components.md`, ADR-0092) | Implemented; merged in `smb-ai-requirement-agent` as [#84](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/84) before the `d5cfb57` snapshot. Now lives in [knowledge-portal](https://github.com/mohamhossam/knowledge-portal) | Live-model extraction check, in knowledge-portal |
 | Three-repository platform split (ADR-0098, ADR-0099, ADR-0100; plan `docs/slices/enhancement-platform-split.md`) | **Done 2026-10-05.** Stages 0–5: `platform-kernel` v1.0.2, the untangling and seams here, knowledge-portal v0.1.0, the cutover, and the guarded drop of the moved tables ([#31](https://github.com/mohamhossam/requirement-portal/pull/31)) with the run guides ([#32](https://github.com/mohamhossam/requirement-portal/pull/32)). No data is moved while the platform is in development. The acceptance criteria are checked in the plan, with their evidence: CI proves a withdrawal reaching requirement work, and runs the platform in a browser, on the combined stack | Branch protection on `main` (an owner setting) |
 | The Product Architecture Explorer on the knowledge catalogue (ADR-0101, with Amendments 1 and 2) | **Done 2026-10-05.** Built in [knowledge-portal](https://github.com/mohamhossam/knowledge-portal) (its #22–#36). Here: the ADR, and step 7's handoff of approved backlogs to the catalogue's change-request inbox ([#35](https://github.com/mohamhossam/requirement-portal/pull/35), `docs/slices/enhancement-change-requests-from-requirement-ai.md`) | A handoff status on the approval screen (deferred by decision) |
-| Knowledge Center (`docs/slices/enhancement-knowledge-center.md`, ADR-0099 Amendment 1) | **Re-planned 2026-10-06 for the three repositories.** A is mostly delivered by the split, and F early. Each remaining sub-slice is built where its data lives: B's rules and data here, with its admin screens in [knowledge-portal](https://github.com/mohamhossam/knowledge-portal); C and D in knowledge-portal. **B1 (attachments in the requirement corpus) is scheduled next, here** | B1; then A′, B2, B3, C, D to be sequenced; E also needs an explicit roadmap change (read-only ADO) and four open answers |
+| Knowledge Center (`docs/slices/enhancement-knowledge-center.md`, ADR-0099 Amendment 1, ADR-0102) | **Re-planned 2026-10-06 for the three repositories.** A is mostly delivered by the split, and F early. B1, A′, B2, B3, C and D are delivered (each built where its data lives). **E is scheduled 2026-10-06** (ADR-0102): E1, knowledge-portal's read-only ADO import and lineage, is in progress | E1, then E2 (historic corpus and prior art here); the ADO edition, for the REST adapter |
 | ADO publication and safe republish (12–13) | Planned; not implemented | Implementation |
 | Advanced workflow optimization (15) | Planned; evidence-gated | Demonstrate a need and measurable benefit before implementation |
 
@@ -1650,8 +1650,8 @@ Suggested order: A, B, F, E, C (after 8A.2), D.
 
 ## Enhancement — Knowledge Center
 
-**Status: re-planned 2026-10-06 for the three repositories (ADR-0099 Amendment 1). B1 is
-scheduled next.**
+**Status: re-planned 2026-10-06 for the three repositories (ADR-0099 Amendment 1). B1, A′,
+B2, B3, C and D are delivered. E is scheduled 2026-10-06 (ADR-0102): E1, then E2.**
 **Specification:** `docs/slices/enhancement-knowledge-center.md`
 
 ### User Outcome
@@ -1677,10 +1677,15 @@ breakdown as cited prior art.
   and citation counts.
 - **D — Review cycles** (knowledge-portal): review-due dates (180 days by default),
   confirmation, the portal's own reminders, and "not reviewed since" in citations.
-- **E — Historic Requirements** (split): import screens in knowledge-portal, the historic
-  corpus and the read-only ADO connector here. **Requires an explicit roadmap change**, because
-  `AGENTS.md` allows ADO integration only through its roadmap slice, and answers to the
-  specification's four open questions.
+- **E — Historic Requirements** (split; ADR-0102). **Scheduled 2026-10-06 by this explicit
+  roadmap change**: a *read-only* Azure DevOps import ahead of Slices 12–13, which `AGENTS.md`
+  §9 otherwise forbids. Writes to ADO stay in Slices 12–13. The open questions are answered
+  except the ADO edition, so the connector is built against a fake first.
+  - **E1** (knowledge-portal): BRD import, the read-only ADO connector, preview, publish,
+    refresh with a diff, and the lineage viewer. Published historic Requirements become
+    `historic_requirement_changed` events on the outbox this service already polls.
+  - **E2** (here): the historic corpus (`historic_brd`, `historic_backlog`, reference trust),
+    prior art by search then the AI judge, informational on the Knowledge step.
 - **F — AI-assisted catalogue extraction:** **delivered**
   (`docs/slices/enhancement-squad-and-architecture-catalogues.md`, ADR-0081, then
   knowledge-portal).
@@ -1844,7 +1849,11 @@ approved future-slice sequence:
 0. **Three-repository platform split** (ADR-0098): explicitly scheduled 2026-10-02 ahead of the items below. It
    moves the library and catalogues to `knowledge-portal`. Done 2026-10-05.
 0a. **Knowledge Center B1 — attachments in the requirement corpus**, scheduled 2026-10-06
-   (`docs/slices/enhancement-knowledge-center.md`, ADR-0099 Amendment 1).
+   (`docs/slices/enhancement-knowledge-center.md`, ADR-0099 Amendment 1). Then A′, B2, B3, C
+   and D, all delivered.
+0b. **Knowledge Center E — historic Requirements and ADO lineage**, scheduled 2026-10-06
+   (ADR-0102): E1 in knowledge-portal, then E2 here. Its ADO access is read-only; publication
+   stays Slices 12–13 below.
 1. Merge the pending human-answer citation salvage (`0d42039`) from
    `claude/fix-analysis-citations-and-proxy`.
 2. Close production release qualification: complete the environment, quality and capacity
@@ -1864,9 +1873,9 @@ means inserting it above; until then, implementation must not begin.
 - **Centralized logging in Graylog** — independent of the others; supports the operational
   release gates.
 - **Administration portal** — sub-slices in the order A, B, F, E, C (after 8A.2), D.
-- **Knowledge Center**, after B1 — sub-slices in the order A′, B2, B3, C, D, then E. Sub-slice E
-  (read-only ADO import) also needs an explicit roadmap change, since it reads from Azure DevOps
-  ahead of Slices 12–13. F is delivered.
+- **Knowledge Center** — B1, A′, B2, B3, C and D are delivered, and F before them. **E is
+  scheduled 2026-10-06** (E1, then E2; ADR-0102), as the explicit roadmap change for its
+  read-only ADO import ahead of Slices 12–13.
 - **Enhancement 5D.1** — maintained templates/examples. Its recorded debt stays in `AGENTS.md`
   §19 until it is scheduled.
 - **UI/UX redesign follow-ups** — the two §6 product decisions and the raised items under
