@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import uuid
-from dataclasses import dataclass
+from collections.abc import Mapping
+from dataclasses import dataclass, field
+from datetime import date
 
 from smb_kernel.time.clock import ClockPort
 
@@ -25,6 +27,7 @@ from smb_requirement_agent.application.ports.analysis_audit_repository import (
 from smb_requirement_agent.application.ports.reference_grounding import (
     ReferenceAnalysisPort,
     ReferenceEvidencePort,
+    ReferenceReviewPort,
 )
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
@@ -90,6 +93,8 @@ class AnalysisWorkspace:
     questions: tuple[ClarificationQuestion, ...]
     question_changes: tuple[AnalysisQuestionChange, ...] = ()
     stale_reference_proposal_ids: tuple[str, ...] = ()
+    # Cited library documents past their review date, with that date (Knowledge Center D).
+    overdue_reference_reviews: Mapping[str, date] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -128,7 +133,9 @@ class AnalysisCollaboration:
         reference_grounding: ReferenceAnalysisPort,
         references: ReferenceEvidencePort,
         authorization: RequirementAccessService,
+        reviews: ReferenceReviewPort | None = None,
     ) -> None:
+        self._reviews = reviews
         self._requirements = requirements
         self._reference_grounding, self._references = reference_grounding, references
         self._contexts = contexts
@@ -157,6 +164,7 @@ class AnalysisCollaboration:
             questions,
             round_.question_changes if round_ is not None else (),
             self._references.stale_analysis(analysis),
+            self._overdue_reviews(analysis),
         )
 
     def list_rounds(self, requirement_id: RequirementId) -> tuple[AnalysisRoundView, ...]:
@@ -636,7 +644,19 @@ class AnalysisCollaboration:
             active_questions,
             reconciled.round.question_changes,
             self._references.stale_analysis(analysis),
+            self._overdue_reviews(analysis),
         )
+
+    def _overdue_reviews(self, analysis: RequirementAnalysis) -> Mapping[str, date]:
+        """Which documents its proposals cite are past their review date: a flag, not a block."""
+        if self._reviews is None:
+            return {}
+        cited = {
+            citation.document_id
+            for proposal in analysis.intent_proposals
+            for citation in proposal.reference_evidence
+        }
+        return self._reviews.overdue_reviews(tuple(cited), self._clock.now().date())
 
     def _active_snapshot_matches(
         self,

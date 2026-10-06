@@ -302,6 +302,18 @@
             "title": "Publication Id",
             "type": "string"
           },
+          "review_due_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Due On"
+          },
           "revision_id": {
             "title": "Revision Id",
             "type": "string"
@@ -415,6 +427,18 @@
           "source_label": {
             "title": "Source Label",
             "type": "string"
+          },
+          "system_review_due_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Review Due On"
           },
           "text": {
             "title": "Text",
@@ -1335,7 +1359,7 @@
     },
     "/internal/architecture/releases/{release_id}/evidence/{chunk_id}": {
       "get": {
-        "description": "Evidence of a published release; a draft answers 404.",
+        "description": "Evidence of a published release; a draft answers 404. A system's own record says when\nthat system falls due for review (Knowledge Center D).",
         "operationId": "evidence_internal_architecture_releases__release_id__evidence__chunk_id__get",
         "parameters": [
           {

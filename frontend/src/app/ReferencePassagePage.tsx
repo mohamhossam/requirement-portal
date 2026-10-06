@@ -9,6 +9,7 @@ import { PageHeader } from "../components/shell";
 import { AsyncState, ErrorNotice, asyncStatus } from "../components/states";
 import { ButtonLink, Card } from "../components/ui";
 import { useDocumentTitle } from "./useDocumentTitle";
+import { ReviewOverdue } from "../components/ReviewOverdue";
 
 /**
  * The exact published passage a Requirement cites, read-only (ADR-0099).
@@ -58,6 +59,7 @@ export function ReferencePassagePage() {
                   {passage.data.section_path.length > 0 && <> · <bdi>{passage.data.section_path.join(" / ")}</bdi></>}
                   {" · "}<bdi>{passage.data.label}</bdi>
                 </p>
+                <ReviewOverdue dueOn={passage.data.review_due_on} subject="document" />
                 <blockquote dir="auto" className="border-line m-0 border-0 border-l-2 border-solid pl-4">
                   <p className="text-document font-document text-ink m-0 whitespace-pre-line">{passage.data.text}</p>
                 </blockquote>

@@ -71,6 +71,22 @@ it("requires rationale for reference decisions and blocks stale acceptance", asy
   expect(screen.getByRole("button", { name: "Reject" })).toBeEnabled();
 });
 
+it("flags a cited document past its review date beside the citation, without blocking the decision", () => {
+  const reference: IntentProposal = { ...pendingProposal, kind: "business_rule", success_measures: [],
+    reference_evidence: [{ document_id: "policy", title: "Coverage policy", version_id: "v1", version_number: 1,
+      revision_id: "r1", publication_id: "pub1", approval_fingerprint: "a".repeat(64), block_id: "b1",
+      location: "Page 7", excerpt: "Coverage required.", start_offset: 0, end_offset: 18, lineage_hash: "b".repeat(64) }],
+  };
+  const analysis = {
+    ...analysisFixture,
+    business_intent: { ...analysisFixture.business_intent, proposals: [reference] },
+    overdue_reference_reviews: { policy: "2020-01-02" },
+  };
+  render(<AnalysisPanel analysis={analysis} busy={false} error={null} onClarify={vi.fn()} onConfirm={vi.fn()} canDecideIntent onDecideIntent={vi.fn()} />);
+  expect(screen.getByText(/Review overdue since .*2020/)).toBeVisible();
+  expect(screen.getByLabelText("Applicability rationale")).toBeEnabled();
+});
+
 it("shows human support with answer attribution and no invented document link", () => {
   const statement = "DEL serves single-user lines; PABX serves multi-user plans.";
   const { container } = render(<AnalysisPanel analysis={{
@@ -664,6 +680,7 @@ describe("AnalysisPanel", () => {
           [questionFixture.id]: {
             id: "suggestions-1",
             question_id: questionFixture.id,
+            overdue_reference_reviews: {},
             suggestions: [{
               id: "suggestion-1",
               source: "trusted_knowledge",
@@ -736,6 +753,7 @@ describe("AnalysisPanel", () => {
           [questionFixture.id]: {
             id: "suggestions-empty",
             question_id: questionFixture.id,
+            overdue_reference_reviews: {},
             suggestions: [],
             provenance: {
               model: "grounded-test",

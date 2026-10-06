@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import replace
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from threading import RLock
 
 import pytest
@@ -256,3 +256,40 @@ def test_the_containers_copy_follows_the_knowledge_services_feed() -> None:
     container.reference_currency.require_current(republished)
     with pytest.raises(RequirementAnalysisConflictError):
         container.reference_currency.require_current((citation,))
+
+
+def test_the_review_due_date_travels_with_the_state_and_old_copies_still_read() -> None:
+    reviewed = replace(STATE, review_due_on=date(2026, 10, 1))
+    assert ReferenceDocumentState.from_payload(reviewed.to_payload()) == reviewed
+    legacy = {key: value for key, value in STATE.to_payload().items() if key != "review_due_on"}
+    assert ReferenceDocumentState.from_payload(legacy).review_due_on is None
+    with pytest.raises(InvalidDocumentError):
+        ReferenceDocumentState.from_payload({**STATE.to_payload(), "review_due_on": "soon"})
+    # Overdue from the due day itself; never before it, and never without a date.
+    assert reviewed.review_overdue(date(2026, 10, 1))
+    assert not reviewed.review_overdue(date(2026, 9, 30))
+    assert not STATE.review_overdue(date(2030, 1, 1))
+
+
+def test_overdue_reviews_are_worked_out_from_the_copy_when_read() -> None:
+    currency, _, events, projector = _currency()
+    events.append(
+        REFERENCE_DOCUMENT_CHANGED,
+        "doc-1",
+        replace(STATE, review_due_on=date(2026, 10, 1)).to_payload(),
+    )
+    events.append(
+        REFERENCE_DOCUMENT_CHANGED,
+        "doc-2",
+        replace(STATE, document_id="doc-2", review_due_on=date(2026, 12, 1)).to_payload(),
+    )
+    while projector.project_next():
+        pass
+    assert currency.overdue_reviews(("doc-1", "doc-2", "unknown"), date(2026, 10, 6)) == {
+        "doc-1": date(2026, 10, 1)
+    }
+    # The same copy, read later, finds the second one overdue too: nothing has to be sent.
+    assert currency.overdue_reviews(["doc-1", "doc-2"], date(2026, 12, 1)) == {
+        "doc-1": date(2026, 10, 1),
+        "doc-2": date(2026, 12, 1),
+    }

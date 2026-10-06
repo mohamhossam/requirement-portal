@@ -2137,6 +2137,13 @@ export interface components {
         AnswerSuggestionSetResponse: {
             /** Id */
             id: string;
+            /**
+             * Overdue Reference Reviews
+             * @default {}
+             */
+            overdue_reference_reviews: {
+                [key: string]: string;
+            };
             provenance: components["schemas"]["ProvenanceResponse"];
             /** Question Id */
             question_id: string;
@@ -2264,6 +2271,8 @@ export interface components {
             location: string;
             /** Source Label */
             source_label: string;
+            /** System Review Due On */
+            system_review_due_on?: string | null;
             /** Text */
             text: string;
         };
@@ -2702,6 +2711,8 @@ export interface components {
             label: string;
             /** Publication Id */
             publication_id: string;
+            /** Review Due On */
+            review_due_on?: string | null;
             /** Revision Id */
             revision_id: string;
             /** Section Path */
@@ -4109,6 +4120,13 @@ export interface components {
             known_facts: components["schemas"]["KnownFactResponse"][];
             /** Open Questions */
             open_questions: components["schemas"]["OpenQuestionResponse"][];
+            /**
+             * Overdue Reference Reviews
+             * @default {}
+             */
+            overdue_reference_reviews: {
+                [key: string]: string;
+            };
             /** Potential Dependencies */
             potential_dependencies: components["schemas"]["PotentialDependencyResponse"][];
             provenance: components["schemas"]["ProvenanceResponse"] | null;

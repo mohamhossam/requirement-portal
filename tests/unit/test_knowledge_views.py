@@ -10,6 +10,7 @@ import json
 import re
 from collections.abc import Callable, Iterator
 from dataclasses import replace
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -116,6 +117,18 @@ def test_a_cited_passage_is_read_by_its_exact_citation() -> None:
     }
     assert passage is not None and passage.section_path == ("Eligibility", "Coverage")
     assert passage.text == "XGPON coverage is required."
+    assert passage.review_due_on is None
+
+
+def test_the_knowledge_service_says_when_a_cited_document_or_system_falls_due() -> None:
+    """Knowledge Center D: additive fields, decoded where the contract has them."""
+    passage = HttpKnowledgeViews(
+        _client(_answering({**PASSAGE, "review_due_on": "2026-10-01"}))
+    ).passage(CITATION)
+    assert passage is not None and passage.review_due_on == date(2026, 10, 1)
+    record = {**EVIDENCE, "location": "system bcrm", "system_review_due_on": "2026-06-30"}
+    evidence = HttpKnowledgeViews(_client(_answering(record))).evidence("rel-1", "chunk-1")
+    assert evidence is not None and evidence.system_review_due_on == date(2026, 6, 30)
 
 
 def test_evidence_is_read_from_its_release() -> None:

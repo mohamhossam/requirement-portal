@@ -2,6 +2,7 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import date
 from typing import Protocol
 
 from smb_requirement_agent.application.errors import RequirementAnalysisConflictError
@@ -67,6 +68,16 @@ class ReferenceEvidencePort(Protocol):
     ) -> tuple[str, ...]: ...
     def stale_proposals(self, proposals: Sequence[IntentProposal]) -> tuple[str, ...]: ...
     def require_current(self, evidence: Sequence[PublishedReference]) -> None: ...
+
+
+class ReferenceReviewPort(Protocol):
+    def overdue_reviews(self, document_ids: Sequence[str], today: date) -> dict[str, date]:
+        """The cited documents the library says are past their review date, with that date.
+
+        Knowledge Center D: an overdue document is flagged beside its citations, never
+        withheld from them.
+        """
+        ...
 
 
 class ReferenceSearchPort(ReferenceEvidencePort, Protocol):

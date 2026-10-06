@@ -6,6 +6,7 @@ serves only live publications and published releases; anything else is absent.
 """
 
 from dataclasses import dataclass
+from datetime import date
 from typing import Protocol
 
 
@@ -30,6 +31,8 @@ class CitedPassage:
     section_path: tuple[str, ...]
     label: str
     text: str
+    # When its document falls due for review again (Knowledge Center D).
+    review_due_on: date | None = None
 
 
 @dataclass(frozen=True)
@@ -39,6 +42,8 @@ class ArchitectureEvidence:
     location: str
     text: str
     document_version_id: str | None = None
+    # For a catalogue system's own record: when that system falls due for review again.
+    system_review_due_on: date | None = None
 
 
 class KnowledgeViewsPort(Protocol):

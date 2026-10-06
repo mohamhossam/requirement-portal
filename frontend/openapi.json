@@ -956,6 +956,15 @@
             "title": "Id",
             "type": "string"
           },
+          "overdue_reference_reviews": {
+            "additionalProperties": {
+              "format": "date",
+              "type": "string"
+            },
+            "default": {},
+            "title": "Overdue Reference Reviews",
+            "type": "object"
+          },
           "provenance": {
             "$ref": "#/components/schemas/ProvenanceResponse"
           },
@@ -1324,6 +1333,18 @@
           "source_label": {
             "title": "Source Label",
             "type": "string"
+          },
+          "system_review_due_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Review Due On"
           },
           "text": {
             "title": "Text",
@@ -2539,6 +2560,18 @@
           "publication_id": {
             "title": "Publication Id",
             "type": "string"
+          },
+          "review_due_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Due On"
           },
           "revision_id": {
             "title": "Revision Id",
@@ -6583,6 +6616,15 @@
             },
             "title": "Open Questions",
             "type": "array"
+          },
+          "overdue_reference_reviews": {
+            "additionalProperties": {
+              "format": "date",
+              "type": "string"
+            },
+            "default": {},
+            "title": "Overdue Reference Reviews",
+            "type": "object"
           },
           "potential_dependencies": {
             "items": {

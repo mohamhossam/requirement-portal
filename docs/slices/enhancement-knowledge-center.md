@@ -193,9 +193,9 @@ Delivery order: **B1 → A′ → B2 → B3 → C → D**, then E once it is sch
   `/internal/knowledge/reindex`). Knowledge-portal offers them as actions on the B2 screens.
 
 ### C — Library and catalogue curation (knowledge-portal)
-> In progress ([enhancement-knowledge-center-c-library-curation.md](enhancement-knowledge-center-c-library-curation.md)):
-> requirement-portal's citation counts on `feat/library-citation-counts`. Agreed 2026-10-06:
-> admins may also review and approve on the owner's behalf, under a recorded grant.
+> Delivered ([enhancement-knowledge-center-c-library-curation.md](enhancement-knowledge-center-c-library-curation.md)):
+> requirement-portal#44 and knowledge-portal#44. Agreed 2026-10-06: admins may also review and
+> approve on the owner's behalf, under a recorded grant.
 - **Admin overrides on any library document:** reassign ownership and withdraw, each with a
   reason, recording the admin. Today both are owner-only.
 - **Bulk retry and rebuild** for failed library readings and index builds.
@@ -207,6 +207,10 @@ Delivery order: **B1 → A′ → B2 → B3 → C → D**, then E once it is sch
   requirement-portal read, `/internal/references/citation-counts`.
 
 ### D — Review cycles (knowledge-portal) (decisions 5 and 8)
+> In progress ([enhancement-knowledge-center-d-review-cycles.md](enhancement-knowledge-center-d-review-cycles.md)):
+> `feat/knowledge-center-review-cycles` (knowledge-portal, merges first) and
+> `feat/knowledge-review-labels` (requirement-portal). Agreed 2026-10-06: every catalogue
+> maintainer is reminded of every system; admins confirm on anyone's behalf with a reason.
 - **Review dates.** Library documents and catalogue systems carry `last_reviewed_at`,
   `review_due_at` and the reviewer.
   - The cycle is a setting, 180 days by default.

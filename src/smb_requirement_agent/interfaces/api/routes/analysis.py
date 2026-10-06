@@ -378,7 +378,10 @@ def workspace_response(workspace: AnalysisWorkspace) -> RequirementAnalysisRespo
         workspace.questions,
         workspace.question_changes,
     ).model_copy(
-        update={"stale_reference_proposal_ids": list(workspace.stale_reference_proposal_ids)}
+        update={
+            "stale_reference_proposal_ids": list(workspace.stale_reference_proposal_ids),
+            "overdue_reference_reviews": dict(workspace.overdue_reference_reviews),
+        }
     )
 
 
