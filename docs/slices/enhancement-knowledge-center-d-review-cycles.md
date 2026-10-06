@@ -1,8 +1,7 @@
 # Enhancement — Knowledge Center D: review cycles
 
-> **Status:** delivered on `feat/knowledge-center-review-cycles` (knowledge-portal) and
-> `feat/knowledge-review-labels` (requirement-portal), 2026-10-06. knowledge-portal merges
-> first: requirement-portal pins the fields it adds.
+> **Status:** delivered 2026-10-06: knowledge-portal#45 merged first, then
+> requirement-portal#45, which pins the fields it adds.
 > **Parent:** the Knowledge Center re-plan, sub-slice D
 > ([enhancement-knowledge-center.md](enhancement-knowledge-center.md)), decisions 5 and 8.
 

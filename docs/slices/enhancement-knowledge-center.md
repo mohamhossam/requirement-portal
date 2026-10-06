@@ -4,10 +4,10 @@
 > - **Decisions:** recorded 2026-09-26, then amended by ADR-0098 (the split), ADR-0099
 >   Amendment 1 (the Knowledge Center across the split) and this re-plan.
 > - **Delivered:** A is mostly delivered by the split itself, and F was delivered early.
-> - **Next:** B1, attachments in the requirement corpus.
-> - **Not scheduled:** each later sub-slice needs `ROADMAP.md` scheduling before it starts.
->   E reads from Azure DevOps, so scheduling it is an explicit roadmap change (`AGENTS.md`
->   allows ADO integration only through its roadmap slice), and it waits on four open questions.
+> - **Delivered since:** B1, A′, B2, B3, C and D.
+> - **Next:** E, scheduled 2026-10-06 by an explicit roadmap change (read-only Azure DevOps
+>   import, ADR-0102). It is delivered as E1 (knowledge-portal's import and lineage) then E2
+>   (this service's historic corpus and prior art).
 >
 > Every sub-slice below names the repository it is built in.
 
@@ -59,7 +59,11 @@ routes (ADR-0099 Amendment 1).
 | 6a | New Requirements | Every new Requirement, text or document, must be ingested into the Requirement knowledge base |
 | 7 | Where B lives (2026-10-06) | **Split.** Rules, data and attachment indexing stay in requirement-portal. The admin screens (corpus browser, portfolio findings, bulk retry, retire and reinstate) live in knowledge-portal and call new service-token routes on requirement-portal |
 | 8 | Review reminders (2026-10-06) | **knowledge-portal's own**: its own reminder list and badge. Nothing crosses the services, and there is no email |
-| 9 | Sub-slice E (2026-10-06) | Re-planned with its new homes, **left unscheduled** until the four open questions are answered |
+| 9 | Sub-slice E (2026-10-06) | Re-planned with its new homes, **left unscheduled** until the four open questions are answered. **Answered and scheduled the same day** (decisions 10–13, ADR-0102) |
+| 10 | E's open questions (2026-10-06) | ADO edition: **not decided**, so build against a fake and add the REST adapter once known. Process: **Agile** (Epic → Feature → User Story). IDs in BRDs: **sometimes**, so IDs found in the text are suggested and the curator confirms. Formats: **mostly DOCX, some PDF** |
+| 11 | Where E's ADO connector lives (2026-10-06) | **knowledge-portal**, read-only; ADO writes stay here in Slices 12–13 (ADR-0102, amending ADR-0099 Amendment 1) |
+| 12 | How historic Requirements reach this service (2026-10-06) | **As `historic_requirement_changed` events on the outbox this service already polls**, carrying the whole state; projected here with their own cursor from 0. No push route |
+| 13 | Prior art (2026-10-06) | **Search, then the AI judge** (`similar_past_requirement` with a rationale); informational prior-art records, never findings, never blocking. Delivered in two slices, **E1 then E2** |
 
 ## Current state (surveyed 2026-10-06)
 
@@ -137,7 +141,7 @@ routes (ADR-0099 Amendment 1).
 
 ## Sub-slices
 
-Delivery order: **B1 → A′ → B2 → B3 → C → D**, then E once it is scheduled. F is done.
+Delivery order: **B1 → A′ → B2 → B3 → C → D → E1 → E2**. F is done.
 
 ### B1 — Attachments in the requirement corpus (requirement-portal) — next
 - **A new source kind, `attachment`**, for the passages of attachments that analysis includes.
@@ -207,9 +211,8 @@ Delivery order: **B1 → A′ → B2 → B3 → C → D**, then E once it is sch
   requirement-portal read, `/internal/references/citation-counts`.
 
 ### D — Review cycles (knowledge-portal) (decisions 5 and 8)
-> In progress ([enhancement-knowledge-center-d-review-cycles.md](enhancement-knowledge-center-d-review-cycles.md)):
-> `feat/knowledge-center-review-cycles` (knowledge-portal, merges first) and
-> `feat/knowledge-review-labels` (requirement-portal). Agreed 2026-10-06: every catalogue
+> Delivered ([enhancement-knowledge-center-d-review-cycles.md](enhancement-knowledge-center-d-review-cycles.md)):
+> knowledge-portal#45, then requirement-portal#45. Agreed 2026-10-06: every catalogue
 > maintainer is reminded of every system; admins confirm on anyone's behalf with a reason.
 - **Review dates.** Library documents and catalogue systems carry `last_reviewed_at`,
   `review_due_at` and the reviewer.
@@ -231,7 +234,15 @@ Delivery order: **B1 → A′ → B2 → B3 → C → D**, then E once it is sch
     the label.
 - Overdue knowledge is **never** removed from retrieval.
 
-### E — Historic BRDs and Azure DevOps lineage (split; not scheduled)
+### E — Historic BRDs and Azure DevOps lineage (split; decisions 10–13, ADR-0102)
+> **Scheduled 2026-10-06** and re-placed by ADR-0102: the read-only ADO connector moves to
+> knowledge-portal, and published historic Requirements arrive as polled events, not over a
+> push route. The bullets below are kept as planned; where they differ, ADR-0102 wins.
+> - **E1 — in progress** ([enhancement-knowledge-center-e1-historic-import.md](enhancement-knowledge-center-e1-historic-import.md)):
+>   knowledge-portal's import, fake ADO connector, preview, publish, refresh with a diff and
+>   lineage, on `feat/knowledge-center-historic-import`; this ADR and the roadmap change here.
+> - **E2 — next:** this service's projection, historic corpus, prior-art screening with the
+>   judge, and the Knowledge step's "Similar past requirements".
 - **A historic Requirement.** A read-only reference concept, distinct from a live Requirement:
   no workflow, no ownership, no approvals. It holds:
   - one or more BRD documents, read with the existing document pipeline (DOCX and PDF; `.doc`
@@ -257,7 +268,7 @@ Delivery order: **B1 → A′ → B2 → B3 → C → D**, then E once it is sch
     approved backlogs reach knowledge-portal (ADR-0101 Amendment 2).
 - **Nothing is ever written to ADO.** Import runs are durable jobs, with progress, retry and a
   per-item error report.
-- It needs the open questions below answered, and a roadmap change.
+- ~~It needs the open questions below answered, and a roadmap change.~~ Done 2026-10-06.
 
 ### F — AI-assisted architecture catalogue extraction (knowledge-portal) — delivered
 - **Delivered early** (2026-09-29, `enhancement-squad-and-architecture-catalogues.md`,
@@ -450,7 +461,11 @@ Delivery order: **B1 → A′ → B2 → B3 → C → D**, then E once it is sch
 - **A new ADR before E:** historic reference knowledge and its trust levels, and read-only ADO
   ingestion.
 
-## Open questions (before sub-slice E starts)
+## Open questions (before sub-slice E starts) — answered 2026-10-06 (decision 10)
+
+One stays open: **which ADO edition**. It decides only the REST adapter's base URL and API
+version (ADR-0102), so E is built against the fake until it is answered.
+
 
 - Azure DevOps Services (cloud) or Azure DevOps Server (on-premises), and which version?
 - Which ADO process template (Agile, Scrum, CMMI) and hierarchy? This decides the work item

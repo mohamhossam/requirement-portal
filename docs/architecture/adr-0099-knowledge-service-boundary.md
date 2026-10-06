@@ -143,7 +143,9 @@ this boundary, each part is built where its data lives.
   reviewed there, and their reminders are a list in that portal, computed from due dates. They
   are not sent through this service's notifications. Overdue knowledge is marked in citations
   through an additive field on the knowledge service's internal passage and evidence responses.
-- **Historic Requirements (sub-slice E, not scheduled) are split the same way:**
+- **Historic Requirements (sub-slice E) are split the same way** (amended by ADR-0102, which
+  moves the read-only ADO connector to knowledge-portal and delivers historic Requirements as
+  polled events instead of over a push route):
   - curation and import screens live in knowledge-portal;
   - the historic corpus, prior-art screening and the read-only Azure DevOps connector live here,
     next to ADO publication (Slices 12–13);
