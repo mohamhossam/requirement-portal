@@ -89,6 +89,7 @@ def build_analysis_workflow(
             clock,
         ),
         references=knowledge.source_impact,
+        reviews=knowledge.reference_currency,
     )
     return AnalysisWorkflowWiring(
         generation_context_tokens=contexts,

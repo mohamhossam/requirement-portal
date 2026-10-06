@@ -186,3 +186,17 @@ Agreed in session when B3 was built:
 - **Bulk retry and reindex only reset failure counts or mark sources changed.** The index
   worker does the provider work, and re-screening follows the existing triggers, so no internal
   route reaches a provider.
+
+### When cited knowledge falls due for review (D, 2026-10-06)
+
+Agreed in session when D was built:
+
+- **Two optional fields join the knowledge service's internal contract**, both additive:
+  `CitedPassage.review_due_on` and, for a system's own catalogue record,
+  `ArchitectureEvidence.system_review_due_on`. The `reference_document_changed` event payload
+  carries `review_due_on` too, so this service's local copy (`ReferenceDocumentState`) knows it
+  without a call. Events written before D carry none and still read.
+- **This service works out "overdue" when it reads**, from the due date and today, so the label
+  never goes stale between events.
+- **Overdue is a flag, never a block.** It does not change whether a citation is current
+  (`cites`), what retrieval returns, or what an owner may accept or confirm.

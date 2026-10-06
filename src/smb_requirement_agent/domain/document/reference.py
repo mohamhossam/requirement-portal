@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import unicodedata
 from dataclasses import dataclass
+from datetime import date
 
 from smb_requirement_agent.domain.document.errors import InvalidDocumentError
 
@@ -95,6 +96,12 @@ class ReferenceDocumentState:
     title: str
     version: int
     published: CurrentPublication | None = None
+    # When the library says it falls due for review again (Knowledge Center D). A citation
+    # of it reads "not reviewed since" once that day has passed; it is never withheld.
+    review_due_on: date | None = None
+
+    def review_overdue(self, today: date) -> bool:
+        return self.review_due_on is not None and today >= self.review_due_on
 
     @property
     def publication_state(self) -> str:
@@ -147,6 +154,7 @@ class ReferenceDocumentState:
                 "block_labels": [list(item) for item in published.block_labels],
                 "passages": [list(item) for item in published.passages],
             },
+            "review_due_on": None if self.review_due_on is None else self.review_due_on.isoformat(),
         }
 
     @classmethod
@@ -173,9 +181,17 @@ class ReferenceDocumentState:
                 _text(data["title"]),
                 _number(data["version"]),
                 current,
+                # Absent from events and copies written before Knowledge Center D.
+                _day(data.get("review_due_on")),
             )
-        except (KeyError, TypeError) as exc:
+        except (KeyError, TypeError, ValueError) as exc:
             raise InvalidDocumentError("Reference document event is malformed.") from exc
+
+
+def _day(value: object) -> date | None:
+    if value is None:
+        return None
+    return date.fromisoformat(_text(value))
 
 
 def _mapping(value: object) -> dict[str, object]:

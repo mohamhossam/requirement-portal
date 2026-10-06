@@ -19,6 +19,7 @@ from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.errors import AuthenticationRequiredError
 from smb_requirement_agent.application.ports.identity import Actor
+from smb_requirement_agent.application.ports.reference_grounding import ReferenceReviewPort
 from smb_requirement_agent.application.use_cases.activity_reporting import (
     GetOperationalReport,
     ListActivity,
@@ -556,6 +557,10 @@ KnowledgeActorDep = Annotated[Actor, Depends(get_knowledge_actor)]
 
 def get_clock(container: ContainerDep) -> ClockPort:
     return container.clock
+
+
+def get_reference_reviews(container: ContainerDep) -> ReferenceReviewPort:
+    return container.reference_currency
 
 
 def get_architecture_mapping_jobs(container: ContainerDep) -> ArchitectureMappingJobs:

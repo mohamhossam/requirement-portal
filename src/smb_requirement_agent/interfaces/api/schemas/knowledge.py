@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -104,6 +104,8 @@ class AnswerSuggestionResponse(BaseModel):
 
 
 class AnswerSuggestionSetResponse(BaseModel):
+    # Cited library documents past their review date, by id (Knowledge Center D).
+    overdue_reference_reviews: dict[str, date] = {}
     id: str
     question_id: str
     suggestions: list[AnswerSuggestionResponse]

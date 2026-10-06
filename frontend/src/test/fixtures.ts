@@ -74,6 +74,7 @@ export const architectureFixture: ArchitectureImpact = {
 
 export const analysisFixture: RequirementAnalysis = {
   stale_reference_proposal_ids: [],
+  overdue_reference_reviews: {},
   clarification_evidence: [],
   requirement_id: "requirement-1",
   version: 1,

@@ -20,6 +20,7 @@ import {
   SUGGESTION_SOURCE_LABEL,
 } from "./labels";
 import { passageHref } from "../../api/knowledge";
+import { ReviewOverdue } from "../../components/ReviewOverdue";
 
 export function QuestionGroup({
   analysis,
@@ -374,6 +375,7 @@ function QuestionCard({
               {c.title} · version {c.version_number} · {c.location}
             </a>
             <blockquote dir="auto">{c.excerpt}</blockquote>
+            <ReviewOverdue dueOn={suggestionSet.overdue_reference_reviews?.[c.document_id]} subject="document" />
           </div>
         ))}
         {pickedSuggestion && (

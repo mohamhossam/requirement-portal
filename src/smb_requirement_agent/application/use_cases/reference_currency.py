@@ -6,7 +6,7 @@ transaction, so a withdrawal is serialised against the work that checks it.
 """
 
 from collections.abc import Sequence
-from datetime import timedelta
+from datetime import date, timedelta
 
 from smb_kernel.time.clock import ClockPort
 
@@ -63,6 +63,15 @@ class ReferenceCurrency:
                     "A cited reference was withdrawn or replaced. "
                     "Re-analyse and reconcile its applicability before continuing."
                 )
+
+    def overdue_reviews(self, document_ids: Sequence[str], today: date) -> dict[str, date]:
+        overdue: dict[str, date] = {}
+        with self._transactions.transaction():
+            for document_id in sorted(set(document_ids)):
+                state = self._states.get(document_id)
+                if state is not None and state.review_due_on and state.review_overdue(today):
+                    overdue[document_id] = state.review_due_on
+        return overdue
 
     def stale_analysis(
         self, analysis: RequirementAnalysis, *, target_ids: Sequence[str] | None = None

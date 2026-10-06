@@ -14,7 +14,7 @@ import re
 import uuid
 from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 from smb_requirement_agent.application.ports.knowledge_events import (
     ARCHITECTURE_RELEASE_ACTIVATED,
@@ -109,6 +109,11 @@ class PublishedLibrary:
             for citation in citations
         )
         return citations
+
+    def falls_due(self, document_id: str, on: date) -> None:
+        """The library says the document falls due for review on `on` (Knowledge Center D)."""
+        state = self._states[document_id]
+        self._changed(replace(state, version=state.version + 1, review_due_on=on))
 
     def withdraw(self, document_id: str) -> None:
         """Withdraw the document's publication; its citations stop being current."""

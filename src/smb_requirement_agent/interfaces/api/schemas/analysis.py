@@ -1,6 +1,6 @@
 """Analysis API schemas."""
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Annotated
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StringConstraints
@@ -187,6 +187,8 @@ class AnalysisActionsResponse(BaseModel):
 
 class RequirementAnalysisResponse(BaseModel):
     stale_reference_proposal_ids: list[str] = []
+    # Cited library documents past their review date, by id (Knowledge Center D).
+    overdue_reference_reviews: dict[str, date] = {}
     clarification_evidence: list["AnalysisClarificationEvidenceResponse"] = []
     requirement_id: str
     version: int

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from dataclasses import replace
+from datetime import date
 
 import pytest
 from fastapi import HTTPException, Request
@@ -16,6 +17,7 @@ from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.interfaces.api.dependencies import require_service_caller
 from smb_requirement_agent.interfaces.api.main import create_app
+from tests.knowledge_doubles import sync
 from tests.unit import test_reference_grounding
 from tests.unit.test_reference_grounding import Grounded
 
@@ -189,3 +191,27 @@ def test_the_router_refuses_a_request_the_middleware_did_not_admit() -> None:
     assert refused.value.status_code == 401
     admitted = Request({"type": "http", "headers": [], CALLER_SCOPE_KEY: "knowledge"})
     assert require_service_caller(admitted) == "knowledge"
+
+
+def test_a_cited_document_past_its_review_date_is_flagged_beside_its_proposal(
+    grounded: Grounded,
+) -> None:
+    """Knowledge Center D: worked out when read, from the library's due date; never a block."""
+    container, owner = grounded.container, FAKE_ACTORS[0]
+    requirement = container.create_requirement.execute(
+        CreateRequirementInput("Cites the policy", "XGPON coverage for bundles."), owner
+    )
+    container.analyze_requirement.execute(owner, requirement.id)
+    workspace = container.analysis_collaboration.workspace(requirement.id)
+    assert workspace.overdue_reference_reviews == {}
+    document_id = grounded.citation.document_id
+    grounded.library.falls_due(document_id, date(2026, 1, 1))
+    sync(container)
+    later = container.analysis_collaboration.workspace(requirement.id)
+    assert later.overdue_reference_reviews == {document_id: date(2026, 1, 1)}
+    # A due date still ahead is not flagged.
+    grounded.library.falls_due(document_id, date(2099, 1, 1))
+    sync(container)
+    assert (
+        container.analysis_collaboration.workspace(requirement.id).overdue_reference_reviews == {}
+    )
