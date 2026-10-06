@@ -14,6 +14,7 @@ from fastapi import APIRouter, Depends, FastAPI, Query
 
 from smb_requirement_agent.application.ports.architecture_mapping_stats import MappingCount
 from smb_requirement_agent.application.use_cases.internal_reads import (
+    CorpusSummary,
     DependentsPage,
     InternalReads,
 )
@@ -69,6 +70,12 @@ def document_dependents(
 @router.get("/architecture-mapping/stats")
 def mapping_stats(reads: ReadsDep) -> list[MappingCount]:
     return list(reads.mapping_counts())
+
+
+@router.get("/knowledge/corpus/summary")
+def corpus_summary(reads: ReadsDep) -> CorpusSummary:
+    """Requirement knowledge corpus health for the Knowledge Center: counts only."""
+    return reads.corpus_summary()
 
 
 def contract_openapi() -> dict[str, Any]:

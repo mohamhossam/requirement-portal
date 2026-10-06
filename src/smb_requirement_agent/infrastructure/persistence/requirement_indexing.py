@@ -8,13 +8,16 @@ from psycopg.types.json import Jsonb
 from pydantic import TypeAdapter
 
 from smb_requirement_agent.application.errors import PersistenceError
-from smb_requirement_agent.application.ports.requirement_indexing import RequirementIndexProgress
+from smb_requirement_agent.application.ports.requirement_indexing import (
+    FAILED_AFTER,
+    RequirementIndexProgress,
+)
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 
 
 def eligible(progress: RequirementIndexProgress, change: int, now: datetime) -> bool:
     return progress.source_change != change or (
-        progress.failures < 3 and (progress.retry_at is None or progress.retry_at <= now)
+        progress.failures < FAILED_AFTER and (progress.retry_at is None or progress.retry_at <= now)
     )
 
 
@@ -73,6 +76,16 @@ class MemoryRequirementIndexProgress:
                 retry_at=None,
             )
             return True
+
+    def failed(self, identity: str) -> tuple[tuple[str, int], ...]:
+        with self._lock:
+            return tuple(
+                sorted(
+                    (source, progress.source_change)
+                    for (owner, source), progress in self._rows.items()
+                    if owner == identity and progress.failures >= FAILED_AFTER
+                )
+            )
 
 
 class PostgresRequirementIndexProgress:
@@ -161,3 +174,14 @@ class PostgresRequirementIndexProgress:
                 (identity, source, now),
             )
             return cursor.rowcount == 1
+
+    def failed(self, identity: str) -> tuple[tuple[str, int], ...]:
+        with self._store.connection() as connection:
+            rows = connection.execute(
+                "SELECT source_id, (payload->>'source_change')::integer "
+                "FROM requirement_index_progress "
+                "WHERE identity=%s AND COALESCE((payload->>'failures')::integer, 0) >= %s "
+                "ORDER BY source_id",
+                (identity, FAILED_AFTER),
+            ).fetchall()
+        return tuple((str(row[0]), int(str(row[1] or 0))) for row in rows)

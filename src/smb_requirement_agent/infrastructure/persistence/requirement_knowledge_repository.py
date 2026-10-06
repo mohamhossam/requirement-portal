@@ -6,6 +6,7 @@ import math
 import re
 import threading
 from copy import deepcopy
+from datetime import datetime
 from typing import Any
 
 from smb_requirement_agent.application.errors import KnowledgeGenerationError
@@ -192,6 +193,21 @@ class InMemoryRequirementKnowledgeStore:
         self._findings[finding.id] = finding
         self.mark_source_changed(finding.subject_requirement_id)
         self.mark_source_changed(finding.related_requirement_id)
+
+    def raised_findings(self) -> tuple[tuple[KnowledgeFinding, datetime], ...]:
+        """Every finding with the time its screen raised it; for the corpus summary."""
+        with self._index_lock:
+            raised = {
+                finding_id: screen.provenance.generated_at
+                for screens in self._screens.values()
+                for screen in screens
+                for finding_id in screen.finding_ids
+            }
+            return tuple(
+                (finding, raised[finding.id])
+                for finding in self._findings.values()
+                if finding.id in raised
+            )
 
     def list_related_findings(self, requirement_id: RequirementId) -> tuple[KnowledgeFinding, ...]:
         return tuple(
