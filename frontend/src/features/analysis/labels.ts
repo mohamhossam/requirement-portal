@@ -103,6 +103,8 @@ const EVIDENCE_FIELD_LABEL: Record<string, string> = {
 export function evidenceFieldLabel(field: string): string {
   const known = EVIDENCE_FIELD_LABEL[field];
   if (known) return known;
+  // `attachment:<document>:<block>`: the identifiers do not belong on the page.
+  if (field.startsWith("attachment:")) return "Attachment passage";
   const words = field.replaceAll("_", " ").trim();
   return words ? words.charAt(0).toUpperCase() + words.slice(1) : field;
 }

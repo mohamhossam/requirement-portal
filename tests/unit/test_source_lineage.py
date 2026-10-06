@@ -80,6 +80,7 @@ def test_answer_origin_survives_reanalysis_and_is_not_independent(
         container.analysis_audit_repository,
         container.access_repository,
         container.knowledge_repository,
+        container.document_repository,
     )
     copies = [chunk for chunk in corpus.chunks(requirement) if chunk.source_lineage]
     assert copies and all(c.source_lineage[0].citation.document_id == document_id for c in copies)

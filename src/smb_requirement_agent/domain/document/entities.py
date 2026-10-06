@@ -152,6 +152,24 @@ class SourceDocument:
             f"Document version {version_id.value!r} does not belong to this document."
         )
 
+    @property
+    def included_blocks(self) -> tuple[DocumentEvidenceBlock, ...]:
+        """The included version's blocks, without hidden worksheets nobody chose to include.
+
+        Analysis and the requirement knowledge index both read a document through this, so
+        they always agree on what it contributes. Empty when the document is not included.
+        """
+        if not self.is_included or self.included_version_id is None:
+            return ()
+        return tuple(
+            block
+            for block in self.version(self.included_version_id).evidence_blocks
+            if not block.section_path
+            or not block.section_path[0].startswith("Hidden worksheet: ")
+            or block.section_path[0].removeprefix("Hidden worksheet: ")
+            in self.included_hidden_worksheets
+        )
+
     def add_version(self, version: SourceDocumentVersion) -> SourceDocument:
         if self.removed:
             raise InvalidDocumentError("A removed document cannot receive a new version.")

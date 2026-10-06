@@ -59,6 +59,7 @@ def corpus(container: Container) -> RequirementKnowledgeCorpus:
         container.analysis_audit_repository,
         container.access_repository,
         container.knowledge_repository,
+        container.document_repository,
     )
 
 

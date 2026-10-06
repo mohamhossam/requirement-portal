@@ -20,6 +20,9 @@ from smb_requirement_agent.infrastructure.persistence.postgres_activity_sources 
     PostgresActivitySources,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_ai_jobs import PostgresAiJobStore
+from smb_requirement_agent.infrastructure.persistence.postgres_document_repository import (
+    PostgresDocumentRepository,
+)
 from smb_requirement_agent.infrastructure.persistence.postgres_repositories import (
     PostgresAccessRepository,
     PostgresAnalysisAuditRepository,
@@ -63,6 +66,7 @@ def refresh_postgres_projections(
         audit,
         PostgresAccessRepository(session),
         knowledge,
+        PostgresDocumentRepository(session),
     )
     sources = PostgresActivitySources(session, snapshots, revisions)
     activity = PostgresProjectedActivity(

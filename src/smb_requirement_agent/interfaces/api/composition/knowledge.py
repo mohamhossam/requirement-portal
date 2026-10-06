@@ -95,6 +95,7 @@ def build_requirement_knowledge(
         persistence.analysis_audit_repository,
         persistence.access_repository,
         persistence.knowledge_repository,
+        persistence.document_repository,
     )
     review = GetKnowledgeReview(corpus, persistence.knowledge_repository)
     screen_scheduler = KnowledgeScreenScheduler(

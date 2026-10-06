@@ -259,6 +259,7 @@ def test_current_analysis_suggestion_evidence_excludes_uncertainty(
         container.analysis_audit_repository,
         container.access_repository,
         container.knowledge_repository,
+        container.document_repository,
     ).current_analysis_chunks(requirement)
 
     assert chunks
@@ -280,6 +281,7 @@ def test_hybrid_index_fuses_lexical_and_semantic_ranks(container: Container) -> 
         container.analysis_audit_repository,
         container.access_repository,
         container.knowledge_repository,
+        container.document_repository,
     )
     embeddings = FakeKnowledgeEmbedding()
     corpus.sync_index(container.knowledge_index, embeddings)
@@ -301,6 +303,7 @@ def test_trusted_corpus_excludes_unconfirmed_ai_content(container: Container) ->
         container.analysis_audit_repository,
         container.access_repository,
         container.knowledge_repository,
+        container.document_repository,
     ).chunks(requirement)
 
     assert {item.source_kind for item in candidate_chunks} == {KnowledgeSourceKind.SOURCE}
@@ -518,6 +521,7 @@ def test_suggestions_are_grounded_and_record_optional_human_influence(
         container.analysis_audit_repository,
         container.access_repository,
         container.knowledge_repository,
+        container.document_repository,
     )
     assert not any(
         c.source_kind is KnowledgeSourceKind.CLARIFICATION for c in corpus.chunks(subject)
@@ -633,6 +637,7 @@ def test_no_supported_answer_is_a_successful_empty_suggestion_set(
             container.analysis_audit_repository,
             container.access_repository,
             container.knowledge_repository,
+            container.document_repository,
         ),
         container.knowledge_index,
         container.knowledge_repository,
@@ -723,6 +728,7 @@ def test_invalid_suggestion_output_does_not_overwrite_the_prior_valid_set(
             container.analysis_audit_repository,
             container.access_repository,
             container.knowledge_repository,
+            container.document_repository,
         ),
         container.knowledge_index,
         container.knowledge_repository,
@@ -795,6 +801,7 @@ def test_stale_provider_citation_fails_without_overwriting_prior_suggestions(
             container.analysis_audit_repository,
             container.access_repository,
             container.knowledge_repository,
+            container.document_repository,
         ),
         container.knowledge_index,
         container.knowledge_repository,
@@ -828,6 +835,7 @@ def test_unknown_classifier_citation_and_wrong_embedding_dimension_fail_atomical
         container.analysis_audit_repository,
         container.access_repository,
         container.knowledge_repository,
+        container.document_repository,
     )
 
     class InvalidClassifier:
