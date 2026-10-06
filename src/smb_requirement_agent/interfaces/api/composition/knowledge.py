@@ -14,7 +14,18 @@ from smb_requirement_agent.application.use_cases.ai_job_scheduling import (
 from smb_requirement_agent.application.use_cases.answer_suggestions import (
     SuggestClarificationAnswers,
 )
+from smb_requirement_agent.application.use_cases.historic_corpus import (
+    IndexHistoricCorpus,
+    ProjectHistoricRequirements,
+    historic_identity,
+)
 from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
+from smb_requirement_agent.application.use_cases.prior_art import (
+    GetPriorArt,
+    HistoricCitations,
+    PriorArtScheduler,
+    ScreenPriorArt,
+)
 from smb_requirement_agent.application.use_cases.rebuild_knowledge_index import (
     RebuildKnowledgeIndex,
 )
@@ -78,6 +89,16 @@ class RequirementKnowledgeWiring:
     ensure_screen: EnsureKnowledgeScreen
     decide_finding: DecideKnowledgeFinding
     unified_search: UnifiedKnowledgeSearch
+    # Historic requirements (Knowledge Center E2, ADR-0102): their own cursor, their own
+    # loops, so a slow page of historic content never holds up reference currency.
+    # Prior art from the historic corpus: informational, never a finding.
+    get_prior_art: GetPriorArt
+    screen_prior_art: ScreenPriorArt
+    historic_citations: HistoricCitations
+    historic_projection: ProjectHistoricRequirements
+    historic_event_worker: IngestionLoop
+    historic_indexer: IndexHistoricCorpus
+    historic_index_worker: IngestionLoop
 
 
 def build_requirement_knowledge(
@@ -99,6 +120,30 @@ def build_requirement_knowledge(
         membership=persistence.corpus_membership,
     )
     review = GetKnowledgeReview(corpus, persistence.knowledge_repository)
+    historic_index_identity = historic_identity(embedding_identity)
+    get_prior_art = GetPriorArt(
+        corpus,
+        persistence.historic_corpus,
+        persistence.historic_corpus,
+        persistence.prior_art,
+        persistence.ai_job_repository,
+        persistence.prior_art,
+        clock,
+        identity=historic_index_identity,
+        enabled=settings.prior_art_enabled,
+        judge_calls_per_hour=settings.prior_art_judge_calls_per_hour,
+    )
+    prior_art_scheduler = PriorArtScheduler(
+        get_prior_art,
+        persistence.prior_art,
+        persistence.historic_corpus,
+        persistence.ai_job_repository,
+        persistence.requirement_repository,
+        clock,
+        _AUTOMATIC_ACTOR,
+        identity=historic_index_identity,
+        enabled=settings.prior_art_enabled,
+    )
     screen_scheduler = KnowledgeScreenScheduler(
         review,
         persistence.ai_job_repository,
@@ -107,6 +152,7 @@ def build_requirement_knowledge(
         clock,
         _AUTOMATIC_ACTOR,
         membership=persistence.corpus_membership,
+        prior_art=prior_art_scheduler,
     )
     indexer = IndexRequirementKnowledge(
         corpus,
@@ -130,10 +176,26 @@ def build_requirement_knowledge(
         persistence.transaction_manager,
         clock,
     )
+    historic_projector = ProjectHistoricRequirements(
+        service.events,
+        persistence.historic_corpus,
+        persistence.historic_corpus,
+        persistence.transaction_manager,
+        clock,
+    )
+    historic_indexer = IndexHistoricCorpus(
+        service.historic_content,
+        persistence.historic_corpus,
+        llm.knowledge_embedding,
+        clock,
+        historic_index_identity,
+        settings.historic_embed_chunks_per_hour,
+    )
     if not service.remote:
         # The offline feed is fixed; read it now so a catalogue version is known at once.
         # A remote service's events are polled by the knowledge event worker instead.
         projector.drain()
+        historic_projector.drain()
     return RequirementKnowledgeWiring(
         corpus=corpus,
         review=review,
@@ -205,6 +267,36 @@ def build_requirement_knowledge(
             authorization=access,
             membership=persistence.corpus_membership,
         ),
+        get_prior_art=get_prior_art,
+        screen_prior_art=ScreenPriorArt(
+            persistence.requirement_repository,
+            corpus,
+            persistence.historic_corpus,
+            persistence.historic_corpus,
+            persistence.prior_art,
+            llm.knowledge_embedding,
+            llm.prior_art_judge,
+            persistence.prior_art,
+            clock,
+            persistence.transaction_manager,
+            authorization=access,
+            identity=historic_index_identity,
+            enabled=settings.prior_art_enabled,
+            judge_calls_per_hour=settings.prior_art_judge_calls_per_hour,
+        ),
+        historic_citations=HistoricCitations(
+            persistence.prior_art,
+            get_prior_art,
+            persistence.requirement_repository,
+            persistence.access_repository,
+            corpus,
+        ),
+        historic_projection=historic_projector,
+        historic_event_worker=IngestionLoop(
+            "historic-requirements", (historic_projector.project_next,)
+        ),
+        historic_indexer=historic_indexer,
+        historic_index_worker=IngestionLoop("historic-index", (historic_indexer.process_next,)),
         unified_search=UnifiedKnowledgeSearch(
             corpus,
             persistence.knowledge_index,

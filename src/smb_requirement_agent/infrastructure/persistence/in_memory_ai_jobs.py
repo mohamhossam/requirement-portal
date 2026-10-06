@@ -249,6 +249,8 @@ class InMemoryAiJobStore:
                 self._jobs.values(),
                 key=lambda item: (
                     0 if item.job.origin is AiJobOrigin.USER else 1,
+                    # Prior art waits behind everything else (Knowledge Center E2).
+                    1 if item.job.operation is AiJobOperation.SCREEN_PRIOR_ART else 0,
                     item.job.created_at,
                 ),
             )

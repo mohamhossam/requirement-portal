@@ -1,0 +1,28 @@
+{
+  "historic_requirement_id": "11111111-2222-3333-4444-555555555555",
+  "published": {
+    "counts": {
+      "brds": 1,
+      "items": 8,
+      "passages": 2
+    },
+    "fetched_at": "2026-10-06T09:00:00+00:00",
+    "fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "imported_at": "2026-10-06T09:00:00+00:00",
+    "imported_by": {
+      "id": "ada-admin",
+      "name": "Ada Admin"
+    },
+    "publication": 1,
+    "published_at": "2026-10-06T09:00:00+00:00",
+    "published_by": {
+      "id": "ada-admin",
+      "name": "Ada Admin"
+    },
+    "root_ids": [
+      48213
+    ],
+    "title": "XGPON bundles"
+  },
+  "version": 6
+}

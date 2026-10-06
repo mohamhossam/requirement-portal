@@ -8,9 +8,10 @@ never routes /internal.
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Depends, FastAPI, Query
+from fastapi import APIRouter, Depends, FastAPI, Path, Query
 from pydantic import BaseModel, Field
 
 from smb_requirement_agent.application.ports.architecture_mapping_stats import MappingCount
@@ -35,11 +36,13 @@ from smb_requirement_agent.application.use_cases.knowledge_portfolio import (
     NudgeFindingOwners,
     NudgeResult,
 )
+from smb_requirement_agent.application.use_cases.prior_art import HistoricCitations
 from smb_requirement_agent.application.use_cases.source_impact import DependencyImpactPage
 from smb_requirement_agent.domain.knowledge.entities import KnowledgeRelationshipKind
 from smb_requirement_agent.domain.knowledge.membership import REASON_MAX
 from smb_requirement_agent.interfaces.api.dependencies import (
     get_bulk_reindex,
+    get_historic_citations,
     get_internal_reads,
     get_knowledge_portfolio,
     get_nudge_finding_owners,
@@ -104,6 +107,70 @@ DocumentIds = Annotated[
 @router.get("/references/citation-counts")
 def citation_counts(document_ids: DocumentIds, reads: ReadsDep) -> CitationCounts:
     return CitationCounts(counts=reads.citation_counts(tuple(document_ids)))
+
+
+# --- Where historic requirements are cited (Knowledge Center E2, ADR-0102) -----------------
+
+HistoricCitationsDep = Annotated[HistoricCitations, Depends(get_historic_citations)]
+HistoricIds = Annotated[
+    list[Annotated[str, Field(min_length=1, max_length=200)]],
+    Query(alias="historic_id", min_length=1, max_length=CITATION_COUNTS_MAX),
+]
+
+
+class HistoricCitationCounts(BaseModel):
+    """Requirements whose prior art cites each historic requirement; 0 when none does."""
+
+    counts: dict[str, int]
+
+
+class HistoricCitationItem(BaseModel):
+    requirement_id: str
+    title: str
+    owner: str
+    checked_at: datetime
+    # Whether that prior-art check is still current for the Requirement as it stands.
+    current: bool
+    retired: bool
+    duplicate: bool
+
+
+class HistoricCitationPage(BaseModel):
+    items: list[HistoricCitationItem]
+    next_offset: int | None
+
+
+@router.get("/knowledge/historic/citation-counts")
+def historic_citation_counts(
+    historic_ids: HistoricIds, citations: HistoricCitationsDep
+) -> HistoricCitationCounts:
+    return HistoricCitationCounts(counts=citations.counts(tuple(historic_ids)))
+
+
+@router.get("/knowledge/historic/{historic_requirement_id}/citations")
+def historic_citations(
+    historic_requirement_id: Annotated[str, Path(min_length=1, max_length=200)],
+    citations: HistoricCitationsDep,
+    offset: int = Query(0, ge=0, le=100_000),
+    limit: int = Query(20, ge=1, le=100),
+) -> HistoricCitationPage:
+    """Requirements citing a historic requirement: who and when, never what was matched."""
+    items, next_offset = citations.page(historic_requirement_id, offset, limit)
+    return HistoricCitationPage(
+        items=[
+            HistoricCitationItem(
+                requirement_id=item.requirement_id,
+                title=item.title,
+                owner=item.owner,
+                checked_at=item.checked_at,
+                current=item.current,
+                retired=item.retired,
+                duplicate=item.duplicate,
+            )
+            for item in items
+        ],
+        next_offset=next_offset,
+    )
 
 
 @router.get("/references/{document_id}/impact")

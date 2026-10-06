@@ -16,6 +16,7 @@ from smb_requirement_agent.infrastructure.jobs.polling_worker import (
     AiJobWorkerGroup,
     PollingAiJobWorker,
 )
+from smb_requirement_agent.infrastructure.jobs.prior_art_gate import PriorArtGatedQueue
 from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import IndexReadyJobQueue
 from smb_requirement_agent.interfaces.api.composition.analysis_workflow import (
     AnalysisWorkflowWiring,
@@ -65,12 +66,22 @@ def build_ai_jobs(
         persistence.access_repository,
         access,
         analysis.generation_context_tokens,
+        screen_prior_art=knowledge.screen_prior_art,
     )
     # Index-dependent operations wait behind the gate instead of failing.
     worker = AiJobWorkerGroup(
         tuple(
             PollingAiJobWorker(
-                IndexReadyJobQueue(persistence.ai_job_queue, knowledge.indexer),
+                IndexReadyJobQueue(
+                    PriorArtGatedQueue(
+                        persistence.ai_job_queue,
+                        persistence.prior_art,
+                        clock,
+                        enabled=settings.prior_art_enabled,
+                        hourly=settings.prior_art_judge_calls_per_hour,
+                    ),
+                    knowledge.indexer,
+                ),
                 execute,
                 clock,
                 metrics,

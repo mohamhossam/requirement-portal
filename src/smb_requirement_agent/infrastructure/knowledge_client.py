@@ -22,6 +22,11 @@ from smb_requirement_agent.application.ports.architecture_knowledge import (
     ArchitectureKnowledgeMatch,
     ArchitectureQuery,
 )
+from smb_requirement_agent.application.ports.historic_corpus import (
+    ContentPart,
+    HistoricContentGoneError,
+    HistoricContentPage,
+)
 from smb_requirement_agent.application.ports.knowledge_events import KnowledgeEvent
 from smb_requirement_agent.application.ports.knowledge_views import (
     ArchitectureEvidence,
@@ -154,6 +159,46 @@ class HttpKnowledgeViews:
             raise
 
 
+class HttpHistoricContent:
+    """A published historic requirement's content, a page at a time (ADR-0102, amendment 1).
+
+    An older publication (409) or a withdrawn record (404) is `HistoricContentGoneError`:
+    a newer event says what to read instead.
+    """
+
+    def __init__(self, client: InternalHttpClient) -> None:
+        self._client = client
+
+    def page(
+        self, historic_id: str, publication: int, part: ContentPart, offset: int, limit: int
+    ) -> HistoricContentPage:
+        try:
+            body = self._client.get_json(
+                f"/internal/historic-requirements/{quote(historic_id, safe='')}/{part.value}",
+                {"publication": publication, "offset": offset, "limit": limit},
+            )
+        except ServiceResponseError as refused:
+            if refused.status_code in _ABSENT:
+                raise HistoricContentGoneError(
+                    "That publication is no longer the one in use."
+                ) from refused
+            raise
+        try:
+            if not isinstance(body, dict) or not isinstance(body["entries"], list):
+                raise TypeError("expected a page")
+            following = body["next_offset"]
+            return HistoricContentPage(
+                _whole(body["publication"]),
+                _text(body["fingerprint"]),
+                tuple(body["entries"]),
+                None if following is None else _whole(following),
+            )
+        except (KeyError, TypeError) as exc:
+            raise ServiceUnavailableError(
+                "The knowledge service returned an unusable historic page."
+            ) from exc
+
+
 class HttpChangeRequestInbox:
     """The knowledge service's inbox of change requests (ADR-0101 Amendment 2)."""
 
@@ -246,6 +291,15 @@ class FakeKnowledgeEvents:
 
     def after(self, seq: int, limit: int) -> tuple[KnowledgeEvent, ...]:
         return (self._ACTIVATION,) if seq < 1 and limit > 0 else ()
+
+
+class FakeHistoricContent:
+    """Offline there are no historic requirements, so there is nothing to read."""
+
+    def page(
+        self, historic_id: str, publication: int, part: ContentPart, offset: int, limit: int
+    ) -> HistoricContentPage:
+        raise HistoricContentGoneError("No historic requirement is published offline.")
 
 
 class FakeKnowledgeViews:

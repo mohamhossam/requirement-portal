@@ -275,7 +275,11 @@ class RepositoryActivityProjection(ActivityReadPort, ReportingReadPort):
                 title,
                 (
                     ActivityCategory.KNOWLEDGE
-                    if job.operation is AiJobOperation.SCREEN_REQUIREMENT_KNOWLEDGE
+                    if job.operation
+                    in {
+                        AiJobOperation.SCREEN_REQUIREMENT_KNOWLEDGE,
+                        AiJobOperation.SCREEN_PRIOR_ART,
+                    }
                     else ActivityCategory.GENERATION
                 ),
                 action,

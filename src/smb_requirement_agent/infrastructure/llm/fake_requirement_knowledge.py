@@ -5,6 +5,10 @@ from __future__ import annotations
 import hashlib
 import re
 
+from smb_requirement_agent.application.ports.prior_art import (
+    PriorArtCandidateInput,
+    PriorArtJudgement,
+)
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidence
 from smb_requirement_agent.application.ports.requirement_knowledge import (
     AnswerSuggestionCandidate,
@@ -21,6 +25,8 @@ from smb_requirement_agent.domain.requirement.entities import Requirement
 
 _WORDS = re.compile(r"[a-z0-9]+")
 _NEGATIONS = {"not", "never", "exclude", "excluded", "cannot", "disabled", "only"}
+# Words too common to make two requirements alike.
+_STOP = {"a", "an", "and", "as", "for", "i", "in", "is", "of", "on", "or", "the", "to", "with"}
 
 
 class FakeKnowledgeEmbedding:
@@ -72,6 +78,45 @@ class FakeRequirementRelationshipClassifier:
                 )
             )
         return tuple(findings[:10])
+
+
+class FakePriorArtJudge:
+    """Similar when enough of the subject's words recur in a candidate's evidence."""
+
+    model = "fake-prior-art-judge"
+    prompt_version = "prior-art-v1"
+
+    def judge(
+        self, title: str, subject_text: str, candidates: tuple[PriorArtCandidateInput, ...]
+    ) -> tuple[PriorArtJudgement, ...]:
+        subject_words = set(_WORDS.findall(f"{title} {subject_text}".casefold())) - _STOP
+        judged: list[tuple[float, PriorArtJudgement]] = []
+        for candidate in candidates:
+            text = " ".join(item.text for item in candidate.evidence)
+            words = set(_WORDS.findall(f"{candidate.title} {text}".casefold())) - _STOP
+            shared = subject_words & words
+            coverage = len(shared) / max(1, min(len(subject_words), len(words)))
+            if coverage < 0.35:
+                continue
+            cited = tuple(
+                item.number
+                for item in candidate.evidence
+                if shared & set(_WORDS.findall(item.text.casefold()))
+            )[:3] or (candidate.evidence[0].number,)
+            judged.append(
+                (
+                    coverage,
+                    PriorArtJudgement(
+                        candidate.number,
+                        "It delivered much the same capability: "
+                        + ", ".join(sorted(shared)[:5])
+                        + ".",
+                        cited,
+                    ),
+                )
+            )
+        judged.sort(key=lambda pair: pair[0], reverse=True)
+        return tuple(judgement for _, judgement in judged[:5])
 
 
 class FakeClarificationAnswerSuggester:

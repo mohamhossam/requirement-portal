@@ -802,6 +802,220 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "HistoricItemEntry": {
+        "properties": {
+          "acceptance_criteria": {
+            "title": "Acceptance Criteria",
+            "type": "string"
+          },
+          "area_path": {
+            "title": "Area Path",
+            "type": "string"
+          },
+          "child_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Child Ids",
+            "type": "array"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "iteration_path": {
+            "title": "Iteration Path",
+            "type": "string"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/WorkItemType"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "title",
+          "state",
+          "revision",
+          "url",
+          "description",
+          "acceptance_criteria",
+          "area_path",
+          "iteration_path",
+          "tags",
+          "parent_id",
+          "child_ids"
+        ],
+        "title": "HistoricItemEntry",
+        "type": "object"
+      },
+      "HistoricItemsPage": {
+        "description": "Work items of a publication, in order. `fingerprint` is the publication's own.",
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/HistoricItemEntry"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "fingerprint": {
+            "title": "Fingerprint",
+            "type": "string"
+          },
+          "historic_requirement_id": {
+            "title": "Historic Requirement Id",
+            "type": "string"
+          },
+          "next_offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Offset"
+          },
+          "publication": {
+            "title": "Publication",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "historic_requirement_id",
+          "publication",
+          "fingerprint",
+          "entries",
+          "next_offset"
+        ],
+        "title": "HistoricItemsPage",
+        "type": "object"
+      },
+      "HistoricPassageEntry": {
+        "properties": {
+          "block_id": {
+            "title": "Block Id",
+            "type": "string"
+          },
+          "brd_id": {
+            "title": "Brd Id",
+            "type": "string"
+          },
+          "filename": {
+            "title": "Filename",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "section_path": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Section Path",
+            "type": "array"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "brd_id",
+          "filename",
+          "block_id",
+          "label",
+          "section_path",
+          "text"
+        ],
+        "title": "HistoricPassageEntry",
+        "type": "object"
+      },
+      "HistoricPassagesPage": {
+        "description": "Passages of a publication, in order. `fingerprint` is the publication's own.",
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/HistoricPassageEntry"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "fingerprint": {
+            "title": "Fingerprint",
+            "type": "string"
+          },
+          "historic_requirement_id": {
+            "title": "Historic Requirement Id",
+            "type": "string"
+          },
+          "next_offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Offset"
+          },
+          "publication": {
+            "title": "Publication",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "historic_requirement_id",
+          "publication",
+          "fingerprint",
+          "entries",
+          "next_offset"
+        ],
+        "title": "HistoricPassagesPage",
+        "type": "object"
+      },
       "JourneyNeighbour": {
         "description": "An activity just before or after a journey step, and the system that performs it.",
         "properties": {
@@ -1310,6 +1524,15 @@
         ],
         "title": "ValidationError",
         "type": "object"
+      },
+      "WorkItemType": {
+        "enum": [
+          "epic",
+          "feature",
+          "user_story"
+        ],
+        "title": "WorkItemType",
+        "type": "string"
       }
     }
   },
@@ -1504,6 +1727,172 @@
           }
         },
         "summary": "Events"
+      }
+    },
+    "/internal/historic-requirements/{historic_requirement_id}/items": {
+      "get": {
+        "description": "A published historic requirement's Epics, Features and User Stories, a page at a time.",
+        "operationId": "historic_items_internal_historic_requirements__historic_requirement_id__items_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "historic_requirement_id",
+            "required": true,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Historic Requirement Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "publication",
+            "required": true,
+            "schema": {
+              "maximum": 100000,
+              "minimum": 1,
+              "title": "Publication",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 1000000,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoricItemsPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not published"
+          },
+          "409": {
+            "description": "Superseded"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Historic Items"
+      }
+    },
+    "/internal/historic-requirements/{historic_requirement_id}/passages": {
+      "get": {
+        "description": "A published historic requirement's BRD passages, a page at a time. An older\npublication answers 409; a withdrawn or unknown record 404 (ADR-0102, amendment 1).",
+        "operationId": "historic_passages_internal_historic_requirements__historic_requirement_id__passages_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "historic_requirement_id",
+            "required": true,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Historic Requirement Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "publication",
+            "required": true,
+            "schema": {
+              "maximum": 100000,
+              "minimum": 1,
+              "title": "Publication",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 1000000,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoricPassagesPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not published"
+          },
+          "409": {
+            "description": "Superseded"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Historic Passages"
       }
     },
     "/internal/library/passages": {

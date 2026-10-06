@@ -11,6 +11,9 @@ from typing import Protocol
 
 REFERENCE_DOCUMENT_CHANGED = "reference_document_changed"
 ARCHITECTURE_RELEASE_ACTIVATED = "architecture_release_activated"
+# A historic requirement was published, refreshed or withdrawn (ADR-0102). Its payload names
+# the publication; the content is read a page at a time (ADR-0102, amendment 1).
+HISTORIC_REQUIREMENT_CHANGED = "historic_requirement_changed"
 
 
 @dataclass(frozen=True)

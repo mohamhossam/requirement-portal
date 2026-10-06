@@ -43,6 +43,9 @@ class AiJobOperation(StrEnum):
     RESOLVE_REVIEW_OPEN_QUESTION = "resolve_review_open_question"
     SCREEN_REQUIREMENT_KNOWLEDGE = "screen_requirement_knowledge"
     SUGGEST_CLARIFICATION_ANSWERS = "suggest_clarification_answers"
+    # Prior art from historic requirements (Knowledge Center E2). Automatic, informational,
+    # and claimed only when nothing else is waiting.
+    SCREEN_PRIOR_ART = "screen_prior_art"
 
     @property
     def uses_analyzer(self) -> bool:

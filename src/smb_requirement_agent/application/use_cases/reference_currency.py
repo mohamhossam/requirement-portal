@@ -32,6 +32,7 @@ from smb_requirement_agent.application.ports.reference_publications import (
     ReferencePublicationStatePort,
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
+from smb_requirement_agent.application.use_cases.knowledge_event_cursor import contiguous_reach
 from smb_requirement_agent.application.use_cases.source_lineage import analysis_lineage
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
 from smb_requirement_agent.domain.analysis.value_objects import (
@@ -135,12 +136,8 @@ class CurrentReferences:
 class ProjectKnowledgeEvents:
     """Bring the local copy up to date with the library's events, a batch at a time.
 
-    Sequence numbers are taken when an event is written, but transactions commit
-    in their own order, so a later number can be visible while an earlier one is
-    still in flight. Every visible event is applied (each carries its document's
-    whole state, and a newer one always wins), but the cursor only moves through
-    an unbroken run of numbers. A gap older than `gap_grace` is a rolled-back
-    write and is stepped over.
+    Every visible event is applied (each carries its document's whole state, and a
+    newer one always wins); the cursor moves as `contiguous_reach` allows.
     """
 
     def __init__(
@@ -172,12 +169,7 @@ class ProjectKnowledgeEvents:
                     )
                 elif event.kind == ARCHITECTURE_RELEASE_ACTIVATED:
                     self._releases.apply(event.seq, _release(event.payload))
-            reached = cursor
-            now = self._clock.now()
-            for event in events:
-                if event.seq != reached + 1 and now - event.created_at < self._gap_grace:
-                    break
-                reached = event.seq
+            reached = contiguous_reach(cursor, events, self._clock.now(), self._gap_grace)
             if reached > cursor:
                 self._states.advance(reached)
             return reached > cursor

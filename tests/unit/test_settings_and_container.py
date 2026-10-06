@@ -667,6 +667,8 @@ def test_container_names_every_background_worker_for_readiness() -> None:
             "workers",
             "attachment_worker",
             "knowledge_event_worker",
+            "historic_event_worker",
+            "historic_index_worker",
         }
         assert container.background_workers["workers"] is container.ai_job_worker
         # Attachments are this service's only document ingestion; the library left (ADR-0099).

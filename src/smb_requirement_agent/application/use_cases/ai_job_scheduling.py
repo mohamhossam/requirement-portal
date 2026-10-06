@@ -16,6 +16,7 @@ from smb_requirement_agent.application.ports.ai_jobs import (
     JsonValue,
 )
 from smb_requirement_agent.application.ports.corpus_membership import CorpusMembershipPort
+from smb_requirement_agent.application.ports.prior_art import PriorArtSchedulerPort
 from smb_requirement_agent.application.ports.requirement_knowledge import (
     AnswerSuggestionSchedulerPort,
     KnowledgeReviewPort,
@@ -52,7 +53,9 @@ class KnowledgeScreenScheduler(KnowledgeScreenSchedulerPort):
         automatic_actor: ActorProfile,
         *,
         membership: CorpusMembershipPort | None = None,
+        prior_art: PriorArtSchedulerPort | None = None,
     ) -> None:
+        self._prior_art = prior_art
         self._knowledge_review = knowledge_review
         self._jobs = jobs
         self._requirements = requirements
@@ -86,6 +89,9 @@ class KnowledgeScreenScheduler(KnowledgeScreenSchedulerPort):
                         triggering_requirement if affected_id != triggering_requirement.id else None
                     ),
                 )
+        # Prior art follows the Requirement that changed, never the ones related to it.
+        if self._prior_art is not None and not self._retired(requirement_id):
+            self._prior_art.schedule(requirement_id)
 
     def ensure(self, requirement_id: RequirementId) -> KnowledgeScreenEnsureResult:
         requirement = self._requirements.get(requirement_id)
@@ -99,7 +105,11 @@ class KnowledgeScreenScheduler(KnowledgeScreenSchedulerPort):
             raise RequirementRetiredError(
                 "This Requirement is retired from the knowledge corpus, so it is not screened."
             )
-        return self._schedule_one(requirement_id)
+        result = self._schedule_one(requirement_id)
+        # Opening the Knowledge step checks prior art too, even when the screen is current.
+        if self._prior_art is not None:
+            self._prior_art.ensure(requirement_id)
+        return result
 
     def _schedule_one(
         self,

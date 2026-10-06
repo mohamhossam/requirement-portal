@@ -27,6 +27,10 @@ from smb_requirement_agent.application.ports.architecture_knowledge import (
     ArchitectureKnowledgePort,
     ArchitectureQuery,
 )
+from smb_requirement_agent.application.ports.historic_corpus import (
+    ContentPart,
+    HistoricContentGoneError,
+)
 from smb_requirement_agent.application.ports.knowledge_events import (
     ARCHITECTURE_RELEASE_ACTIVATED,
     REFERENCE_DOCUMENT_CHANGED,
@@ -60,6 +64,7 @@ from smb_requirement_agent.infrastructure.knowledge_client import (
     FakeReferenceKnowledge,
     HttpArchitectureKnowledge,
     HttpChangeRequestInbox,
+    HttpHistoricContent,
     HttpKnowledgeEvents,
     HttpReferenceKnowledge,
 )
@@ -670,3 +675,50 @@ def test_a_refused_or_unusable_delivery_is_an_explicit_failure() -> None:
     for answer in ({"approval_id": "apr-1"}, ["CR-1"], {"change_request_id": 7}):
         with pytest.raises(ServiceUnavailableError):
             HttpChangeRequestInbox(_client(_answering(answer, 201))).deliver({})
+
+
+# --- A historic requirement's content, a page at a time (ADR-0102, amendment 1) ------------
+
+HISTORIC_PAGE = {
+    "historic_requirement_id": "h1",
+    "publication": 2,
+    "fingerprint": "f" * 64,
+    "entries": [
+        {
+            "brd_id": "b1",
+            "filename": "BRD-2025-014.docx",
+            "block_id": "p1",
+            "label": "Paragraph 1",
+            "section_path": ["Scope"],
+            "text": "Business customers order XGPON bundles.",
+        }
+    ],
+    "next_offset": 200,
+}
+
+
+def test_historic_content_is_read_a_page_at_a_time_within_the_contract() -> None:
+    seen: list[httpx.Request] = []
+    page = HttpHistoricContent(_client(_answering(HISTORIC_PAGE), seen)).page(
+        "h1", 2, ContentPart.PASSAGES, 0, 200
+    )
+    (request,) = seen
+    _assert_in_contract(request)
+    _assert_answer_in_contract(request, HISTORIC_PAGE)
+    assert request.url.path == "/internal/historic-requirements/h1/passages"
+    assert dict(request.url.params) == {"publication": "2", "offset": "0", "limit": "200"}
+    assert (page.publication, page.next_offset, len(page.entries)) == (2, 200, 1)
+
+
+@pytest.mark.parametrize("status", [404, 409])
+def test_a_superseded_or_withdrawn_publication_is_gone_not_a_failure(status: int) -> None:
+    gone = _client(_answering({"detail": "gone"}, status=status))
+    with pytest.raises(HistoricContentGoneError):
+        HttpHistoricContent(gone).page("h1", 1, ContentPart.ITEMS, 0, 200)
+
+
+def test_an_unusable_historic_page_is_an_explicit_failure() -> None:
+    with pytest.raises(ServiceUnavailableError):
+        HttpHistoricContent(_client(_answering({"entries": "no"}))).page(
+            "h1", 1, ContentPart.ITEMS, 0, 200
+        )

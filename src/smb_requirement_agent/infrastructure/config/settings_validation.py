@@ -44,6 +44,10 @@ def validate_settings(settings: Settings) -> None:
         and not settings.knowledge_api_base_url.startswith(("http://", "https://"))
     ):
         raise ConfigurationError("KNOWLEDGE_API_BASE_URL must be an http(s) URL.")
+    if settings.prior_art_judge_calls_per_hour < 1:
+        raise ConfigurationError("PRIOR_ART_JUDGE_CALLS_PER_HOUR must be a positive number.")
+    if settings.historic_embed_chunks_per_hour < 1:
+        raise ConfigurationError("HISTORIC_EMBED_CHUNKS_PER_HOUR must be a positive number.")
     if settings.provider_rate_limit_per_minute < 0:
         raise ConfigurationError(
             "PROVIDER_RATE_LIMIT_PER_MINUTE must be 0 (unlimited) or a positive number."
