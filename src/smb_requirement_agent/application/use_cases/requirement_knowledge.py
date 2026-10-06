@@ -20,6 +20,7 @@ from smb_requirement_agent.application.ports.access_repository import AccessRepo
 from smb_requirement_agent.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
+from smb_requirement_agent.application.ports.document_repository import DocumentRepositoryPort
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
@@ -85,12 +86,14 @@ class RequirementKnowledgeCorpus:
         audits: AnalysisAuditRepositoryPort,
         access: AccessRepositoryPort,
         reviews: RequirementKnowledgeRepositoryPort,
+        documents: DocumentRepositoryPort,
     ) -> None:
         self._requirements = requirements
         self._analyses = analyses
         self._audits = audits
         self._access = access
         self._reviews = reviews
+        self._documents = documents
 
     def chunks(
         self, requirement: Requirement, *, screening_subject: bool = False
@@ -120,6 +123,7 @@ class RequirementKnowledgeCorpus:
             values.extend(
                 (KnowledgeSourceKind.SOURCE, field, item.value, path, ()) for item in entries
             )
+        values.extend(self._attachment_values(requirement))
         analysis = self._analyses.get_by_requirement_id(requirement.id)
         if analysis is not None:
             analysis_path = f"/requirements/{requirement.id.value}/clarify"
@@ -191,6 +195,33 @@ class RequirementKnowledgeCorpus:
             for ordinal, part in enumerate(bounded_knowledge_text(text))
             if part.strip()
         )
+
+    def _attachment_values(
+        self, requirement: Requirement
+    ) -> list[tuple[KnowledgeSourceKind, str, str, str, tuple[SourceLineage, ...]]]:
+        """The included passages of the Requirement's own attachments (Knowledge Center B1).
+
+        Each is the Requirement's own source, like a typed field, so it carries no lineage.
+        Its field names the document and block, so two equal passages stay two citations.
+        """
+        values: list[tuple[KnowledgeSourceKind, str, str, str, tuple[SourceLineage, ...]]] = []
+        documents = self._documents.list_for_requirement(requirement.id)
+        for document in sorted(documents, key=lambda item: item.id.value):
+            if not document.is_included or document.included_version_id is None:
+                continue
+            path = f"/documents/{document.id.value}"
+            prefix = f"attachment:{document.id.value}"
+            if document.version(document.included_version_id).extraction_version is None:
+                # A legacy plain-text extraction has no blocks; analysis reads its text whole.
+                text = document.version(document.included_version_id).extracted_text or ""
+                values.append((KnowledgeSourceKind.ATTACHMENT, f"{prefix}:text", text, path, ()))
+                continue
+            values.extend(
+                (KnowledgeSourceKind.ATTACHMENT, f"{prefix}:{block.id}", block.text, path, ())
+                for block in document.included_blocks
+                if block.text
+            )
+        return values
 
     def fingerprint(self, requirement_id: RequirementId) -> str:
         requirement = self._require(requirement_id)

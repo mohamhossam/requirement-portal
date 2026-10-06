@@ -652,14 +652,7 @@ class AssembleAnalysisDocuments:
             if not document.is_included or document.included_version_id is None:
                 continue
             version = document.version(document.included_version_id)
-            selected_blocks = tuple(
-                block
-                for block in version.evidence_blocks
-                if not block.section_path
-                or not block.section_path[0].startswith("Hidden worksheet: ")
-                or block.section_path[0].removeprefix("Hidden worksheet: ")
-                in document.included_hidden_worksheets
-            )
+            selected_blocks = document.included_blocks
             text = (
                 "\n".join(block.text for block in selected_blocks if block.text)
                 if version.extraction_version is not None

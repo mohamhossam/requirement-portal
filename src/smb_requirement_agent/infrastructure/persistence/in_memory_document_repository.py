@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from copy import deepcopy
 from threading import RLock
 from typing import Any
@@ -20,8 +21,11 @@ from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 
 
 class InMemoryDocumentRepository(DocumentRepositoryPort):
-    def __init__(self) -> None:
+    def __init__(self, source_changed: Callable[[RequirementId], None] | None = None) -> None:
         self._documents: dict[str, SourceDocument] = {}
+        # A Requirement's attachments are part of its knowledge source (Knowledge Center B1),
+        # as PostgreSQL's trigger on source_documents records.
+        self._source_changed = source_changed
 
     def snapshot_state(self) -> Any:
         return deepcopy((self._documents,))
@@ -33,6 +37,7 @@ class InMemoryDocumentRepository(DocumentRepositoryPort):
         if document.id.value in self._documents:
             raise DocumentVersionConflictError("The document already exists.")
         self._documents[document.id.value] = document
+        self._changed(document)
 
     def get(self, document_id: DocumentId) -> SourceDocument | None:
         return self._documents.get(document_id.value)
@@ -46,6 +51,11 @@ class InMemoryDocumentRepository(DocumentRepositoryPort):
                 "The document changed before this mutation could be saved. Reload it."
             )
         self._documents[document.id.value] = document
+        self._changed(document)
+
+    def _changed(self, document: SourceDocument) -> None:
+        if self._source_changed is not None and document.requirement_id is not None:
+            self._source_changed(document.requirement_id)
 
     def list_all(self) -> list[SourceDocument]:
         return sorted(

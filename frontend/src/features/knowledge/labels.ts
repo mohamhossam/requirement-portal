@@ -51,15 +51,16 @@ const FIELD_LABEL: Record<string, string> = {
 };
 
 const PREFIX_LABEL: Record<string, string> = {
+  attachment: "Attachment passage",
   clarification: "Clarification answer",
   intent: "Intent decision",
   proposal: "Reference decision",
 };
 
 /**
- * `clarification:open_question` and `proposal:<uuid>` carry a prefix that says
- * what kind of passage it is; the part after the colon is either another enum
- * or an identifier, and neither belongs on the page.
+ * `clarification:open_question`, `proposal:<uuid>` and `attachment:<document>:<block>`
+ * carry a prefix that says what kind of passage it is; the part after the colon is
+ * either another enum or identifiers, and neither belongs on the page.
  */
 export function fieldLabel(field: string): string {
   if (FIELD_LABEL[field]) return FIELD_LABEL[field];
