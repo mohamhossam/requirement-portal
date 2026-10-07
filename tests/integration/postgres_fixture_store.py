@@ -48,8 +48,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_repositories impo
     PostgresBreakdownReviewRepository,
     PostgresEpicRepository,
     PostgresFeatureRepository,
-    PostgresRequirementDraftRepository,
-    PostgresRequirementRepository,
     PostgresStoryChangeProposalRepository,
     PostgresStoryRepository,
 )
@@ -73,6 +71,10 @@ from smb_requirement_agent.requirements.domain.requirement.entities import (
 )
 from smb_requirement_agent.requirements.infrastructure.postgres_document_metadata import (
     PostgresDocumentRepository,
+)
+from smb_requirement_agent.requirements.infrastructure.postgres_requirements import (
+    PostgresRequirementDraftRepository,
+    PostgresRequirementRepository,
 )
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,

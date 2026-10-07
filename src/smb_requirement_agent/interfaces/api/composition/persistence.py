@@ -208,8 +208,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_repositories impo
     PostgresBreakdownReviewRepository,
     PostgresEpicRepository,
     PostgresFeatureRepository,
-    PostgresRequirementDraftRepository,
-    PostgresRequirementRepository,
     PostgresStoryChangeProposalRepository,
     PostgresStoryRepository,
 )
@@ -305,6 +303,10 @@ from smb_requirement_agent.requirements.infrastructure.in_memory_requirement_rep
 from smb_requirement_agent.requirements.infrastructure.postgres_document_repository import (
     PostgresDocumentRepository,
     PostgresDocumentStorage,
+)
+from smb_requirement_agent.requirements.infrastructure.postgres_requirements import (
+    PostgresRequirementDraftRepository,
+    PostgresRequirementRepository,
 )
 
 
