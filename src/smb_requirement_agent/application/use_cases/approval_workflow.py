@@ -30,16 +30,7 @@ from smb_requirement_agent.application.ports.knowledge_handoff import (
 from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.ports.story_repository import StoryRepositoryPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.approval_policy import (
-    ApprovalPolicy,
-    artifact_fingerprint,
-    breakdown_fingerprint,
-)
 from smb_requirement_agent.application.use_cases.breakdown_review import ReviewEvidenceLoader
-from smb_requirement_agent.application.use_cases.breakdown_review_evidence import (
-    ReviewEvidence,
-    evidence_fingerprint,
-)
 from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
@@ -50,6 +41,15 @@ from smb_requirement_agent.domain.feature.value_objects import FeatureId
 from smb_requirement_agent.domain.identity.entities import RequirementAccess
 from smb_requirement_agent.domain.review.entities import BreakdownReview, BreakdownStatus, FlagId
 from smb_requirement_agent.domain.review.errors import InvalidReviewContentError
+from smb_requirement_agent.domain.review.evidence import (
+    ReviewEvidence,
+    evidence_fingerprint,
+)
+from smb_requirement_agent.domain.review.fingerprints import (
+    artifact_fingerprint,
+    breakdown_fingerprint,
+)
+from smb_requirement_agent.domain.review.policy import ApprovalPolicy
 from smb_requirement_agent.domain.story.entities import UserStory
 from smb_requirement_agent.domain.story.value_objects import StoryId
 from smb_requirement_agent.shared_kernel.actors import ActorProfile

@@ -15,7 +15,6 @@ from smb_requirement_agent.application.ports.generation_guidance import Generati
 from smb_requirement_agent.application.ports.requirement_evidence_analyzer import (
     AnalysisProgressPort,
 )
-from smb_requirement_agent.application.ports.story_quality_evaluator import StoryQualityEvidence
 from smb_requirement_agent.application.ports.story_quality_repository import (
     StoryQualityRepositoryPort,
 )
@@ -32,7 +31,11 @@ from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
 from smb_requirement_agent.domain.feature.entities import Feature
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.story.entities import UserStory
-from smb_requirement_agent.domain.story.quality import FeatureQualitySnapshot, InvestCriterion
+from smb_requirement_agent.domain.story.quality import (
+    FeatureQualitySnapshot,
+    InvestCriterion,
+    StoryQualityEvidence,
+)
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 

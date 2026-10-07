@@ -14,19 +14,15 @@ from dataclasses import dataclass
 from typing import Any
 
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidencePort
-from smb_requirement_agent.application.use_cases.approval_policy import (
-    artifact_fingerprint,
-    breakdown_fingerprint,
-)
-from smb_requirement_agent.application.use_cases.breakdown_review_evidence import (
-    evidence_fingerprint,
-)
-from smb_requirement_agent.application.use_cases.breakdown_review_policy import (
-    BreakdownReviewPolicy,
-)
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
 from smb_requirement_agent.domain.analysis.value_objects import IntentProposal
+from smb_requirement_agent.domain.review.evidence import evidence_fingerprint
+from smb_requirement_agent.domain.review.fingerprints import (
+    artifact_fingerprint,
+    breakdown_fingerprint,
+)
+from smb_requirement_agent.domain.review.policy import BreakdownReviewPolicy
 from smb_requirement_agent.infrastructure.persistence.activity_codec import (
     activity_from_payload,
     activity_to_payload,

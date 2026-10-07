@@ -19,7 +19,6 @@ from smb_requirement_agent.application.ports.architecture_knowledge import (
     ArchitectureQuery,
 )
 from smb_requirement_agent.application.ports.generation_guidance import GenerationGuidance
-from smb_requirement_agent.application.use_cases.approval_policy import artifact_fingerprint
 from smb_requirement_agent.application.use_cases.architecture_mapping import (
     MapFeatureArchitecture,
 )
@@ -37,6 +36,7 @@ from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementStatus,
     RequirementTitle,
 )
+from smb_requirement_agent.domain.review.fingerprints import artifact_fingerprint
 from smb_requirement_agent.infrastructure.llm.prompts.generation_guidance import render_guidance
 from smb_requirement_agent.infrastructure.persistence.shared_payloads import (
     architecture_from_payload,

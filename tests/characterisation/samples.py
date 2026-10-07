@@ -26,7 +26,6 @@ from smb_requirement_agent.application.ports.activity import (
     AuditSourceKind,
     AuditSourceReference,
 )
-from smb_requirement_agent.application.use_cases.breakdown_review_evidence import ReviewEvidence
 from smb_requirement_agent.domain.analysis.entities import (
     AnalysisDocumentReference,
     AnalysisQuestionChange,
@@ -131,6 +130,7 @@ from smb_requirement_agent.domain.review.entities import (
     Risk,
     RiskId,
 )
+from smb_requirement_agent.domain.review.evidence import ReviewEvidence
 from smb_requirement_agent.domain.story.entities import (
     StoryChangeOperation,
     StoryChangeProposal,

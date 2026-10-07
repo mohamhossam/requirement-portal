@@ -38,9 +38,6 @@ from smb_requirement_agent.application.use_cases.breakdown_review import (
     RefreshSavedBreakdownReview,
     ResolveOpenQuestion,
 )
-from smb_requirement_agent.application.use_cases.breakdown_review_policy import (
-    BreakdownReviewPolicy,
-)
 from smb_requirement_agent.application.use_cases.edit_epic import EditEpic
 from smb_requirement_agent.application.use_cases.feature_review import (
     ApproveFeature,
@@ -70,6 +67,7 @@ from smb_requirement_agent.application.use_cases.story_workflow import (
     RegenerateStory,
     SplitStory,
 )
+from smb_requirement_agent.domain.review.policy import BreakdownReviewPolicy
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
 from smb_requirement_agent.interfaces.api.composition.review import ReviewWiring
 

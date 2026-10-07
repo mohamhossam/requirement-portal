@@ -32,7 +32,6 @@ from smb_requirement_agent.application.ports.requirement_analysis_repository imp
     RequirementAnalysisRepositoryPort,
 )
 from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
-from smb_requirement_agent.application.ports.story_quality_evaluator import StoryQualityEvidence
 from smb_requirement_agent.application.ports.story_quality_repository import (
     StoryQualityRepositoryPort,
 )
@@ -40,14 +39,6 @@ from smb_requirement_agent.application.ports.story_repository import StoryReposi
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.analysis_collaboration import (
     AnalysisCollaboration,
-)
-from smb_requirement_agent.application.use_cases.breakdown_review_evidence import (
-    ReviewEvidence,
-    evidence_fingerprint,
-)
-from smb_requirement_agent.application.use_cases.breakdown_review_policy import (
-    REVIEW_RULESET_VERSION,
-    BreakdownReviewPolicy,
 )
 from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
@@ -73,7 +64,19 @@ from smb_requirement_agent.domain.review.entities import (
     ResolutionPolicy,
 )
 from smb_requirement_agent.domain.review.errors import InvalidReviewContentError
-from smb_requirement_agent.domain.story.quality import FeatureQualitySnapshot, InvestAssessment
+from smb_requirement_agent.domain.review.evidence import (
+    ReviewEvidence,
+    evidence_fingerprint,
+)
+from smb_requirement_agent.domain.review.policy import (
+    REVIEW_RULESET_VERSION,
+    BreakdownReviewPolicy,
+)
+from smb_requirement_agent.domain.story.quality import (
+    FeatureQualitySnapshot,
+    InvestAssessment,
+    StoryQualityEvidence,
+)
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 

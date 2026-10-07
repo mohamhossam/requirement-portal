@@ -16,7 +16,6 @@ from smb_requirement_agent.application.ports.architecture_knowledge import (
 )
 from smb_requirement_agent.application.ports.backlog_export import BacklogExportPort
 from smb_requirement_agent.application.ports.knowledge_handoff import ApprovedBacklogOutboxPort
-from smb_requirement_agent.application.use_cases.approval_policy import ApprovalPolicy
 from smb_requirement_agent.application.use_cases.approval_workflow import (
     AddReviewComment,
     ApprovalRecorder,
@@ -37,6 +36,7 @@ from smb_requirement_agent.application.use_cases.revision_history import (
     GetRevisionHistory,
 )
 from smb_requirement_agent.application.use_cases.source_impact import SourceImpactReview
+from smb_requirement_agent.domain.review.policy import ApprovalPolicy
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
 
 

@@ -21,10 +21,7 @@ from smb_requirement_agent.application.ports.generation_guidance import (
     GenerationGuidance,
 )
 from smb_requirement_agent.application.ports.story_generator import StoryCandidate
-from smb_requirement_agent.application.ports.story_quality_evaluator import (
-    EMPTY_QUALITY_EVIDENCE,
-    StoryQualityEvidence,
-)
+from smb_requirement_agent.application.ports.story_quality_evaluator import EMPTY_QUALITY_EVIDENCE
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
 from smb_requirement_agent.domain.analysis.value_objects import KnownFact
 from smb_requirement_agent.domain.architecture.entities import (
@@ -39,6 +36,7 @@ from smb_requirement_agent.domain.story.entities import UserStory
 from smb_requirement_agent.domain.story.quality import (
     FindingSource,
     InvestCriterion,
+    StoryQualityEvidence,
     ValidationFinding,
 )
 from smb_requirement_agent.domain.story.value_objects import BusinessValue

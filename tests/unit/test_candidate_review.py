@@ -10,10 +10,8 @@ from smb_requirement_agent.application.use_cases.breakdown_review import (
     GovernanceCandidateReview,
     RefreshSavedBreakdownReview,
 )
-from smb_requirement_agent.application.use_cases.breakdown_review_evidence import ReviewEvidence
-from smb_requirement_agent.application.use_cases.breakdown_review_policy import (
-    BreakdownReviewPolicy,
-)
+from smb_requirement_agent.domain.review.evidence import ReviewEvidence
+from smb_requirement_agent.domain.review.policy import BreakdownReviewPolicy
 from tests.characterisation import samples
 
 

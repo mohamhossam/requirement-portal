@@ -19,14 +19,6 @@ from smb_requirement_agent.application.ports.requirement_worklist import (
     WorkflowStatus,
     WorklistSort,
 )
-from smb_requirement_agent.application.use_cases.approval_policy import breakdown_fingerprint
-from smb_requirement_agent.application.use_cases.breakdown_review_evidence import (
-    ReviewEvidence,
-    evidence_fingerprint,
-)
-from smb_requirement_agent.application.use_cases.breakdown_review_policy import (
-    REVIEW_RULESET_VERSION,
-)
 from smb_requirement_agent.application.use_cases.requirement_worklist import (
     ListRequirementWorklist,
     NextAction,
@@ -58,6 +50,12 @@ from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementTitle,
 )
 from smb_requirement_agent.domain.review.entities import BreakdownReview, BreakdownStatus
+from smb_requirement_agent.domain.review.evidence import (
+    ReviewEvidence,
+    evidence_fingerprint,
+)
+from smb_requirement_agent.domain.review.fingerprints import breakdown_fingerprint
+from smb_requirement_agent.domain.review.policy import REVIEW_RULESET_VERSION
 from smb_requirement_agent.domain.story.entities import UserStory
 from smb_requirement_agent.domain.story.value_objects import (
     AcceptanceCriterion,

@@ -4,14 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from smb_requirement_agent.application.ports.story_quality_evaluator import (
-    EMPTY_QUALITY_EVIDENCE,
-    StoryQualityEvidence,
-)
+from smb_requirement_agent.application.ports.story_quality_evaluator import EMPTY_QUALITY_EVIDENCE
 from smb_requirement_agent.domain.story.entities import UserStory
 from smb_requirement_agent.domain.story.quality import (
     FindingSource,
     InvestCriterion,
+    StoryQualityEvidence,
     ValidationFinding,
 )
 

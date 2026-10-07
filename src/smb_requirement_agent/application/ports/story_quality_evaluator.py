@@ -9,11 +9,6 @@ from smb_requirement_agent.domain.story.quality import (
     ValidationFinding,
 )
 
-# MIGRATION SHIM: StoryQualityEvidence lives in domain/story/quality.py since ADR-0103 PR 6.
-# The import-rewrite commit points its importers there and drops this re-export.
-__all__ = ["EMPTY_QUALITY_EVIDENCE", "StoryQualityEvaluatorPort", "StoryQualityEvidence"]
-
-
 EMPTY_QUALITY_EVIDENCE = StoryQualityEvidence()
 
 

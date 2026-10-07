@@ -16,7 +16,6 @@ from smb_requirement_agent.application.errors import (
 )
 from smb_requirement_agent.application.ports.story_quality_evaluator import (
     StoryQualityEvaluatorPort,
-    StoryQualityEvidence,
 )
 from smb_requirement_agent.application.ports.story_quality_repository import (
     StoryQualityRepositoryPort,
@@ -26,6 +25,7 @@ from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
 )
+from smb_requirement_agent.domain.story.quality import StoryQualityEvidence
 
 if TYPE_CHECKING:
     from smb_requirement_agent.application.use_cases.story_workflow import GetStories

@@ -8,10 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from smb_requirement_agent.application.errors import StoryQualityEvaluationError
-from smb_requirement_agent.application.ports.story_quality_evaluator import (
-    EMPTY_QUALITY_EVIDENCE,
-    StoryQualityEvidence,
-)
+from smb_requirement_agent.application.ports.story_quality_evaluator import EMPTY_QUALITY_EVIDENCE
 from smb_requirement_agent.domain.review.entities import (
     BreakdownReview,
     BreakdownStatus,
@@ -35,6 +32,7 @@ from smb_requirement_agent.domain.story.entities import UserStory
 from smb_requirement_agent.domain.story.quality import (
     FindingSource,
     InvestCriterion,
+    StoryQualityEvidence,
     ValidationFinding,
 )
 from smb_requirement_agent.infrastructure.config.options import LLMProvider

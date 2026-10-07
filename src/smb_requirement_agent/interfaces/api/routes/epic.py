@@ -10,7 +10,6 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Response
 
-from smb_requirement_agent.application.use_cases.approval_policy import artifact_fingerprint
 from smb_requirement_agent.application.use_cases.approve_epic import ApproveEpic
 from smb_requirement_agent.application.use_cases.edit_epic import EditEpic, EditEpicInput
 from smb_requirement_agent.application.use_cases.generate_epic import (
@@ -21,6 +20,7 @@ from smb_requirement_agent.application.use_cases.generation_context import Gener
 from smb_requirement_agent.application.use_cases.get_epic import GetEpic
 from smb_requirement_agent.application.use_cases.requirement_commands import ExpectedContext
 from smb_requirement_agent.domain.epic.entities import Epic
+from smb_requirement_agent.domain.review.fingerprints import artifact_fingerprint
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     RequirementCommandsDep,

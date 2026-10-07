@@ -20,7 +20,6 @@ from smb_requirement_agent.application.use_cases.analysis_collaboration import (
     AnalysisCollaboration,
 )
 from smb_requirement_agent.application.use_cases.analyze_requirement import AnalyzeRequirement
-from smb_requirement_agent.application.use_cases.approval_policy import artifact_fingerprint
 from smb_requirement_agent.application.use_cases.approval_workflow import ApprovalRecorder
 from smb_requirement_agent.application.use_cases.approve_epic import ApproveEpic
 from smb_requirement_agent.application.use_cases.confirm_requirement_analysis import (
@@ -59,6 +58,7 @@ from smb_requirement_agent.domain.feature.value_objects import (
     SplittingPattern,
 )
 from smb_requirement_agent.domain.requirement.entities import Requirement
+from smb_requirement_agent.domain.review.fingerprints import artifact_fingerprint
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.llm.fake_epic_generator import FakeEpicGenerator
 from smb_requirement_agent.infrastructure.llm.fake_feature_generator import FakeFeatureGenerator

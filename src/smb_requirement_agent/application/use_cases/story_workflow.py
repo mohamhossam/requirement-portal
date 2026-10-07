@@ -32,7 +32,6 @@ from smb_requirement_agent.application.ports.story_generator import (
     StoryCandidate,
     StoryGeneratorPort,
 )
-from smb_requirement_agent.application.ports.story_quality_evaluator import StoryQualityEvidence
 from smb_requirement_agent.application.ports.story_repository import (
     StoryChangeProposalRepositoryPort,
     StoryRepositoryPort,
@@ -61,6 +60,7 @@ from smb_requirement_agent.domain.story.errors import (
     StoryRegenerationConflictError,
 )
 from smb_requirement_agent.domain.story.events import StoriesChanged
+from smb_requirement_agent.domain.story.quality import StoryQualityEvidence
 from smb_requirement_agent.domain.story.value_objects import (
     AcceptanceCriterion,
     BusinessValue,
