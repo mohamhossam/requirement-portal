@@ -22,3 +22,6 @@ f54cd67a7045c2e37deb290067f0b0470a6bf673
 
 # PR 8: the jobs context moved into smb_requirement_agent/jobs, imports rewritten (ADR-0103).
 11765af728e169e2921c10d908607498dfb4022f
+
+# PR 9: the requirements context moved into smb_requirement_agent/requirements, imports rewritten (ADR-0103).
+0088dd878ea2cf41a59c50bbf522ae83f5428d73

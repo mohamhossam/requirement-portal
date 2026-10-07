@@ -1,8 +1,8 @@
 # Refactor — Bounded-context packages and domain events
 
 **Status:** ADR-0103 accepted and the slice scheduled 2026-10-07. PR 1 delivered. The PR 1
-findings were decided the same day (ADR-0103 Amendment 1). PRs 2–8 delivered; PR 9 (move
-`requirements`) is next.
+findings were decided the same day (ADR-0103 Amendment 1). PRs 2–9 delivered; PR 10 (move
+`analysis`) is next.
 
 **Related:** [context map](../architecture/context-map.md),
 [ubiquitous language](../architecture/ubiquitous-language.md).
@@ -634,6 +634,89 @@ then. `tests/unit/test_polling_worker.py` and `test_worker_process.py` stay with
 - `ruff check .` and `ruff format --check .`: clean.
 - `mypy src tests`: no issues in 585 source files.
 - `lint-imports`: 16 contracts kept, 0 broken.
+
+## PR 9 — The `requirements` package (2026-10-07)
+
+### Delivered
+
+**Moved with `git mv` into `smb_requirement_agent/requirements/`.** The move and the import
+rewrite share one commit, which is in `.git-blame-ignore-revs`.
+
+| Was | Now |
+|---|---|
+| `domain/requirement/*` | `requirements/domain/requirement/` |
+| `domain/document/{attachment,entities,errors,ingestion,value_objects}.py` | `requirements/domain/document/` |
+| `application/ports/{attachment_ingestions,document_repository,requirement_draft_repository,requirement_repository,screening_requests}.py` | `requirements/application/ports/` |
+| `application/use_cases/{create_requirement,update_requirement,get_requirement,requirement_drafts,owned_requirements,requirement_sources,documents,attachment_ingestion}.py` | `requirements/application/use_cases/` |
+| `application/document_upload_validation.py` | `requirements/application/` |
+| `infrastructure/documents/attachment_worker.py` | `requirements/infrastructure/` |
+| `infrastructure/persistence/{attachment_ingestions,document_payloads,in_memory_document_repository,in_memory_requirement_draft_repository,in_memory_requirement_repository,postgres_document_metadata,postgres_document_repository,requirement_snapshot}.py` | `requirements/infrastructure/` |
+| 12 requirements-only unit test modules | `tests/unit/requirements/` |
+
+Three changes that are not just moves each have their own commit. Each was checked against the
+original text with `diff`.
+
+| Change | Commit |
+|---|---|
+| `AssembleAnalysisDocuments` and `AnalysisDocumentSelection` move verbatim from `documents.py` to analysis's new `application/use_cases/analysis_documents.py` | before the move |
+| `PostgresRequirementRepository` and `PostgresRequirementDraftRepository` move verbatim to `requirements/infrastructure/postgres_requirements.py` | after the move |
+| `composition/documents.py` is merged into `composition/requirements.py` | after the move |
+
+- **No shims.** Every importer was rewritten.
+- **`domain/document/`** keeps only `lineage.py` (knowledge) and `reference.py` (references) until
+  those contexts move.
+
+### Placement corrections
+
+| Module | Context map said | Now | Why |
+|---|---|---|---|
+| `AssembleAnalysisDocuments` (in `documents.py`) | requirements | analysis | It builds analysis's input types (`AnalysisDocumentContext`, `AnalysisDocumentReference`), and only analysis calls it. These were the two `requirements → analysis` imports |
+| `application/ports/source_dependencies.py` and its adapter | requirements | knowledge, moving in PR 15b | It is the reverse evidence index and its `ImpactDecision`s. No requirements code uses it: its users are `source_impact` (knowledge), `dependency_projection` (reporting) and `internal_reads` (workflows). This was the `requirements → knowledge` import |
+| `infrastructure/documents/ingestion_loop.py` | requirements | stays shared | It is a generic polling loop that the requirements, references and knowledge workers all run |
+| `infrastructure/persistence/backfill_document_blobs.py` | requirements | stays | Operators run it by its module path (`docs/operations/production-readiness-maintenance.md`), so moving it would change their command |
+
+### Contracts (19 kept, up from 16)
+
+- Requirements joins the layer, framework and adapter-selection contracts.
+- `requirements_internal_layers` and `requirements_published_surface` match the other contexts'.
+- **`requirements_depends_only_upstream`** forbids every unmoved context (`domain`,
+  `application.use_cases`, `application.ports`) and `interfaces`. It reports 11 ignored imports:
+  - the shared technical ports: `domain_events` (2) and `transaction_manager` (5);
+  - **debt:** 4 imports of `application.use_cases.identity_access`, the access service. It stays
+    in workflows until PR 14 gives identity `RequirementAccessPort` (F4).
+- `identity` and `jobs` now also forbid `requirements`, and their published-surface contracts
+  treat requirements as a consumer.
+- **Probes**, all reverted:
+  - an analysis domain import added to `get_requirement` broke `requirements_depends_only_upstream`;
+  - a requirements adapter import added to `analyze_requirement` broke
+    `requirements_published_surface` and `application_independence`;
+  - a requirements import added to jobs' `retention` broke `jobs_depends_on_no_other_context`.
+
+### Dependency report
+
+211 of 211 modules classified, 82 crossing pairs (84 before), 17 against the order (19 before).
+
+| Pair | Change |
+|---|---|
+| `requirements → analysis` | gone: `AssembleAnalysisDocuments` is analysis's |
+| `requirements → knowledge` | gone: `source_dependencies` is knowledge's |
+| `requirements → workflows` | 4 imports remain: `identity_access`, until PR 14 |
+
+### PostgreSQL integration tests now run locally
+
+Earlier PRs skipped the 75 PostgreSQL integration tests: the session had no database. From PR 9
+they run against a local PostgreSQL 16 with `pgvector`, through `TEST_DATABASE_URL`. That covers
+the adapters PRs 7–9 moved: identity's, the AI job stores, and the requirement and document
+repositories.
+
+### Validation evidence (PR 9, local)
+
+- `pytest` with `TEST_DATABASE_URL` set: 1864 passed, 0 skipped, exit 0, after each code commit
+  from the PostgreSQL extraction on. Earlier commits ran without the database: 1789 passed, 75
+  skipped. No file under `tests/characterisation/golden/` changed.
+- `ruff check .` and `ruff format --check .`: clean.
+- `mypy src tests`: no issues in 594 source files.
+- `lint-imports`: 19 contracts kept, 0 broken.
 
 ## Shims
 
