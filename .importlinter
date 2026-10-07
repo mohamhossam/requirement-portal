@@ -13,6 +13,7 @@ source_modules =
     smb_requirement_agent.shared_kernel
     smb_requirement_agent.identity.domain
     smb_requirement_agent.jobs.domain
+    smb_requirement_agent.requirements.domain
 forbidden_modules =
     smb_requirement_agent.application
     smb_requirement_agent.infrastructure
@@ -21,6 +22,8 @@ forbidden_modules =
     smb_requirement_agent.identity.infrastructure
     smb_requirement_agent.jobs.application
     smb_requirement_agent.jobs.infrastructure
+    smb_requirement_agent.requirements.application
+    smb_requirement_agent.requirements.infrastructure
 
 [importlinter:contract:shared_kernel_pure]
 name = The shared kernel imports nothing else from requirement-portal (ADR-0103)
@@ -34,6 +37,7 @@ forbidden_modules =
     smb_requirement_agent.interfaces
     smb_requirement_agent.identity
     smb_requirement_agent.jobs
+    smb_requirement_agent.requirements
 
 [importlinter:contract:application_independence]
 name = Application must not depend on infrastructure or interfaces
@@ -42,11 +46,13 @@ source_modules =
     smb_requirement_agent.application
     smb_requirement_agent.identity.application
     smb_requirement_agent.jobs.application
+    smb_requirement_agent.requirements.application
 forbidden_modules =
     smb_requirement_agent.infrastructure
     smb_requirement_agent.interfaces
     smb_requirement_agent.identity.infrastructure
     smb_requirement_agent.jobs.infrastructure
+    smb_requirement_agent.requirements.infrastructure
 
 [importlinter:contract:domain_framework_independence]
 name = Domain must not import frameworks or provider SDKs
@@ -56,6 +62,7 @@ source_modules =
     smb_requirement_agent.shared_kernel
     smb_requirement_agent.identity.domain
     smb_requirement_agent.jobs.domain
+    smb_requirement_agent.requirements.domain
 forbidden_modules =
     fastapi
     pydantic
@@ -71,6 +78,7 @@ source_modules =
     smb_requirement_agent.application
     smb_requirement_agent.identity.application
     smb_requirement_agent.jobs.application
+    smb_requirement_agent.requirements.application
 forbidden_modules =
     fastapi
     psycopg
@@ -87,6 +95,7 @@ forbidden_modules =
     smb_requirement_agent.infrastructure
     smb_requirement_agent.identity.infrastructure
     smb_requirement_agent.jobs.infrastructure
+    smb_requirement_agent.requirements.infrastructure
 allow_indirect_imports = True
 
 [importlinter:contract:dependencies_no_adapter_selection]
@@ -99,6 +108,7 @@ forbidden_modules =
     smb_requirement_agent.infrastructure.llm
     smb_requirement_agent.identity.infrastructure
     smb_requirement_agent.jobs.infrastructure
+    smb_requirement_agent.requirements.infrastructure
     smb_requirement_agent.infrastructure.documents
     smb_requirement_agent.infrastructure.jobs
 allow_indirect_imports = True
@@ -110,6 +120,7 @@ source_modules =
     smb_requirement_agent.infrastructure
     smb_requirement_agent.identity.infrastructure
     smb_requirement_agent.jobs.infrastructure
+    smb_requirement_agent.requirements.infrastructure
 forbidden_modules =
     smb_requirement_agent.interfaces
 
@@ -124,6 +135,8 @@ source_modules =
     smb_requirement_agent.identity.application
     smb_requirement_agent.jobs.domain
     smb_requirement_agent.jobs.application
+    smb_requirement_agent.requirements.domain
+    smb_requirement_agent.requirements.application
 forbidden_modules =
     smb_kernel.identity.oidc
     smb_kernel.identity.fake
@@ -184,6 +197,7 @@ forbidden_modules =
     smb_requirement_agent.application.ports
     smb_requirement_agent.interfaces
     smb_requirement_agent.jobs
+    smb_requirement_agent.requirements
 # Identity imports only the shared kernel and shared technical modules (application.errors, the
 # payload and PostgreSQL helpers). Those still reach unmoved context code until their own contexts
 # move, so only direct imports are checked here; PR 16 removes this exemption.
@@ -197,6 +211,7 @@ source_modules =
     smb_requirement_agent.application
     smb_requirement_agent.shared_kernel
     smb_requirement_agent.jobs
+    smb_requirement_agent.requirements
 forbidden_modules =
     smb_requirement_agent.identity.infrastructure
 
@@ -221,6 +236,7 @@ forbidden_modules =
     smb_requirement_agent.application.ports
     smb_requirement_agent.interfaces
     smb_requirement_agent.identity
+    smb_requirement_agent.requirements
 # As for identity: jobs imports only the shared kernel and shared technical modules
 # (application.errors, postgres_session, postgres_values), which still reach unmoved context code.
 allow_indirect_imports = True
@@ -233,5 +249,47 @@ source_modules =
     smb_requirement_agent.application
     smb_requirement_agent.shared_kernel
     smb_requirement_agent.identity
+    smb_requirement_agent.requirements
 forbidden_modules =
     smb_requirement_agent.jobs.infrastructure
+
+[importlinter:contract:requirements_internal_layers]
+name = requirements: infrastructure > application > domain
+type = layers
+containers =
+    smb_requirement_agent.requirements
+layers =
+    infrastructure
+    application
+    domain
+
+[importlinter:contract:requirements_depends_only_upstream]
+name = requirements depends only on identity, jobs and the shared kernel (ADR-0103 §2)
+type = forbidden
+source_modules =
+    smb_requirement_agent.requirements
+forbidden_modules =
+    smb_requirement_agent.domain
+    smb_requirement_agent.application.use_cases
+    smb_requirement_agent.application.ports
+    smb_requirement_agent.interfaces
+# The shared technical ports requirements uses, which every context may use.
+ignore_imports =
+    smb_requirement_agent.requirements.** -> smb_requirement_agent.application.ports.domain_events
+    smb_requirement_agent.requirements.** -> smb_requirement_agent.application.ports.transaction_manager
+    # Debt: the access service stays in workflows until PR 14 gives identity RequirementAccessPort (F4).
+    smb_requirement_agent.requirements.** -> smb_requirement_agent.application.use_cases.identity_access
+# As for identity and jobs: the shared technical modules still reach unmoved context code.
+allow_indirect_imports = True
+
+[importlinter:contract:requirements_published_surface]
+name = Other contexts use requirements' domain and ports, never its adapters (ADR-0103 §5)
+type = forbidden
+source_modules =
+    smb_requirement_agent.domain
+    smb_requirement_agent.application
+    smb_requirement_agent.shared_kernel
+    smb_requirement_agent.identity
+    smb_requirement_agent.jobs
+forbidden_modules =
+    smb_requirement_agent.requirements.infrastructure

@@ -56,8 +56,6 @@ DOMAIN = {
     # After PR 2 this module holds only ImpactDecision (source impact).
     "domain.document.lineage": "knowledge",
     "domain.document.reference": "references",
-    "domain.document": "requirements",
-    "domain.requirement": "requirements",
     "domain.analysis": "analysis",
     "domain.epic": "breakdown",
     "domain.feature": "breakdown",
@@ -73,16 +71,6 @@ DOMAIN = {
 }
 
 USE_CASES = {
-    "requirements": [
-        "create_requirement",
-        "update_requirement",
-        "get_requirement",
-        "requirement_drafts",
-        "owned_requirements",
-        "requirement_sources",
-        "documents",
-        "attachment_ingestion",
-    ],
     "references": [
         "historic_corpus",
         "knowledge_event_cursor",
@@ -169,14 +157,6 @@ USE_CASES = {
 }
 
 PORTS = {
-    "requirements": [
-        "attachment_ingestions",
-        "document_repository",
-        "requirement_draft_repository",
-        "requirement_repository",
-        "source_dependencies",
-        "screening_requests",
-    ],
     "references": [
         "architecture_knowledge",
         "embedding",
@@ -196,6 +176,9 @@ PORTS = {
         "requirement_evidence_analyzer",
     ],
     "knowledge": [
+        # The reverse evidence index and impact decisions (PR 9 reassigned it from
+        # requirements: only knowledge, reporting and workflows use it).
+        "source_dependencies",
         "corpus_membership",
         "corpus_summary",
         "knowledge_index_generations",
@@ -224,7 +207,6 @@ PORTS = {
 }
 
 APPLICATION_MODULES = {
-    "application.document_upload_validation": "requirements",
     "application.exports": "governance",
     "application.grounding_evaluation": "references",
     "application.retrieval_evaluation": "references",
@@ -240,7 +222,7 @@ APPLICATION_MODULES = {
 
 # Contexts that have moved into their own package (ADR-0103 §1). Their domain and application
 # layers are classified whole; their infrastructure, like the rest, is out of scope.
-CONTEXT_PACKAGES = ("identity", "jobs")
+CONTEXT_PACKAGES = ("identity", "jobs", "requirements")
 
 
 def _prefixes() -> dict[str, str]:
@@ -268,7 +250,14 @@ def classify(module: str, table: dict[str, str]) -> str | None:
 
 def _in_scope(module: str) -> bool:
     relative = module.removeprefix(f"{ROOT}.")
-    if relative in ("domain", "application", "application.use_cases", "application.ports"):
+    # domain.document is only the package left around lineage.py and reference.py (PR 9).
+    if relative in (
+        "domain",
+        "domain.document",
+        "application",
+        "application.use_cases",
+        "application.ports",
+    ):
         return False
     moved = tuple(
         f"{context}.{layer}" for context in CONTEXT_PACKAGES for layer in ("domain", "application")
