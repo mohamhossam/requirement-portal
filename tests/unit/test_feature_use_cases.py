@@ -43,9 +43,6 @@ from smb_requirement_agent.application.use_cases.generation_context import Gener
 from smb_requirement_agent.application.use_cases.invalidate_approval_workflow import (
     InvalidateApprovalWorkflow,
 )
-from smb_requirement_agent.application.use_cases.invalidate_derived_artifacts import (
-    InvalidateDerivedArtifacts,
-)
 from smb_requirement_agent.application.use_cases.update_requirement import (
     UpdateRequirement,
     UpdateRequirementInput,
@@ -108,6 +105,7 @@ from tests.conftest import (
     NoOpAnswerSuggestionScheduler,
     NoOpKnowledgeScheduler,
     make_analysis_documents,
+    make_invalidation,
 )
 from tests.reference_helpers import EmptyReferences
 from tests.unit.access_service import access_service_for
@@ -142,14 +140,14 @@ class World:
         self.audits = InMemoryAnalysisAuditRepository(lambda requirement_id: None)
         self.reviews = InMemoryBreakdownReviewRepository()
 
-        self.invalidation = InvalidateDerivedArtifacts(
+        self.invalidation = make_invalidation(
             self.analyses,
             self.epics,
             self.features,
             self.stories,
             self.clock,
             self.audits,
-            InvalidateApprovalWorkflow(self.reviews),
+            reviews=self.reviews,
         )
         self.contexts = GenerationContextTokens(
             self.requirements,

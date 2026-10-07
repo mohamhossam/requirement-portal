@@ -25,6 +25,10 @@ class NoOpTransactionManager:
     def external_call(self) -> AbstractContextManager[None]:
         return _external()
 
+    def in_unit_of_work(self) -> bool:
+        """This stub stands in for an active transaction everywhere."""
+        return True
+
 
 @contextmanager
 def _nothing() -> Iterator[None]:

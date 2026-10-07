@@ -1,15 +1,19 @@
 """The order of the writes a change cascades into (ADR-0004, ADR-0103 PR 1).
 
 ADR-0103 replaces `InvalidateDerivedArtifacts` and `InvalidateApprovalWorkflow` with domain-event
-handlers that must run in the same order as these direct calls. This test records that order.
-In PR 4 it drives the publishing facade, and in PR 5 the events themselves; the expected
-sequences below must not change.
+handlers that must run in the same order as these direct calls. This test recorded that order in
+PR 1. Since PR 4 it drives the publishing facade, through handlers subscribed exactly as the
+composition root subscribes them, inside an in-memory unit of work. PR 5 drives the events
+themselves. The expected sequences below have not changed.
 """
 
 from __future__ import annotations
 
+from threading import RLock
+
 from smb_kernel.time.fixed import FixedClock
 
+from smb_requirement_agent.application.events import InProcessEventDispatcher
 from smb_requirement_agent.application.use_cases.invalidate_approval_workflow import (
     InvalidateApprovalWorkflow,
 )
@@ -38,6 +42,12 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_feature_reposito
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_story_repository import (
     InMemoryStoryRepository,
+)
+from smb_requirement_agent.infrastructure.persistence.in_memory_transaction import (
+    InMemoryTransactionManager,
+)
+from smb_requirement_agent.interfaces.api.composition.events import (
+    subscribe_invalidation_handlers,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.characterisation import samples
@@ -109,7 +119,7 @@ def _stale(item: Epic | Feature | UserStory) -> str:
     return item.staleness.reason.value if item.staleness else "current"
 
 
-def _cascade() -> tuple[InvalidateDerivedArtifacts, Writes]:
+def _cascade() -> tuple[InvalidateDerivedArtifacts, Writes, InMemoryTransactionManager]:
     """A full sample breakdown under review, with every write recorded once seeded.
 
     The second Feature is already stale (`epic_changed`): it shows that a stale artifact keeps
@@ -137,22 +147,26 @@ def _cascade() -> tuple[InvalidateDerivedArtifacts, Writes]:
         samples.FEATURE_ID, [samples.story(), samples.second_story()], expected_set_version=1
     )
     writes.clear()
-    invalidation = InvalidateDerivedArtifacts(
-        analyses,
-        epics,
-        features,
-        stories,
-        FixedClock(samples.T3),
-        audits,
-        InvalidateApprovalWorkflow(reviews),
+    transactions = InMemoryTransactionManager(lambda requirement_id: None, RLock())
+    events = InProcessEventDispatcher(transactions)
+    subscribe_invalidation_handlers(
+        events,
+        analyses=analyses,
+        audits=audits,
+        epics=epics,
+        features=features,
+        stories=stories,
+        clock=FixedClock(samples.T3),
+        approval_workflow=InvalidateApprovalWorkflow(reviews),
     )
-    return invalidation, writes
+    return InvalidateDerivedArtifacts(events), writes, transactions
 
 
 def test_requirement_change_order() -> None:
-    invalidation, writes = _cascade()
+    invalidation, writes, transactions = _cascade()
 
-    invalidation.for_changed_requirement(samples.REQUIREMENT_ID)
+    with transactions.transaction():
+        invalidation.for_changed_requirement(samples.REQUIREMENT_ID)
 
     assert writes == [
         ("review.save", "needs_revision"),
@@ -167,9 +181,10 @@ def test_requirement_change_order() -> None:
 
 
 def test_epic_change_order() -> None:
-    invalidation, writes = _cascade()
+    invalidation, writes, transactions = _cascade()
 
-    invalidation.for_changed_epic(samples.epic())
+    with transactions.transaction():
+        invalidation.for_changed_epic(samples.epic())
 
     assert writes == [
         ("review.save", "needs_revision"),
@@ -181,9 +196,10 @@ def test_epic_change_order() -> None:
 
 
 def test_feature_change_order() -> None:
-    invalidation, writes = _cascade()
+    invalidation, writes, transactions = _cascade()
 
-    invalidation.for_changed_feature(samples.REQUIREMENT_ID, samples.feature())
+    with transactions.transaction():
+        invalidation.for_changed_feature(samples.REQUIREMENT_ID, samples.feature())
 
     assert writes == [
         ("review.save", "needs_revision"),

@@ -20,6 +20,7 @@ from smb_kernel.observability.metrics import Metrics
 from smb_kernel.time.clock import ClockPort
 from smb_kernel.time.system import SystemClock
 
+from smb_requirement_agent.application.events import InProcessEventDispatcher
 from smb_requirement_agent.application.exports import ExportFormat
 from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.application.ports.activity import ActivityReadPort, ReportingReadPort
@@ -265,6 +266,7 @@ from smb_requirement_agent.interfaces.api.composition.breakdown import (
     build_breakdown,
 )
 from smb_requirement_agent.interfaces.api.composition.documents import build_documents
+from smb_requirement_agent.interfaces.api.composition.events import subscribe_invalidation_handlers
 from smb_requirement_agent.interfaces.api.composition.identity import build_identity
 from smb_requirement_agent.interfaces.api.composition.jobs import build_ai_jobs
 from smb_requirement_agent.interfaces.api.composition.knowledge import build_requirement_knowledge
@@ -538,15 +540,18 @@ def _build_container(
     )
 
     approval_invalidation = InvalidateApprovalWorkflow(persistence.breakdown_review_repository)
-    invalidation = InvalidateDerivedArtifacts(
-        persistence.analysis_repository,
-        persistence.epic_repository,
-        persistence.feature_repository,
-        persistence.story_repository,
-        resolved_clock,
-        persistence.analysis_audit_repository,
-        approval_invalidation,
+    domain_events = InProcessEventDispatcher(persistence.transaction_manager)
+    subscribe_invalidation_handlers(
+        domain_events,
+        analyses=persistence.analysis_repository,
+        audits=persistence.analysis_audit_repository,
+        epics=persistence.epic_repository,
+        features=persistence.feature_repository,
+        stories=persistence.story_repository,
+        clock=resolved_clock,
+        approval_workflow=approval_invalidation,
     )
+    invalidation = InvalidateDerivedArtifacts(domain_events)
     access_service = RequirementAccessService(
         persistence.requirement_repository,
         persistence.requirement_draft_repository,

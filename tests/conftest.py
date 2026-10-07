@@ -16,6 +16,7 @@ from fastapi.testclient import TestClient
 from smb_kernel.documents.text_extractor import SafeDocumentTextExtractor
 from smb_kernel.time.fixed import FixedClock
 
+from smb_requirement_agent.application.events import InProcessEventDispatcher
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
@@ -24,6 +25,7 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
     KnowledgeScreenEnsureOutcome,
     KnowledgeScreenEnsureResult,
 )
+from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.documents import AssembleAnalysisDocuments
 from smb_requirement_agent.application.use_cases.invalidate_approval_workflow import (
     InvalidateApprovalWorkflow,
@@ -56,10 +58,12 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_feature_reposito
 from smb_requirement_agent.infrastructure.persistence.in_memory_story_repository import (
     InMemoryStoryRepository,
 )
+from smb_requirement_agent.interfaces.api.composition.events import subscribe_invalidation_handlers
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.interfaces.api.main import create_app
 from smb_requirement_agent.shared_kernel.generation import Provenance
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from tests.unit.transaction_stub import NoOpTransactionManager
 
 # The application resolves settings during startup, which TestClient triggers.
 # Default the suite to the fake provider so no test needs provider credentials.
@@ -151,14 +155,25 @@ def make_invalidation(
     story_repository: InMemoryStoryRepository | None = None,
     clock: FixedClock | None = None,
     audits: InMemoryAnalysisAuditRepository | None = None,
+    *,
+    reviews: InMemoryBreakdownReviewRepository | None = None,
+    transactions: TransactionManagerPort | None = None,
 ) -> InvalidateDerivedArtifacts:
-    """Build the collaborator UpdateRequirement requires, with fresh defaults."""
-    return InvalidateDerivedArtifacts(
-        analysis_repository or InMemoryRequirementAnalysisRepository(),
-        epic_repository or InMemoryEpicRepository(),
-        feature_repository or InMemoryFeatureRepository(),
-        story_repository or InMemoryStoryRepository(),
-        clock or FixedClock(TEST_NOW),
-        audits or InMemoryAnalysisAuditRepository(lambda requirement_id: None),
-        InvalidateApprovalWorkflow(InMemoryBreakdownReviewRepository()),
+    """Build the collaborator UpdateRequirement requires, with fresh defaults.
+
+    Its handlers are subscribed exactly as the composition root subscribes them (ADR-0103).
+    """
+    events = InProcessEventDispatcher(transactions or NoOpTransactionManager())
+    subscribe_invalidation_handlers(
+        events,
+        analyses=analysis_repository or InMemoryRequirementAnalysisRepository(),
+        audits=audits or InMemoryAnalysisAuditRepository(lambda requirement_id: None),
+        epics=epic_repository or InMemoryEpicRepository(),
+        features=feature_repository or InMemoryFeatureRepository(),
+        stories=story_repository or InMemoryStoryRepository(),
+        clock=clock or FixedClock(TEST_NOW),
+        approval_workflow=InvalidateApprovalWorkflow(
+            reviews or InMemoryBreakdownReviewRepository()
+        ),
     )
+    return InvalidateDerivedArtifacts(events)

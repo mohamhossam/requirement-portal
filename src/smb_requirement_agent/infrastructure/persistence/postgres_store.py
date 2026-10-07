@@ -100,6 +100,10 @@ class PostgresStore:
     def mark_rollback_only(self) -> None:
         self._rollback_var.set(True)
 
+    def in_unit_of_work(self) -> bool:
+        # external_call() clears the connection while the provider runs.
+        return self._connection_var.get() is not None
+
     def readiness(self) -> bool:
         """Bounded database checks, without schema changes or paid provider calls."""
         try:

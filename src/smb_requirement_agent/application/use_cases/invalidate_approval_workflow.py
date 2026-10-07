@@ -3,6 +3,7 @@
 from smb_requirement_agent.application.ports.breakdown_review_repository import (
     BreakdownReviewRepositoryPort,
 )
+from smb_requirement_agent.shared_kernel.events import DomainEvent
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
@@ -19,3 +20,7 @@ class InvalidateApprovalWorkflow:
         updated = review.request_revision()
         if updated is not review:
             self._reviews.save(updated)
+
+    def on_change(self, event: DomainEvent) -> None:
+        """Handler: any change to a Requirement's breakdown evidence resets its review."""
+        self.execute(event.requirement_id)

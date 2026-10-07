@@ -26,3 +26,7 @@ class TransactionManagerPort(Protocol):
     def external_call(self) -> AbstractContextManager[None]:
         """Suspend transaction ownership while a slow external provider runs."""
         ...
+
+    def in_unit_of_work(self) -> bool:
+        """True inside `transaction()`, and false again while `external_call()` runs."""
+        ...

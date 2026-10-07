@@ -84,6 +84,10 @@ class InMemoryTransactionManager:
                         del self._local.revision_checkpoints
                         del self._local.depth
 
+    def in_unit_of_work(self) -> bool:
+        # external_call() sets the depth to 0 while the provider runs.
+        return int(getattr(self._local, "depth", 0)) > 0
+
     def mark_rollback_only(self) -> None:
         if int(getattr(self._local, "depth", 0)) == 0:
             raise RuntimeError("No in-memory transaction is active.")

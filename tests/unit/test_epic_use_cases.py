@@ -28,12 +28,6 @@ from smb_requirement_agent.application.use_cases.edit_epic import EditEpic, Edit
 from smb_requirement_agent.application.use_cases.generate_epic import GenerateEpic
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.application.use_cases.get_epic import GetEpic
-from smb_requirement_agent.application.use_cases.invalidate_approval_workflow import (
-    InvalidateApprovalWorkflow,
-)
-from smb_requirement_agent.application.use_cases.invalidate_derived_artifacts import (
-    InvalidateDerivedArtifacts,
-)
 from smb_requirement_agent.application.use_cases.update_requirement import (
     UpdateRequirement,
     UpdateRequirementInput,
@@ -89,6 +83,7 @@ from tests.conftest import (
     NoOpAnswerSuggestionScheduler,
     NoOpKnowledgeScheduler,
     make_analysis_documents,
+    make_invalidation,
 )
 from tests.reference_helpers import EmptyReferences
 from tests.unit.access_service import access_service_for
@@ -154,14 +149,14 @@ class World:
                 authorization=access_service_for(self.requirements, self.access),
             )
         )
-        self.invalidation = InvalidateDerivedArtifacts(
+        self.invalidation = make_invalidation(
             self.analyses,
             self.epics,
             self.features,
             self.stories,
             self.clock,
             self.audits,
-            InvalidateApprovalWorkflow(self.reviews),
+            reviews=self.reviews,
         )
         self.generate = GenerateEpic(
             self.requirements,
