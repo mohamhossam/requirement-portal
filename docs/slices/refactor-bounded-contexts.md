@@ -1,8 +1,8 @@
 # Refactor — Bounded-context packages and domain events
 
 **Status:** ADR-0103 accepted and the slice scheduled 2026-10-07. PR 1 delivered. The PR 1
-findings were decided the same day (ADR-0103 Amendment 1). PRs 2–9 delivered; PR 10 (move
-`analysis`) is next.
+findings were decided the same day (ADR-0103 Amendment 1). PRs 2–10 delivered; PR 11 (move
+`breakdown`) is next.
 
 **Related:** [context map](../architecture/context-map.md),
 [ubiquitous language](../architecture/ubiquitous-language.md).
@@ -106,11 +106,11 @@ stays green. A move that also edits code keeps a separate move-only commit.
 | 8 | Move `jobs` | Leaf context |
 | 9 | Move `requirements` (intake + source documents) | Upstream of everything else |
 | 10 | Move `analysis` | |
-| 11 | Move `breakdown` | |
+| 11 | Move `breakdown`; breakdown adopts `ExpectedContextPort`. Then, as its own step, the per-context LLM adapters (deferred from PR 10) | |
 | 12 | Move `governance` | |
 | 13 | Move `reporting` | |
 | 14 | Move `workflows` | |
-| 15a | Move `references`. The ACL decodes knowledge-portal events into typed state, which replaces PR 2's `KnowledgeStateDecoderPort`, and takes over `HistoricPassage.from_entry` and `HistoricWorkItem.from_entry` | After Knowledge Center E2 merges, because E2 is the most active area |
+| 15a | Move `references`. The ACL decodes knowledge-portal events into typed state, which replaces PR 2's `KnowledgeStateDecoderPort`, and takes over `HistoricPassage.from_entry` and `HistoricWorkItem.from_entry`. Also splits the analysis half of `reference_currency` (`stale_analysis`, `stale_proposals`) into analysis behind a references currency port that keeps today's lock order (deferred from PR 10) | After Knowledge Center E2 merges, because E2 is the most active area |
 | 15b | Move `knowledge` (screening) | After 15a |
 | 16 | **Finish.** Delete every migration shim; enable `contexts_layered` and `published_surface` without exceptions beyond those ADR-0103 records; remove the empty `domain/` and `application/use_cases/`; retire the AGENTS.md §19 debt row | Locks the boundaries in |
 
@@ -717,6 +717,108 @@ repositories.
 - `ruff check .` and `ruff format --check .`: clean.
 - `mypy src tests`: no issues in 594 source files.
 - `lint-imports`: 19 contracts kept, 0 broken.
+
+## PR 10 — The `analysis` package (2026-10-07)
+
+### Delivered
+
+Seven commits. The first three remove analysis's wrong-way imports before anything moves.
+
+**1. Analysis owns its screening ports (Amendment 1, F1).**
+- **New ports.** `application/ports/knowledge_screening.py`, now
+  `analysis/application/ports/knowledge_screening.py`, holds three ports:
+  - `AnswerSuggestionRequestPort`;
+  - `KnowledgeGatePort`;
+  - `SuggestionProvenancePort`.
+- **Screening requests.** Analysis asks for a screen through requirements' `ScreeningRequestPort`,
+  which is upstream and published. Owning an identical copy would add nothing.
+- **Composition.** The composition root passes the same screening objects as before; they satisfy
+  the new ports structurally, and mypy checks that.
+- **Provenance.** `SuggestionProvenancePort` returns the lineage an answer taken from a suggestion
+  records, so analysis no longer handles knowledge's `AnswerSuggestion` or `RelationshipEvidence`.
+  The lineage expression moved verbatim from `AnalysisCollaboration` to
+  `SuggestClarificationAnswers.suggestion_provenance`. A new test,
+  `tests/unit/test_suggestion_provenance.py`, pins both kinds of evidence. Until now only the
+  reference-citation half was tested.
+- **Deleted.** Analysis was the only user of knowledge's `AnswerSuggestionValidatorPort`, so it is
+  gone. Two test doubles renamed their method to match.
+
+**2. Analysis stops importing workflows (F2 and a correction to F6).**
+- **`source_lineage` is analysis domain code.** It is pure functions over `RequirementAnalysis`,
+  and its importers are analysis or downstream of it. It moved with `git mv` to
+  `domain/analysis/lineage.py`, now `analysis/domain/lineage.py`. F6 had sent it to workflows.
+- **`ExpectedContextPort`** (`application/ports/expected_context.py`, shared technical) replaces
+  the concrete `GenerationContextTokens` in `AnalysisCollaboration`. It has the two methods
+  analysis uses; breakdown adds its own in PR 11.
+
+**3. The analysis half of the reference-grounding ports.** These moved verbatim to
+`reference_analysis.py`:
+- `ReferenceProposerPort` and `ReferenceAnalysisPort`;
+- `ReferenceProposalCandidate` and `ReferenceProposalResult`.
+
+**4. The move.** One commit, in `.git-blame-ignore-revs`.
+
+| Was | Now |
+|---|---|
+| `domain/analysis/*` (with `lineage.py`) | `analysis/domain/` |
+| 12 use cases: `analyze_requirement`, `get_requirement_analysis`, `clarify_requirement_analysis`, `confirm_requirement_analysis`, `analysis_collaboration`, `analysis_mapping`, `analysis_reconciliation`, `evidence_analysis`, `generation_effects`, `reference_grounding`, `discard_analysis`, `analysis_documents` | `analysis/application/use_cases/` |
+| 6 ports: `analysis_audit_repository`, `requirement_analysis_repository`, `requirement_analyzer`, `requirement_evidence_analyzer`, `knowledge_screening`, `reference_analysis` | `analysis/application/ports/` |
+| `infrastructure/persistence/{analysis_payloads,in_memory_analysis_audit_repository,in_memory_analysis_repository,in_memory_evidence_fragment_cache,postgres_evidence_fragment_cache}.py` | `analysis/infrastructure/` |
+| 9 analysis-only unit test modules | `tests/unit/analysis/` |
+
+**5–7. Adapters, composition and contracts.**
+- `PostgresAnalysisRepository` and `PostgresAnalysisAuditRepository` moved verbatim to
+  `analysis/infrastructure/postgres_analysis.py`, checked with `diff`.
+- `composition/analysis_workflow.py` was merged into `composition/analysis.py`.
+- The contracts and the dependency report were updated.
+
+No shims.
+
+### Deferred, and why
+
+| Item | Deferred to | Why |
+|---|---|---|
+| The staleness half of `reference_currency` (`stale_analysis`, `stale_proposals`) and `ReferenceEvidencePort`'s analysis-typed methods | PR 15a | The implementations lock references' publication state and read it inside one transaction. Splitting them needs a references currency port and must keep today's lock order (origins' documents, then proposals'). That belongs with the references move. These are the 5 remaining `references → analysis` imports |
+| Per-context LLM adapters (`fake_requirement_analyzer`, `local_requirement_analyzer`, `reference_proposals`, the analysis prompt and schema) | A step after PR 11 | `candidate_mappers.py` and the OpenAI and OpenRouter adapter modules mix analysis and breakdown, so moving one context's half now would leave cross-imports in both directions |
+| `identity_access` (2 imports) | PR 14 (F4) | As for requirements |
+
+### Contracts (22 kept, up from 19)
+
+- **New contracts.** `analysis_internal_layers`, `analysis_depends_only_upstream` and
+  `analysis_published_surface`.
+- **Ignored imports.** The upstream contract reports 10:
+  - the shared technical ports `expected_context` (1) and `transaction_manager` (2);
+  - references' unmoved ports `embedding` (1) and `reference_grounding` (4), which go in PR 15a;
+  - `identity_access` (2), which goes in PR 14.
+- **Upstream contexts.** `identity`, `jobs` and `requirements` now forbid `analysis` and treat it
+  as a consumer of their published surface.
+- **Probes**, all reverted:
+  - a knowledge port import added to `get_requirement_analysis` broke
+    `analysis_depends_only_upstream`;
+  - an analysis adapter import added to `generate_epic` broke `analysis_published_surface` and
+    `application_independence`;
+  - an analysis import added to `get_requirement` broke `requirements_depends_only_upstream`.
+
+### Dependency report
+
+217 of 217 modules classified, 78 crossing pairs (82 before), 14 against the order (17 before).
+
+| Pair | Change |
+|---|---|
+| `analysis → knowledge` | gone: F1 |
+| `analysis → workflows` | 4 → 2: `generation_context` and `source_lineage` gone; `identity_access` remains |
+| `breakdown → workflows` | 15 → 12: `source_lineage` is analysis domain code |
+| `knowledge → workflows` | 7 → 6, for the same reason |
+| `references → workflows`, `reporting → workflows` | gone, for the same reason |
+| `references → analysis` | 5 remain, deferred to PR 15a |
+
+### Validation evidence (PR 10, local, with PostgreSQL)
+
+- `pytest` with `TEST_DATABASE_URL` set: 1865 passed, 0 skipped, exit 0, after each code commit.
+  No file under `tests/characterisation/golden/` changed.
+- `ruff check .` and `ruff format --check .`: clean.
+- `mypy src tests`: no issues in 604 source files.
+- `lint-imports`: 22 contracts kept, 0 broken.
 
 ## Shims
 

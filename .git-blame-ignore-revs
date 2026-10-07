@@ -25,3 +25,6 @@ f54cd67a7045c2e37deb290067f0b0470a6bf673
 
 # PR 9: the requirements context moved into smb_requirement_agent/requirements, imports rewritten (ADR-0103).
 0088dd878ea2cf41a59c50bbf522ae83f5428d73
+
+# PR 10: the analysis context moved into smb_requirement_agent/analysis, imports rewritten (ADR-0103).
+dc3fe018980c18a2f6a42677c1b0ad45c2c75ee3
