@@ -24,12 +24,14 @@ write a new ADR that supersedes it and update the older one's Status.
 
 Search and AI grounding: [ADR-0064](adr-0064-unified-search-and-reference-answers.md), accepted.
 
+Bounded contexts: [context map](context-map.md) and [ubiquitous language](ubiquitous-language.md), under [ADR-0103](adr-0103-bounded-context-packages-and-domain-events.md), proposed.
+
 | ADR | Title | Status |
 |---|---|---|
 | [0001](adr-0001-composition-root-and-configuration.md) | Composition root and configuration | Accepted |
 | [0002](adr-0002-central-error-translation.md) | Central error translation at the interface boundary | Accepted |
 | [0003](adr-0003-epic-lifecycle-and-staleness.md) | Epic lifecycle and staleness | Accepted |
-| [0004](adr-0004-derived-artifact-invalidation.md) | Derived-artifact invalidation | Accepted |
+| [0004](adr-0004-derived-artifact-invalidation.md) | Derived-artifact invalidation | Accepted; mechanism to be superseded by ADR-0103 if accepted (semantics kept) |
 | [0005](adr-0005-separate-generator-ports.md) | Separate generator ports per artifact | Accepted |
 | [0006](adr-0006-local-openai-compatible-provider.md) | Local OpenAI-compatible LLM provider | Accepted |
 | [0007](adr-0007-local-reasoning-and-operational-logs.md) | Local reasoning control and operational error logs | Accepted |
@@ -46,7 +48,7 @@ Search and AI grounding: [ADR-0064](adr-0064-unified-search-and-reference-answer
 | [0018](adr-0018-identity-access-boundary.md) | Provider-neutral identity and Requirement access boundary | Accepted |
 | [0019](adr-0019-collaborative-analysis-audit.md) | Stable clarification questions and immutable analysis rounds | Accepted |
 | [0020](adr-0020-leased-durable-ai-jobs.md) | Leased durable AI jobs and actor notifications | Accepted |
-| [0021](adr-0021-content-bound-approval-governance.md) | Content-bound approval governance | Accepted |
+| [0021](adr-0021-content-bound-approval-governance.md) | Content-bound approval governance | Accepted; to be amended by ADR-0103 if accepted |
 | [0022](adr-0022-audit-derived-activity-reporting-and-private-saved-views.md) | Audit-derived activity/reporting and private saved views | Accepted |
 | [0023](adr-0023-versioned-neutral-backlog-export.md) | Versioned neutral backlog export | Accepted |
 | [0024](adr-0024-explicit-database-migrations.md) | Explicit database migrations outside API startup | Accepted |
@@ -91,8 +93,8 @@ Search and AI grounding: [ADR-0064](adr-0064-unified-search-and-reference-answer
 - [ADR-0067: Versioned architecture knowledge and local hybrid retrieval](adr-0067-versioned-architecture-knowledge-and-local-rag.md)
 - [ADR-0068: Architecture knowledge roles and release-scoped jobs](adr-0068-architecture-knowledge-roles-and-jobs.md)
 - [ADR-0069: PostgreSQL connection pool and worker process separation](adr-0069-connection-pool-and-worker-process-separation.md)
-- [ADR-0070: Requirement commands own their unit of work](adr-0070-requirement-command-units-of-work.md)
-- [ADR-0071: The composition root is a package](adr-0071-composition-root-package.md)
+- [ADR-0070: Requirement commands own their unit of work](adr-0070-requirement-command-units-of-work.md) — to be amended by ADR-0103 if accepted
+- [ADR-0071: The composition root is a package](adr-0071-composition-root-package.md) — to be amended by ADR-0103 if accepted
 - [ADR-0072: OpenAI runs on the shared structured-generation adapters](adr-0072-openai-on-shared-structured-adapters.md)
 - [ADR-0073: Review action availability is a domain rule the API reports](adr-0073-review-action-availability.md)
 - [ADR-0074: Production packaging and operability](adr-0074-production-packaging-and-operability.md)
@@ -124,3 +126,4 @@ Search and AI grounding: [ADR-0064](adr-0064-unified-search-and-reference-answer
 - [ADR-0100: The platform kernel holds mechanisms, never meaning](adr-0100-platform-kernel.md)
 - [ADR-0101: The product architecture explorer lives on the knowledge catalogue](adr-0101-product-architecture-explorer-on-the-catalogue.md)
 - [ADR-0102: Historic Requirements and their Azure DevOps lineage](adr-0102-historic-requirements-and-ado-lineage.md)
+- [ADR-0103: Bounded-context packages and in-process domain events](adr-0103-bounded-context-packages-and-domain-events.md) — Proposed

@@ -35,6 +35,7 @@ this ledger.
 | Three-repository platform split (ADR-0098, ADR-0099, ADR-0100; plan `docs/slices/enhancement-platform-split.md`) | **Done 2026-10-05.** Stages 0–5: `platform-kernel` v1.0.2, the untangling and seams here, knowledge-portal v0.1.0, the cutover, and the guarded drop of the moved tables ([#31](https://github.com/mohamhossam/requirement-portal/pull/31)) with the run guides ([#32](https://github.com/mohamhossam/requirement-portal/pull/32)). No data is moved while the platform is in development. The acceptance criteria are checked in the plan, with their evidence: CI proves a withdrawal reaching requirement work, and runs the platform in a browser, on the combined stack | Branch protection on `main` (an owner setting) |
 | The Product Architecture Explorer on the knowledge catalogue (ADR-0101, with Amendments 1 and 2) | **Done 2026-10-05.** Built in [knowledge-portal](https://github.com/mohamhossam/knowledge-portal) (its #22–#36). Here: the ADR, and step 7's handoff of approved backlogs to the catalogue's change-request inbox ([#35](https://github.com/mohamhossam/requirement-portal/pull/35), `docs/slices/enhancement-change-requests-from-requirement-ai.md`) | A handoff status on the approval screen (deferred by decision) |
 | Knowledge Center (`docs/slices/enhancement-knowledge-center.md`, ADR-0099 Amendment 1, ADR-0102) | **Re-planned 2026-10-06 for the three repositories.** A is mostly delivered by the split, and F early. B1, A′, B2, B3, C and D are delivered (each built where its data lives). **E is scheduled 2026-10-06** (ADR-0102): E1, knowledge-portal's read-only ADO import and lineage, is delivered; E2, the historic corpus and prior art here, is in progress | E2; the ADO edition, for the REST adapter |
+| Bounded-context restructure toward Domain-Driven Design (ADR-0103, proposed; `docs/slices/refactor-bounded-contexts.md`) | Specified 2026-10-07; not scheduled. Context map and ubiquitous language in `docs/architecture/` | Owner acceptance of ADR-0103, a position in the delivery order, then PRs 1–16 |
 | ADO publication and safe republish (12–13) | Planned; not implemented | Implementation |
 | Advanced workflow optimization (15) | Planned; evidence-gated | Demonstrate a need and measurable benefit before implementation |
 
@@ -1762,6 +1763,65 @@ rehearsal and deployment remain separate operational release prerequisites.
 ### Specification
 - `docs/slices/production-readiness-remediation.md`
 
+# Refactor — Bounded-Context Packages and Domain Events
+
+**Status:** Specified 2026-10-07; not scheduled. Decision: ADR-0103 (proposed).
+**Specification:** `docs/slices/refactor-bounded-contexts.md`. **Context map:**
+`docs/architecture/context-map.md`. **Glossary:** `docs/architecture/ubiquitous-language.md`.
+
+### User Outcome
+No user-visible change; it is a behaviour-preserving refactor (§15.1 decision recorded in the
+specification). Maintainers find each bounded context's model, use cases and adapters in one
+package. `lint-imports` rejects a dependency between contexts that runs the wrong way, and
+cross-context effects are domain events with handlers registered in one place.
+
+### Domain
+- `shared_kernel/` holds the review lifecycle, approval, staleness, provenance and action
+  availability, plus `RequirementId`, `ActorSnapshot`, `SourceLineage` and `DomainEvent`.
+- Per-context `domain/` packages, following the context map.
+- Domain events: `RequirementRevised`, `EpicChanged`, `FeatureChanged`, `FeaturesReplaced`,
+  `StoriesChanged` and `ArchitectureImpactChanged`.
+- The governance rules move into the domain: fingerprints, readiness, the blocker and review
+  policies, and `BreakdownReview` refresh and carry-forward.
+
+### Application
+- The 72 use-case modules move to their contexts. Cross-context orchestration goes to
+  `workflows/`.
+- `InvalidateDerivedArtifacts` and `InvalidateApprovalWorkflow` become event handlers, running in
+  the order ADR-0103 fixes.
+
+### Ports
+- `DomainEventPublisher`, `TransactionManagerPort.in_unit_of_work()`, `ScreeningRequestPort` and
+  `CandidateReviewPort`.
+- Every other port keeps its signature and moves with its owning context.
+
+### Adapters
+- The pure-Python `InProcessEventDispatcher`, which dispatches synchronously inside the existing
+  unit of work and lock (ADR-0070).
+- Repositories and payload codecs move per context. Persisted payloads stay byte-identical.
+
+### API
+None. The routes, schemas, error map and OpenAPI snapshot are unchanged.
+
+### UI
+None. It is a backend-only refactor, agreed with the owner on 2026-10-07 and recorded under
+"Dropped from this slice" in the specification.
+
+### Tests
+- Golden fingerprints, payloads and context tokens before any move.
+- A handler-order test.
+- Domain-only tests for the moved governance rules.
+- `tests/architecture/test_context_boundaries.py`.
+- Per-context import-linter contracts.
+- `tests/unit/<context>/` layout.
+
+### Dependencies and order
+- PRs 1–6 (characterisation tests, domain cycles, shared kernel, events, governance into the
+  domain) do not depend on Knowledge Center E2.
+- The context moves (PRs 7–15) go one context at a time, with `knowledge` last, after E2 merges.
+
+---
+
 # UI/UX Redesign — Phases 0–10 delivered; follow-ups open
 
 **Status:** Phases 0–10 implemented and merged into `main`. Governed by `docs/ux-plan.md`,
@@ -1883,6 +1943,9 @@ means inserting it above; until then, implementation must not begin.
   §19 until it is scheduled.
 - **UI/UX redesign follow-ups** — the two §6 product decisions and the raised items under
   *UI/UX Redesign* above.
+- **Bounded-context restructure** (ADR-0103, proposed; `docs/slices/refactor-bounded-contexts.md`).
+  It needs the owner to accept ADR-0103. PRs 1–6 can be scheduled independently of E2; the
+  `knowledge` move waits for E2 to merge.
 
 Do not reorder just because an external integration is exciting. The ADO adapter becomes straightforward only after the internal backlog model and approval lifecycle are stable.
 
