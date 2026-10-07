@@ -1,8 +1,8 @@
 # Refactor — Bounded-context packages and domain events
 
 **Status:** ADR-0103 accepted and the slice scheduled 2026-10-07. PR 1 delivered. The PR 1
-findings were decided the same day (ADR-0103 Amendment 1). PRs 2–5 delivered; PR 6 (governance
-rules into the domain) is next.
+findings were decided the same day (ADR-0103 Amendment 1). PRs 2–6 delivered; PR 7 (move
+`identity`) is next.
 
 **Related:** [context map](../architecture/context-map.md),
 [ubiquitous language](../architecture/ubiquitous-language.md).
@@ -435,6 +435,71 @@ left to PR 6, which moves the review refresh into the governance domain.
 - `lint-imports` — 10 contracts kept, 0 broken.
 - `grep -rn "InvalidateDerivedArtifacts\|InvalidateApprovalWorkflow\|make_invalidation" src tests`
   finds only the write-order test's docstring, which names the classes it replaced.
+
+## PR 6 — Governance rules in the domain (2026-10-07)
+
+### Delivered
+
+**Moved verbatim into the governance domain (`domain/review/`):**
+
+| New module | Holds | Was in |
+|---|---|---|
+| `fingerprints.py` | `artifact_fingerprint`, `breakdown_fingerprint` | `approval_policy.py` |
+| `evidence.py` | `ReviewEvidence`, `evidence_fingerprint` | `breakdown_review_evidence.py` |
+| `policy.py` | `BreakdownReviewPolicy`, `REVIEW_RULESET_VERSION`, `ApprovalPolicy` | `breakdown_review_policy.py`, `approval_policy.py` |
+| `readiness.py` | `ArtifactApprovalState`, `artifact_states`, `readiness_reasons`, `approval_subject` | private helpers of `approval_workflow.py` |
+
+- `ApprovalPolicy`'s blocker count now compares `FlagSeverity.BLOCKING` rather than the string
+  `"blocking"`. The two are equivalent for the `StrEnum`.
+- `readiness_reasons` gives the same reasons in the same order as before.
+
+**Two pure dependencies moved into the breakdown domain (`domain/story/quality.py`):**
+- `StoryQualityEvidence`. Its field names are unchanged, so its `asdict` (and the evidence
+  fingerprint built from it) is identical.
+- `spidr_recommendations`. `SuggestStorySplit.for_assessment` delegates to it, so its callers are
+  untouched.
+
+**New `BreakdownReview` behaviour.** Nothing outside the aggregate rebuilds it with `replace()`
+any more:
+- `effective_status(subject, evidence_fingerprint)` replaces the recalculation in
+  `GetApprovalWorkflow.build`;
+- `carry_forward_from(existing)` replaces `_carry_forward_decisions`;
+- `with_knowledge_version(version)` replaces the two `replace(..., knowledge_version=...)` calls.
+
+**Imports.** 43 import statements in 34 files were rewritten. The three application modules are
+deleted, and the rewrite commit is in `.git-blame-ignore-revs`.
+
+`can_submit` and `can_approve` stay in `GetApprovalWorkflow.build`: they combine these domain
+answers with the actor's access.
+
+### The ordering left unpinned in PR 5 is now pinned
+
+`test_story_regeneration_resets_the_review_before_refreshing_it` (in
+`tests/unit/test_approval_workflow_api.py`):
+1. submits the review;
+2. regenerates a Feature's Stories with `force`;
+3. checks the stored review is `needs_revision`, at its version plus 2.
+
+Swapping the publish and `checks.save` in `RegenerateStory._execute_all` made it fail (+1). The
+swap was reverted.
+
+### Deferred
+
+- **The `Fingerprint` value object** named in ADR-0103 §4. Fingerprints stay `str`, because a
+  value object would change every approval, route and schema type for no behavioural gain. It is
+  worth doing only alongside an approval-model change that needs it.
+
+### Validation evidence (PR 6, local)
+
+- `pytest` — exit 0 after each code commit. No file under `tests/characterisation/golden/`
+  changed, which covers the fingerprints, the review policy build and the context tokens.
+- The new `tests/unit/test_review_domain_rules.py` passes 9 tests.
+- `ruff check .` and `ruff format --check .` — clean.
+- `mypy src tests` — no issues in 575 source files.
+- `lint-imports` — 10 contracts kept, 0 broken.
+- **Dependency report** — 201 of 201 modules, 87 crossing pairs, 21 against the order (unchanged).
+  Moving code inside governance changes no crossing. The two `breakdown → governance` imports
+  are `ApproveFeature`'s, until PR 12.
 
 ## Shims
 

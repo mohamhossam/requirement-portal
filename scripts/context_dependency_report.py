@@ -143,10 +143,7 @@ USE_CASES = {
     ],
     "governance": [
         "breakdown_review",
-        "breakdown_review_evidence",
-        "breakdown_review_policy",
         "approval_workflow",
-        "approval_policy",
         "approve_epic",
         "revision_history",
         "export_breakdown",
