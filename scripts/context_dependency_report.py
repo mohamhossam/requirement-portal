@@ -101,6 +101,8 @@ USE_CASES = {
         "analysis_reconciliation",
         "evidence_analysis",
         "generation_effects",
+        # Split from requirements' documents use case (PR 9).
+        "analysis_documents",
         # Handler for RequirementRevised (PR 4).
         "discard_analysis",
         "reference_grounding",

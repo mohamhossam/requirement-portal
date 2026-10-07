@@ -15,6 +15,7 @@ from smb_requirement_agent.application.ports.requirement_analyzer import Require
 from smb_requirement_agent.application.use_cases.analysis_collaboration import (
     AnalysisCollaboration,
 )
+from smb_requirement_agent.application.use_cases.analysis_documents import AssembleAnalysisDocuments
 from smb_requirement_agent.application.use_cases.analyze_requirement import AnalyzeRequirement
 from smb_requirement_agent.application.use_cases.clarify_requirement_analysis import (
     ClarifyRequirementAnalysis,
@@ -22,7 +23,6 @@ from smb_requirement_agent.application.use_cases.clarify_requirement_analysis im
 from smb_requirement_agent.application.use_cases.confirm_requirement_analysis import (
     ConfirmRequirementAnalysis,
 )
-from smb_requirement_agent.application.use_cases.documents import AssembleAnalysisDocuments
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.application.use_cases.get_requirement_analysis import (
     GetRequirementAnalysis,

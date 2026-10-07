@@ -42,11 +42,11 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
 )
 from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
+from smb_requirement_agent.application.use_cases.analysis_documents import AssembleAnalysisDocuments
 from smb_requirement_agent.application.use_cases.analysis_mapping import build_analysis
 from smb_requirement_agent.application.use_cases.analysis_reconciliation import (
     reconcile_round,
 )
-from smb_requirement_agent.application.use_cases.documents import AssembleAnalysisDocuments
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.application.use_cases.generation_effects import (
     accepted_generation_effects,

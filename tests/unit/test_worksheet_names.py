@@ -104,7 +104,9 @@ def test_chart_tabs_do_not_shift_following_worksheet_media_context() -> None:
 
 @pytest.mark.parametrize("legacy", [False, True])
 def test_hidden_selection_keeps_new_positions_and_legacy_names_separate(legacy: bool) -> None:
-    from smb_requirement_agent.application.use_cases.documents import AssembleAnalysisDocuments
+    from smb_requirement_agent.application.use_cases.analysis_documents import (
+        AssembleAnalysisDocuments,
+    )
     from smb_requirement_agent.domain.document.entities import SourceDocument, SourceDocumentVersion
     from smb_requirement_agent.domain.document.value_objects import (
         DocumentId,

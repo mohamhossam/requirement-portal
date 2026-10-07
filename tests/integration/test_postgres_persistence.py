@@ -44,7 +44,7 @@ from smb_requirement_agent.application.ports.saved_views import (
 from smb_requirement_agent.application.use_cases.analysis_collaboration import (
     AnalysisCollaboration,
 )
-from smb_requirement_agent.application.use_cases.documents import AssembleAnalysisDocuments
+from smb_requirement_agent.application.use_cases.analysis_documents import AssembleAnalysisDocuments
 from smb_requirement_agent.application.use_cases.export_breakdown import ExportBreakdown
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.domain.analysis.entities import (

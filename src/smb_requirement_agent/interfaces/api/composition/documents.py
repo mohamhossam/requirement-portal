@@ -16,9 +16,9 @@ from smb_kernel.documents.scanner import ClamAvDocumentScanner, OfflineDocumentS
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
+from smb_requirement_agent.application.use_cases.analysis_documents import AssembleAnalysisDocuments
 from smb_requirement_agent.application.use_cases.attachment_ingestion import AttachmentIngestion
 from smb_requirement_agent.application.use_cases.documents import (
-    AssembleAnalysisDocuments,
     GetDocument,
     ListDocuments,
     RemoveDocument,
