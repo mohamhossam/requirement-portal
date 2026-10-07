@@ -70,7 +70,6 @@ DOMAIN = {
     # Split: InvalidKnowledgeError goes to references, the screening errors to knowledge.
     "domain.knowledge.errors": "references",
     "domain.knowledge": "knowledge",
-    "domain.identity": "identity",
     "domain.jobs": "jobs",
 }
 
@@ -172,7 +171,6 @@ USE_CASES = {
 }
 
 PORTS = {
-    "identity": ["access_repository", "actor_directory", "identity"],
     "jobs": ["ai_jobs", "notifications"],
     "requirements": [
         "attachment_ingestions",
@@ -243,8 +241,15 @@ APPLICATION_MODULES = {
 }
 
 
+# Contexts that have moved into their own package (ADR-0103 §1). Their domain and application
+# layers are classified whole; their infrastructure, like the rest, is out of scope.
+CONTEXT_PACKAGES = ("identity",)
+
+
 def _prefixes() -> dict[str, str]:
     table = dict(DOMAIN)
+    for context in CONTEXT_PACKAGES:
+        table.update({f"{context}.domain": context, f"{context}.application": context})
     table.update(APPLICATION_MODULES)
     for context, names in USE_CASES.items():
         table.update({f"application.use_cases.{name}": context for name in names})
@@ -268,7 +273,10 @@ def _in_scope(module: str) -> bool:
     relative = module.removeprefix(f"{ROOT}.")
     if relative in ("domain", "application", "application.use_cases", "application.ports"):
         return False
-    return relative.startswith(("domain.", "application.", "shared_kernel"))
+    moved = tuple(
+        f"{context}.{layer}" for context in CONTEXT_PACKAGES for layer in ("domain", "application")
+    )
+    return relative.startswith(("domain.", "application.", "shared_kernel", *moved))
 
 
 def allowed(source: str, target: str) -> bool:
