@@ -93,19 +93,19 @@ Paths are relative to `src/smb_requirement_agent/`. Ports move with the use case
 | `domain/knowledge/{entities,membership,prior_art}.py` | `knowledge/domain/` |
 | `domain/knowledge/errors.py` | split: `InvalidKnowledgeError` to `references/domain/`; the finding, review, retirement and membership errors to `knowledge/domain/` |
 | `domain/identity/*` | `identity/domain/` (done in PR 7) |
-| `domain/jobs/*` | `jobs/domain/` |
+| `domain/jobs/*` | `jobs/domain/` (done in PR 8) |
 
 ### Use cases (`application/use_cases/`)
 
 | Target | Modules |
 |---|---|
 | `identity` | none. `identity_access` moves to `workflows` (F4); `identity` publishes `RequirementAccessPort` |
-| `jobs` | `leased_jobs`, `job_execution_context`, `provider_call_rate`, `retention` |
+| `jobs` | `job_execution_context`, `provider_call_rate`, `retention` (in `jobs/application/use_cases/` since PR 8). `leased_jobs` is breakdown's (PR 8 correction) |
 | `requirements` | `create_requirement`, `update_requirement`, `get_requirement`, `requirement_drafts`, `owned_requirements`, `requirement_sources`, `documents`, `attachment_ingestion`; plus `application/document_upload_validation.py` |
 | `references` | `historic_corpus`, `knowledge_event_cursor`, `knowledge_views`, `qualify_chunk_tokens`, `reference_currency` (its citation half); plus `application/{grounding,retrieval}_evaluation.py` |
 | `analysis` | `analyze_requirement`, `get_requirement_analysis`, `clarify_requirement_analysis`, `confirm_requirement_analysis`, `analysis_collaboration`, `analysis_mapping`, `analysis_reconciliation`, `evidence_analysis`, `generation_effects`, `reference_grounding`, `discard_analysis` (the `RequirementRevised` handler, PR 4), and the analysis half of `reference_currency` |
 | `knowledge` | `requirement_knowledge`, `requirement_indexing`, `rebuild_knowledge_index`, `knowledge_portfolio`, `corpus_actions`, `unified_knowledge_search`, `prior_art`, `source_impact`, `answer_suggestions`; plus `application/prior_art_evaluation.py` |
-| `breakdown` | `generate_epic`, `edit_epic`, `get_epic`, `generate_features`, `feature_review` (`GetFeatures`, `EditFeature`), `story_workflow`, `story_change_proposals`, `story_quality`, `generation_checks` (through `CandidateReviewPort`), `architecture_mapping`, `architecture_mapping_jobs`, `mark_backlog_stale` (the staleness handler, PR 4) |
+| `breakdown` | `generate_epic`, `edit_epic`, `get_epic`, `generate_features`, `feature_review` (`GetFeatures`, `EditFeature`), `story_workflow`, `story_change_proposals`, `story_quality`, `generation_checks` (through `CandidateReviewPort`), `architecture_mapping`, `architecture_mapping_jobs`, `leased_jobs` (the mapping queue's lease logic, reassigned from `jobs` in PR 8), `mark_backlog_stale` (the staleness handler, PR 4) |
 | `governance` | `breakdown_review` (with `GovernanceCandidateReview`, which implements breakdown's `CandidateReviewPort`), `reset_approval_workflow` (the review-reset handler, PR 5), `breakdown_review_evidence`, `approval_workflow`, `approve_epic`, `feature_review` (`ApproveFeature`), `revision_history`, `export_breakdown`, `knowledge_handoff` (F7); plus `application/exports.py`. Governance domain code since PR 6: `domain/review/{fingerprints,evidence,policy,readiness}.py` (formerly `approval_policy`, `breakdown_review_evidence`, `breakdown_review_policy`, and the readiness helpers of `approval_workflow`) |
 | `reporting` | `requirement_worklist`, `activity_reporting`, `saved_views`, `dependency_projection` |
 | `workflows` | `requirement_commands`, `ai_job_execution`, `ai_job_scheduling`, `ai_jobs` (F3), `identity_access` (F4), `generation_context` (behind `ExpectedContextPort`, F2), `source_lineage`, `requirement_impact` (F6), `internal_reads` |
@@ -118,7 +118,7 @@ Paths are relative to `src/smb_requirement_agent/`. Ports move with the use case
 | Target | Ports |
 |---|---|
 | `identity` | `access_repository`, `actor_directory`, `identity` (in `identity/application/ports/` since PR 7), new `RequirementAccessPort` (PR 14, with `identity_access`) |
-| `jobs` | `ai_jobs`, `notifications` |
+| `jobs` | `ai_jobs`, `notifications` (in `jobs/application/ports/` since PR 8) |
 | `requirements` | `attachment_ingestions`, `document_repository`, `requirement_draft_repository`, `requirement_repository`, `source_dependencies`, new `ScreeningRequestPort` |
 | `references` | `architecture_knowledge` (returning its own match type, F8), `embedding`, `historic_corpus`, `knowledge_events`, `knowledge_views`, `reference_publications`, the outbox and inbox ports of `knowledge_handoff`, the citation half of `reference_grounding` |
 | `analysis` | `analysis_audit_repository`, `requirement_analysis_repository`, `requirement_analyzer`, `requirement_evidence_analyzer`, the analysis half of `reference_grounding`, new `ScreeningRequestPort`, `AnswerSuggestionRequestPort`, `KnowledgeGatePort`, `SuggestionProvenancePort` |
@@ -139,7 +139,8 @@ Paths are relative to `src/smb_requirement_agent/`. Ports move with the use case
 | `infrastructure/knowledge_client.py` | `references/infrastructure/` (the ACL) |
 | `infrastructure/documents/` | `requirements/infrastructure/` |
 | `infrastructure/identity/`, `infrastructure/persistence/{identity_payloads,in_memory_identity}.py`, and `PostgresAccessRepository` and `PostgresActorDirectory` from `postgres_repositories.py` | `identity/infrastructure/` (done in PR 7; the PostgreSQL pair is now `postgres_identity.py`) |
-| `infrastructure/jobs/` | `jobs/infrastructure/` |
+| `infrastructure/persistence/{in_memory_ai_jobs,postgres_ai_jobs}.py` | `jobs/infrastructure/` (done in PR 8) |
+| `infrastructure/jobs/` (PR 8 correction: these workers run other contexts' work, so `jobs` cannot hold them) | `architecture_job_worker.py` → `breakdown/infrastructure/`; `polling_worker.py` (drives `ExecuteAiJob`) → `workflows/infrastructure/`; `prior_art_gate.py`, `requirement_index_worker.py` → `knowledge/infrastructure/` |
 | `infrastructure/exports/` | `governance/infrastructure/` |
 | `infrastructure/llm/` adapters for one context's port | that context's `infrastructure/llm/`; the shared transport and provider selection helpers stay in `infrastructure/llm/` |
 | `infrastructure/config/`, `infrastructure/text/` | unchanged |

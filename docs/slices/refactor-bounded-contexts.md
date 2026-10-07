@@ -1,8 +1,8 @@
 # Refactor — Bounded-context packages and domain events
 
 **Status:** ADR-0103 accepted and the slice scheduled 2026-10-07. PR 1 delivered. The PR 1
-findings were decided the same day (ADR-0103 Amendment 1). PRs 2–7 delivered; PR 8 (move
-`jobs`) is next.
+findings were decided the same day (ADR-0103 Amendment 1). PRs 2–8 delivered; PR 9 (move
+`requirements`) is next.
 
 **Related:** [context map](../architecture/context-map.md),
 [ubiquitous language](../architecture/ubiquitous-language.md).
@@ -567,6 +567,73 @@ infrastructure. The per-module `domain.identity` and identity `PORTS` entries ar
   `__init__`s), 87 crossing pairs, 21 against the order (unchanged). One of the 21 is
   `jobs → identity`: `leased_jobs` imports the identity port. That pair was counted before the
   move too, because `jobs` and `identity` are unordered siblings. It is reviewed with PR 8.
+
+## PR 8 — The `jobs` package (2026-10-07)
+
+### Delivered
+
+**Moved with `git mv` into `smb_requirement_agent/jobs/`.** The moved files changed only in their
+imports, so the move and the rewrite share one commit, which is in `.git-blame-ignore-revs`.
+
+| Was | Now |
+|---|---|
+| `domain/jobs/{entities,errors}.py` | `jobs/domain/` |
+| `application/ports/{ai_jobs,notifications}.py` | `jobs/application/ports/` |
+| `application/use_cases/{job_execution_context,provider_call_rate,retention}.py` | `jobs/application/use_cases/` |
+| `infrastructure/persistence/{in_memory_ai_jobs,postgres_ai_jobs}.py` | `jobs/infrastructure/` |
+| `tests/unit/{test_ai_jobs,test_notification_retention,test_provider_call_rate}.py` | `tests/unit/jobs/` |
+
+- **No shims.** Every importer was rewritten in the same commit.
+- **Composition.** `composition/jobs.py` already has its target name.
+
+### Placement corrections
+
+The context map put `leased_jobs` and all of `infrastructure/jobs/` in `jobs`. Each of them
+imports a context ranked above `jobs`, so they could not live in the most upstream context without
+breaking ADR-0103 §2. They are reassigned by what they depend on:
+
+| Module | Depends on | Now belongs to | Moves in |
+|---|---|---|---|
+| `application/use_cases/leased_jobs.py` | breakdown's `architecture_jobs` port; its only subclass is `ArchitectureMappingJobs` | `breakdown` | PR 11 |
+| `infrastructure/jobs/architecture_job_worker.py` | `LeasedJobs`, `ArchitectureJob` | `breakdown` | PR 11 |
+| `infrastructure/jobs/polling_worker.py` | `ExecuteAiJob` | `workflows` | PR 14 |
+| `infrastructure/jobs/prior_art_gate.py` | `PriorArtBudgetPort` | `knowledge` | PR 15b |
+| `infrastructure/jobs/requirement_index_worker.py` | the `requirement_indexing` use case | `knowledge` | PR 15b |
+
+The reassignment only changes where these files go later. They stay at their current paths until
+then. `tests/unit/test_polling_worker.py` and `test_worker_process.py` stay with them.
+
+### Contracts (16 kept, up from 13)
+
+- Jobs joins the layer, framework and adapter-selection contracts, and `shared_kernel_pure` now
+  also forbids it.
+- `jobs_internal_layers`, `jobs_depends_on_no_other_context` and `jobs_published_surface` match
+  identity's. The second one checks direct imports only, for the same reason as identity's.
+- **Tightened.** ADR-0103 §2 has `identity` and `jobs` as unordered siblings, so each "depends on
+  no other context" contract now forbids the sibling. Both contracts now also forbid
+  `application.ports`, not only `application.use_cases`. Both contexts already satisfied this.
+- **Probe.** An identity import added to `retention` broke `jobs_depends_on_no_other_context`. An
+  adapter import added to `ai_jobs` (a use case) broke `jobs_published_surface` and
+  `application_independence`. Both probes were reverted.
+
+### Dependency report
+
+206 of 206 modules classified, 84 crossing pairs (87 before), 19 against the order (21 before).
+`jobs` now crosses into nothing.
+
+| Pair | Change |
+|---|---|
+| `jobs → breakdown`, `jobs → identity`, `jobs → interfaces` | gone: they were `leased_jobs`' imports |
+| `breakdown → jobs` | gone: `architecture_mapping_jobs → leased_jobs` is now inside breakdown |
+| `breakdown → interfaces` | new: `leased_jobs → application.public_errors`, which leaves `application/` with F5 |
+
+### Validation evidence (PR 8, local)
+
+- `pytest`: 1789 passed, 75 skipped (PostgreSQL integration tests without a database), exit 0. No
+  file under `tests/characterisation/golden/` changed.
+- `ruff check .` and `ruff format --check .`: clean.
+- `mypy src tests`: no issues in 585 source files.
+- `lint-imports`: 16 contracts kept, 0 broken.
 
 ## Shims
 
