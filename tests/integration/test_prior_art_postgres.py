@@ -14,12 +14,12 @@ from urllib.parse import quote
 import psycopg
 import pytest
 
-from smb_requirement_agent.domain.jobs.entities import AiJobOperation
 from smb_requirement_agent.domain.knowledge.prior_art import PriorArtStatus
 from smb_requirement_agent.infrastructure.config.options import LLMProvider, PersistenceProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
 from smb_requirement_agent.interfaces.api.container import Container
+from smb_requirement_agent.jobs.domain.entities import AiJobOperation
 from tests.knowledge_doubles import PublishedLibrary, container_with_library
 from tests.unit.test_prior_art import _create, _drain, _publish_xgpon
 

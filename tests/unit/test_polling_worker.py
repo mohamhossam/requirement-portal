@@ -9,17 +9,17 @@ from typing import cast
 from smb_kernel.observability.metrics import Metrics
 from smb_kernel.time.fixed import FixedClock
 
-from smb_requirement_agent.application.ports.ai_jobs import (
-    AiJobCommand,
-    AiJobQueuePort,
-    AiJobRecord,
-)
 from smb_requirement_agent.application.use_cases.ai_job_execution import ExecuteAiJob
 from smb_requirement_agent.infrastructure.jobs.polling_worker import (
     AiJobWorkerGroup,
     PollingAiJobWorker,
 )
-from tests.unit.test_ai_jobs import NOW, _job
+from smb_requirement_agent.jobs.application.ports.ai_jobs import (
+    AiJobCommand,
+    AiJobQueuePort,
+    AiJobRecord,
+)
+from tests.unit.jobs.test_ai_jobs import NOW, _job
 
 
 class BlockingExecutor:

@@ -11,7 +11,6 @@ from smb_requirement_agent.domain.analysis.entities import (
     ClarificationQuestion,
 )
 from smb_requirement_agent.domain.feature.entities import Feature
-from smb_requirement_agent.domain.jobs.entities import AiJobOperation
 from smb_requirement_agent.domain.story.entities import UserStory
 from smb_requirement_agent.identity.infrastructure.identity_payloads import access_from_payload
 from smb_requirement_agent.infrastructure.persistence.analysis_payloads import (
@@ -33,6 +32,7 @@ from smb_requirement_agent.infrastructure.persistence.requirement_snapshot impor
     requirement_from_payload,
 )
 from smb_requirement_agent.infrastructure.persistence.review_payloads import review_from_payload
+from smb_requirement_agent.jobs.domain.entities import AiJobOperation
 
 
 class PostgresSnapshotReader:

@@ -4,11 +4,11 @@ import logging
 from datetime import datetime
 from threading import Event, Thread
 
-from smb_requirement_agent.application.ports.ai_jobs import AiJobQueuePort, AiJobRecord
 from smb_requirement_agent.application.use_cases.requirement_indexing import (
     IndexRequirementKnowledge,
 )
-from smb_requirement_agent.domain.jobs.entities import AiJobId, AiJobOperation
+from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobQueuePort, AiJobRecord
+from smb_requirement_agent.jobs.domain.entities import AiJobId, AiJobOperation
 
 
 class RequirementIndexWorker:

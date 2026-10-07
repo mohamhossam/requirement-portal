@@ -16,10 +16,17 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from fastapi.testclient import TestClient
 
-from smb_requirement_agent.application.ports.ai_jobs import AiJobCommand, AiJobRecord, JsonValue
 from smb_requirement_agent.application.use_cases.ai_jobs import MAX_LIST_LIMIT
 from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirementInput
-from smb_requirement_agent.domain.jobs.entities import (
+from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
+from smb_requirement_agent.interfaces.api.container import Container, build_container
+from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.jobs.application.ports.ai_jobs import (
+    AiJobCommand,
+    AiJobRecord,
+    JsonValue,
+)
+from smb_requirement_agent.jobs.domain.entities import (
     ActorNotification,
     AiJob,
     AiJobId,
@@ -28,9 +35,6 @@ from smb_requirement_agent.domain.jobs.entities import (
     NotificationId,
     NotificationKind,
 )
-from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
-from smb_requirement_agent.interfaces.api.container import Container, build_container
-from smb_requirement_agent.interfaces.api.main import create_app
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorSnapshot,

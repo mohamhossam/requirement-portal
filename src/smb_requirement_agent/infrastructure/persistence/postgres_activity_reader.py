@@ -21,7 +21,6 @@ from smb_requirement_agent.application.ports.activity import (
     BlockerEvidence,
     ReportingReadPort,
 )
-from smb_requirement_agent.application.ports.ai_jobs import AiJobRecord
 from smb_requirement_agent.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
@@ -46,6 +45,7 @@ from smb_requirement_agent.infrastructure.persistence.activity_projection import
     ActivityJobSource,
     RepositoryActivityProjection,
 )
+from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobRecord
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 

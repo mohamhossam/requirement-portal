@@ -22,10 +22,6 @@ from smb_kernel.persistence.connector import (
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.ports.activity import ActivityReadPort, ReportingReadPort
-from smb_requirement_agent.application.ports.ai_jobs import (
-    AiJobQueuePort,
-    AiJobRepositoryPort,
-)
 from smb_requirement_agent.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
@@ -63,7 +59,6 @@ from smb_requirement_agent.application.ports.knowledge_portfolio import (
     FindingNudgesPort,
     KnowledgePortfolioPort,
 )
-from smb_requirement_agent.application.ports.notifications import NotificationRepositoryPort
 from smb_requirement_agent.application.ports.prior_art import PriorArtStorePort
 from smb_requirement_agent.application.ports.reference_publications import (
     ReferencePublicationStatePort,
@@ -163,10 +158,6 @@ from smb_requirement_agent.infrastructure.persistence.historic_corpus import (
     InMemoryHistoricCorpus,
     PostgresHistoricCorpus,
 )
-from smb_requirement_agent.infrastructure.persistence.in_memory_ai_jobs import (
-    InMemoryAiJobStore,
-    InMemoryNotificationRepository,
-)
 from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_audit_repository import (
     InMemoryAnalysisAuditRepository,
 )
@@ -229,10 +220,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader i
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_activity_sources import (
     PostgresActivitySources,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_ai_jobs import (
-    PostgresAiJobStore,
-    PostgresNotificationRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_architecture_jobs import (
     PostgresArchitectureJobs,
@@ -301,6 +288,19 @@ from smb_requirement_agent.infrastructure.persistence.story_quality_repository i
 )
 from smb_requirement_agent.interfaces.api.composition.projections import (
     refresh_postgres_projections,
+)
+from smb_requirement_agent.jobs.application.ports.ai_jobs import (
+    AiJobQueuePort,
+    AiJobRepositoryPort,
+)
+from smb_requirement_agent.jobs.application.ports.notifications import NotificationRepositoryPort
+from smb_requirement_agent.jobs.infrastructure.in_memory_ai_jobs import (
+    InMemoryAiJobStore,
+    InMemoryNotificationRepository,
+)
+from smb_requirement_agent.jobs.infrastructure.postgres_ai_jobs import (
+    PostgresAiJobStore,
+    PostgresNotificationRepository,
 )
 
 

@@ -14,23 +14,23 @@ from threading import RLock
 import pytest
 from smb_kernel.time.fixed import FixedClock
 
-from smb_requirement_agent.application.use_cases.retention import PruneReadNotifications
-from smb_requirement_agent.domain.jobs.entities import (
-    ActorNotification,
-    AiJobId,
-    NotificationId,
-    NotificationKind,
-)
 from smb_requirement_agent.infrastructure.config.options import (
     DEFAULT_NOTIFICATION_RETENTION_DAYS,
     ConfigurationError,
 )
 from smb_requirement_agent.infrastructure.config.settings import RetentionSettings
-from smb_requirement_agent.infrastructure.persistence.in_memory_ai_jobs import (
+from smb_requirement_agent.interfaces import retention
+from smb_requirement_agent.jobs.application.use_cases.retention import PruneReadNotifications
+from smb_requirement_agent.jobs.domain.entities import (
+    ActorNotification,
+    AiJobId,
+    NotificationId,
+    NotificationKind,
+)
+from smb_requirement_agent.jobs.infrastructure.in_memory_ai_jobs import (
     InMemoryAiJobStore,
     InMemoryNotificationRepository,
 )
-from smb_requirement_agent.interfaces import retention
 from smb_requirement_agent.shared_kernel.actors import ActorId
 
 NOW = datetime(2026, 9, 25, 12, tzinfo=UTC)

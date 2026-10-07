@@ -23,11 +23,6 @@ from smb_kernel.time.system import SystemClock
 from smb_requirement_agent.application.events import InProcessEventDispatcher
 from smb_requirement_agent.application.exports import ExportFormat
 from smb_requirement_agent.application.ports.activity import ActivityReadPort, ReportingReadPort
-from smb_requirement_agent.application.ports.ai_jobs import (
-    AiJobQueuePort,
-    AiJobRepositoryPort,
-    AiJobWorkerPort,
-)
 from smb_requirement_agent.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
@@ -47,7 +42,6 @@ from smb_requirement_agent.application.ports.knowledge_handoff import ApprovedBa
 from smb_requirement_agent.application.ports.knowledge_index_generations import (
     KnowledgeIndexGenerationsPort,
 )
-from smb_requirement_agent.application.ports.notifications import NotificationRepositoryPort
 from smb_requirement_agent.application.ports.prior_art import PriorArtStorePort
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
@@ -183,7 +177,6 @@ from smb_requirement_agent.application.use_cases.owned_requirements import (
     SaveOwnedRequirementDraft,
 )
 from smb_requirement_agent.application.use_cases.prior_art import GetPriorArt, HistoricCitations
-from smb_requirement_agent.application.use_cases.provider_call_rate import ProviderCallRateLimit
 from smb_requirement_agent.application.use_cases.rebuild_knowledge_index import (
     RebuildKnowledgeIndex,
 )
@@ -275,6 +268,15 @@ from smb_requirement_agent.interfaces.api.composition.llm import build_llm_adapt
 from smb_requirement_agent.interfaces.api.composition.persistence import build_persistence
 from smb_requirement_agent.interfaces.api.composition.requirements import build_requirement_intake
 from smb_requirement_agent.interfaces.api.composition.review import build_review
+from smb_requirement_agent.jobs.application.ports.ai_jobs import (
+    AiJobQueuePort,
+    AiJobRepositoryPort,
+    AiJobWorkerPort,
+)
+from smb_requirement_agent.jobs.application.ports.notifications import NotificationRepositoryPort
+from smb_requirement_agent.jobs.application.use_cases.provider_call_rate import (
+    ProviderCallRateLimit,
+)
 
 
 class BackgroundWorker(Protocol):

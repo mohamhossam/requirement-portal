@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from smb_requirement_agent.application.ports.ai_jobs import AiJobRepositoryPort
 from smb_requirement_agent.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
@@ -22,6 +21,7 @@ from smb_requirement_agent.application.ports.requirement_worklist import (
 )
 from smb_requirement_agent.application.ports.story_repository import StoryRepositoryPort
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
+from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobRepositoryPort
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 

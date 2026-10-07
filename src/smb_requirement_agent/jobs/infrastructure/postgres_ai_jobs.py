@@ -9,8 +9,14 @@ from typing import cast
 from psycopg import errors
 from psycopg.types.json import Jsonb
 
-from smb_requirement_agent.application.ports.ai_jobs import AiJobCommand, AiJobRecord, JsonValue
-from smb_requirement_agent.domain.jobs.entities import (
+from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
+from smb_requirement_agent.infrastructure.persistence.postgres_values import DbConnection
+from smb_requirement_agent.jobs.application.ports.ai_jobs import (
+    AiJobCommand,
+    AiJobRecord,
+    JsonValue,
+)
+from smb_requirement_agent.jobs.domain.entities import (
     ActorNotification,
     AiJob,
     AiJobFailure,
@@ -23,9 +29,7 @@ from smb_requirement_agent.domain.jobs.entities import (
     NotificationKind,
     NotificationPreference,
 )
-from smb_requirement_agent.domain.jobs.errors import AiJobConflictError
-from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
-from smb_requirement_agent.infrastructure.persistence.postgres_values import DbConnection
+from smb_requirement_agent.jobs.domain.errors import AiJobConflictError
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorSnapshot,

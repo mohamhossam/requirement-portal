@@ -6,9 +6,9 @@ from datetime import datetime
 
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.ports.ai_jobs import AiJobQueuePort, AiJobRecord
 from smb_requirement_agent.application.ports.prior_art import PriorArtBudgetPort
-from smb_requirement_agent.domain.jobs.entities import AiJobId, AiJobOperation
+from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobQueuePort, AiJobRecord
+from smb_requirement_agent.jobs.domain.entities import AiJobId, AiJobOperation
 
 
 class PriorArtGatedQueue:

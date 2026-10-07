@@ -32,7 +32,6 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     KnownFact,
     QuestionId,
 )
-from smb_requirement_agent.domain.jobs.entities import AiJobFailure
 from smb_requirement_agent.domain.knowledge.entities import (
     AnswerSuggestionSource,
     KnowledgeChunk,
@@ -61,6 +60,7 @@ from smb_requirement_agent.infrastructure.persistence.requirement_knowledge_repo
     InMemoryRequirementKnowledgeStore,
 )
 from smb_requirement_agent.interfaces.api.container import Container
+from smb_requirement_agent.jobs.domain.entities import AiJobFailure
 from smb_requirement_agent.shared_kernel.actors import ActorId
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.unit.access_service import access_service_for

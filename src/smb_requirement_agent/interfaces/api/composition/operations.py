@@ -29,12 +29,8 @@ from smb_requirement_agent.application.use_cases.dependency_projection import De
 from smb_requirement_agent.application.use_cases.qualify_chunk_tokens import (
     qualify_chunk_tokens,
 )
-from smb_requirement_agent.application.use_cases.retention import PruneReadNotifications
 from smb_requirement_agent.infrastructure.config.options import ConfigurationError
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.persistence.postgres_ai_jobs import (
-    PostgresNotificationRepository,
-)
 from smb_requirement_agent.infrastructure.persistence.postgres_revisions import (
     PostgresRevisionRepository,
     PostgresRevisionWriter,
@@ -51,6 +47,10 @@ from smb_requirement_agent.infrastructure.persistence.source_dependencies import
 )
 from smb_requirement_agent.interfaces.api.composition.projections import (
     refresh_postgres_projections,
+)
+from smb_requirement_agent.jobs.application.use_cases.retention import PruneReadNotifications
+from smb_requirement_agent.jobs.infrastructure.postgres_ai_jobs import (
+    PostgresNotificationRepository,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 

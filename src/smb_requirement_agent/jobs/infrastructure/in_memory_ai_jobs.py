@@ -9,8 +9,8 @@ from datetime import datetime
 from threading import RLock
 from typing import Any
 
-from smb_requirement_agent.application.ports.ai_jobs import AiJobRecord
-from smb_requirement_agent.domain.jobs.entities import (
+from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobRecord
+from smb_requirement_agent.jobs.domain.entities import (
     ActorNotification,
     AiJob,
     AiJobId,
@@ -20,7 +20,7 @@ from smb_requirement_agent.domain.jobs.entities import (
     NotificationId,
     NotificationPreference,
 )
-from smb_requirement_agent.domain.jobs.errors import AiJobConflictError
+from smb_requirement_agent.jobs.domain.errors import AiJobConflictError
 from smb_requirement_agent.shared_kernel.actors import ActorId
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 

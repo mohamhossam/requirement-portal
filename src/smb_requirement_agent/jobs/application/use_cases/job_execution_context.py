@@ -4,7 +4,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
 
-from smb_requirement_agent.application.ports.ai_jobs import AiJobRecord
+from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobRecord
 
 _attempt: ContextVar[AiJobRecord | None] = ContextVar("ai_execution_attempt", default=None)
 

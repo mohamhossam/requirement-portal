@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Protocol
 
-from smb_requirement_agent.domain.jobs.entities import (
+from smb_requirement_agent.jobs.domain.entities import (
     ActorNotification,
     NotificationId,
     NotificationPreference,

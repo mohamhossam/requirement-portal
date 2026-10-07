@@ -9,9 +9,11 @@ import pytest
 from fastapi.testclient import TestClient
 
 from smb_requirement_agent.application.errors import ProviderRateLimitExceededError
-from smb_requirement_agent.application.use_cases.provider_call_rate import ProviderCallRateLimit
 from smb_requirement_agent.interfaces.api.container import build_container
 from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.jobs.application.use_cases.provider_call_rate import (
+    ProviderCallRateLimit,
+)
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,

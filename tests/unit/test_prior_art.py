@@ -25,7 +25,6 @@ from smb_requirement_agent.application.prior_art_evaluation import (
 )
 from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirementInput
 from smb_requirement_agent.application.use_cases.prior_art import _validated
-from smb_requirement_agent.domain.jobs.entities import AiJobOperation, AiJobStatus
 from smb_requirement_agent.domain.knowledge.prior_art import PriorArtStatus
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
@@ -36,6 +35,7 @@ from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import I
 from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import FakePriorArtJudge
 from smb_requirement_agent.interfaces.api.container import Container
 from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.jobs.domain.entities import AiJobOperation, AiJobStatus
 from tests.knowledge_doubles import (
     PublishedLibrary,
     container_with_library,

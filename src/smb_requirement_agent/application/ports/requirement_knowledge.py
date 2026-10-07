@@ -14,7 +14,6 @@ from smb_requirement_agent.application.ports.embedding import (
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidence
 from smb_requirement_agent.domain.analysis.entities import ClarificationQuestion
 from smb_requirement_agent.domain.analysis.value_objects import QuestionId
-from smb_requirement_agent.domain.jobs.entities import AiJobId
 from smb_requirement_agent.domain.knowledge.entities import (
     AnswerSuggestion,
     AnswerSuggestionSet,
@@ -27,6 +26,7 @@ from smb_requirement_agent.domain.knowledge.entities import (
 )
 from smb_requirement_agent.domain.knowledge.membership import CorpusMembership
 from smb_requirement_agent.domain.requirement.entities import Requirement
+from smb_requirement_agent.jobs.domain.entities import AiJobId
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 

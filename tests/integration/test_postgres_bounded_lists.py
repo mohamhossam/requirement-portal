@@ -12,8 +12,15 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from smb_requirement_agent.application.ports.ai_jobs import AiJobCommand, AiJobRecord
-from smb_requirement_agent.domain.jobs.entities import (
+from smb_requirement_agent.domain.requirement.entities import Requirement
+from smb_requirement_agent.domain.requirement.value_objects import (
+    RequirementDescription,
+    RequirementStatus,
+    RequirementTitle,
+)
+from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
+from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobCommand, AiJobRecord
+from smb_requirement_agent.jobs.domain.entities import (
     ActorNotification,
     AiJob,
     AiJobId,
@@ -22,14 +29,7 @@ from smb_requirement_agent.domain.jobs.entities import (
     NotificationId,
     NotificationKind,
 )
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementDescription,
-    RequirementStatus,
-    RequirementTitle,
-)
-from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
-from smb_requirement_agent.infrastructure.persistence.postgres_ai_jobs import (
+from smb_requirement_agent.jobs.infrastructure.postgres_ai_jobs import (
     PostgresAiJobStore,
     PostgresNotificationRepository,
 )

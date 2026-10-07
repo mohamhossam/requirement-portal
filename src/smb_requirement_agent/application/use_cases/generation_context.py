@@ -32,10 +32,10 @@ from smb_requirement_agent.application.ports.story_repository import (
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.domain.feature.value_objects import FeatureId
-from smb_requirement_agent.domain.jobs.entities import AiJobOperation
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.review.fingerprints import artifact_fingerprint
 from smb_requirement_agent.domain.story.value_objects import StoryId
+from smb_requirement_agent.jobs.domain.entities import AiJobOperation
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 CONTEXT_TOKEN_FORMAT = "generation-context-v2"

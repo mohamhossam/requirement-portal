@@ -28,8 +28,6 @@ from smb_requirement_agent.application.ports.requirement_draft_repository import
 )
 from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.job_execution_context import current_attempt
-from smb_requirement_agent.domain.jobs.entities import AiJobOperation, AiJobOrigin
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.identity.application.ports.actor_directory import ActorDirectoryPort
 from smb_requirement_agent.identity.domain.entities import (
@@ -40,6 +38,8 @@ from smb_requirement_agent.identity.domain.errors import (
     AuthorizationDeniedError,
     RequirementAccessConflictError,
 )
+from smb_requirement_agent.jobs.application.use_cases.job_execution_context import current_attempt
+from smb_requirement_agent.jobs.domain.entities import AiJobOperation, AiJobOrigin
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,

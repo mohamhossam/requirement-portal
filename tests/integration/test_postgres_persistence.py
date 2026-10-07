@@ -23,7 +23,6 @@ from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.application.errors import DocumentStorageError
 from smb_requirement_agent.application.exports import ExportFormat
-from smb_requirement_agent.application.ports.ai_jobs import AiJobCommand, AiJobRecord
 from smb_requirement_agent.application.ports.requirement_analyzer import (
     RequirementAnalysisCandidate,
 )
@@ -105,13 +104,6 @@ from smb_requirement_agent.domain.feature.value_objects import (
     SplittingPattern,
     SplittingRationale,
 )
-from smb_requirement_agent.domain.jobs.entities import (
-    AiJob,
-    AiJobId,
-    AiJobOperation,
-    AiJobOrigin,
-    AiJobStatus,
-)
 from smb_requirement_agent.domain.knowledge.entities import (
     AnswerSuggestion,
     AnswerSuggestionId,
@@ -187,7 +179,6 @@ from smb_requirement_agent.infrastructure.persistence.migration_runner import (
 from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader import (
     PostgresActivityReadAdapter,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_ai_jobs import PostgresAiJobStore
 from smb_requirement_agent.infrastructure.persistence.postgres_document_repository import (
     PostgresDocumentStorage,
 )
@@ -214,6 +205,15 @@ from smb_requirement_agent.infrastructure.persistence.postgres_store import (
 from smb_requirement_agent.infrastructure.persistence.postgres_store import (
     PostgresStore as UnitOfWorkStore,
 )
+from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobCommand, AiJobRecord
+from smb_requirement_agent.jobs.domain.entities import (
+    AiJob,
+    AiJobId,
+    AiJobOperation,
+    AiJobOrigin,
+    AiJobStatus,
+)
+from smb_requirement_agent.jobs.infrastructure.postgres_ai_jobs import PostgresAiJobStore
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,

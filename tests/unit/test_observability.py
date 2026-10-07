@@ -35,20 +35,20 @@ from smb_kernel.observability.metrics import (
 )
 from smb_kernel.time.fixed import FixedClock
 
-from smb_requirement_agent.application.ports.ai_jobs import (
-    AiJobCommand,
-    AiJobQueuePort,
-    AiJobRecord,
-)
 from smb_requirement_agent.application.use_cases.ai_job_execution import ExecuteAiJob
-from smb_requirement_agent.domain.jobs.entities import AiJob
 from smb_requirement_agent.infrastructure.config.options import LogFormat
 from smb_requirement_agent.infrastructure.jobs.polling_worker import PollingAiJobWorker
 from smb_requirement_agent.interfaces.api.container import build_container
 from smb_requirement_agent.interfaces.api.main import create_app
 from smb_requirement_agent.interfaces.runtime import start_metrics
+from smb_requirement_agent.jobs.application.ports.ai_jobs import (
+    AiJobCommand,
+    AiJobQueuePort,
+    AiJobRecord,
+)
+from smb_requirement_agent.jobs.domain.entities import AiJob
 from tests.conftest import FAKE_PROVIDER_SETTINGS
-from tests.unit.test_ai_jobs import NOW, _job
+from tests.unit.jobs.test_ai_jobs import NOW, _job
 from tests.unit.test_polling_worker import RecordingQueue
 
 

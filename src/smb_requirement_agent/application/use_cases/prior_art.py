@@ -20,12 +20,6 @@ from smb_requirement_agent.application.errors import (
     KnowledgeGenerationError,
     RequirementNotFoundError,
 )
-from smb_requirement_agent.application.ports.ai_jobs import (
-    AiJobCommand,
-    AiJobRecord,
-    AiJobRepositoryPort,
-    JsonValue,
-)
 from smb_requirement_agent.application.ports.embedding import KnowledgeEmbeddingPort
 from smb_requirement_agent.application.ports.historic_corpus import (
     HistoricCorpusIndexPort,
@@ -52,13 +46,6 @@ from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     RequirementKnowledgeCorpus,
     bounded_knowledge_text,
 )
-from smb_requirement_agent.domain.jobs.entities import (
-    AiJob,
-    AiJobId,
-    AiJobOperation,
-    AiJobOrigin,
-    AiJobStatus,
-)
 from smb_requirement_agent.domain.knowledge.historic import WORK_ITEM_TYPES, HistoricSourceKind
 from smb_requirement_agent.domain.knowledge.prior_art import (
     MATCHES_MAX,
@@ -70,6 +57,19 @@ from smb_requirement_agent.domain.knowledge.prior_art import (
 )
 from smb_requirement_agent.domain.requirement.value_objects import RequirementStatus
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
+from smb_requirement_agent.jobs.application.ports.ai_jobs import (
+    AiJobCommand,
+    AiJobRecord,
+    AiJobRepositoryPort,
+    JsonValue,
+)
+from smb_requirement_agent.jobs.domain.entities import (
+    AiJob,
+    AiJobId,
+    AiJobOperation,
+    AiJobOrigin,
+    AiJobStatus,
+)
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.generation import Provenance
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId

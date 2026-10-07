@@ -48,7 +48,6 @@ from smb_requirement_agent.domain.analysis.entities import (
 from smb_requirement_agent.domain.analysis.value_objects import (
     IntentProposalStatus,
 )
-from smb_requirement_agent.domain.jobs.entities import AiJobOperation
 from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeChunk,
     KnowledgeChunkId,
@@ -71,6 +70,7 @@ from smb_requirement_agent.domain.requirement.errors import DuplicateRequirement
 from smb_requirement_agent.domain.requirement.value_objects import RequirementStatus
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.identity.domain.entities import RequirementAccess
+from smb_requirement_agent.jobs.domain.entities import AiJobOperation
 from smb_requirement_agent.shared_kernel.actors import (
     ActorProfile,
     ActorSnapshot,

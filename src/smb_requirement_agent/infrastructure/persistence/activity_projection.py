@@ -19,7 +19,6 @@ from smb_requirement_agent.application.ports.activity import (
     BlockerEvidence,
     ReportingReadPort,
 )
-from smb_requirement_agent.application.ports.ai_jobs import AiJobRecord
 from smb_requirement_agent.application.ports.requirement_worklist import (
     RequirementWorklistSnapshot,
     RequirementWorklistSnapshotPort,
@@ -30,7 +29,6 @@ from smb_requirement_agent.application.use_cases.activity_reporting import (
 )
 from smb_requirement_agent.domain.analysis.entities import AnalysisRound, ClarificationQuestion
 from smb_requirement_agent.domain.analysis.value_objects import QuestionChangeAction
-from smb_requirement_agent.domain.jobs.entities import AiJobOperation, AiJobStatus
 from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeDecisionKind,
     KnowledgeFinding,
@@ -47,6 +45,8 @@ from smb_requirement_agent.domain.review.evidence import (
 )
 from smb_requirement_agent.domain.revision.entities import BreakdownRevision, RequirementRevision
 from smb_requirement_agent.identity.domain.entities import AccessChangeKind
+from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobRecord
+from smb_requirement_agent.jobs.domain.entities import AiJobOperation, AiJobStatus
 from smb_requirement_agent.shared_kernel.actors import ActorSnapshot
 from smb_requirement_agent.shared_kernel.approval import (
     Approval,

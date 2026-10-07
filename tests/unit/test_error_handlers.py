@@ -113,7 +113,6 @@ from smb_requirement_agent.domain.feature.errors import (
     InvalidFeatureContentError,
     StaleFeatureApprovalError,
 )
-from smb_requirement_agent.domain.jobs.errors import AiJobConflictError, InvalidAiJobError
 from smb_requirement_agent.domain.knowledge.errors import (
     CorpusMembershipConflictError,
     InvalidKnowledgeError,
@@ -155,6 +154,7 @@ from smb_requirement_agent.interfaces.api.error_handlers import (
     status_code_for,
 )
 from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.jobs.domain.errors import AiJobConflictError, InvalidAiJobError
 from smb_requirement_agent.shared_kernel.errors import (
     InvalidApprovalContentError,
     InvalidGeneratedContentError,

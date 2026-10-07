@@ -9,12 +9,6 @@ from smb_kernel.time.clock import ClockPort
 from smb_requirement_agent.application.errors import (
     RequirementNotFoundError,
 )
-from smb_requirement_agent.application.ports.ai_jobs import (
-    AiJobCommand,
-    AiJobRecord,
-    AiJobRepositoryPort,
-    JsonValue,
-)
 from smb_requirement_agent.application.ports.corpus_membership import CorpusMembershipPort
 from smb_requirement_agent.application.ports.prior_art import PriorArtSchedulerPort
 from smb_requirement_agent.application.ports.requirement_knowledge import (
@@ -28,17 +22,23 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
 from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.use_cases.ai_jobs import command_fingerprint
 from smb_requirement_agent.domain.analysis.entities import ClarificationQuestion
-from smb_requirement_agent.domain.jobs.entities import (
+from smb_requirement_agent.domain.knowledge.errors import RequirementRetiredError
+from smb_requirement_agent.domain.requirement.entities import Requirement
+from smb_requirement_agent.domain.requirement.errors import DuplicateRequirementStateError
+from smb_requirement_agent.domain.requirement.value_objects import RequirementStatus
+from smb_requirement_agent.jobs.application.ports.ai_jobs import (
+    AiJobCommand,
+    AiJobRecord,
+    AiJobRepositoryPort,
+    JsonValue,
+)
+from smb_requirement_agent.jobs.domain.entities import (
     AiJob,
     AiJobId,
     AiJobOperation,
     AiJobOrigin,
     AiJobStatus,
 )
-from smb_requirement_agent.domain.knowledge.errors import RequirementRetiredError
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.errors import DuplicateRequirementStateError
-from smb_requirement_agent.domain.requirement.value_objects import RequirementStatus
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 

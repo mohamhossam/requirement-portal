@@ -14,20 +14,20 @@ from smb_requirement_agent.application.errors import (
     NotificationNotFoundError,
     RequirementNotFoundError,
 )
-from smb_requirement_agent.application.ports.ai_jobs import (
-    AiJobCommand,
-    AiJobRecord,
-    AiJobRepositoryPort,
-)
-from smb_requirement_agent.application.ports.notifications import NotificationRepositoryPort
 from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
-from smb_requirement_agent.application.use_cases.job_execution_context import (
+from smb_requirement_agent.jobs.application.ports.ai_jobs import (
+    AiJobCommand,
+    AiJobRecord,
+    AiJobRepositoryPort,
+)
+from smb_requirement_agent.jobs.application.ports.notifications import NotificationRepositoryPort
+from smb_requirement_agent.jobs.application.use_cases.job_execution_context import (
     current_attempt,
 )
-from smb_requirement_agent.domain.jobs.entities import (
+from smb_requirement_agent.jobs.domain.entities import (
     ActorNotification,
     AiJob,
     AiJobId,
@@ -37,7 +37,7 @@ from smb_requirement_agent.domain.jobs.entities import (
     NotificationId,
     NotificationPreference,
 )
-from smb_requirement_agent.domain.jobs.errors import AiJobConflictError
+from smb_requirement_agent.jobs.domain.errors import AiJobConflictError
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,

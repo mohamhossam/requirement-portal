@@ -12,7 +12,7 @@ from datetime import timedelta
 
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.ports.notifications import NotificationRepositoryPort
+from smb_requirement_agent.jobs.application.ports.notifications import NotificationRepositoryPort
 
 
 class PruneReadNotifications:

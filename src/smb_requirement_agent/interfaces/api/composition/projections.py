@@ -22,7 +22,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader i
 from smb_requirement_agent.infrastructure.persistence.postgres_activity_sources import (
     PostgresActivitySources,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_ai_jobs import PostgresAiJobStore
 from smb_requirement_agent.infrastructure.persistence.postgres_document_repository import (
     PostgresDocumentRepository,
 )
@@ -50,6 +49,7 @@ from smb_requirement_agent.infrastructure.persistence.postgres_worklist import (
 from smb_requirement_agent.infrastructure.persistence.source_dependencies import (
     PostgresSourceDependencies,
 )
+from smb_requirement_agent.jobs.infrastructure.postgres_ai_jobs import PostgresAiJobStore
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 

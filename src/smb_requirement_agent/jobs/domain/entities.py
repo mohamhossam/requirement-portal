@@ -6,7 +6,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime
 from enum import StrEnum
 
-from smb_requirement_agent.domain.jobs.errors import AiJobConflictError, InvalidAiJobError
+from smb_requirement_agent.jobs.domain.errors import AiJobConflictError, InvalidAiJobError
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorSnapshot,

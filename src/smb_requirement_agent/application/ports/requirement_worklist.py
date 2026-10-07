@@ -13,11 +13,11 @@ from smb_requirement_agent.domain.analysis.entities import (
 )
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.feature.entities import Feature
-from smb_requirement_agent.domain.jobs.entities import AiJobOperation
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.review.entities import BreakdownReview
 from smb_requirement_agent.domain.story.entities import UserStory
 from smb_requirement_agent.identity.domain.entities import RequirementAccess
+from smb_requirement_agent.jobs.domain.entities import AiJobOperation
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
