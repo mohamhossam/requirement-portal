@@ -1,8 +1,8 @@
 # Refactor — Bounded-context packages and domain events
 
 **Status:** ADR-0103 accepted and the slice scheduled 2026-10-07. PR 1 delivered. The PR 1
-findings were decided the same day (ADR-0103 Amendment 1). PRs 2 and 3 delivered; PR 4 (event
-infrastructure) is next.
+findings were decided the same day (ADR-0103 Amendment 1). PRs 2–4 delivered; PR 5 (call sites
+publish directly) is next.
 
 **Related:** [context map](../architecture/context-map.md),
 [ubiquitous language](../architecture/ubiquitous-language.md).
@@ -300,6 +300,69 @@ F1–F8 moves that happen in their contexts' PRs.
   - reverting it brought back 10 kept, 0 broken.
 - **Old path is gone:** `grep -rn "domain\.shared" src tests scripts --include=*.py` finds
   nothing.
+
+## PR 4 — In-process domain events (2026-10-07)
+
+### Delivered
+
+- **Events.**
+  - `shared_kernel/events.py` defines `DomainEvent`, which carries `requirement_id` and nothing
+    but identities.
+  - The concrete events live in the domain package that owns each one:
+    - `domain/requirement/events.py`: `RequirementRevised`;
+    - `domain/epic/events.py`: `EpicChanged` (`epic_id`);
+    - `domain/feature/events.py`: `FeatureChanged` (`feature_id`).
+  - **Dropped:** ADR-0103 §3 gave `RequirementRevised` a `cause`. No handler reads it, so it was
+    left out (AGENTS.md §16) and is added if a consumer ever needs it.
+- **Dispatch.**
+  - `application/ports/domain_events.py` defines `DomainEventPublisher`.
+  - `application/events.py` defines `InProcessEventDispatcher`. It matches the exact event type
+    and runs handlers synchronously, in subscription order. An exception propagates, so the
+    unit of work rolls back.
+  - It raises `RuntimeError` outside a unit of work or during `external_call()`, through the
+    new `TransactionManagerPort.in_unit_of_work()`. That method is implemented by `PostgresStore`,
+    `InMemoryTransactionManager` and the unit-test stub.
+  - Every existing call site already runs inside `transaction()`, so the check changes nothing
+    at runtime.
+- **Handlers.** Each holds the body it replaced, verbatim:
+  - `DiscardAnalysis` (analysis): delete the analysis, then supersede its questions;
+  - `MarkBacklogStale` (breakdown): the Epic, then each Feature's Stories, then the Feature;
+  - `InvalidateApprovalWorkflow.on_change` (governance).
+- **Subscriptions.** `interfaces/api/composition/events.py` is the only place they are made:
+  - `RequirementRevised`: approval reset → discard analysis → backlog stale;
+  - `EpicChanged`: approval reset → Features and Stories stale;
+  - `FeatureChanged`: approval reset → Stories stale.
+- **Facade.** `InvalidateDerivedArtifacts` now only publishes. Its eight call sites are
+  unchanged; PR 5 has them publish directly and removes the facade.
+- **Wiring.** The container builds the dispatcher on the persistence transaction manager. The
+  `make_invalidation` fixture wires handlers through the same `subscribe_invalidation_handlers`.
+
+### Tests
+
+- `tests/characterisation/test_invalidation_order.py` now runs through the dispatcher inside an
+  in-memory unit of work. Its expected write sequences have not changed since PR 1.
+- New `tests/unit/test_domain_events.py`: subscription order; exact-type match; no
+  subscribers; the refusal outside a unit of work and during an external call; a failing
+  handler rolling back an earlier handler's write.
+- New `tests/architecture/test_context_boundaries.py`: `.subscribe(` only in
+  `composition/events.py`, and `InProcessEventDispatcher(` only in the composition root.
+- **Probes,** each reverted:
+
+  | Probe | Result |
+  |---|---|
+  | A stray `.subscribe(` in a use case | The boundary test fails |
+  | Swapping the analysis and backlog handlers | The order test fails |
+  | Removing the guard | The dispatcher tests fail |
+
+### Validation evidence (PR 4, local)
+
+- `pytest` — exit 0. No file under `tests/characterisation/golden/` changed.
+- `ruff check .` and `ruff format --check .` — clean.
+- `mypy src tests` — no issues in 569 source files.
+- `lint-imports` — 10 contracts kept, 0 broken.
+- **Dependency report** — 197 of 197 modules classified, 88 crossing pairs, 22 against the order,
+  as before.
+  - The two `requirements → governance` imports remain: they are the facade, which PR 5 removes.
 
 ## Shims
 

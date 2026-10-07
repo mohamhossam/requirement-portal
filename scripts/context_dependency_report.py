@@ -109,6 +109,8 @@ USE_CASES = {
         "analysis_reconciliation",
         "evidence_analysis",
         "generation_effects",
+        # Handler for RequirementRevised (PR 4).
+        "discard_analysis",
         "reference_grounding",
     ],
     "knowledge": [
@@ -136,6 +138,8 @@ USE_CASES = {
         "generation_checks",
         "architecture_mapping",
         "architecture_mapping_jobs",
+        # Handler for RequirementRevised, EpicChanged, FeatureChanged (PR 4).
+        "mark_backlog_stale",
     ],
     "governance": [
         "breakdown_review",
@@ -223,7 +227,7 @@ PORTS = {
     ],
     "governance": ["backlog_export", "breakdown_repository", "breakdown_review_repository"],
     "reporting": ["activity", "requirement_worklist", "saved_views"],
-    TECHNICAL: ["external_work", "transaction_manager"],
+    TECHNICAL: ["domain_events", "external_work", "transaction_manager"],
 }
 
 APPLICATION_MODULES = {
@@ -234,6 +238,8 @@ APPLICATION_MODULES = {
     "application.prior_art_evaluation": "knowledge",
     # Base errors stay shared; the context errors in it move to their contexts (F5).
     "application.errors": TECHNICAL,
+    # The in-process dispatcher (PR 4).
+    "application.events": TECHNICAL,
     # The client-facing error catalogue moves beside interfaces/api/error_handlers.py (F5).
     "application.public_errors": "interfaces",
 }
