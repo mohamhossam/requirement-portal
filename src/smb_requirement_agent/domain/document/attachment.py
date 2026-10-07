@@ -18,7 +18,7 @@ from smb_requirement_agent.domain.document.entities import (
 )
 from smb_requirement_agent.domain.document.errors import InvalidDocumentError
 from smb_requirement_agent.domain.document.ingestion import IngestionStage
-from smb_requirement_agent.domain.identity.entities import ActorSnapshot
+from smb_requirement_agent.domain.shared.actors import ActorSnapshot
 from smb_requirement_agent.domain.shared.staleness import require_aware
 
 

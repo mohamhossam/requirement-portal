@@ -25,7 +25,7 @@ from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeRelationshipKind,
     KnowledgeSourceKind,
 )
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import (
     FakeKnowledgeEmbedding,

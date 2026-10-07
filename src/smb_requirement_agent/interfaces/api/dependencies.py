@@ -149,7 +149,7 @@ from smb_requirement_agent.application.use_cases.story_workflow import (
 from smb_requirement_agent.application.use_cases.unified_knowledge_search import (
     UnifiedKnowledgeSearch,
 )
-from smb_requirement_agent.domain.identity.entities import ActorProfile
+from smb_requirement_agent.domain.shared.actors import ActorProfile
 from smb_requirement_agent.infrastructure.config.options import IdentityProvider
 from smb_requirement_agent.interfaces.api.container import Container
 from smb_requirement_agent.interfaces.api.error_handlers import status_code_for

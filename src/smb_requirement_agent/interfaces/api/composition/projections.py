@@ -9,7 +9,7 @@ from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     GetKnowledgeReview,
     RequirementKnowledgeCorpus,
 )
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.corpus_membership import (
     PostgresCorpusMembership,
 )

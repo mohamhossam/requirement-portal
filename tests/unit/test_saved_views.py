@@ -16,7 +16,10 @@ from smb_requirement_agent.application.ports.requirement_worklist import (
 )
 from smb_requirement_agent.application.ports.saved_views import SavedViewCriteria
 from smb_requirement_agent.application.use_cases.saved_views import SavedViews
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorProfile
+from smb_requirement_agent.domain.shared.actors import (
+    ActorId,
+    ActorProfile,
+)
 from smb_requirement_agent.infrastructure.persistence.in_memory_saved_views import (
     InMemorySavedViewRepository,
 )

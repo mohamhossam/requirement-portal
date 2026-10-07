@@ -20,7 +20,6 @@ from smb_requirement_agent.application.ports.knowledge_portfolio import IndexSta
 from smb_requirement_agent.application.use_cases.corpus_actions import BulkReindexRequirements
 from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirementInput
 from smb_requirement_agent.application.use_cases.requirement_indexing import IndexBacklogReader
-from smb_requirement_agent.domain.identity.entities import ActorProfile
 from smb_requirement_agent.domain.jobs.entities import NotificationKind
 from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeDecisionKind,
@@ -33,7 +32,8 @@ from smb_requirement_agent.domain.knowledge.errors import (
     RequirementRetiredError,
 )
 from smb_requirement_agent.domain.knowledge.membership import CorpusActionKind
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import ActorProfile
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import (
     FakeKnowledgeEmbedding,

@@ -32,7 +32,7 @@ from smb_requirement_agent.application.use_cases.requirement_drafts import Requi
 from smb_requirement_agent.domain.analysis.value_objects import IntentProposalStatus
 from smb_requirement_agent.domain.document.value_objects import DocumentId
 from smb_requirement_agent.domain.identity.errors import AuthorizationDeniedError
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.config.options import (
     LLMProvider,
     PersistenceProvider,

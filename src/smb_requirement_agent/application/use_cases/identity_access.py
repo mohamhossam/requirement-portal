@@ -32,8 +32,6 @@ from smb_requirement_agent.application.ports.requirement_repository import Requi
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.job_execution_context import current_attempt
 from smb_requirement_agent.domain.identity.entities import (
-    ActorId,
-    ActorProfile,
     DraftOwnership,
     RequirementAccess,
 )
@@ -42,7 +40,11 @@ from smb_requirement_agent.domain.identity.errors import (
     RequirementAccessConflictError,
 )
 from smb_requirement_agent.domain.jobs.entities import AiJobOperation, AiJobOrigin
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import (
+    ActorId,
+    ActorProfile,
+)
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 T = TypeVar("T")
 

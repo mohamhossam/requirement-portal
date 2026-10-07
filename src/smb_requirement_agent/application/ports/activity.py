@@ -7,8 +7,11 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Protocol
 
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorSnapshot
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import (
+    ActorId,
+    ActorSnapshot,
+)
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 
 class ActivityCategory(StrEnum):

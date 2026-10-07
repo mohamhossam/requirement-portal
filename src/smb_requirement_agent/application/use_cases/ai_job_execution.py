@@ -62,7 +62,6 @@ from smb_requirement_agent.application.use_cases.story_workflow import (
 )
 from smb_requirement_agent.domain.analysis.value_objects import ClarificationKind, QuestionId
 from smb_requirement_agent.domain.feature.value_objects import FeatureId
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorProfile
 from smb_requirement_agent.domain.jobs.entities import (
     ActorNotification,
     AiJob,
@@ -77,6 +76,10 @@ from smb_requirement_agent.domain.jobs.entities import (
 )
 from smb_requirement_agent.domain.jobs.errors import AiJobConflictError
 from smb_requirement_agent.domain.review.entities import FlagId
+from smb_requirement_agent.domain.shared.actors import (
+    ActorId,
+    ActorProfile,
+)
 from smb_requirement_agent.domain.story.entities import StoryChangeOperation
 from smb_requirement_agent.domain.story.value_objects import StoryId
 

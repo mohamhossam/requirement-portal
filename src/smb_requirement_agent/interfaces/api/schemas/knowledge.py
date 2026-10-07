@@ -10,12 +10,12 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from smb_requirement_agent.application.ports.requirement_knowledge import (
     KnowledgeScreenEnsureOutcome,
 )
-from smb_requirement_agent.domain.document.reference import PublishedReference
 from smb_requirement_agent.domain.knowledge.entities import (
     AnswerSuggestionSource,
     KnowledgeFindingStatus,
     KnowledgeRelationshipKind,
 )
+from smb_requirement_agent.domain.shared.citation import PublishedReference
 from smb_requirement_agent.interfaces.api.schemas.bounds import (
     Text,
 )

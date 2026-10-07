@@ -54,12 +54,12 @@ from smb_requirement_agent.domain.jobs.entities import AiJobOperation
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementDescription,
-    RequirementId,
     RequirementStatus,
     RequirementTitle,
 )
 from smb_requirement_agent.domain.review.entities import BreakdownReview, BreakdownStatus
 from smb_requirement_agent.domain.shared.generation import GenerationStatus, Provenance
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.domain.shared.staleness import Staleness, StaleReason
 from smb_requirement_agent.domain.story.entities import UserStory
 from smb_requirement_agent.domain.story.value_objects import (

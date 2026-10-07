@@ -40,7 +40,6 @@ from smb_requirement_agent.application.use_cases.invalidate_approval_workflow im
     InvalidateApprovalWorkflow,
 )
 from smb_requirement_agent.application.use_cases.source_lineage import generation_lineage
-from smb_requirement_agent.domain.document.lineage import merge_lineage
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.epic.errors import EpicNotApprovedError
 from smb_requirement_agent.domain.epic.value_objects import EpicStatus
@@ -56,10 +55,11 @@ from smb_requirement_agent.domain.feature.value_objects import (
     SplittingPattern,
     SplittingRationale,
 )
-from smb_requirement_agent.domain.identity.entities import ActorProfile
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import ActorProfile
 from smb_requirement_agent.domain.shared.enums import supported_values, value_of
 from smb_requirement_agent.domain.shared.generation import Provenance
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.domain.shared.lineage import merge_lineage
 
 
 @dataclass(frozen=True)

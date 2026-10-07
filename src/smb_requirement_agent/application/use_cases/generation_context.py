@@ -35,7 +35,7 @@ from smb_requirement_agent.application.use_cases.approval_policy import artifact
 from smb_requirement_agent.domain.feature.value_objects import FeatureId
 from smb_requirement_agent.domain.jobs.entities import AiJobOperation
 from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.domain.story.value_objects import StoryId
 
 CONTEXT_TOKEN_FORMAT = "generation-context-v2"

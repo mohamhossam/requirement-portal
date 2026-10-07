@@ -17,7 +17,7 @@ from smb_requirement_agent.application.errors import (
 from smb_requirement_agent.application.ports.document_repository import DocumentRepositoryPort
 from smb_requirement_agent.domain.document.entities import SourceDocument
 from smb_requirement_agent.domain.document.value_objects import DocumentId, DocumentVersionId
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 
 class InMemoryDocumentRepository(DocumentRepositoryPort):

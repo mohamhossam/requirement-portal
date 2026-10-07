@@ -28,8 +28,10 @@ from smb_requirement_agent.application.use_cases.reference_currency import (
 from smb_requirement_agent.domain.document.errors import InvalidDocumentError
 from smb_requirement_agent.domain.document.reference import (
     CurrentPublication,
-    PublishedReference,
     ReferenceDocumentState,
+)
+from smb_requirement_agent.domain.shared.citation import (
+    PublishedReference,
     normalize_search,
 )
 from smb_requirement_agent.infrastructure.persistence.architecture_release_state import (

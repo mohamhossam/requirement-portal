@@ -28,9 +28,13 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     QuestionChangeAction,
     QuestionId,
 )
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorProfile
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId, RequirementVersion
+from smb_requirement_agent.domain.requirement.value_objects import RequirementVersion
+from smb_requirement_agent.domain.shared.actors import (
+    ActorId,
+    ActorProfile,
+)
 from smb_requirement_agent.domain.shared.generation import Provenance
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.analysis_payloads import (
     analysis_from_payload,
     analysis_round_from_payload,

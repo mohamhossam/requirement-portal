@@ -18,7 +18,7 @@ from smb_requirement_agent.domain.jobs.entities import (
     AiJobOperation,
     NotificationId,
 )
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     get_ai_jobs,

@@ -6,9 +6,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
 
-from smb_requirement_agent.domain.identity.entities import ActorId
 from smb_requirement_agent.domain.jobs.entities import AiJob, AiJobId, AiJobOperation
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import ActorId
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 type JsonScalar = str | int | float | bool | None
 type JsonValue = JsonScalar | list[JsonValue] | dict[str, JsonValue]

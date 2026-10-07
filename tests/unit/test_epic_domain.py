@@ -20,8 +20,8 @@ from smb_requirement_agent.domain.epic.value_objects import (
     EpicStatus,
     StaleReason,
 )
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.domain.shared.errors import InvalidGeneratedContentError
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 GENERATED_AT = datetime(2026, 1, 1, 12, 0, tzinfo=UTC)
 CHANGED_AT = GENERATED_AT + timedelta(days=1)

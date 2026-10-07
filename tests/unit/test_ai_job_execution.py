@@ -30,7 +30,6 @@ from smb_requirement_agent.application.ports.saved_views import SavedViewCriteri
 from smb_requirement_agent.domain.analysis.entities import ClarificationQuestion
 from smb_requirement_agent.domain.analysis.value_objects import QuestionId
 from smb_requirement_agent.domain.document.value_objects import DocumentVersionId
-from smb_requirement_agent.domain.identity.entities import ActorId
 from smb_requirement_agent.domain.jobs.entities import (
     AiJob,
     AiJobOperation,
@@ -38,7 +37,8 @@ from smb_requirement_agent.domain.jobs.entities import (
     AiJobStatus,
     NotificationKind,
 )
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import ActorId
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import IndexReadyJobQueue
 from smb_requirement_agent.infrastructure.persistence.in_memory_document_repository import (

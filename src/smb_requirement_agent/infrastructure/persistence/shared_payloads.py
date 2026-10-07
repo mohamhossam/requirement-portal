@@ -25,7 +25,7 @@ from smb_requirement_agent.domain.architecture.entities import (
     SystemReference,
 )
 from smb_requirement_agent.domain.architecture.knowledge import RelationshipKind
-from smb_requirement_agent.domain.identity.entities import (
+from smb_requirement_agent.domain.shared.actors import (
     ActorId,
     ActorProfile,
     ActorSnapshot,

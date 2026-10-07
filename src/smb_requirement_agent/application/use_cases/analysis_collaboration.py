@@ -79,12 +79,16 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     IntentProposalStatus,
     QuestionId,
 )
-from smb_requirement_agent.domain.document.lineage import SourceLineage
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorProfile, RequirementAccess
+from smb_requirement_agent.domain.identity.entities import RequirementAccess
 from smb_requirement_agent.domain.identity.errors import AuthorizationDeniedError
 from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import (
+    ActorId,
+    ActorProfile,
+)
 from smb_requirement_agent.domain.shared.generation import Provenance
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.domain.shared.lineage import SourceLineage
 
 
 @dataclass(frozen=True)

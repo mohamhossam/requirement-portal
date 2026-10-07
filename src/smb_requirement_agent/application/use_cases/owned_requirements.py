@@ -20,9 +20,9 @@ from smb_requirement_agent.application.use_cases.requirement_drafts import (
     RequirementDraftInput,
     SaveRequirementDraft,
 )
-from smb_requirement_agent.domain.identity.entities import ActorProfile
 from smb_requirement_agent.domain.requirement.entities import Requirement, RequirementDraft
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import ActorProfile
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 
 class CreateOwnedRequirement:

@@ -49,7 +49,10 @@ from smb_requirement_agent.application.use_cases.source_impact import SourceImpa
 from smb_requirement_agent.application.use_cases.unified_knowledge_search import (
     UnifiedKnowledgeSearch,
 )
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorProfile
+from smb_requirement_agent.domain.shared.actors import (
+    ActorId,
+    ActorProfile,
+)
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.documents.ingestion_loop import IngestionLoop
 from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import (

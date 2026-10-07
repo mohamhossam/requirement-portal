@@ -11,9 +11,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 
-from smb_requirement_agent.domain.identity.entities import ActorSnapshot
 from smb_requirement_agent.domain.knowledge.errors import InvalidKnowledgeError
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import ActorSnapshot
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.domain.shared.staleness import require_aware
 
 REASON_MAX = 500

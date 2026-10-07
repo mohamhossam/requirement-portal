@@ -18,12 +18,12 @@ from smb_requirement_agent.application.ports.requirement_analysis_repository imp
 )
 from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.ports.story_repository import StoryRepositoryPort
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.domain.revision.entities import (
     BreakdownRevision,
     RequirementRevision,
     RevisionNumber,
 )
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 
 class InMemoryRevisionRepository:

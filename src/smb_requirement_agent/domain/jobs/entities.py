@@ -6,9 +6,12 @@ from dataclasses import dataclass, replace
 from datetime import datetime
 from enum import StrEnum
 
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorSnapshot
 from smb_requirement_agent.domain.jobs.errors import AiJobConflictError, InvalidAiJobError
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import (
+    ActorId,
+    ActorSnapshot,
+)
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.domain.shared.staleness import require_aware
 
 

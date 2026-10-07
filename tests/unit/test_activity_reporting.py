@@ -20,8 +20,11 @@ from smb_requirement_agent.application.use_cases.activity_reporting import (
     ListActivity,
     aggregate_activity_events,
 )
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorSnapshot
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import (
+    ActorId,
+    ActorSnapshot,
+)
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 NOW = datetime(2026, 9, 4, 12, tzinfo=UTC)
 REQUIREMENT_ID = RequirementId("req-1")

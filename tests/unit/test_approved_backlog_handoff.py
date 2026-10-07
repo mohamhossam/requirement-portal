@@ -27,12 +27,12 @@ from smb_requirement_agent.application.use_cases.knowledge_handoff import (
     MAX_ATTEMPTS,
     DeliverApprovedBacklogs,
 )
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.domain.revision.entities import (
     BreakdownRevision,
     RequirementRevision,
     RevisionNumber,
 )
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.knowledge_client import (
     FakeArchitectureKnowledge,
     FakeKnowledgeEvents,

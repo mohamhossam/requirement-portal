@@ -44,13 +44,13 @@ from smb_requirement_agent.domain.document.value_objects import (
     DocumentVersionId,
     ExtractionStatus,
 )
-from smb_requirement_agent.domain.identity.entities import ActorProfile
 from smb_requirement_agent.domain.requirement.entities import (
     AnalysisEligibility,
     Requirement,
     RequirementDraft,
 )
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import ActorProfile
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 SUPPORTED_EXTENSIONS: dict[str, str | tuple[str, ...]] = {
     "text/csv": ".csv",

@@ -9,7 +9,6 @@ from datetime import datetime
 
 from pydantic import TypeAdapter
 
-from smb_requirement_agent.domain.document.lineage import SourceLineage
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.epic.value_objects import (
     BusinessCase,
@@ -26,10 +25,9 @@ from smb_requirement_agent.domain.feature.value_objects import (
     SplittingPattern,
     SplittingRationale,
 )
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementId,
-)
 from smb_requirement_agent.domain.shared.generation import Provenance
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.domain.shared.lineage import SourceLineage
 from smb_requirement_agent.domain.story.entities import (
     StoryChangeOperation,
     StoryChangeProposal,

@@ -34,10 +34,10 @@ from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementContext,
     RequirementDescription,
-    RequirementId,
     RequirementStatus,
     RequirementTitle,
 )
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.llm.prompts.generation_guidance import render_guidance
 from smb_requirement_agent.infrastructure.persistence.shared_payloads import (
     architecture_from_payload,

@@ -34,7 +34,7 @@ from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeRelationshipKind,
 )
 from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.llm.prompts.knowledge_prompt import (
     RELATIONSHIP_SYSTEM_PROMPT,
     SCREEN_PROMPT_VERSION,

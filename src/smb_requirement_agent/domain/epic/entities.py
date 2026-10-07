@@ -11,7 +11,6 @@ from smb_requirement_agent.domain.epic.value_objects import (
     EpicId,
     EpicName,
 )
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.domain.shared.actions import ActionAvailability
 from smb_requirement_agent.domain.shared.approval import (
     Approval,
@@ -20,6 +19,7 @@ from smb_requirement_agent.domain.shared.approval import (
 )
 from smb_requirement_agent.domain.shared.errors import InvalidApprovalContentError
 from smb_requirement_agent.domain.shared.generation import GenerationStatus, ReviewableGeneration
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 
 @dataclass(frozen=True, kw_only=True)

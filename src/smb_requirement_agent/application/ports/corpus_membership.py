@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Protocol
 
 from smb_requirement_agent.domain.knowledge.membership import CorpusAction, CorpusMembership
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 
 class CorpusMembershipPort(Protocol):

@@ -17,8 +17,8 @@ from smb_requirement_agent.application.ports.activity import (
     BlockerEvidence,
     WeeklyActivityEvidence,
 )
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.domain.review.entities import BreakdownStatus
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.activity_codec import (
     activity_from_payload,
     activity_to_payload,

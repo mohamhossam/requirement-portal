@@ -19,8 +19,11 @@ from smb_requirement_agent.application.use_cases.requirement_commands import (
     ExpectedContext,
     RequirementCommands,
 )
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorProfile
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import (
+    ActorId,
+    ActorProfile,
+)
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 T = TypeVar("T")
 REQUIREMENT = RequirementId("requirement-1")

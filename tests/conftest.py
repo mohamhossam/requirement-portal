@@ -32,8 +32,8 @@ from smb_requirement_agent.application.use_cases.invalidate_derived_artifacts im
     InvalidateDerivedArtifacts,
 )
 from smb_requirement_agent.domain.knowledge.entities import KnowledgeScreen, KnowledgeScreenId
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.domain.shared.generation import Provenance
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_audit_repository import (

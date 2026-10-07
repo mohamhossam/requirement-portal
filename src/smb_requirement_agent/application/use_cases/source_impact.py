@@ -25,10 +25,10 @@ from smb_requirement_agent.application.use_cases.identity_access import (
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
 from smb_requirement_agent.domain.analysis.value_objects import IntentProposal
 from smb_requirement_agent.domain.document.lineage import ImpactDecision, ImpactDecisionKind
-from smb_requirement_agent.domain.document.reference import PublishedReference
-from smb_requirement_agent.domain.identity.entities import ActorProfile
 from smb_requirement_agent.domain.identity.errors import AuthorizationDeniedError
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import ActorProfile
+from smb_requirement_agent.domain.shared.citation import PublishedReference
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 
 @dataclass(frozen=True)

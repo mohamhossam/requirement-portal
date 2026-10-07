@@ -39,13 +39,11 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     QuestionChangeAction,
     QuestionId,
 )
-from smb_requirement_agent.domain.document.lineage import SourceLineage
-from smb_requirement_agent.domain.document.reference import PublishedReference
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementId,
-    RequirementVersion,
-)
+from smb_requirement_agent.domain.requirement.value_objects import RequirementVersion
+from smb_requirement_agent.domain.shared.citation import PublishedReference
 from smb_requirement_agent.domain.shared.generation import Provenance
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.domain.shared.lineage import SourceLineage
 from smb_requirement_agent.infrastructure.persistence.payload_fields import (
     JsonObject,
     boolean_field,

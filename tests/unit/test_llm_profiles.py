@@ -30,7 +30,7 @@ from smb_kernel.llm.structured_output import truncated
 
 from smb_requirement_agent.application.errors import KnowledgeGenerationError, ModelTransportError
 from smb_requirement_agent.application.public_errors import describe_public_error
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.config.options import ConfigurationError, LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.persistence.knowledge_index_generations import (

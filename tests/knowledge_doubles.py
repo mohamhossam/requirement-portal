@@ -30,8 +30,10 @@ from smb_requirement_agent.application.ports.knowledge_events import (
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidence
 from smb_requirement_agent.domain.document.reference import (
     CurrentPublication,
-    PublishedReference,
     ReferenceDocumentState,
+)
+from smb_requirement_agent.domain.shared.citation import (
+    PublishedReference,
     normalize_search,
 )
 from smb_requirement_agent.infrastructure.config.settings import Settings

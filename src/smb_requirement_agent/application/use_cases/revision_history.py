@@ -7,13 +7,13 @@ from dataclasses import dataclass
 from smb_requirement_agent.application.errors import RequirementNotFoundError
 from smb_requirement_agent.application.ports.breakdown_repository import BreakdownRepositoryPort
 from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.domain.revision.entities import (
     BreakdownRevision,
     RequirementRevision,
     RevisionNumber,
 )
 from smb_requirement_agent.domain.revision.errors import RevisionNotFoundError
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 
 @dataclass(frozen=True)

@@ -9,13 +9,15 @@ from typing import Any
 from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.application.ports.actor_directory import ActorDirectoryPort
 from smb_requirement_agent.domain.identity.entities import (
-    ActorId,
-    ActorProfile,
     DraftOwnership,
     RequirementAccess,
 )
 from smb_requirement_agent.domain.identity.errors import RequirementAccessConflictError
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import (
+    ActorId,
+    ActorProfile,
+)
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 
 class InMemoryActorDirectory(ActorDirectoryPort):

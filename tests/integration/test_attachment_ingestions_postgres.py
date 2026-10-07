@@ -20,7 +20,10 @@ from smb_requirement_agent.domain.document.attachment import (
     AttachmentUpload,
 )
 from smb_requirement_agent.domain.document.ingestion import IngestionStage
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorSnapshot
+from smb_requirement_agent.domain.shared.actors import (
+    ActorId,
+    ActorSnapshot,
+)
 from smb_requirement_agent.infrastructure.persistence.attachment_ingestions import (
     PostgresAttachmentIngestions,
 )

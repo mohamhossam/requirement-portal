@@ -359,7 +359,7 @@ def test_source_edits_allow_empty_text_only_with_current_included_attachment(
 def test_empty_typed_description_snapshot_roundtrip(
     client: TestClient, container: Container
 ) -> None:
-    from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+    from smb_requirement_agent.domain.shared.identifiers import RequirementId
     from smb_requirement_agent.infrastructure.persistence.requirement_snapshot import (
         requirement_from_payload,
         requirement_to_payload,

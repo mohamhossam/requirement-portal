@@ -5,10 +5,8 @@ from __future__ import annotations
 from datetime import datetime
 from typing import cast
 
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementContext,
-    RequirementId,
-)
+from smb_requirement_agent.domain.requirement.value_objects import RequirementContext
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 type JsonObject = dict[str, object]
 

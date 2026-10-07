@@ -8,7 +8,7 @@ from typing import Any
 
 from smb_requirement_agent.application.errors import SavedViewConflictError
 from smb_requirement_agent.application.ports.saved_views import SavedRequirementView
-from smb_requirement_agent.domain.identity.entities import ActorId
+from smb_requirement_agent.domain.shared.actors import ActorId
 
 
 class InMemorySavedViewRepository:

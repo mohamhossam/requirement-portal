@@ -49,12 +49,7 @@ from smb_requirement_agent.domain.analysis.entities import (
 from smb_requirement_agent.domain.analysis.value_objects import (
     IntentProposalStatus,
 )
-from smb_requirement_agent.domain.document.lineage import SourceLineage, merge_lineage
-from smb_requirement_agent.domain.identity.entities import (
-    ActorProfile,
-    ActorSnapshot,
-    RequirementAccess,
-)
+from smb_requirement_agent.domain.identity.entities import RequirementAccess
 from smb_requirement_agent.domain.jobs.entities import AiJobOperation
 from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeChunk,
@@ -75,11 +70,17 @@ from smb_requirement_agent.domain.knowledge.errors import (
 from smb_requirement_agent.domain.knowledge.membership import CorpusMembership
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.requirement.errors import DuplicateRequirementStateError
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementId,
-    RequirementStatus,
+from smb_requirement_agent.domain.requirement.value_objects import RequirementStatus
+from smb_requirement_agent.domain.shared.actors import (
+    ActorProfile,
+    ActorSnapshot,
 )
 from smb_requirement_agent.domain.shared.generation import Provenance
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.domain.shared.lineage import (
+    SourceLineage,
+    merge_lineage,
+)
 
 
 class RequirementKnowledgeCorpus:

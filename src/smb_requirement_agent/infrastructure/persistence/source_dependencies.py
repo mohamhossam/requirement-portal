@@ -10,8 +10,8 @@ from smb_requirement_agent.application.errors import ArtifactVersionConflictErro
 from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.application.ports.source_dependencies import SourceDependency
 from smb_requirement_agent.domain.document.lineage import ImpactDecision
-from smb_requirement_agent.domain.identity.entities import ActorId
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import ActorId
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 
 

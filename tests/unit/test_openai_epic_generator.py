@@ -26,10 +26,10 @@ from smb_requirement_agent.domain.analysis.value_objects import (
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementDescription,
-    RequirementId,
     RequirementStatus,
     RequirementTitle,
 )
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.llm.openai_adapters import OpenAIEpicGenerator
 from smb_requirement_agent.infrastructure.llm.prompts.epic_prompt import PROMPT_VERSION

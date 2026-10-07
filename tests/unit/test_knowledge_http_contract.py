@@ -55,7 +55,7 @@ from smb_requirement_agent.domain.architecture.entities import (
     SystemReference,
 )
 from smb_requirement_agent.domain.architecture.knowledge import RelationshipKind
-from smb_requirement_agent.domain.document.reference import PublishedReference
+from smb_requirement_agent.domain.shared.citation import PublishedReference
 from smb_requirement_agent.infrastructure.knowledge_client import (
     OFFLINE_RELEASE_ID,
     OFFLINE_RELEASE_NAME,

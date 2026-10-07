@@ -22,8 +22,8 @@ from smb_requirement_agent.application.use_cases.identity_access import Requirem
 from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     RequirementKnowledgeCorpus,
 )
-from smb_requirement_agent.domain.identity.entities import ActorProfile
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import ActorProfile
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 
 @dataclass(frozen=True)

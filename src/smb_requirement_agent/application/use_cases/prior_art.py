@@ -53,7 +53,6 @@ from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     RequirementKnowledgeCorpus,
     bounded_knowledge_text,
 )
-from smb_requirement_agent.domain.identity.entities import ActorProfile
 from smb_requirement_agent.domain.jobs.entities import (
     AiJob,
     AiJobId,
@@ -70,8 +69,10 @@ from smb_requirement_agent.domain.knowledge.prior_art import (
     PriorArtStatus,
     PriorArtVerdict,
 )
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId, RequirementStatus
+from smb_requirement_agent.domain.requirement.value_objects import RequirementStatus
+from smb_requirement_agent.domain.shared.actors import ActorProfile
 from smb_requirement_agent.domain.shared.generation import Provenance
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 # What the judge is shown: the closest historic requirements, a few passages each.
 SEARCH_LIMIT = 100

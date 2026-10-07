@@ -30,8 +30,8 @@ from smb_requirement_agent.application.use_cases.requirement_worklist import (
     RequirementWorklistResult,
     WorkflowStage,
 )
-from smb_requirement_agent.domain.identity.entities import ActorProfile
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import ActorProfile
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.activity_codec import (
     activity_from_payload,
     activity_to_payload,

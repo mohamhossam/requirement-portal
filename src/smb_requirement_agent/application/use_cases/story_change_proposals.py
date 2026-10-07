@@ -49,10 +49,10 @@ from smb_requirement_agent.application.use_cases.story_workflow import (
     story_from_candidate,
     story_state_fingerprint,
 )
-from smb_requirement_agent.domain.document.lineage import merge_lineage
 from smb_requirement_agent.domain.feature.value_objects import FeatureId
-from smb_requirement_agent.domain.identity.entities import ActorProfile
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import ActorProfile
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.domain.shared.lineage import merge_lineage
 from smb_requirement_agent.domain.story.entities import (
     StoryChangeOperation,
     StoryChangeProposal,

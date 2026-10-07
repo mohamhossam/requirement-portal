@@ -9,8 +9,12 @@ from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessView,
     SearchKnownActors,
 )
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorProfile, ActorSnapshot
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import (
+    ActorId,
+    ActorProfile,
+    ActorSnapshot,
+)
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.interfaces.api.dependencies import (
     ContainerDep,
     CurrentActorDep,

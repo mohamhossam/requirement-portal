@@ -11,8 +11,8 @@ from smb_requirement_agent.application.use_cases.approval_workflow import (
     GetApprovalWorkflow,
     SubmitForReview,
 )
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.domain.shared.approval import ApprovalTarget
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     get_add_review_comment,

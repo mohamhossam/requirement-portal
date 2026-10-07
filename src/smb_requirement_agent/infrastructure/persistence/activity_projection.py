@@ -34,25 +34,26 @@ from smb_requirement_agent.application.use_cases.breakdown_review_evidence impor
 )
 from smb_requirement_agent.domain.analysis.entities import AnalysisRound, ClarificationQuestion
 from smb_requirement_agent.domain.analysis.value_objects import QuestionChangeAction
-from smb_requirement_agent.domain.identity.entities import AccessChangeKind, ActorSnapshot
+from smb_requirement_agent.domain.identity.entities import AccessChangeKind
 from smb_requirement_agent.domain.jobs.entities import AiJobOperation, AiJobStatus
 from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeDecisionKind,
     KnowledgeFinding,
     KnowledgeFindingStatus,
 )
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.domain.review.entities import (
     BreakdownStatus,
     FlagSeverity,
     FlagStatus,
 )
 from smb_requirement_agent.domain.revision.entities import BreakdownRevision, RequirementRevision
+from smb_requirement_agent.domain.shared.actors import ActorSnapshot
 from smb_requirement_agent.domain.shared.approval import (
     Approval,
     ApprovalDecision,
     ApprovalTargetKind,
 )
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 
 def _event_id(*parts: object) -> str:

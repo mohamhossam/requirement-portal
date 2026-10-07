@@ -12,8 +12,6 @@ from smb_requirement_agent.application.ports.story_quality_evaluator import (
     EMPTY_QUALITY_EVIDENCE,
     StoryQualityEvidence,
 )
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorSnapshot
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.domain.review.entities import (
     BreakdownReview,
     BreakdownStatus,
@@ -33,6 +31,10 @@ from smb_requirement_agent.domain.review.errors import (
     FlagResolutionNotAllowedError,
     InvalidReviewContentError,
 )
+from smb_requirement_agent.domain.shared.actors import (
+    ActorId,
+    ActorSnapshot,
+)
 from smb_requirement_agent.domain.shared.approval import (
     Approval,
     ApprovalDecision,
@@ -42,6 +44,7 @@ from smb_requirement_agent.domain.shared.approval import (
     ReviewComment,
 )
 from smb_requirement_agent.domain.shared.errors import InvalidApprovalContentError
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.domain.story.entities import UserStory
 from smb_requirement_agent.domain.story.quality import (
     FindingSource,

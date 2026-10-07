@@ -111,7 +111,7 @@ def test_hidden_selection_keeps_new_positions_and_legacy_names_separate(legacy: 
         DocumentVersionId,
         ExtractionStatus,
     )
-    from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+    from smb_requirement_agent.domain.shared.identifiers import RequirementId
     from smb_requirement_agent.infrastructure.persistence.in_memory_document_repository import (
         InMemoryDocumentRepository,
         InMemoryDocumentStorage,

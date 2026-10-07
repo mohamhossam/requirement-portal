@@ -15,13 +15,13 @@ import pytest
 from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.application.use_cases.retention import PruneReadNotifications
-from smb_requirement_agent.domain.identity.entities import ActorId
 from smb_requirement_agent.domain.jobs.entities import (
     ActorNotification,
     AiJobId,
     NotificationId,
     NotificationKind,
 )
+from smb_requirement_agent.domain.shared.actors import ActorId
 from smb_requirement_agent.infrastructure.config.options import (
     DEFAULT_NOTIFICATION_RETENTION_DAYS,
     ConfigurationError,

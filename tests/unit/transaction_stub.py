@@ -4,7 +4,7 @@ from collections.abc import Iterator
 from contextlib import AbstractContextManager, contextmanager
 
 from smb_requirement_agent.application.ports.external_work import check_external_result
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 
 class NoOpTransactionManager:

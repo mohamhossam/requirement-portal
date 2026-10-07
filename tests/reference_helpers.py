@@ -8,8 +8,8 @@ from smb_requirement_agent.application.ports.requirement_analyzer import (
 )
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
 from smb_requirement_agent.domain.analysis.value_objects import IntentProposal
-from smb_requirement_agent.domain.document.reference import PublishedReference
 from smb_requirement_agent.domain.requirement.entities import Requirement
+from smb_requirement_agent.domain.shared.citation import PublishedReference
 
 
 class EmptyReferences:

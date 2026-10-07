@@ -12,7 +12,7 @@ from smb_kernel.persistence.connector import PostgresConnector
 
 from smb_requirement_agent.application.errors import DuplicateRequirementError, PersistenceError
 from smb_requirement_agent.application.ports.external_work import check_external_result
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.migration_runner import (
     latest_packaged_migration,
 )

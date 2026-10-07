@@ -10,7 +10,6 @@ from threading import RLock
 from typing import Any
 
 from smb_requirement_agent.application.ports.ai_jobs import AiJobRecord
-from smb_requirement_agent.domain.identity.entities import ActorId
 from smb_requirement_agent.domain.jobs.entities import (
     ActorNotification,
     AiJob,
@@ -22,7 +21,8 @@ from smb_requirement_agent.domain.jobs.entities import (
     NotificationPreference,
 )
 from smb_requirement_agent.domain.jobs.errors import AiJobConflictError
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import ActorId
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 
 class InMemoryAiJobStore:

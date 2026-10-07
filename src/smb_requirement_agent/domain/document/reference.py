@@ -11,9 +11,7 @@ import hashlib
 from dataclasses import dataclass
 from datetime import date
 
-# MIGRATION SHIM: re-exports removed by the import-rewrite commit of PR 2 (ADR-0103).
-from smb_requirement_agent.domain.shared.citation import PublishedReference as PublishedReference
-from smb_requirement_agent.domain.shared.citation import normalize_search as normalize_search
+from smb_requirement_agent.domain.shared.citation import PublishedReference, normalize_search
 
 
 @dataclass(frozen=True)

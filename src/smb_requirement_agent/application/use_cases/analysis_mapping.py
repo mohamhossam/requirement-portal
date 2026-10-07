@@ -28,11 +28,9 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     PotentialDependency,
     is_additional_intent_proposal,
 )
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementId,
-    RequirementVersion,
-)
+from smb_requirement_agent.domain.requirement.value_objects import RequirementVersion
 from smb_requirement_agent.domain.shared.generation import Provenance
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 
 def analysis_evidence_key(kind: str, subject: str) -> str:

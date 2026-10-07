@@ -106,9 +106,6 @@ from smb_requirement_agent.domain.feature.value_objects import (
     SplittingRationale,
 )
 from smb_requirement_agent.domain.identity.entities import (
-    ActorId,
-    ActorProfile,
-    ActorSnapshot,
     DraftOwnership,
     RequirementAccess,
 )
@@ -139,7 +136,6 @@ from smb_requirement_agent.domain.knowledge.entities import (
 from smb_requirement_agent.domain.requirement.entities import Requirement, RequirementDraft
 from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementDescription,
-    RequirementId,
     RequirementStatus,
     RequirementTitle,
     RequirementVersion,
@@ -157,6 +153,11 @@ from smb_requirement_agent.domain.review.entities import (
     ReviewSource,
     ReviewSourceKind,
 )
+from smb_requirement_agent.domain.shared.actors import (
+    ActorId,
+    ActorProfile,
+    ActorSnapshot,
+)
 from smb_requirement_agent.domain.shared.approval import (
     Approval,
     ApprovalDecision,
@@ -165,6 +166,7 @@ from smb_requirement_agent.domain.shared.approval import (
     ApprovalTargetKind,
 )
 from smb_requirement_agent.domain.shared.generation import GenerationStatus, Provenance
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.domain.story.entities import (
     StoryChangeOperation,
     StoryChangeProposal,

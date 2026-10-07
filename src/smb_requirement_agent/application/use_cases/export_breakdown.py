@@ -48,17 +48,17 @@ from smb_requirement_agent.domain.architecture.entities import (
     ProductContext,
     SystemReference,
 )
-from smb_requirement_agent.domain.identity.entities import ActorProfile
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.domain.review.entities import BreakdownStatus
 from smb_requirement_agent.domain.revision.entities import BreakdownRevision, RevisionNumber
 from smb_requirement_agent.domain.revision.errors import RevisionNotFoundError
+from smb_requirement_agent.domain.shared.actors import ActorProfile
 from smb_requirement_agent.domain.shared.approval import (
     Approval,
     ApprovalDecision,
     ApprovalTargetKind,
 )
 from smb_requirement_agent.domain.shared.generation import Provenance
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 
 def formal_final_approval(revision: BreakdownRevision) -> Approval | None:

@@ -5,8 +5,8 @@ from typing import Any, cast
 
 from smb_requirement_agent.application.ports.requirement_worklist import RequirementWorklistSnapshot
 from smb_requirement_agent.domain.analysis.entities import AnalysisRound, ClarificationQuestion
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.domain.revision.entities import BreakdownRevision, RequirementRevision
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.analysis_payloads import (
     analysis_round_from_payload,
     clarification_question_from_payload,

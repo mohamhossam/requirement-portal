@@ -16,15 +16,18 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     IntentProposalKind,
     IntentProposalStatus,
 )
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorSnapshot
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementContext,
     RequirementDescription,
-    RequirementId,
     RequirementStatus,
     RequirementTitle,
 )
+from smb_requirement_agent.domain.shared.actors import (
+    ActorId,
+    ActorSnapshot,
+)
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.llm.openai_adapters import (
     OpenAIRequirementAnalyzer,
 )

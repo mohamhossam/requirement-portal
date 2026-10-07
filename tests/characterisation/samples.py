@@ -93,7 +93,6 @@ from smb_requirement_agent.domain.feature.value_objects import (
 from smb_requirement_agent.domain.identity.entities import (
     AccessChange,
     AccessChangeKind,
-    ActorSnapshot,
     AssignmentRole,
     DraftOwnership,
     RequirementAccess,
@@ -107,7 +106,6 @@ from smb_requirement_agent.domain.requirement.entities import Requirement, Requi
 from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementContext,
     RequirementDescription,
-    RequirementId,
     RequirementStatus,
     RequirementTitle,
     RequirementVersion,
@@ -133,6 +131,7 @@ from smb_requirement_agent.domain.review.entities import (
     Risk,
     RiskId,
 )
+from smb_requirement_agent.domain.shared.actors import ActorSnapshot
 from smb_requirement_agent.domain.shared.approval import (
     Approval,
     ApprovalDecision,
@@ -142,6 +141,7 @@ from smb_requirement_agent.domain.shared.approval import (
     ReviewComment,
 )
 from smb_requirement_agent.domain.shared.generation import GenerationStatus, Provenance
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.domain.shared.staleness import Staleness, StaleReason
 from smb_requirement_agent.domain.story.entities import (
     StoryChangeOperation,

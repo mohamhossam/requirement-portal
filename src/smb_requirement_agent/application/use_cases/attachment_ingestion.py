@@ -53,9 +53,9 @@ from smb_requirement_agent.domain.document.value_objects import (
     DocumentVersionId,
     ExtractionWarningSeverity,
 )
-from smb_requirement_agent.domain.identity.entities import ActorProfile
 from smb_requirement_agent.domain.identity.errors import AuthorizationDeniedError
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import ActorProfile
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 # A scan-and-extract attempt holds its lease this long: the background
 # extraction deadline plus a minute of margin.

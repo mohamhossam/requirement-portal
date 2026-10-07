@@ -16,8 +16,8 @@ from smb_requirement_agent.application.use_cases.create_requirement import Creat
 from smb_requirement_agent.application.use_cases.requirement_drafts import RequirementDraftInput
 from smb_requirement_agent.domain.analysis.errors import InvalidIntentProposalDecisionError
 from smb_requirement_agent.domain.analysis.value_objects import IntentProposalStatus
-from smb_requirement_agent.domain.document.reference import PublishedReference
 from smb_requirement_agent.domain.identity.errors import AuthorizationDeniedError
+from smb_requirement_agent.domain.shared.citation import PublishedReference
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS

@@ -14,7 +14,7 @@ from smb_requirement_agent.application.ports.requirement_analyzer import (
 )
 from smb_requirement_agent.domain.analysis.value_objects import HumanClarification, IntentProposal
 from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 
 class RequirementEvidenceAnalyzerPort(Protocol):

@@ -11,12 +11,12 @@ from smb_requirement_agent.domain.analysis.entities import (
     AnalysisRound,
     ClarificationQuestion,
 )
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.domain.revision.entities import (
     BreakdownRevision,
     RequirementRevision,
     RevisionNumber,
 )
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.analysis_payloads import (
     analysis_from_payload,
     analysis_round_from_payload,

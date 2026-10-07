@@ -40,9 +40,7 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     IntentProposal,
     IntentProposalStatus,
 )
-from smb_requirement_agent.domain.document.reference import (
-    PublishedReference,
-)
+from smb_requirement_agent.domain.shared.citation import PublishedReference
 
 
 class ReferenceCurrency:

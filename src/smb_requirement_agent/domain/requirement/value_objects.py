@@ -12,11 +12,6 @@ from smb_requirement_agent.domain.requirement.errors import (
     InvalidRequirementVersionError,
 )
 
-# MIGRATION SHIM: removed by the import-rewrite commit of PR 2 (ADR-0103).
-from smb_requirement_agent.domain.shared.identifiers import (
-    RequirementId as RequirementId,
-)
-
 
 @dataclass(frozen=True)
 class RequirementTitle:

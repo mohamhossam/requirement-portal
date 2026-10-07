@@ -44,14 +44,14 @@ from smb_requirement_agent.domain.feature.value_objects import (
     SplittingPattern,
     SplittingRationale,
 )
-from smb_requirement_agent.domain.identity.entities import ActorProfile
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import ActorProfile
 from smb_requirement_agent.domain.shared.approval import (
     ApprovalDecision,
     ApprovalTarget,
     ApprovalTargetKind,
 )
 from smb_requirement_agent.domain.shared.enums import supported_values, value_of
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 
 @dataclass(frozen=True)

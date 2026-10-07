@@ -32,7 +32,6 @@ from smb_requirement_agent.application.ports.requirement_repository import (
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.requirement_indexing import IndexBacklogReader
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorSnapshot
 from smb_requirement_agent.domain.jobs.entities import (
     ActorNotification,
     NotificationId,
@@ -47,10 +46,12 @@ from smb_requirement_agent.domain.knowledge.membership import (
     corpus_reason,
 )
 from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementId,
-    RequirementStatus,
+from smb_requirement_agent.domain.requirement.value_objects import RequirementStatus
+from smb_requirement_agent.domain.shared.actors import (
+    ActorId,
+    ActorSnapshot,
 )
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 # At most this many Requirements in one reindex.
 REINDEX_MAX = 500

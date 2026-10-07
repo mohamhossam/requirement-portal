@@ -2,7 +2,10 @@
 
 from typing import Protocol
 
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorProfile
+from smb_requirement_agent.domain.shared.actors import (
+    ActorId,
+    ActorProfile,
+)
 
 
 class ActorLookupPort(Protocol):

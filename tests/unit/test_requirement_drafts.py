@@ -16,7 +16,7 @@ from smb_requirement_agent.application.use_cases.requirement_drafts import (
     RequirementDraftInput,
     SaveRequirementDraft,
 )
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.in_memory_document_repository import (
     InMemoryDocumentRepository,
 )

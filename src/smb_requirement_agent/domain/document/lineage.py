@@ -9,10 +9,6 @@ from enum import StrEnum
 
 from smb_requirement_agent.domain.document.errors import InvalidDocumentError
 from smb_requirement_agent.domain.shared.actors import ActorSnapshot
-
-# MIGRATION SHIM: removed by the import-rewrite commit of PR 2 (ADR-0103).
-from smb_requirement_agent.domain.shared.lineage import SourceLineage as SourceLineage
-from smb_requirement_agent.domain.shared.lineage import merge_lineage as merge_lineage
 from smb_requirement_agent.domain.shared.staleness import require_aware
 
 

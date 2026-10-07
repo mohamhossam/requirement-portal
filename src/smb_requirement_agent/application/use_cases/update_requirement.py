@@ -21,14 +21,14 @@ from smb_requirement_agent.application.use_cases.invalidate_derived_artifacts im
     InvalidateDerivedArtifacts,
 )
 from smb_requirement_agent.application.use_cases.requirement_sources import require_usable_source
-from smb_requirement_agent.domain.identity.entities import ActorProfile
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementContext,
     RequirementDescription,
-    RequirementId,
     RequirementTitle,
 )
+from smb_requirement_agent.domain.shared.actors import ActorProfile
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 
 @dataclass(frozen=True, kw_only=True)

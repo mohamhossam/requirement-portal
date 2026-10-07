@@ -3,7 +3,7 @@
 from typing import Protocol
 
 from smb_requirement_agent.domain.identity.entities import DraftOwnership, RequirementAccess
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 
 class AccessRepositoryPort(Protocol):

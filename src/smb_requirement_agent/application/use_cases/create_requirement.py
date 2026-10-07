@@ -11,11 +11,11 @@ from smb_requirement_agent.domain.requirement.intake_limits import require_withi
 from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementContext,
     RequirementDescription,
-    RequirementId,
     RequirementStatus,
     RequirementTitle,
     RequirementVersion,
 )
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 
 @dataclass(frozen=True)

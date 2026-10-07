@@ -8,11 +8,11 @@ from smb_requirement_agent.domain.requirement.entities import Requirement, Requi
 from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementContext,
     RequirementDescription,
-    RequirementId,
     RequirementStatus,
     RequirementTitle,
     RequirementVersion,
 )
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 type JsonObject = dict[str, object]
 

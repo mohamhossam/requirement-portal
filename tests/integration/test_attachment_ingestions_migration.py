@@ -23,7 +23,10 @@ from pydantic import TypeAdapter
 
 from smb_requirement_agent.domain.document.attachment import AttachmentFile, AttachmentUpload
 from smb_requirement_agent.domain.document.ingestion import IngestionStage
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorSnapshot
+from smb_requirement_agent.domain.shared.actors import (
+    ActorId,
+    ActorSnapshot,
+)
 from smb_requirement_agent.infrastructure.persistence import migration_runner
 
 DATABASE_URL = os.getenv("TEST_DATABASE_URL")

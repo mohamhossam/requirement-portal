@@ -13,10 +13,10 @@ from smb_requirement_agent.domain.requirement.errors import (
 )
 from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementDescription,
-    RequirementId,
     RequirementStatus,
     RequirementTitle,
 )
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 
 def _valid_requirement() -> Requirement:

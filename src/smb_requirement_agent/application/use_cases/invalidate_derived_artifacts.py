@@ -34,7 +34,7 @@ from smb_requirement_agent.application.use_cases.invalidate_approval_workflow im
 )
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.feature.entities import Feature
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.domain.shared.staleness import StaleReason
 
 

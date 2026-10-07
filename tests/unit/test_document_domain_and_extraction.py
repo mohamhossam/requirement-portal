@@ -45,7 +45,7 @@ from smb_requirement_agent.domain.document.value_objects import (
     DocumentVersionId,
     ExtractionStatus,
 )
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.document_payloads import (
     document_from_payload,
     document_to_payload,

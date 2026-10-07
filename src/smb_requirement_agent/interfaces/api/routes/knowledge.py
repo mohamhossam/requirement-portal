@@ -28,7 +28,7 @@ from smb_requirement_agent.domain.knowledge.entities import (
     RelationshipEvidence,
 )
 from smb_requirement_agent.domain.knowledge.prior_art import PriorArtEvidence
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     get_clock,

@@ -8,7 +8,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 from smb_requirement_agent.application.ports.ai_jobs import AiJobCommand, AiJobRecord
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorSnapshot
 from smb_requirement_agent.domain.jobs.entities import (
     AiJob,
     AiJobFailure,
@@ -18,7 +17,11 @@ from smb_requirement_agent.domain.jobs.entities import (
     AiJobStatus,
 )
 from smb_requirement_agent.domain.jobs.errors import AiJobConflictError
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import (
+    ActorId,
+    ActorSnapshot,
+)
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.in_memory_ai_jobs import InMemoryAiJobStore
 from smb_requirement_agent.interfaces.api.container import Container
 

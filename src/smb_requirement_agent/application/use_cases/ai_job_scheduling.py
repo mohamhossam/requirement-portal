@@ -28,7 +28,6 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
 from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.use_cases.ai_jobs import command_fingerprint
 from smb_requirement_agent.domain.analysis.entities import ClarificationQuestion
-from smb_requirement_agent.domain.identity.entities import ActorProfile
 from smb_requirement_agent.domain.jobs.entities import (
     AiJob,
     AiJobId,
@@ -39,7 +38,9 @@ from smb_requirement_agent.domain.jobs.entities import (
 from smb_requirement_agent.domain.knowledge.errors import RequirementRetiredError
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.requirement.errors import DuplicateRequirementStateError
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId, RequirementStatus
+from smb_requirement_agent.domain.requirement.value_objects import RequirementStatus
+from smb_requirement_agent.domain.shared.actors import ActorProfile
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 
 class KnowledgeScreenScheduler(KnowledgeScreenSchedulerPort):

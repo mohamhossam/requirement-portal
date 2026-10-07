@@ -19,7 +19,6 @@ from fastapi.testclient import TestClient
 from smb_requirement_agent.application.ports.ai_jobs import AiJobCommand, AiJobRecord, JsonValue
 from smb_requirement_agent.application.use_cases.ai_jobs import MAX_LIST_LIMIT
 from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirementInput
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorSnapshot
 from smb_requirement_agent.domain.jobs.entities import (
     ActorNotification,
     AiJob,
@@ -29,7 +28,11 @@ from smb_requirement_agent.domain.jobs.entities import (
     NotificationId,
     NotificationKind,
 )
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import (
+    ActorId,
+    ActorSnapshot,
+)
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.interfaces.api.main import create_app

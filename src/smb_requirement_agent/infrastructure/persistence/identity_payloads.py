@@ -12,9 +12,7 @@ from smb_requirement_agent.domain.identity.entities import (
     RequirementAccess,
     RequirementAssignment,
 )
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementId,
-)
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.payload_fields import (
     JsonObject,
     json_array,

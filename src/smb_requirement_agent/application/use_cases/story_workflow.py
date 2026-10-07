@@ -48,14 +48,17 @@ from smb_requirement_agent.application.use_cases.invalidate_approval_workflow im
 )
 from smb_requirement_agent.application.use_cases.source_lineage import generation_lineage
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
-from smb_requirement_agent.domain.document.lineage import SourceLineage, merge_lineage
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.feature.entities import Feature
 from smb_requirement_agent.domain.feature.value_objects import FeatureId
-from smb_requirement_agent.domain.identity.entities import ActorProfile
 from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import ActorProfile
 from smb_requirement_agent.domain.shared.generation import GenerationStatus, Provenance
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.domain.shared.lineage import (
+    SourceLineage,
+    merge_lineage,
+)
 from smb_requirement_agent.domain.story.entities import (
     StoryDraft,
     UserStory,

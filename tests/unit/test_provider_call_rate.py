@@ -10,7 +10,10 @@ from fastapi.testclient import TestClient
 
 from smb_requirement_agent.application.errors import ProviderRateLimitExceededError
 from smb_requirement_agent.application.use_cases.provider_call_rate import ProviderCallRateLimit
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorProfile
+from smb_requirement_agent.domain.shared.actors import (
+    ActorId,
+    ActorProfile,
+)
 from smb_requirement_agent.interfaces.api.container import build_container
 from smb_requirement_agent.interfaces.api.main import create_app
 from tests.conftest import FAKE_PROVIDER_SETTINGS

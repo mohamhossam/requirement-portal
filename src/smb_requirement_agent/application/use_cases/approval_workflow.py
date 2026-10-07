@@ -47,13 +47,10 @@ from smb_requirement_agent.application.use_cases.identity_access import (
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.feature.entities import Feature
 from smb_requirement_agent.domain.feature.value_objects import FeatureId
-from smb_requirement_agent.domain.identity.entities import (
-    ActorProfile,
-    RequirementAccess,
-)
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.identity.entities import RequirementAccess
 from smb_requirement_agent.domain.review.entities import BreakdownReview, BreakdownStatus, FlagId
 from smb_requirement_agent.domain.review.errors import InvalidReviewContentError
+from smb_requirement_agent.domain.shared.actors import ActorProfile
 from smb_requirement_agent.domain.shared.approval import (
     Approval,
     ApprovalDecision,
@@ -63,6 +60,7 @@ from smb_requirement_agent.domain.shared.approval import (
     ReviewComment,
 )
 from smb_requirement_agent.domain.shared.generation import GenerationStatus
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.domain.story.entities import UserStory
 from smb_requirement_agent.domain.story.value_objects import StoryId
 

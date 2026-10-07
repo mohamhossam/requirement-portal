@@ -29,7 +29,7 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     OpenQuestion,
     PotentialDependency,
 )
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 
 

@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.errors import ProviderRateLimitExceededError
-from smb_requirement_agent.domain.identity.entities import ActorProfile
+from smb_requirement_agent.domain.shared.actors import ActorProfile
 
 _WINDOW = timedelta(minutes=1)
 

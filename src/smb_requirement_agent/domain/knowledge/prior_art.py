@@ -13,8 +13,8 @@ from enum import StrEnum
 
 from smb_requirement_agent.domain.knowledge.errors import InvalidKnowledgeError
 from smb_requirement_agent.domain.knowledge.historic import HistoricSourceKind
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.domain.shared.generation import Provenance
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 MATCHES_MAX = 5
 EVIDENCE_MAX = 5

@@ -21,7 +21,7 @@ from smb_requirement_agent.application.ports.saved_views import (
     SavedRequirementView,
     SavedViewCriteria,
 )
-from smb_requirement_agent.domain.identity.entities import ActorId
+from smb_requirement_agent.domain.shared.actors import ActorId
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 
 

@@ -14,8 +14,9 @@ from smb_requirement_agent.application.ports.source_dependencies import (
     SourceDependencyPort,
 )
 from smb_requirement_agent.application.use_cases.source_lineage import analysis_lineage
-from smb_requirement_agent.domain.document.lineage import SourceLineage
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId, RequirementStatus
+from smb_requirement_agent.domain.requirement.value_objects import RequirementStatus
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.domain.shared.lineage import SourceLineage
 from smb_requirement_agent.domain.story.entities import UserStory
 
 

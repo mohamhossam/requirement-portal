@@ -8,7 +8,7 @@ from smb_requirement_agent.application.ports.requirement_analysis_repository imp
     RequirementAnalysisRepositoryPort,
 )
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 
 
 class InMemoryRequirementAnalysisRepository(RequirementAnalysisRepositoryPort):

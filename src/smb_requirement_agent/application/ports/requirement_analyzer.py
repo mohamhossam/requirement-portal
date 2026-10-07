@@ -12,8 +12,8 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     IntentProposalKind,
     QuestionChangeAction,
 )
-from smb_requirement_agent.domain.document.reference import PublishedReference
 from smb_requirement_agent.domain.requirement.entities import Requirement
+from smb_requirement_agent.domain.shared.citation import PublishedReference
 from smb_requirement_agent.domain.shared.generation import Provenance
 
 

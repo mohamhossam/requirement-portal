@@ -32,7 +32,6 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     KnownFact,
     QuestionId,
 )
-from smb_requirement_agent.domain.identity.entities import ActorId
 from smb_requirement_agent.domain.identity.errors import AuthorizationDeniedError
 from smb_requirement_agent.domain.jobs.entities import AiJobFailure
 from smb_requirement_agent.domain.knowledge.entities import (
@@ -51,10 +50,11 @@ from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.requirement.errors import DuplicateRequirementStateError
 from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementDescription,
-    RequirementId,
     RequirementStatus,
     RequirementTitle,
 )
+from smb_requirement_agent.domain.shared.actors import ActorId
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import (
     FakeKnowledgeEmbedding,

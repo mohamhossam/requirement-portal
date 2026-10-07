@@ -23,7 +23,7 @@ from smb_requirement_agent.domain.document.value_objects import (
     ExtractionStatus,
     ExtractionWarningSeverity,
 )
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.domain.shared.staleness import require_aware
 
 

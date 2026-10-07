@@ -20,7 +20,6 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     ClarificationSource,
     QuestionId,
 )
-from smb_requirement_agent.domain.document.reference import PublishedReference
 from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeChunk,
     KnowledgeChunkId,
@@ -30,10 +29,11 @@ from smb_requirement_agent.domain.knowledge.entities import (
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementDescription,
-    RequirementId,
     RequirementStatus,
     RequirementTitle,
 )
+from smb_requirement_agent.domain.shared.citation import PublishedReference
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.llm.prompts.knowledge_prompt import (
     SUGGESTION_SYSTEM_PROMPT,
     suggestion_prompt,

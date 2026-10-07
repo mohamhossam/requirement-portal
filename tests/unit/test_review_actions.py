@@ -9,10 +9,10 @@ import pytest
 
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
 from smb_requirement_agent.domain.analysis.value_objects import KnownFact
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.domain.shared.actions import ActionAvailability
 from smb_requirement_agent.domain.shared.errors import InvalidGeneratedContentError
 from smb_requirement_agent.domain.shared.generation import GenerationStatus, ReviewableGeneration
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.domain.shared.staleness import StaleReason
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from tests.unit.test_epic_domain import make_epic

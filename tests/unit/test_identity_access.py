@@ -16,13 +16,17 @@ from smb_requirement_agent.application.use_cases.create_requirement import Creat
 from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementPermission,
 )
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorProfile, RequirementAccess
+from smb_requirement_agent.domain.identity.entities import RequirementAccess
 from smb_requirement_agent.domain.identity.errors import (
     AuthorizationDeniedError,
     InvalidIdentityError,
     RequirementAccessConflictError,
 )
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.domain.shared.actors import (
+    ActorId,
+    ActorProfile,
+)
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.config.options import IdentityProvider, LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS

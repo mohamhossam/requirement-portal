@@ -7,7 +7,10 @@ without an identity provider.
 
 from smb_kernel.identity.fake import FakeIdentityProvider as KernelFakeIdentityProvider
 
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorProfile
+from smb_requirement_agent.domain.shared.actors import (
+    ActorId,
+    ActorProfile,
+)
 
 FAKE_ACTORS = (
     ActorProfile(
