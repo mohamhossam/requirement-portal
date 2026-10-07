@@ -40,10 +40,6 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     QuestionId,
 )
 from smb_requirement_agent.domain.requirement.value_objects import RequirementVersion
-from smb_requirement_agent.domain.shared.citation import PublishedReference
-from smb_requirement_agent.domain.shared.generation import Provenance
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
-from smb_requirement_agent.domain.shared.lineage import SourceLineage
 from smb_requirement_agent.infrastructure.persistence.payload_fields import (
     JsonObject,
     boolean_field,
@@ -66,6 +62,10 @@ from smb_requirement_agent.infrastructure.persistence.shared_payloads import (
     optional_actor_snapshot,
     required_actor_snapshot,
 )
+from smb_requirement_agent.shared_kernel.citation import PublishedReference
+from smb_requirement_agent.shared_kernel.generation import Provenance
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.lineage import SourceLineage
 
 
 def analysis_to_payload(value: RequirementAnalysis) -> JsonObject:

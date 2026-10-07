@@ -4,7 +4,7 @@ from dataclasses import dataclass, replace
 
 from smb_kernel.documents.model import InvalidDocumentError
 
-from smb_requirement_agent.domain.shared.citation import PublishedReference
+from smb_requirement_agent.shared_kernel.citation import PublishedReference
 
 
 @dataclass(frozen=True)

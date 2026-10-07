@@ -38,11 +38,11 @@ from smb_requirement_agent.domain.jobs.entities import (
     NotificationPreference,
 )
 from smb_requirement_agent.domain.jobs.errors import AiJobConflictError
-from smb_requirement_agent.domain.shared.actors import (
+from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 @dataclass(frozen=True)

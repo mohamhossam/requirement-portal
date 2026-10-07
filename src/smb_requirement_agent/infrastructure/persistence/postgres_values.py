@@ -12,8 +12,8 @@ from smb_requirement_agent.application.errors import (
 )
 from smb_requirement_agent.domain.epic.value_objects import EpicId
 from smb_requirement_agent.domain.feature.value_objects import FeatureId
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.payload_fields import JsonObject
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 def _payload(value: object) -> JsonObject:

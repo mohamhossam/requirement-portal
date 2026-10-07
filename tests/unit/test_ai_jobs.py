@@ -17,13 +17,13 @@ from smb_requirement_agent.domain.jobs.entities import (
     AiJobStatus,
 )
 from smb_requirement_agent.domain.jobs.errors import AiJobConflictError
-from smb_requirement_agent.domain.shared.actors import (
+from smb_requirement_agent.infrastructure.persistence.in_memory_ai_jobs import InMemoryAiJobStore
+from smb_requirement_agent.interfaces.api.container import Container
+from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorSnapshot,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
-from smb_requirement_agent.infrastructure.persistence.in_memory_ai_jobs import InMemoryAiJobStore
-from smb_requirement_agent.interfaces.api.container import Container
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 OWNER = {"X-Fake-Actor-Id": "fake-owner"}
 NOW = datetime(2026, 9, 3, 12, tzinfo=UTC)

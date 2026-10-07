@@ -22,8 +22,6 @@ from smb_requirement_agent.application.use_cases.activity_reporting import (
     MetricCount,
 )
 from smb_requirement_agent.application.use_cases.saved_views import SavedViews
-from smb_requirement_agent.domain.shared.actors import ActorId
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     get_list_activity,
@@ -46,6 +44,8 @@ from smb_requirement_agent.interfaces.api.schemas.activity import (
     SavedViewUpdateRequest,
     WeeklyMetricsResponse,
 )
+from smb_requirement_agent.shared_kernel.actors import ActorId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 activity_router = APIRouter(
     prefix="/activity",

@@ -28,12 +28,12 @@ from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementStatus,
     RequirementTitle,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.llm.openrouter_adapters import OpenRouterEpicGenerator
 from smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters import (
     OpenRouterKnowledgeEmbedding,
 )
 from smb_requirement_agent.infrastructure.llm.schemas.epic_schema import EpicSchema
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 def _client(*, trace: JsonLinesDebugTrace | None = None) -> OpenRouterStructuredOutputClient:

@@ -44,7 +44,6 @@ from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementStatus,
     RequirementTitle,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.exports.json_exporter import JsonBacklogExporter
 from smb_requirement_agent.infrastructure.exports.xlsx_exporter import XlsxBacklogExporter
 from smb_requirement_agent.infrastructure.llm.prompts.generation_guidance import render_guidance
@@ -52,6 +51,7 @@ from smb_requirement_agent.infrastructure.persistence.shared_payloads import (
     architecture_from_payload,
     architecture_to_payload,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.unit.test_backlog_export import _document
 from tests.unit.test_feature_domain import make_feature
 

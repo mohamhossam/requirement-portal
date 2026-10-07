@@ -27,8 +27,6 @@ from smb_requirement_agent.application.use_cases.breakdown_review_policy import 
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
 from smb_requirement_agent.domain.analysis.value_objects import IntentProposal
-from smb_requirement_agent.domain.shared.citation import PublishedReference
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.activity_codec import (
     activity_from_payload,
     activity_to_payload,
@@ -102,6 +100,8 @@ from smb_requirement_agent.infrastructure.persistence.review_payloads import (
     review_from_payload,
     review_to_payload,
 )
+from smb_requirement_agent.shared_kernel.citation import PublishedReference
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.characterisation import samples
 
 

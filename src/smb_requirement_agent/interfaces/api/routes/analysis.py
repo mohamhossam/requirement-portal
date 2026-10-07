@@ -40,8 +40,6 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     IntentProposalStatus,
     QuestionId,
 )
-from smb_requirement_agent.domain.shared.actors import ActorId
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     RequirementCommandsDep,
@@ -93,6 +91,8 @@ from smb_requirement_agent.interfaces.api.schemas.generation import (
     ActionAvailabilityResponse,
     GenerationRequest,
 )
+from smb_requirement_agent.shared_kernel.actors import ActorId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 router = APIRouter(
     prefix="/requirements", tags=["analysis"], dependencies=[Depends(require_authenticated_actor)]

@@ -131,18 +131,6 @@ from smb_requirement_agent.domain.review.entities import (
     Risk,
     RiskId,
 )
-from smb_requirement_agent.domain.shared.actors import ActorSnapshot
-from smb_requirement_agent.domain.shared.approval import (
-    Approval,
-    ApprovalDecision,
-    ApprovalId,
-    ApprovalTarget,
-    ApprovalTargetKind,
-    ReviewComment,
-)
-from smb_requirement_agent.domain.shared.generation import GenerationStatus, Provenance
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
-from smb_requirement_agent.domain.shared.staleness import Staleness, StaleReason
 from smb_requirement_agent.domain.story.entities import (
     StoryChangeOperation,
     StoryChangeProposal,
@@ -163,6 +151,18 @@ from smb_requirement_agent.domain.story.value_objects import (
     StoryProposalId,
     UserRole,
 )
+from smb_requirement_agent.shared_kernel.actors import ActorSnapshot
+from smb_requirement_agent.shared_kernel.approval import (
+    Approval,
+    ApprovalDecision,
+    ApprovalId,
+    ApprovalTarget,
+    ApprovalTargetKind,
+    ReviewComment,
+)
+from smb_requirement_agent.shared_kernel.generation import GenerationStatus, Provenance
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.staleness import Staleness, StaleReason
 
 T0 = datetime(2026, 3, 1, 9, 0, tzinfo=UTC)
 T1 = datetime(2026, 3, 1, 10, 0, tzinfo=UTC)

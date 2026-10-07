@@ -20,7 +20,7 @@ from smb_requirement_agent.application.ports.requirement_analyzer import (
 )
 from smb_requirement_agent.domain.analysis.value_objects import IntentProposal
 from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.shared.generation import Provenance
+from smb_requirement_agent.shared_kernel.generation import Provenance
 
 
 class ReferenceGrounding:

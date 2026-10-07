@@ -70,9 +70,9 @@ from smb_requirement_agent.domain.knowledge.prior_art import (
     PriorArtVerdict,
 )
 from smb_requirement_agent.domain.requirement.value_objects import RequirementStatus
-from smb_requirement_agent.domain.shared.actors import ActorProfile
-from smb_requirement_agent.domain.shared.generation import Provenance
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.actors import ActorProfile
+from smb_requirement_agent.shared_kernel.generation import Provenance
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 # What the judge is shown: the closest historic requirements, a few passages each.
 SEARCH_LIMIT = 100

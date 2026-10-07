@@ -17,8 +17,8 @@ from smb_requirement_agent.domain.identity.entities import RequirementAccess
 from smb_requirement_agent.domain.jobs.entities import AiJobOperation
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.review.entities import BreakdownReview
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.domain.story.entities import UserStory
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 class WorkflowStatus(StrEnum):

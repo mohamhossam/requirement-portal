@@ -7,21 +7,21 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 from smb_requirement_agent.domain.review.entities import BreakdownStatus
-from smb_requirement_agent.domain.shared.actors import ActorSnapshot
-from smb_requirement_agent.domain.shared.approval import (
-    Approval,
-    ApprovalDecision,
-    ApprovalTarget,
-    ApprovalTargetKind,
-    ReviewComment,
-)
-from smb_requirement_agent.domain.shared.generation import GenerationStatus
 from smb_requirement_agent.interfaces.api.schemas.bounds import (
     MAX_IDENTIFIER_CHARACTERS,
     RequiredText,
     Text,
 )
 from smb_requirement_agent.interfaces.api.schemas.identity import ActorResponse
+from smb_requirement_agent.shared_kernel.actors import ActorSnapshot
+from smb_requirement_agent.shared_kernel.approval import (
+    Approval,
+    ApprovalDecision,
+    ApprovalTarget,
+    ApprovalTargetKind,
+    ReviewComment,
+)
+from smb_requirement_agent.shared_kernel.generation import GenerationStatus
 
 
 def _actor(actor: ActorSnapshot) -> ActorResponse:

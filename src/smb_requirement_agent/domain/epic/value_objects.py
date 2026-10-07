@@ -10,8 +10,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from smb_requirement_agent.domain.epic.errors import InvalidEpicContentError
-from smb_requirement_agent.domain.shared.generation import GenerationStatus, Provenance
-from smb_requirement_agent.domain.shared.staleness import Staleness, StaleReason
+from smb_requirement_agent.shared_kernel.generation import GenerationStatus, Provenance
+from smb_requirement_agent.shared_kernel.staleness import Staleness, StaleReason
 
 EpicStatus = GenerationStatus
 EpicProvenance = Provenance

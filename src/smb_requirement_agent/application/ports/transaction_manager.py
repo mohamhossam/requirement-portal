@@ -5,7 +5,7 @@ from __future__ import annotations
 from contextlib import AbstractContextManager
 from typing import Protocol
 
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 class TransactionManagerPort(Protocol):

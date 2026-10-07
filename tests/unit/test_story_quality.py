@@ -9,7 +9,6 @@ from fastapi.testclient import TestClient
 
 from smb_requirement_agent.application.errors import StoryQualityEvaluationError
 from smb_requirement_agent.application.use_cases.story_quality import SuggestStorySplit
-from smb_requirement_agent.domain.shared.generation import Provenance
 from smb_requirement_agent.domain.story.errors import InvalidStoryContentError
 from smb_requirement_agent.domain.story.quality import (
     FindingSource,
@@ -33,6 +32,7 @@ from smb_requirement_agent.infrastructure.llm.story_quality_mapping import (
 )
 from smb_requirement_agent.interfaces.api.container import build_container
 from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.shared_kernel.generation import Provenance
 from tests.conftest import FAKE_PROVIDER_SETTINGS
 from tests.unit.workflow_helpers import generate_story_tree
 

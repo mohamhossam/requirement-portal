@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Protocol
 
 from smb_requirement_agent.domain.knowledge.prior_art import PriorArtCheck
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 @dataclass(frozen=True)

@@ -13,7 +13,6 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
     RequirementKnowledgeIndexPort,
 )
 from smb_requirement_agent.domain.knowledge.entities import KnowledgeChunk, KnowledgeMatch
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.postgres_requirement_knowledge import (
     _chunk_from_payload,
     _chunk_payload,
@@ -22,6 +21,7 @@ from smb_requirement_agent.infrastructure.persistence.postgres_requirement_knowl
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 from smb_requirement_agent.infrastructure.persistence.postgres_values import DbConnection, _integer
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 class PostgresKnowledgeIndexGenerations:

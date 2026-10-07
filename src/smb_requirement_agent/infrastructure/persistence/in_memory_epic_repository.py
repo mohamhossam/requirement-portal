@@ -8,7 +8,7 @@ from typing import Any
 from smb_requirement_agent.application.errors import ArtifactVersionConflictError
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.epic.value_objects import EpicId
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 class InMemoryEpicRepository:

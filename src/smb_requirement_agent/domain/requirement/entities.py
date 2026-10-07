@@ -14,7 +14,7 @@ from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementTitle,
     RequirementVersion,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 @dataclass(frozen=True)

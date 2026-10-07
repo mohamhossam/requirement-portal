@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from smb_requirement_agent.domain.document.lineage import ImpactDecision
-from smb_requirement_agent.domain.shared.actors import ActorId
-from smb_requirement_agent.domain.shared.lineage import SourceLineage
+from smb_requirement_agent.shared_kernel.actors import ActorId
+from smb_requirement_agent.shared_kernel.lineage import SourceLineage
 
 
 @dataclass(frozen=True)

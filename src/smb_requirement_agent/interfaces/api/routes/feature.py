@@ -25,7 +25,6 @@ from smb_requirement_agent.application.use_cases.generation_context import Gener
 from smb_requirement_agent.application.use_cases.requirement_commands import ExpectedContext
 from smb_requirement_agent.domain.feature.entities import Feature
 from smb_requirement_agent.domain.feature.value_objects import FeatureId
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     RequirementCommandsDep,
@@ -53,6 +52,7 @@ from smb_requirement_agent.interfaces.api.schemas.governance import (
     ApprovalRequest,
     ApprovalResponse,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 router = APIRouter(
     prefix="/requirements", tags=["features"], dependencies=[Depends(require_authenticated_actor)]

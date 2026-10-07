@@ -13,8 +13,8 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     QuestionChangeAction,
 )
 from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.shared.citation import PublishedReference
-from smb_requirement_agent.domain.shared.generation import Provenance
+from smb_requirement_agent.shared_kernel.citation import PublishedReference
+from smb_requirement_agent.shared_kernel.generation import Provenance
 
 
 class AnalysisDocumentContext(TypedDict):

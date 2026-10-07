@@ -31,11 +31,11 @@ from smb_requirement_agent.application.use_cases.leased_jobs import (
     CommitFence,
     LeasedJobs,
 )
-from smb_requirement_agent.domain.shared.actors import (
+from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 class ArchitectureMappingJobs(LeasedJobs):

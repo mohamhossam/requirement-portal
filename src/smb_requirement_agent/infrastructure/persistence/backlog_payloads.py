@@ -25,9 +25,6 @@ from smb_requirement_agent.domain.feature.value_objects import (
     SplittingPattern,
     SplittingRationale,
 )
-from smb_requirement_agent.domain.shared.generation import Provenance
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
-from smb_requirement_agent.domain.shared.lineage import SourceLineage
 from smb_requirement_agent.domain.story.entities import (
     StoryChangeOperation,
     StoryChangeProposal,
@@ -60,6 +57,9 @@ from smb_requirement_agent.infrastructure.persistence.shared_payloads import (
     quality_assessment_from_payload,
     quality_assessment_to_payload,
 )
+from smb_requirement_agent.shared_kernel.generation import Provenance
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.lineage import SourceLineage
 
 
 def epic_to_payload(value: Epic) -> JsonObject:

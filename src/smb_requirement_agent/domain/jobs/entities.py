@@ -7,12 +7,12 @@ from datetime import datetime
 from enum import StrEnum
 
 from smb_requirement_agent.domain.jobs.errors import AiJobConflictError, InvalidAiJobError
-from smb_requirement_agent.domain.shared.actors import (
+from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorSnapshot,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
-from smb_requirement_agent.domain.shared.staleness import require_aware
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.staleness import require_aware
 
 
 def _text(value: str, field: str) -> str:

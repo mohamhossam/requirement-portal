@@ -23,8 +23,8 @@ from smb_requirement_agent.domain.document.value_objects import (
     ExtractionStatus,
     ExtractionWarningSeverity,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
-from smb_requirement_agent.domain.shared.staleness import require_aware
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.staleness import require_aware
 
 
 @dataclass(frozen=True)

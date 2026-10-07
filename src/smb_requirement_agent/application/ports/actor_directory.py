@@ -2,7 +2,7 @@
 
 from typing import Protocol
 
-from smb_requirement_agent.domain.shared.actors import (
+from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,
 )

@@ -21,7 +21,6 @@ from smb_requirement_agent.domain.requirement.errors import (
     InvalidRequirementDescriptionError,
     InvalidRequirementTitleError,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.persistence.in_memory_document_repository import (
     InMemoryDocumentRepository,
@@ -32,6 +31,7 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_identity import 
 from smb_requirement_agent.infrastructure.persistence.in_memory_requirement_repository import (
     InMemoryRequirementRepository,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.conftest import TEST_NOW, make_invalidation
 from tests.unit.access_service import access_service_for
 from tests.unit.owned_requirement_creator import OwnedRequirementCreator

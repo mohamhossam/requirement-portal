@@ -47,17 +47,17 @@ from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementStatus,
     RequirementTitle,
 )
-from smb_requirement_agent.domain.shared.actors import (
-    ActorId,
-    ActorSnapshot,
-)
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.llm.local_requirement_analyzer import (
     StructuredRequirementAnalyzerAdapter,
 )
 from smb_requirement_agent.infrastructure.llm.schemas.analysis_schema import (
     citation_recovery_schema,
 )
+from smb_requirement_agent.shared_kernel.actors import (
+    ActorId,
+    ActorSnapshot,
+)
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.conftest import TEST_NOW
 
 PROVIDERS = ["legacy-local", "legacy-openrouter", "Gemini", "OpenAI", "OpenRouter", "Ollama"]

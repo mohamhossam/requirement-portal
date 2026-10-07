@@ -28,7 +28,6 @@ from smb_requirement_agent.domain.knowledge.entities import (
     RelationshipEvidence,
 )
 from smb_requirement_agent.domain.knowledge.prior_art import PriorArtEvidence
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     get_clock,
@@ -59,6 +58,7 @@ from smb_requirement_agent.interfaces.api.schemas.knowledge import (
     PriorArtPassageResponse,
     PriorArtResponse,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 router = APIRouter(
     prefix="/requirements",

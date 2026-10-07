@@ -16,9 +16,9 @@ from smb_requirement_agent.domain.knowledge.prior_art import (
     PriorArtMatch,
     PriorArtVerdict,
 )
-from smb_requirement_agent.domain.shared.generation import Provenance
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
+from smb_requirement_agent.shared_kernel.generation import Provenance
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 def _hour(moment: datetime) -> datetime:

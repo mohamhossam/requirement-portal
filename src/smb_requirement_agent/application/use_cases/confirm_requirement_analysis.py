@@ -25,8 +25,8 @@ from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementPermission,
 )
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
-from smb_requirement_agent.domain.shared.actors import ActorProfile
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.actors import ActorProfile
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 class ConfirmRequirementAnalysis:

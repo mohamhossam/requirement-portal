@@ -9,7 +9,6 @@ from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     GetKnowledgeReview,
     RequirementKnowledgeCorpus,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.corpus_membership import (
     PostgresCorpusMembership,
 )
@@ -51,6 +50,7 @@ from smb_requirement_agent.infrastructure.persistence.postgres_worklist import (
 from smb_requirement_agent.infrastructure.persistence.source_dependencies import (
     PostgresSourceDependencies,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 def refresh_postgres_projections(

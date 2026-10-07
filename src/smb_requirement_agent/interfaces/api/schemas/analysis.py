@@ -14,7 +14,6 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     IntentProposalStatus,
     QuestionChangeAction,
 )
-from smb_requirement_agent.domain.shared.citation import PublishedReference
 from smb_requirement_agent.interfaces.api.schemas.bounds import (
     MAX_IDENTIFIER_CHARACTERS,
     MAX_ITEMS,
@@ -25,6 +24,7 @@ from smb_requirement_agent.interfaces.api.schemas.bounds import (
 from smb_requirement_agent.interfaces.api.schemas.epic import ProvenanceResponse
 from smb_requirement_agent.interfaces.api.schemas.generation import ActionAvailabilityResponse
 from smb_requirement_agent.interfaces.api.schemas.identity import ActorResponse
+from smb_requirement_agent.shared_kernel.citation import PublishedReference
 
 NonBlankText = Annotated[
     str,

@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 
-from smb_requirement_agent.domain.shared.errors import InvalidGeneratedContentError
+from smb_requirement_agent.shared_kernel.errors import InvalidGeneratedContentError
 
 
 class StaleReason(Enum):

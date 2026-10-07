@@ -40,11 +40,11 @@ from smb_requirement_agent.domain.identity.errors import (
     RequirementAccessConflictError,
 )
 from smb_requirement_agent.domain.jobs.entities import AiJobOperation, AiJobOrigin
-from smb_requirement_agent.domain.shared.actors import (
+from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 T = TypeVar("T")
 

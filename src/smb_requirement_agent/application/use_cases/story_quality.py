@@ -30,9 +30,6 @@ from smb_requirement_agent.application.use_cases.identity_access import (
 if TYPE_CHECKING:
     from smb_requirement_agent.application.use_cases.story_workflow import GetStories
 from smb_requirement_agent.domain.feature.value_objects import FeatureId
-from smb_requirement_agent.domain.shared.actors import ActorProfile
-from smb_requirement_agent.domain.shared.generation import Provenance
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.domain.story.entities import UserStory
 from smb_requirement_agent.domain.story.quality import (
     FeatureQualitySnapshot,
@@ -44,6 +41,9 @@ from smb_requirement_agent.domain.story.quality import (
     ValidationFinding,
 )
 from smb_requirement_agent.domain.story.value_objects import StoryId
+from smb_requirement_agent.shared_kernel.actors import ActorProfile
+from smb_requirement_agent.shared_kernel.generation import Provenance
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 SEMANTIC_CRITERIA = (
     InvestCriterion.INDEPENDENT,

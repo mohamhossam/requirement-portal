@@ -36,11 +36,6 @@ from smb_requirement_agent.domain.revision.entities import (
     RequirementRevision,
     RevisionNumber,
 )
-from smb_requirement_agent.domain.shared.actors import (
-    ActorId,
-    ActorProfile,
-)
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.domain.story.entities import StoryChangeProposal, UserStory
 from smb_requirement_agent.domain.story.value_objects import StoryId, StoryProposalId
 from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader import (
@@ -74,6 +69,11 @@ from smb_requirement_agent.infrastructure.persistence.postgres_snapshots import 
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
 from smb_requirement_agent.infrastructure.persistence.postgres_values import DbConnection
+from smb_requirement_agent.shared_kernel.actors import (
+    ActorId,
+    ActorProfile,
+)
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 class FixturePostgresStore(PostgresStore, RequirementRepositoryPort):

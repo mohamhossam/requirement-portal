@@ -11,7 +11,7 @@ from smb_requirement_agent.application.ports.requirement_worklist import (
     WorkflowStatus,
     WorklistSort,
 )
-from smb_requirement_agent.domain.shared.actors import ActorId
+from smb_requirement_agent.shared_kernel.actors import ActorId
 
 
 def _text(value: str, field: str, maximum: int) -> str:

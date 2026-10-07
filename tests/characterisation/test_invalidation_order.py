@@ -20,7 +20,6 @@ from smb_requirement_agent.domain.analysis.entities import ClarificationQuestion
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.feature.entities import Feature
 from smb_requirement_agent.domain.review.entities import BreakdownReview
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.domain.story.entities import UserStory
 from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_audit_repository import (
     InMemoryAnalysisAuditRepository,
@@ -40,6 +39,7 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_feature_reposito
 from smb_requirement_agent.infrastructure.persistence.in_memory_story_repository import (
     InMemoryStoryRepository,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.characterisation import samples
 
 Writes = list[tuple[str, str]]

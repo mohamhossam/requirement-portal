@@ -22,11 +22,6 @@ from smb_requirement_agent.domain.identity.errors import (
     InvalidIdentityError,
     RequirementAccessConflictError,
 )
-from smb_requirement_agent.domain.shared.actors import (
-    ActorId,
-    ActorProfile,
-)
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.config.options import IdentityProvider, LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
@@ -35,6 +30,11 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_identity import 
 )
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.shared_kernel.actors import (
+    ActorId,
+    ActorProfile,
+)
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.conftest import FAKE_PROVIDER_SETTINGS
 from tests.unit.workflow_helpers import post_analysis, screen_current_knowledge
 

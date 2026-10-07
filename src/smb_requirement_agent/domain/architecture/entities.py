@@ -11,7 +11,7 @@ from smb_requirement_agent.domain.architecture.knowledge import (
     RelationshipKind,
     relationship_kind,
 )
-from smb_requirement_agent.domain.shared.staleness import require_aware
+from smb_requirement_agent.shared_kernel.staleness import require_aware
 
 
 def _text(value: str, field: str) -> str:

@@ -153,20 +153,6 @@ from smb_requirement_agent.domain.review.entities import (
     ReviewSource,
     ReviewSourceKind,
 )
-from smb_requirement_agent.domain.shared.actors import (
-    ActorId,
-    ActorProfile,
-    ActorSnapshot,
-)
-from smb_requirement_agent.domain.shared.approval import (
-    Approval,
-    ApprovalDecision,
-    ApprovalId,
-    ApprovalTarget,
-    ApprovalTargetKind,
-)
-from smb_requirement_agent.domain.shared.generation import GenerationStatus, Provenance
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.domain.story.entities import (
     StoryChangeOperation,
     StoryChangeProposal,
@@ -228,6 +214,20 @@ from smb_requirement_agent.infrastructure.persistence.postgres_store import (
 from smb_requirement_agent.infrastructure.persistence.postgres_store import (
     PostgresStore as UnitOfWorkStore,
 )
+from smb_requirement_agent.shared_kernel.actors import (
+    ActorId,
+    ActorProfile,
+    ActorSnapshot,
+)
+from smb_requirement_agent.shared_kernel.approval import (
+    Approval,
+    ApprovalDecision,
+    ApprovalId,
+    ApprovalTarget,
+    ApprovalTargetKind,
+)
+from smb_requirement_agent.shared_kernel.generation import GenerationStatus, Provenance
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.integration.postgres_fixture_store import (
     FixturePostgresStore as _PostgresStore,
 )

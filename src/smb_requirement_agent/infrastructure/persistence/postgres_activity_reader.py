@@ -42,11 +42,11 @@ from smb_requirement_agent.domain.review.entities import (
     BreakdownStatus,
 )
 from smb_requirement_agent.domain.revision.entities import BreakdownRevision, RequirementRevision
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.activity_projection import (
     ActivityJobSource,
     RepositoryActivityProjection,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 class _PostgresActivityStore(Protocol):

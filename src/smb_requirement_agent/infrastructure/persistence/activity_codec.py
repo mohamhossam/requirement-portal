@@ -10,10 +10,10 @@ from smb_requirement_agent.application.ports.activity import (
     AuditSourceKind,
     AuditSourceReference,
 )
-from smb_requirement_agent.domain.shared.actors import ActorSnapshot
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.payload_fields import JsonObject
 from smb_requirement_agent.infrastructure.persistence.shared_payloads import actor_from_payload
+from smb_requirement_agent.shared_kernel.actors import ActorSnapshot
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 def actor_to_payload(actor: ActorSnapshot) -> JsonObject:

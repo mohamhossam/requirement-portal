@@ -41,7 +41,6 @@ from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementStatus,
     RequirementTitle,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters import (
     EMBEDDING_DIMENSIONS,
     LocalKnowledgeEmbedding,
@@ -55,6 +54,7 @@ from smb_requirement_agent.infrastructure.llm.schemas.knowledge_schema import (
     RelationshipFindingSchema,
     RelationshipScreenSchema,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 SchemaT = TypeVar("SchemaT", bound=BaseModel)
 VECTOR = [0.5] * EMBEDDING_DIMENSIONS

@@ -25,7 +25,7 @@ from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     require_index_current,
 )
 from smb_requirement_agent.domain.knowledge.entities import RelationshipEvidence
-from smb_requirement_agent.domain.shared.citation import (
+from smb_requirement_agent.shared_kernel.citation import (
     PublishedReference,
     normalize_search,
 )

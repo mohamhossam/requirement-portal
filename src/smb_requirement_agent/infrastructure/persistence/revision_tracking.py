@@ -24,9 +24,9 @@ from smb_requirement_agent.domain.feature.value_objects import FeatureId
 from smb_requirement_agent.domain.identity.entities import DraftOwnership, RequirementAccess
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.review.entities import BreakdownReview
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.domain.story.entities import UserStory
 from smb_requirement_agent.domain.story.value_objects import StoryId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 from .in_memory_transaction import InMemoryTransactionManager
 

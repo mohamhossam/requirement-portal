@@ -35,7 +35,6 @@ from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementStatus,
     RequirementTitle,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.llm.fake_requirement_analyzer import (
     FakeRequirementAnalyzer,
@@ -66,6 +65,7 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_story_repository
     InMemoryStoryChangeProposalRepository,
     InMemoryStoryRepository,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.conftest import (
     TEST_NOW,
     AcceptAllSuggestionValidator,

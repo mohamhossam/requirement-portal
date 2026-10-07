@@ -19,8 +19,8 @@ from smb_requirement_agent.application.use_cases.update_requirement import (
     UpdateRequirementInput,
 )
 from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.shared.actors import ActorProfile
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.actors import ActorProfile
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 @dataclass(frozen=True)

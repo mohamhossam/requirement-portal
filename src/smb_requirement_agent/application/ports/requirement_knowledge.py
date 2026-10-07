@@ -27,7 +27,7 @@ from smb_requirement_agent.domain.knowledge.entities import (
 )
 from smb_requirement_agent.domain.knowledge.membership import CorpusMembership
 from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 @dataclass(frozen=True)

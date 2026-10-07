@@ -7,10 +7,10 @@ from datetime import datetime
 from enum import Enum
 
 from smb_requirement_agent.domain.feature.value_objects import FeatureId
-from smb_requirement_agent.domain.shared.generation import Provenance
-from smb_requirement_agent.domain.shared.staleness import require_aware
 from smb_requirement_agent.domain.story.errors import InvalidStoryContentError
 from smb_requirement_agent.domain.story.value_objects import StoryId
+from smb_requirement_agent.shared_kernel.generation import Provenance
+from smb_requirement_agent.shared_kernel.staleness import require_aware
 
 
 class InvestCriterion(Enum):

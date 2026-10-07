@@ -16,7 +16,7 @@ from smb_requirement_agent.application.ports.saved_views import (
     SavedViewCriteria,
     SavedViewRepositoryPort,
 )
-from smb_requirement_agent.domain.shared.actors import ActorProfile
+from smb_requirement_agent.shared_kernel.actors import ActorProfile
 
 
 class SavedViews:

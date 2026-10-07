@@ -25,14 +25,14 @@ from smb_requirement_agent.application.use_cases.create_requirement import Creat
 from smb_requirement_agent.domain.jobs.entities import NotificationKind
 from smb_requirement_agent.domain.knowledge.entities import KnowledgeRelationshipKind
 from smb_requirement_agent.domain.knowledge.errors import KnowledgeFindingConflictError
-from smb_requirement_agent.domain.shared.actors import (
-    ActorId,
-    ActorProfile,
-)
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.shared_kernel.actors import (
+    ActorId,
+    ActorProfile,
+)
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.conftest import FAKE_PROVIDER_SETTINGS
 from tests.unit.workflow_helpers import drain_requirement_index
 

@@ -6,7 +6,6 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from smb_requirement_agent.domain.shared.generation import GenerationStatus
 from smb_requirement_agent.domain.story.entities import StoryChangeOperation
 from smb_requirement_agent.domain.story.quality import (
     FindingSource,
@@ -25,6 +24,7 @@ from smb_requirement_agent.interfaces.api.schemas.bounds import (
 from smb_requirement_agent.interfaces.api.schemas.epic import ProvenanceResponse, StalenessResponse
 from smb_requirement_agent.interfaces.api.schemas.generation import ActionAvailabilityResponse
 from smb_requirement_agent.interfaces.api.schemas.governance import ApprovalResponse
+from smb_requirement_agent.shared_kernel.generation import GenerationStatus
 
 
 class AcceptanceCriterionPayload(BaseModel):

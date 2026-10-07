@@ -30,10 +30,6 @@ from smb_requirement_agent.domain.document.reference import (
     CurrentPublication,
     ReferenceDocumentState,
 )
-from smb_requirement_agent.domain.shared.citation import (
-    PublishedReference,
-    normalize_search,
-)
 from smb_requirement_agent.infrastructure.persistence.architecture_release_state import (
     InMemoryArchitectureReleaseState,
 )
@@ -47,6 +43,10 @@ from smb_requirement_agent.infrastructure.persistence.knowledge_payloads import 
 )
 from smb_requirement_agent.infrastructure.persistence.reference_publications import (
     InMemoryReferencePublications,
+)
+from smb_requirement_agent.shared_kernel.citation import (
+    PublishedReference,
+    normalize_search,
 )
 from tests.conftest import FAKE_PROVIDER_SETTINGS
 from tests.knowledge_doubles import container_with_library, sync

@@ -17,7 +17,6 @@ from smb_requirement_agent.application.use_cases.create_requirement import Creat
 from smb_requirement_agent.application.use_cases.documents import UploadDocumentInput
 from smb_requirement_agent.application.use_cases.requirement_drafts import RequirementDraftInput
 from smb_requirement_agent.domain.knowledge.entities import KnowledgeSourceKind
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.config.options import LLMProvider, PersistenceProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
@@ -26,6 +25,7 @@ from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import 
 )
 from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
 from smb_requirement_agent.interfaces.api.container import Container, build_container
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.unit.workflow_helpers import drain_requirement_index
 
 DATABASE_URL = os.getenv("TEST_DATABASE_URL")

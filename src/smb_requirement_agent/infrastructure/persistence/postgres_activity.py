@@ -18,7 +18,6 @@ from smb_requirement_agent.application.ports.activity import (
     WeeklyActivityEvidence,
 )
 from smb_requirement_agent.domain.review.entities import BreakdownStatus
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.activity_codec import (
     activity_from_payload,
     activity_to_payload,
@@ -31,6 +30,7 @@ from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader i
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 from smb_requirement_agent.infrastructure.persistence.postgres_values import _integer
 from smb_requirement_agent.infrastructure.persistence.shared_payloads import actor_from_payload
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 class PostgresProjectedActivity:

@@ -2,7 +2,7 @@
 
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
 from smb_requirement_agent.domain.analysis.value_objects import HumanClarification, IntentProposal
-from smb_requirement_agent.domain.shared.lineage import (
+from smb_requirement_agent.shared_kernel.lineage import (
     SourceLineage,
     merge_lineage,
 )

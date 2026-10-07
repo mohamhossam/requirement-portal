@@ -70,9 +70,9 @@ from smb_requirement_agent.domain.review.entities import (
     ResolutionPolicy,
 )
 from smb_requirement_agent.domain.review.errors import InvalidReviewContentError
-from smb_requirement_agent.domain.shared.actors import ActorProfile
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.domain.story.quality import FeatureQualitySnapshot, InvestAssessment
+from smb_requirement_agent.shared_kernel.actors import ActorProfile
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 @dataclass(frozen=True)

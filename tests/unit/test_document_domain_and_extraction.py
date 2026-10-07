@@ -45,7 +45,6 @@ from smb_requirement_agent.domain.document.value_objects import (
     DocumentVersionId,
     ExtractionStatus,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.document_payloads import (
     document_from_payload,
     document_to_payload,
@@ -53,6 +52,7 @@ from smb_requirement_agent.infrastructure.persistence.document_payloads import (
 from smb_requirement_agent.infrastructure.persistence.in_memory_document_repository import (
     InMemoryDocumentStorage,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 NOW = datetime(2026, 9, 3, 12, 0, tzinfo=UTC)
 

@@ -16,7 +16,6 @@ from smb_requirement_agent.domain.revision.entities import (
     RequirementRevision,
     RevisionNumber,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.analysis_payloads import (
     analysis_from_payload,
     analysis_round_from_payload,
@@ -41,6 +40,7 @@ from smb_requirement_agent.infrastructure.persistence.requirement_snapshot impor
     requirement_from_payload,
 )
 from smb_requirement_agent.infrastructure.persistence.review_payloads import review_from_payload
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 class PostgresRevisionRepository:

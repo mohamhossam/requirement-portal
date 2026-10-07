@@ -65,8 +65,6 @@ from smb_requirement_agent.domain.feature.value_objects import (
     SplittingPattern,
 )
 from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
-from smb_requirement_agent.domain.shared.staleness import StaleReason
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.llm.fake_epic_generator import FakeEpicGenerator
 from smb_requirement_agent.infrastructure.llm.fake_feature_generator import FakeFeatureGenerator
@@ -102,6 +100,8 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_story_repository
     InMemoryStoryChangeProposalRepository,
     InMemoryStoryRepository,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.staleness import StaleReason
 from tests.conftest import (
     AcceptAllSuggestionValidator,
     AlwaysReadyKnowledgeReview,

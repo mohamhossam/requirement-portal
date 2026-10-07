@@ -7,12 +7,6 @@ from enum import Enum
 
 from smb_requirement_agent.domain.architecture.entities import ArchitectureImpact
 from smb_requirement_agent.domain.feature.value_objects import FeatureId
-from smb_requirement_agent.domain.shared.approval import (
-    Approval,
-    ApprovalDecision,
-    ApprovalTargetKind,
-)
-from smb_requirement_agent.domain.shared.generation import Provenance, ReviewableGeneration
 from smb_requirement_agent.domain.story.errors import InvalidStoryContentError
 from smb_requirement_agent.domain.story.quality import InvestAssessment
 from smb_requirement_agent.domain.story.value_objects import (
@@ -23,6 +17,12 @@ from smb_requirement_agent.domain.story.value_objects import (
     StoryProposalId,
     UserRole,
 )
+from smb_requirement_agent.shared_kernel.approval import (
+    Approval,
+    ApprovalDecision,
+    ApprovalTargetKind,
+)
+from smb_requirement_agent.shared_kernel.generation import Provenance, ReviewableGeneration
 
 
 @dataclass(frozen=True, kw_only=True)

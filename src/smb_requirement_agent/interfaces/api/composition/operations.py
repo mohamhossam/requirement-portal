@@ -30,7 +30,6 @@ from smb_requirement_agent.application.use_cases.qualify_chunk_tokens import (
     qualify_chunk_tokens,
 )
 from smb_requirement_agent.application.use_cases.retention import PruneReadNotifications
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.config.options import ConfigurationError
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.persistence.postgres_ai_jobs import (
@@ -53,6 +52,7 @@ from smb_requirement_agent.infrastructure.persistence.source_dependencies import
 from smb_requirement_agent.interfaces.api.composition.projections import (
     refresh_postgres_projections,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 def build_notification_retention(database_url: str) -> PruneReadNotifications:

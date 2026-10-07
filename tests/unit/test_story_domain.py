@@ -7,19 +7,6 @@ from datetime import UTC, datetime
 import pytest
 
 from smb_requirement_agent.domain.feature.value_objects import FeatureId
-from smb_requirement_agent.domain.shared.actors import (
-    ActorId,
-    ActorSnapshot,
-)
-from smb_requirement_agent.domain.shared.approval import (
-    Approval,
-    ApprovalDecision,
-    ApprovalId,
-    ApprovalTarget,
-    ApprovalTargetKind,
-)
-from smb_requirement_agent.domain.shared.generation import GenerationStatus, Provenance
-from smb_requirement_agent.domain.shared.staleness import StaleReason
 from smb_requirement_agent.domain.story.entities import UserStory
 from smb_requirement_agent.domain.story.errors import InvalidStoryContentError
 from smb_requirement_agent.domain.story.value_objects import (
@@ -29,6 +16,19 @@ from smb_requirement_agent.domain.story.value_objects import (
     StoryId,
     UserRole,
 )
+from smb_requirement_agent.shared_kernel.actors import (
+    ActorId,
+    ActorSnapshot,
+)
+from smb_requirement_agent.shared_kernel.approval import (
+    Approval,
+    ApprovalDecision,
+    ApprovalId,
+    ApprovalTarget,
+    ApprovalTargetKind,
+)
+from smb_requirement_agent.shared_kernel.generation import GenerationStatus, Provenance
+from smb_requirement_agent.shared_kernel.staleness import StaleReason
 
 NOW = datetime(2026, 1, 1, 12, tzinfo=UTC)
 

@@ -21,7 +21,6 @@ from smb_requirement_agent.domain.jobs.entities import (
     NotificationId,
     NotificationKind,
 )
-from smb_requirement_agent.domain.shared.actors import ActorId
 from smb_requirement_agent.infrastructure.config.options import (
     DEFAULT_NOTIFICATION_RETENTION_DAYS,
     ConfigurationError,
@@ -32,6 +31,7 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_ai_jobs import (
     InMemoryNotificationRepository,
 )
 from smb_requirement_agent.interfaces import retention
+from smb_requirement_agent.shared_kernel.actors import ActorId
 
 NOW = datetime(2026, 9, 25, 12, tzinfo=UTC)
 OWNER = ActorId("fake-owner")

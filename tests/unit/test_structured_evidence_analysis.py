@@ -38,10 +38,10 @@ from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementStatus,
     RequirementTitle,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.in_memory_evidence_fragment_cache import (
     InMemoryEvidenceFragmentCache,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 NOW = datetime(2026, 9, 7, tzinfo=UTC)
 

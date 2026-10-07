@@ -55,7 +55,6 @@ from smb_requirement_agent.domain.architecture.entities import (
     SystemReference,
 )
 from smb_requirement_agent.domain.architecture.knowledge import RelationshipKind
-from smb_requirement_agent.domain.shared.citation import PublishedReference
 from smb_requirement_agent.infrastructure.knowledge_client import (
     OFFLINE_RELEASE_ID,
     OFFLINE_RELEASE_NAME,
@@ -68,6 +67,7 @@ from smb_requirement_agent.infrastructure.knowledge_client import (
     HttpKnowledgeEvents,
     HttpReferenceKnowledge,
 )
+from smb_requirement_agent.shared_kernel.citation import PublishedReference
 from tests.unit.workflow_helpers import approve_fake_breakdown
 
 CONTRACT = json.loads(

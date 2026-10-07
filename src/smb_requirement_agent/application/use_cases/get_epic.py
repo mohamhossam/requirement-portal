@@ -6,7 +6,7 @@ from smb_requirement_agent.application.errors import EpicNotFoundError, Requirem
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.domain.epic.entities import Epic
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 class GetEpic:

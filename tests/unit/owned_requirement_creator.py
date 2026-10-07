@@ -10,7 +10,7 @@ from smb_requirement_agent.application.use_cases.create_requirement import (
 )
 from smb_requirement_agent.domain.identity.entities import RequirementAccess
 from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.shared.actors import ActorProfile
+from smb_requirement_agent.shared_kernel.actors import ActorProfile
 
 
 class OwnedRequirementCreator:

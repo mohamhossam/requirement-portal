@@ -14,10 +14,10 @@ from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementStatus,
     RequirementTitle,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.in_memory_requirement_repository import (
     InMemoryRequirementRepository,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 def _make_requirement(req_id: str = "req-1") -> Requirement:

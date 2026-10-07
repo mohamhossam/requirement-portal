@@ -28,16 +28,16 @@ from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementStatus,
     RequirementTitle,
 )
-from smb_requirement_agent.domain.shared.actors import (
-    ActorId,
-    ActorSnapshot,
-)
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
 from smb_requirement_agent.infrastructure.persistence.postgres_ai_jobs import (
     PostgresAiJobStore,
     PostgresNotificationRepository,
 )
+from smb_requirement_agent.shared_kernel.actors import (
+    ActorId,
+    ActorSnapshot,
+)
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.integration.postgres_fixture_store import FixturePostgresStore
 
 DATABASE_URL = os.getenv("TEST_DATABASE_URL")

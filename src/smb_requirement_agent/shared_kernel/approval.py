@@ -6,9 +6,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 
-from smb_requirement_agent.domain.shared.actors import ActorSnapshot
-from smb_requirement_agent.domain.shared.errors import InvalidApprovalContentError
-from smb_requirement_agent.domain.shared.staleness import require_aware
+from smb_requirement_agent.shared_kernel.actors import ActorSnapshot
+from smb_requirement_agent.shared_kernel.errors import InvalidApprovalContentError
+from smb_requirement_agent.shared_kernel.staleness import require_aware
 
 
 def _text(value: str, field: str) -> str:

@@ -15,12 +15,12 @@ from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeFindingStatus,
     KnowledgeRelationshipKind,
 )
-from smb_requirement_agent.domain.shared.citation import PublishedReference
 from smb_requirement_agent.interfaces.api.schemas.bounds import (
     Text,
 )
 from smb_requirement_agent.interfaces.api.schemas.epic import ProvenanceResponse
 from smb_requirement_agent.interfaces.api.schemas.identity import ActorResponse
+from smb_requirement_agent.shared_kernel.citation import PublishedReference
 
 
 class KnowledgeEvidenceResponse(BaseModel):

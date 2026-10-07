@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from smb_requirement_agent.domain.shared.errors import InvalidRequirementIdError
+from smb_requirement_agent.shared_kernel.errors import InvalidRequirementIdError
 
 
 @dataclass(frozen=True)

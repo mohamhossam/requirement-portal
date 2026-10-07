@@ -11,7 +11,7 @@ import hashlib
 from dataclasses import dataclass
 from datetime import date
 
-from smb_requirement_agent.domain.shared.citation import PublishedReference, normalize_search
+from smb_requirement_agent.shared_kernel.citation import PublishedReference, normalize_search
 
 
 @dataclass(frozen=True)

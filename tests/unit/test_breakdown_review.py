@@ -31,20 +31,6 @@ from smb_requirement_agent.domain.review.errors import (
     FlagResolutionNotAllowedError,
     InvalidReviewContentError,
 )
-from smb_requirement_agent.domain.shared.actors import (
-    ActorId,
-    ActorSnapshot,
-)
-from smb_requirement_agent.domain.shared.approval import (
-    Approval,
-    ApprovalDecision,
-    ApprovalId,
-    ApprovalTarget,
-    ApprovalTargetKind,
-    ReviewComment,
-)
-from smb_requirement_agent.domain.shared.errors import InvalidApprovalContentError
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.domain.story.entities import UserStory
 from smb_requirement_agent.domain.story.quality import (
     FindingSource,
@@ -59,6 +45,20 @@ from smb_requirement_agent.infrastructure.persistence.review_payloads import (
 )
 from smb_requirement_agent.interfaces.api.container import build_container
 from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.shared_kernel.actors import (
+    ActorId,
+    ActorSnapshot,
+)
+from smb_requirement_agent.shared_kernel.approval import (
+    Approval,
+    ApprovalDecision,
+    ApprovalId,
+    ApprovalTarget,
+    ApprovalTargetKind,
+    ReviewComment,
+)
+from smb_requirement_agent.shared_kernel.errors import InvalidApprovalContentError
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.unit.workflow_helpers import generate_story_tree, post_analysis
 
 NOW = datetime(2026, 9, 3, 12, tzinfo=UTC)

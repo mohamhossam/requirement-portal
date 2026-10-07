@@ -29,12 +29,6 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     QuestionId,
 )
 from smb_requirement_agent.domain.requirement.value_objects import RequirementVersion
-from smb_requirement_agent.domain.shared.actors import (
-    ActorId,
-    ActorProfile,
-)
-from smb_requirement_agent.domain.shared.generation import Provenance
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.analysis_payloads import (
     analysis_from_payload,
     analysis_round_from_payload,
@@ -42,6 +36,12 @@ from smb_requirement_agent.infrastructure.persistence.analysis_payloads import (
     clarification_question_from_payload,
     clarification_question_to_payload,
 )
+from smb_requirement_agent.shared_kernel.actors import (
+    ActorId,
+    ActorProfile,
+)
+from smb_requirement_agent.shared_kernel.generation import Provenance
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 NOW = datetime(2026, 9, 3, 12, 0, tzinfo=UTC)
 OWNER = ActorProfile(ActorId("owner"), "Owner", "owner@example.test")

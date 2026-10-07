@@ -47,13 +47,13 @@ from smb_requirement_agent.domain.review.entities import (
     FlagStatus,
 )
 from smb_requirement_agent.domain.revision.entities import BreakdownRevision, RequirementRevision
-from smb_requirement_agent.domain.shared.actors import ActorSnapshot
-from smb_requirement_agent.domain.shared.approval import (
+from smb_requirement_agent.shared_kernel.actors import ActorSnapshot
+from smb_requirement_agent.shared_kernel.approval import (
     Approval,
     ApprovalDecision,
     ApprovalTargetKind,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 def _event_id(*parts: object) -> str:

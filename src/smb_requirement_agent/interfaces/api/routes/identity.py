@@ -9,12 +9,6 @@ from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessView,
     SearchKnownActors,
 )
-from smb_requirement_agent.domain.shared.actors import (
-    ActorId,
-    ActorProfile,
-    ActorSnapshot,
-)
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.interfaces.api.dependencies import (
     ContainerDep,
     CurrentActorDep,
@@ -32,6 +26,12 @@ from smb_requirement_agent.interfaces.api.schemas.identity import (
     RequirementAccessResponse,
     TransferOwnershipRequest,
 )
+from smb_requirement_agent.shared_kernel.actors import (
+    ActorId,
+    ActorProfile,
+    ActorSnapshot,
+)
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 public_router = APIRouter(prefix="/identity", tags=["identity"])
 router = APIRouter(

@@ -49,10 +49,6 @@ from smb_requirement_agent.application.use_cases.source_impact import SourceImpa
 from smb_requirement_agent.application.use_cases.unified_knowledge_search import (
     UnifiedKnowledgeSearch,
 )
-from smb_requirement_agent.domain.shared.actors import (
-    ActorId,
-    ActorProfile,
-)
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.documents.ingestion_loop import IngestionLoop
 from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import (
@@ -64,6 +60,10 @@ from smb_requirement_agent.infrastructure.persistence.knowledge_payloads import 
 from smb_requirement_agent.interfaces.api.composition.knowledge_service import KnowledgeService
 from smb_requirement_agent.interfaces.api.composition.llm import LLMAdapters
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
+from smb_requirement_agent.shared_kernel.actors import (
+    ActorId,
+    ActorProfile,
+)
 
 # The actor recorded on jobs the system schedules for itself.
 _AUTOMATIC_ACTOR = ActorProfile(

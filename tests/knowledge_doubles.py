@@ -32,10 +32,6 @@ from smb_requirement_agent.domain.document.reference import (
     CurrentPublication,
     ReferenceDocumentState,
 )
-from smb_requirement_agent.domain.shared.citation import (
-    PublishedReference,
-    normalize_search,
-)
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.knowledge_client import (
     OFFLINE_RELEASE_ID,
@@ -48,6 +44,10 @@ from smb_requirement_agent.infrastructure.persistence.knowledge_payloads import 
 )
 from smb_requirement_agent.interfaces.api.composition.knowledge_service import KnowledgeService
 from smb_requirement_agent.interfaces.api.container import Container, build_container
+from smb_requirement_agent.shared_kernel.citation import (
+    PublishedReference,
+    normalize_search,
+)
 
 _WORDS = re.compile(r"\w+")
 

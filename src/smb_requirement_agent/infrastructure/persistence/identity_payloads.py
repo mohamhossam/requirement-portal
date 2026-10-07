@@ -12,7 +12,6 @@ from smb_requirement_agent.domain.identity.entities import (
     RequirementAccess,
     RequirementAssignment,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.payload_fields import (
     JsonObject,
     json_array,
@@ -25,6 +24,7 @@ from smb_requirement_agent.infrastructure.persistence.shared_payloads import (
     actor_fields_to_payload,
     as_snapshot,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 def access_to_payload(value: RequirementAccess) -> JsonObject:

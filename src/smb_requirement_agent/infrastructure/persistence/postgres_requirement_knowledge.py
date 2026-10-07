@@ -31,16 +31,16 @@ from smb_requirement_agent.domain.knowledge.entities import (
     RelationshipEvidence,
 )
 from smb_requirement_agent.domain.knowledge.errors import KnowledgeFindingConflictError
-from smb_requirement_agent.domain.shared.actors import (
+from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
+from smb_requirement_agent.infrastructure.persistence.postgres_values import _integer
+from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorSnapshot,
 )
-from smb_requirement_agent.domain.shared.citation import PublishedReference
-from smb_requirement_agent.domain.shared.generation import Provenance
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
-from smb_requirement_agent.domain.shared.lineage import SourceLineage
-from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
-from smb_requirement_agent.infrastructure.persistence.postgres_values import _integer
+from smb_requirement_agent.shared_kernel.citation import PublishedReference
+from smb_requirement_agent.shared_kernel.generation import Provenance
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.lineage import SourceLineage
 
 
 class PostgresRequirementKnowledgeStore:

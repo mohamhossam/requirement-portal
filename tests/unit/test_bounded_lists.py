@@ -28,14 +28,14 @@ from smb_requirement_agent.domain.jobs.entities import (
     NotificationId,
     NotificationKind,
 )
-from smb_requirement_agent.domain.shared.actors import (
-    ActorId,
-    ActorSnapshot,
-)
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.shared_kernel.actors import (
+    ActorId,
+    ActorSnapshot,
+)
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.conftest import FAKE_PROVIDER_SETTINGS
 
 # After any real clock, so the automatic screen (real-clock timestamped) is always oldest.

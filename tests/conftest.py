@@ -32,8 +32,6 @@ from smb_requirement_agent.application.use_cases.invalidate_derived_artifacts im
     InvalidateDerivedArtifacts,
 )
 from smb_requirement_agent.domain.knowledge.entities import KnowledgeScreen, KnowledgeScreenId
-from smb_requirement_agent.domain.shared.generation import Provenance
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_audit_repository import (
@@ -60,6 +58,8 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_story_repository
 )
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.shared_kernel.generation import Provenance
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 # The application resolves settings during startup, which TestClient triggers.
 # Default the suite to the fake provider so no test needs provider credentials.

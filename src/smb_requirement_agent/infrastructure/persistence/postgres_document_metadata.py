@@ -9,7 +9,6 @@ from smb_requirement_agent.application.errors import (
 )
 from smb_requirement_agent.domain.document.entities import SourceDocument
 from smb_requirement_agent.domain.document.value_objects import DocumentId
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.document_payloads import (
     document_from_payload,
     document_to_payload,
@@ -18,6 +17,7 @@ from smb_requirement_agent.infrastructure.persistence.postgres_session import Po
 from smb_requirement_agent.infrastructure.persistence.postgres_values import (
     _payload,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 class PostgresDocumentRepository:

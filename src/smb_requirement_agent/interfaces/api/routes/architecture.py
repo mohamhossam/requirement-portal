@@ -13,7 +13,6 @@ from smb_requirement_agent.application.use_cases.architecture_mapping import (
 from smb_requirement_agent.application.use_cases.architecture_mapping_jobs import (
     ArchitectureMappingJobs,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     KnowledgeActorDep,
@@ -29,6 +28,7 @@ from smb_requirement_agent.interfaces.api.schemas.architecture import (
     FeatureArchitectureMappingResponse,
     StoryArchitectureMappingResponse,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 router = APIRouter(
     prefix="/requirements",

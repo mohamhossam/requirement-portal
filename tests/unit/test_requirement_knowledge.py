@@ -53,8 +53,6 @@ from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementStatus,
     RequirementTitle,
 )
-from smb_requirement_agent.domain.shared.actors import ActorId
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import (
     FakeKnowledgeEmbedding,
@@ -63,6 +61,8 @@ from smb_requirement_agent.infrastructure.persistence.requirement_knowledge_repo
     InMemoryRequirementKnowledgeStore,
 )
 from smb_requirement_agent.interfaces.api.container import Container
+from smb_requirement_agent.shared_kernel.actors import ActorId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.unit.access_service import access_service_for
 from tests.unit.workflow_helpers import drain_requirement_index
 

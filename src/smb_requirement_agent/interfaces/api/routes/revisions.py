@@ -15,8 +15,6 @@ from smb_requirement_agent.application.use_cases.revision_history import (
     GetRevisionHistory,
 )
 from smb_requirement_agent.domain.revision.entities import BreakdownRevision, RevisionNumber
-from smb_requirement_agent.domain.shared.generation import GenerationStatus
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     get_compare_breakdown_versions,
@@ -31,6 +29,8 @@ from smb_requirement_agent.interfaces.api.schemas.revisions import (
     RequirementRevisionResponse,
     RevisionHistoryResponse,
 )
+from smb_requirement_agent.shared_kernel.generation import GenerationStatus
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 router = APIRouter(
     prefix="/requirements", tags=["revisions"], dependencies=[Depends(require_authenticated_actor)]

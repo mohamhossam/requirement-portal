@@ -25,11 +25,11 @@ from smb_requirement_agent.application.use_cases.breakdown_review_evidence impor
 )
 from smb_requirement_agent.domain.requirement.value_objects import RequirementStatus
 from smb_requirement_agent.domain.review.entities import BreakdownStatus
-from smb_requirement_agent.domain.shared.actors import (
+from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorSnapshot,
 )
-from smb_requirement_agent.domain.shared.generation import GenerationStatus
+from smb_requirement_agent.shared_kernel.generation import GenerationStatus
 
 
 class WorkflowStage(StrEnum):

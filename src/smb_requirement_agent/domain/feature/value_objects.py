@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 from smb_requirement_agent.domain.feature.errors import InvalidFeatureContentError
-from smb_requirement_agent.domain.shared.generation import GenerationStatus, Provenance
+from smb_requirement_agent.shared_kernel.generation import GenerationStatus, Provenance
 
 # Aliases, not parallel definitions: a Feature's status and provenance are the
 # shared ones, so a Feature status can never fail to compare equal to an Epic's.

@@ -8,7 +8,6 @@ from smb_requirement_agent.domain.feature.value_objects import (
     DeliveryDrop,
     SplittingPattern,
 )
-from smb_requirement_agent.domain.shared.generation import GenerationStatus
 from smb_requirement_agent.interfaces.api.schemas.architecture import ArchitectureImpactResponse
 from smb_requirement_agent.interfaces.api.schemas.bounds import (
     Name,
@@ -17,6 +16,7 @@ from smb_requirement_agent.interfaces.api.schemas.bounds import (
 from smb_requirement_agent.interfaces.api.schemas.epic import ProvenanceResponse, StalenessResponse
 from smb_requirement_agent.interfaces.api.schemas.generation import ActionAvailabilityResponse
 from smb_requirement_agent.interfaces.api.schemas.governance import ApprovalResponse
+from smb_requirement_agent.shared_kernel.generation import GenerationStatus
 
 
 class EditFeatureRequest(BaseModel):

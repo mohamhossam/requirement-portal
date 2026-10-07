@@ -11,9 +11,9 @@ from smb_requirement_agent.domain.identity.errors import (
     InvalidIdentityError,
     RequirementAccessConflictError,
 )
-from smb_requirement_agent.domain.shared.actors import ActorId, ActorProfile, ActorSnapshot
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
-from smb_requirement_agent.domain.shared.staleness import require_aware
+from smb_requirement_agent.shared_kernel.actors import ActorId, ActorProfile, ActorSnapshot
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.staleness import require_aware
 
 
 class AssignmentRole(StrEnum):

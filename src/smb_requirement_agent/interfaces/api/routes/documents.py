@@ -29,7 +29,6 @@ from smb_requirement_agent.domain.document.value_objects import (
     EvidenceBlockKind,
     ExtractionWarningSeverity,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     get_attachment_ingestion,
@@ -53,6 +52,7 @@ from smb_requirement_agent.interfaces.api.schemas.documents import (
     SetDocumentInclusionRequest,
     SetHiddenWorksheetInclusionRequest,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 router = APIRouter(tags=["documents"], dependencies=[Depends(require_authenticated_actor)])
 

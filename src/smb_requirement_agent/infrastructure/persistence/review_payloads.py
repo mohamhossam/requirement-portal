@@ -25,7 +25,6 @@ from smb_requirement_agent.domain.review.entities import (
     Risk,
     RiskId,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.payload_fields import (
     JsonObject,
     item_text,
@@ -46,6 +45,7 @@ from smb_requirement_agent.infrastructure.persistence.shared_payloads import (
     comment_to_payload,
     quality_assessment_from_payload,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 def review_to_payload(value: BreakdownReview) -> JsonObject:

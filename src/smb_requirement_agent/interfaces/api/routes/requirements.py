@@ -45,8 +45,6 @@ from smb_requirement_agent.application.use_cases.update_requirement import (
 )
 from smb_requirement_agent.domain.requirement.entities import Requirement, RequirementDraft
 from smb_requirement_agent.domain.requirement.value_objects import RequirementContext
-from smb_requirement_agent.domain.shared.actors import ActorId
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     RequirementCommandsDep,
@@ -83,6 +81,8 @@ from smb_requirement_agent.interfaces.api.schemas.requirements import (
     UpdateRequirementRequest,
     WorkflowStatusCountsResponse,
 )
+from smb_requirement_agent.shared_kernel.actors import ActorId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 router = APIRouter(
     prefix="/requirements",

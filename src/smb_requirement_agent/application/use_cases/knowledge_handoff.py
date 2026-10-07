@@ -34,7 +34,7 @@ from smb_requirement_agent.application.use_cases.export_breakdown import (
     approved_backlog_document,
     formal_final_approval,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 LEASE = timedelta(minutes=5)
 FIRST_RETRY = timedelta(minutes=1)

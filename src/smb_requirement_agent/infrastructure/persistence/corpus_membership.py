@@ -18,12 +18,12 @@ from smb_requirement_agent.domain.knowledge.membership import (
     CorpusMembership,
     CorpusState,
 )
-from smb_requirement_agent.domain.shared.actors import (
+from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
+from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorSnapshot,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
-from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 _MEMBERSHIP = (
     "SELECT requirement_id, state, reason, actor_id, actor_name, changed_at "

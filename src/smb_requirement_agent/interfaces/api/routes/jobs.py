@@ -18,7 +18,6 @@ from smb_requirement_agent.domain.jobs.entities import (
     AiJobOperation,
     NotificationId,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     get_ai_jobs,
@@ -38,6 +37,7 @@ from smb_requirement_agent.interfaces.api.schemas.jobs import (
     NotificationResponse,
     RetryAiJobRequest,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 router = APIRouter(
     prefix="/requirements",

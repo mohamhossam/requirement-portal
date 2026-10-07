@@ -34,7 +34,6 @@ from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeRelationshipKind,
 )
 from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.llm.prompts.knowledge_prompt import (
     RELATIONSHIP_SYSTEM_PROMPT,
     SCREEN_PROMPT_VERSION,
@@ -55,6 +54,7 @@ from smb_requirement_agent.infrastructure.llm.schemas.knowledge_schema import (
 from smb_requirement_agent.infrastructure.llm.schemas.prior_art_schema import (
     PriorArtJudgementSchema,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 EMBEDDING_DIMENSIONS = 768
 LOCAL_KNOWLEDGE_MAX_OUTPUT_TOKENS = 2048

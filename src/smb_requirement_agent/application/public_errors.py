@@ -129,17 +129,17 @@ from smb_requirement_agent.domain.review.errors import (
     InvalidReviewTransitionError,
 )
 from smb_requirement_agent.domain.revision.errors import InvalidRevisionError, RevisionNotFoundError
-from smb_requirement_agent.domain.shared.errors import (
-    InvalidApprovalContentError,
-    InvalidGeneratedContentError,
-    InvalidRequirementIdError,
-)
 from smb_requirement_agent.domain.story.errors import (
     FeatureNotReadyForStoriesError,
     InvalidStoryContentError,
     StoriesAlreadyExistError,
     StoryProposalConflictError,
     StoryRegenerationConflictError,
+)
+from smb_requirement_agent.shared_kernel.errors import (
+    InvalidApprovalContentError,
+    InvalidGeneratedContentError,
+    InvalidRequirementIdError,
 )
 
 

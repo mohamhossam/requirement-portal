@@ -15,9 +15,9 @@ from smb_requirement_agent.application.ports.source_dependencies import (
 )
 from smb_requirement_agent.application.use_cases.source_lineage import analysis_lineage
 from smb_requirement_agent.domain.requirement.value_objects import RequirementStatus
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
-from smb_requirement_agent.domain.shared.lineage import SourceLineage
 from smb_requirement_agent.domain.story.entities import UserStory
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.lineage import SourceLineage
 
 
 def fingerprint(value: object) -> str:

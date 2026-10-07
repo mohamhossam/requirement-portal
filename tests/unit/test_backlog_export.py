@@ -41,14 +41,14 @@ from smb_requirement_agent.domain.identity.entities import (
 from smb_requirement_agent.domain.identity.errors import AuthorizationDeniedError
 from smb_requirement_agent.domain.review.entities import BreakdownStatus
 from smb_requirement_agent.domain.revision.entities import RevisionNumber
-from smb_requirement_agent.domain.shared.actors import (
-    ActorId,
-    ActorProfile,
-)
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.exports.json_exporter import JsonBacklogExporter
 from smb_requirement_agent.infrastructure.exports.xlsx_exporter import XlsxBacklogExporter
 from smb_requirement_agent.interfaces.api.container import Container
+from smb_requirement_agent.shared_kernel.actors import (
+    ActorId,
+    ActorProfile,
+)
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.unit.access_service import access_service_for
 from tests.unit.workflow_helpers import approve_fake_breakdown, post_analysis
 

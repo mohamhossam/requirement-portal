@@ -39,8 +39,8 @@ from smb_requirement_agent.domain.epic.value_objects import (
     EpicProvenance,
     EpicStatus,
 )
-from smb_requirement_agent.domain.shared.actors import ActorProfile
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.actors import ActorProfile
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 @dataclass(frozen=True)

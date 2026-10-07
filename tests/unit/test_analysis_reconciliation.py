@@ -34,12 +34,12 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     QuestionChangeAction,
     QuestionId,
 )
-from smb_requirement_agent.domain.shared.generation import Provenance
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.llm.fake_requirement_analyzer import (
     FakeRequirementAnalyzer,
 )
 from smb_requirement_agent.interfaces.api.container import build_container
+from smb_requirement_agent.shared_kernel.generation import Provenance
 from tests.conftest import FAKE_PROVIDER_SETTINGS
 
 Round = tuple[RequirementAnalysis, RequirementAnalysisCandidate, tuple[ClarificationQuestion, ...]]

@@ -34,7 +34,6 @@ from smb_requirement_agent.domain.architecture.entities import (
     SystemReference,
 )
 from smb_requirement_agent.domain.architecture.errors import InvalidArchitectureContentError
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.knowledge_client import OFFLINE_RELEASE_ID
 from smb_requirement_agent.infrastructure.persistence.backlog_payloads import (
@@ -44,6 +43,7 @@ from smb_requirement_agent.infrastructure.persistence.backlog_payloads import (
     story_to_payload,
 )
 from smb_requirement_agent.interfaces.api.container import Container, build_container
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.conftest import FAKE_PROVIDER_SETTINGS
 from tests.knowledge_doubles import PublishedLibrary, service_for, sync
 from tests.unit.workflow_helpers import (

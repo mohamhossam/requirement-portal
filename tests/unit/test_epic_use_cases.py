@@ -45,7 +45,6 @@ from smb_requirement_agent.domain.epic.errors import (
 )
 from smb_requirement_agent.domain.epic.value_objects import EpicStatus, StaleReason
 from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.llm.fake_epic_generator import (
     FAKE_MODEL,
@@ -84,6 +83,7 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_story_repository
     InMemoryStoryChangeProposalRepository,
     InMemoryStoryRepository,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.conftest import (
     AcceptAllSuggestionValidator,
     NoOpAnswerSuggestionScheduler,

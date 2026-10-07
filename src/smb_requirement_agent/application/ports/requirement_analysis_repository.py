@@ -3,7 +3,7 @@
 from typing import Protocol
 
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 class RequirementAnalysisRepositoryPort(Protocol):

@@ -15,14 +15,14 @@ from smb_requirement_agent.domain.feature.value_objects import (
     SplittingPattern,
     SplittingRationale,
 )
-from smb_requirement_agent.domain.shared.actions import ActionAvailability
-from smb_requirement_agent.domain.shared.approval import (
+from smb_requirement_agent.shared_kernel.actions import ActionAvailability
+from smb_requirement_agent.shared_kernel.approval import (
     Approval,
     ApprovalDecision,
     ApprovalTargetKind,
 )
-from smb_requirement_agent.domain.shared.errors import InvalidApprovalContentError
-from smb_requirement_agent.domain.shared.generation import GenerationStatus, ReviewableGeneration
+from smb_requirement_agent.shared_kernel.errors import InvalidApprovalContentError
+from smb_requirement_agent.shared_kernel.generation import GenerationStatus, ReviewableGeneration
 
 
 @dataclass(frozen=True, kw_only=True)

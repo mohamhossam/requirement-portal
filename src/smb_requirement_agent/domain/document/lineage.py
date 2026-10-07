@@ -8,8 +8,8 @@ from datetime import datetime
 from enum import StrEnum
 
 from smb_requirement_agent.domain.document.errors import InvalidDocumentError
-from smb_requirement_agent.domain.shared.actors import ActorSnapshot
-from smb_requirement_agent.domain.shared.staleness import require_aware
+from smb_requirement_agent.shared_kernel.actors import ActorSnapshot
+from smb_requirement_agent.shared_kernel.staleness import require_aware
 
 
 class ImpactDecisionKind(StrEnum):

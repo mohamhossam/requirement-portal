@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from smb_requirement_agent.domain.shared.errors import InvalidGeneratedContentError
+from smb_requirement_agent.shared_kernel.errors import InvalidGeneratedContentError
 
 
 @dataclass(frozen=True)

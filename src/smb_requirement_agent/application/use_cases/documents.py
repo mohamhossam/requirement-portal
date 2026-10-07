@@ -49,8 +49,8 @@ from smb_requirement_agent.domain.requirement.entities import (
     Requirement,
     RequirementDraft,
 )
-from smb_requirement_agent.domain.shared.actors import ActorProfile
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.actors import ActorProfile
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 SUPPORTED_EXTENSIONS: dict[str, str | tuple[str, ...]] = {
     "text/csv": ".csv",

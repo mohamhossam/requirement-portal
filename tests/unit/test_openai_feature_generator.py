@@ -30,12 +30,12 @@ from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementStatus,
     RequirementTitle,
 )
-from smb_requirement_agent.domain.shared.generation import Provenance
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.llm.openai_adapters import (
     OpenAIFeatureGenerator,
 )
 from smb_requirement_agent.infrastructure.llm.prompts.feature_prompt import PROMPT_VERSION
+from smb_requirement_agent.shared_kernel.generation import Provenance
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 GENERATED_AT = datetime(2026, 1, 1, tzinfo=UTC)
 

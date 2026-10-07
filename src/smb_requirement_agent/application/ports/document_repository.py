@@ -4,7 +4,7 @@ from typing import Protocol
 
 from smb_requirement_agent.domain.document.entities import SourceDocument
 from smb_requirement_agent.domain.document.value_objects import DocumentId
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 class DocumentRepositoryPort(Protocol):

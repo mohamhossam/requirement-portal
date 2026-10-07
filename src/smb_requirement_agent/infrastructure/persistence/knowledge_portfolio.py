@@ -37,11 +37,11 @@ from smb_requirement_agent.application.ports.requirement_repository import (
 from smb_requirement_agent.domain.knowledge.entities import KnowledgeFinding
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.requirement.value_objects import RequirementStatus
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 from smb_requirement_agent.infrastructure.persistence.requirement_knowledge_repository import (
     InMemoryRequirementKnowledgeStore,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 _IN_FORCE = """
     COALESCE(f.payload->>'status', 'open') IN ('open', 'resolution_pending')

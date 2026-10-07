@@ -27,7 +27,7 @@ from smb_requirement_agent.application.use_cases.requirement_sources import (
 from smb_requirement_agent.domain.requirement.entities import Requirement, RequirementDraft
 from smb_requirement_agent.domain.requirement.intake_limits import require_within_intake_limits
 from smb_requirement_agent.domain.requirement.value_objects import RequirementVersion
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 @dataclass(frozen=True)

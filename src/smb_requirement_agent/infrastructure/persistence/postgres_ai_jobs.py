@@ -24,13 +24,13 @@ from smb_requirement_agent.domain.jobs.entities import (
     NotificationPreference,
 )
 from smb_requirement_agent.domain.jobs.errors import AiJobConflictError
-from smb_requirement_agent.domain.shared.actors import (
+from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
+from smb_requirement_agent.infrastructure.persistence.postgres_values import DbConnection
+from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorSnapshot,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
-from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
-from smb_requirement_agent.infrastructure.persistence.postgres_values import DbConnection
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 class PostgresAiJobStore:

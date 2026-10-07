@@ -14,7 +14,7 @@ from smb_requirement_agent.domain.analysis.errors import (
     InvalidClarificationTransitionError,
 )
 from smb_requirement_agent.domain.analysis.value_objects import AnalysisId, QuestionId
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 class InMemoryAnalysisAuditRepository(AnalysisAuditRepositoryPort):

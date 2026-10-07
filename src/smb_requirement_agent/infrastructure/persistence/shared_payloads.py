@@ -25,21 +25,6 @@ from smb_requirement_agent.domain.architecture.entities import (
     SystemReference,
 )
 from smb_requirement_agent.domain.architecture.knowledge import RelationshipKind
-from smb_requirement_agent.domain.shared.actors import (
-    ActorId,
-    ActorProfile,
-    ActorSnapshot,
-)
-from smb_requirement_agent.domain.shared.approval import (
-    Approval,
-    ApprovalDecision,
-    ApprovalId,
-    ApprovalTarget,
-    ApprovalTargetKind,
-    ReviewComment,
-)
-from smb_requirement_agent.domain.shared.generation import GenerationStatus, Provenance
-from smb_requirement_agent.domain.shared.staleness import Staleness, StaleReason
 from smb_requirement_agent.domain.story.quality import (
     FindingSource,
     InvestAssessment,
@@ -58,6 +43,21 @@ from smb_requirement_agent.infrastructure.persistence.payload_fields import (
     optional_json_array,
     required_text,
 )
+from smb_requirement_agent.shared_kernel.actors import (
+    ActorId,
+    ActorProfile,
+    ActorSnapshot,
+)
+from smb_requirement_agent.shared_kernel.approval import (
+    Approval,
+    ApprovalDecision,
+    ApprovalId,
+    ApprovalTarget,
+    ApprovalTargetKind,
+    ReviewComment,
+)
+from smb_requirement_agent.shared_kernel.generation import GenerationStatus, Provenance
+from smb_requirement_agent.shared_kernel.staleness import Staleness, StaleReason
 
 
 def actor_to_payload(value: ActorProfile) -> JsonObject:

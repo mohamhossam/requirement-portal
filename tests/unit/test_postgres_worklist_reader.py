@@ -21,11 +21,11 @@ from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementStatus,
     RequirementTitle,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
 from smb_requirement_agent.infrastructure.persistence.postgres_worklist import (
     PostgresRequirementWorklistReader,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 NOW = datetime(2026, 9, 8, 12, tzinfo=UTC)
 

@@ -10,7 +10,7 @@ from smb_requirement_agent.domain.jobs.entities import (
     NotificationId,
     NotificationPreference,
 )
-from smb_requirement_agent.domain.shared.actors import ActorId
+from smb_requirement_agent.shared_kernel.actors import ActorId
 
 
 class NotificationRepositoryPort(Protocol):

@@ -12,16 +12,16 @@ from smb_requirement_agent.domain.review.errors import (
     InvalidReviewContentError,
     InvalidReviewTransitionError,
 )
-from smb_requirement_agent.domain.shared.actors import ActorSnapshot
-from smb_requirement_agent.domain.shared.approval import (
+from smb_requirement_agent.domain.story.quality import InvestAssessment
+from smb_requirement_agent.shared_kernel.actors import ActorSnapshot
+from smb_requirement_agent.shared_kernel.approval import (
     Approval,
     ApprovalDecision,
     ApprovalTargetKind,
     ReviewComment,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
-from smb_requirement_agent.domain.shared.staleness import require_aware
-from smb_requirement_agent.domain.story.quality import InvestAssessment
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.staleness import require_aware
 
 
 def _text(value: str, field: str) -> str:

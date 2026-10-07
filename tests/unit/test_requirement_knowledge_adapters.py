@@ -32,8 +32,6 @@ from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementStatus,
     RequirementTitle,
 )
-from smb_requirement_agent.domain.shared.citation import PublishedReference
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.llm.prompts.knowledge_prompt import (
     SUGGESTION_SYSTEM_PROMPT,
     suggestion_prompt,
@@ -46,6 +44,8 @@ from smb_requirement_agent.infrastructure.llm.schemas.knowledge_schema import (
     AnswerSuggestionListSchema,
     AnswerSuggestionSchema,
 )
+from smb_requirement_agent.shared_kernel.citation import PublishedReference
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 def _requirement() -> Requirement:

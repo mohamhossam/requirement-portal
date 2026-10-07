@@ -29,7 +29,7 @@ from smb_requirement_agent.application.use_cases.source_impact import (
     DependencyImpactPage,
     SourceImpactReview,
 )
-from smb_requirement_agent.domain.shared.actors import (
+from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,
 )

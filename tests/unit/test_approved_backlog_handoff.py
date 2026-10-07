@@ -32,7 +32,6 @@ from smb_requirement_agent.domain.revision.entities import (
     RequirementRevision,
     RevisionNumber,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.knowledge_client import (
     FakeArchitectureKnowledge,
     FakeKnowledgeEvents,
@@ -45,6 +44,7 @@ from smb_requirement_agent.infrastructure.persistence.backlog_handoffs import (
 from smb_requirement_agent.interfaces.api.composition.knowledge_service import KnowledgeService
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.conftest import FAKE_PROVIDER_SETTINGS
 from tests.unit.workflow_helpers import approve_fake_breakdown
 

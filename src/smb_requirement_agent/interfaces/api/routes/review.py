@@ -14,7 +14,6 @@ from smb_requirement_agent.application.use_cases.breakdown_review import (
 )
 from smb_requirement_agent.application.use_cases.story_quality import SuggestStorySplit
 from smb_requirement_agent.domain.review.entities import FlagId, ReviewSource
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     RequirementCommandsDep,
@@ -51,6 +50,7 @@ from smb_requirement_agent.interfaces.api.schemas.story import (
     StoryQualityResponse,
     ValidationFindingResponse,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 router = APIRouter(
     prefix="/requirements",

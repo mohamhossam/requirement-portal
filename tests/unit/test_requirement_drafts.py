@@ -16,7 +16,6 @@ from smb_requirement_agent.application.use_cases.requirement_drafts import (
     RequirementDraftInput,
     SaveRequirementDraft,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.in_memory_document_repository import (
     InMemoryDocumentRepository,
 )
@@ -26,6 +25,7 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_requirement_draf
 from smb_requirement_agent.infrastructure.persistence.in_memory_requirement_repository import (
     InMemoryRequirementRepository,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.unit.transaction_stub import NoOpTransactionManager
 from tests.unit.workflow_helpers import post_analysis
 

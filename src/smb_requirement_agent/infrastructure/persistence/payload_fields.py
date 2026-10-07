@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import cast
 
 from smb_requirement_agent.domain.requirement.value_objects import RequirementContext
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 type JsonObject = dict[str, object]
 

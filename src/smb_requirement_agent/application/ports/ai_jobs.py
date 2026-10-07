@@ -7,8 +7,8 @@ from datetime import datetime
 from typing import Protocol
 
 from smb_requirement_agent.domain.jobs.entities import AiJob, AiJobId, AiJobOperation
-from smb_requirement_agent.domain.shared.actors import ActorId
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.actors import ActorId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 type JsonScalar = str | int | float | bool | None
 type JsonValue = JsonScalar | list[JsonValue] | dict[str, JsonValue]

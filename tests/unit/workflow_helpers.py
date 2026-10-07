@@ -6,8 +6,8 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from httpx2 import Response
 
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.interfaces.api.container import Container
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 def post_analysis(

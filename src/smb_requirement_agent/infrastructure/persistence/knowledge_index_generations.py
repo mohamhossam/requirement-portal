@@ -13,10 +13,10 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
     RequirementKnowledgeIndexPort,
 )
 from smb_requirement_agent.domain.knowledge.entities import KnowledgeChunk, KnowledgeMatch
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.persistence.requirement_knowledge_repository import (
     InMemoryRequirementKnowledgeStore,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 class InMemoryKnowledgeIndexGenerations:

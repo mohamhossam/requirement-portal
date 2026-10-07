@@ -22,7 +22,7 @@ from smb_requirement_agent.application.ports.requirement_worklist import (
     RequirementWorklistSnapshot,
 )
 from smb_requirement_agent.application.ports.story_repository import StoryRepositoryPort
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 class InMemoryCurrentWorklistProjection(CurrentWorklistProjectionPort):

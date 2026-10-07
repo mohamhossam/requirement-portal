@@ -76,12 +76,12 @@ from smb_requirement_agent.domain.jobs.entities import (
 )
 from smb_requirement_agent.domain.jobs.errors import AiJobConflictError
 from smb_requirement_agent.domain.review.entities import FlagId
-from smb_requirement_agent.domain.shared.actors import (
+from smb_requirement_agent.domain.story.entities import StoryChangeOperation
+from smb_requirement_agent.domain.story.value_objects import StoryId
+from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,
 )
-from smb_requirement_agent.domain.story.entities import StoryChangeOperation
-from smb_requirement_agent.domain.story.value_objects import StoryId
 
 logger = logging.getLogger("smb_requirement_agent.ai_jobs")
 

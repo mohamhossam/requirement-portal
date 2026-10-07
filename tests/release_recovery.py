@@ -32,7 +32,6 @@ from smb_requirement_agent.application.use_cases.requirement_drafts import Requi
 from smb_requirement_agent.domain.analysis.value_objects import IntentProposalStatus
 from smb_requirement_agent.domain.document.value_objects import DocumentId
 from smb_requirement_agent.domain.identity.errors import AuthorizationDeniedError
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.config.options import (
     LLMProvider,
     PersistenceProvider,
@@ -44,6 +43,7 @@ from smb_requirement_agent.interfaces.api.composition.operations import (
     build_projection_rebuild,
 )
 from smb_requirement_agent.interfaces.api.container import Container, build_container
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.knowledge_doubles import PublishedLibrary, service_for, sync
 
 DATABASE_PREFIX = "codex_qualification_test_"

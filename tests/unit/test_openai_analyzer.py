@@ -23,11 +23,6 @@ from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementStatus,
     RequirementTitle,
 )
-from smb_requirement_agent.domain.shared.actors import (
-    ActorId,
-    ActorSnapshot,
-)
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.llm.openai_adapters import (
     OpenAIRequirementAnalyzer,
 )
@@ -39,6 +34,11 @@ from smb_requirement_agent.infrastructure.llm.schemas.analysis_schema import (
     RequirementAnalysisSchema,
     UncertaintySchema,
 )
+from smb_requirement_agent.shared_kernel.actors import (
+    ActorId,
+    ActorSnapshot,
+)
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.conftest import TEST_NOW
 
 

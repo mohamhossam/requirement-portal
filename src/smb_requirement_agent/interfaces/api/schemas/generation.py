@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from smb_requirement_agent.domain.shared.actions import ActionAvailability
 from smb_requirement_agent.interfaces.api.schemas.bounds import MAX_IDENTIFIER_CHARACTERS
+from smb_requirement_agent.shared_kernel.actions import ActionAvailability
 
 
 class GenerationRequest(BaseModel):

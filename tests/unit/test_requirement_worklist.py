@@ -58,9 +58,6 @@ from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementTitle,
 )
 from smb_requirement_agent.domain.review.entities import BreakdownReview, BreakdownStatus
-from smb_requirement_agent.domain.shared.generation import GenerationStatus, Provenance
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
-from smb_requirement_agent.domain.shared.staleness import Staleness, StaleReason
 from smb_requirement_agent.domain.story.entities import UserStory
 from smb_requirement_agent.domain.story.value_objects import (
     AcceptanceCriterion,
@@ -100,6 +97,9 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_story_repository
 from smb_requirement_agent.infrastructure.persistence.in_memory_worklist import (
     InMemoryRequirementWorklistSnapshotAdapter,
 )
+from smb_requirement_agent.shared_kernel.generation import GenerationStatus, Provenance
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.staleness import Staleness, StaleReason
 from tests.conftest import AlwaysReadyKnowledgeReview
 
 NOW = datetime(2026, 9, 2, 12, tzinfo=UTC)

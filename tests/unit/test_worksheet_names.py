@@ -111,11 +111,11 @@ def test_hidden_selection_keeps_new_positions_and_legacy_names_separate(legacy: 
         DocumentVersionId,
         ExtractionStatus,
     )
-    from smb_requirement_agent.domain.shared.identifiers import RequirementId
     from smb_requirement_agent.infrastructure.persistence.in_memory_document_repository import (
         InMemoryDocumentRepository,
         InMemoryDocumentStorage,
     )
+    from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
     content = reviewed_worksheet_names_document()
     extractor = SafeDocumentTextExtractor()

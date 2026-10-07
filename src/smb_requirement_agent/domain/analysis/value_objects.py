@@ -13,11 +13,11 @@ from smb_requirement_agent.domain.analysis.errors import (
     InvalidIntentProposalDecisionError,
     InvalidIntentProposalTransitionError,
 )
-from smb_requirement_agent.domain.shared.actors import ActorSnapshot
-from smb_requirement_agent.domain.shared.citation import PublishedReference
-from smb_requirement_agent.domain.shared.generation import Provenance
-from smb_requirement_agent.domain.shared.lineage import SourceLineage
-from smb_requirement_agent.domain.shared.staleness import require_aware
+from smb_requirement_agent.shared_kernel.actors import ActorSnapshot
+from smb_requirement_agent.shared_kernel.citation import PublishedReference
+from smb_requirement_agent.shared_kernel.generation import Provenance
+from smb_requirement_agent.shared_kernel.lineage import SourceLineage
+from smb_requirement_agent.shared_kernel.staleness import require_aware
 
 
 def _require_text(value: str, field_name: str) -> None:

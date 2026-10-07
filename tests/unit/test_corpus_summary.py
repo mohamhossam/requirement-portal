@@ -23,7 +23,6 @@ from smb_requirement_agent.application.use_cases.requirement_indexing import (
     IndexBacklogReader,
     IndexRequirementKnowledge,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.persistence.requirement_indexing import (
     MemoryRequirementIndexProgress,
@@ -33,6 +32,7 @@ from smb_requirement_agent.infrastructure.persistence.requirement_knowledge_repo
 )
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.conftest import FAKE_PROVIDER_SETTINGS
 from tests.unit.test_requirement_indexing import RecordingEmbedding, corpus
 from tests.unit.workflow_helpers import drain_requirement_index

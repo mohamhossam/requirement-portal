@@ -21,8 +21,8 @@ from smb_requirement_agent.application.use_cases.requirement_drafts import (
     SaveRequirementDraft,
 )
 from smb_requirement_agent.domain.requirement.entities import Requirement, RequirementDraft
-from smb_requirement_agent.domain.shared.actors import ActorProfile
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.actors import ActorProfile
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 class CreateOwnedRequirement:

@@ -12,7 +12,7 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     HumanClarification,
     KnownFact,
 )
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 @pytest.mark.parametrize("numbers", [(), (0,), (-1,), (1, 1), (True,)])

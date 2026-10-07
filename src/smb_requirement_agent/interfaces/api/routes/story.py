@@ -28,7 +28,6 @@ from smb_requirement_agent.application.use_cases.story_workflow import (
     StoryInput,
 )
 from smb_requirement_agent.domain.feature.value_objects import FeatureId
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.domain.story.entities import StoryChangeProposal, StoryDraft, UserStory
 from smb_requirement_agent.domain.story.quality import InvestAssessment, SpidrRecommendation
 from smb_requirement_agent.domain.story.value_objects import StoryId, StoryProposalId
@@ -82,6 +81,7 @@ from smb_requirement_agent.interfaces.api.schemas.story import (
     StorySetResponse,
     ValidationFindingResponse,
 )
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 router = APIRouter(
     prefix="/requirements", tags=["stories"], dependencies=[Depends(require_authenticated_actor)]

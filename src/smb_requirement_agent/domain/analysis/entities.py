@@ -35,15 +35,15 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     QuestionId,
 )
 from smb_requirement_agent.domain.requirement.value_objects import RequirementVersion
-from smb_requirement_agent.domain.shared.actions import ActionAvailability
-from smb_requirement_agent.domain.shared.actors import (
+from smb_requirement_agent.shared_kernel.actions import ActionAvailability
+from smb_requirement_agent.shared_kernel.actors import (
     ActorProfile,
     ActorSnapshot,
 )
-from smb_requirement_agent.domain.shared.generation import Provenance
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
-from smb_requirement_agent.domain.shared.lineage import SourceLineage
-from smb_requirement_agent.domain.shared.staleness import require_aware
+from smb_requirement_agent.shared_kernel.generation import Provenance
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.lineage import SourceLineage
+from smb_requirement_agent.shared_kernel.staleness import require_aware
 
 
 def _text(value: str, field: str) -> str:

@@ -35,7 +35,6 @@ from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.feature.entities import Feature
 from smb_requirement_agent.domain.feature.value_objects import FeatureId
 from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.domain.story.entities import UserStory
 from smb_requirement_agent.domain.story.quality import (
     FindingSource,
@@ -54,6 +53,7 @@ from smb_requirement_agent.infrastructure.persistence.backlog_payloads import (
 )
 from smb_requirement_agent.interfaces.api.container import build_container
 from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.unit.workflow_helpers import generate_story_tree
 
 

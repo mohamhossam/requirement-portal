@@ -142,12 +142,6 @@ from smb_requirement_agent.domain.review.errors import (
     InvalidReviewTransitionError,
 )
 from smb_requirement_agent.domain.revision.errors import InvalidRevisionError, RevisionNotFoundError
-from smb_requirement_agent.domain.shared.errors import (
-    InvalidApprovalContentError,
-    InvalidGeneratedContentError,
-    InvalidRequirementIdError,
-)
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.domain.story.errors import (
     FeatureNotReadyForStoriesError,
     InvalidStoryContentError,
@@ -161,6 +155,12 @@ from smb_requirement_agent.interfaces.api.error_handlers import (
     status_code_for,
 )
 from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.shared_kernel.errors import (
+    InvalidApprovalContentError,
+    InvalidGeneratedContentError,
+    InvalidRequirementIdError,
+)
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.conftest import FAKE_PROVIDER_SETTINGS
 
 

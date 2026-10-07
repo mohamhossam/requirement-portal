@@ -32,8 +32,6 @@ from smb_requirement_agent.domain.knowledge.errors import (
     RequirementRetiredError,
 )
 from smb_requirement_agent.domain.knowledge.membership import CorpusActionKind
-from smb_requirement_agent.domain.shared.actors import ActorProfile
-from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import (
     FakeKnowledgeEmbedding,
@@ -49,6 +47,8 @@ from smb_requirement_agent.infrastructure.persistence.requirement_knowledge_repo
 )
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.shared_kernel.actors import ActorProfile
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.conftest import FAKE_PROVIDER_SETTINGS
 from tests.unit.workflow_helpers import drain_requirement_index
 

@@ -10,12 +10,12 @@ from fastapi.testclient import TestClient
 
 from smb_requirement_agent.application.errors import ProviderRateLimitExceededError
 from smb_requirement_agent.application.use_cases.provider_call_rate import ProviderCallRateLimit
-from smb_requirement_agent.domain.shared.actors import (
+from smb_requirement_agent.interfaces.api.container import build_container
+from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,
 )
-from smb_requirement_agent.interfaces.api.container import build_container
-from smb_requirement_agent.interfaces.api.main import create_app
 from tests.conftest import FAKE_PROVIDER_SETTINGS
 
 START = datetime(2026, 9, 24, 12, 0, tzinfo=UTC)

@@ -20,15 +20,15 @@ from smb_requirement_agent.domain.document.attachment import (
     AttachmentUpload,
 )
 from smb_requirement_agent.domain.document.ingestion import IngestionStage
-from smb_requirement_agent.domain.shared.actors import (
-    ActorId,
-    ActorSnapshot,
-)
 from smb_requirement_agent.infrastructure.persistence.attachment_ingestions import (
     PostgresAttachmentIngestions,
 )
 from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
 from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
+from smb_requirement_agent.shared_kernel.actors import (
+    ActorId,
+    ActorSnapshot,
+)
 
 DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 pytestmark = pytest.mark.skipif(not DATABASE_URL, reason="TEST_DATABASE_URL is not configured")

@@ -26,8 +26,8 @@ from smb_requirement_agent.domain.feature.value_objects import (
     SplittingPattern,
     SplittingRationale,
 )
-from smb_requirement_agent.domain.shared.generation import Provenance
-from smb_requirement_agent.domain.shared.staleness import StaleReason
+from smb_requirement_agent.shared_kernel.generation import Provenance
+from smb_requirement_agent.shared_kernel.staleness import StaleReason
 
 GENERATED_AT = datetime(2026, 1, 1, 12, 0, tzinfo=UTC)
 CHANGED_AT = GENERATED_AT + timedelta(days=1)
