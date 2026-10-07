@@ -7,9 +7,7 @@ from dataclasses import dataclass
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
-from smb_requirement_agent.application.ports.requirement_knowledge import (
-    KnowledgeScreenSchedulerPort,
-)
+from smb_requirement_agent.application.ports.screening_requests import ScreeningRequestPort
 from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirement
 from smb_requirement_agent.application.use_cases.get_requirement import GetRequirement
 from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
@@ -54,7 +52,7 @@ def build_requirement_intake(
     clock: ClockPort,
     access: RequirementAccessService,
     events: DomainEventPublisher,
-    screen_scheduler: KnowledgeScreenSchedulerPort,
+    screen_scheduler: ScreeningRequestPort,
 ) -> RequirementIntakeWiring:
     """Each owned wrapper adds authorization and a unit of work to its base use case.
 

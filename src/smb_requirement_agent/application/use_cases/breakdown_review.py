@@ -24,6 +24,7 @@ from smb_requirement_agent.application.ports.architecture_knowledge import (
 from smb_requirement_agent.application.ports.breakdown_review_repository import (
     BreakdownReviewRepositoryPort,
 )
+from smb_requirement_agent.application.ports.candidate_review import CandidateCritique
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidencePort
@@ -60,6 +61,8 @@ from smb_requirement_agent.domain.analysis.entities import (
     RequirementAnalysis,
 )
 from smb_requirement_agent.domain.analysis.value_objects import QuestionId
+from smb_requirement_agent.domain.feature.entities import Feature
+from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.review.entities import (
     BreakdownReview,
     Decision,
@@ -138,6 +141,40 @@ class ReviewEvidenceLoader:
             questions,
             self._references.stale_analysis(analysis),
         )
+
+
+class GovernanceCandidateReview:
+    """`CandidateReviewPort` over the breakdown review rules (ADR-0103 PR 5)."""
+
+    def __init__(
+        self,
+        policy: BreakdownReviewPolicy,
+        refresher: RefreshSavedBreakdownReview,
+        clock: ClockPort,
+    ) -> None:
+        self._policy = policy
+        self._refresher = refresher
+        self._clock = clock
+
+    def critique_features(
+        self,
+        requirement: Requirement,
+        analysis: RequirementAnalysis,
+        features: tuple[Feature, ...],
+    ) -> CandidateCritique:
+        review = self._policy.build(
+            ReviewEvidence(requirement, analysis, None, features, ()),
+            (),
+            self._clock.now(),
+        )
+        return CandidateCritique(
+            has_flags=bool(review.flags),
+            feedback=tuple(flag.detail for flag in review.flags)
+            + tuple(item.rationale for item in review.recommendations),
+        )
+
+    def refresh(self, requirement_id: RequirementId) -> None:
+        self._refresher.execute(requirement_id)
 
 
 class RefreshSavedBreakdownReview:

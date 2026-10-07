@@ -10,6 +10,7 @@ from smb_requirement_agent.application.ports.architecture_knowledge import (
     ArchitectureKnowledgePort,
     ArchitectureQuery,
 )
+from smb_requirement_agent.application.ports.candidate_review import CandidateReviewPort
 from smb_requirement_agent.application.ports.generation_guidance import GenerationGuidance
 from smb_requirement_agent.application.ports.requirement_evidence_analyzer import (
     AnalysisProgressPort,
@@ -21,11 +22,6 @@ from smb_requirement_agent.application.ports.story_quality_repository import (
 from smb_requirement_agent.application.use_cases.architecture_mapping import (
     MapFeatureArchitecture,
     MapStoryArchitecture,
-)
-from smb_requirement_agent.application.use_cases.breakdown_review import RefreshSavedBreakdownReview
-from smb_requirement_agent.application.use_cases.breakdown_review_evidence import ReviewEvidence
-from smb_requirement_agent.application.use_cases.breakdown_review_policy import (
-    BreakdownReviewPolicy,
 )
 from smb_requirement_agent.application.use_cases.story_quality import (
     AssessStoryCandidate,
@@ -54,8 +50,7 @@ class GenerationChecks:
         story_mapper: MapStoryArchitecture,
         assessor: AssessStoryCandidate,
         quality: StoryQualityRepositoryPort,
-        review: RefreshSavedBreakdownReview,
-        policy: BreakdownReviewPolicy,
+        review: CandidateReviewPort,
         clock: ClockPort,
         progress: AnalysisProgressPort,
     ) -> None:
@@ -65,7 +60,6 @@ class GenerationChecks:
         self._assessor = assessor
         self._quality = quality
         self._review = review
-        self._policy = policy
         self._clock = clock
         self._progress = progress
 
@@ -114,17 +108,12 @@ class GenerationChecks:
                 self._feature_mapper.execute(requirement, item, self._clock.now()).feature
                 for item in candidates
             ]
-            review = self._policy.build(
-                ReviewEvidence(requirement, analysis, None, tuple(candidates), ()),
-                (),
-                self._clock.now(),
-            )
-            if attempt == 1 or not review.flags:
+            critique = self._review.critique_features(requirement, analysis, tuple(candidates))
+            if attempt == 1 or not critique.has_flags:
                 break
             guidance = replace(
                 guidance,
-                feedback=tuple(flag.detail for flag in review.flags)
-                + tuple(item.rationale for item in review.recommendations),
+                feedback=critique.feedback,
                 previous_draft=tuple(
                     f"{item.name.value}: {item.outcome.value}; {item.delivery_drop.value}; "
                     f"{item.splitting_pattern.value}: {item.splitting_rationale.value}"
@@ -228,4 +217,4 @@ class GenerationChecks:
         """Called inside the owning artifact transaction, after storing its final content."""
         if snapshot is not None:
             self._quality.save(snapshot)
-        self._review.execute(requirement_id)
+        self._review.refresh(requirement_id)

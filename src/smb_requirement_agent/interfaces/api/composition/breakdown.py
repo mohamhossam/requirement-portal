@@ -34,6 +34,7 @@ from smb_requirement_agent.application.use_cases.architecture_mapping import (
 )
 from smb_requirement_agent.application.use_cases.breakdown_review import (
     GenerateBreakdownReview,
+    GovernanceCandidateReview,
     RefreshSavedBreakdownReview,
     ResolveOpenQuestion,
 )
@@ -145,15 +146,18 @@ def build_breakdown(
         map_story,
         AssessStoryCandidate(models.story_quality_evaluator, clock),
         persistence.story_quality_repository,
-        RefreshSavedBreakdownReview(
-            review.review_evidence,
-            persistence.breakdown_review_repository,
-            persistence.story_quality_repository,
+        GovernanceCandidateReview(
             BreakdownReviewPolicy(),
+            RefreshSavedBreakdownReview(
+                review.review_evidence,
+                persistence.breakdown_review_repository,
+                persistence.story_quality_repository,
+                BreakdownReviewPolicy(),
+                clock,
+                review.current_release,
+            ),
             clock,
-            review.current_release,
         ),
-        BreakdownReviewPolicy(),
         clock,
         AnalysisProgressReporter(persistence.ai_job_repository, clock),
     )

@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
-from smb_requirement_agent.application.ports.requirement_knowledge import (
-    KnowledgeScreenSchedulerPort,
-)
+from smb_requirement_agent.application.ports.screening_requests import ScreeningRequestPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.create_requirement import (
     CreateRequirement,
@@ -31,7 +29,7 @@ class CreateOwnedRequirement:
         create: CreateRequirement,
         access: RequirementAccessService,
         transactions: TransactionManagerPort,
-        knowledge: KnowledgeScreenSchedulerPort,
+        knowledge: ScreeningRequestPort,
     ) -> None:
         self._create = create
         self._access = access
@@ -135,7 +133,7 @@ class PromoteOwnedRequirementDraft:
         access_service: RequirementAccessService,
         access_repository: AccessRepositoryPort,
         transactions: TransactionManagerPort,
-        knowledge: KnowledgeScreenSchedulerPort,
+        knowledge: ScreeningRequestPort,
     ) -> None:
         self._promote = promote
         self._access_service = access_service

@@ -6,13 +6,11 @@ from smb_requirement_agent.application.errors import (
     RequirementImpactAcknowledgementRequiredError,
     RequirementNotFoundError,
 )
-from smb_requirement_agent.application.ports.requirement_knowledge import (
-    KnowledgeScreenSchedulerPort,
-)
 from smb_requirement_agent.application.ports.requirement_worklist import (
     RequirementWorklistSnapshot,
     RequirementWorklistSnapshotPort,
 )
+from smb_requirement_agent.application.ports.screening_requests import ScreeningRequestPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.update_requirement import (
     UpdateRequirement,
@@ -71,7 +69,7 @@ class UpdateRequirementWithImpact:
         update: UpdateRequirement,
         preview: PreviewRequirementImpact,
         transactions: TransactionManagerPort,
-        knowledge: KnowledgeScreenSchedulerPort,
+        knowledge: ScreeningRequestPort,
     ) -> None:
         self._update = update
         self._preview = preview
