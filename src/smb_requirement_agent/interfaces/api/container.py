@@ -219,9 +219,9 @@ from smb_requirement_agent.infrastructure.exports.xlsx_exporter import XlsxBackl
 from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import (
     RequirementIndexWorker,
 )
-from smb_requirement_agent.interfaces.api.composition.analysis import build_requirement_analyzer
-from smb_requirement_agent.interfaces.api.composition.analysis_workflow import (
+from smb_requirement_agent.interfaces.api.composition.analysis import (
     build_analysis_workflow,
+    build_requirement_analyzer,
 )
 from smb_requirement_agent.interfaces.api.composition.architecture import (
     build_architecture_jobs,

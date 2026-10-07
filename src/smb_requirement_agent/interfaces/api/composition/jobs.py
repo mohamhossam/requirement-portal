@@ -17,7 +17,7 @@ from smb_requirement_agent.infrastructure.jobs.polling_worker import (
 )
 from smb_requirement_agent.infrastructure.jobs.prior_art_gate import PriorArtGatedQueue
 from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import IndexReadyJobQueue
-from smb_requirement_agent.interfaces.api.composition.analysis_workflow import (
+from smb_requirement_agent.interfaces.api.composition.analysis import (
     AnalysisWorkflowWiring,
 )
 from smb_requirement_agent.interfaces.api.composition.breakdown import BreakdownWiring
