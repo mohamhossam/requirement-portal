@@ -12,16 +12,18 @@ from smb_requirement_agent.application.ports.breakdown_repository import Breakdo
 from smb_requirement_agent.application.ports.breakdown_review_repository import (
     BreakdownReviewRepositoryPort,
 )
-from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
-from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
-from smb_requirement_agent.application.ports.story_repository import StoryRepositoryPort
-from smb_requirement_agent.domain.epic.entities import Epic
-from smb_requirement_agent.domain.epic.value_objects import EpicId
-from smb_requirement_agent.domain.feature.entities import Feature
-from smb_requirement_agent.domain.feature.value_objects import FeatureId
+from smb_requirement_agent.breakdown.application.ports.epic_repository import EpicRepositoryPort
+from smb_requirement_agent.breakdown.application.ports.feature_repository import (
+    FeatureRepositoryPort,
+)
+from smb_requirement_agent.breakdown.application.ports.story_repository import StoryRepositoryPort
+from smb_requirement_agent.breakdown.domain.epic.entities import Epic
+from smb_requirement_agent.breakdown.domain.epic.value_objects import EpicId
+from smb_requirement_agent.breakdown.domain.feature.entities import Feature
+from smb_requirement_agent.breakdown.domain.feature.value_objects import FeatureId
+from smb_requirement_agent.breakdown.domain.story.entities import UserStory
+from smb_requirement_agent.breakdown.domain.story.value_objects import StoryId
 from smb_requirement_agent.domain.review.entities import BreakdownReview
-from smb_requirement_agent.domain.story.entities import UserStory
-from smb_requirement_agent.domain.story.value_objects import StoryId
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.identity.domain.entities import DraftOwnership, RequirementAccess
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (

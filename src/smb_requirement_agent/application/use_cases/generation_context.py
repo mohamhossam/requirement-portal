@@ -17,21 +17,23 @@ from smb_requirement_agent.analysis.application.ports.requirement_analysis_repos
     RequirementAnalysisRepositoryPort,
 )
 from smb_requirement_agent.application.errors import ArtifactVersionConflictError
-from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.external_work import guard_external_work
-from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
 from smb_requirement_agent.application.ports.reference_grounding import (
     ReferenceEvidencePort,
     require_analysis_references,
 )
-from smb_requirement_agent.application.ports.story_repository import (
+from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
+from smb_requirement_agent.breakdown.application.ports.epic_repository import EpicRepositoryPort
+from smb_requirement_agent.breakdown.application.ports.feature_repository import (
+    FeatureRepositoryPort,
+)
+from smb_requirement_agent.breakdown.application.ports.story_repository import (
     StoryChangeProposalRepositoryPort,
     StoryRepositoryPort,
 )
-from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.domain.feature.value_objects import FeatureId
+from smb_requirement_agent.breakdown.domain.feature.value_objects import FeatureId
+from smb_requirement_agent.breakdown.domain.story.value_objects import StoryId
 from smb_requirement_agent.domain.review.fingerprints import artifact_fingerprint
-from smb_requirement_agent.domain.story.value_objects import StoryId
 from smb_requirement_agent.jobs.domain.entities import AiJobOperation
 from smb_requirement_agent.requirements.application.ports.document_repository import (
     DocumentRepositoryPort,

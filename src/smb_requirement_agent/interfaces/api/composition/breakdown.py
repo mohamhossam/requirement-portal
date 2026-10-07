@@ -15,12 +15,6 @@ from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration
 )
 from smb_requirement_agent.application.ports.architecture_knowledge import ArchitectureKnowledgePort
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
-from smb_requirement_agent.application.ports.epic_generator import EpicGeneratorPort
-from smb_requirement_agent.application.ports.feature_generator import FeatureGeneratorPort
-from smb_requirement_agent.application.ports.story_generator import StoryGeneratorPort
-from smb_requirement_agent.application.ports.story_quality_evaluator import (
-    StoryQualityEvaluatorPort,
-)
 from smb_requirement_agent.application.use_cases.ai_jobs import AnalysisProgressReporter
 from smb_requirement_agent.application.use_cases.approval_workflow import (
     ApproveStory,
@@ -28,27 +22,38 @@ from smb_requirement_agent.application.use_cases.approval_workflow import (
 )
 from smb_requirement_agent.application.use_cases.approve_epic import ApproveEpic
 from smb_requirement_agent.application.use_cases.approve_feature import ApproveFeature
-from smb_requirement_agent.application.use_cases.architecture_mapping import (
-    MapBreakdownArchitecture,
-    MapFeatureArchitecture,
-    MapStoryArchitecture,
-)
 from smb_requirement_agent.application.use_cases.breakdown_review import (
     GenerateBreakdownReview,
     GovernanceCandidateReview,
     RefreshSavedBreakdownReview,
     ResolveOpenQuestion,
 )
-from smb_requirement_agent.application.use_cases.edit_epic import EditEpic
-from smb_requirement_agent.application.use_cases.feature_review import EditFeature, GetFeatures
-from smb_requirement_agent.application.use_cases.generate_epic import GenerateEpic
-from smb_requirement_agent.application.use_cases.generate_features import GenerateFeatures
-from smb_requirement_agent.application.use_cases.generation_checks import GenerationChecks
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
-from smb_requirement_agent.application.use_cases.get_epic import GetEpic
 from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
-from smb_requirement_agent.application.use_cases.story_change_proposals import StoryChangeProposals
-from smb_requirement_agent.application.use_cases.story_quality import (
+from smb_requirement_agent.breakdown.application.ports.epic_generator import EpicGeneratorPort
+from smb_requirement_agent.breakdown.application.ports.feature_generator import FeatureGeneratorPort
+from smb_requirement_agent.breakdown.application.ports.story_generator import StoryGeneratorPort
+from smb_requirement_agent.breakdown.application.ports.story_quality_evaluator import (
+    StoryQualityEvaluatorPort,
+)
+from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping import (
+    MapBreakdownArchitecture,
+    MapFeatureArchitecture,
+    MapStoryArchitecture,
+)
+from smb_requirement_agent.breakdown.application.use_cases.edit_epic import EditEpic
+from smb_requirement_agent.breakdown.application.use_cases.feature_review import (
+    EditFeature,
+    GetFeatures,
+)
+from smb_requirement_agent.breakdown.application.use_cases.generate_epic import GenerateEpic
+from smb_requirement_agent.breakdown.application.use_cases.generate_features import GenerateFeatures
+from smb_requirement_agent.breakdown.application.use_cases.generation_checks import GenerationChecks
+from smb_requirement_agent.breakdown.application.use_cases.get_epic import GetEpic
+from smb_requirement_agent.breakdown.application.use_cases.story_change_proposals import (
+    StoryChangeProposals,
+)
+from smb_requirement_agent.breakdown.application.use_cases.story_quality import (
     AssessStoryCandidate,
     EvaluateFeatureStories,
     GetFeatureQualitySnapshot,
@@ -56,7 +61,7 @@ from smb_requirement_agent.application.use_cases.story_quality import (
     ValidateFeatureStories,
     ValidateStory,
 )
-from smb_requirement_agent.application.use_cases.story_workflow import (
+from smb_requirement_agent.breakdown.application.use_cases.story_workflow import (
     EditStory,
     GenerateStories,
     GetStories,

@@ -81,21 +81,30 @@ from smb_requirement_agent.application.errors import (
     StoryQualitySnapshotNotFoundError,
     UnsupportedDocumentError,
 )
-from smb_requirement_agent.domain.architecture.errors import InvalidArchitectureContentError
-from smb_requirement_agent.domain.architecture.knowledge import (
-    InvalidRelationshipKindError,
-    KnowledgeConflictError,
+from smb_requirement_agent.breakdown.domain.architecture.errors import (
+    InvalidArchitectureContentError,
 )
-from smb_requirement_agent.domain.epic.errors import (
+from smb_requirement_agent.breakdown.domain.epic.errors import (
     EpicNotApprovedError,
     EpicRegenerationConflictError,
     InvalidEpicContentError,
     StaleEpicApprovalError,
 )
-from smb_requirement_agent.domain.feature.errors import (
+from smb_requirement_agent.breakdown.domain.feature.errors import (
     FeatureRegenerationConflictError,
     InvalidFeatureContentError,
     StaleFeatureApprovalError,
+)
+from smb_requirement_agent.breakdown.domain.story.errors import (
+    FeatureNotReadyForStoriesError,
+    InvalidStoryContentError,
+    StoriesAlreadyExistError,
+    StoryProposalConflictError,
+    StoryRegenerationConflictError,
+)
+from smb_requirement_agent.domain.architecture.knowledge import (
+    InvalidRelationshipKindError,
+    KnowledgeConflictError,
 )
 from smb_requirement_agent.domain.knowledge.errors import (
     CorpusMembershipConflictError,
@@ -111,13 +120,6 @@ from smb_requirement_agent.domain.review.errors import (
     InvalidReviewTransitionError,
 )
 from smb_requirement_agent.domain.revision.errors import InvalidRevisionError, RevisionNotFoundError
-from smb_requirement_agent.domain.story.errors import (
-    FeatureNotReadyForStoriesError,
-    InvalidStoryContentError,
-    StoriesAlreadyExistError,
-    StoryProposalConflictError,
-    StoryRegenerationConflictError,
-)
 from smb_requirement_agent.identity.domain.errors import (
     AuthorizationDeniedError,
     InvalidIdentityError,

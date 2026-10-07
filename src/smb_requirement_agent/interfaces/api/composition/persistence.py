@@ -45,14 +45,8 @@ from smb_requirement_agent.analysis.infrastructure.postgres_analysis import (
     PostgresAnalysisRepository,
 )
 from smb_requirement_agent.application.ports.activity import ActivityReadPort, ReportingReadPort
-from smb_requirement_agent.application.ports.architecture_jobs import (
-    ArchitectureJobRepositoryPort,
-)
 from smb_requirement_agent.application.ports.architecture_knowledge import (
     ArchitectureReleaseStatePort,
-)
-from smb_requirement_agent.application.ports.architecture_mapping_stats import (
-    ArchitectureMappingStatsPort,
 )
 from smb_requirement_agent.application.ports.breakdown_repository import BreakdownRepositoryPort
 from smb_requirement_agent.application.ports.breakdown_review_repository import (
@@ -64,8 +58,6 @@ from smb_requirement_agent.application.ports.corpus_membership import (
     SourceChangesPort,
 )
 from smb_requirement_agent.application.ports.corpus_summary import CorpusCountsPort
-from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
-from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
 from smb_requirement_agent.application.ports.historic_corpus import HistoricCorpusPort
 from smb_requirement_agent.application.ports.knowledge_handoff import ApprovedBacklogOutboxPort
 from smb_requirement_agent.application.ports.knowledge_index_generations import (
@@ -92,13 +84,6 @@ from smb_requirement_agent.application.ports.requirement_worklist import (
 )
 from smb_requirement_agent.application.ports.saved_views import SavedViewRepositoryPort
 from smb_requirement_agent.application.ports.source_dependencies import SourceDependencyPort
-from smb_requirement_agent.application.ports.story_quality_repository import (
-    StoryQualityRepositoryPort,
-)
-from smb_requirement_agent.application.ports.story_repository import (
-    StoryChangeProposalRepositoryPort,
-    StoryRepositoryPort,
-)
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.dependency_projection import DependencyProjection
 from smb_requirement_agent.application.use_cases.requirement_knowledge import (
@@ -107,6 +92,47 @@ from smb_requirement_agent.application.use_cases.requirement_knowledge import (
 from smb_requirement_agent.application.use_cases.requirement_worklist import (
     ListRequirementWorklist,
     RequirementWorklistReader,
+)
+from smb_requirement_agent.breakdown.application.ports.architecture_jobs import (
+    ArchitectureJobRepositoryPort,
+)
+from smb_requirement_agent.breakdown.application.ports.architecture_mapping_stats import (
+    ArchitectureMappingStatsPort,
+)
+from smb_requirement_agent.breakdown.application.ports.epic_repository import EpicRepositoryPort
+from smb_requirement_agent.breakdown.application.ports.feature_repository import (
+    FeatureRepositoryPort,
+)
+from smb_requirement_agent.breakdown.application.ports.story_quality_repository import (
+    StoryQualityRepositoryPort,
+)
+from smb_requirement_agent.breakdown.application.ports.story_repository import (
+    StoryChangeProposalRepositoryPort,
+    StoryRepositoryPort,
+)
+from smb_requirement_agent.breakdown.infrastructure.architecture_mapping_stats import (
+    PostgresArchitectureMappingStats,
+    RepositoryArchitectureMappingStats,
+)
+from smb_requirement_agent.breakdown.infrastructure.in_memory_architecture_jobs import (
+    InMemoryArchitectureJobs,
+)
+from smb_requirement_agent.breakdown.infrastructure.in_memory_epic_repository import (
+    InMemoryEpicRepository,
+)
+from smb_requirement_agent.breakdown.infrastructure.in_memory_feature_repository import (
+    InMemoryFeatureRepository,
+)
+from smb_requirement_agent.breakdown.infrastructure.in_memory_story_repository import (
+    InMemoryStoryChangeProposalRepository,
+    InMemoryStoryRepository,
+)
+from smb_requirement_agent.breakdown.infrastructure.postgres_architecture_jobs import (
+    PostgresArchitectureJobs,
+)
+from smb_requirement_agent.breakdown.infrastructure.story_quality_repository import (
+    InMemoryStoryQualityRepository,
+    PostgresStoryQualityRepository,
 )
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.identity.application.ports.actor_directory import ActorDirectoryPort
@@ -130,10 +156,6 @@ from smb_requirement_agent.infrastructure.persistence import (
 )
 from smb_requirement_agent.infrastructure.persistence.activity_projection import (
     InMemoryActivityReadAdapter,
-)
-from smb_requirement_agent.infrastructure.persistence.architecture_mapping_stats import (
-    PostgresArchitectureMappingStats,
-    RepositoryArchitectureMappingStats,
 )
 from smb_requirement_agent.infrastructure.persistence.architecture_release_state import (
     InMemoryArchitectureReleaseState,
@@ -159,27 +181,14 @@ from smb_requirement_agent.infrastructure.persistence.historic_corpus import (
     InMemoryHistoricCorpus,
     PostgresHistoricCorpus,
 )
-from smb_requirement_agent.infrastructure.persistence.in_memory_architecture_jobs import (
-    InMemoryArchitectureJobs,
-)
 from smb_requirement_agent.infrastructure.persistence.in_memory_breakdown_review_repository import (
     InMemoryBreakdownReviewRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_epic_repository import (
-    InMemoryEpicRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_feature_repository import (
-    InMemoryFeatureRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_revision_repository import (
     InMemoryRevisionRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_saved_views import (
     InMemorySavedViewRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_story_repository import (
-    InMemoryStoryChangeProposalRepository,
-    InMemoryStoryRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_transaction import (
     InMemoryTransactionManager,
@@ -202,9 +211,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader i
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_activity_sources import (
     PostgresActivitySources,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_architecture_jobs import (
-    PostgresArchitectureJobs,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_repositories import (
     PostgresBreakdownReviewRepository,
@@ -255,10 +261,6 @@ from smb_requirement_agent.infrastructure.persistence.revision_tracking import (
 from smb_requirement_agent.infrastructure.persistence.source_dependencies import (
     InMemorySourceDependencies,
     PostgresSourceDependencies,
-)
-from smb_requirement_agent.infrastructure.persistence.story_quality_repository import (
-    InMemoryStoryQualityRepository,
-    PostgresStoryQualityRepository,
 )
 from smb_requirement_agent.interfaces.api.composition.projections import (
     refresh_postgres_projections,

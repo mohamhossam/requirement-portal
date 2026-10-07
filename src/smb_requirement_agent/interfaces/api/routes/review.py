@@ -12,7 +12,7 @@ from smb_requirement_agent.application.use_cases.breakdown_review import (
     ResolveFlag,
     ResolveOpenQuestion,
 )
-from smb_requirement_agent.application.use_cases.story_quality import SuggestStorySplit
+from smb_requirement_agent.breakdown.application.use_cases.story_quality import SuggestStorySplit
 from smb_requirement_agent.domain.review.entities import FlagId, ReviewSource
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,

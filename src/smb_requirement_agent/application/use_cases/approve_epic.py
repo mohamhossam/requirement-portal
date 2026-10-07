@@ -8,10 +8,10 @@ from smb_requirement_agent.application.errors import (
     EpicNotFoundError,
     RequirementNotFoundError,
 )
-from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.approval_workflow import ApprovalRecorder
-from smb_requirement_agent.domain.epic.entities import Epic
+from smb_requirement_agent.breakdown.application.ports.epic_repository import EpicRepositoryPort
+from smb_requirement_agent.breakdown.domain.epic.entities import Epic
 from smb_requirement_agent.domain.review.fingerprints import artifact_fingerprint
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,

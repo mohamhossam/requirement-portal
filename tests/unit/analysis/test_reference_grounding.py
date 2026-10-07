@@ -399,7 +399,7 @@ def test_confirmed_reference_withdrawal_blocks_generation_and_preserves_history(
     grounded: Grounded,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from smb_requirement_agent.application.ports.epic_generator import EpicCandidate
+    from smb_requirement_agent.breakdown.application.ports.epic_generator import EpicCandidate
     from smb_requirement_agent.infrastructure.llm.fake_epic_generator import FakeEpicGenerator
 
     container = grounded.container

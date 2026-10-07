@@ -4,14 +4,14 @@ from dataclasses import replace
 
 from fastapi.testclient import TestClient
 
-from smb_requirement_agent.domain.epic.value_objects import (
+from smb_requirement_agent.breakdown.domain.epic.value_objects import (
     BusinessCase,
     BusinessOutcome,
     EpicName,
 )
 from smb_requirement_agent.domain.review.fingerprints import artifact_fingerprint
 from smb_requirement_agent.interfaces.api.container import Container
-from tests.unit.test_epic_domain import make_epic
+from tests.unit.breakdown.test_epic_domain import make_epic
 from tests.unit.workflow_helpers import (
     confirm_fake_analysis,
     post_analysis,

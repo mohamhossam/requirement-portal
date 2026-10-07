@@ -35,8 +35,6 @@ from smb_requirement_agent.application.use_cases.breakdown_review import (
     GenerateBreakdownReview,
     ResolveOpenQuestion,
 )
-from smb_requirement_agent.application.use_cases.generate_epic import GenerateEpic
-from smb_requirement_agent.application.use_cases.generate_features import GenerateFeatures
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
 from smb_requirement_agent.application.use_cases.prior_art import (
@@ -46,16 +44,22 @@ from smb_requirement_agent.application.use_cases.prior_art import (
 from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     ScreenRequirementKnowledge,
 )
-from smb_requirement_agent.application.use_cases.story_change_proposals import StoryChangeProposals
-from smb_requirement_agent.application.use_cases.story_quality import EvaluateFeatureStories
-from smb_requirement_agent.application.use_cases.story_workflow import (
+from smb_requirement_agent.breakdown.application.use_cases.generate_epic import GenerateEpic
+from smb_requirement_agent.breakdown.application.use_cases.generate_features import GenerateFeatures
+from smb_requirement_agent.breakdown.application.use_cases.story_change_proposals import (
+    StoryChangeProposals,
+)
+from smb_requirement_agent.breakdown.application.use_cases.story_quality import (
+    EvaluateFeatureStories,
+)
+from smb_requirement_agent.breakdown.application.use_cases.story_workflow import (
     GenerateStories,
     RegenerateStory,
 )
-from smb_requirement_agent.domain.feature.value_objects import FeatureId
+from smb_requirement_agent.breakdown.domain.feature.value_objects import FeatureId
+from smb_requirement_agent.breakdown.domain.story.entities import StoryChangeOperation
+from smb_requirement_agent.breakdown.domain.story.value_objects import StoryId
 from smb_requirement_agent.domain.review.entities import FlagId
-from smb_requirement_agent.domain.story.entities import StoryChangeOperation
-from smb_requirement_agent.domain.story.value_objects import StoryId
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.identity.application.ports.actor_directory import ActorDirectoryPort
 from smb_requirement_agent.jobs.application.ports.ai_jobs import (

@@ -37,9 +37,9 @@ from smb_requirement_agent.application.errors import (
     RequirementAnalysisGenerationError,
     StoryGenerationError,
 )
-from smb_requirement_agent.application.ports.epic_generator import EpicCandidate
-from smb_requirement_agent.application.ports.feature_generator import FeatureCandidate
-from smb_requirement_agent.application.ports.story_generator import (
+from smb_requirement_agent.breakdown.application.ports.epic_generator import EpicCandidate
+from smb_requirement_agent.breakdown.application.ports.feature_generator import FeatureCandidate
+from smb_requirement_agent.breakdown.application.ports.story_generator import (
     AcceptanceCriterionCandidate,
     StoryCandidate,
 )

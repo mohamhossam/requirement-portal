@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict
 
-from smb_requirement_agent.domain.feature.value_objects import (
+from smb_requirement_agent.breakdown.domain.feature.value_objects import (
     DeliveryDrop,
     SplittingPattern,
 )

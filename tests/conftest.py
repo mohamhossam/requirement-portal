@@ -38,20 +38,20 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
     KnowledgeScreenEnsureResult,
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
+from smb_requirement_agent.breakdown.infrastructure.in_memory_epic_repository import (
+    InMemoryEpicRepository,
+)
+from smb_requirement_agent.breakdown.infrastructure.in_memory_feature_repository import (
+    InMemoryFeatureRepository,
+)
+from smb_requirement_agent.breakdown.infrastructure.in_memory_story_repository import (
+    InMemoryStoryRepository,
+)
 from smb_requirement_agent.domain.knowledge.entities import KnowledgeScreen, KnowledgeScreenId
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.persistence.in_memory_breakdown_review_repository import (
     InMemoryBreakdownReviewRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_epic_repository import (
-    InMemoryEpicRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_feature_repository import (
-    InMemoryFeatureRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_story_repository import (
-    InMemoryStoryRepository,
 )
 from smb_requirement_agent.interfaces.api.composition.events import subscribe_domain_event_handlers
 from smb_requirement_agent.interfaces.api.container import Container, build_container

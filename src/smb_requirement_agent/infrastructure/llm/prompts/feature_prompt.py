@@ -5,7 +5,7 @@ text and you must bump it, or the provenance of previously generated Features
 becomes a false record of what produced them.
 """
 
-from smb_requirement_agent.application.ports.generation_guidance import (
+from smb_requirement_agent.breakdown.application.ports.generation_guidance import (
     EMPTY_GENERATION_GUIDANCE,
     GenerationGuidance,
 )

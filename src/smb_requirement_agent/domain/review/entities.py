@@ -6,13 +6,13 @@ from dataclasses import dataclass, replace
 from datetime import datetime
 from enum import StrEnum
 
+from smb_requirement_agent.breakdown.domain.story.quality import InvestAssessment
 from smb_requirement_agent.domain.review.errors import (
     FlagResolutionConflictError,
     FlagResolutionNotAllowedError,
     InvalidReviewContentError,
     InvalidReviewTransitionError,
 )
-from smb_requirement_agent.domain.story.quality import InvestAssessment
 from smb_requirement_agent.shared_kernel.actors import ActorSnapshot
 from smb_requirement_agent.shared_kernel.approval import (
     Approval,

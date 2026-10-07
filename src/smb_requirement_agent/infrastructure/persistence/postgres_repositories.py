@@ -7,14 +7,13 @@ from psycopg.types.json import Jsonb
 from smb_requirement_agent.application.errors import (
     ArtifactVersionConflictError,
 )
-from smb_requirement_agent.domain.epic.entities import Epic
-from smb_requirement_agent.domain.epic.value_objects import EpicId
-from smb_requirement_agent.domain.feature.entities import Feature
-from smb_requirement_agent.domain.feature.value_objects import FeatureId
-from smb_requirement_agent.domain.review.entities import BreakdownReview
-from smb_requirement_agent.domain.story.entities import StoryChangeProposal, UserStory
-from smb_requirement_agent.domain.story.value_objects import StoryId, StoryProposalId
-from smb_requirement_agent.infrastructure.persistence.backlog_payloads import (
+from smb_requirement_agent.breakdown.domain.epic.entities import Epic
+from smb_requirement_agent.breakdown.domain.epic.value_objects import EpicId
+from smb_requirement_agent.breakdown.domain.feature.entities import Feature
+from smb_requirement_agent.breakdown.domain.feature.value_objects import FeatureId
+from smb_requirement_agent.breakdown.domain.story.entities import StoryChangeProposal, UserStory
+from smb_requirement_agent.breakdown.domain.story.value_objects import StoryId, StoryProposalId
+from smb_requirement_agent.breakdown.infrastructure.backlog_payloads import (
     epic_from_payload,
     epic_to_payload,
     feature_from_payload,
@@ -24,6 +23,7 @@ from smb_requirement_agent.infrastructure.persistence.backlog_payloads import (
     story_proposal_to_payload,
     story_to_payload,
 )
+from smb_requirement_agent.domain.review.entities import BreakdownReview
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 from smb_requirement_agent.infrastructure.persistence.postgres_values import (
     _integer,

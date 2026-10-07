@@ -12,7 +12,11 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from smb_requirement_agent.analysis.domain.value_objects import ClarificationKind
-from smb_requirement_agent.domain.architecture.entities import ArchitectureImpact
+from smb_requirement_agent.breakdown.domain.architecture.entities import ArchitectureImpact
+from smb_requirement_agent.breakdown.domain.story.quality import (
+    InvestAssessment,
+    spidr_recommendations,
+)
 from smb_requirement_agent.domain.review.entities import (
     BreakdownReview,
     Dependency,
@@ -32,7 +36,6 @@ from smb_requirement_agent.domain.review.entities import (
     RiskId,
 )
 from smb_requirement_agent.domain.review.evidence import ReviewEvidence, evidence_fingerprint
-from smb_requirement_agent.domain.story.quality import InvestAssessment, spidr_recommendations
 
 # Bumped whenever the rules below change, so saved reviews are rebuilt.
 REVIEW_RULESET_VERSION = "breakdown-review-v3"

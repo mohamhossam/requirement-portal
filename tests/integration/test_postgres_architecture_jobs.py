@@ -18,16 +18,16 @@ from smb_kernel.persistence.connector import (
     DirectPostgresConnector,
 )
 
-from smb_requirement_agent.application.ports.architecture_jobs import (
+from smb_requirement_agent.breakdown.application.ports.architecture_jobs import (
     ArchitectureJob,
     ArchitectureJobKind,
     ArchitectureJobStatus,
 )
-from smb_requirement_agent.domain.architecture.knowledge import KnowledgeConflictError
-from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
-from smb_requirement_agent.infrastructure.persistence.postgres_architecture_jobs import (
+from smb_requirement_agent.breakdown.infrastructure.postgres_architecture_jobs import (
     PostgresArchitectureJobs,
 )
+from smb_requirement_agent.domain.architecture.knowledge import KnowledgeConflictError
+from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
 
 DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 pytestmark = pytest.mark.skipif(not DATABASE_URL, reason="TEST_DATABASE_URL is not configured")

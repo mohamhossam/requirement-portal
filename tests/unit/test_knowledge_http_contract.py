@@ -41,7 +41,7 @@ from smb_requirement_agent.application.ports.reference_grounding import (
     ReferenceEvidence,
     ReferenceKnowledgePort,
 )
-from smb_requirement_agent.domain.architecture.entities import (
+from smb_requirement_agent.breakdown.domain.architecture.entities import (
     ArchitectureCitation,
     ArchitectureDependency,
     ArchitectureImpact,

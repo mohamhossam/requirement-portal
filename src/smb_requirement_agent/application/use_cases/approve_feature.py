@@ -9,13 +9,15 @@ from smb_requirement_agent.application.errors import (
     ApprovalWorkflowNotReadyError,
     ArtifactVersionConflictError,
 )
-from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
-from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.approval_workflow import ApprovalRecorder
-from smb_requirement_agent.application.use_cases.feature_review import FeatureLookup
-from smb_requirement_agent.domain.feature.entities import Feature
-from smb_requirement_agent.domain.feature.value_objects import FeatureId
+from smb_requirement_agent.breakdown.application.ports.epic_repository import EpicRepositoryPort
+from smb_requirement_agent.breakdown.application.ports.feature_repository import (
+    FeatureRepositoryPort,
+)
+from smb_requirement_agent.breakdown.application.use_cases.feature_review import FeatureLookup
+from smb_requirement_agent.breakdown.domain.feature.entities import Feature
+from smb_requirement_agent.breakdown.domain.feature.value_objects import FeatureId
 from smb_requirement_agent.domain.review.fingerprints import artifact_fingerprint
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,

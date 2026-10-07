@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
 from smb_requirement_agent.application.errors import FeatureGenerationError
-from smb_requirement_agent.application.ports.feature_generator import FeatureCandidate
-from smb_requirement_agent.application.ports.generation_guidance import (
+from smb_requirement_agent.breakdown.application.ports.feature_generator import FeatureCandidate
+from smb_requirement_agent.breakdown.application.ports.generation_guidance import (
     EMPTY_GENERATION_GUIDANCE,
     GenerationGuidance,
 )
-from smb_requirement_agent.domain.epic.entities import Epic
+from smb_requirement_agent.breakdown.domain.epic.entities import Epic
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 
 FAKE_MODEL = "fake"

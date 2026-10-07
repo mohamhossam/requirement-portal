@@ -16,8 +16,8 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     OpenQuestion,
 )
 from smb_requirement_agent.application.errors import FeatureGenerationError
-from smb_requirement_agent.domain.epic.entities import Epic
-from smb_requirement_agent.domain.epic.value_objects import (
+from smb_requirement_agent.breakdown.domain.epic.entities import Epic
+from smb_requirement_agent.breakdown.domain.epic.value_objects import (
     BusinessCase,
     BusinessOutcome,
     EpicId,

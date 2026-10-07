@@ -14,7 +14,6 @@ from typing import Annotated, Any, Literal
 from fastapi import APIRouter, Depends, FastAPI, Path, Query
 from pydantic import BaseModel, Field
 
-from smb_requirement_agent.application.ports.architecture_mapping_stats import MappingCount
 from smb_requirement_agent.application.ports.knowledge_portfolio import FindingAge, IndexState
 from smb_requirement_agent.application.use_cases.corpus_actions import (
     REINDEX_MAX,
@@ -38,6 +37,9 @@ from smb_requirement_agent.application.use_cases.knowledge_portfolio import (
 )
 from smb_requirement_agent.application.use_cases.prior_art import HistoricCitations
 from smb_requirement_agent.application.use_cases.source_impact import DependencyImpactPage
+from smb_requirement_agent.breakdown.application.ports.architecture_mapping_stats import (
+    MappingCount,
+)
 from smb_requirement_agent.domain.knowledge.entities import KnowledgeRelationshipKind
 from smb_requirement_agent.domain.knowledge.membership import REASON_MAX
 from smb_requirement_agent.interfaces.api.dependencies import (

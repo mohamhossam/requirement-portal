@@ -35,8 +35,6 @@ from smb_requirement_agent.analysis.application.ports.reference_analysis import 
 from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     RequirementAnalyzerPort,
 )
-from smb_requirement_agent.application.ports.epic_generator import EpicGeneratorPort
-from smb_requirement_agent.application.ports.feature_generator import FeatureGeneratorPort
 from smb_requirement_agent.application.ports.prior_art import (
     PriorArtJudgePort,
 )
@@ -45,8 +43,10 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
     KnowledgeEmbeddingPort,
     RequirementRelationshipClassifierPort,
 )
-from smb_requirement_agent.application.ports.story_generator import StoryGeneratorPort
-from smb_requirement_agent.application.ports.story_quality_evaluator import (
+from smb_requirement_agent.breakdown.application.ports.epic_generator import EpicGeneratorPort
+from smb_requirement_agent.breakdown.application.ports.feature_generator import FeatureGeneratorPort
+from smb_requirement_agent.breakdown.application.ports.story_generator import StoryGeneratorPort
+from smb_requirement_agent.breakdown.application.ports.story_quality_evaluator import (
     StoryQualityEvaluatorPort,
 )
 from smb_requirement_agent.infrastructure.config.options import ConfigurationError, LLMProvider

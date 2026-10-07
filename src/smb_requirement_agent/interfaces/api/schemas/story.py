@@ -6,8 +6,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from smb_requirement_agent.domain.story.entities import StoryChangeOperation
-from smb_requirement_agent.domain.story.quality import (
+from smb_requirement_agent.breakdown.domain.story.entities import StoryChangeOperation
+from smb_requirement_agent.breakdown.domain.story.quality import (
     FindingSource,
     InvestCriterion,
     SpidrPattern,

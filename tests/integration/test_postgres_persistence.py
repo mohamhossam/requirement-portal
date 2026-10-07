@@ -80,22 +80,22 @@ from smb_requirement_agent.application.ports.saved_views import (
 )
 from smb_requirement_agent.application.use_cases.export_breakdown import ExportBreakdown
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
-from smb_requirement_agent.domain.architecture.entities import (
+from smb_requirement_agent.breakdown.domain.architecture.entities import (
     ArchitectureDependency,
     ArchitectureImpact,
     SystemCapability,
     SystemReference,
 )
-from smb_requirement_agent.domain.epic.entities import Epic
-from smb_requirement_agent.domain.epic.value_objects import (
+from smb_requirement_agent.breakdown.domain.epic.entities import Epic
+from smb_requirement_agent.breakdown.domain.epic.value_objects import (
     BusinessCase,
     BusinessOutcome,
     EpicId,
     EpicName,
     EpicStatus,
 )
-from smb_requirement_agent.domain.feature.entities import Feature
-from smb_requirement_agent.domain.feature.value_objects import (
+from smb_requirement_agent.breakdown.domain.feature.entities import Feature
+from smb_requirement_agent.breakdown.domain.feature.value_objects import (
     DeliveryDrop,
     FeatureId,
     FeatureName,
@@ -103,6 +103,20 @@ from smb_requirement_agent.domain.feature.value_objects import (
     FeatureStatus,
     SplittingPattern,
     SplittingRationale,
+)
+from smb_requirement_agent.breakdown.domain.story.entities import (
+    StoryChangeOperation,
+    StoryChangeProposal,
+    StoryDraft,
+    UserStory,
+)
+from smb_requirement_agent.breakdown.domain.story.value_objects import (
+    AcceptanceCriterion,
+    BusinessValue,
+    DesiredAction,
+    StoryId,
+    StoryProposalId,
+    UserRole,
 )
 from smb_requirement_agent.domain.knowledge.entities import (
     AnswerSuggestion,
@@ -132,20 +146,6 @@ from smb_requirement_agent.domain.review.entities import (
     ResolutionPolicy,
     ReviewSource,
     ReviewSourceKind,
-)
-from smb_requirement_agent.domain.story.entities import (
-    StoryChangeOperation,
-    StoryChangeProposal,
-    StoryDraft,
-    UserStory,
-)
-from smb_requirement_agent.domain.story.value_objects import (
-    AcceptanceCriterion,
-    BusinessValue,
-    DesiredAction,
-    StoryId,
-    StoryProposalId,
-    UserRole,
 )
 from smb_requirement_agent.identity.domain.entities import (
     DraftOwnership,

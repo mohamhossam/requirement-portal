@@ -14,10 +14,6 @@ from datetime import datetime, timedelta
 
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.ports.architecture_mapping_stats import (
-    ArchitectureMappingStatsPort,
-    MappingCount,
-)
 from smb_requirement_agent.application.ports.corpus_summary import CorpusCountsPort
 from smb_requirement_agent.application.ports.source_dependencies import (
     SourceDependency,
@@ -28,6 +24,10 @@ from smb_requirement_agent.application.use_cases.requirement_indexing import Ind
 from smb_requirement_agent.application.use_cases.source_impact import (
     DependencyImpactPage,
     SourceImpactReview,
+)
+from smb_requirement_agent.breakdown.application.ports.architecture_mapping_stats import (
+    ArchitectureMappingStatsPort,
+    MappingCount,
 )
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,

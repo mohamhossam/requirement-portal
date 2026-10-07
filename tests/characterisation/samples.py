@@ -58,7 +58,7 @@ from smb_requirement_agent.application.ports.activity import (
     AuditSourceKind,
     AuditSourceReference,
 )
-from smb_requirement_agent.domain.architecture.entities import (
+from smb_requirement_agent.breakdown.domain.architecture.entities import (
     ArchitectureCitation,
     ArchitectureDependency,
     ArchitectureImpact,
@@ -66,26 +66,46 @@ from smb_requirement_agent.domain.architecture.entities import (
     SystemCapability,
     SystemReference,
 )
-from smb_requirement_agent.domain.architecture.knowledge import RelationshipKind
-from smb_requirement_agent.domain.document.reference import (
-    CurrentPublication,
-    ReferenceDocumentState,
-)
-from smb_requirement_agent.domain.epic.entities import Epic
-from smb_requirement_agent.domain.epic.value_objects import (
+from smb_requirement_agent.breakdown.domain.epic.entities import Epic
+from smb_requirement_agent.breakdown.domain.epic.value_objects import (
     BusinessCase,
     BusinessOutcome,
     EpicId,
     EpicName,
 )
-from smb_requirement_agent.domain.feature.entities import Feature
-from smb_requirement_agent.domain.feature.value_objects import (
+from smb_requirement_agent.breakdown.domain.feature.entities import Feature
+from smb_requirement_agent.breakdown.domain.feature.value_objects import (
     DeliveryDrop,
     FeatureId,
     FeatureName,
     FeatureOutcome,
     SplittingPattern,
     SplittingRationale,
+)
+from smb_requirement_agent.breakdown.domain.story.entities import (
+    StoryChangeOperation,
+    StoryChangeProposal,
+    StoryDraft,
+    UserStory,
+)
+from smb_requirement_agent.breakdown.domain.story.quality import (
+    FindingSource,
+    InvestAssessment,
+    InvestCriterion,
+    ValidationFinding,
+)
+from smb_requirement_agent.breakdown.domain.story.value_objects import (
+    AcceptanceCriterion,
+    BusinessValue,
+    DesiredAction,
+    StoryId,
+    StoryProposalId,
+    UserRole,
+)
+from smb_requirement_agent.domain.architecture.knowledge import RelationshipKind
+from smb_requirement_agent.domain.document.reference import (
+    CurrentPublication,
+    ReferenceDocumentState,
 )
 from smb_requirement_agent.domain.knowledge.historic import (
     HistoricPublication,
@@ -113,26 +133,6 @@ from smb_requirement_agent.domain.review.entities import (
     RiskId,
 )
 from smb_requirement_agent.domain.review.evidence import ReviewEvidence
-from smb_requirement_agent.domain.story.entities import (
-    StoryChangeOperation,
-    StoryChangeProposal,
-    StoryDraft,
-    UserStory,
-)
-from smb_requirement_agent.domain.story.quality import (
-    FindingSource,
-    InvestAssessment,
-    InvestCriterion,
-    ValidationFinding,
-)
-from smb_requirement_agent.domain.story.value_objects import (
-    AcceptanceCriterion,
-    BusinessValue,
-    DesiredAction,
-    StoryId,
-    StoryProposalId,
-    UserRole,
-)
 from smb_requirement_agent.identity.domain.entities import (
     AccessChange,
     AccessChangeKind,

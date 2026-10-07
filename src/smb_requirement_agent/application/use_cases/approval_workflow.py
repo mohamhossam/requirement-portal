@@ -20,20 +20,24 @@ from smb_requirement_agent.application.errors import (
 from smb_requirement_agent.application.ports.breakdown_review_repository import (
     BreakdownReviewRepositoryPort,
 )
-from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
-from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
 from smb_requirement_agent.application.ports.knowledge_handoff import (
     ApprovedBacklogOutboxPort,
     BacklogHandoff,
 )
-from smb_requirement_agent.application.ports.story_repository import StoryRepositoryPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.breakdown_review import ReviewEvidenceLoader
 from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
 )
-from smb_requirement_agent.domain.feature.value_objects import FeatureId
+from smb_requirement_agent.breakdown.application.ports.epic_repository import EpicRepositoryPort
+from smb_requirement_agent.breakdown.application.ports.feature_repository import (
+    FeatureRepositoryPort,
+)
+from smb_requirement_agent.breakdown.application.ports.story_repository import StoryRepositoryPort
+from smb_requirement_agent.breakdown.domain.feature.value_objects import FeatureId
+from smb_requirement_agent.breakdown.domain.story.entities import UserStory
+from smb_requirement_agent.breakdown.domain.story.value_objects import StoryId
 from smb_requirement_agent.domain.review.entities import BreakdownReview, BreakdownStatus, FlagId
 from smb_requirement_agent.domain.review.errors import InvalidReviewContentError
 from smb_requirement_agent.domain.review.evidence import (
@@ -50,8 +54,6 @@ from smb_requirement_agent.domain.review.readiness import (
     artifact_states,
     readiness_reasons,
 )
-from smb_requirement_agent.domain.story.entities import UserStory
-from smb_requirement_agent.domain.story.value_objects import StoryId
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.identity.domain.entities import RequirementAccess
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (

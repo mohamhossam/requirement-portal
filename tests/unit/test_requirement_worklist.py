@@ -32,21 +32,38 @@ from smb_requirement_agent.application.use_cases.requirement_worklist import (
     NextAction,
     RequirementWorklistQuery,
 )
-from smb_requirement_agent.domain.epic.entities import Epic
-from smb_requirement_agent.domain.epic.value_objects import (
+from smb_requirement_agent.breakdown.domain.epic.entities import Epic
+from smb_requirement_agent.breakdown.domain.epic.value_objects import (
     BusinessCase,
     BusinessOutcome,
     EpicId,
     EpicName,
 )
-from smb_requirement_agent.domain.feature.entities import Feature
-from smb_requirement_agent.domain.feature.value_objects import (
+from smb_requirement_agent.breakdown.domain.feature.entities import Feature
+from smb_requirement_agent.breakdown.domain.feature.value_objects import (
     DeliveryDrop,
     FeatureId,
     FeatureName,
     FeatureOutcome,
     SplittingPattern,
     SplittingRationale,
+)
+from smb_requirement_agent.breakdown.domain.story.entities import UserStory
+from smb_requirement_agent.breakdown.domain.story.value_objects import (
+    AcceptanceCriterion,
+    BusinessValue,
+    DesiredAction,
+    StoryId,
+    UserRole,
+)
+from smb_requirement_agent.breakdown.infrastructure.in_memory_epic_repository import (
+    InMemoryEpicRepository,
+)
+from smb_requirement_agent.breakdown.infrastructure.in_memory_feature_repository import (
+    InMemoryFeatureRepository,
+)
+from smb_requirement_agent.breakdown.infrastructure.in_memory_story_repository import (
+    InMemoryStoryRepository,
 )
 from smb_requirement_agent.domain.review.entities import BreakdownReview, BreakdownStatus
 from smb_requirement_agent.domain.review.evidence import (
@@ -55,31 +72,14 @@ from smb_requirement_agent.domain.review.evidence import (
 )
 from smb_requirement_agent.domain.review.fingerprints import breakdown_fingerprint
 from smb_requirement_agent.domain.review.policy import REVIEW_RULESET_VERSION
-from smb_requirement_agent.domain.story.entities import UserStory
-from smb_requirement_agent.domain.story.value_objects import (
-    AcceptanceCriterion,
-    BusinessValue,
-    DesiredAction,
-    StoryId,
-    UserRole,
-)
 from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
     InMemoryAccessRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_breakdown_review_repository import (
     InMemoryBreakdownReviewRepository,
 )
-from smb_requirement_agent.infrastructure.persistence.in_memory_epic_repository import (
-    InMemoryEpicRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_feature_repository import (
-    InMemoryFeatureRepository,
-)
 from smb_requirement_agent.infrastructure.persistence.in_memory_revision_repository import (
     InMemoryRevisionRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_story_repository import (
-    InMemoryStoryRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_worklist import (
     InMemoryRequirementWorklistSnapshotAdapter,

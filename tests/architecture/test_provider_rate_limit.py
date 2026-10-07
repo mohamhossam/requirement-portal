@@ -20,7 +20,7 @@ from collections.abc import Iterator
 from fastapi.dependencies.models import Dependant
 from fastapi.routing import APIRoute, iter_route_contexts
 
-import smb_requirement_agent.application as application_package
+import smb_requirement_agent as root_package
 from smb_requirement_agent.analysis.application.ports.reference_analysis import (
     ReferenceAnalysisPort,
     ReferenceProposerPort,
@@ -34,8 +34,6 @@ from smb_requirement_agent.analysis.application.ports.requirement_evidence_analy
 from smb_requirement_agent.application.ports.architecture_knowledge import (
     ArchitectureKnowledgePort,
 )
-from smb_requirement_agent.application.ports.epic_generator import EpicGeneratorPort
-from smb_requirement_agent.application.ports.feature_generator import FeatureGeneratorPort
 from smb_requirement_agent.application.ports.prior_art import (
     PriorArtJudgePort,
     PriorArtSchedulerPort,
@@ -51,8 +49,10 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
     KnowledgeScreenSchedulerPort,
     RequirementRelationshipClassifierPort,
 )
-from smb_requirement_agent.application.ports.story_generator import StoryGeneratorPort
-from smb_requirement_agent.application.ports.story_quality_evaluator import (
+from smb_requirement_agent.breakdown.application.ports.epic_generator import EpicGeneratorPort
+from smb_requirement_agent.breakdown.application.ports.feature_generator import FeatureGeneratorPort
+from smb_requirement_agent.breakdown.application.ports.story_generator import StoryGeneratorPort
+from smb_requirement_agent.breakdown.application.ports.story_quality_evaluator import (
     StoryQualityEvaluatorPort,
 )
 from smb_requirement_agent.interfaces.api.container import Container
@@ -222,11 +222,15 @@ def test_every_model_backed_mutation_is_rate_limited() -> None:
 
 
 def _application_namespace() -> dict[str, object]:
-    """Every application class by name, to resolve TYPE_CHECKING-only annotations."""
+    """Every application class by name, to resolve TYPE_CHECKING-only annotations.
+
+    Application code lives in `application/` and in each context's `application/` layer
+    (ADR-0103), so every module under an `application` package is walked.
+    """
     namespace: dict[str, object] = {}
-    for module_info in pkgutil.walk_packages(
-        application_package.__path__, f"{application_package.__name__}."
-    ):
+    for module_info in pkgutil.walk_packages(root_package.__path__, f"{root_package.__name__}."):
+        if "application" not in module_info.name.split("."):
+            continue
         module = importlib.import_module(module_info.name)
         for name, value in vars(module).items():
             if inspect.isclass(value):

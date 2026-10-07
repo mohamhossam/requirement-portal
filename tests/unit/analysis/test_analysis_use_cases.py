@@ -31,6 +31,16 @@ from smb_requirement_agent.application.errors import (
     RequirementNotFoundError,
 )
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
+from smb_requirement_agent.breakdown.infrastructure.in_memory_epic_repository import (
+    InMemoryEpicRepository,
+)
+from smb_requirement_agent.breakdown.infrastructure.in_memory_feature_repository import (
+    InMemoryFeatureRepository,
+)
+from smb_requirement_agent.breakdown.infrastructure.in_memory_story_repository import (
+    InMemoryStoryChangeProposalRepository,
+    InMemoryStoryRepository,
+)
 from smb_requirement_agent.identity.domain.entities import RequirementAccess
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
@@ -39,16 +49,6 @@ from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
 )
 from smb_requirement_agent.infrastructure.llm.fake_requirement_analyzer import (
     FakeRequirementAnalyzer,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_epic_repository import (
-    InMemoryEpicRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_feature_repository import (
-    InMemoryFeatureRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_story_repository import (
-    InMemoryStoryChangeProposalRepository,
-    InMemoryStoryRepository,
 )
 from smb_requirement_agent.requirements.application.use_cases.update_requirement import (
     UpdateRequirement,

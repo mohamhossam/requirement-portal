@@ -52,12 +52,6 @@ from smb_requirement_agent.application.use_cases.approval_workflow import (
 )
 from smb_requirement_agent.application.use_cases.approve_epic import ApproveEpic
 from smb_requirement_agent.application.use_cases.approve_feature import ApproveFeature
-from smb_requirement_agent.application.use_cases.architecture_mapping import (
-    MapBreakdownArchitecture,
-)
-from smb_requirement_agent.application.use_cases.architecture_mapping_jobs import (
-    ArchitectureMappingJobs,
-)
 from smb_requirement_agent.application.use_cases.breakdown_review import (
     GenerateBreakdownReview,
     GetBreakdownReview,
@@ -70,13 +64,8 @@ from smb_requirement_agent.application.use_cases.corpus_actions import (
     ReinstateToCorpus,
     RetireFromCorpus,
 )
-from smb_requirement_agent.application.use_cases.edit_epic import EditEpic
 from smb_requirement_agent.application.use_cases.export_breakdown import ExportBreakdown
-from smb_requirement_agent.application.use_cases.feature_review import EditFeature, GetFeatures
-from smb_requirement_agent.application.use_cases.generate_epic import GenerateEpic
-from smb_requirement_agent.application.use_cases.generate_features import GenerateFeatures
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
-from smb_requirement_agent.application.use_cases.get_epic import GetEpic
 from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     SearchKnownActors,
@@ -113,23 +102,39 @@ from smb_requirement_agent.application.use_cases.revision_history import (
 )
 from smb_requirement_agent.application.use_cases.saved_views import SavedViews
 from smb_requirement_agent.application.use_cases.source_impact import SourceImpactReview
-from smb_requirement_agent.application.use_cases.story_change_proposals import StoryChangeProposals
-from smb_requirement_agent.application.use_cases.story_quality import (
+from smb_requirement_agent.application.use_cases.unified_knowledge_search import (
+    UnifiedKnowledgeSearch,
+)
+from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping import (
+    MapBreakdownArchitecture,
+)
+from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping_jobs import (
+    ArchitectureMappingJobs,
+)
+from smb_requirement_agent.breakdown.application.use_cases.edit_epic import EditEpic
+from smb_requirement_agent.breakdown.application.use_cases.feature_review import (
+    EditFeature,
+    GetFeatures,
+)
+from smb_requirement_agent.breakdown.application.use_cases.generate_epic import GenerateEpic
+from smb_requirement_agent.breakdown.application.use_cases.generate_features import GenerateFeatures
+from smb_requirement_agent.breakdown.application.use_cases.get_epic import GetEpic
+from smb_requirement_agent.breakdown.application.use_cases.story_change_proposals import (
+    StoryChangeProposals,
+)
+from smb_requirement_agent.breakdown.application.use_cases.story_quality import (
     GetFeatureQualitySnapshot,
     SuggestStorySplit,
     ValidateFeatureStories,
     ValidateStory,
 )
-from smb_requirement_agent.application.use_cases.story_workflow import (
+from smb_requirement_agent.breakdown.application.use_cases.story_workflow import (
     EditStory,
     GenerateStories,
     GetStories,
     MergeStories,
     RegenerateStory,
     SplitStory,
-)
-from smb_requirement_agent.application.use_cases.unified_knowledge_search import (
-    UnifiedKnowledgeSearch,
 )
 from smb_requirement_agent.identity.application.ports.identity import Actor
 from smb_requirement_agent.infrastructure.config.options import IdentityProvider

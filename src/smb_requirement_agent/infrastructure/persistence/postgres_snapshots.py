@@ -14,14 +14,14 @@ from smb_requirement_agent.analysis.infrastructure.analysis_payloads import (
 from smb_requirement_agent.application.ports.requirement_worklist import (
     RequirementWorklistSnapshot,
 )
-from smb_requirement_agent.domain.feature.entities import Feature
-from smb_requirement_agent.domain.story.entities import UserStory
-from smb_requirement_agent.identity.infrastructure.identity_payloads import access_from_payload
-from smb_requirement_agent.infrastructure.persistence.backlog_payloads import (
+from smb_requirement_agent.breakdown.domain.feature.entities import Feature
+from smb_requirement_agent.breakdown.domain.story.entities import UserStory
+from smb_requirement_agent.breakdown.infrastructure.backlog_payloads import (
     epic_from_payload,
     feature_from_payload,
     story_from_payload,
 )
+from smb_requirement_agent.identity.infrastructure.identity_payloads import access_from_payload
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 from smb_requirement_agent.infrastructure.persistence.postgres_values import (
     _datetime,

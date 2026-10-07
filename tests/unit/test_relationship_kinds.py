@@ -17,15 +17,17 @@ from smb_requirement_agent.application.ports.architecture_knowledge import (
     ArchitectureKnowledgeMatch,
     ArchitectureQuery,
 )
-from smb_requirement_agent.application.use_cases.architecture_mapping import (
+from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping import (
     MapFeatureArchitecture,
 )
-from smb_requirement_agent.domain.architecture.entities import (
+from smb_requirement_agent.breakdown.domain.architecture.entities import (
     ArchitectureDependency,
     ArchitectureImpact,
     SystemReference,
 )
-from smb_requirement_agent.domain.architecture.errors import InvalidArchitectureContentError
+from smb_requirement_agent.breakdown.domain.architecture.errors import (
+    InvalidArchitectureContentError,
+)
 from smb_requirement_agent.domain.architecture.knowledge import (
     InvalidRelationshipKindError,
     RelationshipKind,
@@ -43,7 +45,7 @@ from smb_requirement_agent.requirements.domain.requirement.value_objects import 
     RequirementTitle,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
-from tests.unit.test_feature_domain import make_feature
+from tests.unit.breakdown.test_feature_domain import make_feature
 
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=UTC)
 

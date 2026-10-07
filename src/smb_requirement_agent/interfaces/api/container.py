@@ -56,10 +56,6 @@ from smb_requirement_agent.application.ports.breakdown_repository import Breakdo
 from smb_requirement_agent.application.ports.breakdown_review_repository import (
     BreakdownReviewRepositoryPort,
 )
-from smb_requirement_agent.application.ports.epic_generator import EpicGeneratorPort
-from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
-from smb_requirement_agent.application.ports.feature_generator import FeatureGeneratorPort
-from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
 from smb_requirement_agent.application.ports.historic_corpus import HistoricCorpusPort
 from smb_requirement_agent.application.ports.knowledge_handoff import ApprovedBacklogOutboxPort
 from smb_requirement_agent.application.ports.knowledge_index_generations import (
@@ -74,17 +70,6 @@ from smb_requirement_agent.application.ports.requirement_worklist import (
     CurrentWorklistProjectionPort,
 )
 from smb_requirement_agent.application.ports.saved_views import SavedViewRepositoryPort
-from smb_requirement_agent.application.ports.story_generator import StoryGeneratorPort
-from smb_requirement_agent.application.ports.story_quality_evaluator import (
-    StoryQualityEvaluatorPort,
-)
-from smb_requirement_agent.application.ports.story_quality_repository import (
-    StoryQualityRepositoryPort,
-)
-from smb_requirement_agent.application.ports.story_repository import (
-    StoryChangeProposalRepositoryPort,
-    StoryRepositoryPort,
-)
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.activity_reporting import (
     GetOperationalReport,
@@ -112,14 +97,6 @@ from smb_requirement_agent.application.use_cases.approval_workflow import (
 )
 from smb_requirement_agent.application.use_cases.approve_epic import ApproveEpic
 from smb_requirement_agent.application.use_cases.approve_feature import ApproveFeature
-from smb_requirement_agent.application.use_cases.architecture_mapping import (
-    MapBreakdownArchitecture,
-    MapFeatureArchitecture,
-    MapStoryArchitecture,
-)
-from smb_requirement_agent.application.use_cases.architecture_mapping_jobs import (
-    ArchitectureMappingJobs,
-)
 from smb_requirement_agent.application.use_cases.breakdown_review import (
     GenerateBreakdownReview,
     GetBreakdownReview,
@@ -132,13 +109,8 @@ from smb_requirement_agent.application.use_cases.corpus_actions import (
     ReinstateToCorpus,
     RetireFromCorpus,
 )
-from smb_requirement_agent.application.use_cases.edit_epic import EditEpic
 from smb_requirement_agent.application.use_cases.export_breakdown import ExportBreakdown
-from smb_requirement_agent.application.use_cases.feature_review import EditFeature, GetFeatures
-from smb_requirement_agent.application.use_cases.generate_epic import GenerateEpic
-from smb_requirement_agent.application.use_cases.generate_features import GenerateFeatures
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
-from smb_requirement_agent.application.use_cases.get_epic import GetEpic
 from smb_requirement_agent.application.use_cases.historic_corpus import (
     IndexHistoricCorpus,
     ProjectHistoricRequirements,
@@ -188,23 +160,58 @@ from smb_requirement_agent.application.use_cases.revision_history import (
 )
 from smb_requirement_agent.application.use_cases.saved_views import SavedViews
 from smb_requirement_agent.application.use_cases.source_impact import SourceImpactReview
-from smb_requirement_agent.application.use_cases.story_change_proposals import StoryChangeProposals
-from smb_requirement_agent.application.use_cases.story_quality import (
+from smb_requirement_agent.application.use_cases.unified_knowledge_search import (
+    UnifiedKnowledgeSearch,
+)
+from smb_requirement_agent.breakdown.application.ports.epic_generator import EpicGeneratorPort
+from smb_requirement_agent.breakdown.application.ports.epic_repository import EpicRepositoryPort
+from smb_requirement_agent.breakdown.application.ports.feature_generator import FeatureGeneratorPort
+from smb_requirement_agent.breakdown.application.ports.feature_repository import (
+    FeatureRepositoryPort,
+)
+from smb_requirement_agent.breakdown.application.ports.story_generator import StoryGeneratorPort
+from smb_requirement_agent.breakdown.application.ports.story_quality_evaluator import (
+    StoryQualityEvaluatorPort,
+)
+from smb_requirement_agent.breakdown.application.ports.story_quality_repository import (
+    StoryQualityRepositoryPort,
+)
+from smb_requirement_agent.breakdown.application.ports.story_repository import (
+    StoryChangeProposalRepositoryPort,
+    StoryRepositoryPort,
+)
+from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping import (
+    MapBreakdownArchitecture,
+    MapFeatureArchitecture,
+    MapStoryArchitecture,
+)
+from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping_jobs import (
+    ArchitectureMappingJobs,
+)
+from smb_requirement_agent.breakdown.application.use_cases.edit_epic import EditEpic
+from smb_requirement_agent.breakdown.application.use_cases.feature_review import (
+    EditFeature,
+    GetFeatures,
+)
+from smb_requirement_agent.breakdown.application.use_cases.generate_epic import GenerateEpic
+from smb_requirement_agent.breakdown.application.use_cases.generate_features import GenerateFeatures
+from smb_requirement_agent.breakdown.application.use_cases.get_epic import GetEpic
+from smb_requirement_agent.breakdown.application.use_cases.story_change_proposals import (
+    StoryChangeProposals,
+)
+from smb_requirement_agent.breakdown.application.use_cases.story_quality import (
     GetFeatureQualitySnapshot,
     SuggestStorySplit,
     ValidateFeatureStories,
     ValidateStory,
 )
-from smb_requirement_agent.application.use_cases.story_workflow import (
+from smb_requirement_agent.breakdown.application.use_cases.story_workflow import (
     EditStory,
     GenerateStories,
     GetStories,
     MergeStories,
     RegenerateStory,
     SplitStory,
-)
-from smb_requirement_agent.application.use_cases.unified_knowledge_search import (
-    UnifiedKnowledgeSearch,
 )
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.identity.application.ports.actor_directory import ActorDirectoryPort

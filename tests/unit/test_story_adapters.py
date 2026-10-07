@@ -14,8 +14,11 @@ from smb_kernel.llm.local_structured_output import (
 )
 
 from smb_requirement_agent.application.errors import StoryGenerationError
-from smb_requirement_agent.application.ports.generation_guidance import GenerationGuidance
-from smb_requirement_agent.domain.story.quality import InvestCriterion, StoryQualityEvidence
+from smb_requirement_agent.breakdown.application.ports.generation_guidance import GenerationGuidance
+from smb_requirement_agent.breakdown.domain.story.quality import (
+    InvestCriterion,
+    StoryQualityEvidence,
+)
 from smb_requirement_agent.infrastructure.llm.candidate_mappers import to_story_candidates
 from smb_requirement_agent.infrastructure.llm.local_story_generator import LocalStoryGenerator
 from smb_requirement_agent.infrastructure.llm.openai_adapters import OpenAIStoryGenerator

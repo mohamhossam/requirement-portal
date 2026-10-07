@@ -6,7 +6,7 @@ from dataclasses import asdict
 from smb_requirement_agent.application.ports.architecture_knowledge import (
     ArchitectureKnowledgeMatch,
 )
-from smb_requirement_agent.application.ports.generation_guidance import GenerationGuidance
+from smb_requirement_agent.breakdown.application.ports.generation_guidance import GenerationGuidance
 
 # Connected systems are for a reviewer to check. They are not mapped impact, so
 # generation never sees them (and the prompt stays the version it is labelled).

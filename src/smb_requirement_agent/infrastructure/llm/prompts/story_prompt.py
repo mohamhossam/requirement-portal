@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from smb_requirement_agent.application.ports.generation_guidance import (
+from smb_requirement_agent.breakdown.application.ports.generation_guidance import (
     EMPTY_GENERATION_GUIDANCE,
     GenerationGuidance,
 )
-from smb_requirement_agent.domain.story.entities import UserStory
+from smb_requirement_agent.breakdown.domain.story.entities import UserStory
 from smb_requirement_agent.infrastructure.llm.prompts.generation_guidance import (
     GENERATION_RULES,
     render_guidance,

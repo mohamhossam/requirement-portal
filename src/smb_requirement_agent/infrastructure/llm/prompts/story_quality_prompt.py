@@ -3,9 +3,14 @@
 import json
 from dataclasses import asdict
 
-from smb_requirement_agent.application.ports.story_quality_evaluator import EMPTY_QUALITY_EVIDENCE
-from smb_requirement_agent.domain.story.entities import UserStory
-from smb_requirement_agent.domain.story.quality import InvestCriterion, StoryQualityEvidence
+from smb_requirement_agent.breakdown.application.ports.story_quality_evaluator import (
+    EMPTY_QUALITY_EVIDENCE,
+)
+from smb_requirement_agent.breakdown.domain.story.entities import UserStory
+from smb_requirement_agent.breakdown.domain.story.quality import (
+    InvestCriterion,
+    StoryQualityEvidence,
+)
 
 PROMPT_VERSION = "story-quality-v3"
 

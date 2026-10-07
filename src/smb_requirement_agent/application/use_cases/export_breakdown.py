@@ -38,7 +38,7 @@ from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
 )
-from smb_requirement_agent.domain.architecture.entities import (
+from smb_requirement_agent.breakdown.domain.architecture.entities import (
     ArchitectureDependency,
     ArchitectureImpact,
     JourneyNeighbour,

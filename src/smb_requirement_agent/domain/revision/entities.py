@@ -6,11 +6,11 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
-from smb_requirement_agent.domain.epic.entities import Epic
-from smb_requirement_agent.domain.feature.entities import Feature
+from smb_requirement_agent.breakdown.domain.epic.entities import Epic
+from smb_requirement_agent.breakdown.domain.feature.entities import Feature
+from smb_requirement_agent.breakdown.domain.story.entities import UserStory
 from smb_requirement_agent.domain.review.entities import BreakdownReview
 from smb_requirement_agent.domain.revision.errors import InvalidRevisionError
-from smb_requirement_agent.domain.story.entities import UserStory
 from smb_requirement_agent.identity.domain.entities import RequirementAccess
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId

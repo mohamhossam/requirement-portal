@@ -22,25 +22,25 @@ from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_repository
     InMemoryRequirementAnalysisRepository,
 )
 from smb_requirement_agent.application.events import InProcessEventDispatcher
-from smb_requirement_agent.domain.architecture.events import ArchitectureImpactChanged
-from smb_requirement_agent.domain.epic.entities import Epic
-from smb_requirement_agent.domain.epic.events import EpicChanged
-from smb_requirement_agent.domain.feature.entities import Feature
-from smb_requirement_agent.domain.feature.events import FeatureChanged, FeaturesReplaced
-from smb_requirement_agent.domain.review.entities import BreakdownReview
-from smb_requirement_agent.domain.story.entities import UserStory
-from smb_requirement_agent.domain.story.events import StoriesChanged
-from smb_requirement_agent.infrastructure.persistence.in_memory_breakdown_review_repository import (
-    InMemoryBreakdownReviewRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_epic_repository import (
+from smb_requirement_agent.breakdown.domain.architecture.events import ArchitectureImpactChanged
+from smb_requirement_agent.breakdown.domain.epic.entities import Epic
+from smb_requirement_agent.breakdown.domain.epic.events import EpicChanged
+from smb_requirement_agent.breakdown.domain.feature.entities import Feature
+from smb_requirement_agent.breakdown.domain.feature.events import FeatureChanged, FeaturesReplaced
+from smb_requirement_agent.breakdown.domain.story.entities import UserStory
+from smb_requirement_agent.breakdown.domain.story.events import StoriesChanged
+from smb_requirement_agent.breakdown.infrastructure.in_memory_epic_repository import (
     InMemoryEpicRepository,
 )
-from smb_requirement_agent.infrastructure.persistence.in_memory_feature_repository import (
+from smb_requirement_agent.breakdown.infrastructure.in_memory_feature_repository import (
     InMemoryFeatureRepository,
 )
-from smb_requirement_agent.infrastructure.persistence.in_memory_story_repository import (
+from smb_requirement_agent.breakdown.infrastructure.in_memory_story_repository import (
     InMemoryStoryRepository,
+)
+from smb_requirement_agent.domain.review.entities import BreakdownReview
+from smb_requirement_agent.infrastructure.persistence.in_memory_breakdown_review_repository import (
+    InMemoryBreakdownReviewRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_transaction import (
     InMemoryTransactionManager,

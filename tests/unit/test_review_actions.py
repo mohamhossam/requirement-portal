@@ -15,9 +15,9 @@ from smb_requirement_agent.shared_kernel.errors import InvalidGeneratedContentEr
 from smb_requirement_agent.shared_kernel.generation import GenerationStatus, ReviewableGeneration
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from smb_requirement_agent.shared_kernel.staleness import StaleReason
-from tests.unit.test_epic_domain import make_epic
-from tests.unit.test_feature_domain import make_feature
-from tests.unit.test_story_domain import make_story
+from tests.unit.breakdown.test_epic_domain import make_epic
+from tests.unit.breakdown.test_feature_domain import make_feature
+from tests.unit.breakdown.test_story_domain import make_story
 
 NOW = datetime(2026, 1, 2, tzinfo=UTC)
 

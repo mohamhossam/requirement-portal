@@ -11,19 +11,19 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Response
 
 from smb_requirement_agent.application.use_cases.approve_feature import ApproveFeature
-from smb_requirement_agent.application.use_cases.feature_review import (
+from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
+from smb_requirement_agent.application.use_cases.requirement_commands import ExpectedContext
+from smb_requirement_agent.breakdown.application.use_cases.feature_review import (
     EditFeature,
     EditFeatureInput,
     GetFeatures,
 )
-from smb_requirement_agent.application.use_cases.generate_features import (
+from smb_requirement_agent.breakdown.application.use_cases.generate_features import (
     GenerateFeatures,
     GenerateFeaturesResult,
 )
-from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
-from smb_requirement_agent.application.use_cases.requirement_commands import ExpectedContext
-from smb_requirement_agent.domain.feature.entities import Feature
-from smb_requirement_agent.domain.feature.value_objects import FeatureId
+from smb_requirement_agent.breakdown.domain.feature.entities import Feature
+from smb_requirement_agent.breakdown.domain.feature.value_objects import FeatureId
 from smb_requirement_agent.domain.review.fingerprints import artifact_fingerprint
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,

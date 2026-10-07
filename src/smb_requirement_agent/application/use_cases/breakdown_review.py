@@ -34,24 +34,31 @@ from smb_requirement_agent.application.ports.architecture_knowledge import (
 from smb_requirement_agent.application.ports.breakdown_review_repository import (
     BreakdownReviewRepositoryPort,
 )
-from smb_requirement_agent.application.ports.candidate_review import CandidateCritique
-from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
-from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidencePort
-from smb_requirement_agent.application.ports.story_quality_repository import (
-    StoryQualityRepositoryPort,
-)
-from smb_requirement_agent.application.ports.story_repository import StoryRepositoryPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
 )
-from smb_requirement_agent.application.use_cases.story_quality import (
+from smb_requirement_agent.breakdown.application.ports.candidate_review import CandidateCritique
+from smb_requirement_agent.breakdown.application.ports.epic_repository import EpicRepositoryPort
+from smb_requirement_agent.breakdown.application.ports.feature_repository import (
+    FeatureRepositoryPort,
+)
+from smb_requirement_agent.breakdown.application.ports.story_quality_repository import (
+    StoryQualityRepositoryPort,
+)
+from smb_requirement_agent.breakdown.application.ports.story_repository import StoryRepositoryPort
+from smb_requirement_agent.breakdown.application.use_cases.story_quality import (
     ValidateStory,
     story_set_fingerprint,
 )
-from smb_requirement_agent.domain.feature.entities import Feature
+from smb_requirement_agent.breakdown.domain.feature.entities import Feature
+from smb_requirement_agent.breakdown.domain.story.quality import (
+    FeatureQualitySnapshot,
+    InvestAssessment,
+    StoryQualityEvidence,
+)
 from smb_requirement_agent.domain.review.entities import (
     BreakdownReview,
     Decision,
@@ -69,11 +76,6 @@ from smb_requirement_agent.domain.review.evidence import (
 from smb_requirement_agent.domain.review.policy import (
     REVIEW_RULESET_VERSION,
     BreakdownReviewPolicy,
-)
-from smb_requirement_agent.domain.story.quality import (
-    FeatureQualitySnapshot,
-    InvestAssessment,
-    StoryQualityEvidence,
 )
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,

@@ -14,16 +14,20 @@ from smb_kernel.time.clock import ClockPort
 from smb_requirement_agent.application.ports.architecture_knowledge import (
     ActiveArchitectureReleasePort,
 )
-from smb_requirement_agent.application.use_cases.architecture_mapping import (
+from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping import (
     MapBreakdownArchitecture,
 )
-from smb_requirement_agent.application.use_cases.architecture_mapping_jobs import (
+from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping_jobs import (
     ArchitectureMappingJobs,
 )
-from smb_requirement_agent.application.use_cases.leased_jobs import ArchitectureJobExecution
+from smb_requirement_agent.breakdown.application.use_cases.leased_jobs import (
+    ArchitectureJobExecution,
+)
+from smb_requirement_agent.breakdown.infrastructure.architecture_job_worker import (
+    ArchitectureJobWorker,
+)
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.jobs.architecture_job_worker import ArchitectureJobWorker
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
 
 

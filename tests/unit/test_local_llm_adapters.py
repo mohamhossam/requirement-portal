@@ -34,8 +34,8 @@ from smb_requirement_agent.application.errors import (
     FeatureGenerationError,
     RequirementAnalysisGenerationError,
 )
-from smb_requirement_agent.domain.epic.entities import Epic
-from smb_requirement_agent.domain.epic.value_objects import (
+from smb_requirement_agent.breakdown.domain.epic.entities import Epic
+from smb_requirement_agent.breakdown.domain.epic.value_objects import (
     BusinessCase,
     BusinessOutcome,
     EpicId,

@@ -34,7 +34,7 @@ from smb_requirement_agent.application.ports.knowledge_views import (
     PassageCitation,
 )
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidence
-from smb_requirement_agent.domain.architecture.entities import SystemReference
+from smb_requirement_agent.breakdown.domain.architecture.entities import SystemReference
 
 _QUERY = TypeAdapter(ArchitectureQuery)
 _MATCH = TypeAdapter(ArchitectureKnowledgeMatch)

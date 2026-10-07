@@ -10,15 +10,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from smb_requirement_agent.domain.epic.entities import Epic
-from smb_requirement_agent.domain.feature.entities import Feature
+from smb_requirement_agent.breakdown.domain.epic.entities import Epic
+from smb_requirement_agent.breakdown.domain.feature.entities import Feature
+from smb_requirement_agent.breakdown.domain.story.entities import UserStory
 from smb_requirement_agent.domain.review.entities import BreakdownReview
 from smb_requirement_agent.domain.review.evidence import ReviewEvidence, evidence_fingerprint
 from smb_requirement_agent.domain.review.fingerprints import (
     artifact_fingerprint,
     breakdown_fingerprint,
 )
-from smb_requirement_agent.domain.story.entities import UserStory
 from smb_requirement_agent.shared_kernel.approval import (
     Approval,
     ApprovalTarget,
