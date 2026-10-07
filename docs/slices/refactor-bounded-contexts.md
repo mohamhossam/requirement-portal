@@ -1,8 +1,8 @@
 # Refactor — Bounded-context packages and domain events
 
 **Status:** ADR-0103 accepted and the slice scheduled 2026-10-07. PR 1 delivered. The PR 1
-findings were decided the same day (ADR-0103 Amendment 1). PRs 2–4 delivered; PR 5 (call sites
-publish directly) is next.
+findings were decided the same day (ADR-0103 Amendment 1). PRs 2–5 delivered; PR 6 (governance
+rules into the domain) is next.
 
 **Related:** [context map](../architecture/context-map.md),
 [ubiquitous language](../architecture/ubiquitous-language.md).
@@ -363,6 +363,78 @@ F1–F8 moves that happen in their contexts' PRs.
 - **Dependency report** — 197 of 197 modules classified, 88 crossing pairs, 22 against the order,
   as before.
   - The two `requirements → governance` imports remain: they are the facade, which PR 5 removes.
+
+## PR 5 — Use cases publish events; the invalidation classes go (2026-10-07)
+
+### Delivered
+
+- **New events, each published where the old direct call ran:**
+  - `FeaturesReplaced` (`epic_id`), by `GenerateFeatures`;
+  - `StoriesChanged` (`feature_id`), by `GenerateStories`, `EditStory`, `SplitStory`,
+    `MergeStories`, `RegenerateStory` (one or all) and `StoryChangeProposals._apply`;
+  - `ArchitectureImpactChanged`, by `MapBreakdownArchitecture`.
+
+  Each is subscribed to the review reset only.
+- **Existing events, now published by the use cases themselves:**
+  - `UpdateRequirement` and the four document commands publish `RequirementRevised`;
+  - `GenerateEpic` and `EditEpic` publish `EpicChanged`;
+  - `EditFeature` publishes `FeatureChanged`.
+- **Deleted:** `InvalidateDerivedArtifacts` and `InvalidateApprovalWorkflow`.
+  - `ResetApprovalWorkflow.on_change` is the governance handler, with the same body.
+  - `subscribe_domain_event_handlers` in `composition/events.py` subscribes all six events.
+  - The builders and the container pass one `DomainEventPublisher`.
+  - The `make_event_publisher` fixture replaces `make_invalidation`.
+- **`ScreeningRequestPort`** (requirements, `application/ports/screening_requests.py`):
+  `CreateOwnedRequirement`, `PromoteOwnedRequirementDraft` and `UpdateRequirementWithImpact` ask
+  for a screen through it. Knowledge's scheduler still satisfies it.
+- **`CandidateReviewPort`** (breakdown, `application/ports/candidate_review.py`):
+  - `GenerationChecks` critiques unsaved Feature candidates and refreshes the saved review through
+    it. It no longer imports governance's review use cases, evidence or policy.
+  - `GovernanceCandidateReview`, in `breakdown_review.py`, implements it with the same policy
+    call and feedback order. `tests/unit/test_candidate_review.py` pins that against the
+    policy's own output.
+
+### Unpinned ordering
+
+Within one unit of work, the review reset runs before `GenerationChecks.save` refreshes the review.
+That keeps review version numbers what they were. A probe moved `StoriesChanged` after the refresh
+in `GenerateStories`, and the unit suite still passed, so no test pins this order today.
+
+The code keeps the order, because every publish sits where the old call ran. A test for it is
+left to PR 6, which moves the review refresh into the governance domain.
+
+### Deferred
+
+- **`analysis` → `knowledge` (two imports).** `analysis_collaboration`'s screen scheduler and the
+  suggestion ports become analysis-owned ports when `analysis` moves (PR 10, Amendment 1 F1).
+- **`requirements` → `knowledge` (one import).** The `source_dependencies` port uses
+  `ImpactDecision` (source impact). It is placed when `source_lineage` and `source_impact` move
+  (PR 14 and PR 15b).
+- **`breakdown` → `governance` (two imports).** `feature_review`'s `ApproveFeature` still imports
+  `approval_policy` and `approval_workflow`. It moves to governance in PR 12.
+
+### Dependency report
+
+| | After PR 4 | After PR 5 |
+|---|---|---|
+| Classified modules | 197 | 200 |
+| Crossing pairs | 88 | 87 |
+| Pairs against the order | 22 | 21 |
+
+- `requirements → governance` is gone.
+- `breakdown → governance` falls from 12 imports to 2.
+- `requirements → knowledge` falls from 2 to 1.
+
+### Validation evidence (PR 5, local)
+
+- `pytest` — exit 0 after each code commit. No file under `tests/characterisation/golden/`
+  changed.
+- The write-order test's expected sequences are unchanged.
+- `ruff check .` and `ruff format --check .` — clean.
+- `mypy src tests` — no issues in 573 source files.
+- `lint-imports` — 10 contracts kept, 0 broken.
+- `grep -rn "InvalidateDerivedArtifacts\|InvalidateApprovalWorkflow\|make_invalidation" src tests`
+  finds nothing.
 
 ## Shims
 

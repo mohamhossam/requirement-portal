@@ -151,9 +151,8 @@ USE_CASES = {
         "revision_history",
         "export_breakdown",
         "knowledge_handoff",
-        # Dissolved into event handlers; today they are governance's reach into the others.
-        "invalidate_approval_workflow",
-        "invalidate_derived_artifacts",
+        # The governance handler for every breakdown change (PR 5).
+        "reset_approval_workflow",
     ],
     "reporting": [
         "requirement_worklist",
@@ -184,6 +183,7 @@ PORTS = {
         "requirement_draft_repository",
         "requirement_repository",
         "source_dependencies",
+        "screening_requests",
     ],
     "references": [
         "architecture_knowledge",
@@ -215,6 +215,7 @@ PORTS = {
     "breakdown": [
         "architecture_jobs",
         "architecture_mapping_stats",
+        "candidate_review",
         "epic_generator",
         "epic_repository",
         "feature_generator",
