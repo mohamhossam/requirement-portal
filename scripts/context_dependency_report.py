@@ -56,7 +56,6 @@ DOMAIN = {
     # After PR 2 this module holds only ImpactDecision (source impact).
     "domain.document.lineage": "knowledge",
     "domain.document.reference": "references",
-    "domain.analysis": "analysis",
     "domain.epic": "breakdown",
     "domain.feature": "breakdown",
     "domain.story": "breakdown",
@@ -76,24 +75,8 @@ USE_CASES = {
         "knowledge_event_cursor",
         "knowledge_views",
         "qualify_chunk_tokens",
-        # Split: its analysis half (stale_analysis, stale_proposals) moves to analysis.
+        # Split: its analysis half (stale_analysis, stale_proposals) moves to analysis in PR 15a.
         "reference_currency",
-    ],
-    "analysis": [
-        "analyze_requirement",
-        "get_requirement_analysis",
-        "clarify_requirement_analysis",
-        "confirm_requirement_analysis",
-        "analysis_collaboration",
-        "analysis_mapping",
-        "analysis_reconciliation",
-        "evidence_analysis",
-        "generation_effects",
-        # Split from requirements' documents use case (PR 9).
-        "analysis_documents",
-        # Handler for RequirementRevised (PR 4).
-        "discard_analysis",
-        "reference_grounding",
     ],
     "knowledge": [
         "requirement_knowledge",
@@ -168,16 +151,6 @@ PORTS = {
         "reference_grounding",
         "reference_publications",
     ],
-    "analysis": [
-        # The knowledge screen as analysis sees it (PR 10, F1).
-        "knowledge_screening",
-        # The analysis half of reference_grounding (PR 10).
-        "reference_analysis",
-        "analysis_audit_repository",
-        "requirement_analysis_repository",
-        "requirement_analyzer",
-        "requirement_evidence_analyzer",
-    ],
     "knowledge": [
         # The reverse evidence index and impact decisions (PR 9 reassigned it from
         # requirements: only knowledge, reporting and workflows use it).
@@ -225,7 +198,7 @@ APPLICATION_MODULES = {
 
 # Contexts that have moved into their own package (ADR-0103 §1). Their domain and application
 # layers are classified whole; their infrastructure, like the rest, is out of scope.
-CONTEXT_PACKAGES = ("identity", "jobs", "requirements")
+CONTEXT_PACKAGES = ("identity", "jobs", "requirements", "analysis")
 
 
 def _prefixes() -> dict[str, str]:
