@@ -1,4 +1,8 @@
-"""Carry only recorded origins through the inputs actually supplied to generation."""
+"""Carry only recorded origins through the inputs actually supplied to generation.
+
+Pure functions over the analysis aggregate, so they are analysis domain code (ADR-0103 PR 10;
+they were `application/use_cases/source_lineage.py`).
+"""
 
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
 from smb_requirement_agent.domain.analysis.value_objects import HumanClarification, IntentProposal

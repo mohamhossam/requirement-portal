@@ -42,8 +42,8 @@ from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
 )
-from smb_requirement_agent.application.use_cases.source_lineage import generation_lineage
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
+from smb_requirement_agent.domain.analysis.lineage import generation_lineage
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.feature.entities import Feature
 from smb_requirement_agent.domain.feature.value_objects import FeatureId

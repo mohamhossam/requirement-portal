@@ -5,12 +5,12 @@ import uuid
 from smb_requirement_agent.application.ports.requirement_analyzer import (
     RequirementAnalysisCandidate,
 )
-from smb_requirement_agent.application.use_cases.source_lineage import input_lineage
 from smb_requirement_agent.domain.analysis.entities import (
     AnalysisDocumentReference,
     AnalysisStageProvenance,
     RequirementAnalysis,
 )
+from smb_requirement_agent.domain.analysis.lineage import input_lineage
 from smb_requirement_agent.domain.analysis.value_objects import (
     Ambiguity,
     AnalysisClarificationEvidence,

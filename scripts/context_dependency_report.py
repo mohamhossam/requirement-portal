@@ -150,7 +150,6 @@ USE_CASES = {
         "identity_access",
         # Reached through ExpectedContextPort once PR 5 adds it.
         "generation_context",
-        "source_lineage",
         "requirement_impact",
         "internal_reads",
     ],
@@ -205,7 +204,7 @@ PORTS = {
     ],
     "governance": ["backlog_export", "breakdown_repository", "breakdown_review_repository"],
     "reporting": ["activity", "requirement_worklist", "saved_views"],
-    TECHNICAL: ["domain_events", "external_work", "transaction_manager"],
+    TECHNICAL: ["domain_events", "expected_context", "external_work", "transaction_manager"],
 }
 
 APPLICATION_MODULES = {

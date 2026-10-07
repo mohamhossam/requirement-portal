@@ -38,11 +38,11 @@ from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
 )
-from smb_requirement_agent.application.use_cases.source_lineage import analysis_lineage
 from smb_requirement_agent.domain.analysis.entities import (
     ClarificationQuestion,
     RequirementAnalysis,
 )
+from smb_requirement_agent.domain.analysis.lineage import analysis_lineage
 from smb_requirement_agent.domain.analysis.value_objects import (
     IntentProposalStatus,
 )

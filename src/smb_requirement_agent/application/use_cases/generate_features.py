@@ -36,7 +36,7 @@ from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
 )
-from smb_requirement_agent.application.use_cases.source_lineage import generation_lineage
+from smb_requirement_agent.domain.analysis.lineage import generation_lineage
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.epic.errors import EpicNotApprovedError
 from smb_requirement_agent.domain.epic.value_objects import EpicStatus

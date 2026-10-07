@@ -22,6 +22,7 @@ from smb_requirement_agent.application.errors import (
 from smb_requirement_agent.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
+from smb_requirement_agent.application.ports.expected_context import ExpectedContextPort
 from smb_requirement_agent.application.ports.knowledge_screening import (
     AnswerSuggestionRequestPort,
     SuggestionProvenancePort,
@@ -45,7 +46,6 @@ from smb_requirement_agent.application.use_cases.analysis_mapping import build_a
 from smb_requirement_agent.application.use_cases.analysis_reconciliation import (
     reconcile_round,
 )
-from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.application.use_cases.generation_effects import (
     accepted_generation_effects,
 )
@@ -137,7 +137,7 @@ class AnalysisCollaboration:
         suggestion_scheduler: AnswerSuggestionRequestPort,
         suggestions: SuggestionProvenancePort,
         *,
-        contexts: GenerationContextTokens,
+        contexts: ExpectedContextPort,
         reference_grounding: ReferenceAnalysisPort,
         references: ReferenceEvidencePort,
         authorization: RequirementAccessService,

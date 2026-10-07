@@ -34,8 +34,8 @@ from smb_requirement_agent.application.ports.reference_publications import (
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.knowledge_event_cursor import contiguous_reach
-from smb_requirement_agent.application.use_cases.source_lineage import analysis_lineage
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
+from smb_requirement_agent.domain.analysis.lineage import analysis_lineage
 from smb_requirement_agent.domain.analysis.value_objects import (
     IntentProposal,
     IntentProposalStatus,
