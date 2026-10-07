@@ -38,6 +38,10 @@ from smb_requirement_agent.identity.domain.entities import (
     DraftOwnership,
     RequirementAccess,
 )
+from smb_requirement_agent.identity.infrastructure.postgres_identity import (
+    PostgresAccessRepository,
+    PostgresActorDirectory,
+)
 from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader import (
     ActivityInputDelta,
 )
@@ -48,8 +52,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_document_metadata
     PostgresDocumentRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_repositories import (
-    PostgresAccessRepository,
-    PostgresActorDirectory,
     PostgresAnalysisAuditRepository,
     PostgresAnalysisRepository,
     PostgresBreakdownReviewRepository,

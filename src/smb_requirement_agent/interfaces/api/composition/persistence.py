@@ -113,6 +113,10 @@ from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
     InMemoryAccessRepository,
     InMemoryActorDirectory,
 )
+from smb_requirement_agent.identity.infrastructure.postgres_identity import (
+    PostgresAccessRepository,
+    PostgresActorDirectory,
+)
 from smb_requirement_agent.infrastructure.config.options import (
     ConfigurationError,
     PersistenceProvider,
@@ -238,8 +242,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_document_reposito
     PostgresDocumentStorage,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_repositories import (
-    PostgresAccessRepository,
-    PostgresActorDirectory,
     PostgresAnalysisAuditRepository,
     PostgresAnalysisRepository,
     PostgresBreakdownReviewRepository,

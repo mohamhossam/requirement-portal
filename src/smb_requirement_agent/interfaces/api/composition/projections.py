@@ -9,6 +9,7 @@ from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     GetKnowledgeReview,
     RequirementKnowledgeCorpus,
 )
+from smb_requirement_agent.identity.infrastructure.postgres_identity import PostgresAccessRepository
 from smb_requirement_agent.infrastructure.persistence.corpus_membership import (
     PostgresCorpusMembership,
 )
@@ -26,7 +27,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_document_reposito
     PostgresDocumentRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_repositories import (
-    PostgresAccessRepository,
     PostgresAnalysisAuditRepository,
     PostgresAnalysisRepository,
     PostgresRequirementRepository,

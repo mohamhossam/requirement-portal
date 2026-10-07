@@ -168,6 +168,7 @@ from smb_requirement_agent.identity.domain.entities import (
 )
 from smb_requirement_agent.identity.domain.errors import RequirementAccessConflictError
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
+from smb_requirement_agent.identity.infrastructure.postgres_identity import PostgresActorDirectory
 from smb_requirement_agent.infrastructure.exports.json_exporter import JsonBacklogExporter
 from smb_requirement_agent.infrastructure.exports.xlsx_exporter import XlsxBacklogExporter
 from smb_requirement_agent.infrastructure.llm.fake_requirement_analyzer import (
@@ -194,7 +195,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_evidence_fragment
     PostgresEvidenceFragmentCache,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_repositories import (
-    PostgresActorDirectory,
     PostgresAnalysisAuditRepository,
     PostgresAnalysisRepository,
     PostgresEpicRepository,
