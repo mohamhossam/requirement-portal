@@ -79,8 +79,7 @@ Paths are relative to `src/smb_requirement_agent/`. Ports move with the use case
 
 | Current | Target |
 |---|---|
-| `domain/shared/*` | `shared_kernel/` |
-| `domain/shared/{identifiers,actors,citation,lineage}.py` (PR 2: `RequirementId`; actors re-exported from `smb_kernel`; `PublishedReference` and `normalize_search`; `SourceLineage` and `merge_lineage`) | `shared_kernel/` |
+| `shared_kernel/*`: done in PR 3, formerly `domain/shared`. Since PR 2 it also holds `RequirementId`, the actor types re-exported from `smb_kernel`, `PublishedReference`, `normalize_search`, `SourceLineage` and `merge_lineage` | `shared_kernel/` |
 | `domain/requirement/*` | `requirements/domain/` |
 | `domain/document/{entities,attachment,ingestion,value_objects,errors}.py` | `requirements/domain/` |
 | `domain/document/lineage.py` (`ImpactDecision`, after PR 2) | `knowledge/domain/` (source impact) |

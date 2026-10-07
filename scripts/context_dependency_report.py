@@ -1,6 +1,6 @@
 """Report imports between the candidate bounded contexts of ADR-0103.
 
-Each domain and application module is classified into the context `docs/architecture/
+Each domain, shared-kernel and application module is classified into the context `docs/architecture/
 context-map.md` assigns it. The script then lists every import that crosses contexts, and
 flags the ones that run against the dependency order:
 
@@ -52,7 +52,7 @@ TECHNICAL = "technical"
 # by the side most of them goes to; their other half shows up as crossings until it moves.
 # Most specific prefix wins. Prefixes are relative to the package root.
 DOMAIN = {
-    "domain.shared": "shared_kernel",
+    "shared_kernel": "shared_kernel",
     # After PR 2 this module holds only ImpactDecision (source impact).
     "domain.document.lineage": "knowledge",
     "domain.document.reference": "references",
@@ -264,7 +264,7 @@ def _in_scope(module: str) -> bool:
     relative = module.removeprefix(f"{ROOT}.")
     if relative in ("domain", "application", "application.use_cases", "application.ports"):
         return False
-    return relative.startswith(("domain.", "application."))
+    return relative.startswith(("domain.", "application.", "shared_kernel"))
 
 
 def allowed(source: str, target: str) -> bool:

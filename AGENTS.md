@@ -128,6 +128,9 @@ relationships are in `docs/architecture/context-map.md`.
 
 ### 4.1 Domain
 
+Everything in this section applies to `shared_kernel/` too (ADR-0103). It is domain code
+shared by every context, and `.importlinter` checks it with the domain contracts.
+
 The domain contains:
 - business entities,
 - value objects,

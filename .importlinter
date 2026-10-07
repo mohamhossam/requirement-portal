@@ -10,7 +10,19 @@ name = Domain must not depend on outer layers
 type = forbidden
 source_modules =
     smb_requirement_agent.domain
+    smb_requirement_agent.shared_kernel
 forbidden_modules =
+    smb_requirement_agent.application
+    smb_requirement_agent.infrastructure
+    smb_requirement_agent.interfaces
+
+[importlinter:contract:shared_kernel_pure]
+name = The shared kernel imports nothing else from requirement-portal (ADR-0103)
+type = forbidden
+source_modules =
+    smb_requirement_agent.shared_kernel
+forbidden_modules =
+    smb_requirement_agent.domain
     smb_requirement_agent.application
     smb_requirement_agent.infrastructure
     smb_requirement_agent.interfaces
@@ -29,6 +41,7 @@ name = Domain must not import frameworks or provider SDKs
 type = forbidden
 source_modules =
     smb_requirement_agent.domain
+    smb_requirement_agent.shared_kernel
 forbidden_modules =
     fastapi
     pydantic
@@ -84,6 +97,7 @@ name = Domain and application use only platform-kernel's pure contract modules (
 type = forbidden
 source_modules =
     smb_requirement_agent.domain
+    smb_requirement_agent.shared_kernel
     smb_requirement_agent.application
 forbidden_modules =
     smb_kernel.identity.oidc

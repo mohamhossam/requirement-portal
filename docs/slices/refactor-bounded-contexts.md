@@ -1,7 +1,8 @@
 # Refactor — Bounded-context packages and domain events
 
 **Status:** ADR-0103 accepted and the slice scheduled 2026-10-07. PR 1 delivered. The PR 1
-findings were decided the same day (ADR-0103 Amendment 1). PR 2 delivered; PR 3 is next.
+findings were decided the same day (ADR-0103 Amendment 1). PRs 2 and 3 delivered; PR 4 (event
+infrastructure) is next.
 
 **Related:** [context map](../architecture/context-map.md),
 [ubiquitous language](../architecture/ubiquitous-language.md).
@@ -88,8 +89,10 @@ The refactor must keep each of these rules exactly as it is today:
 ## Migration Sequence
 
 Each PR is independently mergeable and behaviour-preserving, and is green on all five quality gates.
-Moves are made with `git mv` in a move-only commit. The import rewrite goes in a separate commit,
-which is listed in `.git-blame-ignore-revs`.
+Moves are made with `git mv`, and the import rewrite goes in a commit listed in
+`.git-blame-ignore-revs`. When the moved files change only in their imports, the move and the
+rewrite share one commit (from PR 3 on). Git still records the files as renames, and every commit
+stays green. A move that also edits code keeps a separate move-only commit.
 
 | PR | Content | Why at this point |
 |---|---|---|
@@ -264,6 +267,39 @@ F1–F8 moves that happen in their contexts' PRs.
 - `lint-imports` — 9 contracts kept, 0 broken.
 - **Old paths are gone:** `grep` finds no import of a moved name from its old module in `src/` or
   `tests/`.
+
+## PR 3 — The `shared_kernel` package (2026-10-07)
+
+### Delivered
+
+- **The package.** `src/smb_requirement_agent/domain/shared` is now
+  `src/smb_requirement_agent/shared_kernel`, ADR-0103's home for the shared kernel.
+  - 11 modules are recorded as renames.
+  - 440 import lines in 257 files point at the new package.
+  - Move and rewrite are one commit, listed in `.git-blame-ignore-revs`.
+  - No shim stays at `domain/shared`, because no in-flight branch imports it.
+- **A new `.importlinter` contract, `shared_kernel_pure`.** The kernel imports nothing from
+  `domain`, `application`, `infrastructure` or `interfaces`.
+- **Existing contracts cover the kernel.** `domain_independence`,
+  `domain_framework_independence` and `kernel_contracts_only_inward` now include
+  `smb_requirement_agent.shared_kernel`, so the domain rules hold there too. AGENTS.md §4.1 says
+  so.
+- **The dependency report** classifies `shared_kernel.*` directly. Its numbers are unchanged:
+  189 modules, 88 crossing pairs, 22 against the order, and none from `shared_kernel`.
+
+### Validation evidence (PR 3, local)
+
+- `pytest` — exit 0. No file under `tests/characterisation/golden/` changed.
+- `ruff check .` and `ruff format --check .` — clean.
+- `mypy src tests` — no issues in 558 source files.
+- `lint-imports` — 10 contracts kept, 0 broken.
+- **The new contract catches a violation:**
+  - adding `from smb_requirement_agent.domain.requirement.errors import RequirementError` to
+    `shared_kernel/errors.py` made `lint-imports` report `shared_kernel_pure` BROKEN (9 kept,
+    1 broken);
+  - reverting it brought back 10 kept, 0 broken.
+- **Old path is gone:** `grep -rn "domain\.shared" src tests scripts --include=*.py` finds
+  nothing.
 
 ## Shims
 
