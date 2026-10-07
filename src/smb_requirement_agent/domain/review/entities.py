@@ -391,6 +391,57 @@ class BreakdownReview:
             version=self.version + 1,
         )
 
+    def effective_status(self, subject: str | None, evidence_fingerprint: str) -> BreakdownStatus:
+        """The status a reader sees: a submission whose content or evidence moved on is stale.
+
+        A review that is under review or approved attests to one subject and one set of
+        evidence. Once either changes it needs revision, even before anything saves that.
+        """
+        if self.status in (BreakdownStatus.UNDER_REVIEW, BreakdownStatus.APPROVED) and (
+            subject != self.submitted_fingerprint
+            or self.evidence_fingerprint != evidence_fingerprint
+        ):
+            return BreakdownStatus.NEEDS_REVISION
+        return self.status
+
+    def with_knowledge_version(self, knowledge_version: str | None) -> BreakdownReview:
+        """Record the architecture knowledge release this review was built against."""
+        return replace(self, knowledge_version=knowledge_version)
+
+    def carry_forward_from(self, existing: BreakdownReview) -> BreakdownReview:
+        """This newly built review, keeping what people already decided on `existing`.
+
+        Decisions on flags that still exist, and their resolutions, are kept. Submission,
+        approvals and comments come from `existing`; if the evidence changed, a submitted or
+        approved review needs revision. The version follows on from `existing`.
+        """
+        current_flag_ids = {item.id for item in self.flags}
+        carried = self
+        for decision in existing.decisions:
+            if decision.target_flag_id is None or decision.target_flag_id in current_flag_ids:
+                carried = carried.record(decision)
+        resolved = {
+            item.id: item.resolution_decision_id
+            for item in existing.flags
+            if item.status is FlagStatus.RESOLVED and item.id in current_flag_ids
+        }
+        for flag_id, decision_id in resolved.items():
+            if decision_id is None:  # pragma: no cover - protected by Flag invariant
+                continue
+            decision = next(item for item in carried.decisions if item.id == decision_id)
+            carried = carried.resolve(flag_id, decision)
+        governance = existing
+        if self.evidence_fingerprint != existing.evidence_fingerprint:
+            governance = existing.request_revision()
+        return replace(
+            carried,
+            status=governance.status,
+            submitted_fingerprint=governance.submitted_fingerprint,
+            approvals=existing.approvals,
+            comments=existing.comments,
+            version=existing.version + 1,
+        )
+
     def add_comment(self, comment: ReviewComment) -> BreakdownReview:
         if comment in self.comments:
             return self

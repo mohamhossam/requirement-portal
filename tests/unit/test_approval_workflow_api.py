@@ -248,3 +248,33 @@ def test_legacy_approved_artifact_requires_attributed_reaffirmation(
     assert post_epic_approval(client, requirement_id).status_code == 200
     refreshed = client.get(f"/requirements/{requirement_id}/approval-workflow").json()
     assert refreshed["readiness_reasons"] == []
+
+
+def test_story_regeneration_resets_the_review_before_refreshing_it(client: TestClient) -> None:
+    """The reset (StoriesChanged) runs before GenerationChecks refreshes the review.
+
+    Reset first: needs_revision at +1, then the refresh saves +2. Refresh first: the refresh
+    carries the new evidence to needs_revision at +1, and the reset then has nothing to do.
+    Whole-feature regeneration gives the Stories new ids, so the evidence always changes.
+    """
+    requirement_id, stories = _governable_tree(client)
+    workflow = client.get(f"/requirements/{requirement_id}/approval-workflow").json()
+    submitted = client.post(
+        f"/requirements/{requirement_id}/review-submission",
+        json={
+            "expected_fingerprint": workflow["subject_fingerprint"],
+            "expected_version": workflow["review_version"],
+        },
+    )
+    assert submitted.status_code == 200
+    before = client.get(f"/requirements/{requirement_id}/breakdown-review").json()
+    assert before["status"] == "under_review"
+
+    base = f"/requirements/{requirement_id}/features/{stories[0]['feature_id']}/stories"
+    token = client.get(base).json()["generation_context_token"]
+    regenerated = client.post(f"{base}/regeneration", json={"context_token": token, "force": True})
+    assert regenerated.status_code == 200, regenerated.text
+
+    after = client.get(f"/requirements/{requirement_id}/breakdown-review").json()
+    assert after["status"] == "needs_revision"
+    assert after["version"] == before["version"] + 2

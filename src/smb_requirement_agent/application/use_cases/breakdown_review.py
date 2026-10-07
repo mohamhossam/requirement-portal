@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 
 from smb_kernel.time.clock import ClockPort
 
@@ -210,13 +210,12 @@ class RefreshSavedBreakdownReview:
                 StoryQualityEvidence.from_context(evidence.requirement, evidence.analysis, feature),
             ):
                 assessments.extend(snapshot.assessments)
-        review = replace(
-            self._policy.build(evidence, tuple(assessments), self._clock.now()),
-            knowledge_version=self._knowledge.active_release_id(),
-        )
+        review = self._policy.build(
+            evidence, tuple(assessments), self._clock.now()
+        ).with_knowledge_version(self._knowledge.active_release_id())
         existing = self._reviews.get(requirement_id)
         if existing is not None:
-            review = _carry_forward_decisions(review, existing)
+            review = review.carry_forward_from(existing)
         self._reviews.save(review)
         return review
 
@@ -266,10 +265,9 @@ class GenerateBreakdownReview:
             )
         with self._transactions.external_call():
             assessments = self._assess(evidence)
-        review = replace(
-            self._policy.build(evidence, assessments, self._clock.now()),
-            knowledge_version=active_knowledge_version,
-        )
+        review = self._policy.build(
+            evidence, assessments, self._clock.now()
+        ).with_knowledge_version(active_knowledge_version)
         with self._transactions.transaction():
             self._transactions.lock_requirement(requirement_id)
             if evidence_fingerprint(self._evidence.load(requirement_id)) != (
@@ -285,7 +283,7 @@ class GenerateBreakdownReview:
                 )
             existing = self._reviews.get(requirement_id)
             if existing is not None:
-                review = _carry_forward_decisions(review, existing)
+                review = review.carry_forward_from(existing)
             for feature in evidence.features:
                 siblings = tuple(s for s in evidence.stories if s.feature_id == feature.id)
                 self._quality.save(
@@ -577,37 +575,6 @@ def _architecture_knowledge_is_current(
     )
     return all(
         impact is None or impact.knowledge_version == active_knowledge_version for impact in impacts
-    )
-
-
-def _carry_forward_decisions(
-    candidate: BreakdownReview, existing: BreakdownReview
-) -> BreakdownReview:
-    current_flag_ids = {item.id for item in candidate.flags}
-    carried = candidate
-    for decision in existing.decisions:
-        if decision.target_flag_id is None or decision.target_flag_id in current_flag_ids:
-            carried = carried.record(decision)
-    resolved = {
-        item.id: item.resolution_decision_id
-        for item in existing.flags
-        if item.status is FlagStatus.RESOLVED and item.id in current_flag_ids
-    }
-    for flag_id, decision_id in resolved.items():
-        if decision_id is None:  # pragma: no cover - protected by Flag invariant
-            continue
-        decision = next(item for item in carried.decisions if item.id == decision_id)
-        carried = carried.resolve(flag_id, decision)
-    governance = existing
-    if candidate.evidence_fingerprint != existing.evidence_fingerprint:
-        governance = existing.request_revision()
-    return replace(
-        carried,
-        status=governance.status,
-        submitted_fingerprint=governance.submitted_fingerprint,
-        approvals=existing.approvals,
-        comments=existing.comments,
-        version=existing.version + 1,
     )
 
 
