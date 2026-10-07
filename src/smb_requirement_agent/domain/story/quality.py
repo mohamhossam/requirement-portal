@@ -6,7 +6,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 
+from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
+from smb_requirement_agent.domain.feature.entities import Feature
 from smb_requirement_agent.domain.feature.value_objects import FeatureId
+from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.story.errors import InvalidStoryContentError
 from smb_requirement_agent.domain.story.value_objects import StoryId
 from smb_requirement_agent.shared_kernel.generation import Provenance
@@ -102,3 +105,86 @@ class FeatureQualitySnapshot:
         if not self.source_fingerprint.strip():
             raise InvalidStoryContentError("Quality source fingerprint must not be blank.")
         require_aware(self.generated_at, "quality generated_at")
+
+
+@dataclass(frozen=True)
+class StoryQualityEvidence:
+    source_facts: tuple[str, ...] = ()
+    human_decisions: tuple[str, ...] = ()
+    unconfirmed: tuple[str, ...] = ()
+    feature_boundary: tuple[str, ...] = ()
+
+    @classmethod
+    def from_context(
+        cls, requirement: Requirement, analysis: RequirementAnalysis, feature: Feature
+    ) -> StoryQualityEvidence:
+        return cls(
+            source_facts=(
+                requirement.title.value,
+                requirement.description.value,
+                *(item.value for item in requirement.business_rules),
+                *(item.value for item in requirement.constraints),
+                *(f"Declared channel: {item.value}" for item in requirement.channels),
+                *(f"Declared system: {item.value}" for item in requirement.systems),
+                *((requirement.desired_outcome.value,) if requirement.desired_outcome else ()),
+                *((requirement.customer_context.value,) if requirement.customer_context else ()),
+                *(item.statement for item in analysis.known_facts),
+                *(item.statement for item in analysis.constraints),
+                *(item.statement for item in analysis.business_rules),
+            ),
+            human_decisions=(
+                *(f"{item.subject}: {item.answer}" for item in analysis.clarifications),
+                *analysis.accepted_constraints,
+                *analysis.accepted_business_rules,
+                analysis.effective_desired_outcome() or "No confirmed desired outcome supplied.",
+            ),
+            unconfirmed=(
+                *(item.statement for item in analysis.assumptions),
+                *(item.question for item in analysis.open_questions),
+                *(item.statement for item in analysis.ambiguities),
+                *(item.statement for item in analysis.potential_dependencies),
+            ),
+            feature_boundary=(feature.name.value, feature.outcome.value),
+        )
+
+
+def spidr_recommendations(assessment: InvestAssessment) -> tuple[SpidrRecommendation, ...]:
+    """The documented SPIDR split for each failed INVEST criterion, in a fixed order."""
+    failed = {finding.criterion for finding in assessment.findings if not finding.passed}
+    recommendations: list[SpidrRecommendation] = []
+    if InvestCriterion.ESTIMABLE in failed:
+        recommendations.append(
+            SpidrRecommendation(
+                SpidrPattern.SPIKE,
+                "Time-box the unresolved delivery uncertainty, then split with the evidence.",
+            )
+        )
+    if InvestCriterion.INDEPENDENT in failed:
+        recommendations.append(
+            SpidrRecommendation(
+                SpidrPattern.INTERFACES,
+                "Separate the interface or integration boundary to reduce coupling.",
+            )
+        )
+    if InvestCriterion.SMALL in failed:
+        recommendations.append(
+            SpidrRecommendation(
+                SpidrPattern.PATHS,
+                "Deliver the primary path first and sequence alternatives as follow-on Stories.",
+            )
+        )
+    if InvestCriterion.TESTABLE in failed:
+        recommendations.append(
+            SpidrRecommendation(
+                SpidrPattern.DATA,
+                "Split by a concrete data example so each outcome can be verified.",
+            )
+        )
+    if {InvestCriterion.NEGOTIABLE, InvestCriterion.VALUABLE} & failed:
+        recommendations.append(
+            SpidrRecommendation(
+                SpidrPattern.RULES,
+                "Isolate one business rule and its value so scope remains negotiable.",
+            )
+        )
+    return tuple(dict.fromkeys(recommendations))

@@ -36,9 +36,9 @@ from smb_requirement_agent.domain.story.quality import (
     FindingSource,
     InvestAssessment,
     InvestCriterion,
-    SpidrPattern,
     SpidrRecommendation,
     ValidationFinding,
+    spidr_recommendations,
 )
 from smb_requirement_agent.domain.story.value_objects import StoryId
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
@@ -242,42 +242,4 @@ class SuggestStorySplit:
     def for_assessment(
         assessment: InvestAssessment,
     ) -> tuple[SpidrRecommendation, ...]:
-        failed = {finding.criterion for finding in assessment.findings if not finding.passed}
-        recommendations: list[SpidrRecommendation] = []
-        if InvestCriterion.ESTIMABLE in failed:
-            recommendations.append(
-                SpidrRecommendation(
-                    SpidrPattern.SPIKE,
-                    "Time-box the unresolved delivery uncertainty, then split with the evidence.",
-                )
-            )
-        if InvestCriterion.INDEPENDENT in failed:
-            recommendations.append(
-                SpidrRecommendation(
-                    SpidrPattern.INTERFACES,
-                    "Separate the interface or integration boundary to reduce coupling.",
-                )
-            )
-        if InvestCriterion.SMALL in failed:
-            recommendations.append(
-                SpidrRecommendation(
-                    SpidrPattern.PATHS,
-                    "Deliver the primary path first and sequence alternatives as "
-                    "follow-on Stories.",
-                )
-            )
-        if InvestCriterion.TESTABLE in failed:
-            recommendations.append(
-                SpidrRecommendation(
-                    SpidrPattern.DATA,
-                    "Split by a concrete data example so each outcome can be verified.",
-                )
-            )
-        if {InvestCriterion.NEGOTIABLE, InvestCriterion.VALUABLE} & failed:
-            recommendations.append(
-                SpidrRecommendation(
-                    SpidrPattern.RULES,
-                    "Isolate one business rule and its value so scope remains negotiable.",
-                )
-            )
-        return tuple(dict.fromkeys(recommendations))
+        return spidr_recommendations(assessment)
