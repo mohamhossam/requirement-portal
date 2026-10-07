@@ -26,6 +26,7 @@ from smb_requirement_agent.application.errors import (
     StoryGenerationError,
     StoryNotFoundError,
 )
+from smb_requirement_agent.application.ports.breakdown_context import BreakdownContextPort
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
@@ -39,7 +40,6 @@ from smb_requirement_agent.application.ports.story_repository import (
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.generation_checks import GenerationChecks
-from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
@@ -231,7 +231,7 @@ class GenerateStories(StoryWorkflow):
         events: DomainEventPublisher,
         *,
         authorization: RequirementAccessService,
-        contexts: GenerationContextTokens,
+        contexts: BreakdownContextPort,
         checks: GenerationChecks,
         generator: StoryGeneratorPort,
         clock: ClockPort,
@@ -473,7 +473,7 @@ class RegenerateStory(StoryWorkflow):
         events: DomainEventPublisher,
         *,
         authorization: RequirementAccessService,
-        contexts: GenerationContextTokens,
+        contexts: BreakdownContextPort,
         checks: GenerationChecks,
         proposals: StoryChangeProposalRepositoryPort,
         generator: StoryGeneratorPort,

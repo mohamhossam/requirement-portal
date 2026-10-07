@@ -12,6 +12,7 @@ from smb_kernel.time.clock import ClockPort
 from smb_requirement_agent.analysis.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
+from smb_requirement_agent.analysis.application.ports.analysis_context import AnalysisContextPort
 from smb_requirement_agent.analysis.application.ports.knowledge_screening import (
     AnswerSuggestionRequestPort,
     SuggestionProvenancePort,
@@ -69,7 +70,6 @@ from smb_requirement_agent.application.errors import (
     RequirementAnalysisNotFoundError,
     RequirementNotFoundError,
 )
-from smb_requirement_agent.application.ports.expected_context import ExpectedContextPort
 from smb_requirement_agent.application.ports.reference_grounding import (
     ReferenceEvidencePort,
     ReferenceReviewPort,
@@ -141,7 +141,7 @@ class AnalysisCollaboration:
         suggestion_scheduler: AnswerSuggestionRequestPort,
         suggestions: SuggestionProvenancePort,
         *,
-        contexts: ExpectedContextPort,
+        contexts: AnalysisContextPort,
         reference_grounding: ReferenceAnalysisPort,
         references: ReferenceEvidencePort,
         authorization: RequirementAccessService,

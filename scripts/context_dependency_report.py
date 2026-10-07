@@ -165,6 +165,8 @@ PORTS = {
         "requirement_knowledge",
     ],
     "breakdown": [
+        # The context tokens breakdown reads (PR 11, F2).
+        "breakdown_context",
         "architecture_jobs",
         "architecture_mapping_stats",
         "candidate_review",

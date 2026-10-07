@@ -17,11 +17,11 @@ from smb_requirement_agent.application.errors import (
     RequirementAnalysisNotFoundError,
     RequirementNotFoundError,
 )
+from smb_requirement_agent.application.ports.breakdown_context import BreakdownContextPort
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.ports.epic_generator import EpicGeneratorPort
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
@@ -72,7 +72,7 @@ class GenerateEpic:
         transactions: TransactionManagerPort,
         *,
         authorization: RequirementAccessService,
-        contexts: GenerationContextTokens,
+        contexts: BreakdownContextPort,
     ) -> None:
         self._contexts = contexts
         self._requirements = requirement_repository
