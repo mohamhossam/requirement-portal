@@ -23,7 +23,7 @@ from smb_requirement_agent.application.use_cases.requirement_indexing import (
     IndexBacklogReader,
     IndexRequirementKnowledge,
 )
-from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
+from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.persistence.requirement_indexing import (
     MemoryRequirementIndexProgress,
 )

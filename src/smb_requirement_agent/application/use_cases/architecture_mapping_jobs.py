@@ -22,7 +22,6 @@ from smb_requirement_agent.application.ports.architecture_jobs import (
 from smb_requirement_agent.application.ports.architecture_knowledge import (
     ActiveArchitectureReleasePort,
 )
-from smb_requirement_agent.application.ports.identity import Actor, require_reader
 from smb_requirement_agent.application.use_cases.architecture_mapping import (
     MapBreakdownArchitecture,
 )
@@ -31,6 +30,7 @@ from smb_requirement_agent.application.use_cases.leased_jobs import (
     CommitFence,
     LeasedJobs,
 )
+from smb_requirement_agent.identity.application.ports.identity import Actor, require_reader
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,

@@ -17,7 +17,6 @@ from datetime import datetime
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.errors import RequirementNotFoundError
-from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.application.ports.corpus_membership import (
     CorpusActionsPort,
     CorpusMembershipPort,
@@ -47,6 +46,7 @@ from smb_requirement_agent.domain.knowledge.membership import (
 )
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.requirement.value_objects import RequirementStatus
+from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorSnapshot,

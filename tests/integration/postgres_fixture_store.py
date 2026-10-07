@@ -25,10 +25,6 @@ from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.epic.value_objects import EpicId
 from smb_requirement_agent.domain.feature.entities import Feature
 from smb_requirement_agent.domain.feature.value_objects import FeatureId
-from smb_requirement_agent.domain.identity.entities import (
-    DraftOwnership,
-    RequirementAccess,
-)
 from smb_requirement_agent.domain.requirement.entities import Requirement, RequirementDraft
 from smb_requirement_agent.domain.review.entities import BreakdownReview
 from smb_requirement_agent.domain.revision.entities import (
@@ -38,6 +34,10 @@ from smb_requirement_agent.domain.revision.entities import (
 )
 from smb_requirement_agent.domain.story.entities import StoryChangeProposal, UserStory
 from smb_requirement_agent.domain.story.value_objects import StoryId, StoryProposalId
+from smb_requirement_agent.identity.domain.entities import (
+    DraftOwnership,
+    RequirementAccess,
+)
 from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader import (
     ActivityInputDelta,
 )

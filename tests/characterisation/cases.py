@@ -23,6 +23,12 @@ from smb_requirement_agent.domain.review.fingerprints import (
     breakdown_fingerprint,
 )
 from smb_requirement_agent.domain.review.policy import BreakdownReviewPolicy
+from smb_requirement_agent.identity.infrastructure.identity_payloads import (
+    access_from_payload,
+    access_to_payload,
+    draft_ownership_from_payload,
+    draft_ownership_to_payload,
+)
 from smb_requirement_agent.infrastructure.persistence.activity_codec import (
     activity_from_payload,
     activity_to_payload,
@@ -48,12 +54,6 @@ from smb_requirement_agent.infrastructure.persistence.backlog_payloads import (
 from smb_requirement_agent.infrastructure.persistence.document_payloads import (
     document_from_payload,
     document_to_payload,
-)
-from smb_requirement_agent.infrastructure.persistence.identity_payloads import (
-    access_from_payload,
-    access_to_payload,
-    draft_ownership_from_payload,
-    draft_ownership_to_payload,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_audit_repository import (
     InMemoryAnalysisAuditRepository,

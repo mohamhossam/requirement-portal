@@ -64,6 +64,9 @@ from smb_requirement_agent.domain.story.value_objects import (
     StoryId,
     UserRole,
 )
+from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
+    InMemoryAccessRepository,
+)
 from smb_requirement_agent.infrastructure.persistence.in_memory_ai_jobs import InMemoryAiJobStore
 from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_audit_repository import (
     InMemoryAnalysisAuditRepository,
@@ -79,9 +82,6 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_epic_repository 
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_feature_repository import (
     InMemoryFeatureRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_identity import (
-    InMemoryAccessRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_requirement_repository import (
     InMemoryRequirementRepository,

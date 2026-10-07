@@ -4,7 +4,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from smb_requirement_agent.domain.identity.entities import AccessChangeKind, AssignmentRole
+from smb_requirement_agent.identity.domain.entities import AccessChangeKind, AssignmentRole
 from smb_requirement_agent.infrastructure.config.options import IdentityProvider
 from smb_requirement_agent.interfaces.api.schemas.bounds import (
     Identifier,

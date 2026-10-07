@@ -16,18 +16,18 @@ from smb_requirement_agent.application.use_cases.create_requirement import Creat
 from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementPermission,
 )
-from smb_requirement_agent.domain.identity.entities import RequirementAccess
-from smb_requirement_agent.domain.identity.errors import (
+from smb_requirement_agent.identity.domain.entities import RequirementAccess
+from smb_requirement_agent.identity.domain.errors import (
     AuthorizationDeniedError,
     InvalidIdentityError,
     RequirementAccessConflictError,
 )
-from smb_requirement_agent.infrastructure.config.options import IdentityProvider, LLMProvider
-from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
-from smb_requirement_agent.infrastructure.persistence.in_memory_identity import (
+from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
+from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
     InMemoryAccessRepository,
 )
+from smb_requirement_agent.infrastructure.config.options import IdentityProvider, LLMProvider
+from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.interfaces.api.main import create_app
 from smb_requirement_agent.shared_kernel.actors import (

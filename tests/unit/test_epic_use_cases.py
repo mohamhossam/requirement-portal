@@ -39,7 +39,11 @@ from smb_requirement_agent.domain.epic.errors import (
 from smb_requirement_agent.domain.epic.value_objects import EpicStatus, StaleReason
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.review.fingerprints import artifact_fingerprint
-from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
+from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
+from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
+    InMemoryAccessRepository,
+    InMemoryActorDirectory,
+)
 from smb_requirement_agent.infrastructure.llm.fake_epic_generator import (
     FAKE_MODEL,
     FAKE_PROMPT_VERSION,
@@ -65,10 +69,6 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_epic_repository 
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_feature_repository import (
     InMemoryFeatureRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_identity import (
-    InMemoryAccessRepository,
-    InMemoryActorDirectory,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_requirement_repository import (
     InMemoryRequirementRepository,
@@ -422,7 +422,7 @@ class TestEpicIdentity:
 
 
 def test_direct_epic_commands_reject_an_unrelated_actor(world: World) -> None:
-    from smb_requirement_agent.domain.identity.errors import AuthorizationDeniedError
+    from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedError
 
     requirement = world.analysed_requirement()
     with pytest.raises(AuthorizationDeniedError):

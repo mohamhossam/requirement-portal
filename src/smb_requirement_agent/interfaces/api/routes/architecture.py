@@ -6,13 +6,13 @@ from fastapi import APIRouter, Depends
 
 from smb_requirement_agent.application.errors import ArchitectureJobNotFoundError
 from smb_requirement_agent.application.ports.architecture_jobs import ArchitectureJob
-from smb_requirement_agent.application.ports.identity import Actor
 from smb_requirement_agent.application.use_cases.architecture_mapping import (
     MapBreakdownArchitecture,
 )
 from smb_requirement_agent.application.use_cases.architecture_mapping_jobs import (
     ArchitectureMappingJobs,
 )
+from smb_requirement_agent.identity.application.ports.identity import Actor
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     KnowledgeActorDep,

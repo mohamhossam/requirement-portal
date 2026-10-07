@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from smb_requirement_agent.application.errors import AuthenticationRequiredError
-from smb_requirement_agent.domain.identity.errors import AuthorizationDeniedError
+from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedError
 
 
 @dataclass(frozen=True)

@@ -18,7 +18,6 @@ from smb_requirement_agent.application.ports.architecture_knowledge import (
     ArchitectureKnowledgeMatch,
     ArchitectureQuery,
 )
-from smb_requirement_agent.application.ports.identity import Actor
 from smb_requirement_agent.application.use_cases.architecture_mapping import (
     MapBreakdownArchitecture,
     MapFeatureArchitecture,
@@ -31,7 +30,8 @@ from smb_requirement_agent.domain.architecture.entities import (
     SystemReference,
 )
 from smb_requirement_agent.domain.architecture.errors import InvalidArchitectureContentError
-from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
+from smb_requirement_agent.identity.application.ports.identity import Actor
+from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.knowledge_client import OFFLINE_RELEASE_ID
 from smb_requirement_agent.infrastructure.persistence.backlog_payloads import (
     feature_from_payload,

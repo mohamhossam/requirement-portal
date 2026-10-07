@@ -29,7 +29,7 @@ from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementStatus,
     RequirementTitle,
 )
-from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
+from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.llm.openai_adapters import OpenAIEpicGenerator
 from smb_requirement_agent.infrastructure.llm.prompts.epic_prompt import PROMPT_VERSION
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId

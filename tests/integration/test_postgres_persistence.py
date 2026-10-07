@@ -105,11 +105,6 @@ from smb_requirement_agent.domain.feature.value_objects import (
     SplittingPattern,
     SplittingRationale,
 )
-from smb_requirement_agent.domain.identity.entities import (
-    DraftOwnership,
-    RequirementAccess,
-)
-from smb_requirement_agent.domain.identity.errors import RequirementAccessConflictError
 from smb_requirement_agent.domain.jobs.entities import (
     AiJob,
     AiJobId,
@@ -167,9 +162,14 @@ from smb_requirement_agent.domain.story.value_objects import (
     StoryProposalId,
     UserRole,
 )
+from smb_requirement_agent.identity.domain.entities import (
+    DraftOwnership,
+    RequirementAccess,
+)
+from smb_requirement_agent.identity.domain.errors import RequirementAccessConflictError
+from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.exports.json_exporter import JsonBacklogExporter
 from smb_requirement_agent.infrastructure.exports.xlsx_exporter import XlsxBacklogExporter
-from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.llm.fake_requirement_analyzer import (
     FakeRequirementAnalyzer,
 )
@@ -1569,9 +1569,9 @@ def test_incremental_activity_matches_audit_sources_and_report_aggregation() -> 
     from smb_requirement_agent.application.use_cases.create_requirement import (
         CreateRequirementInput,
     )
+    from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
     from smb_requirement_agent.infrastructure.config.options import LLMProvider, PersistenceProvider
     from smb_requirement_agent.infrastructure.config.settings import Settings
-    from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
     from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader import (
         PostgresActivityReadAdapter,
     )

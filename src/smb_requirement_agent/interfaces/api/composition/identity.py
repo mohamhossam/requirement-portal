@@ -9,13 +9,13 @@ import httpx as httpx
 from smb_kernel.identity.oidc import OidcIdentityProvider
 from smb_kernel.identity.ports import IdentityProviderPort
 
-from smb_requirement_agent.application.ports.actor_directory import ActorDirectoryPort
-from smb_requirement_agent.infrastructure.config.options import IdentityProvider
-from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.identity.fake_identity import (
+from smb_requirement_agent.identity.application.ports.actor_directory import ActorDirectoryPort
+from smb_requirement_agent.identity.infrastructure.fake_identity import (
     FAKE_ACTORS,
     FakeIdentityProvider,
 )
+from smb_requirement_agent.infrastructure.config.options import IdentityProvider
+from smb_requirement_agent.infrastructure.config.settings import Settings
 
 
 def build_identity(

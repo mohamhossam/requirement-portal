@@ -20,8 +20,8 @@ from smb_requirement_agent.application.use_cases.create_requirement import (
 )
 from smb_requirement_agent.application.use_cases.documents import UploadDocumentInput
 from smb_requirement_agent.domain.document.value_objects import DocumentId
+from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.conftest import FAKE_PROVIDER_SETTINGS

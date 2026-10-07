@@ -21,12 +21,12 @@ from smb_requirement_agent.domain.requirement.errors import (
     InvalidRequirementDescriptionError,
     InvalidRequirementTitleError,
 )
-from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
+from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
+from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
+    InMemoryAccessRepository,
+)
 from smb_requirement_agent.infrastructure.persistence.in_memory_document_repository import (
     InMemoryDocumentRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_identity import (
-    InMemoryAccessRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_requirement_repository import (
     InMemoryRequirementRepository,

@@ -19,8 +19,6 @@ from smb_requirement_agent.application.errors import (
     RequirementAnalysisNotFoundError,
     RequirementNotFoundError,
 )
-from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
-from smb_requirement_agent.application.ports.actor_directory import ActorDirectoryPort
 from smb_requirement_agent.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
@@ -79,9 +77,11 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     IntentProposalStatus,
     QuestionId,
 )
-from smb_requirement_agent.domain.identity.entities import RequirementAccess
-from smb_requirement_agent.domain.identity.errors import AuthorizationDeniedError
 from smb_requirement_agent.domain.requirement.entities import Requirement
+from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
+from smb_requirement_agent.identity.application.ports.actor_directory import ActorDirectoryPort
+from smb_requirement_agent.identity.domain.entities import RequirementAccess
+from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedError
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,

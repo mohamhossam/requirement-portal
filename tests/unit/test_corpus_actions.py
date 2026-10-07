@@ -32,7 +32,7 @@ from smb_requirement_agent.domain.knowledge.errors import (
     RequirementRetiredError,
 )
 from smb_requirement_agent.domain.knowledge.membership import CorpusActionKind
-from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
+from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import (
     FakeKnowledgeEmbedding,
 )

@@ -13,7 +13,6 @@ from smb_requirement_agent.application.errors import (
     RequirementAnalysisConflictError,
     UnsupportedDocumentError,
 )
-from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceSearchPort
 from smb_requirement_agent.application.ports.requirement_knowledge import (
     KnowledgeEmbeddingPort,
@@ -25,6 +24,7 @@ from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     require_index_current,
 )
 from smb_requirement_agent.domain.knowledge.entities import RelationshipEvidence
+from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.shared_kernel.citation import (
     PublishedReference,
     normalize_search,

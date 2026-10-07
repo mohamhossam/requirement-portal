@@ -17,9 +17,9 @@ from smb_requirement_agent.application.use_cases.create_requirement import Creat
 from smb_requirement_agent.application.use_cases.documents import UploadDocumentInput
 from smb_requirement_agent.domain.document.attachment import AttachmentTarget
 from smb_requirement_agent.domain.document.ingestion import IngestionStage
+from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 
 ACTOR = FAKE_ACTORS[0]

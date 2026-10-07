@@ -30,7 +30,6 @@ from smb_requirement_agent.application.use_cases.activity_reporting import (
 )
 from smb_requirement_agent.domain.analysis.entities import AnalysisRound, ClarificationQuestion
 from smb_requirement_agent.domain.analysis.value_objects import QuestionChangeAction
-from smb_requirement_agent.domain.identity.entities import AccessChangeKind
 from smb_requirement_agent.domain.jobs.entities import AiJobOperation, AiJobStatus
 from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeDecisionKind,
@@ -47,6 +46,7 @@ from smb_requirement_agent.domain.review.evidence import (
     evidence_fingerprint,
 )
 from smb_requirement_agent.domain.revision.entities import BreakdownRevision, RequirementRevision
+from smb_requirement_agent.identity.domain.entities import AccessChangeKind
 from smb_requirement_agent.shared_kernel.actors import ActorSnapshot
 from smb_requirement_agent.shared_kernel.approval import (
     Approval,

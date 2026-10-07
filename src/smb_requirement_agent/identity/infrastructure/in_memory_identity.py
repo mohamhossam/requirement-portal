@@ -6,13 +6,13 @@ from copy import deepcopy
 from threading import RLock
 from typing import Any
 
-from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
-from smb_requirement_agent.application.ports.actor_directory import ActorDirectoryPort
-from smb_requirement_agent.domain.identity.entities import (
+from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
+from smb_requirement_agent.identity.application.ports.actor_directory import ActorDirectoryPort
+from smb_requirement_agent.identity.domain.entities import (
     DraftOwnership,
     RequirementAccess,
 )
-from smb_requirement_agent.domain.identity.errors import RequirementAccessConflictError
+from smb_requirement_agent.identity.domain.errors import RequirementAccessConflictError
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,

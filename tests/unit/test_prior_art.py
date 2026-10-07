@@ -28,9 +28,9 @@ from smb_requirement_agent.application.use_cases.prior_art import _validated
 from smb_requirement_agent.domain.jobs.entities import AiJobOperation, AiJobStatus
 from smb_requirement_agent.domain.knowledge.prior_art import PriorArtStatus
 from smb_requirement_agent.domain.requirement.entities import Requirement
+from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.jobs.prior_art_gate import PriorArtGatedQueue
 from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import IndexReadyJobQueue
 from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import FakePriorArtJudge

@@ -101,11 +101,6 @@ from smb_requirement_agent.domain.feature.errors import (
     InvalidFeatureContentError,
     StaleFeatureApprovalError,
 )
-from smb_requirement_agent.domain.identity.errors import (
-    AuthorizationDeniedError,
-    InvalidIdentityError,
-    RequirementAccessConflictError,
-)
 from smb_requirement_agent.domain.jobs.errors import AiJobConflictError, InvalidAiJobError
 from smb_requirement_agent.domain.knowledge.errors import (
     CorpusMembershipConflictError,
@@ -135,6 +130,11 @@ from smb_requirement_agent.domain.story.errors import (
     StoriesAlreadyExistError,
     StoryProposalConflictError,
     StoryRegenerationConflictError,
+)
+from smb_requirement_agent.identity.domain.errors import (
+    AuthorizationDeniedError,
+    InvalidIdentityError,
+    RequirementAccessConflictError,
 )
 from smb_requirement_agent.shared_kernel.errors import (
     InvalidApprovalContentError,

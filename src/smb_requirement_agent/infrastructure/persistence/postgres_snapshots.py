@@ -13,6 +13,7 @@ from smb_requirement_agent.domain.analysis.entities import (
 from smb_requirement_agent.domain.feature.entities import Feature
 from smb_requirement_agent.domain.jobs.entities import AiJobOperation
 from smb_requirement_agent.domain.story.entities import UserStory
+from smb_requirement_agent.identity.infrastructure.identity_payloads import access_from_payload
 from smb_requirement_agent.infrastructure.persistence.analysis_payloads import (
     analysis_from_payload,
     clarification_question_from_payload,
@@ -22,7 +23,6 @@ from smb_requirement_agent.infrastructure.persistence.backlog_payloads import (
     feature_from_payload,
     story_from_payload,
 )
-from smb_requirement_agent.infrastructure.persistence.identity_payloads import access_from_payload
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 from smb_requirement_agent.infrastructure.persistence.postgres_values import (
     _datetime,

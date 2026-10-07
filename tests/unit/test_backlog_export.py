@@ -34,13 +34,13 @@ from smb_requirement_agent.application.use_cases.export_breakdown import (
     formal_final_approval,
     is_exportable_revision,
 )
-from smb_requirement_agent.domain.identity.entities import (
+from smb_requirement_agent.domain.review.entities import BreakdownStatus
+from smb_requirement_agent.domain.revision.entities import RevisionNumber
+from smb_requirement_agent.identity.domain.entities import (
     DraftOwnership,
     RequirementAccess,
 )
-from smb_requirement_agent.domain.identity.errors import AuthorizationDeniedError
-from smb_requirement_agent.domain.review.entities import BreakdownStatus
-from smb_requirement_agent.domain.revision.entities import RevisionNumber
+from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedError
 from smb_requirement_agent.infrastructure.exports.json_exporter import JsonBacklogExporter
 from smb_requirement_agent.infrastructure.exports.xlsx_exporter import XlsxBacklogExporter
 from smb_requirement_agent.interfaces.api.container import Container

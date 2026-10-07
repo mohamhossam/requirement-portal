@@ -21,9 +21,7 @@ from smb_kernel.persistence.connector import (
 )
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.application.ports.activity import ActivityReadPort, ReportingReadPort
-from smb_requirement_agent.application.ports.actor_directory import ActorDirectoryPort
 from smb_requirement_agent.application.ports.ai_jobs import (
     AiJobQueuePort,
     AiJobRepositoryPort,
@@ -109,6 +107,12 @@ from smb_requirement_agent.application.use_cases.requirement_worklist import (
     ListRequirementWorklist,
     RequirementWorklistReader,
 )
+from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
+from smb_requirement_agent.identity.application.ports.actor_directory import ActorDirectoryPort
+from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
+    InMemoryAccessRepository,
+    InMemoryActorDirectory,
+)
 from smb_requirement_agent.infrastructure.config.options import (
     ConfigurationError,
     PersistenceProvider,
@@ -183,10 +187,6 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_evidence_fragmen
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_feature_repository import (
     InMemoryFeatureRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_identity import (
-    InMemoryAccessRepository,
-    InMemoryActorDirectory,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_requirement_draft_repository import (  # noqa: E501
     InMemoryRequirementDraftRepository,

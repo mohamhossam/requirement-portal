@@ -13,8 +13,6 @@ from smb_requirement_agent.application.errors import (
     KnowledgeIndexPendingError,
     KnowledgeScreenConflictError,
 )
-from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
-from smb_requirement_agent.application.ports.actor_directory import ActorDirectoryPort
 from smb_requirement_agent.application.ports.ai_jobs import (
     AiJobRecord,
     AiJobRepositoryPort,
@@ -78,6 +76,8 @@ from smb_requirement_agent.domain.jobs.errors import AiJobConflictError
 from smb_requirement_agent.domain.review.entities import FlagId
 from smb_requirement_agent.domain.story.entities import StoryChangeOperation
 from smb_requirement_agent.domain.story.value_objects import StoryId
+from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
+from smb_requirement_agent.identity.application.ports.actor_directory import ActorDirectoryPort
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,

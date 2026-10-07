@@ -17,7 +17,6 @@ from smb_requirement_agent.application.errors import (
     RequirementNotFoundError,
     StoryNotFoundError,
 )
-from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.application.ports.breakdown_review_repository import (
     BreakdownReviewRepositoryPort,
 )
@@ -36,7 +35,6 @@ from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementPermission,
 )
 from smb_requirement_agent.domain.feature.value_objects import FeatureId
-from smb_requirement_agent.domain.identity.entities import RequirementAccess
 from smb_requirement_agent.domain.review.entities import BreakdownReview, BreakdownStatus, FlagId
 from smb_requirement_agent.domain.review.errors import InvalidReviewContentError
 from smb_requirement_agent.domain.review.evidence import (
@@ -55,6 +53,8 @@ from smb_requirement_agent.domain.review.readiness import (
 )
 from smb_requirement_agent.domain.story.entities import UserStory
 from smb_requirement_agent.domain.story.value_objects import StoryId
+from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
+from smb_requirement_agent.identity.domain.entities import RequirementAccess
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.approval import (
     Approval,

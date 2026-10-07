@@ -89,14 +89,6 @@ from smb_requirement_agent.domain.feature.value_objects import (
     SplittingPattern,
     SplittingRationale,
 )
-from smb_requirement_agent.domain.identity.entities import (
-    AccessChange,
-    AccessChangeKind,
-    AssignmentRole,
-    DraftOwnership,
-    RequirementAccess,
-    RequirementAssignment,
-)
 from smb_requirement_agent.domain.knowledge.historic import (
     HistoricPublication,
     HistoricRequirementState,
@@ -150,6 +142,14 @@ from smb_requirement_agent.domain.story.value_objects import (
     StoryId,
     StoryProposalId,
     UserRole,
+)
+from smb_requirement_agent.identity.domain.entities import (
+    AccessChange,
+    AccessChangeKind,
+    AssignmentRole,
+    DraftOwnership,
+    RequirementAccess,
+    RequirementAssignment,
 )
 from smb_requirement_agent.shared_kernel.actors import ActorSnapshot
 from smb_requirement_agent.shared_kernel.approval import (

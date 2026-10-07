@@ -20,7 +20,6 @@ from smb_requirement_agent.application.errors import (
     KnowledgeGenerationError,
     RequirementNotFoundError,
 )
-from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.application.ports.ai_jobs import (
     AiJobCommand,
     AiJobRecord,
@@ -70,6 +69,7 @@ from smb_requirement_agent.domain.knowledge.prior_art import (
     PriorArtVerdict,
 )
 from smb_requirement_agent.domain.requirement.value_objects import RequirementStatus
+from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.generation import Provenance
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId

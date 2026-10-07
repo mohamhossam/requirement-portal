@@ -53,7 +53,7 @@ from smb_requirement_agent.domain.document.value_objects import (
     DocumentVersionId,
     ExtractionWarningSeverity,
 )
-from smb_requirement_agent.domain.identity.errors import AuthorizationDeniedError
+from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedError
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 

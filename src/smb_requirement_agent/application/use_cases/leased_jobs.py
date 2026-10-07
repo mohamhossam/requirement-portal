@@ -19,8 +19,8 @@ from smb_requirement_agent.application.ports.architecture_jobs import (
     ArchitectureJobRepositoryPort,
     ArchitectureJobStatus,
 )
-from smb_requirement_agent.application.ports.identity import Actor, require_maintainer
 from smb_requirement_agent.application.public_errors import describe_public_error
+from smb_requirement_agent.identity.application.ports.identity import Actor, require_maintainer
 
 
 class ArchitectureJobLeaseLostError(Exception):

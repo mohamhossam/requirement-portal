@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from smb_requirement_agent.domain.identity.entities import (
+from smb_requirement_agent.identity.domain.entities import (
     AccessChange,
     AccessChangeKind,
     AssignmentRole,

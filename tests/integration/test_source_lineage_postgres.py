@@ -14,10 +14,10 @@ from smb_requirement_agent.application.errors import ArtifactVersionConflictErro
 from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirementInput
 from smb_requirement_agent.domain.analysis.value_objects import IntentProposalStatus
 from smb_requirement_agent.domain.document.lineage import ImpactDecisionKind
-from smb_requirement_agent.domain.identity.errors import AuthorizationDeniedError
+from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedError
+from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.config.options import LLMProvider, PersistenceProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
 from smb_requirement_agent.interfaces.api.composition.operations import build_projection_rebuild
 from smb_requirement_agent.interfaces.api.container import build_container

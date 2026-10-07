@@ -28,7 +28,7 @@ from smb_requirement_agent.domain.jobs.entities import (
     NotificationKind,
 )
 from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
+from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import IndexReadyJobQueue
 from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import (
     FakeKnowledgeEmbedding,

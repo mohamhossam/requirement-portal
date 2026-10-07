@@ -79,7 +79,7 @@ source_modules =
 forbidden_modules =
     smb_requirement_agent.infrastructure.persistence
     smb_requirement_agent.infrastructure.llm
-    smb_requirement_agent.infrastructure.identity
+    smb_requirement_agent.identity.infrastructure
     smb_requirement_agent.infrastructure.documents
     smb_requirement_agent.infrastructure.jobs
 allow_indirect_imports = True

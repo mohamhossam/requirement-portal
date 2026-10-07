@@ -16,6 +16,7 @@ from smb_requirement_agent.domain.revision.entities import (
     RequirementRevision,
     RevisionNumber,
 )
+from smb_requirement_agent.identity.infrastructure.identity_payloads import access_from_payload
 from smb_requirement_agent.infrastructure.persistence.analysis_payloads import (
     analysis_from_payload,
     analysis_round_from_payload,
@@ -26,7 +27,6 @@ from smb_requirement_agent.infrastructure.persistence.backlog_payloads import (
     feature_from_payload,
     story_from_payload,
 )
-from smb_requirement_agent.infrastructure.persistence.identity_payloads import access_from_payload
 from smb_requirement_agent.infrastructure.persistence.payload_fields import JsonObject
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 from smb_requirement_agent.infrastructure.persistence.postgres_values import (

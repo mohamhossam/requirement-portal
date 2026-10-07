@@ -15,7 +15,6 @@ from uuid import uuid4
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.errors import KnowledgeFindingNotFoundError
-from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.application.ports.knowledge_portfolio import (
     CorpusQuery,
     FindingAge,
@@ -49,6 +48,7 @@ from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeRelationshipKind,
 )
 from smb_requirement_agent.domain.knowledge.errors import KnowledgeFindingConflictError
+from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.shared_kernel.actors import ActorId
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 

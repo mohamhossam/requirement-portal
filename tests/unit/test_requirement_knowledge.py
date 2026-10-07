@@ -32,7 +32,6 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     KnownFact,
     QuestionId,
 )
-from smb_requirement_agent.domain.identity.errors import AuthorizationDeniedError
 from smb_requirement_agent.domain.jobs.entities import AiJobFailure
 from smb_requirement_agent.domain.knowledge.entities import (
     AnswerSuggestionSource,
@@ -53,7 +52,8 @@ from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementStatus,
     RequirementTitle,
 )
-from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
+from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedError
+from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import (
     FakeKnowledgeEmbedding,
 )

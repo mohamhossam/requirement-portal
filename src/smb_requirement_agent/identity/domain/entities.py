@@ -6,7 +6,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime
 from enum import StrEnum
 
-from smb_requirement_agent.domain.identity.errors import (
+from smb_requirement_agent.identity.domain.errors import (
     AuthorizationDeniedError,
     InvalidIdentityError,
     RequirementAccessConflictError,

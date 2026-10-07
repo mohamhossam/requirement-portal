@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.application.ports.screening_requests import ScreeningRequestPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.create_requirement import (
@@ -19,6 +18,7 @@ from smb_requirement_agent.application.use_cases.requirement_drafts import (
     SaveRequirementDraft,
 )
 from smb_requirement_agent.domain.requirement.entities import Requirement, RequirementDraft
+from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 

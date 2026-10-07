@@ -18,7 +18,6 @@ from smb_kernel.identity.ports import IdentityCredential
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.errors import AuthenticationRequiredError
-from smb_requirement_agent.application.ports.identity import Actor
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceReviewPort
 from smb_requirement_agent.application.use_cases.activity_reporting import (
     GetOperationalReport,
@@ -149,6 +148,7 @@ from smb_requirement_agent.application.use_cases.story_workflow import (
 from smb_requirement_agent.application.use_cases.unified_knowledge_search import (
     UnifiedKnowledgeSearch,
 )
+from smb_requirement_agent.identity.application.ports.identity import Actor
 from smb_requirement_agent.infrastructure.config.options import IdentityProvider
 from smb_requirement_agent.interfaces.api.container import Container
 from smb_requirement_agent.interfaces.api.error_handlers import status_code_for

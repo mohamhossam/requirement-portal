@@ -17,7 +17,6 @@ from smb_requirement_agent.application.errors import (
     KnowledgeScreenConflictError,
     RequirementNotFoundError,
 )
-from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
@@ -49,7 +48,6 @@ from smb_requirement_agent.domain.analysis.entities import (
 from smb_requirement_agent.domain.analysis.value_objects import (
     IntentProposalStatus,
 )
-from smb_requirement_agent.domain.identity.entities import RequirementAccess
 from smb_requirement_agent.domain.jobs.entities import AiJobOperation
 from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeChunk,
@@ -71,6 +69,8 @@ from smb_requirement_agent.domain.knowledge.membership import CorpusMembership
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.requirement.errors import DuplicateRequirementStateError
 from smb_requirement_agent.domain.requirement.value_objects import RequirementStatus
+from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
+from smb_requirement_agent.identity.domain.entities import RequirementAccess
 from smb_requirement_agent.shared_kernel.actors import (
     ActorProfile,
     ActorSnapshot,

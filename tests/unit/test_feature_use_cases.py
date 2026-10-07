@@ -59,7 +59,11 @@ from smb_requirement_agent.domain.feature.value_objects import (
 )
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.review.fingerprints import artifact_fingerprint
-from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
+from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
+from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
+    InMemoryAccessRepository,
+    InMemoryActorDirectory,
+)
 from smb_requirement_agent.infrastructure.llm.fake_epic_generator import FakeEpicGenerator
 from smb_requirement_agent.infrastructure.llm.fake_feature_generator import FakeFeatureGenerator
 from smb_requirement_agent.infrastructure.llm.fake_requirement_analyzer import (
@@ -82,10 +86,6 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_epic_repository 
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_feature_repository import (
     InMemoryFeatureRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_identity import (
-    InMemoryAccessRepository,
-    InMemoryActorDirectory,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_requirement_repository import (
     InMemoryRequirementRepository,

@@ -12,9 +12,9 @@ from fastapi.testclient import TestClient
 from smb_kernel.http.service_auth import CALLER_SCOPE_KEY
 
 from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirementInput
+from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.config.options import ConfigurationError
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.interfaces.api.dependencies import require_service_caller
 from smb_requirement_agent.interfaces.api.main import create_app
 from tests.knowledge_doubles import sync

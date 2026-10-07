@@ -22,9 +22,7 @@ from smb_kernel.time.system import SystemClock
 
 from smb_requirement_agent.application.events import InProcessEventDispatcher
 from smb_requirement_agent.application.exports import ExportFormat
-from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.application.ports.activity import ActivityReadPort, ReportingReadPort
-from smb_requirement_agent.application.ports.actor_directory import ActorDirectoryPort
 from smb_requirement_agent.application.ports.ai_jobs import (
     AiJobQueuePort,
     AiJobRepositoryPort,
@@ -237,6 +235,8 @@ from smb_requirement_agent.application.use_cases.story_workflow import (
 from smb_requirement_agent.application.use_cases.unified_knowledge_search import (
     UnifiedKnowledgeSearch,
 )
+from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
+from smb_requirement_agent.identity.application.ports.actor_directory import ActorDirectoryPort
 from smb_requirement_agent.infrastructure.config.settings import (
     Settings,
 )

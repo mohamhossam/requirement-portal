@@ -13,7 +13,6 @@ from smb_requirement_agent.application.errors import (
     RequirementAnalysisConflictError,
     RequirementNotFoundError,
 )
-from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
@@ -52,6 +51,7 @@ from smb_requirement_agent.domain.knowledge.errors import (
     KnowledgeFindingConflictError,
 )
 from smb_requirement_agent.domain.requirement.entities import Requirement
+from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.generation import Provenance
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
