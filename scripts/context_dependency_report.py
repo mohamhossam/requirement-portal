@@ -56,11 +56,7 @@ DOMAIN = {
     # After PR 2 this module holds only ImpactDecision (source impact).
     "domain.document.lineage": "knowledge",
     "domain.document.reference": "references",
-    "domain.epic": "breakdown",
-    "domain.feature": "breakdown",
-    "domain.story": "breakdown",
     "domain.architecture.knowledge": "references",
-    "domain.architecture": "breakdown",
     "domain.review": "governance",
     "domain.revision": "governance",
     "domain.knowledge.historic": "references",
@@ -88,25 +84,6 @@ USE_CASES = {
         "prior_art",
         "source_impact",
         "answer_suggestions",
-    ],
-    "breakdown": [
-        "generate_epic",
-        "edit_epic",
-        "get_epic",
-        "generate_features",
-        # GetFeatures and EditFeature; ApproveFeature is governance's approve_feature (PR 11).
-        "feature_review",
-        "story_workflow",
-        "story_change_proposals",
-        "story_quality",
-        "generation_checks",
-        "architecture_mapping",
-        "architecture_mapping_jobs",
-        # The architecture-mapping queue's lease logic; its only subclass is
-        # ArchitectureMappingJobs (PR 8 reassigned it from jobs).
-        "leased_jobs",
-        # Handler for RequirementRevised, EpicChanged, FeatureChanged (PR 4).
-        "mark_backlog_stale",
     ],
     "governance": [
         "breakdown_review",
@@ -164,22 +141,6 @@ PORTS = {
         "requirement_indexing",
         "requirement_knowledge",
     ],
-    "breakdown": [
-        # The context tokens breakdown reads (PR 11, F2).
-        "breakdown_context",
-        "architecture_jobs",
-        "architecture_mapping_stats",
-        "candidate_review",
-        "epic_generator",
-        "epic_repository",
-        "feature_generator",
-        "feature_repository",
-        "generation_guidance",
-        "story_generator",
-        "story_quality_evaluator",
-        "story_quality_repository",
-        "story_repository",
-    ],
     "governance": ["backlog_export", "breakdown_repository", "breakdown_review_repository"],
     "reporting": ["activity", "requirement_worklist", "saved_views"],
     TECHNICAL: ["domain_events", "expected_context", "external_work", "transaction_manager"],
@@ -201,7 +162,7 @@ APPLICATION_MODULES = {
 
 # Contexts that have moved into their own package (ADR-0103 §1). Their domain and application
 # layers are classified whole; their infrastructure, like the rest, is out of scope.
-CONTEXT_PACKAGES = ("identity", "jobs", "requirements", "analysis")
+CONTEXT_PACKAGES = ("identity", "jobs", "requirements", "analysis", "breakdown")
 
 
 def _prefixes() -> dict[str, str]:
@@ -229,9 +190,11 @@ def classify(module: str, table: dict[str, str]) -> str | None:
 
 def _in_scope(module: str) -> bool:
     relative = module.removeprefix(f"{ROOT}.")
-    # domain.document is only the package left around lineage.py and reference.py (PR 9).
+    # domain.document is only the package left around lineage.py and reference.py (PR 9),
+    # and domain.architecture the one around knowledge.py (PR 11).
     if relative in (
         "domain",
+        "domain.architecture",
         "domain.document",
         "application",
         "application.use_cases",
