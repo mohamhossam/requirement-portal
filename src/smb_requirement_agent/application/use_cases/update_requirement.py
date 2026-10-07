@@ -11,17 +11,16 @@ from smb_requirement_agent.application.errors import (
     RequirementVersionConflictError,
 )
 from smb_requirement_agent.application.ports.document_repository import DocumentRepositoryPort
+from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
 )
-from smb_requirement_agent.application.use_cases.invalidate_derived_artifacts import (
-    InvalidateDerivedArtifacts,
-)
 from smb_requirement_agent.application.use_cases.requirement_sources import require_usable_source
 from smb_requirement_agent.domain.requirement.entities import Requirement
+from smb_requirement_agent.domain.requirement.events import RequirementRevised
 from smb_requirement_agent.domain.requirement.value_objects import (
     RequirementContext,
     RequirementDescription,
@@ -61,7 +60,7 @@ class UpdateRequirement:
     def __init__(
         self,
         repository: RequirementRepositoryPort,
-        invalidation: InvalidateDerivedArtifacts,
+        events: DomainEventPublisher,
         clock: ClockPort,
         transactions: TransactionManagerPort,
         *,
@@ -69,7 +68,7 @@ class UpdateRequirement:
         documents: DocumentRepositoryPort,
     ) -> None:
         self._repository = repository
-        self._invalidation = invalidation
+        self._events = events
         self._clock = clock
         self._transactions = transactions
         self._authorization = authorization
@@ -130,7 +129,7 @@ class UpdateRequirement:
             if _same_source(existing, updated):
                 return existing
             self._repository.save(updated)
-            self._invalidation.for_changed_requirement(requirement_id)
+            self._events.publish(RequirementRevised(requirement_id=requirement_id))
             return updated
 
 

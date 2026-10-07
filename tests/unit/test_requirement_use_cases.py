@@ -32,7 +32,7 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_requirement_repo
     InMemoryRequirementRepository,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
-from tests.conftest import TEST_NOW, make_invalidation
+from tests.conftest import TEST_NOW, make_event_publisher
 from tests.unit.access_service import access_service_for
 from tests.unit.owned_requirement_creator import OwnedRequirementCreator
 from tests.unit.transaction_stub import NoOpTransactionManager
@@ -112,7 +112,7 @@ class TestUpdateRequirement:
         create = OwnedRequirementCreator(repo, access, FAKE_ACTORS[0], FixedClock(TEST_NOW))
         update = UpdateRequirement(
             repo,
-            make_invalidation(),
+            make_event_publisher(),
             FixedClock(TEST_NOW),
             NoOpTransactionManager(),
             authorization=access_service_for(repo, access),
@@ -145,7 +145,7 @@ class TestUpdateRequirement:
         access = InMemoryAccessRepository()
         use_case = UpdateRequirement(
             repo,
-            make_invalidation(),
+            make_event_publisher(),
             FixedClock(TEST_NOW),
             NoOpTransactionManager(),
             authorization=access_service_for(repo, access),
@@ -167,7 +167,7 @@ class TestUpdateRequirement:
         create = OwnedRequirementCreator(repo, access, FAKE_ACTORS[0], FixedClock(TEST_NOW))
         update = UpdateRequirement(
             repo,
-            make_invalidation(),
+            make_event_publisher(),
             FixedClock(TEST_NOW),
             NoOpTransactionManager(),
             authorization=access_service_for(repo, access),
@@ -191,7 +191,7 @@ class TestUpdateRequirement:
         create = OwnedRequirementCreator(repo, access, FAKE_ACTORS[0], FixedClock(TEST_NOW))
         update = UpdateRequirement(
             repo,
-            make_invalidation(),
+            make_event_publisher(),
             FixedClock(TEST_NOW),
             NoOpTransactionManager(),
             authorization=access_service_for(repo, access),

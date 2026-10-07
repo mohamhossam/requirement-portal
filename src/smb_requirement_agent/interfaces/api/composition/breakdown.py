@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.ports.architecture_knowledge import ArchitectureKnowledgePort
+from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.ports.epic_generator import EpicGeneratorPort
 from smb_requirement_agent.application.ports.feature_generator import FeatureGeneratorPort
 from smb_requirement_agent.application.ports.story_generator import StoryGeneratorPort
@@ -51,12 +52,6 @@ from smb_requirement_agent.application.use_cases.generation_checks import Genera
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.application.use_cases.get_epic import GetEpic
 from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
-from smb_requirement_agent.application.use_cases.invalidate_approval_workflow import (
-    InvalidateApprovalWorkflow,
-)
-from smb_requirement_agent.application.use_cases.invalidate_derived_artifacts import (
-    InvalidateDerivedArtifacts,
-)
 from smb_requirement_agent.application.use_cases.story_change_proposals import StoryChangeProposals
 from smb_requirement_agent.application.use_cases.story_quality import (
     AssessStoryCandidate,
@@ -126,8 +121,7 @@ def build_breakdown(
     review: ReviewWiring,
     collaboration: AnalysisCollaboration,
     contexts: GenerationContextTokens,
-    invalidation: InvalidateDerivedArtifacts,
-    approval_invalidation: InvalidateApprovalWorkflow,
+    events: DomainEventPublisher,
     clock: ClockPort,
     access: RequirementAccessService,
 ) -> BreakdownWiring:
@@ -140,7 +134,7 @@ def build_breakdown(
     # Every Story-set change shares one argument list; only the model use differs.
     story_set = (requirements, analyses, epics, features, stories, transactions)
 
-    get_stories = GetStories(*story_set, approval_invalidation, authorization=access)
+    get_stories = GetStories(*story_set, events, authorization=access)
     validate_story = ValidateStory(get_stories, models.story_quality_evaluator, clock)
     validate_feature_stories = ValidateFeatureStories(get_stories, validate_story)
     map_feature = MapFeatureArchitecture(architecture)
@@ -170,13 +164,13 @@ def build_breakdown(
             epics,
             models.epic_generator,
             clock,
-            invalidation,
+            events,
             transactions,
             authorization=access,
             contexts=contexts,
         ),
         get_epic=GetEpic(requirements, epics),
-        edit_epic=EditEpic(requirements, epics, invalidation, transactions, authorization=access),
+        edit_epic=EditEpic(requirements, epics, events, transactions, authorization=access),
         approve_epic=ApproveEpic(requirements, epics, review.approval_recorder, transactions),
         generate_features=GenerateFeatures(
             requirements,
@@ -187,7 +181,7 @@ def build_breakdown(
             persistence.story_proposal_repository,
             models.feature_generator,
             clock,
-            approval_invalidation,
+            events,
             transactions,
             authorization=access,
             contexts=contexts,
@@ -195,14 +189,14 @@ def build_breakdown(
         ),
         get_features=GetFeatures(requirements, epics, features),
         edit_feature=EditFeature(
-            requirements, epics, features, invalidation, transactions, authorization=access
+            requirements, epics, features, events, transactions, authorization=access
         ),
         approve_feature=ApproveFeature(
             requirements, epics, features, review.approval_recorder, transactions
         ),
         generate_stories=GenerateStories(
             *story_set,
-            approval_invalidation,
+            events,
             generator=models.story_generator,
             clock=clock,
             authorization=access,
@@ -210,12 +204,12 @@ def build_breakdown(
             checks=checks,
         ),
         get_stories=get_stories,
-        edit_story=EditStory(*story_set, approval_invalidation, authorization=access),
-        split_story=SplitStory(*story_set, approval_invalidation, authorization=access),
-        merge_stories=MergeStories(*story_set, approval_invalidation, authorization=access),
+        edit_story=EditStory(*story_set, events, authorization=access),
+        split_story=SplitStory(*story_set, events, authorization=access),
+        merge_stories=MergeStories(*story_set, events, authorization=access),
         regenerate_story=RegenerateStory(
             *story_set,
-            approval_invalidation,
+            events,
             proposals=persistence.story_proposal_repository,
             generator=models.story_generator,
             clock=clock,
@@ -225,7 +219,7 @@ def build_breakdown(
         ),
         story_change_proposals=StoryChangeProposals(
             *story_set,
-            approval_invalidation,
+            events,
             proposals=persistence.story_proposal_repository,
             generator=models.story_generator,
             clock=clock,
@@ -267,7 +261,7 @@ def build_breakdown(
             map_feature,
             map_story,
             clock,
-            approval_invalidation,
+            events,
             authorization=access,
         ),
         generate_breakdown_review=GenerateBreakdownReview(

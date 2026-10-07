@@ -6,15 +6,13 @@ from dataclasses import dataclass
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.ports.requirement_knowledge import (
     KnowledgeScreenSchedulerPort,
 )
 from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirement
 from smb_requirement_agent.application.use_cases.get_requirement import GetRequirement
 from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
-from smb_requirement_agent.application.use_cases.invalidate_derived_artifacts import (
-    InvalidateDerivedArtifacts,
-)
 from smb_requirement_agent.application.use_cases.owned_requirements import (
     CreateOwnedRequirement,
     CreateOwnedRequirementDraft,
@@ -55,7 +53,7 @@ def build_requirement_intake(
     persistence: PersistenceAdapters,
     clock: ClockPort,
     access: RequirementAccessService,
-    invalidation: InvalidateDerivedArtifacts,
+    events: DomainEventPublisher,
     screen_scheduler: KnowledgeScreenSchedulerPort,
 ) -> RequirementIntakeWiring:
     """Each owned wrapper adds authorization and a unit of work to its base use case.
@@ -69,7 +67,7 @@ def build_requirement_intake(
     preview = PreviewRequirementImpact(persistence.worklist_snapshots)
     update = UpdateRequirement(
         persistence.requirement_repository,
-        invalidation,
+        events,
         clock,
         transactions,
         authorization=access,

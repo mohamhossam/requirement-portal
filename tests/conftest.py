@@ -17,6 +17,9 @@ from smb_kernel.documents.text_extractor import SafeDocumentTextExtractor
 from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.application.events import InProcessEventDispatcher
+from smb_requirement_agent.application.ports.breakdown_review_repository import (
+    BreakdownReviewRepositoryPort,
+)
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
@@ -27,12 +30,6 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.documents import AssembleAnalysisDocuments
-from smb_requirement_agent.application.use_cases.invalidate_approval_workflow import (
-    InvalidateApprovalWorkflow,
-)
-from smb_requirement_agent.application.use_cases.invalidate_derived_artifacts import (
-    InvalidateDerivedArtifacts,
-)
 from smb_requirement_agent.domain.knowledge.entities import KnowledgeScreen, KnowledgeScreenId
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
@@ -58,7 +55,7 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_feature_reposito
 from smb_requirement_agent.infrastructure.persistence.in_memory_story_repository import (
     InMemoryStoryRepository,
 )
-from smb_requirement_agent.interfaces.api.composition.events import subscribe_invalidation_handlers
+from smb_requirement_agent.interfaces.api.composition.events import subscribe_domain_event_handlers
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.interfaces.api.main import create_app
 from smb_requirement_agent.shared_kernel.generation import Provenance
@@ -148,7 +145,7 @@ def make_analysis_documents(
     )
 
 
-def make_invalidation(
+def make_event_publisher(
     analysis_repository: RequirementAnalysisRepositoryPort | None = None,
     epic_repository: InMemoryEpicRepository | None = None,
     feature_repository: InMemoryFeatureRepository | None = None,
@@ -156,24 +153,22 @@ def make_invalidation(
     clock: FixedClock | None = None,
     audits: InMemoryAnalysisAuditRepository | None = None,
     *,
-    reviews: InMemoryBreakdownReviewRepository | None = None,
+    reviews: BreakdownReviewRepositoryPort | None = None,
     transactions: TransactionManagerPort | None = None,
-) -> InvalidateDerivedArtifacts:
-    """Build the collaborator UpdateRequirement requires, with fresh defaults.
+) -> InProcessEventDispatcher:
+    """The domain-event publisher use cases require, with fresh defaults.
 
     Its handlers are subscribed exactly as the composition root subscribes them (ADR-0103).
     """
     events = InProcessEventDispatcher(transactions or NoOpTransactionManager())
-    subscribe_invalidation_handlers(
+    subscribe_domain_event_handlers(
         events,
         analyses=analysis_repository or InMemoryRequirementAnalysisRepository(),
         audits=audits or InMemoryAnalysisAuditRepository(lambda requirement_id: None),
         epics=epic_repository or InMemoryEpicRepository(),
         features=feature_repository or InMemoryFeatureRepository(),
         stories=story_repository or InMemoryStoryRepository(),
+        reviews=reviews or InMemoryBreakdownReviewRepository(),
         clock=clock or FixedClock(TEST_NOW),
-        approval_workflow=InvalidateApprovalWorkflow(
-            reviews or InMemoryBreakdownReviewRepository()
-        ),
     )
-    return InvalidateDerivedArtifacts(events)
+    return events

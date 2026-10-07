@@ -12,6 +12,7 @@ from smb_requirement_agent.application.errors import (
     StoryGenerationError,
     StoryProposalNotFoundError,
 )
+from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
 from smb_requirement_agent.application.ports.generation_guidance import GenerationGuidance
@@ -33,9 +34,6 @@ from smb_requirement_agent.application.use_cases.generation_context import Gener
 from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
-)
-from smb_requirement_agent.application.use_cases.invalidate_approval_workflow import (
-    InvalidateApprovalWorkflow,
 )
 from smb_requirement_agent.application.use_cases.story_quality import story_set_fingerprint
 from smb_requirement_agent.application.use_cases.story_workflow import (
@@ -60,6 +58,7 @@ from smb_requirement_agent.domain.story.errors import (
     InvalidStoryContentError,
     StoryProposalConflictError,
 )
+from smb_requirement_agent.domain.story.events import StoriesChanged
 from smb_requirement_agent.domain.story.quality import FeatureQualitySnapshot
 from smb_requirement_agent.domain.story.value_objects import (
     StoryId,
@@ -79,7 +78,7 @@ class StoryChangeProposals(StoryWorkflow):
         feature_repository: FeatureRepositoryPort,
         story_repository: StoryRepositoryPort,
         transaction_manager: TransactionManagerPort,
-        approval_invalidation: InvalidateApprovalWorkflow,
+        events: DomainEventPublisher,
         *,
         authorization: RequirementAccessService,
         contexts: GenerationContextTokens,
@@ -97,7 +96,7 @@ class StoryChangeProposals(StoryWorkflow):
             feature_repository,
             story_repository,
             transaction_manager,
-            approval_invalidation,
+            events,
             authorization=authorization,
         )
         self._proposals = proposals
@@ -308,7 +307,7 @@ class StoryChangeProposals(StoryWorkflow):
         updated = replace_source_stories(current, {item.id for item in sources}, replacements)
         self._stories.replace_for_feature(feature_id, updated, expected_set_version)
         self._proposals.delete(feature_id, proposal_id)
-        self._approval_invalidation.execute(requirement_id)
+        self._events.publish(StoriesChanged(requirement_id=requirement_id, feature_id=feature_id))
         self._checks.save(
             requirement_id,
             FeatureQualitySnapshot(

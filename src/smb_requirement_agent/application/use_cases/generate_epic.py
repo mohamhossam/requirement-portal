@@ -13,6 +13,7 @@ from smb_requirement_agent.application.errors import (
     RequirementAnalysisNotFoundError,
     RequirementNotFoundError,
 )
+from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.ports.epic_generator import EpicGeneratorPort
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (
@@ -25,12 +26,10 @@ from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
 )
-from smb_requirement_agent.application.use_cases.invalidate_derived_artifacts import (
-    InvalidateDerivedArtifacts,
-)
 from smb_requirement_agent.application.use_cases.source_lineage import generation_lineage
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.epic.errors import EpicRegenerationConflictError
+from smb_requirement_agent.domain.epic.events import EpicChanged
 from smb_requirement_agent.domain.epic.value_objects import (
     BusinessCase,
     BusinessOutcome,
@@ -67,7 +66,7 @@ class GenerateEpic:
         epic_repository: EpicRepositoryPort,
         generator: EpicGeneratorPort,
         clock: ClockPort,
-        invalidation: InvalidateDerivedArtifacts,
+        events: DomainEventPublisher,
         transactions: TransactionManagerPort,
         *,
         authorization: RequirementAccessService,
@@ -79,7 +78,7 @@ class GenerateEpic:
         self._epics = epic_repository
         self._generator = generator
         self._clock = clock
-        self._invalidation = invalidation
+        self._events = events
         self._transactions = transactions
         self._authorization = authorization
 
@@ -156,6 +155,8 @@ class GenerateEpic:
             self._epics.save(epic)
 
             if existing is not None:
-                self._invalidation.for_changed_epic(epic)
+                self._events.publish(
+                    EpicChanged(requirement_id=epic.requirement_id, epic_id=epic.id)
+                )
 
         return GenerateEpicResult(epic=epic, replaced_existing=existing is not None)

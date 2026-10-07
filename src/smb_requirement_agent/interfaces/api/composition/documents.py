@@ -15,6 +15,7 @@ from smb_kernel.documents.process_resources import (
 from smb_kernel.documents.scanner import ClamAvDocumentScanner, OfflineDocumentScanner
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.use_cases.attachment_ingestion import AttachmentIngestion
 from smb_requirement_agent.application.use_cases.documents import (
     AssembleAnalysisDocuments,
@@ -26,9 +27,6 @@ from smb_requirement_agent.application.use_cases.documents import (
     UploadDocument,
 )
 from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
-from smb_requirement_agent.application.use_cases.invalidate_derived_artifacts import (
-    InvalidateDerivedArtifacts,
-)
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.documents.attachment_worker import (
     AttachmentIngestionWorker,
@@ -59,7 +57,7 @@ def build_documents(
     settings: Settings,
     persistence: PersistenceAdapters,
     clock: ClockPort,
-    invalidation: InvalidateDerivedArtifacts,
+    events: DomainEventPublisher,
     access: RequirementAccessService,
 ) -> DocumentWiring:
     extractor = BoundedSubprocessDocumentExtractor(
@@ -90,7 +88,7 @@ def build_documents(
         extractor,
         persistence.requirement_repository,
         persistence.requirement_draft_repository,
-        invalidation,
+        events,
         persistence.transaction_manager,
         access,
         clock,
@@ -127,19 +125,19 @@ def build_documents(
         ),
         set_inclusion=SetDocumentInclusion(
             persistence.document_repository,
-            invalidation,
+            events,
             persistence.transaction_manager,
             authorization=access,
         ),
         set_hidden_worksheet_inclusion=SetHiddenWorksheetInclusion(
             persistence.document_repository,
-            invalidation,
+            events,
             persistence.transaction_manager,
             authorization=access,
         ),
         remove=RemoveDocument(
             persistence.document_repository,
-            invalidation,
+            events,
             persistence.transaction_manager,
             authorization=access,
         ),

@@ -19,6 +19,7 @@ from smb_requirement_agent.application.ports.architecture_knowledge import (
     ArchitectureKnowledgePort,
     ArchitectureQuery,
 )
+from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (
@@ -31,10 +32,8 @@ from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
 )
-from smb_requirement_agent.application.use_cases.invalidate_approval_workflow import (
-    InvalidateApprovalWorkflow,
-)
 from smb_requirement_agent.domain.architecture.entities import ArchitectureImpact
+from smb_requirement_agent.domain.architecture.events import ArchitectureImpactChanged
 from smb_requirement_agent.domain.feature.entities import Feature
 from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.story.entities import UserStory
@@ -161,7 +160,7 @@ class MapBreakdownArchitecture:
         feature_mapper: MapFeatureArchitecture,
         story_mapper: MapStoryArchitecture,
         clock: ClockPort,
-        approval_invalidation: InvalidateApprovalWorkflow,
+        events: DomainEventPublisher,
         *,
         authorization: RequirementAccessService,
     ) -> None:
@@ -175,7 +174,7 @@ class MapBreakdownArchitecture:
         self._feature_mapper = feature_mapper
         self._story_mapper = story_mapper
         self._clock = clock
-        self._approval_invalidation = approval_invalidation
+        self._events = events
 
     def authorize(self, actor: ActorProfile, requirement_id: RequirementId) -> None:
         """Refuse to accept mapping work for a Requirement the actor cannot change."""
@@ -305,6 +304,6 @@ class MapBreakdownArchitecture:
                 self._features.save(mapping.feature)
                 for story_mapping in mapping.stories:
                     self._stories.save(story_mapping.story)
-            self._approval_invalidation.execute(requirement_id)
+            self._events.publish(ArchitectureImpactChanged(requirement_id=requirement_id))
 
         return BreakdownArchitectureMapping(requirement_id, tuple(mappings))

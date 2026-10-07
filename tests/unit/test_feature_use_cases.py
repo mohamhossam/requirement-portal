@@ -40,9 +40,6 @@ from smb_requirement_agent.application.use_cases.generate_epic import GenerateEp
 from smb_requirement_agent.application.use_cases.generate_features import GenerateFeatures
 from smb_requirement_agent.application.use_cases.generation_checks import GenerationChecks
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
-from smb_requirement_agent.application.use_cases.invalidate_approval_workflow import (
-    InvalidateApprovalWorkflow,
-)
 from smb_requirement_agent.application.use_cases.update_requirement import (
     UpdateRequirement,
     UpdateRequirementInput,
@@ -105,7 +102,7 @@ from tests.conftest import (
     NoOpAnswerSuggestionScheduler,
     NoOpKnowledgeScheduler,
     make_analysis_documents,
-    make_invalidation,
+    make_event_publisher,
 )
 from tests.reference_helpers import EmptyReferences
 from tests.unit.access_service import access_service_for
@@ -140,7 +137,7 @@ class World:
         self.audits = InMemoryAnalysisAuditRepository(lambda requirement_id: None)
         self.reviews = InMemoryBreakdownReviewRepository()
 
-        self.invalidation = make_invalidation(
+        self.events = make_event_publisher(
             self.analyses,
             self.epics,
             self.features,
@@ -190,7 +187,7 @@ class World:
             self.epics,
             FakeEpicGenerator(),
             self.clock,
-            self.invalidation,
+            self.events,
             NoOpTransactionManager(),
             authorization=access_service_for(self.requirements, self.access),
             contexts=self.contexts,
@@ -208,7 +205,7 @@ class World:
         self.edit_epic = EditEpic(
             self.requirements,
             self.epics,
-            self.invalidation,
+            self.events,
             NoOpTransactionManager(),
             authorization=access_service_for(self.requirements, self.access),
         )
@@ -231,7 +228,7 @@ class World:
             self.proposals,
             self.generator,
             self.clock,
-            InvalidateApprovalWorkflow(self.reviews),
+            self.events,
             NoOpTransactionManager(),
             authorization=access_service_for(self.requirements, self.access),
             contexts=self.contexts,
@@ -242,7 +239,7 @@ class World:
             self.requirements,
             self.epics,
             self.features,
-            self.invalidation,
+            self.events,
             NoOpTransactionManager(),
             authorization=access_service_for(self.requirements, self.access),
         )
@@ -255,7 +252,7 @@ class World:
         )
         self.update = UpdateRequirement(
             self.requirements,
-            self.invalidation,
+            self.events,
             self.clock,
             NoOpTransactionManager(),
             authorization=access_service_for(self.requirements, self.access),

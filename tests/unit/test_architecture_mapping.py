@@ -24,9 +24,6 @@ from smb_requirement_agent.application.use_cases.architecture_mapping import (
     MapFeatureArchitecture,
     MapStoryArchitecture,
 )
-from smb_requirement_agent.application.use_cases.invalidate_approval_workflow import (
-    InvalidateApprovalWorkflow,
-)
 from smb_requirement_agent.domain.architecture.entities import (
     ArchitectureDependency,
     ArchitectureImpact,
@@ -44,7 +41,7 @@ from smb_requirement_agent.infrastructure.persistence.backlog_payloads import (
 )
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
-from tests.conftest import FAKE_PROVIDER_SETTINGS
+from tests.conftest import FAKE_PROVIDER_SETTINGS, make_event_publisher
 from tests.knowledge_doubles import PublishedLibrary, service_for, sync
 from tests.unit.workflow_helpers import (
     confirm_fake_analysis,
@@ -214,7 +211,10 @@ def test_whole_breakdown_mapping_accepts_empty_matches(
         MapFeatureArchitecture(knowledge),
         MapStoryArchitecture(knowledge),
         container.clock,
-        InvalidateApprovalWorkflow(container.breakdown_review_repository),
+        make_event_publisher(
+            reviews=container.breakdown_review_repository,
+            transactions=container.transaction_manager,
+        ),
         authorization=container.requirement_access,
     )
     requirement = container.requirement_repository.list_all()[0]

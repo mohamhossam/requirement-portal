@@ -21,6 +21,7 @@ from smb_requirement_agent.application.errors import (
     StoryGenerationError,
     StoryNotFoundError,
 )
+from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (
@@ -43,9 +44,6 @@ from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
 )
-from smb_requirement_agent.application.use_cases.invalidate_approval_workflow import (
-    InvalidateApprovalWorkflow,
-)
 from smb_requirement_agent.application.use_cases.source_lineage import generation_lineage
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
 from smb_requirement_agent.domain.epic.entities import Epic
@@ -62,6 +60,7 @@ from smb_requirement_agent.domain.story.errors import (
     StoriesAlreadyExistError,
     StoryRegenerationConflictError,
 )
+from smb_requirement_agent.domain.story.events import StoriesChanged
 from smb_requirement_agent.domain.story.value_objects import (
     AcceptanceCriterion,
     BusinessValue,
@@ -116,7 +115,7 @@ class StoryWorkflow:
         feature_repository: FeatureRepositoryPort,
         story_repository: StoryRepositoryPort,
         transaction_manager: TransactionManagerPort,
-        approval_invalidation: InvalidateApprovalWorkflow,
+        events: DomainEventPublisher,
         *,
         authorization: RequirementAccessService,
     ) -> None:
@@ -127,7 +126,7 @@ class StoryWorkflow:
         self._stories = story_repository
         self._transactions = transaction_manager
         self._authorization = authorization
-        self._approval_invalidation = approval_invalidation
+        self._events = events
 
     def _tree(self, requirement_id: RequirementId, feature_id: FeatureId) -> _StoryTree:
         requirement = self._requirements.get(requirement_id)
@@ -227,7 +226,7 @@ class GenerateStories(StoryWorkflow):
         feature_repository: FeatureRepositoryPort,
         story_repository: StoryRepositoryPort,
         transaction_manager: TransactionManagerPort,
-        approval_invalidation: InvalidateApprovalWorkflow,
+        events: DomainEventPublisher,
         *,
         authorization: RequirementAccessService,
         contexts: GenerationContextTokens,
@@ -244,7 +243,7 @@ class GenerateStories(StoryWorkflow):
             feature_repository,
             story_repository,
             transaction_manager,
-            approval_invalidation,
+            events,
             authorization=authorization,
         )
         self._generator = generator
@@ -299,7 +298,9 @@ class GenerateStories(StoryWorkflow):
                 requirement_id, feature_id, context, existing, expected_set_version
             )
             self._stories.replace_for_feature(feature_id, stories, expected_set_version)
-            self._approval_invalidation.execute(requirement_id)
+            self._events.publish(
+                StoriesChanged(requirement_id=requirement_id, feature_id=feature_id)
+            )
             self._checks.save(requirement_id, prepared.snapshot)
         return stories
 
@@ -342,7 +343,7 @@ class EditStory(StoryWorkflow):
             source_reconciled=data.source_reconciled,
         )
         self._stories.save(edited)
-        self._approval_invalidation.execute(requirement_id)
+        self._events.publish(StoriesChanged(requirement_id=requirement_id, feature_id=feature_id))
         return edited
 
 
@@ -398,7 +399,7 @@ class SplitStory(StoryWorkflow):
             self._stories.get_by_feature_id(feature_id), {source.id}, replacement_stories
         )
         self._stories.replace_for_feature(feature_id, updated, expected_set_version)
-        self._approval_invalidation.execute(requirement_id)
+        self._events.publish(StoriesChanged(requirement_id=requirement_id, feature_id=feature_id))
         return updated
 
 
@@ -454,7 +455,7 @@ class MergeStories(StoryWorkflow):
             self._stories.get_by_feature_id(feature_id), {item.id for item in sources}, [merged]
         )
         self._stories.replace_for_feature(feature_id, updated, expected_set_version)
-        self._approval_invalidation.execute(requirement_id)
+        self._events.publish(StoriesChanged(requirement_id=requirement_id, feature_id=feature_id))
         return updated
 
 
@@ -467,7 +468,7 @@ class RegenerateStory(StoryWorkflow):
         feature_repository: FeatureRepositoryPort,
         story_repository: StoryRepositoryPort,
         transaction_manager: TransactionManagerPort,
-        approval_invalidation: InvalidateApprovalWorkflow,
+        events: DomainEventPublisher,
         *,
         authorization: RequirementAccessService,
         contexts: GenerationContextTokens,
@@ -485,7 +486,7 @@ class RegenerateStory(StoryWorkflow):
             feature_repository,
             story_repository,
             transaction_manager,
-            approval_invalidation,
+            events,
             authorization=authorization,
         )
         self._generator = generator
@@ -577,7 +578,9 @@ class RegenerateStory(StoryWorkflow):
                     "Story proposals changed during generation. Reload them."
                 )
             self._proposals.delete_for_feature(feature_id)
-            self._approval_invalidation.execute(requirement_id)
+            self._events.publish(
+                StoriesChanged(requirement_id=requirement_id, feature_id=feature_id)
+            )
             self._checks.save(requirement_id, prepared.snapshot)
         return updated
 
@@ -651,7 +654,9 @@ class RegenerateStory(StoryWorkflow):
                     "Story proposals changed during generation. Reload them."
                 )
             self._proposals.delete_for_feature(feature_id)
-            self._approval_invalidation.execute(requirement_id)
+            self._events.publish(
+                StoriesChanged(requirement_id=requirement_id, feature_id=feature_id)
+            )
             self._checks.save(requirement_id, prepared.snapshot)
         return stories
 

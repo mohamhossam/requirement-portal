@@ -83,7 +83,7 @@ from tests.conftest import (
     NoOpAnswerSuggestionScheduler,
     NoOpKnowledgeScheduler,
     make_analysis_documents,
-    make_invalidation,
+    make_event_publisher,
 )
 from tests.reference_helpers import EmptyReferences
 from tests.unit.access_service import access_service_for
@@ -149,7 +149,7 @@ class World:
                 authorization=access_service_for(self.requirements, self.access),
             )
         )
-        self.invalidation = make_invalidation(
+        self.events = make_event_publisher(
             self.analyses,
             self.epics,
             self.features,
@@ -164,7 +164,7 @@ class World:
             self.epics,
             self.generator,
             self.clock,
-            self.invalidation,
+            self.events,
             NoOpTransactionManager(),
             authorization=access_service_for(self.requirements, self.access),
             contexts=self.contexts,
@@ -173,7 +173,7 @@ class World:
         self.edit = EditEpic(
             self.requirements,
             self.epics,
-            self.invalidation,
+            self.events,
             NoOpTransactionManager(),
             authorization=access_service_for(self.requirements, self.access),
         )
@@ -187,7 +187,7 @@ class World:
         )
         self.update = UpdateRequirement(
             self.requirements,
-            self.invalidation,
+            self.events,
             self.clock,
             NoOpTransactionManager(),
             authorization=access_service_for(self.requirements, self.access),

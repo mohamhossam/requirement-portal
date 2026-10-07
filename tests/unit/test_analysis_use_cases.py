@@ -72,7 +72,7 @@ from tests.conftest import (
     NoOpAnswerSuggestionScheduler,
     NoOpKnowledgeScheduler,
     make_analysis_documents,
-    make_invalidation,
+    make_event_publisher,
 )
 from tests.reference_helpers import EmptyReferences
 from tests.unit.access_service import access_service_for
@@ -276,7 +276,7 @@ def test_update_requirement_clears_analysis(
     )
     update_use_case = UpdateRequirement(
         req_repo,
-        make_invalidation(analysis_repo),
+        make_event_publisher(analysis_repo),
         FixedClock(TEST_NOW),
         NoOpTransactionManager(),
         authorization=access_service_for(req_repo, access),

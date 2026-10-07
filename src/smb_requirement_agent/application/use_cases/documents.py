@@ -22,6 +22,7 @@ from smb_requirement_agent.application.errors import (
     UnsupportedDocumentError,
 )
 from smb_requirement_agent.application.ports.document_repository import DocumentRepositoryPort
+from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.ports.requirement_analyzer import AnalysisDocumentContext
 from smb_requirement_agent.application.ports.requirement_draft_repository import (
     RequirementDraftRepositoryPort,
@@ -31,9 +32,6 @@ from smb_requirement_agent.application.ports.transaction_manager import Transact
 from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
-)
-from smb_requirement_agent.application.use_cases.invalidate_derived_artifacts import (
-    InvalidateDerivedArtifacts,
 )
 from smb_requirement_agent.application.use_cases.requirement_sources import source_eligibility
 from smb_requirement_agent.domain.analysis.entities import AnalysisDocumentReference
@@ -49,6 +47,7 @@ from smb_requirement_agent.domain.requirement.entities import (
     Requirement,
     RequirementDraft,
 )
+from smb_requirement_agent.domain.requirement.events import RequirementRevised
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
@@ -126,7 +125,7 @@ class UploadDocument:
         extractor: DocumentExtractorPort,
         requirements: RequirementRepositoryPort,
         drafts: RequirementDraftRepositoryPort,
-        invalidation: InvalidateDerivedArtifacts,
+        events: DomainEventPublisher,
         transactions: TransactionManagerPort,
         access: RequirementAccessService,
         clock: ClockPort,
@@ -137,7 +136,7 @@ class UploadDocument:
         self._extractor = extractor
         self._requirements = requirements
         self._drafts = drafts
-        self._invalidation = invalidation
+        self._events = events
         self._transactions = transactions
         self._access = access
         self._clock = clock
@@ -276,7 +275,7 @@ class UploadDocument:
                 self._storage.put(version_id, data.content)
                 self._documents.add(document)
                 if document.is_included and requirement_id is not None:
-                    self._invalidation.for_changed_requirement(requirement_id)
+                    self._events.publish(RequirementRevised(requirement_id=requirement_id))
                 return document
 
             was_included = existing.is_included
@@ -311,7 +310,7 @@ class UploadDocument:
             self._storage.put(version_id, data.content)
             self._documents.save(document)
             if (was_included or document.is_included) and requirement_id is not None:
-                self._invalidation.for_changed_requirement(requirement_id)
+                self._events.publish(RequirementRevised(requirement_id=requirement_id))
             return document
 
     def _validate(self, data: UploadDocumentInput) -> tuple[str, str]:
@@ -435,14 +434,14 @@ class SetDocumentInclusion:
     def __init__(
         self,
         documents: DocumentRepositoryPort,
-        invalidation: InvalidateDerivedArtifacts,
+        events: DomainEventPublisher,
         transactions: TransactionManagerPort,
         *,
         authorization: RequirementAccessService,
     ) -> None:
         self._authorization = authorization
         self._documents = documents
-        self._invalidation = invalidation
+        self._events = events
         self._transactions = transactions
 
     def execute(
@@ -480,7 +479,7 @@ class SetDocumentInclusion:
                 return document
             updated = document.set_included(included)
             self._documents.save(updated)
-            self._invalidation.for_changed_requirement(requirement_id)
+            self._events.publish(RequirementRevised(requirement_id=requirement_id))
             return updated
 
     def for_draft(
@@ -507,14 +506,14 @@ class SetHiddenWorksheetInclusion:
     def __init__(
         self,
         documents: DocumentRepositoryPort,
-        invalidation: InvalidateDerivedArtifacts,
+        events: DomainEventPublisher,
         transactions: TransactionManagerPort,
         *,
         authorization: RequirementAccessService,
     ) -> None:
         self._authorization = authorization
         self._documents = documents
-        self._invalidation = invalidation
+        self._events = events
         self._transactions = transactions
 
     def execute(
@@ -553,7 +552,7 @@ class SetHiddenWorksheetInclusion:
                 return document
             self._documents.save(updated)
             if document.is_included:
-                self._invalidation.for_changed_requirement(requirement_id)
+                self._events.publish(RequirementRevised(requirement_id=requirement_id))
             return updated
 
 
@@ -561,14 +560,14 @@ class RemoveDocument:
     def __init__(
         self,
         documents: DocumentRepositoryPort,
-        invalidation: InvalidateDerivedArtifacts,
+        events: DomainEventPublisher,
         transactions: TransactionManagerPort,
         *,
         authorization: RequirementAccessService,
     ) -> None:
         self._authorization = authorization
         self._documents = documents
-        self._invalidation = invalidation
+        self._events = events
         self._transactions = transactions
 
     def execute(
@@ -600,7 +599,7 @@ class RemoveDocument:
             removed = document.remove()
             self._documents.save(removed)
             if affected_analysis:
-                self._invalidation.for_changed_requirement(requirement_id)
+                self._events.publish(RequirementRevised(requirement_id=requirement_id))
             return removed
 
     def for_draft(

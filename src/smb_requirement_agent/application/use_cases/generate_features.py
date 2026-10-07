@@ -15,6 +15,7 @@ from smb_requirement_agent.application.errors import (
     RequirementAnalysisNotFoundError,
     RequirementNotFoundError,
 )
+from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_generator import (
     FeatureCandidate,
@@ -36,9 +37,6 @@ from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
 )
-from smb_requirement_agent.application.use_cases.invalidate_approval_workflow import (
-    InvalidateApprovalWorkflow,
-)
 from smb_requirement_agent.application.use_cases.source_lineage import generation_lineage
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.epic.errors import EpicNotApprovedError
@@ -47,6 +45,7 @@ from smb_requirement_agent.domain.feature.entities import Feature
 from smb_requirement_agent.domain.feature.errors import (
     FeatureRegenerationConflictError,
 )
+from smb_requirement_agent.domain.feature.events import FeaturesReplaced
 from smb_requirement_agent.domain.feature.value_objects import (
     DeliveryDrop,
     FeatureId,
@@ -88,7 +87,7 @@ class GenerateFeatures:
         proposal_repository: StoryChangeProposalRepositoryPort,
         generator: FeatureGeneratorPort,
         clock: ClockPort,
-        approval_invalidation: InvalidateApprovalWorkflow,
+        events: DomainEventPublisher,
         transactions: TransactionManagerPort,
         *,
         authorization: RequirementAccessService,
@@ -105,7 +104,7 @@ class GenerateFeatures:
         self._proposals = proposal_repository
         self._generator = generator
         self._clock = clock
-        self._approval_invalidation = approval_invalidation
+        self._events = events
         self._transactions = transactions
         self._authorization = authorization
 
@@ -198,7 +197,7 @@ class GenerateFeatures:
             for feature in existing:
                 self._proposals.delete_for_feature(feature.id)
             self._features.replace_for_epic(epic.id, features, expected_set_version)
-            self._approval_invalidation.execute(requirement_id)
+            self._events.publish(FeaturesReplaced(requirement_id=requirement_id, epic_id=epic.id))
             self._checks.save(requirement_id, None)
 
         return GenerateFeaturesResult(features=features, replaced_existing=bool(existing))

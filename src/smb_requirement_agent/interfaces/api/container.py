@@ -171,12 +171,6 @@ from smb_requirement_agent.application.use_cases.identity_access import (
     SearchKnownActors,
 )
 from smb_requirement_agent.application.use_cases.internal_reads import InternalReads
-from smb_requirement_agent.application.use_cases.invalidate_approval_workflow import (
-    InvalidateApprovalWorkflow,
-)
-from smb_requirement_agent.application.use_cases.invalidate_derived_artifacts import (
-    InvalidateDerivedArtifacts,
-)
 from smb_requirement_agent.application.use_cases.knowledge_portfolio import (
     KnowledgePortfolio,
     NudgeFindingOwners,
@@ -266,7 +260,9 @@ from smb_requirement_agent.interfaces.api.composition.breakdown import (
     build_breakdown,
 )
 from smb_requirement_agent.interfaces.api.composition.documents import build_documents
-from smb_requirement_agent.interfaces.api.composition.events import subscribe_invalidation_handlers
+from smb_requirement_agent.interfaces.api.composition.events import (
+    subscribe_domain_event_handlers,
+)
 from smb_requirement_agent.interfaces.api.composition.identity import build_identity
 from smb_requirement_agent.interfaces.api.composition.jobs import build_ai_jobs
 from smb_requirement_agent.interfaces.api.composition.knowledge import build_requirement_knowledge
@@ -539,19 +535,17 @@ def _build_container(
         else knowledge_service.architecture
     )
 
-    approval_invalidation = InvalidateApprovalWorkflow(persistence.breakdown_review_repository)
     domain_events = InProcessEventDispatcher(persistence.transaction_manager)
-    subscribe_invalidation_handlers(
+    subscribe_domain_event_handlers(
         domain_events,
         analyses=persistence.analysis_repository,
         audits=persistence.analysis_audit_repository,
         epics=persistence.epic_repository,
         features=persistence.feature_repository,
         stories=persistence.story_repository,
+        reviews=persistence.breakdown_review_repository,
         clock=resolved_clock,
-        approval_workflow=approval_invalidation,
     )
-    invalidation = InvalidateDerivedArtifacts(domain_events)
     access_service = RequirementAccessService(
         persistence.requirement_repository,
         persistence.requirement_draft_repository,
@@ -568,12 +562,12 @@ def _build_container(
         settings,
         persistence,
         resolved_clock,
-        invalidation,
+        domain_events,
         access_service,
     )
     worklist = persistence.worklist(knowledge.review)
     intake = build_requirement_intake(
-        persistence, resolved_clock, access_service, invalidation, knowledge.screen_scheduler
+        persistence, resolved_clock, access_service, domain_events, knowledge.screen_scheduler
     )
     analysis = build_analysis_workflow(
         persistence,
@@ -606,8 +600,7 @@ def _build_container(
         review,
         analysis.analysis_collaboration,
         analysis.generation_context_tokens,
-        invalidation,
-        approval_invalidation,
+        domain_events,
         resolved_clock,
         access_service,
     )

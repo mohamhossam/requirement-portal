@@ -18,6 +18,7 @@ from smb_requirement_agent.application.errors import (
     FeaturesNotFoundError,
     RequirementNotFoundError,
 )
+from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
 from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
@@ -28,14 +29,12 @@ from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
 )
-from smb_requirement_agent.application.use_cases.invalidate_derived_artifacts import (
-    InvalidateDerivedArtifacts,
-)
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.feature.entities import Feature
 from smb_requirement_agent.domain.feature.errors import (
     InvalidFeatureContentError,
 )
+from smb_requirement_agent.domain.feature.events import FeatureChanged
 from smb_requirement_agent.domain.feature.value_objects import (
     DeliveryDrop,
     FeatureId,
@@ -122,13 +121,13 @@ class EditFeature(_FeatureLookup):
         requirement_repository: RequirementRepositoryPort,
         epic_repository: EpicRepositoryPort,
         feature_repository: FeatureRepositoryPort,
-        invalidation: InvalidateDerivedArtifacts,
+        events: DomainEventPublisher,
         transactions: TransactionManagerPort,
         *,
         authorization: RequirementAccessService,
     ) -> None:
         super().__init__(requirement_repository, epic_repository, feature_repository)
-        self._invalidation = invalidation
+        self._events = events
         self._transactions = transactions
         self._authorization = authorization
 
@@ -169,7 +168,9 @@ class EditFeature(_FeatureLookup):
                 source_reconciled=data.source_reconciled,
             )
             self._features.save(edited)
-            self._invalidation.for_changed_feature(requirement_id, edited)
+            self._events.publish(
+                FeatureChanged(requirement_id=requirement_id, feature_id=edited.id)
+            )
         return edited
 
 

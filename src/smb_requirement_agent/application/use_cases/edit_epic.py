@@ -9,6 +9,7 @@ from smb_requirement_agent.application.errors import (
     EpicNotFoundError,
     RequirementNotFoundError,
 )
+from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
@@ -16,10 +17,8 @@ from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
 )
-from smb_requirement_agent.application.use_cases.invalidate_derived_artifacts import (
-    InvalidateDerivedArtifacts,
-)
 from smb_requirement_agent.domain.epic.entities import Epic
+from smb_requirement_agent.domain.epic.events import EpicChanged
 from smb_requirement_agent.domain.epic.value_objects import (
     BusinessCase,
     BusinessOutcome,
@@ -51,14 +50,14 @@ class EditEpic:
         self,
         requirement_repository: RequirementRepositoryPort,
         epic_repository: EpicRepositoryPort,
-        invalidation: InvalidateDerivedArtifacts,
+        events: DomainEventPublisher,
         transactions: TransactionManagerPort,
         *,
         authorization: RequirementAccessService,
     ) -> None:
         self._requirements = requirement_repository
         self._epics = epic_repository
-        self._invalidation = invalidation
+        self._events = events
         self._transactions = transactions
         self._authorization = authorization
 
@@ -94,5 +93,7 @@ class EditEpic:
                 source_reconciled=data.source_reconciled,
             )
             self._epics.save(edited)
-            self._invalidation.for_changed_epic(edited)
+            self._events.publish(
+                EpicChanged(requirement_id=edited.requirement_id, epic_id=edited.id)
+            )
         return edited
