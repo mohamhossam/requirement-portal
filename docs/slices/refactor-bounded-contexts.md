@@ -434,7 +434,7 @@ left to PR 6, which moves the review refresh into the governance domain.
 - `mypy src tests` — no issues in 573 source files.
 - `lint-imports` — 10 contracts kept, 0 broken.
 - `grep -rn "InvalidateDerivedArtifacts\|InvalidateApprovalWorkflow\|make_invalidation" src tests`
-  finds nothing.
+  finds only the write-order test's docstring, which names the classes it replaced.
 
 ## Shims
 
