@@ -226,7 +226,6 @@ from smb_requirement_agent.interfaces.api.composition.breakdown import (
     BreakdownModels,
     build_breakdown,
 )
-from smb_requirement_agent.interfaces.api.composition.documents import build_documents
 from smb_requirement_agent.interfaces.api.composition.events import (
     subscribe_domain_event_handlers,
 )
@@ -240,7 +239,10 @@ from smb_requirement_agent.interfaces.api.composition.knowledge_service import (
 )
 from smb_requirement_agent.interfaces.api.composition.llm import build_llm_adapters
 from smb_requirement_agent.interfaces.api.composition.persistence import build_persistence
-from smb_requirement_agent.interfaces.api.composition.requirements import build_requirement_intake
+from smb_requirement_agent.interfaces.api.composition.requirements import (
+    build_documents,
+    build_requirement_intake,
+)
 from smb_requirement_agent.interfaces.api.composition.review import build_review
 from smb_requirement_agent.jobs.application.ports.ai_jobs import (
     AiJobQueuePort,
