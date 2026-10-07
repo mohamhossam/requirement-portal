@@ -34,7 +34,7 @@ from smb_requirement_agent.application.ports.feature_generator import FeatureGen
 from smb_requirement_agent.application.ports.prior_art import (
     PriorArtJudgePort,
 )
-from smb_requirement_agent.application.ports.reference_grounding import ReferenceProposerPort
+from smb_requirement_agent.application.ports.reference_analysis import ReferenceProposerPort
 from smb_requirement_agent.application.ports.requirement_analyzer import RequirementAnalyzerPort
 from smb_requirement_agent.application.ports.requirement_knowledge import (
     ClarificationAnswerSuggesterPort,

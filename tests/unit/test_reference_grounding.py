@@ -371,7 +371,7 @@ def test_withdrawal_during_reference_generation_cannot_persist(
     grounded: Grounded,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from smb_requirement_agent.application.ports.reference_grounding import ReferenceProposalResult
+    from smb_requirement_agent.application.ports.reference_analysis import ReferenceProposalResult
     from smb_requirement_agent.infrastructure.llm.reference_proposals import FakeReferenceProposer
 
     container = grounded.container

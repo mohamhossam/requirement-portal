@@ -171,6 +171,8 @@ PORTS = {
     "analysis": [
         # The knowledge screen as analysis sees it (PR 10, F1).
         "knowledge_screening",
+        # The analysis half of reference_grounding (PR 10).
+        "reference_analysis",
         "analysis_audit_repository",
         "requirement_analysis_repository",
         "requirement_analyzer",

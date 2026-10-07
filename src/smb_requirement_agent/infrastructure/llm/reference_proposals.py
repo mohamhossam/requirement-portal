@@ -12,11 +12,11 @@ from smb_kernel.llm.structured_output import (
 )
 
 from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
-from smb_requirement_agent.application.ports.reference_grounding import (
-    ReferenceEvidence,
+from smb_requirement_agent.application.ports.reference_analysis import (
     ReferenceProposalCandidate,
     ReferenceProposalResult,
 )
+from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidence
 from smb_requirement_agent.application.ports.requirement_analyzer import (
     RequirementAnalysisCandidate,
 )

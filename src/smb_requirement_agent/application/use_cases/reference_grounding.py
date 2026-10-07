@@ -9,10 +9,10 @@ from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
 from smb_requirement_agent.application.ports.embedding import TokenCounterPort
+from smb_requirement_agent.application.ports.reference_analysis import ReferenceProposerPort
 from smb_requirement_agent.application.ports.reference_grounding import (
     ReferenceEvidence,
     ReferenceKnowledgePort,
-    ReferenceProposerPort,
 )
 from smb_requirement_agent.application.ports.requirement_analyzer import (
     IntentProposalCandidate,

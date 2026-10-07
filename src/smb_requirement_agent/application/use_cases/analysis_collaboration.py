@@ -27,8 +27,8 @@ from smb_requirement_agent.application.ports.knowledge_screening import (
     AnswerSuggestionRequestPort,
     SuggestionProvenancePort,
 )
+from smb_requirement_agent.application.ports.reference_analysis import ReferenceAnalysisPort
 from smb_requirement_agent.application.ports.reference_grounding import (
-    ReferenceAnalysisPort,
     ReferenceEvidencePort,
     ReferenceReviewPort,
 )
