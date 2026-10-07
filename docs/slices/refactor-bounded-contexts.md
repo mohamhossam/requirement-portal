@@ -1,8 +1,8 @@
 # Refactor — Bounded-context packages and domain events
 
 **Status:** ADR-0103 accepted and the slice scheduled 2026-10-07. PR 1 delivered. The PR 1
-findings were decided the same day (ADR-0103 Amendment 1). PRs 2–10 delivered; PR 11 (move
-`breakdown`) is next.
+findings were decided the same day (ADR-0103 Amendment 1). PRs 2–11 delivered. Next is the per-context LLM
+adapters step, then PR 12 (move `governance`).
 
 **Related:** [context map](../architecture/context-map.md),
 [ubiquitous language](../architecture/ubiquitous-language.md).
@@ -106,7 +106,7 @@ stays green. A move that also edits code keeps a separate move-only commit.
 | 8 | Move `jobs` | Leaf context |
 | 9 | Move `requirements` (intake + source documents) | Upstream of everything else |
 | 10 | Move `analysis` | |
-| 11 | Move `breakdown`; breakdown adopts `ExpectedContextPort`. Then, as its own step, the per-context LLM adapters (deferred from PR 10) | |
+| 11 | Move `breakdown`, with its own `BreakdownContextPort` (F2). Then, as its own step, the per-context LLM adapters (deferred from PR 10) | |
 | 12 | Move `governance` | |
 | 13 | Move `reporting` | |
 | 14 | Move `workflows` | |
@@ -819,6 +819,109 @@ No shims.
 - `ruff check .` and `ruff format --check .`: clean.
 - `mypy src tests`: no issues in 604 source files.
 - `lint-imports`: 22 contracts kept, 0 broken.
+
+## PR 11 — The `breakdown` package (2026-10-07)
+
+### Delivered
+
+Seven commits. The first two remove breakdown's wrong-way imports before anything moves.
+
+**1. `ApproveFeature` is governance's (Amendment 1).**
+- It records an approval through `ApprovalRecorder` against the artifact fingerprint. It moved
+  verbatim from `feature_review.py` to `application/use_cases/approve_feature.py`, beside
+  `approve_epic.py`, checked with `diff`.
+- Its lookup base `_FeatureLookup` became the public `FeatureLookup`, which `GetFeatures` and
+  `EditFeature` already share.
+- This removed breakdown's two governance imports.
+
+**2. Per-context ports for the generation context tokens (F2, refined).**
+- Breakdown's token methods take `FeatureId`. The shared `expected_context.py` may import only the
+  shared kernel, so it cannot declare them. The design:
+
+| Port | Holds |
+|---|---|
+| `ExpectedContextPort` (shared) | only the context-agnostic `guard`, now with its `references_for` and `reference_targets` keywords |
+| `AnalysisContextPort` (`analysis/application/ports/analysis_context.py`) | extends it with `analysis` |
+| `BreakdownContextPort` (now `breakdown/application/ports/breakdown_context.py`) | extends it with `epic`, `features`, `stories` and `input_artifact_ids` |
+
+- `GenerationContextTokens` satisfies both structurally.
+- `GenerateEpic`, `GenerateFeatures`, the Story change proposals and the Story workflow now depend
+  on `BreakdownContextPort`. This removed breakdown's four `generation_context` imports.
+
+**3. The move.** One commit, in `.git-blame-ignore-revs`.
+
+| Was | Now |
+|---|---|
+| `domain/{epic,feature,story}/` | `breakdown/domain/{epic,feature,story}/` |
+| `domain/architecture/{__init__,entities,errors,events}.py` (impact) | `breakdown/domain/architecture/` |
+| 13 use cases: `generate_epic`, `edit_epic`, `get_epic`, `generate_features`, `feature_review`, `story_workflow`, `story_change_proposals`, `story_quality`, `generation_checks`, `architecture_mapping`, `architecture_mapping_jobs`, `mark_backlog_stale`, `leased_jobs` | `breakdown/application/use_cases/` |
+| 13 ports: `architecture_jobs`, `architecture_mapping_stats`, `candidate_review`, `epic_generator`, `epic_repository`, `feature_generator`, `feature_repository`, `generation_guidance`, `story_generator`, `story_quality_evaluator`, `story_quality_repository`, `story_repository`, `breakdown_context` | `breakdown/application/ports/` |
+| `infrastructure/persistence/{backlog_payloads,in_memory_epic_repository,in_memory_feature_repository,in_memory_story_repository,in_memory_architecture_jobs,postgres_architecture_jobs,architecture_mapping_stats,story_quality_repository}.py`, `infrastructure/jobs/architecture_job_worker.py` | `breakdown/infrastructure/` |
+| 15 breakdown-only unit test modules | `tests/unit/breakdown/` |
+
+- `domain/architecture/` keeps `knowledge.py` (the catalogue, references) until PR 15a.
+- **Test fix.** `tests/architecture/test_provider_rate_limit.py` resolved annotations from the old
+  `application` package only, and failed when breakdown's use cases left it. It now walks every
+  module under an `application` package. That covers the old layer and each moved context's, so
+  it checks at least what it did before.
+
+**4–7. Adapters, composition and contracts.**
+- `PostgresEpicRepository`, `PostgresFeatureRepository`, `PostgresStoryRepository` and
+  `PostgresStoryChangeProposalRepository` moved verbatim to
+  `breakdown/infrastructure/postgres_backlog.py`, checked with `diff`.
+  `postgres_repositories.py` keeps only governance's `PostgresBreakdownReviewRepository`.
+- `composition/architecture.py`, which held only the mapping-job wiring, was merged into
+  `composition/breakdown.py`. Catalogue retrieval was already in `knowledge_service.py`.
+- The contracts and the report were updated.
+
+No shims.
+
+### Deferred, and why
+
+| Item | Deferred to | Why |
+|---|---|---|
+| `identity_access` (8 imports) | PR 14 (F4) | As for requirements and analysis |
+| `leased_jobs → application.public_errors` | F5 | The public error catalogue is used by application code too (this and `ai_job_execution` record a failure's public code), so moving it beside `error_handlers.py` needs a decision on where failure codes are described. It is not under a forbidden module, so only the report shows it |
+| References' unmoved catalogue (`application.ports.architecture_knowledge`, 4 imports; `domain.architecture.knowledge`, 3) | PR 15a | As for analysis's references imports |
+| `references → breakdown`: `architecture_knowledge` returns breakdown's impact types | PR 15a (F8) | The port should return its own match type |
+| Per-context LLM adapters | The next step | `candidate_mappers.py` and the OpenAI and OpenRouter adapter modules mix analysis and breakdown; both have now moved |
+
+### Contracts (25 kept, up from 22)
+
+- **New contracts.** `breakdown_internal_layers`, `breakdown_depends_only_upstream` and
+  `breakdown_published_surface`.
+- **Ignored imports.** The upstream contract reports 31:
+  - the shared technical ports `domain_events` (7), `expected_context` (1) and
+    `transaction_manager` (8);
+  - references' `architecture_knowledge` port (4) and `domain.architecture.knowledge` (3), which
+    go in PR 15a;
+  - `identity_access` (8), which goes in PR 14.
+- **Upstream contexts.** Identity, jobs, requirements and analysis now forbid breakdown, and treat
+  it as a consumer of their published surface.
+- **Probes**, all reverted:
+  - a governance import added to `get_epic` broke `breakdown_depends_only_upstream`;
+  - a breakdown adapter import added to `export_breakdown` broke `breakdown_published_surface` and
+    `application_independence`;
+  - a breakdown import added to analysis's `get_requirement_analysis` broke
+    `analysis_depends_only_upstream`.
+
+### Dependency report
+
+224 of 224 modules classified, 77 crossing pairs (78 before), 13 against the order (14 before).
+
+| Pair | Change |
+|---|---|
+| `breakdown → governance` | gone: `ApproveFeature` |
+| `breakdown → workflows` | 12 → 8: `generation_context` gone; `identity_access` remains |
+| `governance → breakdown` | 35 → 40: `ApproveFeature` now imports breakdown, an allowed direction |
+
+### Validation evidence (PR 11, local, with PostgreSQL)
+
+- `pytest` with `TEST_DATABASE_URL` set: 1865 passed, 0 skipped, exit 0, after each code commit.
+  No file under `tests/characterisation/golden/` changed.
+- `ruff check .` and `ruff format --check .`: clean.
+- `mypy src tests`: no issues in 615 source files.
+- `lint-imports`: 25 contracts kept, 0 broken.
 
 ## Shims
 
