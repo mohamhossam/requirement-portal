@@ -6,12 +6,13 @@ from typing import cast
 
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.ports.requirement_analyzer import RequirementAnalyzerPort
-from smb_requirement_agent.application.ports.requirement_evidence_analyzer import (
+from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
+    RequirementAnalyzerPort,
+)
+from smb_requirement_agent.analysis.application.ports.requirement_evidence_analyzer import (
     RequirementEvidenceAnalyzerPort,
 )
-from smb_requirement_agent.application.use_cases.ai_jobs import AnalysisProgressReporter
-from smb_requirement_agent.application.use_cases.evidence_analysis import (
+from smb_requirement_agent.analysis.application.use_cases.evidence_analysis import (
     AnalyzeEvidencePacket,
     AssembleRequirementEvidence,
     ConsolidateEvidenceAnalysis,
@@ -19,6 +20,7 @@ from smb_requirement_agent.application.use_cases.evidence_analysis import (
     StructuredRequirementAnalyzer,
     ValidateAnalysisCitations,
 )
+from smb_requirement_agent.application.use_cases.ai_jobs import AnalysisProgressReporter
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.interfaces.api.composition.llm import LLMAdapters

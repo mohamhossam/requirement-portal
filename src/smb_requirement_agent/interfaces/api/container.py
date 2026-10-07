@@ -20,12 +20,36 @@ from smb_kernel.observability.metrics import Metrics
 from smb_kernel.time.clock import ClockPort
 from smb_kernel.time.system import SystemClock
 
+from smb_requirement_agent.analysis.application.ports.analysis_audit_repository import (
+    AnalysisAuditRepositoryPort,
+)
+from smb_requirement_agent.analysis.application.ports.requirement_analysis_repository import (
+    RequirementAnalysisRepositoryPort,
+)
+from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
+    RequirementAnalyzerPort,
+)
+from smb_requirement_agent.analysis.application.ports.requirement_evidence_analyzer import (
+    EvidenceFragmentCachePort,
+)
+from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration import (
+    AnalysisCollaboration,
+)
+from smb_requirement_agent.analysis.application.use_cases.analyze_requirement import (
+    AnalyzeRequirement,
+)
+from smb_requirement_agent.analysis.application.use_cases.clarify_requirement_analysis import (
+    ClarifyRequirementAnalysis,
+)
+from smb_requirement_agent.analysis.application.use_cases.confirm_requirement_analysis import (
+    ConfirmRequirementAnalysis,
+)
+from smb_requirement_agent.analysis.application.use_cases.get_requirement_analysis import (
+    GetRequirementAnalysis,
+)
 from smb_requirement_agent.application.events import InProcessEventDispatcher
 from smb_requirement_agent.application.exports import ExportFormat
 from smb_requirement_agent.application.ports.activity import ActivityReadPort, ReportingReadPort
-from smb_requirement_agent.application.ports.analysis_audit_repository import (
-    AnalysisAuditRepositoryPort,
-)
 from smb_requirement_agent.application.ports.architecture_knowledge import ArchitectureKnowledgePort
 from smb_requirement_agent.application.ports.backlog_export import BacklogExportPort
 from smb_requirement_agent.application.ports.breakdown_repository import BreakdownRepositoryPort
@@ -42,13 +66,6 @@ from smb_requirement_agent.application.ports.knowledge_index_generations import 
     KnowledgeIndexGenerationsPort,
 )
 from smb_requirement_agent.application.ports.prior_art import PriorArtStorePort
-from smb_requirement_agent.application.ports.requirement_analysis_repository import (
-    RequirementAnalysisRepositoryPort,
-)
-from smb_requirement_agent.application.ports.requirement_analyzer import RequirementAnalyzerPort
-from smb_requirement_agent.application.ports.requirement_evidence_analyzer import (
-    EvidenceFragmentCachePort,
-)
 from smb_requirement_agent.application.ports.requirement_knowledge import (
     RequirementKnowledgeIndexPort,
     RequirementKnowledgeRepositoryPort,
@@ -82,10 +99,6 @@ from smb_requirement_agent.application.use_cases.ai_jobs import (
     AiJobs,
     Notifications,
 )
-from smb_requirement_agent.application.use_cases.analysis_collaboration import (
-    AnalysisCollaboration,
-)
-from smb_requirement_agent.application.use_cases.analyze_requirement import AnalyzeRequirement
 from smb_requirement_agent.application.use_cases.answer_suggestions import (
     SuggestClarificationAnswers,
 )
@@ -113,12 +126,6 @@ from smb_requirement_agent.application.use_cases.breakdown_review import (
     ResolveFlag,
     ResolveOpenQuestion,
 )
-from smb_requirement_agent.application.use_cases.clarify_requirement_analysis import (
-    ClarifyRequirementAnalysis,
-)
-from smb_requirement_agent.application.use_cases.confirm_requirement_analysis import (
-    ConfirmRequirementAnalysis,
-)
 from smb_requirement_agent.application.use_cases.corpus_actions import (
     BulkReindexRequirements,
     ReinstateToCorpus,
@@ -135,9 +142,6 @@ from smb_requirement_agent.application.use_cases.generate_epic import GenerateEp
 from smb_requirement_agent.application.use_cases.generate_features import GenerateFeatures
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.application.use_cases.get_epic import GetEpic
-from smb_requirement_agent.application.use_cases.get_requirement_analysis import (
-    GetRequirementAnalysis,
-)
 from smb_requirement_agent.application.use_cases.historic_corpus import (
     IndexHistoricCorpus,
     ProjectHistoricRequirements,

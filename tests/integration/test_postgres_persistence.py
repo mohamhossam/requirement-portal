@@ -21,44 +21,30 @@ from smb_kernel.persistence.connector import (
 )
 from smb_kernel.time.fixed import FixedClock
 
-from smb_requirement_agent.application.errors import DocumentStorageError
-from smb_requirement_agent.application.exports import ExportFormat
-from smb_requirement_agent.application.ports.requirement_analyzer import (
+from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     RequirementAnalysisCandidate,
 )
-from smb_requirement_agent.application.ports.requirement_evidence_analyzer import (
+from smb_requirement_agent.analysis.application.ports.requirement_evidence_analyzer import (
     EvidenceFragmentCacheEntry,
 )
-from smb_requirement_agent.application.ports.requirement_knowledge import (
-    KnowledgeScreenEnsureOutcome,
-    KnowledgeScreenEnsureResult,
-)
-from smb_requirement_agent.application.ports.requirement_worklist import (
-    WorkflowStatus,
-    WorklistSort,
-)
-from smb_requirement_agent.application.ports.saved_views import (
-    SavedRequirementView,
-    SavedViewCriteria,
-)
-from smb_requirement_agent.application.use_cases.analysis_collaboration import (
+from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration import (
     AnalysisCollaboration,
 )
-from smb_requirement_agent.application.use_cases.analysis_documents import AssembleAnalysisDocuments
-from smb_requirement_agent.application.use_cases.export_breakdown import ExportBreakdown
-from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
-from smb_requirement_agent.domain.analysis.entities import (
+from smb_requirement_agent.analysis.application.use_cases.analysis_documents import (
+    AssembleAnalysisDocuments,
+)
+from smb_requirement_agent.analysis.domain.entities import (
     AnalysisDocumentReference,
     AnalysisQuestionChange,
     AnalysisRound,
     ClarificationQuestion,
     RequirementAnalysis,
 )
-from smb_requirement_agent.domain.analysis.errors import (
+from smb_requirement_agent.analysis.domain.errors import (
     ClarificationVersionConflictError,
     InvalidClarificationTransitionError,
 )
-from smb_requirement_agent.domain.analysis.value_objects import (
+from smb_requirement_agent.analysis.domain.value_objects import (
     AnalysisId,
     ClarificationKind,
     ClarificationSeverity,
@@ -71,6 +57,25 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     QuestionChangeAction,
     QuestionId,
 )
+from smb_requirement_agent.analysis.infrastructure.postgres_evidence_fragment_cache import (
+    PostgresEvidenceFragmentCache,
+)
+from smb_requirement_agent.application.errors import DocumentStorageError
+from smb_requirement_agent.application.exports import ExportFormat
+from smb_requirement_agent.application.ports.requirement_knowledge import (
+    KnowledgeScreenEnsureOutcome,
+    KnowledgeScreenEnsureResult,
+)
+from smb_requirement_agent.application.ports.requirement_worklist import (
+    WorkflowStatus,
+    WorklistSort,
+)
+from smb_requirement_agent.application.ports.saved_views import (
+    SavedRequirementView,
+    SavedViewCriteria,
+)
+from smb_requirement_agent.application.use_cases.export_breakdown import ExportBreakdown
+from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.domain.architecture.entities import (
     ArchitectureDependency,
     ArchitectureImpact,
@@ -158,9 +163,6 @@ from smb_requirement_agent.infrastructure.persistence.migration_runner import (
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader import (
     PostgresActivityReadAdapter,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_evidence_fragment_cache import (
-    PostgresEvidenceFragmentCache,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_repositories import (
     PostgresAnalysisAuditRepository,

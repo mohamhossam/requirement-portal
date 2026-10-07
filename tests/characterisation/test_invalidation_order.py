@@ -14,8 +14,14 @@ from threading import RLock
 import pytest
 from smb_kernel.time.fixed import FixedClock
 
+from smb_requirement_agent.analysis.domain.entities import ClarificationQuestion
+from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_audit_repository import (
+    InMemoryAnalysisAuditRepository,
+)
+from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_repository import (
+    InMemoryRequirementAnalysisRepository,
+)
 from smb_requirement_agent.application.events import InProcessEventDispatcher
-from smb_requirement_agent.domain.analysis.entities import ClarificationQuestion
 from smb_requirement_agent.domain.architecture.events import ArchitectureImpactChanged
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.epic.events import EpicChanged
@@ -24,12 +30,6 @@ from smb_requirement_agent.domain.feature.events import FeatureChanged, Features
 from smb_requirement_agent.domain.review.entities import BreakdownReview
 from smb_requirement_agent.domain.story.entities import UserStory
 from smb_requirement_agent.domain.story.events import StoriesChanged
-from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_audit_repository import (
-    InMemoryAnalysisAuditRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_repository import (
-    InMemoryRequirementAnalysisRepository,
-)
 from smb_requirement_agent.infrastructure.persistence.in_memory_breakdown_review_repository import (
     InMemoryBreakdownReviewRepository,
 )

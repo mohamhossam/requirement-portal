@@ -5,6 +5,10 @@ from dataclasses import dataclass, replace
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.application.ports.requirement_evidence_analyzer import (
+    AnalysisProgressPort,
+)
+from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
 from smb_requirement_agent.application.errors import FeatureGenerationError, StoryGenerationError
 from smb_requirement_agent.application.ports.architecture_knowledge import (
     ArchitectureKnowledgePort,
@@ -12,9 +16,6 @@ from smb_requirement_agent.application.ports.architecture_knowledge import (
 )
 from smb_requirement_agent.application.ports.candidate_review import CandidateReviewPort
 from smb_requirement_agent.application.ports.generation_guidance import GenerationGuidance
-from smb_requirement_agent.application.ports.requirement_evidence_analyzer import (
-    AnalysisProgressPort,
-)
 from smb_requirement_agent.application.ports.story_quality_repository import (
     StoryQualityRepositoryPort,
 )
@@ -27,7 +28,6 @@ from smb_requirement_agent.application.use_cases.story_quality import (
     SuggestStorySplit,
     story_set_fingerprint,
 )
-from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
 from smb_requirement_agent.domain.feature.entities import Feature
 from smb_requirement_agent.domain.story.entities import UserStory
 from smb_requirement_agent.domain.story.quality import (

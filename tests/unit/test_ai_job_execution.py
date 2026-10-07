@@ -21,13 +21,13 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
+from smb_requirement_agent.analysis.domain.entities import ClarificationQuestion
+from smb_requirement_agent.analysis.domain.value_objects import QuestionId
 from smb_requirement_agent.application.errors import (
     DocumentNotFoundError,
     KnowledgeIndexPendingError,
 )
 from smb_requirement_agent.application.ports.saved_views import SavedViewCriteria
-from smb_requirement_agent.domain.analysis.entities import ClarificationQuestion
-from smb_requirement_agent.domain.analysis.value_objects import QuestionId
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
     InMemoryActorDirectory,

@@ -6,7 +6,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime
 from enum import StrEnum
 
-from smb_requirement_agent.domain.analysis.value_objects import QuestionId
+from smb_requirement_agent.analysis.domain.value_objects import QuestionId
 from smb_requirement_agent.domain.knowledge.errors import (
     InvalidKnowledgeError,
     KnowledgeFindingConflictError,

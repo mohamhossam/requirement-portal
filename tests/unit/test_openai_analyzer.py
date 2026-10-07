@@ -6,9 +6,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
-from smb_requirement_agent.application.ports.requirement_analyzer import AnalysisDocumentContext
-from smb_requirement_agent.domain.analysis.value_objects import (
+from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
+    AnalysisDocumentContext,
+)
+from smb_requirement_agent.analysis.domain.value_objects import (
     ClarificationKind,
     HumanClarification,
     IntentProposal,
@@ -16,6 +17,7 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     IntentProposalKind,
     IntentProposalStatus,
 )
+from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
 from smb_requirement_agent.infrastructure.llm.openai_adapters import (
     OpenAIRequirementAnalyzer,
 )

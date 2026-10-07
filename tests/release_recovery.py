@@ -26,7 +26,7 @@ from psycopg import sql
 from psycopg.conninfo import conninfo_to_dict
 from pydantic import TypeAdapter
 
-from smb_requirement_agent.domain.analysis.value_objects import IntentProposalStatus
+from smb_requirement_agent.analysis.domain.value_objects import IntentProposalStatus
 from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedError
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.config.options import (

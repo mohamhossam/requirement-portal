@@ -14,13 +14,13 @@ from smb_kernel.identity.ports import (
 )
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.application.ports.analysis_audit_repository import (
+    AnalysisAuditRepositoryPort,
+)
 from smb_requirement_agent.application.errors import (
     ActorNotFoundError,
     RequirementDraftNotFoundError,
     RequirementNotFoundError,
-)
-from smb_requirement_agent.application.ports.analysis_audit_repository import (
-    AnalysisAuditRepositoryPort,
 )
 from smb_requirement_agent.application.ports.external_work import guard_external_work
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort

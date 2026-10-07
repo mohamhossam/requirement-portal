@@ -13,10 +13,24 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Any
 
+from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
+from smb_requirement_agent.analysis.domain.value_objects import IntentProposal
+from smb_requirement_agent.analysis.infrastructure.analysis_payloads import (
+    analysis_from_payload,
+    analysis_round_from_payload,
+    analysis_round_to_payload,
+    analysis_to_payload,
+    clarification_question_from_payload,
+    clarification_question_to_payload,
+)
+from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_audit_repository import (
+    InMemoryAnalysisAuditRepository,
+)
+from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_repository import (
+    InMemoryRequirementAnalysisRepository,
+)
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidencePort
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
-from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
-from smb_requirement_agent.domain.analysis.value_objects import IntentProposal
 from smb_requirement_agent.domain.review.evidence import evidence_fingerprint
 from smb_requirement_agent.domain.review.fingerprints import (
     artifact_fingerprint,
@@ -33,14 +47,6 @@ from smb_requirement_agent.infrastructure.persistence.activity_codec import (
     activity_from_payload,
     activity_to_payload,
 )
-from smb_requirement_agent.infrastructure.persistence.analysis_payloads import (
-    analysis_from_payload,
-    analysis_round_from_payload,
-    analysis_round_to_payload,
-    analysis_to_payload,
-    clarification_question_from_payload,
-    clarification_question_to_payload,
-)
 from smb_requirement_agent.infrastructure.persistence.backlog_payloads import (
     epic_from_payload,
     epic_to_payload,
@@ -50,12 +56,6 @@ from smb_requirement_agent.infrastructure.persistence.backlog_payloads import (
     story_proposal_from_payload,
     story_proposal_to_payload,
     story_to_payload,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_audit_repository import (
-    InMemoryAnalysisAuditRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_repository import (
-    InMemoryRequirementAnalysisRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_epic_repository import (
     InMemoryEpicRepository,

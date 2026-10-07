@@ -5,6 +5,17 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
+from smb_requirement_agent.analysis.domain.errors import (
+    AnalysisClarificationConflictError,
+    AnalysisConfirmationBlockedError,
+    ClarificationVersionConflictError,
+    IntentProposalVersionConflictError,
+    InvalidAnalysisContentError,
+    InvalidClarificationError,
+    InvalidClarificationTransitionError,
+    InvalidIntentProposalDecisionError,
+    InvalidIntentProposalTransitionError,
+)
 from smb_requirement_agent.application.errors import (
     ActorNotFoundError,
     AiJobNotFoundError,
@@ -69,17 +80,6 @@ from smb_requirement_agent.application.errors import (
     StoryQualitySnapshotConflictError,
     StoryQualitySnapshotNotFoundError,
     UnsupportedDocumentError,
-)
-from smb_requirement_agent.domain.analysis.errors import (
-    AnalysisClarificationConflictError,
-    AnalysisConfirmationBlockedError,
-    ClarificationVersionConflictError,
-    IntentProposalVersionConflictError,
-    InvalidAnalysisContentError,
-    InvalidClarificationError,
-    InvalidClarificationTransitionError,
-    InvalidIntentProposalDecisionError,
-    InvalidIntentProposalTransitionError,
 )
 from smb_requirement_agent.domain.architecture.errors import InvalidArchitectureContentError
 from smb_requirement_agent.domain.architecture.knowledge import (

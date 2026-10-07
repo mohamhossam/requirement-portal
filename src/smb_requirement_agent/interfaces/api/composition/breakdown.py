@@ -10,6 +10,9 @@ from dataclasses import dataclass
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration import (
+    AnalysisCollaboration,
+)
 from smb_requirement_agent.application.ports.architecture_knowledge import ArchitectureKnowledgePort
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.ports.epic_generator import EpicGeneratorPort
@@ -19,9 +22,6 @@ from smb_requirement_agent.application.ports.story_quality_evaluator import (
     StoryQualityEvaluatorPort,
 )
 from smb_requirement_agent.application.use_cases.ai_jobs import AnalysisProgressReporter
-from smb_requirement_agent.application.use_cases.analysis_collaboration import (
-    AnalysisCollaboration,
-)
 from smb_requirement_agent.application.use_cases.approval_workflow import (
     ApproveStory,
     RejectStory,

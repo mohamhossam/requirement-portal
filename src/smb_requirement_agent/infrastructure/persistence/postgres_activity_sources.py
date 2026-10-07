@@ -3,13 +3,13 @@
 from contextlib import AbstractContextManager
 from typing import Any, cast
 
-from smb_requirement_agent.application.ports.requirement_worklist import RequirementWorklistSnapshot
-from smb_requirement_agent.domain.analysis.entities import AnalysisRound, ClarificationQuestion
-from smb_requirement_agent.domain.revision.entities import BreakdownRevision, RequirementRevision
-from smb_requirement_agent.infrastructure.persistence.analysis_payloads import (
+from smb_requirement_agent.analysis.domain.entities import AnalysisRound, ClarificationQuestion
+from smb_requirement_agent.analysis.infrastructure.analysis_payloads import (
     analysis_round_from_payload,
     clarification_question_from_payload,
 )
+from smb_requirement_agent.application.ports.requirement_worklist import RequirementWorklistSnapshot
+from smb_requirement_agent.domain.revision.entities import BreakdownRevision, RequirementRevision
 from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader import (
     ActivityInputDelta,
 )

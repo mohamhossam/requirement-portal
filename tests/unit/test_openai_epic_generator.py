@@ -8,9 +8,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from smb_requirement_agent.application.errors import EpicGenerationError
-from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
-from smb_requirement_agent.domain.analysis.value_objects import (
+from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
+from smb_requirement_agent.analysis.domain.value_objects import (
     Ambiguity,
     Assumption,
     BusinessRule,
@@ -23,6 +22,7 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     OpenQuestion,
     PotentialDependency,
 )
+from smb_requirement_agent.application.errors import EpicGenerationError
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.llm.openai_adapters import OpenAIEpicGenerator
 from smb_requirement_agent.infrastructure.llm.prompts.epic_prompt import PROMPT_VERSION

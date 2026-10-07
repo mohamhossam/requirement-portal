@@ -12,6 +12,11 @@ from typing import Concatenate, cast
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.application.ports.requirement_analysis_repository import (
+    RequirementAnalysisRepositoryPort,
+)
+from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
+from smb_requirement_agent.analysis.domain.lineage import generation_lineage
 from smb_requirement_agent.application.errors import (
     ArtifactVersionConflictError,
     EpicNotFoundError,
@@ -24,9 +29,6 @@ from smb_requirement_agent.application.errors import (
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
-from smb_requirement_agent.application.ports.requirement_analysis_repository import (
-    RequirementAnalysisRepositoryPort,
-)
 from smb_requirement_agent.application.ports.story_generator import (
     StoryCandidate,
     StoryGeneratorPort,
@@ -42,8 +44,6 @@ from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
 )
-from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
-from smb_requirement_agent.domain.analysis.lineage import generation_lineage
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.feature.entities import Feature
 from smb_requirement_agent.domain.feature.value_objects import FeatureId

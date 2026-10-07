@@ -10,7 +10,7 @@ import hashlib
 import json
 from dataclasses import asdict
 
-from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
+from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
 from smb_requirement_agent.domain.architecture.entities import ArchitectureImpact
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.feature.entities import Feature

@@ -7,6 +7,13 @@ from threading import RLock
 
 import pytest
 
+from smb_requirement_agent.analysis.domain.value_objects import (
+    ClarificationKind,
+    ClarificationSeverity,
+    IntentProposalStatus,
+    KnownFact,
+    QuestionId,
+)
 from smb_requirement_agent.application.errors import KnowledgeGenerationError
 from smb_requirement_agent.application.ports.requirement_knowledge import (
     AnswerSuggestionCandidate,
@@ -23,13 +30,6 @@ from smb_requirement_agent.application.use_cases.requirement_knowledge import (
 )
 from smb_requirement_agent.application.use_cases.requirement_worklist import (
     RequirementWorklistQuery,
-)
-from smb_requirement_agent.domain.analysis.value_objects import (
-    ClarificationKind,
-    ClarificationSeverity,
-    IntentProposalStatus,
-    KnownFact,
-    QuestionId,
 )
 from smb_requirement_agent.domain.knowledge.entities import (
     AnswerSuggestionSource,

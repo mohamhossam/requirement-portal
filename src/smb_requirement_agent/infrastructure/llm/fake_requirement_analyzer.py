@@ -2,10 +2,7 @@
 
 from collections.abc import Sequence
 
-from smb_requirement_agent.application.errors import (
-    RequirementAnalysisGenerationError,
-)
-from smb_requirement_agent.application.ports.requirement_analyzer import (
+from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     ActiveQuestionContext,
     AmbiguityCandidate,
     AnalysisDocumentContext,
@@ -17,14 +14,19 @@ from smb_requirement_agent.application.ports.requirement_analyzer import (
     RequirementAnalyzerPort,
     UncertaintyCandidate,
 )
-from smb_requirement_agent.application.use_cases.analysis_mapping import analysis_evidence_key
-from smb_requirement_agent.domain.analysis.value_objects import (
+from smb_requirement_agent.analysis.application.use_cases.analysis_mapping import (
+    analysis_evidence_key,
+)
+from smb_requirement_agent.analysis.domain.value_objects import (
     ClarificationKind,
     ClarificationSource,
     HumanClarification,
     IntentProposal,
     IntentProposalKind,
     QuestionChangeAction,
+)
+from smb_requirement_agent.application.errors import (
+    RequirementAnalysisGenerationError,
 )
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 

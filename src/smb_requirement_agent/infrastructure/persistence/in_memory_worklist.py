@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
-from smb_requirement_agent.application.ports.analysis_audit_repository import (
+from smb_requirement_agent.analysis.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
+)
+from smb_requirement_agent.analysis.application.ports.requirement_analysis_repository import (
+    RequirementAnalysisRepositoryPort,
 )
 from smb_requirement_agent.application.ports.breakdown_repository import BreakdownRepositoryPort
 from smb_requirement_agent.application.ports.breakdown_review_repository import (
@@ -11,9 +14,6 @@ from smb_requirement_agent.application.ports.breakdown_review_repository import 
 )
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
-from smb_requirement_agent.application.ports.requirement_analysis_repository import (
-    RequirementAnalysisRepositoryPort,
-)
 from smb_requirement_agent.application.ports.requirement_worklist import (
     CurrentWorklistProjectionPort,
     RequirementWorklistSnapshot,

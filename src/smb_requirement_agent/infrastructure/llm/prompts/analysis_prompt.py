@@ -3,7 +3,7 @@
 import re
 from collections.abc import Mapping, Sequence
 
-from smb_requirement_agent.application.ports.requirement_analyzer import (
+from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     ActiveQuestionContext,
     AnalysisDocumentContext,
 )

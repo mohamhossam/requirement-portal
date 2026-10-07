@@ -7,6 +7,10 @@ from dataclasses import dataclass
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.application.ports.requirement_analysis_repository import (
+    RequirementAnalysisRepositoryPort,
+)
+from smb_requirement_agent.analysis.domain.lineage import generation_lineage
 from smb_requirement_agent.application.errors import (
     AnalysisConfirmationRequiredError,
     ArtifactVersionConflictError,
@@ -16,16 +20,12 @@ from smb_requirement_agent.application.errors import (
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.ports.epic_generator import EpicGeneratorPort
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
-from smb_requirement_agent.application.ports.requirement_analysis_repository import (
-    RequirementAnalysisRepositoryPort,
-)
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
 )
-from smb_requirement_agent.domain.analysis.lineage import generation_lineage
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.epic.errors import EpicRegenerationConflictError
 from smb_requirement_agent.domain.epic.events import EpicChanged

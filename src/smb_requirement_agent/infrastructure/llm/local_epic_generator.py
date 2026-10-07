@@ -10,9 +10,9 @@ from smb_kernel.llm.structured_output import (
     StructuredOutputError,
 )
 
+from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
 from smb_requirement_agent.application.errors import EpicGenerationError
 from smb_requirement_agent.application.ports.epic_generator import EpicCandidate
-from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
 from smb_requirement_agent.infrastructure.llm.candidate_mappers import to_epic_candidate
 from smb_requirement_agent.infrastructure.llm.prompts.epic_prompt import (
     EPIC_SYSTEM_PROMPT,

@@ -21,10 +21,26 @@ from smb_kernel.persistence.connector import (
 )
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.ports.activity import ActivityReadPort, ReportingReadPort
-from smb_requirement_agent.application.ports.analysis_audit_repository import (
+from smb_requirement_agent.analysis.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
+from smb_requirement_agent.analysis.application.ports.requirement_analysis_repository import (
+    RequirementAnalysisRepositoryPort,
+)
+from smb_requirement_agent.analysis.application.ports.requirement_evidence_analyzer import (
+    EvidenceFragmentCachePort,
+)
+from smb_requirement_agent.analysis.infrastructure import postgres_evidence_fragment_cache
+from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_audit_repository import (
+    InMemoryAnalysisAuditRepository,
+)
+from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_repository import (
+    InMemoryRequirementAnalysisRepository,
+)
+from smb_requirement_agent.analysis.infrastructure.in_memory_evidence_fragment_cache import (
+    InMemoryEvidenceFragmentCache,
+)
+from smb_requirement_agent.application.ports.activity import ActivityReadPort, ReportingReadPort
 from smb_requirement_agent.application.ports.architecture_jobs import (
     ArchitectureJobRepositoryPort,
 )
@@ -58,12 +74,6 @@ from smb_requirement_agent.application.ports.knowledge_portfolio import (
 from smb_requirement_agent.application.ports.prior_art import PriorArtStorePort
 from smb_requirement_agent.application.ports.reference_publications import (
     ReferencePublicationStatePort,
-)
-from smb_requirement_agent.application.ports.requirement_analysis_repository import (
-    RequirementAnalysisRepositoryPort,
-)
-from smb_requirement_agent.application.ports.requirement_evidence_analyzer import (
-    EvidenceFragmentCachePort,
 )
 from smb_requirement_agent.application.ports.requirement_indexing import (
     RequirementIndexProgressPort,
@@ -111,7 +121,6 @@ from smb_requirement_agent.infrastructure.config.options import (
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.persistence import (
     knowledge_index_generations,
-    postgres_evidence_fragment_cache,
     postgres_knowledge_generations,
     postgres_requirement_knowledge,
 )
@@ -146,12 +155,6 @@ from smb_requirement_agent.infrastructure.persistence.historic_corpus import (
     InMemoryHistoricCorpus,
     PostgresHistoricCorpus,
 )
-from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_audit_repository import (
-    InMemoryAnalysisAuditRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_repository import (
-    InMemoryRequirementAnalysisRepository,
-)
 from smb_requirement_agent.infrastructure.persistence.in_memory_architecture_jobs import (
     InMemoryArchitectureJobs,
 )
@@ -160,9 +163,6 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_breakdown_review
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_epic_repository import (
     InMemoryEpicRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_evidence_fragment_cache import (
-    InMemoryEvidenceFragmentCache,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_feature_repository import (
     InMemoryFeatureRepository,

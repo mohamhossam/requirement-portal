@@ -8,6 +8,10 @@ from enum import Enum
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.application.ports.requirement_analysis_repository import (
+    RequirementAnalysisRepositoryPort,
+)
+from smb_requirement_agent.analysis.domain.lineage import generation_lineage
 from smb_requirement_agent.application.errors import (
     ArtifactVersionConflictError,
     EpicNotFoundError,
@@ -22,9 +26,6 @@ from smb_requirement_agent.application.ports.feature_generator import (
     FeatureGeneratorPort,
 )
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
-from smb_requirement_agent.application.ports.requirement_analysis_repository import (
-    RequirementAnalysisRepositoryPort,
-)
 from smb_requirement_agent.application.ports.story_repository import (
     StoryChangeProposalRepositoryPort,
     StoryRepositoryPort,
@@ -36,7 +37,6 @@ from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
 )
-from smb_requirement_agent.domain.analysis.lineage import generation_lineage
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.epic.errors import EpicNotApprovedError
 from smb_requirement_agent.domain.epic.value_objects import EpicStatus

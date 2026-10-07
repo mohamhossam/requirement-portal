@@ -7,6 +7,19 @@ from dataclasses import dataclass
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.application.ports.analysis_audit_repository import (
+    AnalysisAuditRepositoryPort,
+)
+from smb_requirement_agent.analysis.application.ports.requirement_analysis_repository import (
+    RequirementAnalysisRepositoryPort,
+)
+from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration import (
+    AnalysisCollaboration,
+)
+from smb_requirement_agent.analysis.domain.entities import (
+    RequirementAnalysis,
+)
+from smb_requirement_agent.analysis.domain.value_objects import QuestionId
 from smb_requirement_agent.application.errors import (
     ArtifactVersionConflictError,
     BreakdownReviewNotFoundError,
@@ -14,9 +27,6 @@ from smb_requirement_agent.application.errors import (
     RequirementAnalysisNotFoundError,
     RequirementNotFoundError,
     ReviewFlagNotFoundError,
-)
-from smb_requirement_agent.application.ports.analysis_audit_repository import (
-    AnalysisAuditRepositoryPort,
 )
 from smb_requirement_agent.application.ports.architecture_knowledge import (
     ActiveArchitectureReleasePort,
@@ -28,17 +38,11 @@ from smb_requirement_agent.application.ports.candidate_review import CandidateCr
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidencePort
-from smb_requirement_agent.application.ports.requirement_analysis_repository import (
-    RequirementAnalysisRepositoryPort,
-)
 from smb_requirement_agent.application.ports.story_quality_repository import (
     StoryQualityRepositoryPort,
 )
 from smb_requirement_agent.application.ports.story_repository import StoryRepositoryPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.analysis_collaboration import (
-    AnalysisCollaboration,
-)
 from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
@@ -47,10 +51,6 @@ from smb_requirement_agent.application.use_cases.story_quality import (
     ValidateStory,
     story_set_fingerprint,
 )
-from smb_requirement_agent.domain.analysis.entities import (
-    RequirementAnalysis,
-)
-from smb_requirement_agent.domain.analysis.value_objects import QuestionId
 from smb_requirement_agent.domain.feature.entities import Feature
 from smb_requirement_agent.domain.review.entities import (
     BreakdownReview,

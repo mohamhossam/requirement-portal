@@ -10,6 +10,20 @@ from typing import Any
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.application.ports.analysis_audit_repository import (
+    AnalysisAuditRepositoryPort,
+)
+from smb_requirement_agent.analysis.application.ports.requirement_analysis_repository import (
+    RequirementAnalysisRepositoryPort,
+)
+from smb_requirement_agent.analysis.domain.entities import (
+    ClarificationQuestion,
+    RequirementAnalysis,
+)
+from smb_requirement_agent.analysis.domain.lineage import analysis_lineage
+from smb_requirement_agent.analysis.domain.value_objects import (
+    IntentProposalStatus,
+)
 from smb_requirement_agent.application.errors import (
     KnowledgeFindingNotFoundError,
     KnowledgeGenerationError,
@@ -17,13 +31,7 @@ from smb_requirement_agent.application.errors import (
     KnowledgeScreenConflictError,
     RequirementNotFoundError,
 )
-from smb_requirement_agent.application.ports.analysis_audit_repository import (
-    AnalysisAuditRepositoryPort,
-)
 from smb_requirement_agent.application.ports.corpus_membership import CorpusMembershipPort
-from smb_requirement_agent.application.ports.requirement_analysis_repository import (
-    RequirementAnalysisRepositoryPort,
-)
 from smb_requirement_agent.application.ports.requirement_knowledge import (
     KnowledgeEmbeddingPort,
     KnowledgeReview,
@@ -37,14 +45,6 @@ from smb_requirement_agent.application.ports.transaction_manager import Transact
 from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
-)
-from smb_requirement_agent.domain.analysis.entities import (
-    ClarificationQuestion,
-    RequirementAnalysis,
-)
-from smb_requirement_agent.domain.analysis.lineage import analysis_lineage
-from smb_requirement_agent.domain.analysis.value_objects import (
-    IntentProposalStatus,
 )
 from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeChunk,

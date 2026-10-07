@@ -16,6 +16,7 @@ from smb_kernel.llm.structured_output import (
     StructuredOutputError,
 )
 
+from smb_requirement_agent.analysis.domain.entities import ClarificationQuestion
 from smb_requirement_agent.application.errors import KnowledgeGenerationError
 from smb_requirement_agent.application.ports.prior_art import (
     PriorArtCandidateInput,
@@ -27,7 +28,6 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
     Embedding,
     RelationshipCandidate,
 )
-from smb_requirement_agent.domain.analysis.entities import ClarificationQuestion
 from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeChunk,
     KnowledgeMatch,

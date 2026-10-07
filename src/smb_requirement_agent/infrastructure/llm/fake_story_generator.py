@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
 from smb_requirement_agent.application.errors import StoryGenerationError
 from smb_requirement_agent.application.ports.generation_guidance import (
     EMPTY_GENERATION_GUIDANCE,
     GenerationGuidance,
 )
 from smb_requirement_agent.application.ports.story_generator import StoryCandidate
-from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.feature.entities import Feature
 from smb_requirement_agent.domain.story.entities import UserStory

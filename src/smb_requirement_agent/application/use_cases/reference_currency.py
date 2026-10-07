@@ -10,6 +10,12 @@ from datetime import date, timedelta
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
+from smb_requirement_agent.analysis.domain.lineage import analysis_lineage
+from smb_requirement_agent.analysis.domain.value_objects import (
+    IntentProposal,
+    IntentProposalStatus,
+)
 from smb_requirement_agent.application.errors import (
     PersistenceError,
     RequirementAnalysisConflictError,
@@ -34,12 +40,6 @@ from smb_requirement_agent.application.ports.reference_publications import (
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.knowledge_event_cursor import contiguous_reach
-from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
-from smb_requirement_agent.domain.analysis.lineage import analysis_lineage
-from smb_requirement_agent.domain.analysis.value_objects import (
-    IntentProposal,
-    IntentProposalStatus,
-)
 from smb_requirement_agent.shared_kernel.citation import PublishedReference
 
 

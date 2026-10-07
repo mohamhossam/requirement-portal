@@ -7,7 +7,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Protocol
 
-from smb_requirement_agent.domain.analysis.entities import (
+from smb_requirement_agent.analysis.domain.entities import (
     ClarificationQuestion,
     RequirementAnalysis,
 )

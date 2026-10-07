@@ -1,0 +1,45 @@
+"""Carry only recorded origins through the inputs actually supplied to generation.
+
+Pure functions over the analysis aggregate, so they are analysis domain code (ADR-0103 PR 10;
+they were `application/use_cases/source_lineage.py`).
+"""
+
+from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
+from smb_requirement_agent.analysis.domain.value_objects import HumanClarification, IntentProposal
+from smb_requirement_agent.shared_kernel.lineage import (
+    SourceLineage,
+    merge_lineage,
+)
+
+
+def input_lineage(
+    clarifications: tuple[HumanClarification, ...], proposals: tuple[IntentProposal, ...]
+) -> tuple[SourceLineage, ...]:
+    return merge_lineage(
+        tuple(
+            item.through(
+                "clarification:"
+                + (answer.question_id.value if answer.question_id else answer.subject)
+            )
+            for answer in clarifications
+            for item in answer.source_lineage
+        ),
+        tuple(
+            SourceLineage(citation, (f"proposal:{proposal.id.value}",))
+            for proposal in proposals
+            if proposal.effective_statement is not None
+            for citation in proposal.reference_evidence
+        ),
+    )
+
+
+def analysis_lineage(analysis: RequirementAnalysis) -> tuple[SourceLineage, ...]:
+    return merge_lineage(
+        analysis.source_lineage,
+        input_lineage(analysis.clarifications, analysis.intent_proposals),
+    )
+
+
+def generation_lineage(analysis: RequirementAnalysis) -> tuple[SourceLineage, ...]:
+    source = f"analysis:{analysis.id.value if analysis.id else 'legacy'}:v{analysis.version}"
+    return tuple(item.through(source) for item in analysis_lineage(analysis))

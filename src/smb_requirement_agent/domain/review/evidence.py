@@ -6,7 +6,7 @@ import hashlib
 import json
 from dataclasses import asdict, dataclass
 
-from smb_requirement_agent.domain.analysis.entities import (
+from smb_requirement_agent.analysis.domain.entities import (
     ClarificationQuestion,
     RequirementAnalysis,
 )

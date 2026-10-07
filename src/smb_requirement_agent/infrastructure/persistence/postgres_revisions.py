@@ -4,12 +4,17 @@ from __future__ import annotations
 
 from psycopg.types.json import Jsonb
 
-from smb_requirement_agent.application.errors import (
-    PersistenceError,
-)
-from smb_requirement_agent.domain.analysis.entities import (
+from smb_requirement_agent.analysis.domain.entities import (
     AnalysisRound,
     ClarificationQuestion,
+)
+from smb_requirement_agent.analysis.infrastructure.analysis_payloads import (
+    analysis_from_payload,
+    analysis_round_from_payload,
+    clarification_question_from_payload,
+)
+from smb_requirement_agent.application.errors import (
+    PersistenceError,
 )
 from smb_requirement_agent.domain.revision.entities import (
     BreakdownRevision,
@@ -17,11 +22,6 @@ from smb_requirement_agent.domain.revision.entities import (
     RevisionNumber,
 )
 from smb_requirement_agent.identity.infrastructure.identity_payloads import access_from_payload
-from smb_requirement_agent.infrastructure.persistence.analysis_payloads import (
-    analysis_from_payload,
-    analysis_round_from_payload,
-    clarification_question_from_payload,
-)
 from smb_requirement_agent.infrastructure.persistence.backlog_payloads import (
     epic_from_payload,
     feature_from_payload,

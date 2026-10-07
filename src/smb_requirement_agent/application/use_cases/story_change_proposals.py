@@ -7,6 +7,9 @@ from dataclasses import replace
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.application.ports.requirement_analysis_repository import (
+    RequirementAnalysisRepositoryPort,
+)
 from smb_requirement_agent.application.errors import (
     ArtifactVersionConflictError,
     StoryGenerationError,
@@ -16,9 +19,6 @@ from smb_requirement_agent.application.ports.domain_events import DomainEventPub
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
 from smb_requirement_agent.application.ports.generation_guidance import GenerationGuidance
-from smb_requirement_agent.application.ports.requirement_analysis_repository import (
-    RequirementAnalysisRepositoryPort,
-)
 from smb_requirement_agent.application.ports.story_generator import (
     StoryGeneratorPort,
 )

@@ -16,12 +16,21 @@ from fastapi.testclient import TestClient
 from smb_kernel.documents.text_extractor import SafeDocumentTextExtractor
 from smb_kernel.time.fixed import FixedClock
 
+from smb_requirement_agent.analysis.application.ports.requirement_analysis_repository import (
+    RequirementAnalysisRepositoryPort,
+)
+from smb_requirement_agent.analysis.application.use_cases.analysis_documents import (
+    AssembleAnalysisDocuments,
+)
+from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_audit_repository import (
+    InMemoryAnalysisAuditRepository,
+)
+from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_repository import (
+    InMemoryRequirementAnalysisRepository,
+)
 from smb_requirement_agent.application.events import InProcessEventDispatcher
 from smb_requirement_agent.application.ports.breakdown_review_repository import (
     BreakdownReviewRepositoryPort,
-)
-from smb_requirement_agent.application.ports.requirement_analysis_repository import (
-    RequirementAnalysisRepositoryPort,
 )
 from smb_requirement_agent.application.ports.requirement_knowledge import (
     KnowledgeReview,
@@ -29,16 +38,9 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
     KnowledgeScreenEnsureResult,
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.analysis_documents import AssembleAnalysisDocuments
 from smb_requirement_agent.domain.knowledge.entities import KnowledgeScreen, KnowledgeScreenId
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_audit_repository import (
-    InMemoryAnalysisAuditRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_repository import (
-    InMemoryRequirementAnalysisRepository,
-)
 from smb_requirement_agent.infrastructure.persistence.in_memory_breakdown_review_repository import (
     InMemoryBreakdownReviewRepository,
 )

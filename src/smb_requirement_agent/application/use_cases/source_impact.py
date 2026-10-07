@@ -5,6 +5,8 @@ from dataclasses import dataclass
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
+from smb_requirement_agent.analysis.domain.value_objects import IntentProposal
 from smb_requirement_agent.application.errors import (
     ArtifactVersionConflictError,
     DocumentNotFoundError,
@@ -22,8 +24,6 @@ from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
 )
-from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
-from smb_requirement_agent.domain.analysis.value_objects import IntentProposal
 from smb_requirement_agent.domain.document.lineage import ImpactDecision, ImpactDecisionKind
 from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedError
 from smb_requirement_agent.shared_kernel.actors import ActorProfile

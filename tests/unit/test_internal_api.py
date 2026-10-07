@@ -20,8 +20,8 @@ from smb_requirement_agent.requirements.application.use_cases.create_requirement
     CreateRequirementInput,
 )
 from tests.knowledge_doubles import sync
-from tests.unit import test_reference_grounding
-from tests.unit.test_reference_grounding import Grounded
+from tests.unit.analysis import test_reference_grounding
+from tests.unit.analysis.test_reference_grounding import Grounded
 
 grounded = test_reference_grounding.grounded
 TOKEN = "k" * 40

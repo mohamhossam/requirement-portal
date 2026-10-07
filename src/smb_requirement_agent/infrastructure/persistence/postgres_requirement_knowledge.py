@@ -9,8 +9,8 @@ from typing import Any, cast
 from psycopg.types.json import Jsonb
 from pydantic import TypeAdapter
 
+from smb_requirement_agent.analysis.domain.value_objects import QuestionId
 from smb_requirement_agent.application.ports.requirement_knowledge import Embedding
-from smb_requirement_agent.domain.analysis.value_objects import QuestionId
 from smb_requirement_agent.domain.knowledge.entities import (
     AnswerSuggestion,
     AnswerSuggestionId,

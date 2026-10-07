@@ -6,6 +6,7 @@ import uuid
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.domain.entities import ClarificationQuestion
 from smb_requirement_agent.application.errors import (
     RequirementNotFoundError,
 )
@@ -20,7 +21,6 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
     RequirementKnowledgeRepositoryPort,
 )
 from smb_requirement_agent.application.use_cases.ai_jobs import command_fingerprint
-from smb_requirement_agent.domain.analysis.entities import ClarificationQuestion
 from smb_requirement_agent.domain.knowledge.errors import RequirementRetiredError
 from smb_requirement_agent.jobs.application.ports.ai_jobs import (
     AiJobCommand,

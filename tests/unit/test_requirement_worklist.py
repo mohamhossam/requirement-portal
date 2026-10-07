@@ -8,6 +8,14 @@ from threading import RLock
 
 from smb_kernel.time.fixed import FixedClock
 
+from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
+from smb_requirement_agent.analysis.domain.value_objects import Assumption, KnownFact
+from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_audit_repository import (
+    InMemoryAnalysisAuditRepository,
+)
+from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_repository import (
+    InMemoryRequirementAnalysisRepository,
+)
 from smb_requirement_agent.application.ports.activity import (
     ActivityEvent,
     ActivityQuery,
@@ -24,8 +32,6 @@ from smb_requirement_agent.application.use_cases.requirement_worklist import (
     NextAction,
     RequirementWorklistQuery,
 )
-from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
-from smb_requirement_agent.domain.analysis.value_objects import Assumption, KnownFact
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.epic.value_objects import (
     BusinessCase,
@@ -59,12 +65,6 @@ from smb_requirement_agent.domain.story.value_objects import (
 )
 from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
     InMemoryAccessRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_audit_repository import (
-    InMemoryAnalysisAuditRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_repository import (
-    InMemoryRequirementAnalysisRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_breakdown_review_repository import (
     InMemoryBreakdownReviewRepository,

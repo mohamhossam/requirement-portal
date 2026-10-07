@@ -5,7 +5,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, create_model
 
-from smb_requirement_agent.domain.analysis.value_objects import ClarificationKind
+from smb_requirement_agent.analysis.domain.value_objects import ClarificationKind
 
 
 class OpenQuestionSchema(BaseModel):

@@ -12,6 +12,10 @@ from dataclasses import dataclass, replace
 from datetime import datetime
 from typing import Protocol
 
+from smb_requirement_agent.analysis.application.ports.analysis_audit_repository import (
+    AnalysisAuditRepositoryPort,
+)
+from smb_requirement_agent.analysis.domain.entities import AnalysisRound, ClarificationQuestion
 from smb_requirement_agent.application.ports.activity import (
     ActivityEvent,
     ActivityQuery,
@@ -20,9 +24,6 @@ from smb_requirement_agent.application.ports.activity import (
     ActivityResult,
     BlockerEvidence,
     ReportingReadPort,
-)
-from smb_requirement_agent.application.ports.analysis_audit_repository import (
-    AnalysisAuditRepositoryPort,
 )
 from smb_requirement_agent.application.ports.requirement_knowledge import (
     RequirementKnowledgeRepositoryPort,
@@ -33,7 +34,6 @@ from smb_requirement_agent.application.ports.requirement_worklist import (
 from smb_requirement_agent.application.use_cases.activity_reporting import (
     aggregate_activity_events,
 )
-from smb_requirement_agent.domain.analysis.entities import AnalysisRound, ClarificationQuestion
 from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeFinding,
 )

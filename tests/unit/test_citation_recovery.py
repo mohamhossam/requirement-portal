@@ -23,15 +23,15 @@ from smb_kernel.llm.openrouter_structured_output import (
 from smb_kernel.llm.profiles import ModelProfile
 from smb_kernel.llm.structured_output import StructuredOutputClient
 
-from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
-from smb_requirement_agent.application.ports.requirement_analyzer import (
+from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     AnalysisDocumentContext,
     RequirementAnalysisCandidate,
 )
-from smb_requirement_agent.application.public_errors import describe_public_error
-from smb_requirement_agent.application.use_cases.analysis_mapping import build_analysis
-from smb_requirement_agent.application.use_cases.evidence_analysis import ValidateAnalysisCitations
-from smb_requirement_agent.domain.analysis.value_objects import (
+from smb_requirement_agent.analysis.application.use_cases.analysis_mapping import build_analysis
+from smb_requirement_agent.analysis.application.use_cases.evidence_analysis import (
+    ValidateAnalysisCitations,
+)
+from smb_requirement_agent.analysis.domain.value_objects import (
     ClarificationKind,
     HumanClarification,
     IntentProposal,
@@ -40,6 +40,8 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     IntentProposalStatus,
     QuestionId,
 )
+from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
+from smb_requirement_agent.application.public_errors import describe_public_error
 from smb_requirement_agent.infrastructure.llm.local_requirement_analyzer import (
     StructuredRequirementAnalyzerAdapter,
 )

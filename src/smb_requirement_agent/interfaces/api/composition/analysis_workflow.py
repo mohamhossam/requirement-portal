@@ -10,25 +10,35 @@ from dataclasses import dataclass
 
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.ports.reference_analysis import ReferenceProposerPort
-from smb_requirement_agent.application.ports.requirement_analyzer import RequirementAnalyzerPort
-from smb_requirement_agent.application.use_cases.analysis_collaboration import (
+from smb_requirement_agent.analysis.application.ports.reference_analysis import (
+    ReferenceProposerPort,
+)
+from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
+    RequirementAnalyzerPort,
+)
+from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration import (
     AnalysisCollaboration,
 )
-from smb_requirement_agent.application.use_cases.analysis_documents import AssembleAnalysisDocuments
-from smb_requirement_agent.application.use_cases.analyze_requirement import AnalyzeRequirement
-from smb_requirement_agent.application.use_cases.clarify_requirement_analysis import (
+from smb_requirement_agent.analysis.application.use_cases.analysis_documents import (
+    AssembleAnalysisDocuments,
+)
+from smb_requirement_agent.analysis.application.use_cases.analyze_requirement import (
+    AnalyzeRequirement,
+)
+from smb_requirement_agent.analysis.application.use_cases.clarify_requirement_analysis import (
     ClarifyRequirementAnalysis,
 )
-from smb_requirement_agent.application.use_cases.confirm_requirement_analysis import (
+from smb_requirement_agent.analysis.application.use_cases.confirm_requirement_analysis import (
     ConfirmRequirementAnalysis,
 )
-from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
-from smb_requirement_agent.application.use_cases.get_requirement_analysis import (
+from smb_requirement_agent.analysis.application.use_cases.get_requirement_analysis import (
     GetRequirementAnalysis,
 )
+from smb_requirement_agent.analysis.application.use_cases.reference_grounding import (
+    ReferenceGrounding,
+)
+from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
-from smb_requirement_agent.application.use_cases.reference_grounding import ReferenceGrounding
 from smb_requirement_agent.application.use_cases.requirement_commands import RequirementCommands
 from smb_requirement_agent.infrastructure.text.budget import Utf8BudgetCounter
 from smb_requirement_agent.interfaces.api.composition.knowledge import RequirementKnowledgeWiring

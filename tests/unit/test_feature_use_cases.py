@@ -9,6 +9,21 @@ from unittest.mock import Mock
 import pytest
 from smb_kernel.time.fixed import FixedClock
 
+from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration import (
+    AnalysisCollaboration,
+)
+from smb_requirement_agent.analysis.application.use_cases.analyze_requirement import (
+    AnalyzeRequirement,
+)
+from smb_requirement_agent.analysis.application.use_cases.confirm_requirement_analysis import (
+    ConfirmRequirementAnalysis,
+)
+from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_audit_repository import (
+    InMemoryAnalysisAuditRepository,
+)
+from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_repository import (
+    InMemoryRequirementAnalysisRepository,
+)
 from smb_requirement_agent.application.errors import (
     EpicNotFoundError,
     FeatureNotFoundError,
@@ -16,15 +31,8 @@ from smb_requirement_agent.application.errors import (
     RequirementAnalysisNotFoundError,
 )
 from smb_requirement_agent.application.ports.generation_guidance import EMPTY_GENERATION_GUIDANCE
-from smb_requirement_agent.application.use_cases.analysis_collaboration import (
-    AnalysisCollaboration,
-)
-from smb_requirement_agent.application.use_cases.analyze_requirement import AnalyzeRequirement
 from smb_requirement_agent.application.use_cases.approval_workflow import ApprovalRecorder
 from smb_requirement_agent.application.use_cases.approve_epic import ApproveEpic
-from smb_requirement_agent.application.use_cases.confirm_requirement_analysis import (
-    ConfirmRequirementAnalysis,
-)
 from smb_requirement_agent.application.use_cases.edit_epic import EditEpic, EditEpicInput
 from smb_requirement_agent.application.use_cases.feature_review import (
     ApproveFeature,
@@ -60,12 +68,6 @@ from smb_requirement_agent.infrastructure.llm.fake_epic_generator import FakeEpi
 from smb_requirement_agent.infrastructure.llm.fake_feature_generator import FakeFeatureGenerator
 from smb_requirement_agent.infrastructure.llm.fake_requirement_analyzer import (
     FakeRequirementAnalyzer,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_audit_repository import (
-    InMemoryAnalysisAuditRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_repository import (
-    InMemoryRequirementAnalysisRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_breakdown_review_repository import (
     InMemoryBreakdownReviewRepository,

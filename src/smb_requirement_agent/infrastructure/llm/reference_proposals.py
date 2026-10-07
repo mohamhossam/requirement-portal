@@ -11,16 +11,16 @@ from smb_kernel.llm.structured_output import (
     StructuredOutputError,
 )
 
-from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
-from smb_requirement_agent.application.ports.reference_analysis import (
+from smb_requirement_agent.analysis.application.ports.reference_analysis import (
     ReferenceProposalCandidate,
     ReferenceProposalResult,
 )
-from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidence
-from smb_requirement_agent.application.ports.requirement_analyzer import (
+from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     RequirementAnalysisCandidate,
 )
-from smb_requirement_agent.domain.analysis.value_objects import IntentProposal, IntentProposalKind
+from smb_requirement_agent.analysis.domain.value_objects import IntentProposal, IntentProposalKind
+from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
+from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidence
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 
 

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 
-from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
+from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
 from smb_requirement_agent.domain.feature.entities import Feature
 from smb_requirement_agent.domain.feature.value_objects import FeatureId
 from smb_requirement_agent.domain.story.errors import InvalidStoryContentError

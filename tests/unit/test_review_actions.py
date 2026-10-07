@@ -7,8 +7,8 @@ from datetime import UTC, datetime
 
 import pytest
 
-from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
-from smb_requirement_agent.domain.analysis.value_objects import KnownFact
+from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
+from smb_requirement_agent.analysis.domain.value_objects import KnownFact
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.shared_kernel.actions import ActionAvailability
 from smb_requirement_agent.shared_kernel.errors import InvalidGeneratedContentError

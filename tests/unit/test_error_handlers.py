@@ -6,6 +6,24 @@ from collections.abc import Generator, Sequence
 import pytest
 from fastapi.testclient import TestClient
 
+from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
+    ActiveQuestionContext,
+    AnalysisDocumentContext,
+    RequirementAnalysisCandidate,
+    RequirementAnalyzerPort,
+)
+from smb_requirement_agent.analysis.domain.errors import (
+    AnalysisClarificationConflictError,
+    AnalysisConfirmationBlockedError,
+    ClarificationVersionConflictError,
+    IntentProposalVersionConflictError,
+    InvalidAnalysisContentError,
+    InvalidClarificationError,
+    InvalidClarificationTransitionError,
+    InvalidIntentProposalDecisionError,
+    InvalidIntentProposalTransitionError,
+)
+from smb_requirement_agent.analysis.domain.value_objects import HumanClarification, IntentProposal
 from smb_requirement_agent.application.errors import (
     ActorNotFoundError,
     AiJobNotFoundError,
@@ -71,28 +89,10 @@ from smb_requirement_agent.application.errors import (
     StoryQualitySnapshotNotFoundError,
     UnsupportedDocumentError,
 )
-from smb_requirement_agent.application.ports.requirement_analyzer import (
-    ActiveQuestionContext,
-    AnalysisDocumentContext,
-    RequirementAnalysisCandidate,
-    RequirementAnalyzerPort,
-)
 from smb_requirement_agent.application.public_errors import (
     FailureCategory,
     describe_public_error,
 )
-from smb_requirement_agent.domain.analysis.errors import (
-    AnalysisClarificationConflictError,
-    AnalysisConfirmationBlockedError,
-    ClarificationVersionConflictError,
-    IntentProposalVersionConflictError,
-    InvalidAnalysisContentError,
-    InvalidClarificationError,
-    InvalidClarificationTransitionError,
-    InvalidIntentProposalDecisionError,
-    InvalidIntentProposalTransitionError,
-)
-from smb_requirement_agent.domain.analysis.value_objects import HumanClarification, IntentProposal
 from smb_requirement_agent.domain.architecture.errors import InvalidArchitectureContentError
 from smb_requirement_agent.domain.architecture.knowledge import (
     InvalidRelationshipKindError,

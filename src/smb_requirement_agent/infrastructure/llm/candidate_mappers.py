@@ -12,15 +12,7 @@ from collections.abc import Iterable, Sequence
 
 from smb_kernel.diagnostics import DebugTrace
 
-from smb_requirement_agent.application.errors import (
-    EpicGenerationError,
-    FeatureGenerationError,
-    RequirementAnalysisGenerationError,
-    StoryGenerationError,
-)
-from smb_requirement_agent.application.ports.epic_generator import EpicCandidate
-from smb_requirement_agent.application.ports.feature_generator import FeatureCandidate
-from smb_requirement_agent.application.ports.requirement_analyzer import (
+from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     ActiveQuestionContext,
     AmbiguityCandidate,
     AnalysisDocumentContext,
@@ -31,17 +23,25 @@ from smb_requirement_agent.application.ports.requirement_analyzer import (
     RequirementAnalysisCandidate,
     UncertaintyCandidate,
 )
-from smb_requirement_agent.application.ports.story_generator import (
-    AcceptanceCriterionCandidate,
-    StoryCandidate,
-)
-from smb_requirement_agent.domain.analysis.value_objects import (
+from smb_requirement_agent.analysis.domain.value_objects import (
     ClarificationKind,
     ClarificationSource,
     IntentProposal,
     IntentProposalKind,
     QuestionChangeAction,
     is_additional_intent_proposal,
+)
+from smb_requirement_agent.application.errors import (
+    EpicGenerationError,
+    FeatureGenerationError,
+    RequirementAnalysisGenerationError,
+    StoryGenerationError,
+)
+from smb_requirement_agent.application.ports.epic_generator import EpicCandidate
+from smb_requirement_agent.application.ports.feature_generator import FeatureCandidate
+from smb_requirement_agent.application.ports.story_generator import (
+    AcceptanceCriterionCandidate,
+    StoryCandidate,
 )
 from smb_requirement_agent.infrastructure.llm.response_sanitizer import (
     clean_pairs,

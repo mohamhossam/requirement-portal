@@ -19,8 +19,10 @@ from smb_kernel.documents.process_resources import (
 from smb_kernel.documents.scanner import ClamAvDocumentScanner, OfflineDocumentScanner
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.application.use_cases.analysis_documents import (
+    AssembleAnalysisDocuments,
+)
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
-from smb_requirement_agent.application.use_cases.analysis_documents import AssembleAnalysisDocuments
 from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
 from smb_requirement_agent.application.use_cases.requirement_impact import (
     PreviewRequirementImpact,

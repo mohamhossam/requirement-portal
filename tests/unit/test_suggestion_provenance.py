@@ -6,10 +6,10 @@ analysis's SuggestionProvenancePort. This pins both kinds of evidence a suggesti
 
 from __future__ import annotations
 
+from smb_requirement_agent.analysis.domain.value_objects import QuestionId
 from smb_requirement_agent.application.use_cases.answer_suggestions import (
     SuggestClarificationAnswers,
 )
-from smb_requirement_agent.domain.analysis.value_objects import QuestionId
 from smb_requirement_agent.domain.knowledge.entities import (
     AnswerSuggestion,
     AnswerSuggestionId,

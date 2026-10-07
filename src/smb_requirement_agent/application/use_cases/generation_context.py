@@ -10,19 +10,19 @@ from contextlib import contextmanager
 from dataclasses import asdict
 from typing import Any
 
-from smb_requirement_agent.application.errors import ArtifactVersionConflictError
-from smb_requirement_agent.application.ports.analysis_audit_repository import (
+from smb_requirement_agent.analysis.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
+from smb_requirement_agent.analysis.application.ports.requirement_analysis_repository import (
+    RequirementAnalysisRepositoryPort,
+)
+from smb_requirement_agent.application.errors import ArtifactVersionConflictError
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.external_work import guard_external_work
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
 from smb_requirement_agent.application.ports.reference_grounding import (
     ReferenceEvidencePort,
     require_analysis_references,
-)
-from smb_requirement_agent.application.ports.requirement_analysis_repository import (
-    RequirementAnalysisRepositoryPort,
 )
 from smb_requirement_agent.application.ports.story_repository import (
     StoryChangeProposalRepositoryPort,

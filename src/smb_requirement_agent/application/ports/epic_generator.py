@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Protocol, TypedDict
 
-from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
+from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 
 

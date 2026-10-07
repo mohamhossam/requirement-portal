@@ -5,6 +5,7 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Depends
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.domain.value_objects import QuestionId
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceReviewPort
 from smb_requirement_agent.application.ports.requirement_knowledge import KnowledgeReview
 from smb_requirement_agent.application.use_cases.answer_suggestions import (
@@ -20,7 +21,6 @@ from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     EnsureKnowledgeScreen,
     GetKnowledgeReview,
 )
-from smb_requirement_agent.domain.analysis.value_objects import QuestionId
 from smb_requirement_agent.domain.knowledge.entities import (
     AnswerSuggestionSet,
     KnowledgeFinding,

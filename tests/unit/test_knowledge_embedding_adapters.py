@@ -20,15 +20,15 @@ from openai import OpenAI, OpenAIError
 from pydantic import BaseModel
 from smb_kernel.llm.structured_output import StructuredOutputError
 
-from smb_requirement_agent.application.errors import KnowledgeGenerationError
-from smb_requirement_agent.domain.analysis.entities import ClarificationQuestion
-from smb_requirement_agent.domain.analysis.value_objects import (
+from smb_requirement_agent.analysis.domain.entities import ClarificationQuestion
+from smb_requirement_agent.analysis.domain.value_objects import (
     AnalysisId,
     ClarificationKind,
     ClarificationSeverity,
     ClarificationSource,
     QuestionId,
 )
+from smb_requirement_agent.application.errors import KnowledgeGenerationError
 from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeChunk,
     KnowledgeChunkId,

@@ -6,16 +6,16 @@ from smb_kernel.persistence.connector import (
     DirectPostgresConnector,
 )
 
-from smb_requirement_agent.application.ports.requirement_worklist import (
-    CurrentWorklistProjectionPort,
-    RequirementWorklistSnapshot,
-)
-from smb_requirement_agent.domain.analysis.entities import (
+from smb_requirement_agent.analysis.domain.entities import (
     AnalysisRound,
     ClarificationQuestion,
     RequirementAnalysis,
 )
-from smb_requirement_agent.domain.analysis.value_objects import AnalysisId, QuestionId
+from smb_requirement_agent.analysis.domain.value_objects import AnalysisId, QuestionId
+from smb_requirement_agent.application.ports.requirement_worklist import (
+    CurrentWorklistProjectionPort,
+    RequirementWorklistSnapshot,
+)
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.epic.value_objects import EpicId
 from smb_requirement_agent.domain.feature.entities import Feature

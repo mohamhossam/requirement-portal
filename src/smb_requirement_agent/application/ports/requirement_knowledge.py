@@ -8,11 +8,11 @@ from typing import Protocol
 
 from smb_kernel.embeddings import Embedding as Embedding
 
+from smb_requirement_agent.analysis.domain.entities import ClarificationQuestion
 from smb_requirement_agent.application.ports.embedding import (
     KnowledgeEmbeddingPort as KnowledgeEmbeddingPort,
 )
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidence
-from smb_requirement_agent.domain.analysis.entities import ClarificationQuestion
 from smb_requirement_agent.domain.knowledge.entities import (
     AnswerSuggestionSet,
     KnowledgeChunk,

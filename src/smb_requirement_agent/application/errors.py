@@ -17,7 +17,7 @@ from smb_kernel.errors import ServiceResponseError as ServiceResponseError
 from smb_kernel.errors import ServiceUnavailableError as ServiceUnavailableError
 from smb_kernel.errors import UnsupportedDocumentError as UnsupportedDocumentError
 
-from smb_requirement_agent.domain.analysis.errors import RequirementAnalysisError
+from smb_requirement_agent.analysis.domain.errors import RequirementAnalysisError
 from smb_requirement_agent.domain.epic.errors import EpicError
 from smb_requirement_agent.domain.feature.errors import FeatureError
 from smb_requirement_agent.domain.story.errors import StoryError

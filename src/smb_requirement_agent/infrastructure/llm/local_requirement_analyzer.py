@@ -17,20 +17,20 @@ from smb_kernel.llm.structured_output import (
     response_validation_error,
 )
 
-from smb_requirement_agent.application.errors import (
-    ModelTransportError,
-    RequirementAnalysisGenerationError,
-)
-from smb_requirement_agent.application.ports.requirement_analyzer import (
+from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     ActiveQuestionContext,
     AnalysisDocumentContext,
     RequirementAnalysisCandidate,
     RequirementAnalyzerPort,
 )
-from smb_requirement_agent.domain.analysis.value_objects import (
+from smb_requirement_agent.analysis.domain.value_objects import (
     ClarificationKind,
     HumanClarification,
     IntentProposal,
+)
+from smb_requirement_agent.application.errors import (
+    ModelTransportError,
+    RequirementAnalysisGenerationError,
 )
 from smb_requirement_agent.infrastructure.llm.candidate_mappers import (
     analysis_evidence_subjects,

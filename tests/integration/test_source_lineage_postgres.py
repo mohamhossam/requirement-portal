@@ -10,8 +10,8 @@ from urllib.parse import quote
 import psycopg
 import pytest
 
+from smb_requirement_agent.analysis.domain.value_objects import IntentProposalStatus
 from smb_requirement_agent.application.errors import ArtifactVersionConflictError
-from smb_requirement_agent.domain.analysis.value_objects import IntentProposalStatus
 from smb_requirement_agent.domain.document.lineage import ImpactDecisionKind
 from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedError
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS

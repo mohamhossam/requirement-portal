@@ -11,7 +11,7 @@ import hashlib
 from dataclasses import dataclass
 from datetime import datetime
 
-from smb_requirement_agent.domain.analysis.value_objects import ClarificationKind
+from smb_requirement_agent.analysis.domain.value_objects import ClarificationKind
 from smb_requirement_agent.domain.architecture.entities import ArchitectureImpact
 from smb_requirement_agent.domain.review.entities import (
     BreakdownReview,

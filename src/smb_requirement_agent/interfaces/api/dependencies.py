@@ -17,6 +17,21 @@ from smb_kernel.http.service_auth import CALLER_SCOPE_KEY
 from smb_kernel.identity.ports import IdentityCredential
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration import (
+    AnalysisCollaboration,
+)
+from smb_requirement_agent.analysis.application.use_cases.analyze_requirement import (
+    AnalyzeRequirement,
+)
+from smb_requirement_agent.analysis.application.use_cases.clarify_requirement_analysis import (
+    ClarifyRequirementAnalysis,
+)
+from smb_requirement_agent.analysis.application.use_cases.confirm_requirement_analysis import (
+    ConfirmRequirementAnalysis,
+)
+from smb_requirement_agent.analysis.application.use_cases.get_requirement_analysis import (
+    GetRequirementAnalysis,
+)
 from smb_requirement_agent.application.errors import AuthenticationRequiredError
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceReviewPort
 from smb_requirement_agent.application.use_cases.activity_reporting import (
@@ -24,8 +39,6 @@ from smb_requirement_agent.application.use_cases.activity_reporting import (
     ListActivity,
 )
 from smb_requirement_agent.application.use_cases.ai_jobs import AiJobs, Notifications
-from smb_requirement_agent.application.use_cases.analysis_collaboration import AnalysisCollaboration
-from smb_requirement_agent.application.use_cases.analyze_requirement import AnalyzeRequirement
 from smb_requirement_agent.application.use_cases.answer_suggestions import (
     SuggestClarificationAnswers,
 )
@@ -51,12 +64,6 @@ from smb_requirement_agent.application.use_cases.breakdown_review import (
     ResolveFlag,
     ResolveOpenQuestion,
 )
-from smb_requirement_agent.application.use_cases.clarify_requirement_analysis import (
-    ClarifyRequirementAnalysis,
-)
-from smb_requirement_agent.application.use_cases.confirm_requirement_analysis import (
-    ConfirmRequirementAnalysis,
-)
 from smb_requirement_agent.application.use_cases.corpus_actions import (
     BulkReindexRequirements,
     ReinstateToCorpus,
@@ -73,9 +80,6 @@ from smb_requirement_agent.application.use_cases.generate_epic import GenerateEp
 from smb_requirement_agent.application.use_cases.generate_features import GenerateFeatures
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.application.use_cases.get_epic import GetEpic
-from smb_requirement_agent.application.use_cases.get_requirement_analysis import (
-    GetRequirementAnalysis,
-)
 from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     SearchKnownActors,

@@ -19,14 +19,7 @@ from smb_kernel.documents.model import (
 )
 from smb_kernel.identity.actor import ActorId
 
-from smb_requirement_agent.application.ports.activity import (
-    ActivityAction,
-    ActivityCategory,
-    ActivityEvent,
-    AuditSourceKind,
-    AuditSourceReference,
-)
-from smb_requirement_agent.domain.analysis.entities import (
+from smb_requirement_agent.analysis.domain.entities import (
     AnalysisDocumentReference,
     AnalysisQuestionChange,
     AnalysisRound,
@@ -35,7 +28,7 @@ from smb_requirement_agent.domain.analysis.entities import (
     QuestionAssignmentChange,
     RequirementAnalysis,
 )
-from smb_requirement_agent.domain.analysis.value_objects import (
+from smb_requirement_agent.analysis.domain.value_objects import (
     Ambiguity,
     AnalysisEvidenceReference,
     AnalysisId,
@@ -57,6 +50,13 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     PotentialDependency,
     QuestionChangeAction,
     QuestionId,
+)
+from smb_requirement_agent.application.ports.activity import (
+    ActivityAction,
+    ActivityCategory,
+    ActivityEvent,
+    AuditSourceKind,
+    AuditSourceReference,
 )
 from smb_requirement_agent.domain.architecture.entities import (
     ArchitectureCitation,

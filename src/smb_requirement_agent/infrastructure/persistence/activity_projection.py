@@ -6,6 +6,8 @@ import hashlib
 from datetime import datetime
 from typing import Protocol
 
+from smb_requirement_agent.analysis.domain.entities import AnalysisRound, ClarificationQuestion
+from smb_requirement_agent.analysis.domain.value_objects import QuestionChangeAction
 from smb_requirement_agent.application.ports.activity import (
     ActivityAction,
     ActivityCategory,
@@ -27,8 +29,6 @@ from smb_requirement_agent.application.use_cases.activity_reporting import (
     ListActivity,
     aggregate_activity_events,
 )
-from smb_requirement_agent.domain.analysis.entities import AnalysisRound, ClarificationQuestion
-from smb_requirement_agent.domain.analysis.value_objects import QuestionChangeAction
 from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeDecisionKind,
     KnowledgeFinding,

@@ -7,6 +7,18 @@ import uuid
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration import (
+    AnalysisCollaboration,
+    ClarificationResolutionInput,
+)
+from smb_requirement_agent.analysis.application.use_cases.analyze_requirement import (
+    AnalyzeRequirement,
+)
+from smb_requirement_agent.analysis.application.use_cases.clarify_requirement_analysis import (
+    ClarificationAnswerInput,
+    ClarifyRequirementAnalysis,
+)
+from smb_requirement_agent.analysis.domain.value_objects import ClarificationKind, QuestionId
 from smb_requirement_agent.application.errors import (
     ActorNotFoundError,
     AiJobNotFoundError,
@@ -16,21 +28,12 @@ from smb_requirement_agent.application.errors import (
 from smb_requirement_agent.application.ports.external_work import guard_external_work
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.public_errors import describe_public_error
-from smb_requirement_agent.application.use_cases.analysis_collaboration import (
-    AnalysisCollaboration,
-    ClarificationResolutionInput,
-)
-from smb_requirement_agent.application.use_cases.analyze_requirement import AnalyzeRequirement
 from smb_requirement_agent.application.use_cases.answer_suggestions import (
     SuggestClarificationAnswers,
 )
 from smb_requirement_agent.application.use_cases.breakdown_review import (
     GenerateBreakdownReview,
     ResolveOpenQuestion,
-)
-from smb_requirement_agent.application.use_cases.clarify_requirement_analysis import (
-    ClarificationAnswerInput,
-    ClarifyRequirementAnalysis,
 )
 from smb_requirement_agent.application.use_cases.generate_epic import GenerateEpic
 from smb_requirement_agent.application.use_cases.generate_features import GenerateFeatures
@@ -49,7 +52,6 @@ from smb_requirement_agent.application.use_cases.story_workflow import (
     GenerateStories,
     RegenerateStory,
 )
-from smb_requirement_agent.domain.analysis.value_objects import ClarificationKind, QuestionId
 from smb_requirement_agent.domain.feature.value_objects import FeatureId
 from smb_requirement_agent.domain.review.entities import FlagId
 from smb_requirement_agent.domain.story.entities import StoryChangeOperation

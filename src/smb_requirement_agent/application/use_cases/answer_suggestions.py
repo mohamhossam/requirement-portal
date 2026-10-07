@@ -6,15 +6,18 @@ import uuid
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.application.ports.analysis_audit_repository import (
+    AnalysisAuditRepositoryPort,
+)
+from smb_requirement_agent.analysis.domain.value_objects import (
+    QuestionId,
+)
 from smb_requirement_agent.application.errors import (
     AnswerSuggestionNotFoundError,
     ClarificationQuestionNotFoundError,
     KnowledgeGenerationError,
     RequirementAnalysisConflictError,
     RequirementNotFoundError,
-)
-from smb_requirement_agent.application.ports.analysis_audit_repository import (
-    AnalysisAuditRepositoryPort,
 )
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceSearchPort
 from smb_requirement_agent.application.ports.requirement_knowledge import (
@@ -35,9 +38,6 @@ from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     relationship_evidence,
     require_index_current,
     suggestion_input_fingerprint,
-)
-from smb_requirement_agent.domain.analysis.value_objects import (
-    QuestionId,
 )
 from smb_requirement_agent.domain.knowledge.entities import (
     AnswerSuggestion,

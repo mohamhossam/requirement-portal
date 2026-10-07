@@ -7,6 +7,8 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
+from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
+from smb_requirement_agent.analysis.domain.value_objects import KnownFact
 from smb_requirement_agent.application.errors import (
     StoryGenerationError,
     StoryQualityEvaluationError,
@@ -22,8 +24,6 @@ from smb_requirement_agent.application.ports.generation_guidance import (
 )
 from smb_requirement_agent.application.ports.story_generator import StoryCandidate
 from smb_requirement_agent.application.ports.story_quality_evaluator import EMPTY_QUALITY_EVIDENCE
-from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
-from smb_requirement_agent.domain.analysis.value_objects import KnownFact
 from smb_requirement_agent.domain.architecture.entities import (
     ArchitectureDependency,
     SystemReference,

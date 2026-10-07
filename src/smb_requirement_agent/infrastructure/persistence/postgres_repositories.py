@@ -5,29 +5,17 @@ from __future__ import annotations
 from psycopg.errors import RaiseException, UniqueViolation
 from psycopg.types.json import Jsonb
 
-from smb_requirement_agent.application.errors import (
-    ArtifactVersionConflictError,
-    PersistenceError,
-    RequirementAnalysisConflictError,
-)
-from smb_requirement_agent.domain.analysis.entities import (
+from smb_requirement_agent.analysis.domain.entities import (
     AnalysisRound,
     ClarificationQuestion,
     RequirementAnalysis,
 )
-from smb_requirement_agent.domain.analysis.errors import (
+from smb_requirement_agent.analysis.domain.errors import (
     ClarificationVersionConflictError,
     InvalidClarificationTransitionError,
 )
-from smb_requirement_agent.domain.analysis.value_objects import AnalysisId, QuestionId
-from smb_requirement_agent.domain.epic.entities import Epic
-from smb_requirement_agent.domain.epic.value_objects import EpicId
-from smb_requirement_agent.domain.feature.entities import Feature
-from smb_requirement_agent.domain.feature.value_objects import FeatureId
-from smb_requirement_agent.domain.review.entities import BreakdownReview
-from smb_requirement_agent.domain.story.entities import StoryChangeProposal, UserStory
-from smb_requirement_agent.domain.story.value_objects import StoryId, StoryProposalId
-from smb_requirement_agent.infrastructure.persistence.analysis_payloads import (
+from smb_requirement_agent.analysis.domain.value_objects import AnalysisId, QuestionId
+from smb_requirement_agent.analysis.infrastructure.analysis_payloads import (
     analysis_from_payload,
     analysis_round_from_payload,
     analysis_round_to_payload,
@@ -35,6 +23,18 @@ from smb_requirement_agent.infrastructure.persistence.analysis_payloads import (
     clarification_question_from_payload,
     clarification_question_to_payload,
 )
+from smb_requirement_agent.application.errors import (
+    ArtifactVersionConflictError,
+    PersistenceError,
+    RequirementAnalysisConflictError,
+)
+from smb_requirement_agent.domain.epic.entities import Epic
+from smb_requirement_agent.domain.epic.value_objects import EpicId
+from smb_requirement_agent.domain.feature.entities import Feature
+from smb_requirement_agent.domain.feature.value_objects import FeatureId
+from smb_requirement_agent.domain.review.entities import BreakdownReview
+from smb_requirement_agent.domain.story.entities import StoryChangeProposal, UserStory
+from smb_requirement_agent.domain.story.value_objects import StoryId, StoryProposalId
 from smb_requirement_agent.infrastructure.persistence.backlog_payloads import (
     epic_from_payload,
     epic_to_payload,

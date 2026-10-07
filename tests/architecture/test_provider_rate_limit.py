@@ -21,6 +21,16 @@ from fastapi.dependencies.models import Dependant
 from fastapi.routing import APIRoute, iter_route_contexts
 
 import smb_requirement_agent.application as application_package
+from smb_requirement_agent.analysis.application.ports.reference_analysis import (
+    ReferenceAnalysisPort,
+    ReferenceProposerPort,
+)
+from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
+    RequirementAnalyzerPort,
+)
+from smb_requirement_agent.analysis.application.ports.requirement_evidence_analyzer import (
+    RequirementEvidenceAnalyzerPort,
+)
 from smb_requirement_agent.application.ports.architecture_knowledge import (
     ArchitectureKnowledgePort,
 )
@@ -30,17 +40,9 @@ from smb_requirement_agent.application.ports.prior_art import (
     PriorArtJudgePort,
     PriorArtSchedulerPort,
 )
-from smb_requirement_agent.application.ports.reference_analysis import (
-    ReferenceAnalysisPort,
-    ReferenceProposerPort,
-)
 from smb_requirement_agent.application.ports.reference_grounding import (
     ReferenceKnowledgePort,
     ReferenceSearchPort,
-)
-from smb_requirement_agent.application.ports.requirement_analyzer import RequirementAnalyzerPort
-from smb_requirement_agent.application.ports.requirement_evidence_analyzer import (
-    RequirementEvidenceAnalyzerPort,
 )
 from smb_requirement_agent.application.ports.requirement_knowledge import (
     AnswerSuggestionSchedulerPort,

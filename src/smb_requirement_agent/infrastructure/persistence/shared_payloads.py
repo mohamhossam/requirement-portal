@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from smb_requirement_agent.domain.analysis.value_objects import (
+from smb_requirement_agent.analysis.domain.value_objects import (
     AnalysisEvidenceReference,
 )
 from smb_requirement_agent.domain.architecture.entities import (
