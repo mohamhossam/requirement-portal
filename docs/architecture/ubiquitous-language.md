@@ -27,13 +27,14 @@ different things in different places.
 | Story change proposal | breakdown | An AI-suggested split or merge of Stories. It changes nothing until applied. |
 | Quality (INVEST assessment) | breakdown | A deterministic and semantic assessment of a Story against INVEST, with SPIDR split suggestions (ADR-0015, ADR-0041). |
 | Architecture impact | breakdown | The systems, squads and dependencies a Feature or Story touches. It is part of the approved content. |
-| Architecture catalogue | knowledge | The system, squad, product and journey model published by knowledge-portal. Impact mapping reads it; this service does not own it. |
+| Architecture catalogue | references | The system, squad, product and journey model published by knowledge-portal. Impact mapping reads it; this service does not own it. |
 | Breakdown review | governance | The single review of a Requirement's whole breakdown: flags, decisions, dependencies, risks, recommendations, submission and final approval (ADR-0017). |
 | Flag | governance | A review finding with a category (open question, assumption, ambiguity, dependency, architecture, quality, staleness) and a severity. A *blocking* flag prevents final approval until resolved. |
 | Revision | governance | An immutable snapshot of the Requirement (*requirement revision*) or of the whole breakdown (*breakdown revision*), taken at commit (ADR-0009). |
 | Export | governance | A versioned, neutral file produced from an approved breakdown revision (ADR-0023). It is not ADO publication. |
 | Knowledge finding | knowledge | Something the knowledge screen found in the library or in historic requirements that bears on a Requirement, such as a conflict, a duplicate or prior art. A person decides it. |
-| Reference document | knowledge | A reviewed library document published through knowledge-portal and cited as grounding. Not a *source document*. |
+| Reference document | references | A reviewed library document published through knowledge-portal and cited as grounding. Not a *source document*. |
+| Historic requirement | references | An old BRD with the Epics, Features and Stories it was delivered as in ADO, published by knowledge-portal and kept here as reference knowledge, never as confirmed intent (ADR-0102). |
 | Prior art | knowledge | Historic requirements that resemble this one, with their ADO lineage (ADR-0102). |
 | Owner, reviewer, member | identity | Roles on one Requirement (ADR-0018, ADR-0078). The owner confirms and approves; reviewers are assigned. |
 | AI job | jobs | A durable, leased unit of model work with progress, cancellation, retry and a notification on completion (ADR-0020). |
@@ -76,7 +77,11 @@ different things in different places.
 
 **Source document vs reference document**
 - A *source document* is evidence for one Requirement (requirements).
-- A *reference document* is shared library knowledge (knowledge).
+- A *reference document* is shared library knowledge (references).
+
+**References vs knowledge**
+- *references* reads what knowledge-portal publishes: the library, the catalogue, historic requirements.
+- *knowledge* screens one Requirement against that material and its own corpus, and records findings a person decides.
 
 **Domain event vs knowledge event**
 - A *domain event* (ADR-0103) is in-process and dispatched inside one transaction of this service.

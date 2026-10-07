@@ -1,7 +1,7 @@
 # Refactor — Bounded-context packages and domain events
 
-**Status:** ADR-0103 accepted and the slice scheduled 2026-10-07. PR 1 delivered; PR 2 is waiting
-on the context-map decisions under *PR 1 findings*.
+**Status:** ADR-0103 accepted and the slice scheduled 2026-10-07. PR 1 delivered. The PR 1
+findings were decided the same day (ADR-0103 Amendment 1), and PR 2 is in progress.
 
 **Related:** [context map](../architecture/context-map.md),
 [ubiquitous language](../architecture/ubiquitous-language.md).
@@ -94,7 +94,7 @@ which is listed in `.git-blame-ignore-revs`.
 | PR | Content | Why at this point |
 |---|---|---|
 | 1 | **Characterisation tests.** Golden ADR-0021 fingerprints for representative artifacts and breakdowns; golden payload JSON for every codec in `infrastructure/persistence/*_payloads.py`; golden expected-context tokens; an invalidation-order test recording today's side-effect order for each trigger. Also adds `.git-blame-ignore-revs` and a script that reports import edges between the candidate contexts | Later PRs prove they preserve behaviour against these. The dependency report confirms the order in ADR-0103 §2 before any move |
-| 2 | **Break the domain cycles.** Move `ActorSnapshot`, `SourceLineage` and `require_aware` so `domain/shared` imports no other domain package. Move the `to_payload`/`from_payload` of `ReferenceDocumentState` and `HistoricRequirementState` into infrastructure codecs, with byte-identical output. Merge the duplicate `InvalidKnowledgeError` | It is the smallest change that makes the shared kernel extractable |
+| 2 | **Make `domain/shared` a leaf** (ADR-0103 Amendment 1). Move `RequirementId` (`domain/shared/identifiers.py`), the actor types re-exported from `smb_kernel` (`actors.py`), `PublishedReference` and `normalize_search` (`citation.py`), and `SourceLineage` and `merge_lineage` (`lineage.py`) into `domain/shared`, and rewrite every importer. Move the `to_payload`/`from_payload` of `ReferenceDocumentState` and `HistoricRequirementState` into `infrastructure/persistence/knowledge_payloads.py`, with byte-identical output, behind a `KnowledgeStateDecoderPort` for the two event-feed use cases. Rename the architecture `InvalidKnowledgeError` to `InvalidRelationshipKindError` rather than merging it: a merge would move knowledge errors onto another public error code | It is the smallest change that makes the shared kernel extractable |
 | 3 | **Create the shared kernel.** Rename `domain/shared` to `shared_kernel/` and add the `shared_kernel_pure` contract | Every later move depends on it |
 | 4 | **Event infrastructure.** Add the publisher, dispatcher, `in_unit_of_work()` and `composition/events.py`. `InvalidateDerivedArtifacts` and `InvalidateApprovalWorkflow` become thin facades that publish events, with handlers holding their former bodies. Add the handler-order test | The mechanism changes while the existing invalidation tests stay green unchanged |
 | 5 | **Publish directly.** Call sites publish events directly; delete both invalidation classes; replace the `make_invalidation` fixture in `tests/conftest.py` with an event-publisher fixture. Add `ScreeningRequestPort` and `CandidateReviewPort` | Removes every dependency from upstream to downstream contexts |
@@ -107,14 +107,15 @@ which is listed in `.git-blame-ignore-revs`.
 | 12 | Move `governance` | |
 | 13 | Move `reporting` | |
 | 14 | Move `workflows` | |
-| 15 | Move `knowledge` | Last, after Knowledge Center E2 merges, because E2 is the most active area |
+| 15a | Move `references`. The ACL decodes knowledge-portal events into typed state, which replaces PR 2's `KnowledgeStateDecoderPort`, and takes over `HistoricPassage.from_entry` and `HistoricWorkItem.from_entry` | After Knowledge Center E2 merges, because E2 is the most active area |
+| 15b | Move `knowledge` (screening) | After 15a |
 | 16 | **Finish.** Delete every migration shim; enable `contexts_layered` and `published_surface` without exceptions beyond those ADR-0103 records; remove the empty `domain/` and `application/use_cases/`; retire the AGENTS.md §19 debt row | Locks the boundaries in |
 
-`knowledge` sits in the middle of the dependency order but moves last, which is safe for two reasons:
-- **Its contracts follow the move.** Contracts are enabled per context as it moves, so until PR 15 knowledge is checked only by the existing layer contracts.
-- **No moved context reaches into it.** Contexts moved earlier reach knowledge only through its existing ports, which stay importable through shims.
+`references` and `knowledge` sit in the middle of the dependency order but move last, which is safe for two reasons:
+- **Their contracts follow the move.** Contracts are enabled per context as it moves, so until PRs 15a and 15b they are checked only by the existing layer contracts.
+- **No moved context reaches into them.** Contexts moved earlier reach them only through their existing ports, which stay importable through shims.
 
-Each of PRs 7–15 does four things:
+Each of PRs 7–15b does four things:
 1. moves the context's domain, use cases, ports and adapters;
 2. moves its tests to `tests/unit/<context>/`;
 3. renames its composition builder;
@@ -174,8 +175,9 @@ are already planned:
 | `requirements` → `governance` (invalidation) | 2 | PRs 4–5 |
 | `requirements` → `knowledge` (screen scheduler) | 2 | PR 5 (`ScreeningRequestPort`) |
 
-The rest are **not covered by the accepted context map**. Each needs an owner decision before the
-PR that would trip over it:
+The rest were **not covered by the accepted context map**. The owner decided all eight on
+2026-10-07, as proposed below, and ADR-0103 Amendment 1 records them. Each module moves in the
+PR of its target context:
 
 | # | Crossing | Imports | Proposed resolution |
 |---|---|---|---|
@@ -188,8 +190,9 @@ PR that would trip over it:
 | F7 | `knowledge` → `governance` (`knowledge_handoff` reads the export) | 4 | `knowledge_handoff` moves to `governance`. It publishes the approved backlog through the knowledge ACL port |
 | F8 | `knowledge` → `breakdown` (`architecture_knowledge` port returns `ArchitectureImpact`) | 1 | The port returns knowledge's own catalogue-match type, and `breakdown` maps it to its impact value object. Resolved in the knowledge move |
 
-F1, F3 and F4 change which context owns code, so they amend `context-map.md`. F2, F5–F8 move
-individual modules within the accepted design.
+F1, F3 and F4 change which context owns code, so they amend `context-map.md`. F2 and F5–F8 move
+individual modules within the accepted design. The report now classifies every module by its
+target context, so what it lists is the work still to do.
 
 ## Shims
 

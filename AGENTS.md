@@ -104,13 +104,15 @@ relationships are in `docs/architecture/context-map.md`.
 
 - **Package per context.** Each context is a package under `smb_requirement_agent`, with its own
   `domain/`, `application/` and `infrastructure/`:
-  - `identity`, `jobs`, `requirements`, `knowledge`, `analysis`, `breakdown` and `governance`;
+  - `identity`, `jobs`, `requirements`, `references`, `analysis`, `knowledge`, `breakdown` and
+    `governance`;
   - `reporting` (no domain);
   - `workflows` (application only).
 
   `shared_kernel/` is pure domain and imports nothing else from the package.
 - **Dependency order between contexts:**
-  `workflows → reporting → governance → breakdown → analysis → knowledge → requirements → {jobs | identity} → shared_kernel`.
+  `workflows → reporting → governance → breakdown → knowledge → analysis → references → requirements → {jobs | identity} → shared_kernel`
+  (ADR-0103 Amendment 1).
   A context never imports one to its left.
 - **Published surface.** From another context, import only its `domain`,
   `application/ports` or `application/published`. Never import its use cases or its

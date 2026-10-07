@@ -223,3 +223,75 @@ The route, dependency-provider and infrastructure-to-interfaces contracts are ke
 - **A transactional outbox with asynchronous handlers.** Rejected: staleness and approval reset would become eventually consistent. A reviewer could approve a breakdown in the window before its stale flags land, which is the failure ADR-0021 exists to prevent. The outboxes that already exist for knowledge-portal (ADR-0099) are integration events between services and remain as they are.
 - **An `api/` package per context.** Rejected: it would split the single error map (§4.4.2) and the dependency providers, and put the OpenAPI snapshot at risk, for no domain benefit.
 - **Keep Source Documents as its own context.** Rejected for now: it and intake import each other. Separating them needs a published-port design that is only worth doing when there is a reason to deploy or own them separately.
+
+## Amendment 1 — PR 1's dependency report (2026-10-07)
+
+PR 1's report (`scripts/context_dependency_report.py`, findings F1–F8 in
+`docs/slices/refactor-bounded-contexts.md`) found import edges the accepted context map did not
+place. The owner decided them on 2026-10-07. The text above stays as accepted; where it differs,
+this amendment governs.
+
+**F1: `knowledge` splits into `references` and `knowledge`.** Analysis and screening depend on
+each other, but the library side does not depend on analysis.
+
+- **`references`** (supporting) holds:
+  - the knowledge-portal ACL (`infrastructure/knowledge_client.py`);
+  - the domain modules `domain/document/reference.py`, `domain/knowledge/historic.py` and
+    `domain/architecture/knowledge.py`;
+  - the use cases `historic_corpus`, `knowledge_event_cursor`, `knowledge_views` and
+    `qualify_chunk_tokens`, plus the citation half of `reference_currency`;
+  - the ports `architecture_knowledge`, `embedding`, `historic_corpus`, `knowledge_events`,
+    `knowledge_views` and `reference_publications`, the outbox and inbox ports of
+    `knowledge_handoff`, and the citation half of `reference_grounding`;
+  - the offline evaluators `grounding_evaluation` and `retrieval_evaluation`.
+
+  `bounded_knowledge_text` moves here, because the historic corpus chunks with it too.
+- **`knowledge`** (supporting; requirement screening) holds:
+  - the domain modules `domain/knowledge/{entities,membership,prior_art}.py`;
+  - the use cases `requirement_knowledge`, `requirement_indexing`, `rebuild_knowledge_index`,
+    `knowledge_portfolio`, `corpus_actions`, `unified_knowledge_search`, `prior_art`,
+    `source_impact` and `answer_suggestions` (moved here from analysis);
+  - the ports `corpus_membership`, `corpus_summary`, `knowledge_portfolio`,
+    `knowledge_index_generations`, `requirement_indexing`, `requirement_knowledge` and
+    `prior_art`;
+  - the evaluator `prior_art_evaluation`.
+- **What `analysis` owns.** `analysis` keeps the analysis-shaped half of `reference_grounding`
+  and `reference_currency` (`stale_analysis`, `stale_proposals`, `ReferenceAnalysisPort`,
+  `ReferenceProposerPort`). It owns four ports, which the composition root implements with the
+  screening classes:
+  - `ScreeningRequestPort`
+  - `AnswerSuggestionRequestPort`
+  - `KnowledgeGatePort`
+  - `SuggestionProvenancePort`
+
+**The dependency order in §2 becomes:**
+
+```
+workflows → reporting → governance → breakdown → knowledge → analysis → references → requirements → {jobs | identity} → shared_kernel
+```
+
+**Module moves within the accepted design:**
+- **F2:** `analysis`, `breakdown` and `jobs` reach the context tokens through an
+  `ExpectedContextPort` in the shared `application/`. `workflows/generation_context.py`
+  implements it.
+- **F3:** `ai_job_scheduling` and `ai_jobs` move to `workflows/`, beside `ai_job_execution`.
+  `jobs` keeps the `AiJob` aggregate, leasing, notifications, retention and `provider_call_rate`.
+- **F4:** `identity` publishes a `RequirementAccessPort`. The requirement-scoped
+  `RequirementAccessService` moves to `workflows/`, because it reads Requirements, drafts,
+  question assignees and job context.
+- **F5:** `application/public_errors.py`, the client-facing error catalogue, moves beside
+  `interfaces/api/error_handlers.py`. Errors in `application/errors.py` that belong to one context
+  move into that context.
+- **F6:** `source_lineage` and `requirement_impact` move to `workflows/`.
+- **F7:** `knowledge_handoff` moves to `governance`. It delivers the approved backlog through
+  `references`' outbox port.
+- **F8:** `architecture_knowledge` returns `references`' own catalogue-match type, and
+  `breakdown` maps it to its `ArchitectureImpact` value object.
+
+**The shared kernel** (§1) also holds:
+- `PublishedReference` and `normalize_search`, the citation contract that
+  `SourceLineage` carries and both sides of ADR-0099 share;
+- `ActorId` and `ActorProfile`, which are re-exported from `smb_kernel` beside `ActorSnapshot`.
+
+**The migration sequence** gains one PR: the `knowledge` move (PR 15) becomes PR 15a (`references`)
+and PR 15b (`knowledge`), both after Knowledge Center E2.
