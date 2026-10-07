@@ -118,6 +118,12 @@ from smb_requirement_agent.breakdown.domain.story.value_objects import (
     StoryProposalId,
     UserRole,
 )
+from smb_requirement_agent.breakdown.infrastructure.postgres_backlog import (
+    PostgresEpicRepository,
+    PostgresFeatureRepository,
+    PostgresStoryChangeProposalRepository,
+    PostgresStoryRepository,
+)
 from smb_requirement_agent.domain.knowledge.entities import (
     AnswerSuggestion,
     AnswerSuggestionId,
@@ -167,12 +173,6 @@ from smb_requirement_agent.infrastructure.persistence.migration_runner import (
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader import (
     PostgresActivityReadAdapter,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_repositories import (
-    PostgresEpicRepository,
-    PostgresFeatureRepository,
-    PostgresStoryChangeProposalRepository,
-    PostgresStoryRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_requirement_knowledge import (
     PostgresRequirementKnowledgeStore,

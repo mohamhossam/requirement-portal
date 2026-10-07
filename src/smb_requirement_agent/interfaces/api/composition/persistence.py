@@ -130,6 +130,12 @@ from smb_requirement_agent.breakdown.infrastructure.in_memory_story_repository i
 from smb_requirement_agent.breakdown.infrastructure.postgres_architecture_jobs import (
     PostgresArchitectureJobs,
 )
+from smb_requirement_agent.breakdown.infrastructure.postgres_backlog import (
+    PostgresEpicRepository,
+    PostgresFeatureRepository,
+    PostgresStoryChangeProposalRepository,
+    PostgresStoryRepository,
+)
 from smb_requirement_agent.breakdown.infrastructure.story_quality_repository import (
     InMemoryStoryQualityRepository,
     PostgresStoryQualityRepository,
@@ -214,10 +220,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_activity_sources 
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_repositories import (
     PostgresBreakdownReviewRepository,
-    PostgresEpicRepository,
-    PostgresFeatureRepository,
-    PostgresStoryChangeProposalRepository,
-    PostgresStoryRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_revisions import (
     PostgresRevisionRepository,

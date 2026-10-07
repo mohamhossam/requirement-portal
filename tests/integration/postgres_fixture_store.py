@@ -26,6 +26,12 @@ from smb_requirement_agent.breakdown.domain.feature.entities import Feature
 from smb_requirement_agent.breakdown.domain.feature.value_objects import FeatureId
 from smb_requirement_agent.breakdown.domain.story.entities import StoryChangeProposal, UserStory
 from smb_requirement_agent.breakdown.domain.story.value_objects import StoryId, StoryProposalId
+from smb_requirement_agent.breakdown.infrastructure.postgres_backlog import (
+    PostgresEpicRepository,
+    PostgresFeatureRepository,
+    PostgresStoryChangeProposalRepository,
+    PostgresStoryRepository,
+)
 from smb_requirement_agent.domain.review.entities import BreakdownReview
 from smb_requirement_agent.domain.revision.entities import (
     BreakdownRevision,
@@ -48,10 +54,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_activity_sources 
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_repositories import (
     PostgresBreakdownReviewRepository,
-    PostgresEpicRepository,
-    PostgresFeatureRepository,
-    PostgresStoryChangeProposalRepository,
-    PostgresStoryRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_revisions import (
     PostgresRevisionRepository,
