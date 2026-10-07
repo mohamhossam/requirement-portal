@@ -70,16 +70,9 @@ DOMAIN = {
     # Split: InvalidKnowledgeError goes to references, the screening errors to knowledge.
     "domain.knowledge.errors": "references",
     "domain.knowledge": "knowledge",
-    "domain.jobs": "jobs",
 }
 
 USE_CASES = {
-    "jobs": [
-        "leased_jobs",
-        "job_execution_context",
-        "provider_call_rate",
-        "retention",
-    ],
     "requirements": [
         "create_requirement",
         "update_requirement",
@@ -137,6 +130,9 @@ USE_CASES = {
         "generation_checks",
         "architecture_mapping",
         "architecture_mapping_jobs",
+        # The architecture-mapping queue's lease logic; its only subclass is
+        # ArchitectureMappingJobs (PR 8 reassigned it from jobs).
+        "leased_jobs",
         # Handler for RequirementRevised, EpicChanged, FeatureChanged (PR 4).
         "mark_backlog_stale",
     ],
@@ -171,7 +167,6 @@ USE_CASES = {
 }
 
 PORTS = {
-    "jobs": ["ai_jobs", "notifications"],
     "requirements": [
         "attachment_ingestions",
         "document_repository",
@@ -243,7 +238,7 @@ APPLICATION_MODULES = {
 
 # Contexts that have moved into their own package (ADR-0103 §1). Their domain and application
 # layers are classified whole; their infrastructure, like the rest, is out of scope.
-CONTEXT_PACKAGES = ("identity",)
+CONTEXT_PACKAGES = ("identity", "jobs")
 
 
 def _prefixes() -> dict[str, str]:
