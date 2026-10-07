@@ -40,6 +40,10 @@ from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_repository
 from smb_requirement_agent.analysis.infrastructure.in_memory_evidence_fragment_cache import (
     InMemoryEvidenceFragmentCache,
 )
+from smb_requirement_agent.analysis.infrastructure.postgres_analysis import (
+    PostgresAnalysisAuditRepository,
+    PostgresAnalysisRepository,
+)
 from smb_requirement_agent.application.ports.activity import ActivityReadPort, ReportingReadPort
 from smb_requirement_agent.application.ports.architecture_jobs import (
     ArchitectureJobRepositoryPort,
@@ -203,8 +207,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_architecture_jobs
     PostgresArchitectureJobs,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_repositories import (
-    PostgresAnalysisAuditRepository,
-    PostgresAnalysisRepository,
     PostgresBreakdownReviewRepository,
     PostgresEpicRepository,
     PostgresFeatureRepository,

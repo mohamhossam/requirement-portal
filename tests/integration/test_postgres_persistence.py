@@ -57,6 +57,10 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     QuestionChangeAction,
     QuestionId,
 )
+from smb_requirement_agent.analysis.infrastructure.postgres_analysis import (
+    PostgresAnalysisAuditRepository,
+    PostgresAnalysisRepository,
+)
 from smb_requirement_agent.analysis.infrastructure.postgres_evidence_fragment_cache import (
     PostgresEvidenceFragmentCache,
 )
@@ -165,8 +169,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader i
     PostgresActivityReadAdapter,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_repositories import (
-    PostgresAnalysisAuditRepository,
-    PostgresAnalysisRepository,
     PostgresEpicRepository,
     PostgresFeatureRepository,
     PostgresStoryChangeProposalRepository,
@@ -1568,6 +1570,9 @@ def test_generated_quality_and_checked_preview_survive_real_container_restart() 
 
 
 def test_incremental_activity_matches_audit_sources_and_report_aggregation() -> None:
+    from smb_requirement_agent.analysis.infrastructure.postgres_analysis import (
+        PostgresAnalysisAuditRepository,
+    )
     from smb_requirement_agent.application.use_cases.activity_reporting import (
         aggregate_activity_events,
     )
@@ -1579,9 +1584,6 @@ def test_incremental_activity_matches_audit_sources_and_report_aggregation() -> 
     )
     from smb_requirement_agent.infrastructure.persistence.postgres_activity_sources import (
         PostgresActivitySources,
-    )
-    from smb_requirement_agent.infrastructure.persistence.postgres_repositories import (
-        PostgresAnalysisAuditRepository,
     )
     from smb_requirement_agent.infrastructure.persistence.postgres_revisions import (
         PostgresRevisionRepository,

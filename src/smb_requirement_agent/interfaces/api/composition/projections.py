@@ -4,6 +4,10 @@ from __future__ import annotations
 
 import httpx as httpx
 
+from smb_requirement_agent.analysis.infrastructure.postgres_analysis import (
+    PostgresAnalysisAuditRepository,
+    PostgresAnalysisRepository,
+)
 from smb_requirement_agent.application.use_cases.dependency_projection import DependencyProjection
 from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     GetKnowledgeReview,
@@ -21,10 +25,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader i
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_activity_sources import (
     PostgresActivitySources,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_repositories import (
-    PostgresAnalysisAuditRepository,
-    PostgresAnalysisRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_requirement_knowledge import (
     PostgresRequirementKnowledgeStore,

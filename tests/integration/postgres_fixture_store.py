@@ -12,6 +12,10 @@ from smb_requirement_agent.analysis.domain.entities import (
     RequirementAnalysis,
 )
 from smb_requirement_agent.analysis.domain.value_objects import AnalysisId, QuestionId
+from smb_requirement_agent.analysis.infrastructure.postgres_analysis import (
+    PostgresAnalysisAuditRepository,
+    PostgresAnalysisRepository,
+)
 from smb_requirement_agent.application.ports.requirement_worklist import (
     CurrentWorklistProjectionPort,
     RequirementWorklistSnapshot,
@@ -43,8 +47,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_activity_sources 
     PostgresActivitySources,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_repositories import (
-    PostgresAnalysisAuditRepository,
-    PostgresAnalysisRepository,
     PostgresBreakdownReviewRepository,
     PostgresEpicRepository,
     PostgresFeatureRepository,
