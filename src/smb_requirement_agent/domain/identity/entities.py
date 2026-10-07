@@ -6,16 +6,17 @@ from dataclasses import dataclass, replace
 from datetime import datetime
 from enum import StrEnum
 
-from smb_kernel.identity.actor import ActorId as ActorId
-from smb_kernel.identity.actor import ActorProfile as ActorProfile
-from smb_kernel.identity.actor import ActorSnapshot as ActorSnapshot
-
 from smb_requirement_agent.domain.identity.errors import (
     AuthorizationDeniedError,
     InvalidIdentityError,
     RequirementAccessConflictError,
 )
 from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+
+# MIGRATION SHIM: re-exports removed by the import-rewrite commit of PR 2 (ADR-0103).
+from smb_requirement_agent.domain.shared.actors import ActorId as ActorId
+from smb_requirement_agent.domain.shared.actors import ActorProfile as ActorProfile
+from smb_requirement_agent.domain.shared.actors import ActorSnapshot as ActorSnapshot
 from smb_requirement_agent.domain.shared.staleness import require_aware
 
 

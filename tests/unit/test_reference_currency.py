@@ -38,6 +38,11 @@ from smb_requirement_agent.infrastructure.persistence.architecture_release_state
 from smb_requirement_agent.infrastructure.persistence.in_memory_transaction import (
     InMemoryTransactionManager,
 )
+from smb_requirement_agent.infrastructure.persistence.knowledge_payloads import (
+    PayloadKnowledgeStateDecoder,
+    reference_document_state_from_payload,
+    reference_document_state_to_payload,
+)
 from smb_requirement_agent.infrastructure.persistence.reference_publications import (
     InMemoryReferencePublications,
 )
@@ -108,20 +113,25 @@ def test_a_citation_is_current_only_while_it_quotes_the_live_publication_exactly
 
 
 def test_states_survive_the_event_payload_and_refuse_malformed_ones() -> None:
-    assert ReferenceDocumentState.from_payload(STATE.to_payload()) == STATE
+    assert (
+        reference_document_state_from_payload(reference_document_state_to_payload(STATE)) == STATE
+    )
     withdrawn = replace(STATE, published=None)
-    assert ReferenceDocumentState.from_payload(withdrawn.to_payload()) == withdrawn
+    assert (
+        reference_document_state_from_payload(reference_document_state_to_payload(withdrawn))
+        == withdrawn
+    )
     assert withdrawn.publication_state == "4:withdrawn"
     assert STATE.publication_state == "4:pub-1"
     malformed: tuple[object, ...] = (
         {},
         {"document_id": 1},
         [],
-        {**STATE.to_payload(), "published": {"x": 1}},
+        {**reference_document_state_to_payload(STATE), "published": {"x": 1}},
     )
     for payload in malformed:
         with pytest.raises(InvalidDocumentError):
-            ReferenceDocumentState.from_payload(payload)
+            reference_document_state_from_payload(payload)
 
 
 def _currency() -> tuple[
@@ -136,14 +146,19 @@ def _currency() -> tuple[
     transactions = InMemoryTransactionManager(lambda _: None, lock)
     transactions.enroll(states)
     projector = ProjectKnowledgeEvents(
-        events, states, InMemoryArchitectureReleaseState(lock), transactions, FixedClock(NOW)
+        events,
+        states,
+        InMemoryArchitectureReleaseState(lock),
+        transactions,
+        FixedClock(NOW),
+        decoder=PayloadKnowledgeStateDecoder(),
     )
     return ReferenceCurrency(states, transactions), states, events, projector
 
 
 def test_the_copy_catches_up_from_the_event_feed_and_checks_citations_locally() -> None:
     currency, states, events, projector = _currency()
-    events.append(REFERENCE_DOCUMENT_CHANGED, "doc-1", STATE.to_payload())
+    events.append(REFERENCE_DOCUMENT_CHANGED, "doc-1", reference_document_state_to_payload(STATE))
     with pytest.raises(RequirementAnalysisConflictError):
         currency.require_current((_citation(),))
 
@@ -151,7 +166,11 @@ def test_the_copy_catches_up_from_the_event_feed_and_checks_citations_locally() 
     currency.require_current((_citation(),))
     assert not projector.project_next()
 
-    events.append(REFERENCE_DOCUMENT_CHANGED, "doc-1", replace(STATE, published=None).to_payload())
+    events.append(
+        REFERENCE_DOCUMENT_CHANGED,
+        "doc-1",
+        reference_document_state_to_payload(replace(STATE, published=None)),
+    )
     assert projector.project_next()
     with pytest.raises(RequirementAnalysisConflictError, match="withdrawn or replaced"):
         currency.require_current((_citation(),))
@@ -169,7 +188,7 @@ class _GappedOutbox:
     """Events 1 and 3 are visible; 2 is still being written (or was rolled back)."""
 
     def __init__(self, gap_written_at: datetime) -> None:
-        payload = STATE.to_payload()
+        payload = reference_document_state_to_payload(STATE)
         self.events = (
             KnowledgeEvent(1, REFERENCE_DOCUMENT_CHANGED, "doc-1", payload, NOW),
             KnowledgeEvent(3, REFERENCE_DOCUMENT_CHANGED, "doc-2", payload, gap_written_at),
@@ -197,6 +216,7 @@ def test_the_cursor_waits_at_a_fresh_gap_and_steps_over_an_old_one(
         InMemoryArchitectureReleaseState(RLock()),
         transactions,
         FixedClock(NOW),
+        decoder=PayloadKnowledgeStateDecoder(),
     )
 
     projector.project_next()
@@ -213,7 +233,12 @@ def test_the_active_release_follows_activation_events_and_never_goes_back() -> N
     transactions = InMemoryTransactionManager(lambda _: None, lock)
     transactions.enroll(releases)
     projector = ProjectKnowledgeEvents(
-        events, InMemoryReferencePublications(lock), releases, transactions, FixedClock(NOW)
+        events,
+        InMemoryReferencePublications(lock),
+        releases,
+        transactions,
+        FixedClock(NOW),
+        decoder=PayloadKnowledgeStateDecoder(),
     )
     current = CurrentArchitectureRelease(releases)
     with pytest.raises(PersistenceError, match="No active architecture release"):
@@ -260,11 +285,20 @@ def test_the_containers_copy_follows_the_knowledge_services_feed() -> None:
 
 def test_the_review_due_date_travels_with_the_state_and_old_copies_still_read() -> None:
     reviewed = replace(STATE, review_due_on=date(2026, 10, 1))
-    assert ReferenceDocumentState.from_payload(reviewed.to_payload()) == reviewed
-    legacy = {key: value for key, value in STATE.to_payload().items() if key != "review_due_on"}
-    assert ReferenceDocumentState.from_payload(legacy).review_due_on is None
+    assert (
+        reference_document_state_from_payload(reference_document_state_to_payload(reviewed))
+        == reviewed
+    )
+    legacy = {
+        key: value
+        for key, value in reference_document_state_to_payload(STATE).items()
+        if key != "review_due_on"
+    }
+    assert reference_document_state_from_payload(legacy).review_due_on is None
     with pytest.raises(InvalidDocumentError):
-        ReferenceDocumentState.from_payload({**STATE.to_payload(), "review_due_on": "soon"})
+        reference_document_state_from_payload(
+            {**reference_document_state_to_payload(STATE), "review_due_on": "soon"}
+        )
     # Overdue from the due day itself; never before it, and never without a date.
     assert reviewed.review_overdue(date(2026, 10, 1))
     assert not reviewed.review_overdue(date(2026, 9, 30))
@@ -276,12 +310,14 @@ def test_overdue_reviews_are_worked_out_from_the_copy_when_read() -> None:
     events.append(
         REFERENCE_DOCUMENT_CHANGED,
         "doc-1",
-        replace(STATE, review_due_on=date(2026, 10, 1)).to_payload(),
+        reference_document_state_to_payload(replace(STATE, review_due_on=date(2026, 10, 1))),
     )
     events.append(
         REFERENCE_DOCUMENT_CHANGED,
         "doc-2",
-        replace(STATE, document_id="doc-2", review_due_on=date(2026, 12, 1)).to_payload(),
+        reference_document_state_to_payload(
+            replace(STATE, document_id="doc-2", review_due_on=date(2026, 12, 1))
+        ),
     )
     while projector.project_next():
         pass

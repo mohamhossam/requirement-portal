@@ -33,6 +33,7 @@ from smb_requirement_agent.application.ports.historic_corpus import (
 from smb_requirement_agent.application.ports.knowledge_events import (
     HISTORIC_REQUIREMENT_CHANGED,
     KnowledgeEventSourcePort,
+    KnowledgeStateDecoderPort,
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.knowledge_event_cursor import contiguous_reach
@@ -42,7 +43,6 @@ from smb_requirement_agent.application.use_cases.requirement_knowledge import (
 from smb_requirement_agent.domain.knowledge.errors import InvalidKnowledgeError
 from smb_requirement_agent.domain.knowledge.historic import (
     HistoricPassage,
-    HistoricRequirementState,
     HistoricSourceKind,
     HistoricWorkItem,
     ancestors,
@@ -77,8 +77,11 @@ class ProjectHistoricRequirements:
         clock: ClockPort,
         batch: int = 100,
         gap_grace: timedelta = timedelta(seconds=60),
+        *,
+        decoder: KnowledgeStateDecoderPort,
     ) -> None:
         self._outbox = outbox
+        self._decoder = decoder
         self._states = states
         self._index = index
         self._transactions = transactions
@@ -96,7 +99,7 @@ class ProjectHistoricRequirements:
             for event in events:
                 if event.kind != HISTORIC_REQUIREMENT_CHANGED:
                     continue
-                state = HistoricRequirementState.from_payload(event.payload)
+                state = self._decoder.historic_requirement(event.payload)
                 if self._states.apply(event.seq, state) and state.published is None:
                     self._index.remove(state.historic_requirement_id)
             reached = contiguous_reach(cursor, events, self._clock.now(), self._gap_grace)

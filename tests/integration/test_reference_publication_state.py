@@ -31,6 +31,10 @@ from smb_requirement_agent.infrastructure.persistence import migration_runner
 from smb_requirement_agent.infrastructure.persistence.architecture_release_state import (
     PostgresArchitectureReleaseState,
 )
+from smb_requirement_agent.infrastructure.persistence.knowledge_payloads import (
+    PayloadKnowledgeStateDecoder,
+    reference_document_state_from_payload,
+)
 from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
 from smb_requirement_agent.infrastructure.persistence.reference_publications import (
     PostgresReferencePublications,
@@ -148,9 +152,9 @@ def test_the_seed_builds_exactly_the_state_the_library_published(
                 "SELECT document_id, payload FROM reference_publication_state"
             ).fetchall()
         )
-    assert ReferenceDocumentState.from_payload(rows["live"]) == _expected("live", 3, live=True)
-    assert ReferenceDocumentState.from_payload(rows["gone"]) == _expected("gone", 4, live=False)
-    assert ReferenceDocumentState.from_payload(rows["draft"]) == _expected("draft", 1, live=False)
+    assert reference_document_state_from_payload(rows["live"]) == _expected("live", 3, live=True)
+    assert reference_document_state_from_payload(rows["gone"]) == _expected("gone", 4, live=False)
+    assert reference_document_state_from_payload(rows["draft"]) == _expected("draft", 1, live=False)
 
 
 def test_the_postgres_copy_keeps_the_newest_state_and_its_cursor(isolated_url: str) -> None:
@@ -183,7 +187,9 @@ def test_the_knowledge_service_feed_brings_the_postgres_copy_along(isolated_url:
     states = PostgresReferencePublications(store)
     releases = PostgresArchitectureReleaseState(store)
     library = PublishedLibrary()
-    projector = ProjectKnowledgeEvents(library, states, releases, store, SystemClock())
+    projector = ProjectKnowledgeEvents(
+        library, states, releases, store, SystemClock(), decoder=PayloadKnowledgeStateDecoder()
+    )
     currency = ReferenceCurrency(states, store)
     (citation,) = library.publish("Eligibility", ("XGPON coverage is required.",))
     library.activate_release("release-2", "Q4 catalogue")
@@ -203,7 +209,12 @@ def test_the_knowledge_service_feed_brings_the_postgres_copy_along(isolated_url:
     assert states.cursor() == len(library.after(0, 1000))
     # Caught up: a restarted copy resumes where it stopped, with nothing left to apply.
     assert not ProjectKnowledgeEvents(
-        library, PostgresReferencePublications(store), releases, store, SystemClock()
+        library,
+        PostgresReferencePublications(store),
+        releases,
+        store,
+        SystemClock(),
+        decoder=PayloadKnowledgeStateDecoder(),
     ).project_next()
 
 

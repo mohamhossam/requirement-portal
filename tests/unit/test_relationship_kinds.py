@@ -28,7 +28,7 @@ from smb_requirement_agent.domain.architecture.entities import (
 )
 from smb_requirement_agent.domain.architecture.errors import InvalidArchitectureContentError
 from smb_requirement_agent.domain.architecture.knowledge import (
-    InvalidKnowledgeError,
+    InvalidRelationshipKindError,
     RelationshipKind,
     relationship_kind,
 )
@@ -53,7 +53,7 @@ def test_a_dependency_is_unspecified_until_a_source_says_how() -> None:
     stored = ArchitectureDependency("a", "b", "uses", "calls_api")  # type: ignore[arg-type]
     assert stored.kind is RelationshipKind.CALLS_API
     assert relationship_kind("orchestrates") is RelationshipKind.ORCHESTRATES
-    with pytest.raises(InvalidKnowledgeError, match="Unknown relationship kind"):
+    with pytest.raises(InvalidRelationshipKindError, match="Unknown relationship kind"):
         relationship_kind("telepathy")
     with pytest.raises(InvalidArchitectureContentError, match="Unknown relationship kind"):
         ArchitectureDependency("a", "b", "uses", "telepathy")  # type: ignore[arg-type]

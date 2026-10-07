@@ -9,6 +9,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
 
+from smb_requirement_agent.domain.document.reference import ReferenceDocumentState
+from smb_requirement_agent.domain.knowledge.historic import HistoricRequirementState
+
 REFERENCE_DOCUMENT_CHANGED = "reference_document_changed"
 ARCHITECTURE_RELEASE_ACTIVATED = "architecture_release_activated"
 # A historic requirement was published, refreshed or withdrawn (ADR-0102). Its payload names
@@ -31,6 +34,18 @@ class KnowledgeEventSourcePort(Protocol):
     def after(self, seq: int, limit: int) -> tuple[KnowledgeEvent, ...]:
         """Events after `seq`, oldest first."""
         ...
+
+
+class KnowledgeStateDecoderPort(Protocol):
+    """Turns an event's payload into the state it carries, refusing anything malformed.
+
+    The codec is infrastructure (ADR-0103, PR 2). The knowledge-portal ACL decodes events
+    itself once `references` moves (PR 15a), and this port goes.
+    """
+
+    def reference_document(self, payload: object) -> ReferenceDocumentState: ...
+
+    def historic_requirement(self, payload: object) -> HistoricRequirementState: ...
 
 
 class KnowledgeEventOutboxPort(KnowledgeEventSourcePort, Protocol):

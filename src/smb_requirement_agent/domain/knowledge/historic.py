@@ -45,55 +45,13 @@ class HistoricRequirementState:
     """A historic requirement as its latest event left it: published, or withdrawn.
 
     `version` advances on every change in the knowledge portal. The content of a
-    publication is read separately, a page at a time (ADR-0102, amendment 1).
+    publication is read separately, a page at a time (ADR-0102, amendment 1). Its payload codec
+    is infrastructure (`infrastructure/persistence/knowledge_payloads.py`).
     """
 
     historic_requirement_id: str
     version: int
     published: HistoricPublication | None = None
-
-    def to_payload(self) -> dict[str, object]:
-        published = self.published
-        return {
-            "historic_requirement_id": self.historic_requirement_id,
-            "version": self.version,
-            "published": None
-            if published is None
-            else {
-                "publication": published.number,
-                "fingerprint": published.fingerprint,
-                "title": published.title,
-                "published_at": published.published_at.isoformat(),
-                "published_by": {"name": published.published_by},
-                "root_ids": list(published.root_ids),
-            },
-        }
-
-    @classmethod
-    def from_payload(cls, payload: object) -> HistoricRequirementState:
-        """Rebuild a state from an event payload, refusing anything malformed.
-
-        Only the reference fields are read, so an event that still carries its content
-        (as the first historic events did) is read the same way.
-        """
-        try:
-            data = _mapping(payload)
-            published = data["published"]
-            current = None
-            if published is not None:
-                item = _mapping(published)
-                by = _mapping(item["published_by"])
-                current = HistoricPublication(
-                    _positive(item["publication"]),
-                    _text(item["fingerprint"]),
-                    _text(item["title"]),
-                    datetime.fromisoformat(_text(item["published_at"])),
-                    _text(by["name"]),
-                    tuple(_positive(value) for value in _list(item.get("root_ids", []))),
-                )
-            return cls(_text(data["historic_requirement_id"]), _positive(data["version"]), current)
-        except (KeyError, TypeError, ValueError) as exc:
-            raise InvalidKnowledgeError("Historic requirement event is malformed.") from exc
 
 
 @dataclass(frozen=True)

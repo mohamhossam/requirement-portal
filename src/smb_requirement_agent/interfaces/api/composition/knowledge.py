@@ -55,6 +55,9 @@ from smb_requirement_agent.infrastructure.documents.ingestion_loop import Ingest
 from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import (
     RequirementIndexWorker,
 )
+from smb_requirement_agent.infrastructure.persistence.knowledge_payloads import (
+    PayloadKnowledgeStateDecoder,
+)
 from smb_requirement_agent.interfaces.api.composition.knowledge_service import KnowledgeService
 from smb_requirement_agent.interfaces.api.composition.llm import LLMAdapters
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
@@ -169,12 +172,14 @@ def build_requirement_knowledge(
     )
     references = service.references
     current_references = CurrentReferences(references, reference_currency)
+    knowledge_states = PayloadKnowledgeStateDecoder()
     projector = ProjectKnowledgeEvents(
         service.events,
         persistence.reference_publications,
         persistence.architecture_releases,
         persistence.transaction_manager,
         clock,
+        decoder=knowledge_states,
     )
     historic_projector = ProjectHistoricRequirements(
         service.events,
@@ -182,6 +187,7 @@ def build_requirement_knowledge(
         persistence.historic_corpus,
         persistence.transaction_manager,
         clock,
+        decoder=knowledge_states,
     )
     historic_indexer = IndexHistoricCorpus(
         service.historic_content,

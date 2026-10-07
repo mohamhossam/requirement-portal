@@ -83,9 +83,9 @@ from smb_requirement_agent.domain.analysis.errors import (
 )
 from smb_requirement_agent.domain.architecture.errors import InvalidArchitectureContentError
 from smb_requirement_agent.domain.architecture.knowledge import (
-    InvalidKnowledgeError as InvalidArchitectureKnowledgeError,
+    InvalidRelationshipKindError,
+    KnowledgeConflictError,
 )
-from smb_requirement_agent.domain.architecture.knowledge import KnowledgeConflictError
 from smb_requirement_agent.domain.document.errors import (
     DocumentInclusionError,
     InvalidDocumentError,
@@ -132,6 +132,7 @@ from smb_requirement_agent.domain.revision.errors import InvalidRevisionError, R
 from smb_requirement_agent.domain.shared.errors import (
     InvalidApprovalContentError,
     InvalidGeneratedContentError,
+    InvalidRequirementIdError,
 )
 from smb_requirement_agent.domain.story.errors import (
     FeatureNotReadyForStoriesError,
@@ -211,7 +212,7 @@ ERROR_CATALOGUE: tuple[tuple[type[Exception], str, FailureCategory], ...] = (
         FailureCategory.CONFLICT,
     ),
     (
-        InvalidArchitectureKnowledgeError,
+        InvalidRelationshipKindError,
         "invalid_architecture_knowledge",
         FailureCategory.INVALID_INPUT,
     ),
@@ -292,6 +293,8 @@ ERROR_CATALOGUE: tuple[tuple[type[Exception], str, FailureCategory], ...] = (
         FailureCategory.INVALID_INPUT,
     ),
     (InvalidRequirementContextError, "invalid_requirement_context", FailureCategory.INVALID_INPUT),
+    # A blank id reported as it was before RequirementId moved to the shared kernel (PR 2).
+    (InvalidRequirementIdError, "invalid_requirement_context", FailureCategory.INVALID_INPUT),
     (InvalidRequirementVersionError, "invalid_requirement_version", FailureCategory.INVALID_INPUT),
     (InvalidClarificationError, "invalid_clarification", FailureCategory.INVALID_INPUT),
     (

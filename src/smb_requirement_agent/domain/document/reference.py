@@ -1,70 +1,19 @@
-"""Immutable published-reference evidence; applicability is a separate human decision."""
+"""Immutable published-reference evidence; applicability is a separate human decision.
+
+`PublishedReference` and `normalize_search`, the citation contract, live in the shared kernel
+(`domain/shared/citation.py`). The payload codec for `ReferenceDocumentState` is infrastructure
+(`infrastructure/persistence/knowledge_payloads.py`).
+"""
 
 from __future__ import annotations
 
 import hashlib
-import unicodedata
 from dataclasses import dataclass
 from datetime import date
 
-from smb_requirement_agent.domain.document.errors import InvalidDocumentError
-
-
-def normalize_search(text: str) -> str:
-    """The normal form a citation's `lineage_hash` and reference search are computed over.
-
-    It is part of the citation contract both contexts share (ADR-0099).
-    """
-    # Preserve original citation text. Search normalization removes Arabic tatweel/diacritics.
-    return " ".join(
-        "".join(
-            c
-            for c in unicodedata.normalize("NFKC", text).casefold()
-            if c != "ـ" and not ("ً" <= c <= "ٟ") and c != "ٰ"
-        ).split()
-    )
-
-
-@dataclass(frozen=True)
-class PublishedReference:
-    document_id: str
-    title: str
-    version_id: str
-    version_number: int
-    revision_id: str
-    publication_id: str
-    approval_fingerprint: str
-    block_id: str
-    location: str
-    excerpt: str
-    start_offset: int
-    end_offset: int
-    lineage_hash: str
-
-    def __post_init__(self) -> None:
-        if not all(
-            value.strip()
-            for value in (
-                self.document_id,
-                self.title,
-                self.version_id,
-                self.revision_id,
-                self.publication_id,
-                self.block_id,
-                self.location,
-                self.excerpt,
-            )
-        ):
-            raise InvalidDocumentError(
-                "Published reference identity, text and location are required."
-            )
-        if self.version_number < 1 or self.start_offset < 0 or self.end_offset <= self.start_offset:
-            raise InvalidDocumentError("Published reference version or passage range is invalid.")
-        if self.end_offset - self.start_offset != len(self.excerpt):
-            raise InvalidDocumentError("Published reference range must identify its exact excerpt.")
-        for value in (self.approval_fingerprint, self.lineage_hash):
-            if len(value) != 64 or any(c not in "0123456789abcdef" for c in value):
-                raise InvalidDocumentError("Published reference requires SHA-256 provenance.")
+# MIGRATION SHIM: re-exports removed by the import-rewrite commit of PR 2 (ADR-0103).
+from smb_requirement_agent.domain.shared.citation import PublishedReference as PublishedReference
+from smb_requirement_agent.domain.shared.citation import normalize_search as normalize_search
 
 
 @dataclass(frozen=True)
@@ -134,90 +83,3 @@ class ReferenceDocumentState:
             == citation.lineage_hash
             and passage[citation.start_offset : citation.end_offset] == citation.excerpt
         )
-
-    def to_payload(self) -> dict[str, object]:
-        """The event payload: plain JSON values."""
-        published = self.published
-        return {
-            "document_id": self.document_id,
-            "owner_id": self.owner_id,
-            "title": self.title,
-            "version": self.version,
-            "published": None
-            if published is None
-            else {
-                "publication_id": published.publication_id,
-                "fingerprint": published.fingerprint,
-                "version_id": published.version_id,
-                "version_number": published.version_number,
-                "revision_id": published.revision_id,
-                "block_labels": [list(item) for item in published.block_labels],
-                "passages": [list(item) for item in published.passages],
-            },
-            "review_due_on": None if self.review_due_on is None else self.review_due_on.isoformat(),
-        }
-
-    @classmethod
-    def from_payload(cls, payload: object) -> ReferenceDocumentState:
-        """Rebuild a state from an event payload, refusing anything malformed."""
-        try:
-            data = _mapping(payload)
-            published = data["published"]
-            current = None
-            if published is not None:
-                item = _mapping(published)
-                current = CurrentPublication(
-                    _text(item["publication_id"]),
-                    _text(item["fingerprint"]),
-                    _text(item["version_id"]),
-                    _number(item["version_number"]),
-                    _text(item["revision_id"]),
-                    _pairs(item["block_labels"]),
-                    _pairs(item["passages"]),
-                )
-            return cls(
-                _text(data["document_id"]),
-                _text(data["owner_id"]),
-                _text(data["title"]),
-                _number(data["version"]),
-                current,
-                # Absent from events and copies written before Knowledge Center D.
-                _day(data.get("review_due_on")),
-            )
-        except (KeyError, TypeError, ValueError) as exc:
-            raise InvalidDocumentError("Reference document event is malformed.") from exc
-
-
-def _day(value: object) -> date | None:
-    if value is None:
-        return None
-    return date.fromisoformat(_text(value))
-
-
-def _mapping(value: object) -> dict[str, object]:
-    if not isinstance(value, dict):
-        raise TypeError("expected an object")
-    return value
-
-
-def _text(value: object) -> str:
-    if not isinstance(value, str):
-        raise TypeError("expected text")
-    return value
-
-
-def _number(value: object) -> int:
-    if not isinstance(value, int) or isinstance(value, bool):
-        raise TypeError("expected a whole number")
-    return value
-
-
-def _pairs(value: object) -> tuple[tuple[str, str], ...]:
-    if not isinstance(value, list | tuple):
-        raise TypeError("expected a list")
-    pairs: list[tuple[str, str]] = []
-    for item in value:
-        if not isinstance(item, list | tuple) or len(item) != 2:
-            raise TypeError("expected a pair")
-        pairs.append((_text(item[0]), _text(item[1])))
-    return tuple(pairs)

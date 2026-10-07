@@ -8,6 +8,10 @@ from typing import cast
 from psycopg.types.json import Jsonb
 
 from smb_requirement_agent.domain.document.reference import ReferenceDocumentState
+from smb_requirement_agent.infrastructure.persistence.knowledge_payloads import (
+    reference_document_state_from_payload,
+    reference_document_state_to_payload,
+)
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 
 
@@ -69,7 +73,7 @@ class PostgresReferencePublications:
                 "SELECT payload FROM reference_publication_state WHERE document_id = %s",
                 (document_id,),
             ).fetchone()
-        return ReferenceDocumentState.from_payload(row[0]) if row else None
+        return reference_document_state_from_payload(row[0]) if row else None
 
     def apply(self, seq: int, state: ReferenceDocumentState) -> None:
         with self._store.connection() as connection:
@@ -78,7 +82,7 @@ class PostgresReferencePublications:
                 "VALUES (%s, %s, %s) ON CONFLICT (document_id) DO UPDATE "
                 "SET seq = excluded.seq, payload = excluded.payload "
                 "WHERE excluded.seq > reference_publication_state.seq",
-                (state.document_id, seq, Jsonb(state.to_payload())),
+                (state.document_id, seq, Jsonb(reference_document_state_to_payload(state))),
             )
 
     def cursor(self) -> int:

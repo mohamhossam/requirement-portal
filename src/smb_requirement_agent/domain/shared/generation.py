@@ -22,13 +22,13 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, ClassVar, Self
 
-from smb_requirement_agent.domain.document.lineage import SourceLineage
 from smb_requirement_agent.domain.shared.actions import ActionAvailability
 from smb_requirement_agent.domain.shared.approval import Approval, ApprovalDecision
 from smb_requirement_agent.domain.shared.errors import (
     InvalidApprovalContentError,
     InvalidGeneratedContentError,
 )
+from smb_requirement_agent.domain.shared.lineage import SourceLineage
 from smb_requirement_agent.domain.shared.staleness import (
     Staleness,
     StaleReason,

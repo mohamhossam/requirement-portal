@@ -22,6 +22,7 @@ from smb_requirement_agent.application.ports.knowledge_events import (
     ARCHITECTURE_RELEASE_ACTIVATED,
     REFERENCE_DOCUMENT_CHANGED,
     KnowledgeEventSourcePort,
+    KnowledgeStateDecoderPort,
 )
 from smb_requirement_agent.application.ports.reference_grounding import (
     ReferenceEvidence,
@@ -41,7 +42,6 @@ from smb_requirement_agent.domain.analysis.value_objects import (
 )
 from smb_requirement_agent.domain.document.reference import (
     PublishedReference,
-    ReferenceDocumentState,
 )
 
 
@@ -149,8 +149,11 @@ class ProjectKnowledgeEvents:
         clock: ClockPort,
         batch: int = 100,
         gap_grace: timedelta = timedelta(seconds=60),
+        *,
+        decoder: KnowledgeStateDecoderPort,
     ) -> None:
         self._outbox = outbox
+        self._decoder = decoder
         self._states = states
         self._releases = releases
         self._transactions = transactions
@@ -164,9 +167,7 @@ class ProjectKnowledgeEvents:
             events = self._outbox.after(cursor, self._batch)
             for event in events:
                 if event.kind == REFERENCE_DOCUMENT_CHANGED:
-                    self._states.apply(
-                        event.seq, ReferenceDocumentState.from_payload(event.payload)
-                    )
+                    self._states.apply(event.seq, self._decoder.reference_document(event.payload))
                 elif event.kind == ARCHITECTURE_RELEASE_ACTIVATED:
                     self._releases.apply(event.seq, _release(event.payload))
             reached = contiguous_reach(cursor, events, self._clock.now(), self._gap_grace)

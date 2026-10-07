@@ -12,18 +12,10 @@ from smb_requirement_agent.domain.requirement.errors import (
     InvalidRequirementVersionError,
 )
 
-
-@dataclass(frozen=True)
-class RequirementId:
-    """Identifies a Requirement within the system."""
-
-    value: str
-
-    def __post_init__(self) -> None:
-        stripped = self.value.strip()
-        if not stripped:
-            raise InvalidRequirementContextError("Requirement id must not be blank.")
-        object.__setattr__(self, "value", stripped)
+# MIGRATION SHIM: removed by the import-rewrite commit of PR 2 (ADR-0103).
+from smb_requirement_agent.domain.shared.identifiers import (
+    RequirementId as RequirementId,
+)
 
 
 @dataclass(frozen=True)

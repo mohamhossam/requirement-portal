@@ -7,7 +7,7 @@ from datetime import datetime
 
 from smb_requirement_agent.domain.architecture.errors import InvalidArchitectureContentError
 from smb_requirement_agent.domain.architecture.knowledge import (
-    InvalidKnowledgeError,
+    InvalidRelationshipKindError,
     RelationshipKind,
     relationship_kind,
 )
@@ -208,7 +208,7 @@ class ArchitectureDependency:
     def __post_init__(self) -> None:
         try:
             object.__setattr__(self, "kind", relationship_kind(self.kind))
-        except InvalidKnowledgeError as exc:
+        except InvalidRelationshipKindError as exc:
             raise InvalidArchitectureContentError(str(exc)) from exc
         object.__setattr__(self, "source_system_id", _text(self.source_system_id, "source id"))
         object.__setattr__(self, "target_system_id", _text(self.target_system_id, "target id"))

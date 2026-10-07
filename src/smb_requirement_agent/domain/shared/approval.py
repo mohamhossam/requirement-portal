@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 
-from smb_requirement_agent.domain.identity.entities import ActorSnapshot
+from smb_requirement_agent.domain.shared.actors import ActorSnapshot
 from smb_requirement_agent.domain.shared.errors import InvalidApprovalContentError
 from smb_requirement_agent.domain.shared.staleness import require_aware
 

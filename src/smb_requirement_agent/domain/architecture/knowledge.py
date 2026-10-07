@@ -11,8 +11,12 @@ from __future__ import annotations
 from enum import StrEnum
 
 
-class InvalidKnowledgeError(ValueError):
-    """Architecture content violates a business invariant."""
+class InvalidRelationshipKindError(ValueError):
+    """A relationship kind is not one the catalogue defines.
+
+    Named apart from `domain.knowledge.errors.InvalidKnowledgeError` (ADR-0103, PR 2). It keeps
+    its own public code, `invalid_architecture_knowledge`.
+    """
 
 
 class KnowledgeConflictError(Exception):
@@ -34,4 +38,4 @@ def relationship_kind(value: str | RelationshipKind) -> RelationshipKind:
     try:
         return RelationshipKind(value)
     except ValueError as exc:
-        raise InvalidKnowledgeError(f"Unknown relationship kind {value!r}.") from exc
+        raise InvalidRelationshipKindError(f"Unknown relationship kind {value!r}.") from exc

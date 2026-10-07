@@ -16,7 +16,6 @@ from smb_requirement_agent.application.use_cases.historic_corpus import (
 )
 from smb_requirement_agent.domain.knowledge.errors import InvalidKnowledgeError
 from smb_requirement_agent.domain.knowledge.historic import (
-    HistoricRequirementState,
     HistoricSourceKind,
     HistoricWorkItem,
     ancestors,
@@ -25,6 +24,10 @@ from smb_requirement_agent.domain.knowledge.historic import (
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.persistence.historic_corpus import any_of
+from smb_requirement_agent.infrastructure.persistence.knowledge_payloads import (
+    historic_requirement_state_from_payload,
+    historic_requirement_state_to_payload,
+)
 from smb_requirement_agent.interfaces.api.container import Container
 from tests.knowledge_doubles import (
     PublishedLibrary,
@@ -67,16 +70,19 @@ def _search(container: Container, text: str) -> list[str]:
 
 
 def test_the_knowledge_portal_s_pinned_event_is_read() -> None:
-    state = HistoricRequirementState.from_payload(json.loads(EXAMPLE.read_text()))
+    state = historic_requirement_state_from_payload(json.loads(EXAMPLE.read_text()))
     assert state.published is not None
     assert state.published.number == 1 and state.published.title == "XGPON bundles"
     assert state.published.root_ids == (48213,)
-    withdrawn = HistoricRequirementState.from_payload(
+    withdrawn = historic_requirement_state_from_payload(
         {"historic_requirement_id": state.historic_requirement_id, "version": 9, "published": None}
     )
     assert withdrawn.published is None
     # A copy round-trips through what requirement work stores.
-    assert HistoricRequirementState.from_payload(state.to_payload()) == state
+    assert (
+        historic_requirement_state_from_payload(historic_requirement_state_to_payload(state))
+        == state
+    )
 
 
 def test_a_malformed_event_is_refused() -> None:
@@ -86,7 +92,7 @@ def test_a_malformed_event_is_refused() -> None:
         {"historic_requirement_id": "h", "version": 1, "published": {"publication": 1}},
     ):
         with pytest.raises(InvalidKnowledgeError):
-            HistoricRequirementState.from_payload(payload)
+            historic_requirement_state_from_payload(payload)
 
 
 def test_only_web_addresses_become_links_and_lineage_is_epic_first() -> None:

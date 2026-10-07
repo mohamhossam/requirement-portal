@@ -29,9 +29,7 @@ from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
 from smb_requirement_agent.domain.analysis.value_objects import IntentProposal
 from smb_requirement_agent.domain.document.reference import (
     PublishedReference,
-    ReferenceDocumentState,
 )
-from smb_requirement_agent.domain.knowledge.historic import HistoricRequirementState
 from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.infrastructure.persistence.activity_codec import (
     activity_from_payload,
@@ -89,6 +87,12 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_story_repository
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_transaction import (
     InMemoryTransactionManager,
+)
+from smb_requirement_agent.infrastructure.persistence.knowledge_payloads import (
+    historic_requirement_state_from_payload,
+    historic_requirement_state_to_payload,
+    reference_document_state_from_payload,
+    reference_document_state_to_payload,
 )
 from smb_requirement_agent.infrastructure.persistence.requirement_snapshot import (
     requirement_draft_from_payload,
@@ -155,13 +159,13 @@ PAYLOAD_CASES: dict[str, PayloadCase] = {
     ),
     "reference_document_state": PayloadCase(
         samples.reference_document_state,
-        lambda value: value.to_payload(),
-        ReferenceDocumentState.from_payload,
+        reference_document_state_to_payload,
+        reference_document_state_from_payload,
     ),
     "historic_requirement_state": PayloadCase(
         samples.historic_requirement_state,
-        lambda value: value.to_payload(),
-        HistoricRequirementState.from_payload,
+        historic_requirement_state_to_payload,
+        historic_requirement_state_from_payload,
     ),
 }
 

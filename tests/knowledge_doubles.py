@@ -41,6 +41,9 @@ from smb_requirement_agent.infrastructure.knowledge_client import (
     FakeArchitectureKnowledge,
     FakeKnowledgeViews,
 )
+from smb_requirement_agent.infrastructure.persistence.knowledge_payloads import (
+    reference_document_state_to_payload,
+)
 from smb_requirement_agent.interfaces.api.composition.knowledge_service import KnowledgeService
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 
@@ -242,7 +245,11 @@ class PublishedLibrary:
 
     def _changed(self, state: ReferenceDocumentState) -> None:
         self._states[state.document_id] = state
-        self._append(REFERENCE_DOCUMENT_CHANGED, state.document_id, state.to_payload())
+        self._append(
+            REFERENCE_DOCUMENT_CHANGED,
+            state.document_id,
+            reference_document_state_to_payload(state),
+        )
 
     def _append(self, kind: str, subject_id: str, payload: object) -> None:
         self._events.append(

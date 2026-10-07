@@ -24,6 +24,10 @@ from smb_requirement_agent.domain.knowledge.historic import (
     HistoricRequirementState,
     HistoricSourceKind,
 )
+from smb_requirement_agent.infrastructure.persistence.knowledge_payloads import (
+    historic_requirement_state_from_payload,
+    historic_requirement_state_to_payload,
+)
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 
 _WORDS = re.compile(r"\w+", re.UNICODE)
@@ -446,7 +450,7 @@ class PostgresHistoricCorpus:
                 (
                     state.historic_requirement_id,
                     seq,
-                    Jsonb(state.to_payload()),
+                    Jsonb(historic_requirement_state_to_payload(state)),
                     published is not None,
                     None if published is None else published.number,
                     "" if published is None else published.title,
@@ -460,7 +464,7 @@ class PostgresHistoricCorpus:
                 "SELECT payload FROM historic_requirement_state WHERE historic_requirement_id = %s",
                 (historic_id,),
             ).fetchone()
-        return HistoricRequirementState.from_payload(row[0]) if row else None
+        return historic_requirement_state_from_payload(row[0]) if row else None
 
     def standing(self, historic_ids: tuple[str, ...]) -> dict[str, HistoricStanding]:
         if not historic_ids:
@@ -494,7 +498,7 @@ class PostgresHistoricCorpus:
             if row is None:
                 return None
             historic_id, seq = str(row[0]), _int(row[1])
-            state = HistoricRequirementState.from_payload(row[3])
+            state = historic_requirement_state_from_payload(row[3])
             if state.published is None:  # pragma: no cover - `published` is filtered above
                 return None
             part: ContentPart | None

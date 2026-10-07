@@ -95,9 +95,9 @@ from smb_requirement_agent.domain.analysis.errors import (
 from smb_requirement_agent.domain.analysis.value_objects import HumanClarification, IntentProposal
 from smb_requirement_agent.domain.architecture.errors import InvalidArchitectureContentError
 from smb_requirement_agent.domain.architecture.knowledge import (
-    InvalidKnowledgeError as InvalidArchitectureKnowledgeError,
+    InvalidRelationshipKindError,
+    KnowledgeConflictError,
 )
-from smb_requirement_agent.domain.architecture.knowledge import KnowledgeConflictError
 from smb_requirement_agent.domain.document.errors import (
     DocumentInclusionError,
     InvalidDocumentError,
@@ -145,7 +145,9 @@ from smb_requirement_agent.domain.revision.errors import InvalidRevisionError, R
 from smb_requirement_agent.domain.shared.errors import (
     InvalidApprovalContentError,
     InvalidGeneratedContentError,
+    InvalidRequirementIdError,
 )
+from smb_requirement_agent.domain.shared.identifiers import RequirementId
 from smb_requirement_agent.domain.story.errors import (
     FeatureNotReadyForStoriesError,
     InvalidStoryContentError,
@@ -236,7 +238,7 @@ EXPECTED_STATUS_CODES: dict[type[Exception], int] = {
     ArchitectureJobNotFoundError: 404,
     KnowledgeViewUnavailableError: 404,
     KnowledgeConflictError: 409,
-    InvalidArchitectureKnowledgeError: 422,
+    InvalidRelationshipKindError: 422,
     ArchitectureMappingConflictError: 409,
     ArchitectureMappingProfileChangedError: 409,
     BreakdownReviewNotFoundError: 404,
@@ -276,6 +278,7 @@ EXPECTED_STATUS_CODES: dict[type[Exception], int] = {
     InvalidRequirementTitleError: 422,
     InvalidRequirementDescriptionError: 422,
     InvalidRequirementContextError: 422,
+    InvalidRequirementIdError: 422,
     InvalidRequirementVersionError: 422,
     InvalidClarificationError: 422,
     InvalidClarificationTransitionError: 409,
@@ -339,6 +342,19 @@ def test_every_mapped_error_is_covered() -> None:
 
 def test_unmapped_errors_are_not_claimed() -> None:
     assert status_code_for(ValueError("unrelated")) is None
+
+
+def test_blank_requirement_id_keeps_its_public_error() -> None:
+    """RequirementId moved to the shared kernel (ADR-0103, PR 2); clients see no difference."""
+    with pytest.raises(InvalidRequirementIdError) as raised:
+        RequirementId("   ")
+
+    error = describe_public_error(raised.value)
+
+    assert error.code == "invalid_requirement_context"
+    assert error.category is FailureCategory.INVALID_INPUT
+    assert error.message == "Requirement id must not be blank."
+    assert status_code_for(raised.value) == 422
 
 
 def test_public_error_catalogue_preserves_caller_messages_and_hides_server_details() -> None:
