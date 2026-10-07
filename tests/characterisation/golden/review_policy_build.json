@@ -1,0 +1,309 @@
+{
+  "approvals": [],
+  "comments": [],
+  "decisions": [],
+  "dependencies": [
+    {
+      "description": "BCRM → CBCM: Activation request",
+      "evidence_kind": "catalogued",
+      "id": "f11d747182b7176fad32c8a9",
+      "source": {
+        "item_id": "feature-golden-1",
+        "kind": "feature",
+        "label": "Portal bundle ordering"
+      }
+    },
+    {
+      "description": "BCRM → CBCM: Activation request",
+      "evidence_kind": "catalogued",
+      "id": "71f3490488fa32a9e8b72da7",
+      "source": {
+        "item_id": "story-golden-1",
+        "kind": "story",
+        "label": "As a SMB account administrator, I want to add a SIM bundle in the portal, so that new lines work the same day."
+      }
+    }
+  ],
+  "evidence_fingerprint": "a5185c370c6b12b15e6c0b41a62df03f1326f4586025194caf790c007a519fa3",
+  "flags": [
+    {
+      "category": "open_question",
+      "detail": "Which bundle sizes apply? — Pricing is unstated.",
+      "id": "e9e95d3cfdf51f2fca12cd31",
+      "resolution_decision_id": null,
+      "resolution_policy": "clarification",
+      "severity": "blocking",
+      "source": {
+        "item_id": "question-golden-1",
+        "kind": "analysis",
+        "label": "Which bundle sizes apply?"
+      },
+      "status": "open",
+      "title": "Clarification question"
+    },
+    {
+      "category": "open_question",
+      "detail": "Which channels?",
+      "id": "305a3c834c23e02640992d30",
+      "resolution_decision_id": null,
+      "resolution_policy": "clarification",
+      "severity": "warning",
+      "source": {
+        "item_id": "question-golden-2",
+        "kind": "analysis",
+        "label": "Which channels?"
+      },
+      "status": "open",
+      "title": "Clarification question"
+    },
+    {
+      "category": "dependency",
+      "detail": "BCRM → CBCM: Activation request",
+      "id": "21836894939b0d53c42c8390",
+      "resolution_decision_id": null,
+      "resolution_policy": "decision",
+      "severity": "warning",
+      "source": {
+        "item_id": "feature-golden-1",
+        "kind": "feature",
+        "label": "Portal bundle ordering"
+      },
+      "status": "open",
+      "title": "Architecture dependency"
+    },
+    {
+      "category": "architecture",
+      "detail": "Portal bundle ordering spans 2 systems and may require cross-team coordination.",
+      "id": "a3d9432190e655eb48116e5b",
+      "resolution_decision_id": null,
+      "resolution_policy": "decision",
+      "severity": "warning",
+      "source": {
+        "item_id": "feature-golden-1",
+        "kind": "feature",
+        "label": "Portal bundle ordering"
+      },
+      "status": "open",
+      "title": "Cross-system Feature"
+    },
+    {
+      "category": "dependency",
+      "detail": "BCRM → CBCM: Activation request",
+      "id": "6fb55d8079d93b755d8c4976",
+      "resolution_decision_id": null,
+      "resolution_policy": "decision",
+      "severity": "warning",
+      "source": {
+        "item_id": "story-golden-1",
+        "kind": "story",
+        "label": "As a SMB account administrator, I want to add a SIM bundle in the portal, so that new lines work the same day."
+      },
+      "status": "open",
+      "title": "Architecture dependency"
+    },
+    {
+      "category": "architecture",
+      "detail": "No architecture mapping has been recorded for this item.",
+      "id": "e5a56b590618765a91165bdf",
+      "resolution_decision_id": null,
+      "resolution_policy": "source_action",
+      "severity": "warning",
+      "source": {
+        "item_id": "story-golden-2",
+        "kind": "story",
+        "label": "As a SMB account administrator, I want to see bundle activation status, so that I know when lines are usable."
+      },
+      "status": "open",
+      "title": "Architecture mapping required"
+    },
+    {
+      "category": "staleness",
+      "detail": "App bundle ordering is stale and must be reconciled with its source.",
+      "id": "b4e75d9959b9b074ddba8be6",
+      "resolution_decision_id": null,
+      "resolution_policy": "source_action",
+      "severity": "blocking",
+      "source": {
+        "item_id": "feature-golden-2",
+        "kind": "feature",
+        "label": "App bundle ordering"
+      },
+      "status": "open",
+      "title": "Stale generated content"
+    },
+    {
+      "category": "architecture",
+      "detail": "No architecture mapping has been recorded for this item.",
+      "id": "0b3a590a552502b4b44e7aa3",
+      "resolution_decision_id": null,
+      "resolution_policy": "source_action",
+      "severity": "warning",
+      "source": {
+        "item_id": "feature-golden-2",
+        "kind": "feature",
+        "label": "App bundle ordering"
+      },
+      "status": "open",
+      "title": "Architecture mapping required"
+    },
+    {
+      "category": "quality",
+      "detail": "Story fails 1 INVEST criterion: small.",
+      "id": "5a170de4e6c9f0c63ba2ffaf",
+      "resolution_decision_id": null,
+      "resolution_policy": "decision",
+      "severity": "warning",
+      "source": {
+        "item_id": "story-golden-1",
+        "kind": "story",
+        "label": "As a SMB account administrator, I want to add a SIM bundle in the portal, so that new lines work the same day."
+      },
+      "status": "open",
+      "title": "Story quality needs attention"
+    },
+    {
+      "category": "quality",
+      "detail": "Run quality assessment for the current Story set before approval.",
+      "id": "f80911a74aebff1a0db12442",
+      "resolution_decision_id": null,
+      "resolution_policy": "source_action",
+      "severity": "blocking",
+      "source": {
+        "item_id": "story-golden-2",
+        "kind": "story",
+        "label": "As a SMB account administrator, I want to see bundle activation status, so that I know when lines are usable."
+      },
+      "status": "open",
+      "title": "Story quality not evaluated"
+    }
+  ],
+  "generated_at": "2026-03-03T14:15:00+00:00",
+  "knowledge_version": null,
+  "quality_assessments": [
+    {
+      "findings": [
+        {
+          "criterion": "independent",
+          "message": "independent checked",
+          "passed": true,
+          "source": "deterministic"
+        },
+        {
+          "criterion": "negotiable",
+          "message": "negotiable checked",
+          "passed": true,
+          "source": "deterministic"
+        },
+        {
+          "criterion": "valuable",
+          "message": "valuable checked",
+          "passed": true,
+          "source": "deterministic"
+        },
+        {
+          "criterion": "estimable",
+          "message": "estimable checked",
+          "passed": true,
+          "source": "deterministic"
+        },
+        {
+          "criterion": "small",
+          "message": "small checked",
+          "passed": false,
+          "source": "deterministic"
+        },
+        {
+          "criterion": "testable",
+          "message": "testable checked",
+          "passed": true,
+          "source": "deterministic"
+        }
+      ],
+      "provenance": {
+        "generated_at": "2026-03-01T09:00:00+00:00",
+        "model": "golden-model",
+        "prompt_version": "golden-prompt-v1"
+      },
+      "story_id": "story-golden-1"
+    }
+  ],
+  "recommendations": [
+    {
+      "action": "Review a component-based split",
+      "id": "d25a16f19d87a00bce0e9bea",
+      "rationale": "A Feature spanning multiple systems is a strong candidate for a component boundary split.",
+      "source": {
+        "item_id": "feature-golden-1",
+        "kind": "feature",
+        "label": "Portal bundle ordering"
+      }
+    },
+    {
+      "action": "Map architecture",
+      "id": "670a85ce34c6bddb0d5d0a17",
+      "rationale": "Map this Story before governance review so system impact is visible.",
+      "source": {
+        "item_id": "story-golden-2",
+        "kind": "story",
+        "label": "As a SMB account administrator, I want to see bundle activation status, so that I know when lines are usable."
+      }
+    },
+    {
+      "action": "Map architecture",
+      "id": "cfdefa552c25206fefcb144e",
+      "rationale": "Map this Feature before governance review so system impact is visible.",
+      "source": {
+        "item_id": "feature-golden-2",
+        "kind": "feature",
+        "label": "App bundle ordering"
+      }
+    },
+    {
+      "action": "Consider a paths split",
+      "id": "00b244a69910e44c0ba95748",
+      "rationale": "Deliver the primary path first and sequence alternatives as follow-on Stories.",
+      "source": {
+        "item_id": "story-golden-1",
+        "kind": "story",
+        "label": "As a SMB account administrator, I want to add a SIM bundle in the portal, so that new lines work the same day."
+      }
+    }
+  ],
+  "requirement_id": "req-golden-1",
+  "risks": [
+    {
+      "description": "Portal bundle ordering spans 2 systems and may require cross-team coordination.",
+      "id": "4ceda4d48edd995c79cae193",
+      "severity": "warning",
+      "source": {
+        "item_id": "feature-golden-1",
+        "kind": "feature",
+        "label": "Portal bundle ordering"
+      }
+    },
+    {
+      "description": "App bundle ordering is stale and must be reconciled with its source.",
+      "id": "0103bd4745ea443d6271d83b",
+      "severity": "blocking",
+      "source": {
+        "item_id": "feature-golden-2",
+        "kind": "feature",
+        "label": "App bundle ordering"
+      }
+    },
+    {
+      "description": "Story fails 1 INVEST criterion: small.",
+      "id": "8eda955868e81d142a9bdec3",
+      "severity": "warning",
+      "source": {
+        "item_id": "story-golden-1",
+        "kind": "story",
+        "label": "As a SMB account administrator, I want to add a SIM bundle in the portal, so that new lines work the same day."
+      }
+    }
+  ],
+  "ruleset_version": "breakdown-review-v3",
+  "status": "generated",
+  "submitted_fingerprint": null,
+  "version": 1
+}

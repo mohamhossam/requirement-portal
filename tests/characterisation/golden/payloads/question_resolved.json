@@ -1,0 +1,34 @@
+{
+  "answer": "Portal and app.",
+  "answered_at": "2026-03-01T10:00:00+00:00",
+  "answered_by": {
+    "display_name": "Olivia Owner",
+    "email": "olivia@example.test",
+    "id": "actor-owner"
+  },
+  "asked_at": "2026-03-01T09:00:00+00:00",
+  "asked_by": {
+    "display_name": "Olivia Owner",
+    "email": "olivia@example.test",
+    "id": "actor-owner"
+  },
+  "assignee": null,
+  "assignment_history": [],
+  "classification_changed_at": null,
+  "classification_changed_by": null,
+  "draft_answer": null,
+  "draft_updated_at": null,
+  "draft_updated_by": null,
+  "first_analysis_id": "analysis-golden-1",
+  "id": "question-golden-2",
+  "is_blocker": false,
+  "kind": "open_question",
+  "rationale": null,
+  "replaces_question_id": null,
+  "requirement_id": "req-golden-1",
+  "severity": "medium",
+  "source": "human",
+  "status": "resolved",
+  "subject": "Which channels?",
+  "version": 2
+}

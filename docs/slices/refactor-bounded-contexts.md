@@ -1,7 +1,7 @@
 # Refactor — Bounded-context packages and domain events
 
-**Status:** Specified 2026-10-07. Waiting on acceptance of
-[ADR-0103](../architecture/adr-0103-bounded-context-packages-and-domain-events.md). Not started.
+**Status:** ADR-0103 accepted and the slice scheduled 2026-10-07. PR 1 delivered; PR 2 is waiting
+on the context-map decisions under *PR 1 findings*.
 
 **Related:** [context map](../architecture/context-map.md),
 [ubiquitous language](../architecture/ubiquitous-language.md).
@@ -120,6 +120,77 @@ Each of PRs 7–15 does four things:
 3. renames its composition builder;
 4. enables its `context_internal_layers` and `published_surface` entries.
 
+## PR 1 — Characterisation baseline (2026-10-07)
+
+### Delivered
+
+**Golden values.** `tests/characterisation/` holds fixed sample aggregates (`samples.py`) and the
+values computed from them (`cases.py`), compared byte for byte against `golden/`.
+
+| Golden | What it pins | Where it breaks if changed |
+|---|---|---|
+| `golden/payloads/*.json` (20 files) | Every public codec in `infrastructure/persistence/*_payloads.py`, `requirement_snapshot.py` and `activity_codec.py`, plus the two codecs still in the domain (`ReferenceDocumentState`, `HistoricRequirementState`) | Stored JSONB rows |
+| `golden/fingerprints.json` | `artifact_fingerprint` for generated, approved and stale Epics, Features and Stories; `breakdown_fingerprint`; `evidence_fingerprint` | Every recorded approval (ADR-0021) |
+| `golden/context_tokens.json` | The analysis, Epic, Feature, Stories and Story expected-context tokens for a full breakdown | Tokens clients already hold |
+| `golden/review_policy_build.json` | The review `BreakdownReviewPolicy` builds from the sample evidence (10 flags, 3 risks, 4 recommendations) | Review flags when PR 6 moves the policy |
+
+**Checks on every payload.** Each golden payload must:
+- decode to its sample;
+- re-encode unchanged.
+
+So a row written before the migration still loads, and a load-then-save leaves it as it was. A
+further test fails if a golden file exists that nothing compares.
+
+**Rewriting the goldens is a decision, not a fix.** It is done with
+`python -m tests.characterisation.golden`, and only with a reviewed reason.
+
+**Invalidation order.** `tests/characterisation/test_invalidation_order.py` records today's write
+sequence for each trigger, using recording in-memory repositories:
+- *requirement changed:* review reset → analysis deleted → open question superseded → Epic
+  stale → each Feature's Stories, then the Feature;
+- *Epic changed* and *Feature changed:* their cascades, in the same pattern;
+- *the reset alone:* the review write only.
+
+An already-stale artifact keeps its first reason and is still written. PR 4 and PR 5 keep these
+sequences.
+
+**Other files.**
+- `.git-blame-ignore-revs`: empty until the first move PR.
+- `scripts/context_dependency_report.py`: classifies every domain and application module into
+  its context per `context-map.md`, and lists each import that runs against the order in
+  ADR-0103 §2.
+
+### PR 1 findings: the dependency report
+
+`python scripts/context_dependency_report.py` classifies all 185 domain and application modules.
+Contexts cross in 79 pairs, and 30 of those pairs run against the order. Some were expected and
+are already planned:
+
+| Crossing | Imports | Planned in |
+|---|---|---|
+| `shared_kernel` → `identity`, `requirements`, `knowledge` (`approval.py` and `lineage.py` import `ActorSnapshot`, document errors and `PublishedReference`) | 4 | PR 2. `SourceLineage` carries `PublishedReference`, so that citation type moves into the shared kernel too |
+| `RequirementId` and `ActorSnapshot` used from `identity`, `jobs` and `transaction_manager` | most of `identity` → `requirements` and `jobs` → `identity`/`requirements` | PR 2 (both move into the shared kernel) |
+| `breakdown` → `governance` (invalidation, `approval_policy`, `approval_workflow`, review policy) | 12 | PRs 4–6 |
+| `requirements` → `governance` (invalidation) | 2 | PRs 4–5 |
+| `requirements` → `knowledge` (screen scheduler) | 2 | PR 5 (`ScreeningRequestPort`) |
+
+The rest are **not covered by the accepted context map**. Each needs an owner decision before the
+PR that would trip over it:
+
+| # | Crossing | Imports | Proposed resolution |
+|---|---|---|---|
+| F1 | `knowledge` ↔ `analysis` | 14 one way, 13 the other | Split `knowledge` in two. **`references`**, upstream of `analysis`, holds the ACL to knowledge-portal, reference grounding, the catalogue, the historic corpus and embeddings. **`knowledge`**, downstream of `analysis`, holds requirement screening, findings, answer suggestions, prior art and source impact. `analysis`'s confirmation gate on the screen becomes a port that `analysis` owns |
+| F2 | `analysis`, `breakdown` and `jobs` → `workflows` (`generation_context`) | 6 | Callers depend on an `ExpectedContextPort` in the shared `application/`. `GenerationContextTokens` implements it in `workflows/`, wired in the composition root |
+| F3 | `jobs` → `identity`, `requirements`, `knowledge`, `analysis`, `breakdown`, `workflows` | 23 | `ai_job_scheduling` and `ai_jobs` know every job kind and the access service, so they move to `workflows/` beside `ai_job_execution`. `jobs` keeps the `AiJob` aggregate, leasing, notifications, retention and the provider rate |
+| F4 | `identity` → `requirements`, `analysis`, `jobs` (`identity_access`) | 8 | `identity` publishes a `RequirementAccessPort`. The requirement-scoped implementation (`RequirementAccessService`), which reads Requirements, drafts, question assignees and job context, moves to `workflows/`. Callers keep depending on `identity` |
+| F5 | shared `application/errors.py` and `application/public_errors.py` → every context's domain errors | 20 | `public_errors` is the client-facing error catalogue, so it moves beside `interfaces/api/error_handlers.py`. Errors in `application/errors.py` that belong to one context move into that context |
+| F6 | `requirements` → `analysis` (`documents`, `source_lineage`), `requirements` → `reporting` (`requirement_impact`) | 5 | `source_lineage` and `requirement_impact` assemble views across contexts, so they move to `workflows/`. The `documents` → `requirement_analyzer` port edge is reviewed in PR 2 |
+| F7 | `knowledge` → `governance` (`knowledge_handoff` reads the export) | 4 | `knowledge_handoff` moves to `governance`. It publishes the approved backlog through the knowledge ACL port |
+| F8 | `knowledge` → `breakdown` (`architecture_knowledge` port returns `ArchitectureImpact`) | 1 | The port returns knowledge's own catalogue-match type, and `breakdown` maps it to its impact value object. Resolved in the knowledge move |
+
+F1, F3 and F4 change which context owns code, so they amend `context-map.md`. F2, F5–F8 move
+individual modules within the accepted design.
+
 ## Shims
 
 When a module moves, a re-export module stays at the old path:
@@ -150,7 +221,7 @@ The shim needs explicit `__all__` where mypy requires it.
 
 ## Acceptance Criteria
 
-- [ ] ADR-0103 accepted by the owner.
+- [x] ADR-0103 accepted by the owner (2026-10-07).
 - [ ] PRs 1–16 merged, each green on `pytest`, `ruff check .`, `ruff format --check .`, `mypy src tests` and `lint-imports`.
 - [ ] The golden fingerprints, golden payloads and OpenAPI snapshot from before PR 1 are byte-identical after PR 16.
 - [ ] No module under `src/smb_requirement_agent/domain/` or `application/use_cases/` remains.
@@ -160,11 +231,18 @@ The shim needs explicit `__all__` where mypy requires it.
 
 ## Validation Evidence
 
-- `pytest` —
-- `ruff check .` —
-- `ruff format --check .` —
-- `mypy src tests` —
-- `lint-imports` —
+PR 1, local, 2026-10-07:
+
+- `pytest` — exit 0, no failures. The 68 new characterisation tests pass. The PostgreSQL
+  integration tests skip without a database, as they do locally on `main`.
+- **Drift detection** — a hand-corrupted `golden/fingerprints.json` fails
+  `test_value_matches_golden[fingerprints]`, and restoring it passes again.
+- `ruff check .` — all checks passed.
+- `ruff format --check .` — 1110 files already formatted.
+- `mypy src tests` — no issues in 553 source files.
+- `lint-imports` — 9 contracts kept, 0 broken.
+
+CI evidence is recorded when the PR runs.
 
 ## Risks
 

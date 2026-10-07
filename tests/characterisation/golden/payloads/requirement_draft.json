@@ -1,0 +1,17 @@
+{
+  "business_rules": [
+    "Credit check first."
+  ],
+  "channels": [
+    "B2B portal"
+  ],
+  "constraints": [],
+  "customer_context": "Existing SMB accounts.",
+  "description": "Partially captured need.",
+  "desired_outcome": "",
+  "id": "draft-golden-1",
+  "systems": [],
+  "title": "Draft bundle request",
+  "updated_at": "2026-03-01T10:00:00+00:00",
+  "version": 2
+}

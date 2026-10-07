@@ -1,7 +1,7 @@
 # Ubiquitous language
 
 The terms used in code, API, UI and conversation, and the bounded context that owns each.
-Contexts are defined in [`context-map.md`](context-map.md) (ADR-0103, proposed). Where code and
+Contexts are defined in [`context-map.md`](context-map.md) (ADR-0103). Where code and
 this glossary disagree, fix one of them; do not let the two drift.
 
 The business hierarchy and quality rules (Epic, Feature, Story, INVEST, SPIDR) are defined

@@ -1,8 +1,8 @@
 # Context map
 
 The bounded contexts of requirement-portal, how they relate, and which current module belongs to
-each. The decision is [ADR-0103](adr-0103-bounded-context-packages-and-domain-events.md), which is
-Proposed. The migration that produces this layout is
+each. The decision is [ADR-0103](adr-0103-bounded-context-packages-and-domain-events.md), accepted
+2026-10-07. The migration that produces this layout is
 [`docs/slices/refactor-bounded-contexts.md`](../slices/refactor-bounded-contexts.md). The terms used
 here are defined in [`ubiquitous-language.md`](ubiquitous-language.md).
 

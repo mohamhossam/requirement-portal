@@ -2,10 +2,12 @@
 
 ## Status
 
-Proposed. Once accepted:
-- it supersedes the *mechanism* of ADR-0004, while ADR-0004's delete-versus-stale semantics carry forward unchanged;
-- it amends ADR-0021, ADR-0070 and ADR-0071 as described under Decision;
-- it amends AGENTS.md §4, §5, §15 and §19.
+Accepted 2026-10-07 by the repository owner. It:
+- supersedes the *mechanism* of ADR-0004, while ADR-0004's delete-versus-stale semantics carry forward unchanged;
+- amends ADR-0021, ADR-0070 and ADR-0071 as described under Decision;
+- amends AGENTS.md §4, §5, §15 and §19.
+
+The code reaches this layout one PR at a time. Until a context has moved, its code stays in the layer-first packages, and the rules it already follows still apply.
 
 The migration is sequenced in `docs/slices/refactor-bounded-contexts.md`. The contexts and their relationships are in `docs/architecture/context-map.md`, and the terms are in `docs/architecture/ubiquitous-language.md`.
 

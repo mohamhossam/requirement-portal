@@ -1,0 +1,9 @@
+# Commits that only move files or rewrite imports, ignored by `git blame`.
+#
+# The bounded-context migration (ADR-0103, docs/slices/refactor-bounded-contexts.md) moves most
+# modules. Each move PR has a move-only commit and an import-rewrite commit. Add the
+# import-rewrite commit's full SHA here in the same PR, with a comment naming the PR.
+#
+# Use locally with:
+#     git config blame.ignoreRevsFile .git-blame-ignore-revs
+# GitHub reads this file automatically.

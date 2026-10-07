@@ -1,0 +1,41 @@
+{
+  "draft_id": null,
+  "id": "doc-golden-1",
+  "included_hidden_worksheets": [],
+  "included_version_id": "doc-version-golden-1",
+  "removed": false,
+  "requirement_id": "req-golden-1",
+  "requires_attention": false,
+  "version_number": 2,
+  "versions": [
+    {
+      "assets": [],
+      "checksum_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "created_at": "2026-03-01T09:00:00+00:00",
+      "evidence_blocks": [
+        {
+          "asset_id": null,
+          "content_fingerprint": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "id": "block-1",
+          "kind": "paragraph",
+          "label": "Scope",
+          "ordinal": 1,
+          "section_path": [
+            "Scope"
+          ],
+          "text": "SMB customers add SIM bundles through the portal."
+        }
+      ],
+      "extracted_text": "SMB customers add SIM bundles through the portal.",
+      "extraction_error": null,
+      "extraction_status": "ready",
+      "extraction_version": "golden-extractor-1",
+      "extraction_warnings": [],
+      "filename": "scope.docx",
+      "id": "doc-version-golden-1",
+      "mime_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "number": 1,
+      "size_bytes": 2048
+    }
+  ]
+}

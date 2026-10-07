@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted
+Accepted. Amended by ADR-0103 (2026-10-07): approval invalidation becomes a governance
+event handler, and the fingerprint functions move into the governance domain. Their output and
+the approvals stored on artifacts are unchanged.
 
 ## Context
 

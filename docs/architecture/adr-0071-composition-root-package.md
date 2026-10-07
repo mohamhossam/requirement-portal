@@ -4,6 +4,10 @@
 
 Accepted. Amends AGENTS.md §4.4.1 ("wired in exactly one module").
 
+Amended by ADR-0103 (2026-10-07): the builders are renamed one-to-one to the bounded
+contexts, and `composition/events.py` becomes the only place domain-event handlers are
+subscribed.
+
 ## Context
 
 `interfaces/api/container.py` had grown to about 2,500 lines, with one

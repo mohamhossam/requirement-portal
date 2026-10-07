@@ -91,11 +91,13 @@ Dependency direction is inward:
 
 `Interfaces / Infrastructure -> Application -> Domain`
 
-### 4.0 Bounded contexts (ADR-0103, proposed)
+### 4.0 Bounded contexts (ADR-0103)
 
-**Status:** this subsection takes effect when ADR-0103 is accepted. Until then it is the target
-layout, and the code moves toward it only through the PRs in
-`docs/slices/refactor-bounded-contexts.md`.
+**Status:** accepted 2026-10-07; the migration is in progress. The code moves toward this layout
+only through the PRs in `docs/slices/refactor-bounded-contexts.md`. A context that has not yet
+moved keeps the layer-first layout, and the rules it already follows still apply. New code in
+an unmoved area goes where the context map assigns it once that area moves, and must not add a
+dependency that runs against the order below.
 
 The layering above applies **inside each bounded context**. The contexts, their modules and their
 relationships are in `docs/architecture/context-map.md`.
@@ -705,7 +707,7 @@ without reading the note; several get materially harder in later slices.
 | `ai_jobs` rows are kept forever, because they are the activity feed's record of AI work (ADR-0079). | The table grows with use, though reads are bounded and polling cost does not grow. | Archive finished jobs past a horizon into a cold table the activity projection can still read, if the table's size starts to matter. |
 | 2026-09-24 review findings not yet remediated: the provider rate limit is per API process (ADR-0074). | Behind N API replicas an actor can make N times the configured provider calls. | An exact global ceiling at a gateway, or a durable counter if spend control becomes a requirement. Retired: pooling and worker separation (Phase 2, ADR-0069); Slice 14 conventions (Phase 3); route-assembled units of work (Phase 4, ADR-0070); oversized modules, the monolithic container including inline persistence selection, and OpenAI adapter drift (Phase 5, ADR-0071/0072); server-side review action availability and the built app's Content-Security-Policy (Phase 6, ADR-0073); deployment packaging, JSON logs, metrics, the provider rate limit and timestamped migrations (Phase 7, ADR-0074). |
 | Frontend review-remediation items that need frontend logic changes, deferred on 2026-09-24 because CLAUDE.md limits frontend changes to presentation during the UI redesign. (a) `frontend/src/review/rules.ts` still restates the review rules instead of reading the API's `actions` fields (ADR-0073). (b) The knowledge API types in `frontend/src/api/knowledge.ts` are hand-written, not generated from OpenAPI. | (a) The rules now exist on the server, but the browser can still drift from them until it switches over. (b) Hand-written types can silently disagree with the contract; since the third review remediation `src/api/contract.test.ts` checks every client call's method and path against `openapi.json`, but not the payload types. | The UI redesign (`docs/ux-plan.md`), which rebuilds these screens: read `actions`, delete `rules.ts`, and use generated knowledge types. Retired: the 1,790-line `AnalysisPanel.tsx`, split presentationally into seven files (third review remediation, Phase 6.2); identity-dependent queries on the Architecture knowledge page running before identity loaded (fourth review remediation, Phase 5.1); the Clarify panel showing "No analysis yet" after its job finished, because invalidation joined a still-loading read (PR #41: `invalidateWorkspaceKeys` cancels in-flight reads first). These are Phase 6.1 (frontend half), 6.2 and 6.3 of `docs/slices/enhancement-review-remediation.md`. |
-| The layer-first package layout (`domain/`, `application/use_cases/`) predates the bounded contexts in ADR-0103 (proposed). Context boundaries exist only in composition builders and folder names, and cross-context invalidation is direct calls (`InvalidateDerivedArtifacts`, `InvalidateApprovalWorkflow`). During the migration, `# MIGRATION SHIM` re-export modules stay at old import paths. | Nothing enforces boundaries between contexts: upstream use cases import governance, and governance rules live in the application layer. Shims hide the real location of a module from readers. | `docs/slices/refactor-bounded-contexts.md` once ADR-0103 is accepted and scheduled; PR 16 deletes every shim and retires this row. |
+| The layer-first package layout (`domain/`, `application/use_cases/`) predates the bounded contexts in ADR-0103. Context boundaries exist only in composition builders and folder names, and cross-context invalidation is direct calls (`InvalidateDerivedArtifacts`, `InvalidateApprovalWorkflow`). During the migration, `# MIGRATION SHIM` re-export modules stay at old import paths. | Nothing enforces boundaries between contexts: upstream use cases import governance, and governance rules live in the application layer. Shims hide the real location of a module from readers. | `docs/slices/refactor-bounded-contexts.md` (scheduled 2026-10-07). PR 16 deletes every shim and retires this row. |
 
 
 Legacy CSV/TSV extraction can retain first-record wording copied into later rows. ADR-0057 fixes
