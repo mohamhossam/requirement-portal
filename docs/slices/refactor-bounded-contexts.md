@@ -1,7 +1,7 @@
 # Refactor — Bounded-context packages and domain events
 
 **Status:** ADR-0103 accepted and the slice scheduled 2026-10-07. PR 1 delivered. The PR 1
-findings were decided the same day (ADR-0103 Amendment 1), and PR 2 is in progress.
+findings were decided the same day (ADR-0103 Amendment 1). PR 2 delivered; PR 3 is next.
 
 **Related:** [context map](../architecture/context-map.md),
 [ubiquitous language](../architecture/ubiquitous-language.md).
@@ -193,6 +193,77 @@ PR of its target context:
 F1, F3 and F4 change which context owns code, so they amend `context-map.md`. F2 and F5–F8 move
 individual modules within the accepted design. The report now classifies every module by its
 target context, so what it lists is the work still to do.
+
+## PR 2 — `domain/shared` is a leaf (2026-10-07)
+
+### Delivered
+
+`domain/shared` imports nothing from another `smb_requirement_agent.domain` package. Its only
+outside imports are the pure kernel modules `smb_kernel.identity.actor` and
+`smb_kernel.documents.model`.
+
+**New shared modules:**
+
+| Module | Holds | Was in |
+|---|---|---|
+| `identifiers.py` | `RequirementId` | `domain/requirement/value_objects.py` |
+| `actors.py` | `ActorId`, `ActorProfile`, `ActorSnapshot` (re-exported from `smb_kernel`) | re-exported by `domain/identity/entities.py` |
+| `citation.py` | `PublishedReference`, `normalize_search` | `domain/document/reference.py` |
+| `lineage.py` | `SourceLineage`, `merge_lineage` | `domain/document/lineage.py` (which keeps `ImpactDecision`) |
+
+**Error behaviour.**
+- A blank `RequirementId` now raises `InvalidRequirementIdError`, which lives in
+  `domain/shared/errors.py`. It is not a `ValueError`, just like the error it replaces.
+  - Its catalogue entry gives clients the same public error as before: code
+    `invalid_requirement_context`, category invalid input, status 422, and the same message.
+  - `test_blank_requirement_id_keeps_its_public_error` pins this.
+- `PublishedReference` and `SourceLineage` still raise the kernel's `InvalidDocumentError`.
+- The architecture `InvalidKnowledgeError` is renamed `InvalidRelationshipKindError` and keeps
+  its own public code. Merging it with the knowledge error instead would have moved every
+  knowledge error onto the earlier `invalid_architecture_knowledge` catalogue entry.
+
+**Codecs.**
+- The `ReferenceDocumentState` and `HistoricRequirementState` codecs moved, unchanged, to
+  `infrastructure/persistence/knowledge_payloads.py`.
+- `ProjectKnowledgeEvents` and `ProjectHistoricRequirements` decode through
+  `KnowledgeStateDecoderPort`, which `PayloadKnowledgeStateDecoder` implements and the composition
+  root wires.
+- PR 15a replaces that port with typed events decoded in the ACL. It also moves
+  `HistoricPassage.from_entry` and `HistoricWorkItem.from_entry`.
+
+**Three commits.**
+1. The new modules, plus temporary re-export shims at the old paths, so the commit is green on
+   its own.
+2. A mechanical rewrite of 325 import statements in 232 files, by a one-off AST script and
+   ruff's import sorting. It also removes the shims. This commit is in `.git-blame-ignore-revs`.
+3. This record.
+
+### Dependency report
+
+| | Before PR 2 (target mapping) | After PR 2 |
+|---|---|---|
+| Classified modules | 185 | 189 (the four new shared modules) |
+| Crossing pairs | 90 | 88 |
+| Pairs against the order | 26 | 22 |
+
+**Gone:**
+- every `shared_kernel → *` crossing;
+- `identity → requirements` and `jobs → requirements`, which were `RequirementId`;
+- four of the five `jobs → identity` imports, which were the actor types.
+
+**Left:** the expected PR 4–6 crossings (breakdown and requirements into governance), and the
+F1–F8 moves that happen in their contexts' PRs.
+
+### Validation evidence (PR 2, local)
+
+- `pytest` — exit 0 after the shared-modules commit and again after the import rewrite. The PR 1
+  goldens are unchanged: no file under `tests/characterisation/golden/` is modified.
+- `ruff check .` and `ruff format --check .` — clean.
+- `mypy src tests` — no issues in 558 source files. Strict mode (`no_implicit_reexport`) rejects
+  any import left on an old path.
+- `lint-imports` — 9 contracts kept, 0 broken.
+- **Old paths are gone:** `grep` finds no import of a moved name from its old module in `src/` or
+  `tests/`.
 
 ## Shims
 

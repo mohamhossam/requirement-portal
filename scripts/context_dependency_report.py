@@ -271,7 +271,8 @@ def allowed(source: str, target: str) -> bool:
     if source == target or target == TECHNICAL:
         return True
     if source == TECHNICAL:
-        return False
+        # Shared technical code may use the shared kernel, and nothing else.
+        return target == "shared_kernel"
     return RANK[source] > RANK[target]
 
 

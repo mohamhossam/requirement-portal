@@ -7,3 +7,6 @@
 # Use locally with:
 #     git config blame.ignoreRevsFile .git-blame-ignore-revs
 # GitHub reads this file automatically.
+
+# PR 2: imports of shared-kernel types point at domain/shared (ADR-0103).
+227f72f65ce92830c5ba78b0ab1a9167fd203985
