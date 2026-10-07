@@ -238,11 +238,15 @@ Delivery order: **B1 → A′ → B2 → B3 → C → D → E1 → E2**. F is do
 > **Scheduled 2026-10-06** and re-placed by ADR-0102: the read-only ADO connector moves to
 > knowledge-portal, and published historic Requirements arrive as polled events, not over a
 > push route. The bullets below are kept as planned; where they differ, ADR-0102 wins.
-> - **E1 — in progress** ([enhancement-knowledge-center-e1-historic-import.md](enhancement-knowledge-center-e1-historic-import.md)):
+> - **E1 — delivered 2026-10-06** ([enhancement-knowledge-center-e1-historic-import.md](enhancement-knowledge-center-e1-historic-import.md)):
 >   knowledge-portal's import, fake ADO connector, preview, publish, refresh with a diff and
->   lineage, on `feat/knowledge-center-historic-import`; this ADR and the roadmap change here.
-> - **E2 — next:** this service's projection, historic corpus, prior-art screening with the
->   judge, and the Knowledge step's "Similar past requirements".
+>   lineage; this ADR and the roadmap change here.
+> - **E2 — in progress** ([enhancement-knowledge-center-e2-prior-art.md](enhancement-knowledge-center-e2-prior-art.md),
+>   ADR-0102 Amendment 1): this service's projection, historic corpus, prior-art screening with
+>   its own judge, and the Knowledge step's "Similar past requirements"; knowledge-portal's light
+>   event, paged content read and "Cited by" view. The domain below is corrected by the
+>   amendment: historic chunks have their own `HistoricSourceKind`, and the verdict
+>   `similar_past_requirement` its own `PriorArtVerdict`, never the live kinds.
 - **A historic Requirement.** A read-only reference concept, distinct from a live Requirement:
   no workflow, no ownership, no approvals. It holds:
   - one or more BRD documents, read with the existing document pipeline (DOCX and PDF; `.doc`

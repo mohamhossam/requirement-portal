@@ -59,6 +59,10 @@ export type OperationalReport = components["schemas"]["OperationalReportResponse
 export type SavedRequirementView = components["schemas"]["SavedViewResponse"];
 export type SavedViewCriteria = components["schemas"]["SavedViewCriteriaRequest"];
 export type KnowledgeReview = components["schemas"]["KnowledgeReviewResponse"];
+/** Similar past requirements from the historic corpus: reference only (ADR-0102). */
+export type PriorArt = components["schemas"]["PriorArtResponse"];
+export type PriorArtMatch = components["schemas"]["PriorArtMatchResponse"];
+export type PriorArtPassage = components["schemas"]["PriorArtPassageResponse"];
 export type KnowledgeScreenEnsure = components["schemas"]["KnowledgeScreenEnsureResponse"];
 export type KnowledgeFinding = components["schemas"]["KnowledgeFindingResponse"];
 export type KnowledgeFindingDecision = components["schemas"]["KnowledgeFindingDecisionRequest"];
@@ -439,6 +443,8 @@ export const api = {
     request<Actor[]>(`/identity/actors?q=${encodeURIComponent(query)}&limit=${limit}`),
   getAssignments: (id: string) =>
     request<RequirementAccess>(`${requirementPath(id)}/assignments`),
+  getPriorArt: (id: string) =>
+    request<PriorArt>(`${requirementPath(id)}/prior-art`),
   getKnowledgeReview: (id: string) =>
     request<KnowledgeReview>(`${requirementPath(id)}/knowledge-review`),
   ensureKnowledgeScreen: (id: string) =>

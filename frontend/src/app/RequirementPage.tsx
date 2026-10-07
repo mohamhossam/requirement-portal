@@ -145,7 +145,7 @@ function RequirementWorkspaceShell({ view }: { view: RequirementView }) {
   const auth = useAuth();
   const jobs = useRequirementJobs(id);
   const workspace = useRequirementWorkspace(id);
-  const { requirement, assignments, analysis, knowledgeReview } = workspace;
+  const { requirement, assignments, analysis, knowledgeReview, priorArt } = workspace;
   const [drawer, setDrawer] = useState<"source" | "people" | null>(null);
   const source = useSourceEditing({ id, requirement: requirement.data, refresh: workspace.refresh });
 
@@ -161,15 +161,23 @@ function RequirementWorkspaceShell({ view }: { view: RequirementView }) {
         .some((actor) => actor?.id === auth?.actor?.id),
   );
   const screeningActive = jobs.active.some((job) => job.operation === "screen_requirement_knowledge");
+  // The same ensure also asks for a similar-past-requirements check (Knowledge Center E2):
+  // when the screen is current but the historic corpus has moved on, it still fires.
+  const priorArtActive = jobs.active.some((job) => job.operation === "screen_prior_art");
+  const needsScreen =
+    (knowledgeReview.data?.status === "required" || knowledgeReview.data?.status === "stale") && !screeningActive;
+  const needsPriorArt =
+    (priorArt.data?.status === "not_checked" || priorArt.data?.status === "out_of_date") && !priorArtActive;
   const ensureScreen = useLazyKnowledgeScreening({
     requirementId: id,
-    fingerprint: knowledgeReview.data?.input_fingerprint,
+    fingerprint: knowledgeReview.data
+      ? `${knowledgeReview.data.input_fingerprint}:${priorArt.data?.input_key ?? ""}`
+      : undefined,
     enabled:
       (view === "knowledge" || view === "confirm") &&
       isKnowledgeTeamMember &&
       requirement.data?.status !== "duplicate" &&
-      (knowledgeReview.data?.status === "required" || knowledgeReview.data?.status === "stale") &&
-      !screeningActive,
+      (needsScreen || needsPriorArt),
   });
   const screening = {
     ...ensureScreen,

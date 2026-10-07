@@ -43,11 +43,13 @@ from smb_requirement_agent.application.ports.epic_generator import EpicGenerator
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_generator import FeatureGeneratorPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
+from smb_requirement_agent.application.ports.historic_corpus import HistoricCorpusPort
 from smb_requirement_agent.application.ports.knowledge_handoff import ApprovedBacklogOutboxPort
 from smb_requirement_agent.application.ports.knowledge_index_generations import (
     KnowledgeIndexGenerationsPort,
 )
 from smb_requirement_agent.application.ports.notifications import NotificationRepositoryPort
+from smb_requirement_agent.application.ports.prior_art import PriorArtStorePort
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
@@ -158,6 +160,10 @@ from smb_requirement_agent.application.use_cases.get_requirement import GetRequi
 from smb_requirement_agent.application.use_cases.get_requirement_analysis import (
     GetRequirementAnalysis,
 )
+from smb_requirement_agent.application.use_cases.historic_corpus import (
+    IndexHistoricCorpus,
+    ProjectHistoricRequirements,
+)
 from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     ResolveCurrentActor,
@@ -183,6 +189,7 @@ from smb_requirement_agent.application.use_cases.owned_requirements import (
     PromoteOwnedRequirementDraft,
     SaveOwnedRequirementDraft,
 )
+from smb_requirement_agent.application.use_cases.prior_art import GetPriorArt, HistoricCitations
 from smb_requirement_agent.application.use_cases.provider_call_rate import ProviderCallRateLimit
 from smb_requirement_agent.application.use_cases.rebuild_knowledge_index import (
     RebuildKnowledgeIndex,
@@ -312,6 +319,10 @@ class Container:
     bulk_reindex: BulkReindexRequirements
     knowledge_views: KnowledgeViews
     knowledge_projection: ProjectKnowledgeEvents
+    historic_projection: ProjectHistoricRequirements
+    historic_indexer: IndexHistoricCorpus
+    historic_corpus: HistoricCorpusPort
+    prior_art_store: PriorArtStorePort
     current_release: CurrentArchitectureRelease
     unified_knowledge_search: UnifiedKnowledgeSearch
     reference_currency: ReferenceCurrency
@@ -425,6 +436,8 @@ class Container:
     evidence_fragment_cache: EvidenceFragmentCachePort
     screen_requirement_knowledge: ScreenRequirementKnowledge
     get_knowledge_review: GetKnowledgeReview
+    get_prior_art: GetPriorArt
+    historic_citations: HistoricCitations
     ensure_knowledge_screen: EnsureKnowledgeScreen
     decide_knowledge_finding: DecideKnowledgeFinding
     suggest_clarification_answers: SuggestClarificationAnswers
@@ -616,6 +629,8 @@ def _build_container(
         "workers": jobs.worker,
         "attachment_worker": documents.attachment_worker,
         "knowledge_event_worker": knowledge.knowledge_event_worker,
+        "historic_event_worker": knowledge.historic_event_worker,
+        "historic_index_worker": knowledge.historic_index_worker,
     }
     if architecture_jobs.mapping_worker is not None:
         background_workers["architecture_mapping_job_worker"] = architecture_jobs.mapping_worker
@@ -660,6 +675,10 @@ def _build_container(
         source_impact=knowledge.source_impact,
         knowledge_views=KnowledgeViews(knowledge_service.views),
         knowledge_projection=knowledge.projection,
+        historic_projection=knowledge.historic_projection,
+        historic_indexer=knowledge.historic_indexer,
+        historic_corpus=persistence.historic_corpus,
+        prior_art_store=persistence.prior_art,
         current_release=knowledge.current_release,
         internal_reads=InternalReads(
             persistence.dependency_index,
@@ -807,6 +826,8 @@ def _build_container(
         evidence_fragment_cache=persistence.evidence_fragment_cache,
         screen_requirement_knowledge=knowledge.screen,
         get_knowledge_review=knowledge.review,
+        get_prior_art=knowledge.get_prior_art,
+        historic_citations=knowledge.historic_citations,
         ensure_knowledge_screen=knowledge.ensure_screen,
         decide_knowledge_finding=knowledge.decide_finding,
         suggest_clarification_answers=knowledge.suggest_answers,

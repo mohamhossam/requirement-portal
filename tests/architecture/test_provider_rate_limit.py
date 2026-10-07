@@ -26,6 +26,10 @@ from smb_requirement_agent.application.ports.architecture_knowledge import (
 )
 from smb_requirement_agent.application.ports.epic_generator import EpicGeneratorPort
 from smb_requirement_agent.application.ports.feature_generator import FeatureGeneratorPort
+from smb_requirement_agent.application.ports.prior_art import (
+    PriorArtJudgePort,
+    PriorArtSchedulerPort,
+)
 from smb_requirement_agent.application.ports.reference_grounding import (
     ReferenceAnalysisPort,
     ReferenceKnowledgePort,
@@ -112,10 +116,15 @@ PROVIDER_PORTS: set[type] = {
     RequirementAnalyzerPort,
     RequirementEvidenceAnalyzerPort,
     RequirementRelationshipClassifierPort,
+    PriorArtJudgePort,
     StoryGeneratorPort,
     StoryQualityEvaluatorPort,
 }
-SCHEDULER_PORTS: set[type] = {AnswerSuggestionSchedulerPort, KnowledgeScreenSchedulerPort}
+SCHEDULER_PORTS: set[type] = {
+    AnswerSuggestionSchedulerPort,
+    KnowledgeScreenSchedulerPort,
+    PriorArtSchedulerPort,
+}
 
 # The reachability check works per class, not per method, so a route whose
 # use case holds a provider port it does not call on that path is listed here

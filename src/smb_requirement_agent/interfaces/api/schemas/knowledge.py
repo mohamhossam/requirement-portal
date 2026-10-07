@@ -110,3 +110,56 @@ class AnswerSuggestionSetResponse(BaseModel):
     question_id: str
     suggestions: list[AnswerSuggestionResponse]
     provenance: ProvenanceResponse
+
+
+# --- Prior art from historic requirements (Knowledge Center E2, ADR-0102) --------------------
+
+
+class PriorArtLineageItem(BaseModel):
+    id: int
+    type: Literal["epic", "feature", "user_story"]
+    title: str
+    state: str
+    # A link to the work item in Azure DevOps, when it is a web address.
+    url: str | None
+
+
+class PriorArtPassageResponse(BaseModel):
+    source_kind: Literal["historic_brd", "historic_backlog"]
+    excerpt: str
+    # A BRD passage says which BRD and where; a work item says its lineage, Epic first.
+    brd_filename: str | None = None
+    label: str | None = None
+    section_path: list[str] = []
+    lineage: list[PriorArtLineageItem] = []
+
+
+class PriorArtMatchResponse(BaseModel):
+    historic_requirement_id: str
+    title: str
+    publication: int
+    verdict: Literal["similar_past_requirement"]
+    rationale: str
+    passages: list[PriorArtPassageResponse]
+
+
+class PriorArtResponse(BaseModel):
+    """Similar past requirements: reference only, never a finding or a blocker."""
+
+    status: Literal[
+        "disabled",
+        "no_historic_knowledge",
+        "not_checked",
+        "checking",
+        "waiting",
+        "current",
+        "out_of_date",
+        "failed",
+    ]
+    # Changes when the Requirement or the historic corpus does: ask for a check when it does.
+    input_key: str
+    label: Literal["historic"] = "historic"
+    trust: Literal["reference"] = "reference"
+    checked_at: datetime | None = None
+    provenance: ProvenanceResponse | None = None
+    matches: list[PriorArtMatchResponse] = []

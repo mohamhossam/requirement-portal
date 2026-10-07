@@ -16,8 +16,14 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
 from datetime import UTC, date, datetime
 
+from smb_requirement_agent.application.ports.historic_corpus import (
+    ContentPart,
+    HistoricContentGoneError,
+    HistoricContentPage,
+)
 from smb_requirement_agent.application.ports.knowledge_events import (
     ARCHITECTURE_RELEASE_ACTIVATED,
+    HISTORIC_REQUIREMENT_CHANGED,
     REFERENCE_DOCUMENT_CHANGED,
     KnowledgeEvent,
 )
@@ -53,6 +59,9 @@ class PublishedLibrary:
     _states: dict[str, ReferenceDocumentState] = field(default_factory=dict)
     _evidence: dict[str, tuple[ReferenceEvidence, ...]] = field(default_factory=dict)
     _events: list[KnowledgeEvent] = field(default_factory=list)
+    # Historic requirements, as the knowledge portal publishes them (ADR-0102).
+    _historic: dict[str, dict[str, object]] = field(default_factory=dict)
+    content_reads: int = 0
 
     def __post_init__(self) -> None:
         # The offline catalogue version is active from the start, as with the fakes.
@@ -126,6 +135,91 @@ class PublishedLibrary:
             ARCHITECTURE_RELEASE_ACTIVATED, release_id, {"release_id": release_id, "name": name}
         )
 
+    def publish_historic(
+        self,
+        title: str,
+        passages: Sequence[str],
+        items: Sequence[dict[str, object]] = (),
+        *,
+        historic_id: str | None = None,
+    ) -> str:
+        """Publish (or publish again) a historic requirement; return its id."""
+        identifier = historic_id or str(uuid.uuid4())
+        previous = self._historic.get(identifier)
+        number = int(str(previous["publication"])) + 1 if previous else 1
+        version = int(str(previous["version"])) + 1 if previous else 1
+        entries = [
+            {
+                "brd_id": "brd-1",
+                "filename": f"{title}.docx",
+                "block_id": f"p{n}",
+                "label": f"Paragraph {n}",
+                "section_path": [],
+                "text": text,
+            }
+            for n, text in enumerate(passages, start=1)
+        ]
+        fingerprint = _sha(f"{identifier}:{number}:{entries}:{list(items)}")
+        self._historic[identifier] = {
+            "publication": number,
+            "version": version,
+            "fingerprint": fingerprint,
+            "title": title,
+            "passages": entries,
+            "items": list(items),
+            "published": True,
+        }
+        self._append(
+            HISTORIC_REQUIREMENT_CHANGED,
+            identifier,
+            {
+                "historic_requirement_id": identifier,
+                "version": version,
+                "published": {
+                    "title": title,
+                    "root_ids": [item["id"] for item in items if item.get("parent_id") is None],
+                    "fetched_at": "2026-10-06T09:00:00+00:00",
+                    "counts": {"brds": 1, "passages": len(entries), "items": len(items)},
+                    "publication": number,
+                    "fingerprint": fingerprint,
+                    "published_at": "2026-10-06T09:00:00+00:00",
+                    "published_by": {"id": "ada", "name": "Ada Admin"},
+                    "imported_at": "2026-10-06T09:00:00+00:00",
+                    "imported_by": {"id": "ada", "name": "Ada Admin"},
+                },
+            },
+        )
+        return identifier
+
+    def withdraw_historic(self, historic_id: str) -> None:
+        record = self._historic[historic_id]
+        record["published"] = False
+        record["version"] = int(str(record["version"])) + 1
+        self._append(
+            HISTORIC_REQUIREMENT_CHANGED,
+            historic_id,
+            {
+                "historic_requirement_id": historic_id,
+                "version": record["version"],
+                "published": None,
+            },
+        )
+
+    # HistoricContentSourcePort: a publication's content, a page at a time.
+    def page(
+        self, historic_id: str, publication: int, part: ContentPart, offset: int, limit: int
+    ) -> HistoricContentPage:
+        self.content_reads += 1
+        record = self._historic.get(historic_id)
+        if record is None or not record["published"] or record["publication"] != publication:
+            raise HistoricContentGoneError("That publication is no longer the one in use.")
+        entries = list(record[part.value])  # type: ignore[call-overload]
+        page = tuple(entries[offset : offset + limit])
+        more = offset + limit < len(entries)
+        return HistoricContentPage(
+            publication, str(record["fingerprint"]), page, offset + limit if more else None
+        )
+
     # ReferenceKnowledgePort: what requirement work searches and cites.
     def has_published(self) -> bool:
         return bool(self._evidence)
@@ -164,6 +258,7 @@ def service_for(library: PublishedLibrary) -> KnowledgeService:
         events=library,
         views=FakeKnowledgeViews(),
         remote=False,
+        historic_content=library,
     )
 
 
@@ -178,3 +273,38 @@ def container_with_library(
 def sync(container: Container) -> None:
     """Bring requirement work's local copy up to date, as the event worker would."""
     container.knowledge_projection.drain()
+    container.historic_projection.drain()
+
+
+def index_historic(container: Container) -> None:
+    """Read and embed every pending historic publication, as the index worker would."""
+    for _ in range(10_000):
+        if not container.historic_indexer.process_next():
+            return
+
+
+def work_item(
+    item_id: int,
+    kind: str,
+    title: str,
+    *,
+    parent_id: int | None = None,
+    description: str = "",
+    state: str = "Closed",
+) -> dict[str, object]:
+    """A work item entry as the knowledge portal serves it."""
+    return {
+        "id": item_id,
+        "type": kind,
+        "title": title,
+        "state": state,
+        "revision": 1,
+        "url": f"https://dev.azure.com/smb/_workitems/edit/{item_id}",
+        "description": description,
+        "acceptance_criteria": "",
+        "area_path": "SMB\\Fixed",
+        "iteration_path": "SMB\\2025\\Q2",
+        "tags": [],
+        "parent_id": parent_id,
+        "child_ids": [],
+    }

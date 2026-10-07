@@ -29,6 +29,7 @@ export function useLazyKnowledgeScreening({
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.aiJobs(requirementId) }),
         queryClient.invalidateQueries({ queryKey: queryKeys.knowledgeReview(requirementId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.priorArt(requirementId) }),
       ]);
     },
   });

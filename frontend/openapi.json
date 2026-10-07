@@ -424,7 +424,8 @@
           "generate_breakdown_review",
           "resolve_review_open_question",
           "screen_requirement_knowledge",
-          "suggest_clarification_answers"
+          "suggest_clarification_answers",
+          "screen_prior_art"
         ],
         "title": "AiJobOperation",
         "type": "string"
@@ -6034,6 +6035,224 @@
           "statement"
         ],
         "title": "PotentialDependencyResponse",
+        "type": "object"
+      },
+      "PriorArtLineageItem": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "epic",
+              "feature",
+              "user_story"
+            ],
+            "title": "Type",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "title",
+          "state",
+          "url"
+        ],
+        "title": "PriorArtLineageItem",
+        "type": "object"
+      },
+      "PriorArtMatchResponse": {
+        "properties": {
+          "historic_requirement_id": {
+            "title": "Historic Requirement Id",
+            "type": "string"
+          },
+          "passages": {
+            "items": {
+              "$ref": "#/components/schemas/PriorArtPassageResponse"
+            },
+            "title": "Passages",
+            "type": "array"
+          },
+          "publication": {
+            "title": "Publication",
+            "type": "integer"
+          },
+          "rationale": {
+            "title": "Rationale",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "verdict": {
+            "const": "similar_past_requirement",
+            "title": "Verdict",
+            "type": "string"
+          }
+        },
+        "required": [
+          "historic_requirement_id",
+          "title",
+          "publication",
+          "verdict",
+          "rationale",
+          "passages"
+        ],
+        "title": "PriorArtMatchResponse",
+        "type": "object"
+      },
+      "PriorArtPassageResponse": {
+        "properties": {
+          "brd_filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brd Filename"
+          },
+          "excerpt": {
+            "title": "Excerpt",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lineage": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/PriorArtLineageItem"
+            },
+            "title": "Lineage",
+            "type": "array"
+          },
+          "section_path": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Section Path",
+            "type": "array"
+          },
+          "source_kind": {
+            "enum": [
+              "historic_brd",
+              "historic_backlog"
+            ],
+            "title": "Source Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_kind",
+          "excerpt"
+        ],
+        "title": "PriorArtPassageResponse",
+        "type": "object"
+      },
+      "PriorArtResponse": {
+        "description": "Similar past requirements: reference only, never a finding or a blocker.",
+        "properties": {
+          "checked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked At"
+          },
+          "input_key": {
+            "title": "Input Key",
+            "type": "string"
+          },
+          "label": {
+            "const": "historic",
+            "default": "historic",
+            "title": "Label",
+            "type": "string"
+          },
+          "matches": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/PriorArtMatchResponse"
+            },
+            "title": "Matches",
+            "type": "array"
+          },
+          "provenance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProvenanceResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "disabled",
+              "no_historic_knowledge",
+              "not_checked",
+              "checking",
+              "waiting",
+              "current",
+              "out_of_date",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "trust": {
+            "const": "reference",
+            "default": "reference",
+            "title": "Trust",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "input_key"
+        ],
+        "title": "PriorArtResponse",
         "type": "object"
       },
       "ProductContextResponse": {
@@ -17502,6 +17721,70 @@
         "summary": "Claim Requirement",
         "tags": [
           "identity"
+        ]
+      }
+    },
+    "/requirements/{requirement_id}/prior-art": {
+      "get": {
+        "description": "Similar past requirements, from the historic corpus: reference only (ADR-0102).",
+        "operationId": "get_prior_art_requirements__requirement_id__prior_art_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "requirement_id",
+            "required": true,
+            "schema": {
+              "title": "Requirement Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Fake-Actor-Id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fake-Actor-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriorArtResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Prior Art",
+        "tags": [
+          "requirement-knowledge"
         ]
       }
     },

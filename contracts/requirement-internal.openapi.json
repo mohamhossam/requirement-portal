@@ -493,6 +493,95 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "HistoricCitationCounts": {
+        "description": "Requirements whose prior art cites each historic requirement; 0 when none does.",
+        "properties": {
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counts",
+            "type": "object"
+          }
+        },
+        "required": [
+          "counts"
+        ],
+        "title": "HistoricCitationCounts",
+        "type": "object"
+      },
+      "HistoricCitationItem": {
+        "properties": {
+          "checked_at": {
+            "format": "date-time",
+            "title": "Checked At",
+            "type": "string"
+          },
+          "current": {
+            "title": "Current",
+            "type": "boolean"
+          },
+          "duplicate": {
+            "title": "Duplicate",
+            "type": "boolean"
+          },
+          "owner": {
+            "title": "Owner",
+            "type": "string"
+          },
+          "requirement_id": {
+            "title": "Requirement Id",
+            "type": "string"
+          },
+          "retired": {
+            "title": "Retired",
+            "type": "boolean"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "requirement_id",
+          "title",
+          "owner",
+          "checked_at",
+          "current",
+          "retired",
+          "duplicate"
+        ],
+        "title": "HistoricCitationItem",
+        "type": "object"
+      },
+      "HistoricCitationPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/HistoricCitationItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Offset"
+          }
+        },
+        "required": [
+          "items",
+          "next_offset"
+        ],
+        "title": "HistoricCitationPage",
+        "type": "object"
+      },
       "ImpactDecision": {
         "properties": {
           "actor": {
@@ -1393,6 +1482,124 @@
           }
         },
         "summary": "Nudge Finding Owners",
+        "tags": [
+          "internal"
+        ]
+      }
+    },
+    "/internal/knowledge/historic/citation-counts": {
+      "get": {
+        "operationId": "historic_citation_counts_internal_knowledge_historic_citation_counts_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "historic_id",
+            "required": true,
+            "schema": {
+              "items": {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              "maxItems": 100,
+              "minItems": 1,
+              "title": "Historic Id",
+              "type": "array"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoricCitationCounts"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Historic Citation Counts",
+        "tags": [
+          "internal"
+        ]
+      }
+    },
+    "/internal/knowledge/historic/{historic_requirement_id}/citations": {
+      "get": {
+        "description": "Requirements citing a historic requirement: who and when, never what was matched.",
+        "operationId": "historic_citations_internal_knowledge_historic__historic_requirement_id__citations_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "historic_requirement_id",
+            "required": true,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Historic Requirement Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100000,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoricCitationPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Historic Citations",
         "tags": [
           "internal"
         ]

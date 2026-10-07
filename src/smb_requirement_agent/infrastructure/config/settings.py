@@ -41,6 +41,7 @@ from smb_requirement_agent.infrastructure.config.options import (
     DEFAULT_DOCUMENT_MAX_SPREADSHEET_CELLS,
     DEFAULT_DOCUMENT_MAX_XML_NODES,
     DEFAULT_DOCUMENT_STORAGE_PATH,
+    DEFAULT_HISTORIC_EMBED_CHUNKS_PER_HOUR,
     DEFAULT_LOCAL_LLM_BASE_URL,
     DEFAULT_LOCAL_LLM_CONTEXT_WINDOW_TOKENS,
     DEFAULT_LOCAL_LLM_MAX_OUTPUT_TOKENS,
@@ -58,6 +59,7 @@ from smb_requirement_agent.infrastructure.config.options import (
     DEFAULT_OPENROUTER_MAX_OUTPUT_TOKENS,
     DEFAULT_OPENROUTER_MODEL,
     DEFAULT_OPENROUTER_TIMEOUT_SECONDS,
+    DEFAULT_PRIOR_ART_JUDGE_CALLS_PER_HOUR,
     DEFAULT_PROVIDER_RATE_LIMIT_PER_MINUTE,
     DEFAULT_REQUEST_MAX_BODY_BYTES,
     ConfigurationError,
@@ -218,6 +220,13 @@ class Settings:
     # presents there (ADR-0099). Unset, offline stand-ins answer for it.
     knowledge_api_base_url: str | None = None
     requirement_service_token: str | None = field(default=None, repr=False)
+    # Prior art from historic requirements (Knowledge Center E2, ADR-0102). Off until an
+    # operator turns it on, after running the judge's evaluation set against the provider.
+    prior_art_enabled: bool = False
+    # At most this many prior-art judge calls an hour, across the portal.
+    prior_art_judge_calls_per_hour: int = DEFAULT_PRIOR_ART_JUDGE_CALLS_PER_HOUR
+    # At most this many historic chunks embedded an hour, per historic requirement.
+    historic_embed_chunks_per_hour: int = DEFAULT_HISTORIC_EMBED_CHUNKS_PER_HOUR
 
     def __post_init__(self) -> None:
         validate_settings(self)
@@ -538,7 +547,30 @@ class Settings:
                 os.getenv("DEBUG_TRACE_PATH", "").strip() or DEFAULT_DEBUG_TRACE_PATH
             ),
             **_operability_from_env(),
+            **_prior_art_from_env(),
         )
+
+
+def _prior_art_from_env() -> dict[str, Any]:
+    """Prior art from historic requirements: an off switch and two hourly caps (ADR-0102)."""
+    raw_calls = os.getenv("PRIOR_ART_JUDGE_CALLS_PER_HOUR", "").strip()
+    raw_chunks = os.getenv("HISTORIC_EMBED_CHUNKS_PER_HOUR", "").strip()
+    try:
+        calls = int(raw_calls) if raw_calls else DEFAULT_PRIOR_ART_JUDGE_CALLS_PER_HOUR
+        chunks = int(raw_chunks) if raw_chunks else DEFAULT_HISTORIC_EMBED_CHUNKS_PER_HOUR
+    except ValueError as exc:
+        raise ConfigurationError(
+            "PRIOR_ART_JUDGE_CALLS_PER_HOUR and HISTORIC_EMBED_CHUNKS_PER_HOUR must be whole "
+            "numbers."
+        ) from exc
+    raw_enabled = os.getenv("PRIOR_ART_ENABLED", "false").strip().lower()
+    if raw_enabled not in {"true", "false"}:
+        raise ConfigurationError("PRIOR_ART_ENABLED must be true or false.")
+    return {
+        "prior_art_enabled": raw_enabled == "true",
+        "prior_art_judge_calls_per_hour": calls,
+        "historic_embed_chunks_per_hour": chunks,
+    }
 
 
 def _operability_from_env() -> dict[str, Any]:

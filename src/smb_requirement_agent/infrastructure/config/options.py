@@ -172,6 +172,10 @@ LOG_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR")
 
 
 DEFAULT_PROVIDER_RATE_LIMIT_PER_MINUTE = 30
+# Prior art from historic requirements (Knowledge Center E2): judge calls an hour across the
+# portal, and historic chunks embedded an hour per historic requirement.
+DEFAULT_PRIOR_ART_JUDGE_CALLS_PER_HOUR = 60
+DEFAULT_HISTORIC_EMBED_CHUNKS_PER_HOUR = 500
 # Read notifications older than this are pruned by the retention command (ADR-0079).
 DEFAULT_NOTIFICATION_RETENTION_DAYS = 90
 

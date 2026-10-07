@@ -37,6 +37,9 @@ def test_the_contract_covers_what_the_knowledge_service_reads_and_stays_private(
         "/internal/knowledge/requirements/{requirement_id}/retirement",
         "/internal/knowledge/requirements/{requirement_id}/reinstatement",
         "/internal/knowledge/reindex",
+        # Where historic requirements are cited (Knowledge Center E2, ADR-0102).
+        "/internal/knowledge/historic/citation-counts",
+        "/internal/knowledge/historic/{historic_requirement_id}/citations",
     }
     public = create_app().openapi()["paths"]
     assert not paths & set(public)

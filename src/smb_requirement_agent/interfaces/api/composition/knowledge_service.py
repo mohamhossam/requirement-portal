@@ -18,6 +18,7 @@ from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.ports.architecture_knowledge import ArchitectureKnowledgePort
 from smb_requirement_agent.application.ports.backlog_export import BacklogExportPort
+from smb_requirement_agent.application.ports.historic_corpus import HistoricContentSourcePort
 from smb_requirement_agent.application.ports.knowledge_events import KnowledgeEventSourcePort
 from smb_requirement_agent.application.ports.knowledge_handoff import ChangeRequestInboxPort
 from smb_requirement_agent.application.ports.knowledge_views import KnowledgeViewsPort
@@ -27,16 +28,21 @@ from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.documents.ingestion_loop import IngestionLoop
 from smb_requirement_agent.infrastructure.knowledge_client import (
     FakeArchitectureKnowledge,
+    FakeHistoricContent,
     FakeKnowledgeEvents,
     FakeKnowledgeViews,
     FakeReferenceKnowledge,
     HttpArchitectureKnowledge,
     HttpChangeRequestInbox,
+    HttpHistoricContent,
     HttpKnowledgeEvents,
     HttpKnowledgeViews,
     HttpReferenceKnowledge,
 )
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
+
+# Seconds to wait for a page of a historic requirement's content (≤200 entries).
+HISTORIC_PAGE_TIMEOUT = 60.0
 
 
 @dataclass(frozen=True)
@@ -50,6 +56,8 @@ class KnowledgeService:
     # Where approved backlogs are handed over (ADR-0101 Amendment 2); none offline, so
     # approvals queue nothing.
     change_requests: ChangeRequestInboxPort | None = None
+    # A published historic requirement's content, read a page at a time (ADR-0102).
+    historic_content: HistoricContentSourcePort = FakeHistoricContent()
 
 
 def build_knowledge_service(
@@ -73,6 +81,10 @@ def build_knowledge_service(
         service="knowledge",
         http=http,
     )
+    # A page of historic content can be large; it gets its own, more patient client.
+    patient = InternalHttpClient(
+        url, token, service="knowledge", http=http, timeout_seconds=HISTORIC_PAGE_TIMEOUT
+    )
     return KnowledgeService(
         HttpReferenceKnowledge(client),
         HttpArchitectureKnowledge(client),
@@ -80,6 +92,7 @@ def build_knowledge_service(
         HttpKnowledgeViews(client),
         remote=True,
         change_requests=HttpChangeRequestInbox(client),
+        historic_content=HttpHistoricContent(patient),
     )
 
 

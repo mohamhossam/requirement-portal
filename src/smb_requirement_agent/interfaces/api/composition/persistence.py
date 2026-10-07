@@ -56,6 +56,7 @@ from smb_requirement_agent.application.ports.corpus_summary import CorpusCountsP
 from smb_requirement_agent.application.ports.document_repository import DocumentRepositoryPort
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
+from smb_requirement_agent.application.ports.historic_corpus import HistoricCorpusPort
 from smb_requirement_agent.application.ports.knowledge_handoff import ApprovedBacklogOutboxPort
 from smb_requirement_agent.application.ports.knowledge_index_generations import (
     KnowledgeIndexGenerationsPort,
@@ -65,6 +66,7 @@ from smb_requirement_agent.application.ports.knowledge_portfolio import (
     KnowledgePortfolioPort,
 )
 from smb_requirement_agent.application.ports.notifications import NotificationRepositoryPort
+from smb_requirement_agent.application.ports.prior_art import PriorArtStorePort
 from smb_requirement_agent.application.ports.reference_publications import (
     ReferencePublicationStatePort,
 )
@@ -148,6 +150,10 @@ from smb_requirement_agent.infrastructure.persistence.corpus_membership import (
     PostgresCorpusActions,
     PostgresCorpusMembership,
     PostgresSourceChanges,
+)
+from smb_requirement_agent.infrastructure.persistence.historic_corpus import (
+    InMemoryHistoricCorpus,
+    PostgresHistoricCorpus,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_ai_jobs import (
     InMemoryAiJobStore,
@@ -259,6 +265,10 @@ from smb_requirement_agent.infrastructure.persistence.postgres_worklist import (
     PostgresRequirementWorklistReader,
     PostgresWorklistProjectionMaintainer,
 )
+from smb_requirement_agent.infrastructure.persistence.prior_art import (
+    InMemoryPriorArt,
+    PostgresPriorArt,
+)
 from smb_requirement_agent.infrastructure.persistence.reference_publications import (
     InMemoryReferencePublications,
     PostgresReferencePublications,
@@ -336,6 +346,9 @@ class PersistenceAdapters:
     mapping_job_repository: ArchitectureJobRepositoryPort
     reference_publications: ReferencePublicationStatePort
     architecture_releases: ArchitectureReleaseStatePort
+    # Historic requirements and their corpus (Knowledge Center E2, ADR-0102).
+    historic_corpus: HistoricCorpusPort
+    prior_art: PriorArtStorePort
     attachment_ingestions: AttachmentIngestionRepositoryPort
     # Approved backlogs on their way to the knowledge service (ADR-0101 Amendment 2).
     backlog_handoffs: ApprovedBacklogOutboxPort
@@ -393,6 +406,8 @@ def _postgres(
     source_changes: SourceChangesPort = PostgresSourceChanges(postgres)
     mapping_job_repository = PostgresArchitectureJobs(connector)
     reference_publications: ReferencePublicationStatePort = PostgresReferencePublications(postgres)
+    historic_corpus: HistoricCorpusPort = PostgresHistoricCorpus(postgres)
+    prior_art: PriorArtStorePort = PostgresPriorArt(postgres)
     architecture_releases: ArchitectureReleaseStatePort = PostgresArchitectureReleaseState(postgres)
     attachment_ingestions: AttachmentIngestionRepositoryPort = PostgresAttachmentIngestions(
         postgres
@@ -490,6 +505,8 @@ def _postgres(
         mapping_job_repository=mapping_job_repository,
         reference_publications=reference_publications,
         architecture_releases=architecture_releases,
+        historic_corpus=historic_corpus,
+        prior_art=prior_art,
         attachment_ingestions=attachment_ingestions,
         backlog_handoffs=backlog_handoffs,
         revision_repository=revision_repository,
@@ -521,6 +538,8 @@ def _memory(
     memory_handoffs = InMemoryBacklogHandoffs(memory_lock)
     memory_publications = InMemoryReferencePublications(memory_lock)
     reference_publications = memory_publications
+    memory_historic = InMemoryHistoricCorpus(memory_lock)
+    memory_prior_art = InMemoryPriorArt(memory_lock)
     architecture_releases = memory_releases
     base_analyses = InMemoryRequirementAnalysisRepository()
     analysis_audit_repository = InMemoryAnalysisAuditRepository(
@@ -641,6 +660,8 @@ def _memory(
     evidence_fragment_cache = InMemoryEvidenceFragmentCache()
     memory_transactions.enroll(
         memory_publications,
+        memory_historic,
+        memory_prior_art,
         memory_releases,
         memory_attachments,
         memory_handoffs,
@@ -715,6 +736,8 @@ def _memory(
         mapping_job_repository=mapping_job_repository,
         reference_publications=reference_publications,
         architecture_releases=architecture_releases,
+        historic_corpus=memory_historic,
+        prior_art=memory_prior_art,
         attachment_ingestions=attachment_ingestions,
         backlog_handoffs=memory_handoffs,
         revision_repository=revision_repository,

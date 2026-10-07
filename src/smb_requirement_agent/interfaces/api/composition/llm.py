@@ -31,6 +31,9 @@ from smb_kernel.observability.metrics import (
 
 from smb_requirement_agent.application.ports.epic_generator import EpicGeneratorPort
 from smb_requirement_agent.application.ports.feature_generator import FeatureGeneratorPort
+from smb_requirement_agent.application.ports.prior_art import (
+    PriorArtJudgePort,
+)
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceProposerPort
 from smb_requirement_agent.application.ports.requirement_analyzer import RequirementAnalyzerPort
 from smb_requirement_agent.application.ports.requirement_knowledge import (
@@ -52,6 +55,7 @@ from smb_requirement_agent.infrastructure.llm.fake_requirement_analyzer import (
 from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import (
     FakeClarificationAnswerSuggester,
     FakeKnowledgeEmbedding,
+    FakePriorArtJudge,
     FakeRequirementRelationshipClassifier,
 )
 from smb_requirement_agent.infrastructure.llm.fake_story_generator import FakeStoryGenerator
@@ -104,10 +108,12 @@ from smb_requirement_agent.infrastructure.llm.reference_proposals import (
 from smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters import (
     LocalClarificationAnswerSuggester,
     LocalKnowledgeEmbedding,
+    LocalPriorArtJudge,
     LocalRequirementRelationshipClassifier,
     OpenAIKnowledgeEmbedding,
     OpenRouterKnowledgeEmbedding,
     StructuredClarificationAnswerSuggesterAdapter,
+    StructuredPriorArtJudge,
     StructuredRequirementRelationshipClassifierAdapter,
 )
 
@@ -123,6 +129,8 @@ class LLMAdapters:
     story_quality_evaluator: StoryQualityEvaluatorPort
     knowledge_embedding: KnowledgeEmbeddingPort
     relationship_classifier: RequirementRelationshipClassifierPort
+    # Prior art from historic requirements (Knowledge Center E2): its own judge and prompt.
+    prior_art_judge: PriorArtJudgePort
     answer_suggester: ClarificationAnswerSuggesterPort
     reference_proposer: ReferenceProposerPort
     debug_trace: DebugTrace
@@ -187,6 +195,7 @@ def _profile_adapters(
         relationship_classifier=StructuredRequirementRelationshipClassifierAdapter(
             clients["knowledge"], knowledge.provider
         ),
+        prior_art_judge=StructuredPriorArtJudge(clients["knowledge"], knowledge.provider),
         answer_suggester=StructuredClarificationAnswerSuggesterAdapter(
             clients["knowledge"], knowledge.provider
         ),
@@ -232,6 +241,7 @@ def _build_llm_adapters(settings: Settings, resources: ExitStack, metrics: Metri
             story_quality_evaluator=FakeStoryQualityEvaluator.passing(),
             knowledge_embedding=FakeKnowledgeEmbedding(),
             relationship_classifier=FakeRequirementRelationshipClassifier(),
+            prior_art_judge=FakePriorArtJudge(),
             answer_suggester=FakeClarificationAnswerSuggester(),
             reference_proposer=FakeReferenceProposer(),
             debug_trace=debug_trace,
@@ -267,6 +277,7 @@ def _build_llm_adapters(settings: Settings, resources: ExitStack, metrics: Metri
             story_quality_evaluator=LocalStoryQualityEvaluator(**shared),
             knowledge_embedding=local_embedding,
             relationship_classifier=LocalRequirementRelationshipClassifier(**shared),
+            prior_art_judge=LocalPriorArtJudge(**shared),
             answer_suggester=LocalClarificationAnswerSuggester(**shared),
             reference_proposer=StructuredReferenceProposer(LocalStructuredOutputClient(**shared)),
             debug_trace=debug_trace,
@@ -305,6 +316,9 @@ def _build_llm_adapters(settings: Settings, resources: ExitStack, metrics: Metri
             knowledge_embedding=openrouter_embedding,
             relationship_classifier=OpenRouterRequirementRelationshipClassifier(
                 **openrouter_shared
+            ),
+            prior_art_judge=StructuredPriorArtJudge(
+                OpenRouterStructuredOutputClient(**openrouter_shared), "OpenRouter"
             ),
             answer_suggester=OpenRouterClarificationAnswerSuggester(**openrouter_shared),
             reference_proposer=StructuredReferenceProposer(
@@ -345,6 +359,12 @@ def _build_llm_adapters(settings: Settings, resources: ExitStack, metrics: Metri
         knowledge_embedding=openai_embedding,
         relationship_classifier=OpenAIRequirementRelationshipClassifier(
             client, model=openai_model, timeout_seconds=openai_timeout
+        ),
+        prior_art_judge=StructuredPriorArtJudge(
+            OpenAIStructuredOutputClient(
+                client, model=openai_model, timeout_seconds=openai_timeout
+            ),
+            "OpenAI",
         ),
         answer_suggester=OpenAIClarificationAnswerSuggester(
             client, model=openai_model, timeout_seconds=openai_timeout

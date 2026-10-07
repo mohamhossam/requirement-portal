@@ -105,6 +105,7 @@ from smb_requirement_agent.application.use_cases.owned_requirements import (
     PromoteOwnedRequirementDraft,
     SaveOwnedRequirementDraft,
 )
+from smb_requirement_agent.application.use_cases.prior_art import GetPriorArt, HistoricCitations
 from smb_requirement_agent.application.use_cases.reference_currency import (
     CurrentArchitectureRelease,
 )
@@ -485,6 +486,14 @@ def get_export_breakdown(container: ContainerDep) -> ExportBreakdown:
 
 def get_get_knowledge_review(container: ContainerDep) -> GetKnowledgeReview:
     return container.get_knowledge_review
+
+
+def get_get_prior_art(container: ContainerDep) -> GetPriorArt:
+    return container.get_prior_art
+
+
+def get_historic_citations(container: ContainerDep) -> HistoricCitations:
+    return container.historic_citations
 
 
 def get_ensure_knowledge_screen(container: ContainerDep) -> EnsureKnowledgeScreen:

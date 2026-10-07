@@ -47,6 +47,10 @@ from smb_requirement_agent.application.use_cases.identity_access import Requirem
 from smb_requirement_agent.application.use_cases.job_execution_context import (
     bind_attempt,
 )
+from smb_requirement_agent.application.use_cases.prior_art import (
+    PriorArtBudgetSpentError,
+    ScreenPriorArt,
+)
 from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     ScreenRequirementKnowledge,
 )
@@ -113,6 +117,8 @@ class ExecuteAiJob:
         access: AccessRepositoryPort,
         authorizer: RequirementAccessService,
         generation_context: GenerationContextTokens,
+        *,
+        screen_prior_art: ScreenPriorArt | None = None,
     ) -> None:
         self._jobs = jobs
         self._notifications = notifications
@@ -135,6 +141,7 @@ class ExecuteAiJob:
         self._access = access
         self._authorizer = authorizer
         self._generation_context = generation_context
+        self._screen_prior_art = screen_prior_art
 
     def execute(self, record: AiJobRecord) -> AiJob:
         with (
@@ -191,6 +198,9 @@ class ExecuteAiJob:
             if record.job.operation.requires_current_index:
                 return self._defer(record)
             return self._fail(record, exc)
+        except PriorArtBudgetSpentError:
+            # Not a failure: this hour's judge calls are spent, so the check waits its turn.
+            return self._defer(record)
         except Exception as exc:
             return self._fail(record, exc)
 
@@ -390,6 +400,13 @@ class ExecuteAiJob:
             else:
                 self._suggest_answers.execute(requirement_id, question_id, expected_version, actor)
             return (AiJobResultResource("answer_suggestions", f"{base}/clarify"),)
+        if operation is AiJobOperation.SCREEN_PRIOR_ART and self._screen_prior_art is not None:
+            key = _string(args, "prior_art_key")
+            if job.origin is AiJobOrigin.AUTOMATIC:
+                self._screen_prior_art.execute_automatic(requirement_id, key)
+            else:
+                self._screen_prior_art.execute(actor, requirement_id, key)
+            return (AiJobResultResource("prior_art", f"{base}/knowledge"),)
         raise AiJobConflictError(f"Unsupported AI job operation {operation.value!r}.")
 
     def _finish_cancel(self, record: AiJobRecord, job: AiJob) -> AiJob:
@@ -430,7 +447,7 @@ class ExecuteAiJob:
             ):
                 raise _LeaseLost("AI job lease was lost before it could be requeued.")
             logger.info(
-                "AI job %s (%s) requeued until the Requirement index is current",
+                "AI job %s (%s) requeued to wait for the index or its hourly budget",
                 record.job.id.value,
                 record.job.operation.value,
             )

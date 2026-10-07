@@ -10,6 +10,7 @@ from smb_requirement_agent.application.ports.requirement_knowledge import Knowle
 from smb_requirement_agent.application.use_cases.answer_suggestions import (
     SuggestClarificationAnswers,
 )
+from smb_requirement_agent.application.use_cases.prior_art import GetPriorArt, PriorArtView
 from smb_requirement_agent.application.use_cases.requirement_indexing import (
     IndexRequirementKnowledge,
     RequirementIndexStatus,
@@ -26,6 +27,7 @@ from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeFindingId,
     RelationshipEvidence,
 )
+from smb_requirement_agent.domain.knowledge.prior_art import PriorArtEvidence
 from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
@@ -33,6 +35,7 @@ from smb_requirement_agent.interfaces.api.dependencies import (
     get_decide_knowledge_finding,
     get_ensure_knowledge_screen,
     get_get_knowledge_review,
+    get_get_prior_art,
     get_reference_reviews,
     get_requirement_indexer,
     get_suggest_clarification_answers,
@@ -51,6 +54,10 @@ from smb_requirement_agent.interfaces.api.schemas.knowledge import (
     KnowledgeFindingResponse,
     KnowledgeReviewResponse,
     KnowledgeScreenEnsureResponse,
+    PriorArtLineageItem,
+    PriorArtMatchResponse,
+    PriorArtPassageResponse,
+    PriorArtResponse,
 )
 
 router = APIRouter(
@@ -187,6 +194,62 @@ def get_knowledge_review(
     use_case: Annotated[GetKnowledgeReview, Depends(get_get_knowledge_review)],
 ) -> KnowledgeReviewResponse:
     return review_response(use_case.execute(RequirementId(requirement_id)))
+
+
+def _lineage(value: object) -> list[PriorArtLineageItem]:
+    items = value if isinstance(value, list) else []
+    return [PriorArtLineageItem.model_validate(item) for item in items if isinstance(item, dict)]
+
+
+def _passage(item: PriorArtEvidence) -> PriorArtPassageResponse:
+    context = item.context
+    path = context.get("section_path")
+    return PriorArtPassageResponse(
+        source_kind=item.source_kind.value,
+        excerpt=item.excerpt,
+        brd_filename=str(context["brd_filename"]) if "brd_filename" in context else None,
+        label=str(context["label"]) if "label" in context else None,
+        section_path=[str(part) for part in path] if isinstance(path, list) else [],
+        lineage=_lineage(context.get("lineage")),
+    )
+
+
+def prior_art_response(view: PriorArtView) -> PriorArtResponse:
+    check = view.check
+    return PriorArtResponse(
+        status=view.status.value,
+        input_key=view.input_key,
+        checked_at=None if check is None else check.checked_at,
+        provenance=None
+        if check is None
+        else ProvenanceResponse(
+            generated_at=check.provenance.generated_at,
+            model=check.provenance.model,
+            prompt_version=check.provenance.prompt_version,
+        ),
+        matches=[]
+        if check is None
+        else [
+            PriorArtMatchResponse(
+                historic_requirement_id=match.historic_requirement_id,
+                title=match.title,
+                publication=match.publication,
+                verdict=match.verdict.value,
+                rationale=match.rationale,
+                passages=[_passage(item) for item in match.evidence],
+            )
+            for match in check.matches
+        ],
+    )
+
+
+@router.get("/{requirement_id}/prior-art", response_model=PriorArtResponse)
+def get_prior_art(
+    requirement_id: str,
+    use_case: Annotated[GetPriorArt, Depends(get_get_prior_art)],
+) -> PriorArtResponse:
+    """Similar past requirements, from the historic corpus: reference only (ADR-0102)."""
+    return prior_art_response(use_case.execute(RequirementId(requirement_id)))
 
 
 @router.post(

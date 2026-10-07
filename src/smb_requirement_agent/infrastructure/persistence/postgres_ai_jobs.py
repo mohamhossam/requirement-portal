@@ -367,6 +367,7 @@ class PostgresAiJobStore:
                     ORDER BY
                       CASE WHEN j.status IN ('running','cancellation_requested') THEN 0 ELSE 1 END,
                       CASE WHEN j.origin='user' THEN 0 ELSE 1 END,
+                      CASE WHEN j.operation='screen_prior_art' THEN 1 ELSE 0 END,
                       j.created_at
                     FOR UPDATE OF lease SKIP LOCKED
                     LIMIT 1

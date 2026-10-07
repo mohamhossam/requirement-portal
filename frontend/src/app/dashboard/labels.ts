@@ -53,6 +53,7 @@ export const jobLabels: Record<NonNullable<RequirementWorklistItem["active_ai_op
   resolve_review_open_question: "Review resolution running",
   screen_requirement_knowledge: "Knowledge screening running",
   suggest_clarification_answers: "Answer suggestions running",
+  screen_prior_art: "Similar past requirements check running",
 };
 
 /**

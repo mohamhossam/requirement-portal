@@ -17,6 +17,7 @@ export const operationLabels: Record<string, string> = {
   resolve_review_open_question: "Resolving review question",
   screen_requirement_knowledge: "Screening requirement knowledge",
   suggest_clarification_answers: "Finding grounded answer suggestions",
+  screen_prior_art: "Looking for similar past requirements",
 };
 
 /** What finished, in words, without the progressive tense. */
@@ -36,6 +37,7 @@ export const completionLabels: Record<string, string> = {
   resolve_review_open_question: "Review resolution",
   screen_requirement_knowledge: "Knowledge screening",
   suggest_clarification_answers: "Answer suggestions",
+  screen_prior_art: "Similar past requirements check",
 };
 
 export const operationLabel = (operation: string) => operationLabels[operation] ?? operation;

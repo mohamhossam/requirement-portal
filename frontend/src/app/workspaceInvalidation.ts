@@ -5,7 +5,7 @@ import { queryKeys } from "./queryKeys";
 export type WorkspaceChange =
   | "question" | "analysis" | "source" | "epic" | "features" | "stories"
   | "story-quality" | "story-proposals" | "answer-suggestions" | "knowledge"
-  | "review" | "architecture" | "epic-approval" | "feature-approval";
+  | "review" | "architecture" | "epic-approval" | "feature-approval" | "prior-art";
 
 export function workspaceChangeKeys(id: string, change: WorkspaceChange, featureId?: string) {
   const featureKey = (kind: string) => queryKeys.scope(kind, id, ...(featureId ? [featureId] : []));
@@ -25,6 +25,7 @@ export function workspaceChangeKeys(id: string, change: WorkspaceChange, feature
     case "story-proposals": return [featureKey("story-proposals")];
     case "answer-suggestions": return [queryKeys.scope("answer-suggestions", id)];
     case "knowledge": return [queryKeys.knowledgeReview(id), queryKeys.requirement(id), queryKeys.requirementLists()];
+    case "prior-art": return [queryKeys.priorArt(id)];
     case "review": return governance;
     case "architecture": return [queryKeys.features(id), ...stories, ...governance];
   }
@@ -52,6 +53,7 @@ const jobChanges: Record<AiJob["operation"], WorkspaceChange> = {
   propose_story_change: "story-proposals", evaluate_feature_quality: "story-quality",
   generate_breakdown_review: "review", resolve_review_open_question: "analysis",
   screen_requirement_knowledge: "knowledge", suggest_clarification_answers: "answer-suggestions",
+  screen_prior_art: "prior-art",
 };
 
 export function jobCompletionKeys(job: AiJob) {

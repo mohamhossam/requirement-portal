@@ -17,6 +17,10 @@ from smb_kernel.llm.structured_output import (
 )
 
 from smb_requirement_agent.application.errors import KnowledgeGenerationError
+from smb_requirement_agent.application.ports.prior_art import (
+    PriorArtCandidateInput,
+    PriorArtJudgement,
+)
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidence
 from smb_requirement_agent.application.ports.requirement_knowledge import (
     AnswerSuggestionCandidate,
@@ -39,9 +43,17 @@ from smb_requirement_agent.infrastructure.llm.prompts.knowledge_prompt import (
     relationship_prompt,
     suggestion_prompt,
 )
+from smb_requirement_agent.infrastructure.llm.prompts.prior_art_prompt import (
+    PRIOR_ART_PROMPT_VERSION,
+    PRIOR_ART_SYSTEM_PROMPT,
+    prior_art_prompt,
+)
 from smb_requirement_agent.infrastructure.llm.schemas.knowledge_schema import (
     AnswerSuggestionListSchema,
     RelationshipScreenSchema,
+)
+from smb_requirement_agent.infrastructure.llm.schemas.prior_art_schema import (
+    PriorArtJudgementSchema,
 )
 
 EMBEDDING_DIMENSIONS = 768
@@ -208,6 +220,67 @@ class StructuredRequirementRelationshipClassifierAdapter:
 
 
 class LocalRequirementRelationshipClassifier(StructuredRequirementRelationshipClassifierAdapter):
+    def __init__(
+        self,
+        *,
+        base_url: str,
+        http_client: httpx.Client,
+        model: str,
+        timeout_seconds: float,
+        reasoning_effort: str | None,
+        context_window_tokens: int,
+        max_output_tokens: int,
+        debug_trace: DebugTrace | None = None,
+    ) -> None:
+        super().__init__(
+            LocalStructuredOutputClient(
+                base_url=base_url,
+                http_client=http_client,
+                model=model,
+                timeout_seconds=timeout_seconds,
+                reasoning_effort=reasoning_effort,
+                context_window_tokens=context_window_tokens,
+                max_output_tokens=min(max_output_tokens, LOCAL_KNOWLEDGE_MAX_OUTPUT_TOKENS),
+                debug_trace=debug_trace if debug_trace is not None else NullDebugTrace(),
+            ),
+            "Local",
+        )
+
+
+class StructuredPriorArtJudge:
+    """The prior-art judge on any structured-output client (Knowledge Center E2)."""
+
+    prompt_version = PRIOR_ART_PROMPT_VERSION
+
+    def __init__(self, client: StructuredOutputClient, provider_name: str) -> None:
+        self._client = client
+        self._provider_name = provider_name
+        self.model = client.model
+
+    def judge(
+        self, title: str, subject_text: str, candidates: tuple[PriorArtCandidateInput, ...]
+    ) -> tuple[PriorArtJudgement, ...]:
+        try:
+            result = self._client.parse(
+                system_prompt=PRIOR_ART_SYSTEM_PROMPT,
+                user_prompt=prior_art_prompt(title, subject_text, candidates),
+                schema_type=PriorArtJudgementSchema,
+            )
+        except StructuredOutputError as exc:
+            raise KnowledgeGenerationError(
+                f"{self._provider_name} prior-art judgement failed: {exc}"
+            ) from exc
+        return tuple(
+            PriorArtJudgement(
+                match.candidate_number,
+                match.rationale.strip(),
+                tuple(match.cited_evidence_numbers),
+            )
+            for match in result.matches
+        )
+
+
+class LocalPriorArtJudge(StructuredPriorArtJudge):
     def __init__(
         self,
         *,

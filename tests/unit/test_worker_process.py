@@ -113,6 +113,8 @@ def test_the_container_runs_the_requirement_workers(
             "requirement_index_worker",
             "attachment_worker",
             "knowledge_event_worker",
+            "historic_event_worker",
+            "historic_index_worker",
         }
         if mapping_worker:
             expected.add("architecture_mapping_job_worker")

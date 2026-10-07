@@ -667,6 +667,8 @@ def test_container_names_every_background_worker_for_readiness() -> None:
             "workers",
             "attachment_worker",
             "knowledge_event_worker",
+            "historic_event_worker",
+            "historic_index_worker",
         }
         assert container.background_workers["workers"] is container.ai_job_worker
         # Attachments are this service's only document ingestion; the library left (ADR-0099).
@@ -839,3 +841,37 @@ class TestKnowledgeService:
             requirement_service_token=self.TOKEN,
         )
         assert connected.knowledge_api_base_url == "http://knowledge-api:8000"
+
+
+def test_prior_art_is_off_by_default_and_its_caps_are_read_from_the_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("LLM_PROVIDER", "fake")
+    settings = Settings.from_env()
+    assert settings.prior_art_enabled is False
+    assert (settings.prior_art_judge_calls_per_hour, settings.historic_embed_chunks_per_hour) == (
+        60,
+        500,
+    )
+    monkeypatch.setenv("PRIOR_ART_ENABLED", "true")
+    monkeypatch.setenv("PRIOR_ART_JUDGE_CALLS_PER_HOUR", "5")
+    monkeypatch.setenv("HISTORIC_EMBED_CHUNKS_PER_HOUR", "100")
+    settings = Settings.from_env()
+    assert settings.prior_art_enabled is True
+    assert (settings.prior_art_judge_calls_per_hour, settings.historic_embed_chunks_per_hour) == (
+        5,
+        100,
+    )
+    monkeypatch.setenv("PRIOR_ART_ENABLED", "sometimes")
+    with pytest.raises(ConfigurationError, match="PRIOR_ART_ENABLED must be true or false"):
+        Settings.from_env()
+    with pytest.raises(ConfigurationError, match="PRIOR_ART_JUDGE_CALLS_PER_HOUR"):
+        Settings(llm_provider=LLMProvider.FAKE, prior_art_judge_calls_per_hour=0)
+    with pytest.raises(ConfigurationError, match="HISTORIC_EMBED_CHUNKS_PER_HOUR"):
+        Settings(llm_provider=LLMProvider.FAKE, historic_embed_chunks_per_hour=0)
+    # Every provider has a prior-art judge.
+    container = build_container(Settings(llm_provider=LLMProvider.OPENAI, openai_api_key="sk-x"))
+    try:
+        assert container.execute_ai_job._screen_prior_art is not None  # noqa: SLF001
+    finally:
+        container.close_resources()
