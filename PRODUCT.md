@@ -15,7 +15,7 @@ Four confirmed roles work in the same application, at different points of one re
 - **Product Owner.** Consumes and approves the generated Epic → Feature → Story backlog, checks acceptance criteria and INVEST quality, and owns the export that loads into the backlog tool.
 - **Solution architect / tech lead.** Reviews impacted systems, dependencies, risks and architecture findings against the organization's landscape before approval.
 
-The application already models this as explicit per-Requirement access: exactly one **owner** and any number of **reviewers** (`AssignmentRole` in `src/smb_requirement_agent/domain/identity/entities.py`), with ownership transfer and an audited access history. The roles above are jobs people do, not a second permission system.
+The application already models this as explicit per-Requirement access: exactly one **owner** and any number of **reviewers** (`AssignmentRole` in `src/smb_requirement_agent/identity/domain/entities.py`), with ownership transfer and an audited access history. The roles above are jobs people do, not a second permission system.
 
 Because role concentration varies, **one complete information architecture serves every role**. There is no role-scoped navigation, no role-filtered menu and no role-based dashboard; per-Requirement owner/reviewer access is the only gate. That single IA is the safe superset for both org shapes (`docs/ux-plan.md` §0).
 

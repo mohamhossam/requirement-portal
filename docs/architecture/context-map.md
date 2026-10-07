@@ -92,7 +92,7 @@ Paths are relative to `src/smb_requirement_agent/`. Ports move with the use case
 | `domain/knowledge/historic.py` | `references/domain/`; its codec moves to infrastructure in PR 2, and its content-page parsing to the ACL in PR 15a |
 | `domain/knowledge/{entities,membership,prior_art}.py` | `knowledge/domain/` |
 | `domain/knowledge/errors.py` | split: `InvalidKnowledgeError` to `references/domain/`; the finding, review, retirement and membership errors to `knowledge/domain/` |
-| `domain/identity/*` | `identity/domain/` |
+| `domain/identity/*` | `identity/domain/` (done in PR 7) |
 | `domain/jobs/*` | `jobs/domain/` |
 
 ### Use cases (`application/use_cases/`)
@@ -117,7 +117,7 @@ Paths are relative to `src/smb_requirement_agent/`. Ports move with the use case
 
 | Target | Ports |
 |---|---|
-| `identity` | `access_repository`, `actor_directory`, `identity`, new `RequirementAccessPort` |
+| `identity` | `access_repository`, `actor_directory`, `identity` (in `identity/application/ports/` since PR 7), new `RequirementAccessPort` (PR 14, with `identity_access`) |
 | `jobs` | `ai_jobs`, `notifications` |
 | `requirements` | `attachment_ingestions`, `document_repository`, `requirement_draft_repository`, `requirement_repository`, `source_dependencies`, new `ScreeningRequestPort` |
 | `references` | `architecture_knowledge` (returning its own match type, F8), `embedding`, `historic_corpus`, `knowledge_events`, `knowledge_views`, `reference_publications`, the outbox and inbox ports of `knowledge_handoff`, the citation half of `reference_grounding` |
@@ -138,7 +138,7 @@ Paths are relative to `src/smb_requirement_agent/`. Ports move with the use case
 | `infrastructure/persistence/{knowledge_portfolio,postgres_requirement_knowledge}.py` | `knowledge/infrastructure/` |
 | `infrastructure/knowledge_client.py` | `references/infrastructure/` (the ACL) |
 | `infrastructure/documents/` | `requirements/infrastructure/` |
-| `infrastructure/identity/` | `identity/infrastructure/` |
+| `infrastructure/identity/`, `infrastructure/persistence/{identity_payloads,in_memory_identity}.py`, and `PostgresAccessRepository` and `PostgresActorDirectory` from `postgres_repositories.py` | `identity/infrastructure/` (done in PR 7; the PostgreSQL pair is now `postgres_identity.py`) |
 | `infrastructure/jobs/` | `jobs/infrastructure/` |
 | `infrastructure/exports/` | `governance/infrastructure/` |
 | `infrastructure/llm/` adapters for one context's port | that context's `infrastructure/llm/`; the shared transport and provider selection helpers stay in `infrastructure/llm/` |

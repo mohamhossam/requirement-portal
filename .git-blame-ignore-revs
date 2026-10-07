@@ -16,3 +16,6 @@ f664844f1490a8ca07c5d09be2441359f0b0de03
 
 # PR 6: governance rules imported from domain/review (ADR-0103).
 61e4d25142fe1848e0326a04b802e4ed2048cb07
+
+# PR 7: the identity context moved into smb_requirement_agent/identity, imports rewritten (ADR-0103).
+f54cd67a7045c2e37deb290067f0b0470a6bf673

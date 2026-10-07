@@ -1,8 +1,8 @@
 # Refactor — Bounded-context packages and domain events
 
 **Status:** ADR-0103 accepted and the slice scheduled 2026-10-07. PR 1 delivered. The PR 1
-findings were decided the same day (ADR-0103 Amendment 1). PRs 2–6 delivered; PR 7 (move
-`identity`) is next.
+findings were decided the same day (ADR-0103 Amendment 1). PRs 2–7 delivered; PR 8 (move
+`jobs`) is next.
 
 **Related:** [context map](../architecture/context-map.md),
 [ubiquitous language](../architecture/ubiquitous-language.md).
@@ -500,6 +500,73 @@ swap was reverted.
 - **Dependency report** — 201 of 201 modules, 87 crossing pairs, 21 against the order (unchanged).
   Moving code inside governance changes no crossing. The two `breakdown → governance` imports
   are `ApproveFeature`'s, until PR 12.
+
+## PR 7 — The `identity` package (2026-10-07)
+
+### Delivered
+
+**Moved with `git mv` into `smb_requirement_agent/identity/`.** The moved files changed only in
+their imports, so the move and the rewrite share one commit, which is in
+`.git-blame-ignore-revs`.
+
+| Was | Now |
+|---|---|
+| `domain/identity/{entities,errors}.py` | `identity/domain/` |
+| `application/ports/{access_repository,actor_directory,identity}.py` | `identity/application/ports/` |
+| `infrastructure/identity/fake_identity.py` | `identity/infrastructure/` |
+| `infrastructure/persistence/{identity_payloads,in_memory_identity}.py` | `identity/infrastructure/` |
+
+- **PostgreSQL adapters.** `PostgresAccessRepository` and `PostgresActorDirectory` left
+  `infrastructure/persistence/postgres_repositories.py` for the new
+  `identity/infrastructure/postgres_identity.py`. Their bodies are unchanged; this is a separate
+  commit because it edits an existing module.
+- **No shims.** Every importer in `src/` and `tests/` was rewritten in the same commit, and
+  nothing still imports the old paths.
+- **Composition.** `composition/identity.py` already has its target name, so no rename was needed.
+
+**Contracts (13 kept, up from 10).**
+- The identity modules join the existing layer, framework and adapter-selection contracts.
+- `shared_kernel_pure` now also forbids `smb_requirement_agent.identity`.
+- Three new per-context contracts:
+
+| Contract | Checks |
+|---|---|
+| `identity_internal_layers` | `infrastructure > application > domain` inside `identity` |
+| `identity_depends_on_no_other_context` | `identity` imports nothing from `domain`, `application.use_cases` or `interfaces` |
+| `identity_published_surface` | `domain`, `application` and `shared_kernel` never import `identity.infrastructure` |
+
+`identity_depends_on_no_other_context` checks direct imports only (`allow_indirect_imports`).
+Identity imports only the shared kernel and shared technical modules: `application.errors`, the
+payload helpers, `postgres_session` and `postgres_values`. Those still reach unmoved context code,
+for example `application.errors` imports context errors until F5. The exemption is removed in PR
+16, once those modules have been split.
+
+### Not moved, and why
+
+- **`identity_access`** is the access service that use cases call. It moves to `workflows` in PR
+  14 (F4), and `tests/unit/test_identity_access.py` moves with it.
+- **`RequirementAccessPort`**, which F4 has `identity` publish, is added with that move in PR 14.
+  Until then, nothing would implement or consume it.
+- **No `tests/unit/identity/` yet.** No test module covers only the identity package. The identity
+  adapters are exercised through the API and persistence tests.
+
+### Dependency report
+
+`scripts/context_dependency_report.py` gained `CONTEXT_PACKAGES`. A moved context's `domain` and
+`application` layers are classified whole, and its infrastructure is out of scope, like all other
+infrastructure. The per-module `domain.identity` and identity `PORTS` entries are gone.
+
+### Validation evidence (PR 7, local)
+
+- `pytest`: 1789 passed, 75 skipped (PostgreSQL integration tests without a database), exit 0. No
+  file under `tests/characterisation/golden/` changed.
+- `ruff check .` and `ruff format --check .`: clean.
+- `mypy src tests`: no issues in 579 source files.
+- `lint-imports`: 13 contracts kept, 0 broken.
+- **Dependency report:** 203 of 203 modules classified (the two extra are the new package
+  `__init__`s), 87 crossing pairs, 21 against the order (unchanged). One of the 21 is
+  `jobs → identity`: `leased_jobs` imports the identity port. That pair was counted before the
+  move too, because `jobs` and `identity` are unordered siblings. It is reviewed with PR 8.
 
 ## Shims
 
