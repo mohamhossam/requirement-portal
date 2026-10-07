@@ -33,9 +33,9 @@ from smb_requirement_agent.application.errors import (
 from smb_requirement_agent.application.ports.generation_guidance import EMPTY_GENERATION_GUIDANCE
 from smb_requirement_agent.application.use_cases.approval_workflow import ApprovalRecorder
 from smb_requirement_agent.application.use_cases.approve_epic import ApproveEpic
+from smb_requirement_agent.application.use_cases.approve_feature import ApproveFeature
 from smb_requirement_agent.application.use_cases.edit_epic import EditEpic, EditEpicInput
 from smb_requirement_agent.application.use_cases.feature_review import (
-    ApproveFeature,
     EditFeature,
     EditFeatureInput,
     GetFeatures,

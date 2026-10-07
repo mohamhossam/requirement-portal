@@ -27,6 +27,7 @@ from smb_requirement_agent.application.use_cases.approval_workflow import (
     RejectStory,
 )
 from smb_requirement_agent.application.use_cases.approve_epic import ApproveEpic
+from smb_requirement_agent.application.use_cases.approve_feature import ApproveFeature
 from smb_requirement_agent.application.use_cases.architecture_mapping import (
     MapBreakdownArchitecture,
     MapFeatureArchitecture,
@@ -39,11 +40,7 @@ from smb_requirement_agent.application.use_cases.breakdown_review import (
     ResolveOpenQuestion,
 )
 from smb_requirement_agent.application.use_cases.edit_epic import EditEpic
-from smb_requirement_agent.application.use_cases.feature_review import (
-    ApproveFeature,
-    EditFeature,
-    GetFeatures,
-)
+from smb_requirement_agent.application.use_cases.feature_review import EditFeature, GetFeatures
 from smb_requirement_agent.application.use_cases.generate_epic import GenerateEpic
 from smb_requirement_agent.application.use_cases.generate_features import GenerateFeatures
 from smb_requirement_agent.application.use_cases.generation_checks import GenerationChecks

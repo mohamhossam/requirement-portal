@@ -94,8 +94,7 @@ USE_CASES = {
         "edit_epic",
         "get_epic",
         "generate_features",
-        # Split in the migration: GetFeatures and EditFeature stay here, ApproveFeature moves
-        # to governance.
+        # GetFeatures and EditFeature; ApproveFeature is governance's approve_feature (PR 11).
         "feature_review",
         "story_workflow",
         "story_change_proposals",
@@ -113,6 +112,8 @@ USE_CASES = {
         "breakdown_review",
         "approval_workflow",
         "approve_epic",
+        # Split from breakdown's feature_review (PR 11).
+        "approve_feature",
         "revision_history",
         "export_breakdown",
         "knowledge_handoff",

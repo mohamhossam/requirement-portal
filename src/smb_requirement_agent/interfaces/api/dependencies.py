@@ -51,6 +51,7 @@ from smb_requirement_agent.application.use_cases.approval_workflow import (
     SubmitForReview,
 )
 from smb_requirement_agent.application.use_cases.approve_epic import ApproveEpic
+from smb_requirement_agent.application.use_cases.approve_feature import ApproveFeature
 from smb_requirement_agent.application.use_cases.architecture_mapping import (
     MapBreakdownArchitecture,
 )
@@ -71,11 +72,7 @@ from smb_requirement_agent.application.use_cases.corpus_actions import (
 )
 from smb_requirement_agent.application.use_cases.edit_epic import EditEpic
 from smb_requirement_agent.application.use_cases.export_breakdown import ExportBreakdown
-from smb_requirement_agent.application.use_cases.feature_review import (
-    ApproveFeature,
-    EditFeature,
-    GetFeatures,
-)
+from smb_requirement_agent.application.use_cases.feature_review import EditFeature, GetFeatures
 from smb_requirement_agent.application.use_cases.generate_epic import GenerateEpic
 from smb_requirement_agent.application.use_cases.generate_features import GenerateFeatures
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens

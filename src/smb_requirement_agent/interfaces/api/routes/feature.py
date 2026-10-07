@@ -10,8 +10,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Response
 
+from smb_requirement_agent.application.use_cases.approve_feature import ApproveFeature
 from smb_requirement_agent.application.use_cases.feature_review import (
-    ApproveFeature,
     EditFeature,
     EditFeatureInput,
     GetFeatures,

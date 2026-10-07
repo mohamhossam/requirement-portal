@@ -1,8 +1,8 @@
-"""Reading, editing and approving individual Features.
+"""Reading and editing individual Features.
 
-The three operations share the same lookup - resolve the requirement, its Epic,
-then one Feature scoped to that Epic - so they live together rather than
-repeating it in three modules.
+Both operations share the same lookup - resolve the requirement, its Epic, then
+one Feature scoped to that Epic. Approving a Feature uses the same lookup from
+governance's `approve_feature` (ADR-0103 PR 11).
 """
 
 from __future__ import annotations
@@ -11,7 +11,6 @@ from dataclasses import dataclass
 from enum import Enum
 
 from smb_requirement_agent.application.errors import (
-    ApprovalWorkflowNotReadyError,
     ArtifactVersionConflictError,
     EpicNotFoundError,
     FeatureNotFoundError,
@@ -22,7 +21,6 @@ from smb_requirement_agent.application.ports.domain_events import DomainEventPub
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.approval_workflow import ApprovalRecorder
 from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
@@ -41,16 +39,10 @@ from smb_requirement_agent.domain.feature.value_objects import (
     SplittingPattern,
     SplittingRationale,
 )
-from smb_requirement_agent.domain.review.fingerprints import artifact_fingerprint
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
-from smb_requirement_agent.shared_kernel.approval import (
-    ApprovalDecision,
-    ApprovalTarget,
-    ApprovalTargetKind,
-)
 from smb_requirement_agent.shared_kernel.enums import supported_values, value_of
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
@@ -68,7 +60,7 @@ class EditFeatureInput:
     expected_version: int = 1
 
 
-class _FeatureLookup:
+class FeatureLookup:
     """Shared resolution from a requirement down to one Feature."""
 
     def __init__(
@@ -102,7 +94,7 @@ class _FeatureLookup:
         return feature
 
 
-class GetFeatures(_FeatureLookup):
+class GetFeatures(FeatureLookup):
     """Returns the Feature set for a requirement's Epic, in generation order."""
 
     def execute(self, requirement_id: RequirementId) -> list[Feature]:
@@ -115,7 +107,7 @@ class GetFeatures(_FeatureLookup):
         return features
 
 
-class EditFeature(_FeatureLookup):
+class EditFeature(FeatureLookup):
     """Applies a human edit to one Feature, leaving its siblings untouched."""
 
     def __init__(
@@ -174,62 +166,6 @@ class EditFeature(_FeatureLookup):
                 FeatureChanged(requirement_id=requirement_id, feature_id=edited.id)
             )
         return edited
-
-
-class ApproveFeature(_FeatureLookup):
-    """Records a human sign-off on one Feature's current content."""
-
-    def __init__(
-        self,
-        requirement_repository: RequirementRepositoryPort,
-        epic_repository: EpicRepositoryPort,
-        feature_repository: FeatureRepositoryPort,
-        recorder: ApprovalRecorder,
-        transactions: TransactionManagerPort,
-    ) -> None:
-        super().__init__(requirement_repository, epic_repository, feature_repository)
-        self._recorder = recorder
-        self._transactions = transactions
-
-    def execute(
-        self,
-        requirement_id: RequirementId,
-        feature_id: FeatureId,
-        actor: ActorProfile,
-        expected_version: int,
-        expected_fingerprint: str,
-        rationale: str | None = None,
-    ) -> Feature:
-        feature = self._feature(requirement_id, feature_id)
-        self._recorder.require_member(requirement_id, actor)
-        fingerprint = artifact_fingerprint(feature)
-        if expected_fingerprint.strip() != fingerprint:
-            raise ApprovalWorkflowNotReadyError(
-                "The Feature changed. Reload it before approving the current content."
-            )
-        if feature.current_approval(fingerprint) is not None:
-            return feature
-        if feature.version != expected_version:
-            raise ArtifactVersionConflictError(
-                f"Feature changed from version {expected_version} to {feature.version}. Reload it."
-            )
-        with self._transactions.transaction():
-            self._transactions.lock_requirement(requirement_id)
-            if self._feature(requirement_id, feature_id) != feature:
-                raise ArtifactVersionConflictError(
-                    "Feature changed before approval could be committed. Reload it."
-                )
-            approved = feature.approve(
-                self._recorder.decision(
-                    ApprovalTarget(ApprovalTargetKind.FEATURE, feature.id.value),
-                    fingerprint,
-                    actor,
-                    ApprovalDecision.APPROVED,
-                    rationale,
-                )
-            )
-            self._features.save(approved)
-        return approved
 
 
 def _parse_drop(raw: str) -> DeliveryDrop:
