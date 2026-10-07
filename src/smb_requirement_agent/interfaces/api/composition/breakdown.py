@@ -2,6 +2,11 @@
 
 Generation, editing and approval of each level, Story quality, architecture
 mapping, and generating and answering the breakdown review.
+
+Mapping a backlog is queued requirement work: the catalogue and its matching live in
+the knowledge service (ADR-0099), and this process maps its own backlog against the
+release its local copy names, through `ArchitectureKnowledgePort`. ADR-0103 PR 11
+merged that builder, formerly `composition/architecture.py`, into this one.
 """
 
 from __future__ import annotations
@@ -13,7 +18,10 @@ from smb_kernel.time.clock import ClockPort
 from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration import (
     AnalysisCollaboration,
 )
-from smb_requirement_agent.application.ports.architecture_knowledge import ArchitectureKnowledgePort
+from smb_requirement_agent.application.ports.architecture_knowledge import (
+    ActiveArchitectureReleasePort,
+    ArchitectureKnowledgePort,
+)
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.use_cases.ai_jobs import AnalysisProgressReporter
 from smb_requirement_agent.application.use_cases.approval_workflow import (
@@ -41,6 +49,9 @@ from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping 
     MapFeatureArchitecture,
     MapStoryArchitecture,
 )
+from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping_jobs import (
+    ArchitectureMappingJobs,
+)
 from smb_requirement_agent.breakdown.application.use_cases.edit_epic import EditEpic
 from smb_requirement_agent.breakdown.application.use_cases.feature_review import (
     EditFeature,
@@ -50,6 +61,9 @@ from smb_requirement_agent.breakdown.application.use_cases.generate_epic import 
 from smb_requirement_agent.breakdown.application.use_cases.generate_features import GenerateFeatures
 from smb_requirement_agent.breakdown.application.use_cases.generation_checks import GenerationChecks
 from smb_requirement_agent.breakdown.application.use_cases.get_epic import GetEpic
+from smb_requirement_agent.breakdown.application.use_cases.leased_jobs import (
+    ArchitectureJobExecution,
+)
 from smb_requirement_agent.breakdown.application.use_cases.story_change_proposals import (
     StoryChangeProposals,
 )
@@ -69,7 +83,12 @@ from smb_requirement_agent.breakdown.application.use_cases.story_workflow import
     RegenerateStory,
     SplitStory,
 )
+from smb_requirement_agent.breakdown.infrastructure.architecture_job_worker import (
+    ArchitectureJobWorker,
+)
 from smb_requirement_agent.domain.review.policy import BreakdownReviewPolicy
+from smb_requirement_agent.infrastructure.config.options import LLMProvider
+from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
 from smb_requirement_agent.interfaces.api.composition.review import ReviewWiring
 
@@ -286,4 +305,50 @@ def build_breakdown(
             clock,
             transactions,
         ),
+    )
+
+
+@dataclass(frozen=True)
+class ArchitectureJobWiring:
+    mapping_jobs: ArchitectureMappingJobs
+    # Present only when jobs are queued; inline jobs finish inside the request.
+    mapping_worker: ArchitectureJobWorker | None
+
+
+def build_architecture_jobs(
+    settings: Settings,
+    persistence: PersistenceAdapters,
+    map_breakdown_architecture: MapBreakdownArchitecture,
+    clock: ClockPort,
+    current_release: ActiveArchitectureReleasePort,
+) -> ArchitectureJobWiring:
+    # Offline fake models complete jobs inside the starting request; real models
+    # queue them for the background worker.
+    execution = (
+        ArchitectureJobExecution.INLINE
+        if settings.llm_provider is LLMProvider.FAKE
+        else ArchitectureJobExecution.QUEUED
+    )
+    # Matching runs in the knowledge service; a mapping is current for the release
+    # it pinned and the service it asked, which these name.
+    matcher = settings.knowledge_api_base_url or "in-process"
+    mapping_jobs = ArchitectureMappingJobs(
+        persistence.mapping_job_repository,
+        current_release,
+        map_breakdown_architecture,
+        execution,
+        f"knowledge-service:{matcher}",
+        "knowledge-service:architecture-impact-v1",
+        clock,
+    )
+    return ArchitectureJobWiring(
+        mapping_jobs=mapping_jobs,
+        mapping_worker=ArchitectureJobWorker(
+            mapping_jobs,
+            poll_interval_seconds=settings.ai_job_poll_interval_seconds,
+            shutdown_grace_seconds=settings.ai_job_shutdown_grace_seconds,
+            name="architecture-mapping-jobs",
+        )
+        if execution is ArchitectureJobExecution.QUEUED
+        else None,
     )

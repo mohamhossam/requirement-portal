@@ -227,11 +227,9 @@ from smb_requirement_agent.interfaces.api.composition.analysis import (
     build_analysis_workflow,
     build_requirement_analyzer,
 )
-from smb_requirement_agent.interfaces.api.composition.architecture import (
-    build_architecture_jobs,
-)
 from smb_requirement_agent.interfaces.api.composition.breakdown import (
     BreakdownModels,
+    build_architecture_jobs,
     build_breakdown,
 )
 from smb_requirement_agent.interfaces.api.composition.events import (
