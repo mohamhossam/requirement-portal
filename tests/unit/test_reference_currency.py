@@ -25,7 +25,6 @@ from smb_requirement_agent.application.use_cases.reference_currency import (
     ProjectKnowledgeEvents,
     ReferenceCurrency,
 )
-from smb_requirement_agent.domain.document.errors import InvalidDocumentError
 from smb_requirement_agent.domain.document.reference import (
     CurrentPublication,
     ReferenceDocumentState,
@@ -44,6 +43,7 @@ from smb_requirement_agent.infrastructure.persistence.knowledge_payloads import 
 from smb_requirement_agent.infrastructure.persistence.reference_publications import (
     InMemoryReferencePublications,
 )
+from smb_requirement_agent.requirements.domain.document.errors import InvalidDocumentError
 from smb_requirement_agent.shared_kernel.citation import (
     PublishedReference,
     normalize_search,

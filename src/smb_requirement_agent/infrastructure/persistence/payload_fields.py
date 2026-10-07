@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import cast
 
-from smb_requirement_agent.domain.requirement.value_objects import RequirementContext
+from smb_requirement_agent.requirements.domain.requirement.value_objects import RequirementContext
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 type JsonObject = dict[str, object]

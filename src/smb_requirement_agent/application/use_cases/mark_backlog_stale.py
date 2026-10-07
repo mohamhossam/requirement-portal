@@ -19,7 +19,7 @@ from smb_requirement_agent.domain.epic.value_objects import EpicId
 from smb_requirement_agent.domain.feature.entities import Feature
 from smb_requirement_agent.domain.feature.events import FeatureChanged
 from smb_requirement_agent.domain.feature.value_objects import FeatureId
-from smb_requirement_agent.domain.requirement.events import RequirementRevised
+from smb_requirement_agent.requirements.domain.requirement.events import RequirementRevised
 from smb_requirement_agent.shared_kernel.staleness import StaleReason
 
 

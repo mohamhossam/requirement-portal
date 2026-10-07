@@ -23,7 +23,6 @@ from smb_requirement_agent.application.ports.story_generator import StoryCandida
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.feature.entities import Feature
-from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.story.entities import UserStory
 from smb_requirement_agent.infrastructure.llm.candidate_mappers import to_story_candidates
 from smb_requirement_agent.infrastructure.llm.prompts.story_prompt import (
@@ -34,6 +33,7 @@ from smb_requirement_agent.infrastructure.llm.prompts.story_prompt import (
     build_story_user_prompt,
 )
 from smb_requirement_agent.infrastructure.llm.schemas.story_schema import StorySetSchema
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 
 logger = logging.getLogger("smb_requirement_agent.llm.local_story")
 

@@ -24,16 +24,16 @@ from smb_requirement_agent.domain.epic.value_objects import (
     EpicName,
     EpicStatus,
 )
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementDescription,
-    RequirementStatus,
-    RequirementTitle,
-)
 from smb_requirement_agent.infrastructure.llm.openai_adapters import (
     OpenAIFeatureGenerator,
 )
 from smb_requirement_agent.infrastructure.llm.prompts.feature_prompt import PROMPT_VERSION
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.value_objects import (
+    RequirementDescription,
+    RequirementStatus,
+    RequirementTitle,
+)
 from smb_requirement_agent.shared_kernel.generation import Provenance
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 

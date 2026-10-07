@@ -14,7 +14,6 @@ from smb_requirement_agent.application.errors import ArtifactVersionConflictErro
 from smb_requirement_agent.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
-from smb_requirement_agent.application.ports.document_repository import DocumentRepositoryPort
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.external_work import guard_external_work
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
@@ -25,17 +24,22 @@ from smb_requirement_agent.application.ports.reference_grounding import (
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
-from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.ports.story_repository import (
     StoryChangeProposalRepositoryPort,
     StoryRepositoryPort,
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.domain.feature.value_objects import FeatureId
-from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.review.fingerprints import artifact_fingerprint
 from smb_requirement_agent.domain.story.value_objects import StoryId
 from smb_requirement_agent.jobs.domain.entities import AiJobOperation
+from smb_requirement_agent.requirements.application.ports.document_repository import (
+    DocumentRepositoryPort,
+)
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
+    RequirementRepositoryPort,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 CONTEXT_TOKEN_FORMAT = "generation-context-v2"

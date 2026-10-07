@@ -19,7 +19,7 @@ from smb_requirement_agent.application.ports.requirement_analyzer import (
     RequirementAnalysisCandidate,
 )
 from smb_requirement_agent.domain.analysis.value_objects import IntentProposal
-from smb_requirement_agent.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.shared_kernel.generation import Provenance
 
 

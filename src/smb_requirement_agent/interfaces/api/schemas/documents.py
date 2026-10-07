@@ -4,15 +4,15 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from smb_requirement_agent.domain.document.value_objects import (
+from smb_requirement_agent.interfaces.api.schemas.bounds import (
+    MAX_CATALOGUE_ITEMS,
+    Name,
+)
+from smb_requirement_agent.requirements.domain.document.value_objects import (
     AnalysisReadiness,
     EvidenceBlockKind,
     ExtractionStatus,
     ExtractionWarningSeverity,
-)
-from smb_requirement_agent.interfaces.api.schemas.bounds import (
-    MAX_CATALOGUE_ITEMS,
-    Name,
 )
 
 

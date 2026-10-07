@@ -12,8 +12,6 @@ from smb_requirement_agent.application.errors import (
     RequirementAnalysisConflictError,
     RequirementAnalysisGenerationError,
 )
-from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirementInput
-from smb_requirement_agent.application.use_cases.requirement_drafts import RequirementDraftInput
 from smb_requirement_agent.domain.analysis.errors import InvalidIntentProposalDecisionError
 from smb_requirement_agent.domain.analysis.value_objects import IntentProposalStatus
 from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedError
@@ -31,6 +29,12 @@ from smb_requirement_agent.infrastructure.persistence.analysis_payloads import (
 )
 from smb_requirement_agent.interfaces.api.container import Container
 from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
+    CreateRequirementInput,
+)
+from smb_requirement_agent.requirements.application.use_cases.requirement_drafts import (
+    RequirementDraftInput,
+)
 from smb_requirement_agent.shared_kernel.citation import PublishedReference
 from tests.knowledge_doubles import PublishedLibrary, container_with_library, sync
 from tests.unit.workflow_helpers import drain_requirement_index

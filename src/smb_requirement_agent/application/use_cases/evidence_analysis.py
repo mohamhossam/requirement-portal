@@ -41,7 +41,7 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     IntentProposalKind,
     QuestionChangeAction,
 )
-from smb_requirement_agent.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 
 PACKET_PROMPT_RESERVE_CHARACTERS = 12_000
 MAX_PACKET_IMAGES = 3

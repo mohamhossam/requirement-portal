@@ -16,13 +16,6 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     IntentProposalKind,
     IntentProposalStatus,
 )
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementContext,
-    RequirementDescription,
-    RequirementStatus,
-    RequirementTitle,
-)
 from smb_requirement_agent.infrastructure.llm.openai_adapters import (
     OpenAIRequirementAnalyzer,
 )
@@ -33,6 +26,13 @@ from smb_requirement_agent.infrastructure.llm.schemas.analysis_schema import (
     IntentStatementProposalSchema,
     RequirementAnalysisSchema,
     UncertaintySchema,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.value_objects import (
+    RequirementContext,
+    RequirementDescription,
+    RequirementStatus,
+    RequirementTitle,
 )
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,

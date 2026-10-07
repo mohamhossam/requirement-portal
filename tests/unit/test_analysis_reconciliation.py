@@ -22,7 +22,6 @@ from smb_requirement_agent.application.ports.requirement_analyzer import (
 )
 from smb_requirement_agent.application.use_cases.analysis_mapping import build_analysis
 from smb_requirement_agent.application.use_cases.analysis_reconciliation import reconcile_round
-from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirementInput
 from smb_requirement_agent.domain.analysis.entities import (
     ClarificationQuestion,
     RequirementAnalysis,
@@ -39,6 +38,9 @@ from smb_requirement_agent.infrastructure.llm.fake_requirement_analyzer import (
     FakeRequirementAnalyzer,
 )
 from smb_requirement_agent.interfaces.api.container import build_container
+from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
+    CreateRequirementInput,
+)
 from smb_requirement_agent.shared_kernel.generation import Provenance
 from tests.conftest import FAKE_PROVIDER_SETTINGS
 

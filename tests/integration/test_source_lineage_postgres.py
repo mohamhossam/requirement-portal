@@ -11,7 +11,6 @@ import psycopg
 import pytest
 
 from smb_requirement_agent.application.errors import ArtifactVersionConflictError
-from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirementInput
 from smb_requirement_agent.domain.analysis.value_objects import IntentProposalStatus
 from smb_requirement_agent.domain.document.lineage import ImpactDecisionKind
 from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedError
@@ -21,6 +20,9 @@ from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
 from smb_requirement_agent.interfaces.api.composition.operations import build_projection_rebuild
 from smb_requirement_agent.interfaces.api.container import build_container
+from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
+    CreateRequirementInput,
+)
 from tests.knowledge_doubles import PublishedLibrary, service_for, sync
 
 DATABASE_URL = os.getenv("TEST_DATABASE_URL")

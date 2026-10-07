@@ -20,24 +20,16 @@ from smb_requirement_agent.application.use_cases.analysis_collaboration import (
 from smb_requirement_agent.application.use_cases.analyze_requirement import AnalyzeRequirement
 from smb_requirement_agent.application.use_cases.approval_workflow import ApprovalRecorder
 from smb_requirement_agent.application.use_cases.approve_epic import ApproveEpic
-from smb_requirement_agent.application.use_cases.create_requirement import (
-    CreateRequirementInput,
-)
 from smb_requirement_agent.application.use_cases.edit_epic import EditEpic, EditEpicInput
 from smb_requirement_agent.application.use_cases.generate_epic import GenerateEpic
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.application.use_cases.get_epic import GetEpic
-from smb_requirement_agent.application.use_cases.update_requirement import (
-    UpdateRequirement,
-    UpdateRequirementInput,
-)
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.epic.errors import (
     EpicRegenerationConflictError,
     StaleEpicApprovalError,
 )
 from smb_requirement_agent.domain.epic.value_objects import EpicStatus, StaleReason
-from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.review.fingerprints import artifact_fingerprint
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
@@ -61,21 +53,29 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_reposit
 from smb_requirement_agent.infrastructure.persistence.in_memory_breakdown_review_repository import (
     InMemoryBreakdownReviewRepository,
 )
-from smb_requirement_agent.infrastructure.persistence.in_memory_document_repository import (
-    InMemoryDocumentRepository,
-)
 from smb_requirement_agent.infrastructure.persistence.in_memory_epic_repository import (
     InMemoryEpicRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_feature_repository import (
     InMemoryFeatureRepository,
 )
-from smb_requirement_agent.infrastructure.persistence.in_memory_requirement_repository import (
-    InMemoryRequirementRepository,
-)
 from smb_requirement_agent.infrastructure.persistence.in_memory_story_repository import (
     InMemoryStoryChangeProposalRepository,
     InMemoryStoryRepository,
+)
+from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
+    CreateRequirementInput,
+)
+from smb_requirement_agent.requirements.application.use_cases.update_requirement import (
+    UpdateRequirement,
+    UpdateRequirementInput,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.infrastructure.in_memory_document_repository import (
+    InMemoryDocumentRepository,
+)
+from smb_requirement_agent.requirements.infrastructure.in_memory_requirement_repository import (
+    InMemoryRequirementRepository,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.conftest import (

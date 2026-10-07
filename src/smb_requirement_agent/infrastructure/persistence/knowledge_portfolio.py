@@ -30,17 +30,17 @@ from smb_requirement_agent.application.ports.knowledge_portfolio import (
     RetiredMark,
     finding_age,
 )
-from smb_requirement_agent.application.ports.requirement_repository import (
-    RequirementRepositoryPort,
-)
 from smb_requirement_agent.domain.knowledge.entities import KnowledgeFinding
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import RequirementStatus
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 from smb_requirement_agent.infrastructure.persistence.requirement_knowledge_repository import (
     InMemoryRequirementKnowledgeStore,
 )
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
+    RequirementRepositoryPort,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.value_objects import RequirementStatus
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 _IN_FORCE = """

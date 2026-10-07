@@ -14,9 +14,9 @@ from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
 from smb_requirement_agent.domain.architecture.entities import ArchitectureImpact
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.feature.entities import Feature
-from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.review.entities import BreakdownReview
 from smb_requirement_agent.domain.story.entities import UserStory
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 
 
 def _digest(payload: object) -> str:

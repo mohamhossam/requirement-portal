@@ -67,12 +67,10 @@ from smb_requirement_agent.domain.architecture.entities import (
     SystemReference,
 )
 from smb_requirement_agent.domain.architecture.knowledge import RelationshipKind
-from smb_requirement_agent.domain.document.entities import SourceDocument, SourceDocumentVersion
 from smb_requirement_agent.domain.document.reference import (
     CurrentPublication,
     ReferenceDocumentState,
 )
-from smb_requirement_agent.domain.document.value_objects import DocumentId, ExtractionStatus
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.epic.value_objects import (
     BusinessCase,
@@ -92,14 +90,6 @@ from smb_requirement_agent.domain.feature.value_objects import (
 from smb_requirement_agent.domain.knowledge.historic import (
     HistoricPublication,
     HistoricRequirementState,
-)
-from smb_requirement_agent.domain.requirement.entities import Requirement, RequirementDraft
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementContext,
-    RequirementDescription,
-    RequirementStatus,
-    RequirementTitle,
-    RequirementVersion,
 )
 from smb_requirement_agent.domain.review.entities import (
     BreakdownReview,
@@ -150,6 +140,25 @@ from smb_requirement_agent.identity.domain.entities import (
     DraftOwnership,
     RequirementAccess,
     RequirementAssignment,
+)
+from smb_requirement_agent.requirements.domain.document.entities import (
+    SourceDocument,
+    SourceDocumentVersion,
+)
+from smb_requirement_agent.requirements.domain.document.value_objects import (
+    DocumentId,
+    ExtractionStatus,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import (
+    Requirement,
+    RequirementDraft,
+)
+from smb_requirement_agent.requirements.domain.requirement.value_objects import (
+    RequirementContext,
+    RequirementDescription,
+    RequirementStatus,
+    RequirementTitle,
+    RequirementVersion,
 )
 from smb_requirement_agent.shared_kernel.actors import ActorSnapshot
 from smb_requirement_agent.shared_kernel.approval import (

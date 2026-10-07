@@ -21,12 +21,12 @@ from psycopg.types.json import Jsonb
 from smb_kernel.persistence.connector import DirectPostgresConnector
 
 from smb_requirement_agent.application.errors import DocumentNotFoundError
-from smb_requirement_agent.domain.document.value_objects import DocumentVersionId
 from smb_requirement_agent.infrastructure.persistence import migration_runner
-from smb_requirement_agent.infrastructure.persistence.postgres_document_repository import (
+from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
+from smb_requirement_agent.requirements.domain.document.value_objects import DocumentVersionId
+from smb_requirement_agent.requirements.infrastructure.postgres_document_repository import (
     PostgresDocumentStorage,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
 
 DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 pytestmark = pytest.mark.skipif(not DATABASE_URL, reason="TEST_DATABASE_URL is not configured")

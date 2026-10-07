@@ -42,13 +42,6 @@ from smb_requirement_agent.domain.epic.value_objects import (
     EpicName,
     EpicStatus,
 )
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementContext,
-    RequirementDescription,
-    RequirementStatus,
-    RequirementTitle,
-)
 from smb_requirement_agent.infrastructure.llm.candidate_mappers import to_analysis_candidate
 from smb_requirement_agent.infrastructure.llm.local_epic_generator import LocalEpicGenerator
 from smb_requirement_agent.infrastructure.llm.local_feature_generator import LocalFeatureGenerator
@@ -74,6 +67,13 @@ from smb_requirement_agent.infrastructure.llm.schemas.epic_schema import EpicSch
 from smb_requirement_agent.infrastructure.llm.schemas.feature_schema import (
     FeatureItemSchema,
     FeatureSetSchema,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.value_objects import (
+    RequirementContext,
+    RequirementDescription,
+    RequirementStatus,
+    RequirementTitle,
 )
 from smb_requirement_agent.shared_kernel.generation import Provenance
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId

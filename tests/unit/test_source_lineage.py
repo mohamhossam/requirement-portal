@@ -9,7 +9,6 @@ from smb_requirement_agent.application.errors import (
     ArtifactVersionConflictError,
     RequirementAnalysisConflictError,
 )
-from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirementInput
 from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     RequirementKnowledgeCorpus,
 )
@@ -29,6 +28,9 @@ from smb_requirement_agent.infrastructure.persistence.backlog_payloads import (
     story_to_payload,
 )
 from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
+    CreateRequirementInput,
+)
 from tests.unit import test_reference_grounding
 from tests.unit.test_reference_grounding import Grounded
 from tests.unit.workflow_helpers import drain_requirement_index

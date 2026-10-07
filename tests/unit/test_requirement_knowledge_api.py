@@ -8,15 +8,15 @@ from dataclasses import replace
 import pytest
 from fastapi.testclient import TestClient
 
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import (
+from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
+from smb_requirement_agent.interfaces.api.container import Container, build_container
+from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.value_objects import (
     RequirementDescription,
     RequirementStatus,
     RequirementTitle,
 )
-from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
-from smb_requirement_agent.interfaces.api.container import Container, build_container
-from smb_requirement_agent.interfaces.api.main import create_app
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.conftest import FAKE_PROVIDER_SETTINGS
 from tests.unit.workflow_helpers import (

@@ -28,7 +28,6 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     QuestionChangeAction,
     QuestionId,
 )
-from smb_requirement_agent.domain.requirement.value_objects import RequirementVersion
 from smb_requirement_agent.infrastructure.persistence.analysis_payloads import (
     analysis_from_payload,
     analysis_round_from_payload,
@@ -36,6 +35,7 @@ from smb_requirement_agent.infrastructure.persistence.analysis_payloads import (
     clarification_question_from_payload,
     clarification_question_to_payload,
 )
+from smb_requirement_agent.requirements.domain.requirement.value_objects import RequirementVersion
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,

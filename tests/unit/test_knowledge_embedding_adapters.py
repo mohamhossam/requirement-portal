@@ -35,12 +35,6 @@ from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeRelationshipKind,
     KnowledgeSourceKind,
 )
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementDescription,
-    RequirementStatus,
-    RequirementTitle,
-)
 from smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters import (
     EMBEDDING_DIMENSIONS,
     LocalKnowledgeEmbedding,
@@ -53,6 +47,12 @@ from smb_requirement_agent.infrastructure.llm.schemas.knowledge_schema import (
     AnswerSuggestionSchema,
     RelationshipFindingSchema,
     RelationshipScreenSchema,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.value_objects import (
+    RequirementDescription,
+    RequirementStatus,
+    RequirementTitle,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 

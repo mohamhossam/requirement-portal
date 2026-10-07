@@ -13,7 +13,7 @@ from smb_requirement_agent.application.ports.analysis_audit_repository import (
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
-from smb_requirement_agent.domain.requirement.events import RequirementRevised
+from smb_requirement_agent.requirements.domain.requirement.events import RequirementRevised
 
 
 class DiscardAnalysis:

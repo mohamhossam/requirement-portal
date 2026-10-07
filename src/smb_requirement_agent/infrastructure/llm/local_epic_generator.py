@@ -13,7 +13,6 @@ from smb_kernel.llm.structured_output import (
 from smb_requirement_agent.application.errors import EpicGenerationError
 from smb_requirement_agent.application.ports.epic_generator import EpicCandidate
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
-from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.infrastructure.llm.candidate_mappers import to_epic_candidate
 from smb_requirement_agent.infrastructure.llm.prompts.epic_prompt import (
     EPIC_SYSTEM_PROMPT,
@@ -21,6 +20,7 @@ from smb_requirement_agent.infrastructure.llm.prompts.epic_prompt import (
     build_epic_user_prompt,
 )
 from smb_requirement_agent.infrastructure.llm.schemas.epic_schema import EpicSchema
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 
 
 class StructuredEpicGeneratorAdapter:

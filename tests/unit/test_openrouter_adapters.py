@@ -22,17 +22,17 @@ from smb_requirement_agent.application.errors import (
 )
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
 from smb_requirement_agent.domain.analysis.value_objects import KnownFact
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementDescription,
-    RequirementStatus,
-    RequirementTitle,
-)
 from smb_requirement_agent.infrastructure.llm.openrouter_adapters import OpenRouterEpicGenerator
 from smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters import (
     OpenRouterKnowledgeEmbedding,
 )
 from smb_requirement_agent.infrastructure.llm.schemas.epic_schema import EpicSchema
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.value_objects import (
+    RequirementDescription,
+    RequirementStatus,
+    RequirementTitle,
+)
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 

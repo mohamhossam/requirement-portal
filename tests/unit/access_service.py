@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from smb_kernel.time.fixed import FixedClock
 
-from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
@@ -17,11 +16,14 @@ from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACT
 from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
     InMemoryActorDirectory,
 )
-from smb_requirement_agent.infrastructure.persistence import (
-    in_memory_requirement_draft_repository as drafts,
-)
 from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_audit_repository import (
     InMemoryAnalysisAuditRepository,
+)
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
+    RequirementRepositoryPort,
+)
+from smb_requirement_agent.requirements.infrastructure import (
+    in_memory_requirement_draft_repository as drafts,
 )
 from tests.conftest import TEST_NOW
 from tests.unit.transaction_stub import NoOpTransactionManager

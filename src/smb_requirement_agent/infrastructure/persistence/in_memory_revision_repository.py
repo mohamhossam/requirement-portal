@@ -15,7 +15,6 @@ from smb_requirement_agent.application.ports.feature_repository import FeatureRe
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
-from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.ports.story_repository import StoryRepositoryPort
 from smb_requirement_agent.domain.revision.entities import (
     BreakdownRevision,
@@ -23,6 +22,9 @@ from smb_requirement_agent.domain.revision.entities import (
     RevisionNumber,
 )
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
+    RequirementRepositoryPort,
+)
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 

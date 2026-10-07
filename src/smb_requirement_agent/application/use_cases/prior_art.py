@@ -35,7 +35,6 @@ from smb_requirement_agent.application.ports.prior_art import (
     PriorArtJudgePort,
     PriorArtRepositoryPort,
 )
-from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.ai_jobs import command_fingerprint
 from smb_requirement_agent.application.use_cases.identity_access import (
@@ -55,7 +54,6 @@ from smb_requirement_agent.domain.knowledge.prior_art import (
     PriorArtStatus,
     PriorArtVerdict,
 )
-from smb_requirement_agent.domain.requirement.value_objects import RequirementStatus
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.jobs.application.ports.ai_jobs import (
     AiJobCommand,
@@ -70,6 +68,10 @@ from smb_requirement_agent.jobs.domain.entities import (
     AiJobOrigin,
     AiJobStatus,
 )
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
+    RequirementRepositoryPort,
+)
+from smb_requirement_agent.requirements.domain.requirement.value_objects import RequirementStatus
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.generation import Provenance
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId

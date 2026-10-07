@@ -30,8 +30,8 @@ from smb_requirement_agent.application.use_cases.reset_approval_workflow import 
 from smb_requirement_agent.domain.architecture.events import ArchitectureImpactChanged
 from smb_requirement_agent.domain.epic.events import EpicChanged
 from smb_requirement_agent.domain.feature.events import FeatureChanged, FeaturesReplaced
-from smb_requirement_agent.domain.requirement.events import RequirementRevised
 from smb_requirement_agent.domain.story.events import StoriesChanged
+from smb_requirement_agent.requirements.domain.requirement.events import RequirementRevised
 
 
 def subscribe_domain_event_handlers(

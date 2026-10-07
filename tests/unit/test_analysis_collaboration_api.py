@@ -22,13 +22,13 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     QuestionChangeAction,
     QuestionId,
 )
-from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.llm.fake_requirement_analyzer import (
     FakeRequirementAnalyzer,
 )
 from smb_requirement_agent.interfaces.api.container import build_container
 from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.conftest import FAKE_PROVIDER_SETTINGS, TEST_NOW
 from tests.unit.workflow_helpers import post_analysis, screen_current_knowledge

@@ -14,7 +14,6 @@ from smb_requirement_agent.application.errors import (
     NotificationNotFoundError,
     RequirementNotFoundError,
 )
-from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
@@ -38,6 +37,9 @@ from smb_requirement_agent.jobs.domain.entities import (
     NotificationPreference,
 )
 from smb_requirement_agent.jobs.domain.errors import AiJobConflictError
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
+    RequirementRepositoryPort,
+)
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,

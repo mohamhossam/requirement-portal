@@ -19,13 +19,9 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
     KnowledgeScreenSchedulerPort,
     RequirementKnowledgeRepositoryPort,
 )
-from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.use_cases.ai_jobs import command_fingerprint
 from smb_requirement_agent.domain.analysis.entities import ClarificationQuestion
 from smb_requirement_agent.domain.knowledge.errors import RequirementRetiredError
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.errors import DuplicateRequirementStateError
-from smb_requirement_agent.domain.requirement.value_objects import RequirementStatus
 from smb_requirement_agent.jobs.application.ports.ai_jobs import (
     AiJobCommand,
     AiJobRecord,
@@ -39,6 +35,14 @@ from smb_requirement_agent.jobs.domain.entities import (
     AiJobOrigin,
     AiJobStatus,
 )
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
+    RequirementRepositoryPort,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.errors import (
+    DuplicateRequirementStateError,
+)
+from smb_requirement_agent.requirements.domain.requirement.value_objects import RequirementStatus
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 

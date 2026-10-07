@@ -6,9 +6,6 @@ from smb_kernel.persistence.connector import (
     DirectPostgresConnector,
 )
 
-from smb_requirement_agent.application.ports.requirement_repository import (
-    RequirementRepositoryPort,
-)
 from smb_requirement_agent.application.ports.requirement_worklist import (
     CurrentWorklistProjectionPort,
     RequirementWorklistSnapshot,
@@ -19,13 +16,10 @@ from smb_requirement_agent.domain.analysis.entities import (
     RequirementAnalysis,
 )
 from smb_requirement_agent.domain.analysis.value_objects import AnalysisId, QuestionId
-from smb_requirement_agent.domain.document.entities import SourceDocument
-from smb_requirement_agent.domain.document.value_objects import DocumentId
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.epic.value_objects import EpicId
 from smb_requirement_agent.domain.feature.entities import Feature
 from smb_requirement_agent.domain.feature.value_objects import FeatureId
-from smb_requirement_agent.domain.requirement.entities import Requirement, RequirementDraft
 from smb_requirement_agent.domain.review.entities import BreakdownReview
 from smb_requirement_agent.domain.revision.entities import (
     BreakdownRevision,
@@ -48,9 +42,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader i
 from smb_requirement_agent.infrastructure.persistence.postgres_activity_sources import (
     PostgresActivitySources,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_document_metadata import (
-    PostgresDocumentRepository,
-)
 from smb_requirement_agent.infrastructure.persistence.postgres_repositories import (
     PostgresAnalysisAuditRepository,
     PostgresAnalysisRepository,
@@ -71,6 +62,18 @@ from smb_requirement_agent.infrastructure.persistence.postgres_snapshots import 
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
 from smb_requirement_agent.infrastructure.persistence.postgres_values import DbConnection
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
+    RequirementRepositoryPort,
+)
+from smb_requirement_agent.requirements.domain.document.entities import SourceDocument
+from smb_requirement_agent.requirements.domain.document.value_objects import DocumentId
+from smb_requirement_agent.requirements.domain.requirement.entities import (
+    Requirement,
+    RequirementDraft,
+)
+from smb_requirement_agent.requirements.infrastructure.postgres_document_metadata import (
+    PostgresDocumentRepository,
+)
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,

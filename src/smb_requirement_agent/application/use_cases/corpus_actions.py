@@ -25,9 +25,6 @@ from smb_requirement_agent.application.ports.corpus_membership import (
 from smb_requirement_agent.application.ports.requirement_knowledge import (
     RequirementKnowledgeRepositoryPort,
 )
-from smb_requirement_agent.application.ports.requirement_repository import (
-    RequirementRepositoryPort,
-)
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.requirement_indexing import IndexBacklogReader
 from smb_requirement_agent.domain.knowledge.errors import CorpusMembershipConflictError
@@ -38,8 +35,6 @@ from smb_requirement_agent.domain.knowledge.membership import (
     CorpusState,
     corpus_reason,
 )
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import RequirementStatus
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.jobs.application.ports.notifications import NotificationRepositoryPort
 from smb_requirement_agent.jobs.domain.entities import (
@@ -47,6 +42,11 @@ from smb_requirement_agent.jobs.domain.entities import (
     NotificationId,
     NotificationKind,
 )
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
+    RequirementRepositoryPort,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.value_objects import RequirementStatus
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorSnapshot,

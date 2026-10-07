@@ -7,11 +7,20 @@ from dataclasses import dataclass
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
-from smb_requirement_agent.application.ports.screening_requests import ScreeningRequestPort
-from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirement
-from smb_requirement_agent.application.use_cases.get_requirement import GetRequirement
 from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
-from smb_requirement_agent.application.use_cases.owned_requirements import (
+from smb_requirement_agent.application.use_cases.requirement_impact import (
+    PreviewRequirementImpact,
+    UpdateRequirementWithImpact,
+)
+from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
+from smb_requirement_agent.requirements.application.ports.screening_requests import (
+    ScreeningRequestPort,
+)
+from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
+    CreateRequirement,
+)
+from smb_requirement_agent.requirements.application.use_cases.get_requirement import GetRequirement
+from smb_requirement_agent.requirements.application.use_cases.owned_requirements import (
     CreateOwnedRequirement,
     CreateOwnedRequirementDraft,
     GetOwnedRequirementDraft,
@@ -19,19 +28,16 @@ from smb_requirement_agent.application.use_cases.owned_requirements import (
     PromoteOwnedRequirementDraft,
     SaveOwnedRequirementDraft,
 )
-from smb_requirement_agent.application.use_cases.requirement_drafts import (
+from smb_requirement_agent.requirements.application.use_cases.requirement_drafts import (
     CreateRequirementDraft,
     GetRequirementDraft,
     ListRequirementDrafts,
     PromoteRequirementDraft,
     SaveRequirementDraft,
 )
-from smb_requirement_agent.application.use_cases.requirement_impact import (
-    PreviewRequirementImpact,
-    UpdateRequirementWithImpact,
+from smb_requirement_agent.requirements.application.use_cases.update_requirement import (
+    UpdateRequirement,
 )
-from smb_requirement_agent.application.use_cases.update_requirement import UpdateRequirement
-from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
 
 
 @dataclass(frozen=True)

@@ -31,16 +31,16 @@ from smb_requirement_agent.domain.architecture.knowledge import (
     RelationshipKind,
     relationship_kind,
 )
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementDescription,
-    RequirementStatus,
-    RequirementTitle,
-)
 from smb_requirement_agent.domain.review.fingerprints import artifact_fingerprint
 from smb_requirement_agent.infrastructure.persistence.shared_payloads import (
     architecture_from_payload,
     architecture_to_payload,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.value_objects import (
+    RequirementDescription,
+    RequirementStatus,
+    RequirementTitle,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.unit.test_feature_domain import make_feature

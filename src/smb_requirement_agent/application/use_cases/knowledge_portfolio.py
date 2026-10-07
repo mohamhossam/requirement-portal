@@ -32,9 +32,6 @@ from smb_requirement_agent.application.ports.knowledge_portfolio import (
 from smb_requirement_agent.application.ports.requirement_knowledge import (
     RequirementKnowledgeRepositoryPort,
 )
-from smb_requirement_agent.application.ports.requirement_repository import (
-    RequirementRepositoryPort,
-)
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.requirement_indexing import IndexBacklogReader
 from smb_requirement_agent.domain.knowledge.entities import (
@@ -48,6 +45,9 @@ from smb_requirement_agent.jobs.domain.entities import (
     ActorNotification,
     NotificationId,
     NotificationKind,
+)
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
+    RequirementRepositoryPort,
 )
 from smb_requirement_agent.shared_kernel.actors import ActorId
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId

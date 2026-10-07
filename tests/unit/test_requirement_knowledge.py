@@ -17,7 +17,6 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
 from smb_requirement_agent.application.use_cases.answer_suggestions import (
     SuggestClarificationAnswers,
 )
-from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirementInput
 from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     RequirementKnowledgeCorpus,
     ScreenRequirementKnowledge,
@@ -44,13 +43,6 @@ from smb_requirement_agent.domain.knowledge.errors import (
     InvalidKnowledgeError,
     KnowledgeFindingConflictError,
 )
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.errors import DuplicateRequirementStateError
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementDescription,
-    RequirementStatus,
-    RequirementTitle,
-)
 from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedError
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import (
@@ -61,6 +53,18 @@ from smb_requirement_agent.infrastructure.persistence.requirement_knowledge_repo
 )
 from smb_requirement_agent.interfaces.api.container import Container
 from smb_requirement_agent.jobs.domain.entities import AiJobFailure
+from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
+    CreateRequirementInput,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.errors import (
+    DuplicateRequirementStateError,
+)
+from smb_requirement_agent.requirements.domain.requirement.value_objects import (
+    RequirementDescription,
+    RequirementStatus,
+    RequirementTitle,
+)
 from smb_requirement_agent.shared_kernel.actors import ActorId
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.unit.access_service import access_service_for

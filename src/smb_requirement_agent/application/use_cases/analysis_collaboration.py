@@ -40,7 +40,6 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
     AnswerSuggestionValidatorPort,
     KnowledgeScreenSchedulerPort,
 )
-from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.analysis_documents import AssembleAnalysisDocuments
 from smb_requirement_agent.application.use_cases.analysis_mapping import build_analysis
@@ -77,11 +76,14 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     IntentProposalStatus,
     QuestionId,
 )
-from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.identity.application.ports.actor_directory import ActorDirectoryPort
 from smb_requirement_agent.identity.domain.entities import RequirementAccess
 from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedError
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
+    RequirementRepositoryPort,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,

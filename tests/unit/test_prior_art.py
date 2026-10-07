@@ -23,10 +23,8 @@ from smb_requirement_agent.application.prior_art_evaluation import (
     PriorArtCase,
     evaluate_prior_art,
 )
-from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirementInput
 from smb_requirement_agent.application.use_cases.prior_art import _validated
 from smb_requirement_agent.domain.knowledge.prior_art import PriorArtStatus
-from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
@@ -36,6 +34,10 @@ from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import 
 from smb_requirement_agent.interfaces.api.container import Container
 from smb_requirement_agent.interfaces.api.main import create_app
 from smb_requirement_agent.jobs.domain.entities import AiJobOperation, AiJobStatus
+from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
+    CreateRequirementInput,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from tests.knowledge_doubles import (
     PublishedLibrary,
     container_with_library,

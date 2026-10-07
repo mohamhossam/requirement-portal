@@ -25,7 +25,6 @@ from smb_requirement_agent.application.ports.feature_repository import FeatureRe
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
-from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.ports.story_repository import (
     StoryChangeProposalRepositoryPort,
     StoryRepositoryPort,
@@ -53,6 +52,9 @@ from smb_requirement_agent.domain.feature.value_objects import (
     FeatureOutcome,
     SplittingPattern,
     SplittingRationale,
+)
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
+    RequirementRepositoryPort,
 )
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.enums import supported_values, value_of

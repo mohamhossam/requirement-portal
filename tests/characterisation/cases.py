@@ -51,27 +51,17 @@ from smb_requirement_agent.infrastructure.persistence.backlog_payloads import (
     story_proposal_to_payload,
     story_to_payload,
 )
-from smb_requirement_agent.infrastructure.persistence.document_payloads import (
-    document_from_payload,
-    document_to_payload,
-)
 from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_audit_repository import (
     InMemoryAnalysisAuditRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_repository import (
     InMemoryRequirementAnalysisRepository,
 )
-from smb_requirement_agent.infrastructure.persistence.in_memory_document_repository import (
-    InMemoryDocumentRepository,
-)
 from smb_requirement_agent.infrastructure.persistence.in_memory_epic_repository import (
     InMemoryEpicRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_feature_repository import (
     InMemoryFeatureRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_requirement_repository import (
-    InMemoryRequirementRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_story_repository import (
     InMemoryStoryChangeProposalRepository,
@@ -86,15 +76,25 @@ from smb_requirement_agent.infrastructure.persistence.knowledge_payloads import 
     reference_document_state_from_payload,
     reference_document_state_to_payload,
 )
-from smb_requirement_agent.infrastructure.persistence.requirement_snapshot import (
+from smb_requirement_agent.infrastructure.persistence.review_payloads import (
+    review_from_payload,
+    review_to_payload,
+)
+from smb_requirement_agent.requirements.infrastructure.document_payloads import (
+    document_from_payload,
+    document_to_payload,
+)
+from smb_requirement_agent.requirements.infrastructure.in_memory_document_repository import (
+    InMemoryDocumentRepository,
+)
+from smb_requirement_agent.requirements.infrastructure.in_memory_requirement_repository import (
+    InMemoryRequirementRepository,
+)
+from smb_requirement_agent.requirements.infrastructure.requirement_snapshot import (
     requirement_draft_from_payload,
     requirement_draft_to_payload,
     requirement_from_payload,
     requirement_to_payload,
-)
-from smb_requirement_agent.infrastructure.persistence.review_payloads import (
-    review_from_payload,
-    review_to_payload,
 )
 from smb_requirement_agent.shared_kernel.citation import PublishedReference
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId

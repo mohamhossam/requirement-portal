@@ -11,11 +11,11 @@ from smb_kernel.persistence.connector import PostgresConnector
 from smb_requirement_agent.application.errors import PersistenceError
 from smb_requirement_agent.application.ports.corpus_membership import CorpusMembershipPort
 from smb_requirement_agent.application.ports.corpus_summary import CorpusCounts
-from smb_requirement_agent.application.ports.requirement_repository import (
+from smb_requirement_agent.domain.knowledge.entities import KnowledgeFinding
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )
-from smb_requirement_agent.domain.knowledge.entities import KnowledgeFinding
-from smb_requirement_agent.domain.requirement.value_objects import RequirementStatus
+from smb_requirement_agent.requirements.domain.requirement.value_objects import RequirementStatus
 
 _REQUIREMENTS = """
 SELECT count(*), count(*) FILTER (WHERE payload->>'status' = 'duplicate'),

@@ -29,13 +29,13 @@ from smb_requirement_agent.application.use_cases.story_quality import (
 )
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
 from smb_requirement_agent.domain.feature.entities import Feature
-from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.story.entities import UserStory
 from smb_requirement_agent.domain.story.quality import (
     FeatureQualitySnapshot,
     InvestCriterion,
     StoryQualityEvidence,
 )
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 

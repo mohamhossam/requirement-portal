@@ -31,7 +31,6 @@ from smb_requirement_agent.application.ports.reference_grounding import Referenc
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
-from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.ports.story_quality_repository import (
     StoryQualityRepositoryPort,
 )
@@ -53,7 +52,6 @@ from smb_requirement_agent.domain.analysis.entities import (
 )
 from smb_requirement_agent.domain.analysis.value_objects import QuestionId
 from smb_requirement_agent.domain.feature.entities import Feature
-from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.review.entities import (
     BreakdownReview,
     Decision,
@@ -77,6 +75,10 @@ from smb_requirement_agent.domain.story.quality import (
     InvestAssessment,
     StoryQualityEvidence,
 )
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
+    RequirementRepositoryPort,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 

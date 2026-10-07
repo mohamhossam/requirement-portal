@@ -13,13 +13,15 @@ from urllib.parse import quote
 import psycopg
 import pytest
 
-from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirementInput
 from smb_requirement_agent.application.use_cases.internal_reads import OpenFindingAges
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.config.options import LLMProvider, PersistenceProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
 from smb_requirement_agent.interfaces.api.container import build_container
+from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
+    CreateRequirementInput,
+)
 from tests.unit.workflow_helpers import drain_requirement_index
 
 DATABASE_URL = os.getenv("TEST_DATABASE_URL")

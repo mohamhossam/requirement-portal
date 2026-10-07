@@ -19,7 +19,6 @@ from smb_requirement_agent.application.ports.generation_guidance import Generati
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
-from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.ports.story_generator import (
     StoryGeneratorPort,
 )
@@ -62,6 +61,9 @@ from smb_requirement_agent.domain.story.quality import FeatureQualitySnapshot, S
 from smb_requirement_agent.domain.story.value_objects import (
     StoryId,
     StoryProposalId,
+)
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
+    RequirementRepositoryPort,
 )
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId

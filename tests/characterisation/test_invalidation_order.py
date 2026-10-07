@@ -21,7 +21,6 @@ from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.epic.events import EpicChanged
 from smb_requirement_agent.domain.feature.entities import Feature
 from smb_requirement_agent.domain.feature.events import FeatureChanged, FeaturesReplaced
-from smb_requirement_agent.domain.requirement.events import RequirementRevised
 from smb_requirement_agent.domain.review.entities import BreakdownReview
 from smb_requirement_agent.domain.story.entities import UserStory
 from smb_requirement_agent.domain.story.events import StoriesChanged
@@ -49,6 +48,7 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_transaction impo
 from smb_requirement_agent.interfaces.api.composition.events import (
     subscribe_domain_event_handlers,
 )
+from smb_requirement_agent.requirements.domain.requirement.events import RequirementRevised
 from smb_requirement_agent.shared_kernel.events import DomainEvent
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.characterisation import samples

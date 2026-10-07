@@ -17,8 +17,13 @@ from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.use_cases.analysis_documents import AssembleAnalysisDocuments
-from smb_requirement_agent.application.use_cases.attachment_ingestion import AttachmentIngestion
-from smb_requirement_agent.application.use_cases.documents import (
+from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
+from smb_requirement_agent.infrastructure.config.settings import Settings
+from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
+from smb_requirement_agent.requirements.application.use_cases.attachment_ingestion import (
+    AttachmentIngestion,
+)
+from smb_requirement_agent.requirements.application.use_cases.documents import (
     GetDocument,
     ListDocuments,
     RemoveDocument,
@@ -26,12 +31,9 @@ from smb_requirement_agent.application.use_cases.documents import (
     SetHiddenWorksheetInclusion,
     UploadDocument,
 )
-from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
-from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.documents.attachment_worker import (
+from smb_requirement_agent.requirements.infrastructure.attachment_worker import (
     AttachmentIngestionWorker,
 )
-from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
 
 # Library sources are extracted one at a time in the background, so they get a
 # far larger allowance than a request-time attachment.

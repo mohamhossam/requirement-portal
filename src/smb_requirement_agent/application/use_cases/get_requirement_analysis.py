@@ -7,8 +7,10 @@ from smb_requirement_agent.application.errors import (
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
-from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
+    RequirementRepositoryPort,
+)
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 

@@ -44,7 +44,6 @@ from smb_requirement_agent.application.use_cases.architecture_mapping import (
 from smb_requirement_agent.application.use_cases.architecture_mapping_jobs import (
     ArchitectureMappingJobs,
 )
-from smb_requirement_agent.application.use_cases.attachment_ingestion import AttachmentIngestion
 from smb_requirement_agent.application.use_cases.breakdown_review import (
     GenerateBreakdownReview,
     GetBreakdownReview,
@@ -63,14 +62,6 @@ from smb_requirement_agent.application.use_cases.corpus_actions import (
     ReinstateToCorpus,
     RetireFromCorpus,
 )
-from smb_requirement_agent.application.use_cases.documents import (
-    GetDocument,
-    ListDocuments,
-    RemoveDocument,
-    SetDocumentInclusion,
-    SetHiddenWorksheetInclusion,
-    UploadDocument,
-)
 from smb_requirement_agent.application.use_cases.edit_epic import EditEpic
 from smb_requirement_agent.application.use_cases.export_breakdown import ExportBreakdown
 from smb_requirement_agent.application.use_cases.feature_review import (
@@ -82,7 +73,6 @@ from smb_requirement_agent.application.use_cases.generate_epic import GenerateEp
 from smb_requirement_agent.application.use_cases.generate_features import GenerateFeatures
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.application.use_cases.get_epic import GetEpic
-from smb_requirement_agent.application.use_cases.get_requirement import GetRequirement
 from smb_requirement_agent.application.use_cases.get_requirement_analysis import (
     GetRequirementAnalysis,
 )
@@ -96,14 +86,6 @@ from smb_requirement_agent.application.use_cases.knowledge_portfolio import (
     NudgeFindingOwners,
 )
 from smb_requirement_agent.application.use_cases.knowledge_views import KnowledgeViews
-from smb_requirement_agent.application.use_cases.owned_requirements import (
-    CreateOwnedRequirement,
-    CreateOwnedRequirementDraft,
-    GetOwnedRequirementDraft,
-    ListOwnedRequirementDrafts,
-    PromoteOwnedRequirementDraft,
-    SaveOwnedRequirementDraft,
-)
 from smb_requirement_agent.application.use_cases.prior_art import GetPriorArt, HistoricCitations
 from smb_requirement_agent.application.use_cases.reference_currency import (
     CurrentArchitectureRelease,
@@ -152,6 +134,26 @@ from smb_requirement_agent.identity.application.ports.identity import Actor
 from smb_requirement_agent.infrastructure.config.options import IdentityProvider
 from smb_requirement_agent.interfaces.api.container import Container
 from smb_requirement_agent.interfaces.api.error_handlers import status_code_for
+from smb_requirement_agent.requirements.application.use_cases.attachment_ingestion import (
+    AttachmentIngestion,
+)
+from smb_requirement_agent.requirements.application.use_cases.documents import (
+    GetDocument,
+    ListDocuments,
+    RemoveDocument,
+    SetDocumentInclusion,
+    SetHiddenWorksheetInclusion,
+    UploadDocument,
+)
+from smb_requirement_agent.requirements.application.use_cases.get_requirement import GetRequirement
+from smb_requirement_agent.requirements.application.use_cases.owned_requirements import (
+    CreateOwnedRequirement,
+    CreateOwnedRequirementDraft,
+    GetOwnedRequirementDraft,
+    ListOwnedRequirementDrafts,
+    PromoteOwnedRequirementDraft,
+    SaveOwnedRequirementDraft,
+)
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 
 

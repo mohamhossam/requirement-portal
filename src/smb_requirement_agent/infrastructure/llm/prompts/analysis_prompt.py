@@ -7,7 +7,7 @@ from smb_requirement_agent.application.ports.requirement_analyzer import (
     ActiveQuestionContext,
     AnalysisDocumentContext,
 )
-from smb_requirement_agent.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 
 PROMPT_VERSION = "analysis-v24-citation-business-context"
 

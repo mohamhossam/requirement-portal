@@ -31,12 +31,6 @@ from smb_requirement_agent.domain.architecture.entities import (
     SystemReference,
 )
 from smb_requirement_agent.domain.architecture.errors import InvalidArchitectureContentError
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementDescription,
-    RequirementStatus,
-    RequirementTitle,
-)
 from smb_requirement_agent.domain.review.fingerprints import artifact_fingerprint
 from smb_requirement_agent.infrastructure.exports.json_exporter import JsonBacklogExporter
 from smb_requirement_agent.infrastructure.exports.xlsx_exporter import XlsxBacklogExporter
@@ -44,6 +38,12 @@ from smb_requirement_agent.infrastructure.llm.prompts.generation_guidance import
 from smb_requirement_agent.infrastructure.persistence.shared_payloads import (
     architecture_from_payload,
     architecture_to_payload,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.value_objects import (
+    RequirementDescription,
+    RequirementStatus,
+    RequirementTitle,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.unit.test_backlog_export import _document

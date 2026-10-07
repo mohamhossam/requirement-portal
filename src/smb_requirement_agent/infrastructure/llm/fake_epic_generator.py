@@ -5,7 +5,7 @@ from __future__ import annotations
 from smb_requirement_agent.application.errors import EpicGenerationError
 from smb_requirement_agent.application.ports.epic_generator import EpicCandidate
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
-from smb_requirement_agent.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 
 FAKE_MODEL = "fake"
 FAKE_PROMPT_VERSION = "fake-epic-v1"

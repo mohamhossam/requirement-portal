@@ -27,7 +27,6 @@ from smb_requirement_agent.application.ports.feature_repository import FeatureRe
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
-from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.ports.story_generator import (
     StoryCandidate,
     StoryGeneratorPort,
@@ -48,7 +47,6 @@ from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.feature.entities import Feature
 from smb_requirement_agent.domain.feature.value_objects import FeatureId
-from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.story.entities import (
     StoryDraft,
     UserStory,
@@ -68,6 +66,10 @@ from smb_requirement_agent.domain.story.value_objects import (
     StoryId,
     UserRole,
 )
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
+    RequirementRepositoryPort,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.generation import GenerationStatus, Provenance
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId

@@ -21,7 +21,6 @@ from smb_requirement_agent.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
 from smb_requirement_agent.application.ports.corpus_membership import CorpusMembershipPort
-from smb_requirement_agent.application.ports.document_repository import DocumentRepositoryPort
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
@@ -34,7 +33,6 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
     RequirementKnowledgeRepositoryPort,
     RequirementRelationshipClassifierPort,
 )
-from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
@@ -65,12 +63,20 @@ from smb_requirement_agent.domain.knowledge.errors import (
     RequirementRetiredError,
 )
 from smb_requirement_agent.domain.knowledge.membership import CorpusMembership
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.errors import DuplicateRequirementStateError
-from smb_requirement_agent.domain.requirement.value_objects import RequirementStatus
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.identity.domain.entities import RequirementAccess
 from smb_requirement_agent.jobs.domain.entities import AiJobOperation
+from smb_requirement_agent.requirements.application.ports.document_repository import (
+    DocumentRepositoryPort,
+)
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
+    RequirementRepositoryPort,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.errors import (
+    DuplicateRequirementStateError,
+)
+from smb_requirement_agent.requirements.domain.requirement.value_objects import RequirementStatus
 from smb_requirement_agent.shared_kernel.actors import (
     ActorProfile,
     ActorSnapshot,

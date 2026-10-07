@@ -36,10 +36,10 @@ from smb_requirement_agent.infrastructure.persistence.postgres_values import (
     _payload,
     _string,
 )
-from smb_requirement_agent.infrastructure.persistence.requirement_snapshot import (
+from smb_requirement_agent.infrastructure.persistence.review_payloads import review_from_payload
+from smb_requirement_agent.requirements.infrastructure.requirement_snapshot import (
     requirement_from_payload,
 )
-from smb_requirement_agent.infrastructure.persistence.review_payloads import review_from_payload
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 

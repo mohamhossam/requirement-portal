@@ -8,12 +8,12 @@ from threading import RLock
 import pytest
 
 from smb_requirement_agent.application.events import InProcessEventDispatcher
-from smb_requirement_agent.domain.requirement.events import RequirementRevised
-from smb_requirement_agent.infrastructure.persistence.in_memory_requirement_repository import (
-    InMemoryRequirementRepository,
-)
 from smb_requirement_agent.infrastructure.persistence.in_memory_transaction import (
     InMemoryTransactionManager,
+)
+from smb_requirement_agent.requirements.domain.requirement.events import RequirementRevised
+from smb_requirement_agent.requirements.infrastructure.in_memory_requirement_repository import (
+    InMemoryRequirementRepository,
 )
 from smb_requirement_agent.shared_kernel.events import DomainEvent
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId

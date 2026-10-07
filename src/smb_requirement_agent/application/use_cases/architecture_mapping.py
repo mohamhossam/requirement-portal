@@ -25,7 +25,6 @@ from smb_requirement_agent.application.ports.feature_repository import FeatureRe
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
-from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.ports.story_repository import StoryRepositoryPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.identity_access import (
@@ -35,8 +34,11 @@ from smb_requirement_agent.application.use_cases.identity_access import (
 from smb_requirement_agent.domain.architecture.entities import ArchitectureImpact
 from smb_requirement_agent.domain.architecture.events import ArchitectureImpactChanged
 from smb_requirement_agent.domain.feature.entities import Feature
-from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.domain.story.entities import UserStory
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
+    RequirementRepositoryPort,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 

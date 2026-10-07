@@ -34,7 +34,7 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     QuestionChangeAction,
     QuestionId,
 )
-from smb_requirement_agent.domain.requirement.value_objects import RequirementVersion
+from smb_requirement_agent.requirements.domain.requirement.value_objects import RequirementVersion
 from smb_requirement_agent.shared_kernel.actions import ActionAvailability
 from smb_requirement_agent.shared_kernel.actors import (
     ActorProfile,

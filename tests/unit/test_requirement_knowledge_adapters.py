@@ -26,12 +26,6 @@ from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeMatch,
     KnowledgeSourceKind,
 )
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementDescription,
-    RequirementStatus,
-    RequirementTitle,
-)
 from smb_requirement_agent.infrastructure.llm.prompts.knowledge_prompt import (
     SUGGESTION_SYSTEM_PROMPT,
     suggestion_prompt,
@@ -43,6 +37,12 @@ from smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters imp
 from smb_requirement_agent.infrastructure.llm.schemas.knowledge_schema import (
     AnswerSuggestionListSchema,
     AnswerSuggestionSchema,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.value_objects import (
+    RequirementDescription,
+    RequirementStatus,
+    RequirementTitle,
 )
 from smb_requirement_agent.shared_kernel.citation import PublishedReference
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId

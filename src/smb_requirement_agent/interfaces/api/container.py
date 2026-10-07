@@ -32,7 +32,6 @@ from smb_requirement_agent.application.ports.breakdown_repository import Breakdo
 from smb_requirement_agent.application.ports.breakdown_review_repository import (
     BreakdownReviewRepositoryPort,
 )
-from smb_requirement_agent.application.ports.document_repository import DocumentRepositoryPort
 from smb_requirement_agent.application.ports.epic_generator import EpicGeneratorPort
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_generator import FeatureGeneratorPort
@@ -47,9 +46,6 @@ from smb_requirement_agent.application.ports.requirement_analysis_repository imp
     RequirementAnalysisRepositoryPort,
 )
 from smb_requirement_agent.application.ports.requirement_analyzer import RequirementAnalyzerPort
-from smb_requirement_agent.application.ports.requirement_draft_repository import (
-    RequirementDraftRepositoryPort,
-)
 from smb_requirement_agent.application.ports.requirement_evidence_analyzer import (
     EvidenceFragmentCachePort,
 )
@@ -57,7 +53,6 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
     RequirementKnowledgeIndexPort,
     RequirementKnowledgeRepositoryPort,
 )
-from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.ports.requirement_worklist import (
     CurrentWorklistProjectionPort,
 )
@@ -111,7 +106,6 @@ from smb_requirement_agent.application.use_cases.architecture_mapping import (
 from smb_requirement_agent.application.use_cases.architecture_mapping_jobs import (
     ArchitectureMappingJobs,
 )
-from smb_requirement_agent.application.use_cases.attachment_ingestion import AttachmentIngestion
 from smb_requirement_agent.application.use_cases.breakdown_review import (
     GenerateBreakdownReview,
     GetBreakdownReview,
@@ -130,14 +124,6 @@ from smb_requirement_agent.application.use_cases.corpus_actions import (
     ReinstateToCorpus,
     RetireFromCorpus,
 )
-from smb_requirement_agent.application.use_cases.documents import (
-    GetDocument,
-    ListDocuments,
-    RemoveDocument,
-    SetDocumentInclusion,
-    SetHiddenWorksheetInclusion,
-    UploadDocument,
-)
 from smb_requirement_agent.application.use_cases.edit_epic import EditEpic
 from smb_requirement_agent.application.use_cases.export_breakdown import ExportBreakdown
 from smb_requirement_agent.application.use_cases.feature_review import (
@@ -149,7 +135,6 @@ from smb_requirement_agent.application.use_cases.generate_epic import GenerateEp
 from smb_requirement_agent.application.use_cases.generate_features import GenerateFeatures
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.application.use_cases.get_epic import GetEpic
-from smb_requirement_agent.application.use_cases.get_requirement import GetRequirement
 from smb_requirement_agent.application.use_cases.get_requirement_analysis import (
     GetRequirementAnalysis,
 )
@@ -168,14 +153,6 @@ from smb_requirement_agent.application.use_cases.knowledge_portfolio import (
     NudgeFindingOwners,
 )
 from smb_requirement_agent.application.use_cases.knowledge_views import KnowledgeViews
-from smb_requirement_agent.application.use_cases.owned_requirements import (
-    CreateOwnedRequirement,
-    CreateOwnedRequirementDraft,
-    GetOwnedRequirementDraft,
-    ListOwnedRequirementDrafts,
-    PromoteOwnedRequirementDraft,
-    SaveOwnedRequirementDraft,
-)
 from smb_requirement_agent.application.use_cases.prior_art import GetPriorArt, HistoricCitations
 from smb_requirement_agent.application.use_cases.rebuild_knowledge_index import (
     RebuildKnowledgeIndex,
@@ -233,9 +210,6 @@ from smb_requirement_agent.identity.application.ports.actor_directory import Act
 from smb_requirement_agent.infrastructure.config.settings import (
     Settings,
 )
-from smb_requirement_agent.infrastructure.documents.attachment_worker import (
-    AttachmentIngestionWorker,
-)
 from smb_requirement_agent.infrastructure.exports.json_exporter import JsonBacklogExporter
 from smb_requirement_agent.infrastructure.exports.xlsx_exporter import XlsxBacklogExporter
 from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import (
@@ -276,6 +250,38 @@ from smb_requirement_agent.jobs.application.ports.ai_jobs import (
 from smb_requirement_agent.jobs.application.ports.notifications import NotificationRepositoryPort
 from smb_requirement_agent.jobs.application.use_cases.provider_call_rate import (
     ProviderCallRateLimit,
+)
+from smb_requirement_agent.requirements.application.ports.document_repository import (
+    DocumentRepositoryPort,
+)
+from smb_requirement_agent.requirements.application.ports.requirement_draft_repository import (
+    RequirementDraftRepositoryPort,
+)
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
+    RequirementRepositoryPort,
+)
+from smb_requirement_agent.requirements.application.use_cases.attachment_ingestion import (
+    AttachmentIngestion,
+)
+from smb_requirement_agent.requirements.application.use_cases.documents import (
+    GetDocument,
+    ListDocuments,
+    RemoveDocument,
+    SetDocumentInclusion,
+    SetHiddenWorksheetInclusion,
+    UploadDocument,
+)
+from smb_requirement_agent.requirements.application.use_cases.get_requirement import GetRequirement
+from smb_requirement_agent.requirements.application.use_cases.owned_requirements import (
+    CreateOwnedRequirement,
+    CreateOwnedRequirementDraft,
+    GetOwnedRequirementDraft,
+    ListOwnedRequirementDrafts,
+    PromoteOwnedRequirementDraft,
+    SaveOwnedRequirementDraft,
+)
+from smb_requirement_agent.requirements.infrastructure.attachment_worker import (
+    AttachmentIngestionWorker,
 )
 
 

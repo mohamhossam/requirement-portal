@@ -12,7 +12,6 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
-from smb_requirement_agent.domain.document.errors import InvalidDocumentError
 from smb_requirement_agent.domain.document.reference import (
     CurrentPublication,
     ReferenceDocumentState,
@@ -22,6 +21,7 @@ from smb_requirement_agent.domain.knowledge.historic import (
     HistoricPublication,
     HistoricRequirementState,
 )
+from smb_requirement_agent.requirements.domain.document.errors import InvalidDocumentError
 
 
 def reference_document_state_to_payload(state: ReferenceDocumentState) -> dict[str, object]:

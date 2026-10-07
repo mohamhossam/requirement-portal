@@ -21,9 +21,12 @@ import pytest
 from psycopg.types.json import Jsonb
 from pydantic import TypeAdapter
 
-from smb_requirement_agent.domain.document.attachment import AttachmentFile, AttachmentUpload
-from smb_requirement_agent.domain.document.ingestion import IngestionStage
 from smb_requirement_agent.infrastructure.persistence import migration_runner
+from smb_requirement_agent.requirements.domain.document.attachment import (
+    AttachmentFile,
+    AttachmentUpload,
+)
+from smb_requirement_agent.requirements.domain.document.ingestion import IngestionStage
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorSnapshot,

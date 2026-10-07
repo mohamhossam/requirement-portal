@@ -10,13 +10,15 @@ from smb_requirement_agent.application.ports.requirement_worklist import (
     RequirementWorklistSnapshot,
     RequirementWorklistSnapshotPort,
 )
-from smb_requirement_agent.application.ports.screening_requests import ScreeningRequestPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.update_requirement import (
+from smb_requirement_agent.requirements.application.ports.screening_requests import (
+    ScreeningRequestPort,
+)
+from smb_requirement_agent.requirements.application.use_cases.update_requirement import (
     UpdateRequirement,
     UpdateRequirementInput,
 )
-from smb_requirement_agent.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 

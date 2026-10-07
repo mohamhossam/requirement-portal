@@ -10,7 +10,7 @@ from smb_requirement_agent.application.ports.generation_guidance import (
 )
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
 from smb_requirement_agent.domain.epic.entities import Epic
-from smb_requirement_agent.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 
 FAKE_MODEL = "fake"
 FAKE_PROMPT_VERSION = "fake-feature-v1"

@@ -12,12 +12,6 @@ from smb_requirement_agent.application.errors import (
     RequirementAnalysisConflictError,
     RequirementVersionConflictError,
 )
-from smb_requirement_agent.application.ports.requirement_draft_repository import (
-    RequirementDraftRepositoryPort,
-)
-from smb_requirement_agent.application.ports.requirement_repository import (
-    RequirementRepositoryPort,
-)
 from smb_requirement_agent.domain.analysis.entities import (
     AnalysisRound,
     ClarificationQuestion,
@@ -32,7 +26,6 @@ from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.epic.value_objects import EpicId
 from smb_requirement_agent.domain.feature.entities import Feature
 from smb_requirement_agent.domain.feature.value_objects import FeatureId
-from smb_requirement_agent.domain.requirement.entities import Requirement, RequirementDraft
 from smb_requirement_agent.domain.review.entities import BreakdownReview
 from smb_requirement_agent.domain.story.entities import StoryChangeProposal, UserStory
 from smb_requirement_agent.domain.story.value_objects import StoryId, StoryProposalId
@@ -61,15 +54,25 @@ from smb_requirement_agent.infrastructure.persistence.postgres_values import (
     requirement_id_for_epic,
     requirement_id_for_feature,
 )
-from smb_requirement_agent.infrastructure.persistence.requirement_snapshot import (
+from smb_requirement_agent.infrastructure.persistence.review_payloads import (
+    review_from_payload,
+    review_to_payload,
+)
+from smb_requirement_agent.requirements.application.ports.requirement_draft_repository import (
+    RequirementDraftRepositoryPort,
+)
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
+    RequirementRepositoryPort,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import (
+    Requirement,
+    RequirementDraft,
+)
+from smb_requirement_agent.requirements.infrastructure.requirement_snapshot import (
     requirement_draft_from_payload,
     requirement_draft_to_payload,
     requirement_from_payload,
     requirement_to_payload,
-)
-from smb_requirement_agent.infrastructure.persistence.review_payloads import (
-    review_from_payload,
-    review_to_payload,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 

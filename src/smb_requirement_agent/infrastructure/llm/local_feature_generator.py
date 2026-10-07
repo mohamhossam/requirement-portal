@@ -18,7 +18,6 @@ from smb_requirement_agent.application.ports.generation_guidance import (
 )
 from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
 from smb_requirement_agent.domain.epic.entities import Epic
-from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.infrastructure.llm.candidate_mappers import to_feature_candidates
 from smb_requirement_agent.infrastructure.llm.prompts.feature_prompt import (
     FEATURE_SYSTEM_PROMPT,
@@ -26,6 +25,7 @@ from smb_requirement_agent.infrastructure.llm.prompts.feature_prompt import (
     build_feature_user_prompt,
 )
 from smb_requirement_agent.infrastructure.llm.schemas.feature_schema import FeatureSetSchema
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 
 
 class StructuredFeatureGeneratorAdapter:

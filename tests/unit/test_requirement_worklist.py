@@ -42,12 +42,6 @@ from smb_requirement_agent.domain.feature.value_objects import (
     SplittingPattern,
     SplittingRationale,
 )
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementDescription,
-    RequirementStatus,
-    RequirementTitle,
-)
 from smb_requirement_agent.domain.review.entities import BreakdownReview, BreakdownStatus
 from smb_requirement_agent.domain.review.evidence import (
     ReviewEvidence,
@@ -81,9 +75,6 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_epic_repository 
 from smb_requirement_agent.infrastructure.persistence.in_memory_feature_repository import (
     InMemoryFeatureRepository,
 )
-from smb_requirement_agent.infrastructure.persistence.in_memory_requirement_repository import (
-    InMemoryRequirementRepository,
-)
 from smb_requirement_agent.infrastructure.persistence.in_memory_revision_repository import (
     InMemoryRevisionRepository,
 )
@@ -95,6 +86,15 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_worklist import 
 )
 from smb_requirement_agent.jobs.domain.entities import AiJobOperation
 from smb_requirement_agent.jobs.infrastructure.in_memory_ai_jobs import InMemoryAiJobStore
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.value_objects import (
+    RequirementDescription,
+    RequirementStatus,
+    RequirementTitle,
+)
+from smb_requirement_agent.requirements.infrastructure.in_memory_requirement_repository import (
+    InMemoryRequirementRepository,
+)
 from smb_requirement_agent.shared_kernel.generation import GenerationStatus, Provenance
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from smb_requirement_agent.shared_kernel.staleness import Staleness, StaleReason

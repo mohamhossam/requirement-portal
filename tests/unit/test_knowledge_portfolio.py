@@ -21,13 +21,15 @@ from smb_requirement_agent.application.ports.knowledge_portfolio import (
     IndexState,
     PersonName,
 )
-from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirementInput
 from smb_requirement_agent.domain.knowledge.entities import KnowledgeRelationshipKind
 from smb_requirement_agent.domain.knowledge.errors import KnowledgeFindingConflictError
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.interfaces.api.main import create_app
 from smb_requirement_agent.jobs.domain.entities import NotificationKind
+from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
+    CreateRequirementInput,
+)
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,

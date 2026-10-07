@@ -77,15 +77,6 @@ from smb_requirement_agent.domain.architecture.entities import (
     SystemCapability,
     SystemReference,
 )
-from smb_requirement_agent.domain.document.entities import (
-    SourceDocument,
-    SourceDocumentVersion,
-)
-from smb_requirement_agent.domain.document.value_objects import (
-    DocumentId,
-    DocumentVersionId,
-    ExtractionStatus,
-)
 from smb_requirement_agent.domain.epic.entities import Epic
 from smb_requirement_agent.domain.epic.value_objects import (
     BusinessCase,
@@ -119,13 +110,6 @@ from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeScreenId,
     KnowledgeSourceKind,
     RelationshipEvidence,
-)
-from smb_requirement_agent.domain.requirement.entities import Requirement, RequirementDraft
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementDescription,
-    RequirementStatus,
-    RequirementTitle,
-    RequirementVersion,
 )
 from smb_requirement_agent.domain.review.entities import (
     BreakdownReview,
@@ -167,10 +151,6 @@ from smb_requirement_agent.infrastructure.llm.fake_requirement_analyzer import (
     FakeRequirementAnalyzer,
 )
 from smb_requirement_agent.infrastructure.persistence.backfill_document_blobs import backfill
-from smb_requirement_agent.infrastructure.persistence.in_memory_document_repository import (
-    InMemoryDocumentRepository,
-    InMemoryDocumentStorage,
-)
 from smb_requirement_agent.infrastructure.persistence.migration_runner import (
     MIGRATIONS,
     latest_packaged_migration,
@@ -178,9 +158,6 @@ from smb_requirement_agent.infrastructure.persistence.migration_runner import (
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader import (
     PostgresActivityReadAdapter,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_document_repository import (
-    PostgresDocumentStorage,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_evidence_fragment_cache import (
     PostgresEvidenceFragmentCache,
@@ -214,6 +191,32 @@ from smb_requirement_agent.jobs.domain.entities import (
     AiJobStatus,
 )
 from smb_requirement_agent.jobs.infrastructure.postgres_ai_jobs import PostgresAiJobStore
+from smb_requirement_agent.requirements.domain.document.entities import (
+    SourceDocument,
+    SourceDocumentVersion,
+)
+from smb_requirement_agent.requirements.domain.document.value_objects import (
+    DocumentId,
+    DocumentVersionId,
+    ExtractionStatus,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import (
+    Requirement,
+    RequirementDraft,
+)
+from smb_requirement_agent.requirements.domain.requirement.value_objects import (
+    RequirementDescription,
+    RequirementStatus,
+    RequirementTitle,
+    RequirementVersion,
+)
+from smb_requirement_agent.requirements.infrastructure.in_memory_document_repository import (
+    InMemoryDocumentRepository,
+    InMemoryDocumentStorage,
+)
+from smb_requirement_agent.requirements.infrastructure.postgres_document_repository import (
+    PostgresDocumentStorage,
+)
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,
@@ -1566,9 +1569,6 @@ def test_incremental_activity_matches_audit_sources_and_report_aggregation() -> 
     from smb_requirement_agent.application.use_cases.activity_reporting import (
         aggregate_activity_events,
     )
-    from smb_requirement_agent.application.use_cases.create_requirement import (
-        CreateRequirementInput,
-    )
     from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
     from smb_requirement_agent.infrastructure.config.options import LLMProvider, PersistenceProvider
     from smb_requirement_agent.infrastructure.config.settings import Settings
@@ -1588,6 +1588,9 @@ def test_incremental_activity_matches_audit_sources_and_report_aggregation() -> 
         PostgresSnapshotReader,
     )
     from smb_requirement_agent.interfaces.api.container import build_container
+    from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
+        CreateRequirementInput,
+    )
 
     assert DATABASE_URL is not None
     run_migrations(DATABASE_URL)
@@ -1720,9 +1723,6 @@ def test_isolated_embedding_generations_resume_switch_and_rollback() -> None:
 
 
 def test_requirement_index_batches_survive_restart_and_stale_leases_are_fenced() -> None:
-    from smb_requirement_agent.application.use_cases.create_requirement import (
-        CreateRequirementInput,
-    )
     from smb_requirement_agent.application.use_cases.requirement_indexing import (
         IndexRequirementKnowledge,
     )
@@ -1732,6 +1732,9 @@ def test_requirement_index_batches_survive_restart_and_stale_leases_are_fenced()
         PostgresRequirementIndexProgress,
     )
     from smb_requirement_agent.interfaces.api.container import build_container
+    from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
+        CreateRequirementInput,
+    )
     from tests.unit.test_requirement_indexing import RecordingEmbedding, corpus
 
     assert DATABASE_URL is not None

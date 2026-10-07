@@ -14,16 +14,16 @@ from smb_requirement_agent.application.use_cases.requirement_worklist import (
     NextAction,
     WorkflowStage,
 )
-from smb_requirement_agent.domain.requirement.intake_limits import (
+from smb_requirement_agent.interfaces.api.schemas.identity import ActorResponse
+from smb_requirement_agent.jobs.domain.entities import AiJobOperation
+from smb_requirement_agent.requirements.domain.requirement.intake_limits import (
     MAX_CONTEXT_CHARACTERS,
     MAX_DESCRIPTION_CHARACTERS,
     MAX_LIST_ITEM_CHARACTERS,
     MAX_LIST_ITEMS,
     MAX_TITLE_CHARACTERS,
 )
-from smb_requirement_agent.domain.requirement.value_objects import RequirementStatus
-from smb_requirement_agent.interfaces.api.schemas.identity import ActorResponse
-from smb_requirement_agent.jobs.domain.entities import AiJobOperation
+from smb_requirement_agent.requirements.domain.requirement.value_objects import RequirementStatus
 
 
 class LastActivityResponse(BaseModel):

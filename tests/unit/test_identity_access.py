@@ -12,7 +12,6 @@ from smb_requirement_agent.application.errors import (
     AuthenticationRequiredError,
     IdentityProviderUnavailableError,
 )
-from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirementInput
 from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementPermission,
 )
@@ -30,6 +29,9 @@ from smb_requirement_agent.infrastructure.config.options import IdentityProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
+    CreateRequirementInput,
+)
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,

@@ -21,7 +21,7 @@ from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeMatch,
     KnowledgeRelationshipKind,
 )
-from smb_requirement_agent.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 
 _WORDS = re.compile(r"[a-z0-9]+")
 _NEGATIONS = {"not", "never", "exclude", "excluded", "cannot", "disabled", "only"}

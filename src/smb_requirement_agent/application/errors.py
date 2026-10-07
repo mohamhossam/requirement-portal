@@ -20,8 +20,8 @@ from smb_kernel.errors import UnsupportedDocumentError as UnsupportedDocumentErr
 from smb_requirement_agent.domain.analysis.errors import RequirementAnalysisError
 from smb_requirement_agent.domain.epic.errors import EpicError
 from smb_requirement_agent.domain.feature.errors import FeatureError
-from smb_requirement_agent.domain.requirement.errors import RequirementError
 from smb_requirement_agent.domain.story.errors import StoryError
+from smb_requirement_agent.requirements.domain.requirement.errors import RequirementError
 
 
 class RequirementNotFoundError(RequirementError):

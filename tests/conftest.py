@@ -42,10 +42,6 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_reposit
 from smb_requirement_agent.infrastructure.persistence.in_memory_breakdown_review_repository import (
     InMemoryBreakdownReviewRepository,
 )
-from smb_requirement_agent.infrastructure.persistence.in_memory_document_repository import (
-    InMemoryDocumentRepository,
-    InMemoryDocumentStorage,
-)
 from smb_requirement_agent.infrastructure.persistence.in_memory_epic_repository import (
     InMemoryEpicRepository,
 )
@@ -58,6 +54,10 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_story_repository
 from smb_requirement_agent.interfaces.api.composition.events import subscribe_domain_event_handlers
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.requirements.infrastructure.in_memory_document_repository import (
+    InMemoryDocumentRepository,
+    InMemoryDocumentStorage,
+)
 from smb_requirement_agent.shared_kernel.generation import Provenance
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.unit.transaction_stub import NoOpTransactionManager

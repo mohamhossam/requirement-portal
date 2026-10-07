@@ -3,7 +3,7 @@
 A worker that lost its lease must not report progress, heartbeat or finish a
 job another worker now owns. Idempotency keys bind one command to one job.
 Notification preferences default to off. The in-memory queue has the same
-tests in `tests/unit/test_ai_jobs.py`; these prove the SQL does the same.
+tests in `tests/unit/jobs/test_ai_jobs.py`; these prove the SQL does the same.
 """
 
 from __future__ import annotations
@@ -15,12 +15,6 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementDescription,
-    RequirementStatus,
-    RequirementTitle,
-)
 from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
 from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobCommand, AiJobRecord
 from smb_requirement_agent.jobs.domain.entities import (
@@ -37,6 +31,12 @@ from smb_requirement_agent.jobs.domain.errors import AiJobConflictError
 from smb_requirement_agent.jobs.infrastructure.postgres_ai_jobs import (
     PostgresAiJobStore,
     PostgresNotificationRepository,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.value_objects import (
+    RequirementDescription,
+    RequirementStatus,
+    RequirementTitle,
 )
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,

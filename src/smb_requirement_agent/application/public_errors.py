@@ -86,10 +86,6 @@ from smb_requirement_agent.domain.architecture.knowledge import (
     InvalidRelationshipKindError,
     KnowledgeConflictError,
 )
-from smb_requirement_agent.domain.document.errors import (
-    DocumentInclusionError,
-    InvalidDocumentError,
-)
 from smb_requirement_agent.domain.epic.errors import (
     EpicNotApprovedError,
     EpicRegenerationConflictError,
@@ -107,14 +103,6 @@ from smb_requirement_agent.domain.knowledge.errors import (
     KnowledgeFindingConflictError,
     KnowledgeReviewRequiredError,
     RequirementRetiredError,
-)
-from smb_requirement_agent.domain.requirement.errors import (
-    DuplicateRequirementStateError,
-    InvalidRequirementContextError,
-    InvalidRequirementDescriptionError,
-    InvalidRequirementTitleError,
-    InvalidRequirementVersionError,
-    RequirementIntakeTooLargeError,
 )
 from smb_requirement_agent.domain.review.errors import (
     FlagResolutionConflictError,
@@ -136,6 +124,18 @@ from smb_requirement_agent.identity.domain.errors import (
     RequirementAccessConflictError,
 )
 from smb_requirement_agent.jobs.domain.errors import AiJobConflictError, InvalidAiJobError
+from smb_requirement_agent.requirements.domain.document.errors import (
+    DocumentInclusionError,
+    InvalidDocumentError,
+)
+from smb_requirement_agent.requirements.domain.requirement.errors import (
+    DuplicateRequirementStateError,
+    InvalidRequirementContextError,
+    InvalidRequirementDescriptionError,
+    InvalidRequirementTitleError,
+    InvalidRequirementVersionError,
+    RequirementIntakeTooLargeError,
+)
 from smb_requirement_agent.shared_kernel.errors import (
     InvalidApprovalContentError,
     InvalidGeneratedContentError,

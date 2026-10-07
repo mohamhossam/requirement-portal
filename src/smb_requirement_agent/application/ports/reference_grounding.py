@@ -14,7 +14,7 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     IntentProposal,
     IntentProposalKind,
 )
-from smb_requirement_agent.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.shared_kernel.citation import PublishedReference
 
 

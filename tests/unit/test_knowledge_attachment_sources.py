@@ -19,7 +19,6 @@ from smb_requirement_agent.application.ports.requirement_knowledge import Knowle
 from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     RequirementKnowledgeCorpus,
 )
-from smb_requirement_agent.domain.document.value_objects import DocumentId
 from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeChunk,
     KnowledgeRelationshipKind,
@@ -29,13 +28,14 @@ from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACT
 from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import (
     FakeKnowledgeEmbedding,
 )
-from smb_requirement_agent.infrastructure.persistence.in_memory_document_repository import (
-    InMemoryDocumentRepository,
-)
 from smb_requirement_agent.infrastructure.persistence.requirement_knowledge_repository import (
     InMemoryRequirementKnowledgeStore,
 )
 from smb_requirement_agent.interfaces.api.container import Container
+from smb_requirement_agent.requirements.domain.document.value_objects import DocumentId
+from smb_requirement_agent.requirements.infrastructure.in_memory_document_repository import (
+    InMemoryDocumentRepository,
+)
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.unit.workflow_helpers import drain_requirement_index
 

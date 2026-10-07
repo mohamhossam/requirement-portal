@@ -13,7 +13,6 @@ from smb_requirement_agent.application.errors import (
     KnowledgeScreenConflictError,
 )
 from smb_requirement_agent.application.ports.requirement_indexing import RequirementIndexProgress
-from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirementInput
 from smb_requirement_agent.application.use_cases.requirement_indexing import (
     IndexRequirementKnowledge,
 )
@@ -21,8 +20,6 @@ from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     RequirementKnowledgeCorpus,
     bounded_knowledge_text,
 )
-from smb_requirement_agent.application.use_cases.update_requirement import UpdateRequirementInput
-from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import IndexReadyJobQueue
 from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import (
@@ -37,6 +34,13 @@ from smb_requirement_agent.jobs.domain.entities import (
     AiJobStatus,
     NotificationKind,
 )
+from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
+    CreateRequirementInput,
+)
+from smb_requirement_agent.requirements.application.use_cases.update_requirement import (
+    UpdateRequirementInput,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from tests.unit.workflow_helpers import drain_requirement_index
 
 

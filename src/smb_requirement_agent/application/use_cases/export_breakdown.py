@@ -34,7 +34,6 @@ from smb_requirement_agent.application.exports import (
 )
 from smb_requirement_agent.application.ports.backlog_export import BacklogExportPort
 from smb_requirement_agent.application.ports.breakdown_repository import BreakdownRepositoryPort
-from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
 from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
     RequirementPermission,
@@ -51,6 +50,9 @@ from smb_requirement_agent.domain.architecture.entities import (
 from smb_requirement_agent.domain.review.entities import BreakdownStatus
 from smb_requirement_agent.domain.revision.entities import BreakdownRevision, RevisionNumber
 from smb_requirement_agent.domain.revision.errors import RevisionNotFoundError
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
+    RequirementRepositoryPort,
+)
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.approval import (
     Approval,

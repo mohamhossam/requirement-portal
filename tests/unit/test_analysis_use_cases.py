@@ -19,21 +19,10 @@ from smb_requirement_agent.application.use_cases.generation_context import Gener
 from smb_requirement_agent.application.use_cases.get_requirement_analysis import (
     GetRequirementAnalysis,
 )
-from smb_requirement_agent.application.use_cases.update_requirement import (
-    UpdateRequirement,
-    UpdateRequirementInput,
-)
 from smb_requirement_agent.domain.analysis.errors import (
     AnalysisClarificationConflictError,
 )
 from smb_requirement_agent.domain.analysis.value_objects import ClarificationKind
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementContext,
-    RequirementDescription,
-    RequirementStatus,
-    RequirementTitle,
-)
 from smb_requirement_agent.identity.domain.entities import RequirementAccess
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
@@ -49,21 +38,32 @@ from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_audit_r
 from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_repository import (
     InMemoryRequirementAnalysisRepository,
 )
-from smb_requirement_agent.infrastructure.persistence.in_memory_document_repository import (
-    InMemoryDocumentRepository,
-)
 from smb_requirement_agent.infrastructure.persistence.in_memory_epic_repository import (
     InMemoryEpicRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_feature_repository import (
     InMemoryFeatureRepository,
 )
-from smb_requirement_agent.infrastructure.persistence.in_memory_requirement_repository import (
-    InMemoryRequirementRepository,
-)
 from smb_requirement_agent.infrastructure.persistence.in_memory_story_repository import (
     InMemoryStoryChangeProposalRepository,
     InMemoryStoryRepository,
+)
+from smb_requirement_agent.requirements.application.use_cases.update_requirement import (
+    UpdateRequirement,
+    UpdateRequirementInput,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.value_objects import (
+    RequirementContext,
+    RequirementDescription,
+    RequirementStatus,
+    RequirementTitle,
+)
+from smb_requirement_agent.requirements.infrastructure.in_memory_document_repository import (
+    InMemoryDocumentRepository,
+)
+from smb_requirement_agent.requirements.infrastructure.in_memory_requirement_repository import (
+    InMemoryRequirementRepository,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.conftest import (

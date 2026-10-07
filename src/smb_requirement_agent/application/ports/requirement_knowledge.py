@@ -25,8 +25,8 @@ from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeScreen,
 )
 from smb_requirement_agent.domain.knowledge.membership import CorpusMembership
-from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.jobs.domain.entities import AiJobId
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 

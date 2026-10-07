@@ -18,13 +18,13 @@ from smb_requirement_agent.application.ports.requirement_worklist import (
     WorkflowStatus,
     WorklistSort,
 )
-from smb_requirement_agent.domain.requirement.value_objects import RequirementStatus
 from smb_requirement_agent.domain.review.entities import BreakdownStatus
 from smb_requirement_agent.domain.review.evidence import (
     ReviewEvidence,
     evidence_fingerprint,
 )
 from smb_requirement_agent.domain.review.fingerprints import breakdown_fingerprint
+from smb_requirement_agent.requirements.domain.requirement.value_objects import RequirementStatus
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorSnapshot,

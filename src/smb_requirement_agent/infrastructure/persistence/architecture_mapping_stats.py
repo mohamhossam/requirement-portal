@@ -11,10 +11,10 @@ from smb_requirement_agent.application.errors import PersistenceError
 from smb_requirement_agent.application.ports.architecture_mapping_stats import MappingCount
 from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
-from smb_requirement_agent.application.ports.requirement_repository import (
+from smb_requirement_agent.application.ports.story_repository import StoryRepositoryPort
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )
-from smb_requirement_agent.application.ports.story_repository import StoryRepositoryPort
 
 _COUNTS = """
 WITH mapped AS (

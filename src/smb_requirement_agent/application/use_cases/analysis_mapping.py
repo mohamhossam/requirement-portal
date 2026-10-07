@@ -28,7 +28,7 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     PotentialDependency,
     is_additional_intent_proposal,
 )
-from smb_requirement_agent.domain.requirement.value_objects import RequirementVersion
+from smb_requirement_agent.requirements.domain.requirement.value_objects import RequirementVersion
 from smb_requirement_agent.shared_kernel.generation import Provenance
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 

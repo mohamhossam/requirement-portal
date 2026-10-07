@@ -40,18 +40,18 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     IntentProposalStatus,
     QuestionId,
 )
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementContext,
-    RequirementDescription,
-    RequirementStatus,
-    RequirementTitle,
-)
 from smb_requirement_agent.infrastructure.llm.local_requirement_analyzer import (
     StructuredRequirementAnalyzerAdapter,
 )
 from smb_requirement_agent.infrastructure.llm.schemas.analysis_schema import (
     citation_recovery_schema,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.value_objects import (
+    RequirementContext,
+    RequirementDescription,
+    RequirementStatus,
+    RequirementTitle,
 )
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,

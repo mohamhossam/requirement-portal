@@ -11,12 +11,19 @@ from dataclasses import dataclass
 from smb_kernel.documents.ports import DocumentExtractorPort, DocumentStoragePort
 
 from smb_requirement_agent.application.errors import DocumentContextTooLargeError
-from smb_requirement_agent.application.ports.document_repository import DocumentRepositoryPort
 from smb_requirement_agent.application.ports.requirement_analyzer import AnalysisDocumentContext
-from smb_requirement_agent.application.use_cases.requirement_sources import source_eligibility
 from smb_requirement_agent.domain.analysis.entities import AnalysisDocumentReference
-from smb_requirement_agent.domain.document.entities import SourceDocument
-from smb_requirement_agent.domain.requirement.entities import AnalysisEligibility, Requirement
+from smb_requirement_agent.requirements.application.ports.document_repository import (
+    DocumentRepositoryPort,
+)
+from smb_requirement_agent.requirements.application.use_cases.requirement_sources import (
+    source_eligibility,
+)
+from smb_requirement_agent.requirements.domain.document.entities import SourceDocument
+from smb_requirement_agent.requirements.domain.requirement.entities import (
+    AnalysisEligibility,
+    Requirement,
+)
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 

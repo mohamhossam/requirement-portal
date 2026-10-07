@@ -32,7 +32,6 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     HumanClarification,
     IntentProposal,
 )
-from smb_requirement_agent.domain.requirement.entities import Requirement
 from smb_requirement_agent.infrastructure.llm.candidate_mappers import (
     analysis_evidence_subjects,
     attach_analysis_evidence,
@@ -71,6 +70,7 @@ from smb_requirement_agent.infrastructure.llm.schemas.analysis_schema import (
     RequirementAnalysisSchema,
     citation_recovery_schema,
 )
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 
 logger = logging.getLogger("smb_requirement_agent.llm.local_analysis")
 
