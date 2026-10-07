@@ -170,6 +170,8 @@ PORTS = {
         "reference_publications",
     ],
     "analysis": [
+        # The knowledge screen as analysis sees it (PR 10, F1).
+        "knowledge_screening",
         "analysis_audit_repository",
         "requirement_analysis_repository",
         "requirement_analyzer",

@@ -108,7 +108,7 @@ class NoOpAnswerSuggestionScheduler:
 class AcceptAllSuggestionValidator:
     """Explicit old-slice test double for suggestion provenance validation."""
 
-    def require_suggestion(
+    def suggestion_provenance(
         self, requirement_id: object, question_id: object, suggestion_id: str
     ) -> Never:
         raise AssertionError("This fixture does not supply suggestions.")

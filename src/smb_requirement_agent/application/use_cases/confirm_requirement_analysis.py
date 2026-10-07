@@ -10,6 +10,7 @@ from smb_requirement_agent.application.errors import (
 from smb_requirement_agent.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
+from smb_requirement_agent.application.ports.knowledge_screening import KnowledgeGatePort
 from smb_requirement_agent.application.ports.reference_grounding import (
     ReferenceEvidencePort,
     require_analysis_references,
@@ -17,7 +18,6 @@ from smb_requirement_agent.application.ports.reference_grounding import (
 from smb_requirement_agent.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
-from smb_requirement_agent.application.ports.requirement_knowledge import KnowledgeReviewPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
@@ -41,7 +41,7 @@ class ConfirmRequirementAnalysis:
         clock: ClockPort,
         authorization: RequirementAccessService,
         audits: AnalysisAuditRepositoryPort,
-        knowledge: KnowledgeReviewPort,
+        knowledge: KnowledgeGatePort,
         transactions: TransactionManagerPort,
         references: ReferenceEvidencePort,
     ) -> None:

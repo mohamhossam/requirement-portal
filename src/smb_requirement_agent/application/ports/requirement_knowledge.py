@@ -13,9 +13,7 @@ from smb_requirement_agent.application.ports.embedding import (
 )
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidence
 from smb_requirement_agent.domain.analysis.entities import ClarificationQuestion
-from smb_requirement_agent.domain.analysis.value_objects import QuestionId
 from smb_requirement_agent.domain.knowledge.entities import (
-    AnswerSuggestion,
     AnswerSuggestionSet,
     KnowledgeChunk,
     KnowledgeFinding,
@@ -190,9 +188,3 @@ class KnowledgeReviewPort(Protocol):
     def execute(self, requirement_id: RequirementId) -> KnowledgeReview: ...
 
     def require_ready(self, requirement_id: RequirementId) -> None: ...
-
-
-class AnswerSuggestionValidatorPort(Protocol):
-    def require_suggestion(
-        self, requirement_id: RequirementId, question_id: QuestionId, suggestion_id: str
-    ) -> AnswerSuggestion: ...

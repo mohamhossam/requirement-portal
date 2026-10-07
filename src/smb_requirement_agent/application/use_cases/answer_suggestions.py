@@ -57,6 +57,7 @@ from smb_requirement_agent.requirements.domain.requirement.entities import Requi
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.generation import Provenance
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.lineage import SourceLineage
 
 
 class SuggestClarificationAnswers:
@@ -320,3 +321,21 @@ class SuggestClarificationAnswers:
                 "The selected answer suggestion is absent or stale. Refresh suggestions."
             )
         return next(item for item in result.suggestions if item.id.value == suggestion_id)
+
+    def suggestion_provenance(
+        self, requirement_id: RequirementId, question_id: QuestionId, suggestion_id: str
+    ) -> tuple[SourceLineage, ...]:
+        """The lineage an answer taken from this suggestion records.
+
+        Implements analysis's `SuggestionProvenancePort`; the lineage was built in
+        `AnalysisCollaboration` until ADR-0103 PR 10.
+        """
+        suggestion = self.require_suggestion(requirement_id, question_id, suggestion_id)
+        return (
+            *tuple(SourceLineage(c) for c in suggestion.reference_evidence),
+            *(
+                o.through(f"requirement:{e.requirement_id.value}:chunk:{e.chunk_id.value}")
+                for e in suggestion.evidence
+                for o in e.source_lineage
+            ),
+        )

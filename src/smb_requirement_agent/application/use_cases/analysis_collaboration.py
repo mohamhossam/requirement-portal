@@ -22,6 +22,10 @@ from smb_requirement_agent.application.errors import (
 from smb_requirement_agent.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
+from smb_requirement_agent.application.ports.knowledge_screening import (
+    AnswerSuggestionRequestPort,
+    SuggestionProvenancePort,
+)
 from smb_requirement_agent.application.ports.reference_grounding import (
     ReferenceAnalysisPort,
     ReferenceEvidencePort,
@@ -34,11 +38,6 @@ from smb_requirement_agent.application.ports.requirement_analyzer import (
     ActiveQuestionContext,
     RequirementAnalysisCandidate,
     RequirementAnalyzerPort,
-)
-from smb_requirement_agent.application.ports.requirement_knowledge import (
-    AnswerSuggestionSchedulerPort,
-    AnswerSuggestionValidatorPort,
-    KnowledgeScreenSchedulerPort,
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.analysis_documents import AssembleAnalysisDocuments
@@ -82,6 +81,9 @@ from smb_requirement_agent.identity.domain.entities import RequirementAccess
 from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedError
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
+)
+from smb_requirement_agent.requirements.application.ports.screening_requests import (
+    ScreeningRequestPort,
 )
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.shared_kernel.actors import (
@@ -131,9 +133,9 @@ class AnalysisCollaboration:
         actors: ActorDirectoryPort,
         clock: ClockPort,
         transactions: TransactionManagerPort,
-        knowledge: KnowledgeScreenSchedulerPort,
-        suggestion_scheduler: AnswerSuggestionSchedulerPort,
-        suggestions: AnswerSuggestionValidatorPort,
+        knowledge: ScreeningRequestPort,
+        suggestion_scheduler: AnswerSuggestionRequestPort,
+        suggestions: SuggestionProvenancePort,
         *,
         contexts: GenerationContextTokens,
         reference_grounding: ReferenceAnalysisPort,
@@ -488,9 +490,9 @@ class AnalysisCollaboration:
         for item in answers:
             question = self._require_question(requirement_id, item.question_id)
             self._require_answerer(requirement_id, question, actor, allow_team=allow_team)
-            suggestion = None
+            lineage: tuple[SourceLineage, ...] = ()
             if item.source_suggestion_id is not None:
-                suggestion = self._suggestions.require_suggestion(
+                lineage = self._suggestions.suggestion_provenance(
                     requirement_id, question.id, item.source_suggestion_id
                 )
             resolved = question.resolve(
@@ -509,18 +511,7 @@ class AnalysisCollaboration:
                     actor.snapshot(),
                     answered_at,
                     item.source_suggestion_id,
-                    (
-                        *tuple(SourceLineage(c) for c in suggestion.reference_evidence),
-                        *(
-                            o.through(
-                                f"requirement:{e.requirement_id.value}:chunk:{e.chunk_id.value}"
-                            )
-                            for e in suggestion.evidence
-                            for o in e.source_lineage
-                        ),
-                    )
-                    if suggestion is not None
-                    else (),
+                    lineage,
                 )
             )
 
@@ -558,7 +549,7 @@ class AnalysisCollaboration:
                 )
             for item in answers:
                 if item.source_suggestion_id is not None:
-                    self._suggestions.require_suggestion(
+                    self._suggestions.suggestion_provenance(
                         requirement_id, item.question_id, item.source_suggestion_id
                     )
             for _, resolved in selected:

@@ -402,7 +402,7 @@ def test_analysis_and_automatic_suggestion_scheduling_roll_back_together() -> No
             raise RuntimeError("suggestion queue unavailable")
 
     class NoOpSuggestionValidator:
-        def require_suggestion(
+        def suggestion_provenance(
             self,
             requirement_id: RequirementId,
             question_id: QuestionId,

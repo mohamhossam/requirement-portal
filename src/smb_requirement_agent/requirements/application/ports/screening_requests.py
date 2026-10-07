@@ -1,7 +1,8 @@
 """Asking for a knowledge screen, as the Requirement context sees it (ADR-0103 Amendment 1).
 
 Requirements sit upstream of the knowledge screen, so they ask for one through this port they
-own. The composition root implements it with the screening context's scheduler.
+own. The composition root implements it with the screening context's scheduler. Analysis, also
+upstream of the screen, asks through the same port (ADR-0103 PR 10).
 """
 
 from __future__ import annotations
