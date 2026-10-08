@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from smb_requirement_agent.application.ports.architecture_knowledge import (
+from smb_requirement_agent.references.application.ports.architecture_knowledge import (
     ArchitectureKnowledgeMatch,
 )
 

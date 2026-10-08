@@ -9,7 +9,6 @@ from typing import cast
 
 from psycopg.types.json import Jsonb
 
-from smb_requirement_agent.domain.knowledge.historic import HistoricSourceKind
 from smb_requirement_agent.domain.knowledge.prior_art import (
     PriorArtCheck,
     PriorArtEvidence,
@@ -17,6 +16,7 @@ from smb_requirement_agent.domain.knowledge.prior_art import (
     PriorArtVerdict,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
+from smb_requirement_agent.references.domain.historic import HistoricSourceKind
 from smb_requirement_agent.shared_kernel.generation import Provenance
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 

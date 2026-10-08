@@ -20,12 +20,6 @@ from smb_requirement_agent.application.errors import (
     KnowledgeGenerationError,
     RequirementNotFoundError,
 )
-from smb_requirement_agent.application.ports.embedding import KnowledgeEmbeddingPort
-from smb_requirement_agent.application.ports.historic_corpus import (
-    HistoricCorpusIndexPort,
-    HistoricMatch,
-    HistoricRequirementStatePort,
-)
 from smb_requirement_agent.application.ports.knowledge_access import KnowledgeAccessPort
 from smb_requirement_agent.application.ports.prior_art import (
     HistoricCitation,
@@ -40,8 +34,6 @@ from smb_requirement_agent.application.ports.transaction_manager import Transact
 from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     RequirementKnowledgeCorpus,
 )
-from smb_requirement_agent.domain.knowledge.bounded_text import bounded_knowledge_text
-from smb_requirement_agent.domain.knowledge.historic import WORK_ITEM_TYPES, HistoricSourceKind
 from smb_requirement_agent.domain.knowledge.prior_art import (
     MATCHES_MAX,
     PriorArtCheck,
@@ -68,6 +60,14 @@ from smb_requirement_agent.jobs.domain.entities import (
     AiJobOrigin,
     AiJobStatus,
 )
+from smb_requirement_agent.references.application.ports.embedding import KnowledgeEmbeddingPort
+from smb_requirement_agent.references.application.ports.historic_corpus import (
+    HistoricCorpusIndexPort,
+    HistoricMatch,
+    HistoricRequirementStatePort,
+)
+from smb_requirement_agent.references.domain.bounded_text import bounded_knowledge_text
+from smb_requirement_agent.references.domain.historic import WORK_ITEM_TYPES, HistoricSourceKind
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )

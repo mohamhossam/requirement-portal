@@ -14,33 +14,33 @@ from smb_requirement_agent.application.errors import (
     PersistenceError,
     RequirementAnalysisConflictError,
 )
-from smb_requirement_agent.application.ports.architecture_knowledge import ActiveRelease
-from smb_requirement_agent.application.ports.knowledge_events import (
+from smb_requirement_agent.infrastructure.persistence.in_memory_transaction import (
+    InMemoryTransactionManager,
+)
+from smb_requirement_agent.references.application.ports.architecture_knowledge import ActiveRelease
+from smb_requirement_agent.references.application.ports.knowledge_events import (
     ARCHITECTURE_RELEASE_ACTIVATED,
     REFERENCE_DOCUMENT_CHANGED,
     KnowledgeEvent,
 )
-from smb_requirement_agent.application.use_cases.reference_currency import (
+from smb_requirement_agent.references.application.use_cases.reference_currency import (
     CurrentArchitectureRelease,
     ProjectKnowledgeEvents,
     ReferenceCurrency,
 )
-from smb_requirement_agent.domain.document.reference import (
+from smb_requirement_agent.references.domain.reference import (
     CurrentPublication,
     ReferenceDocumentState,
 )
-from smb_requirement_agent.infrastructure.persistence.architecture_release_state import (
+from smb_requirement_agent.references.infrastructure.architecture_release_state import (
     InMemoryArchitectureReleaseState,
 )
-from smb_requirement_agent.infrastructure.persistence.in_memory_transaction import (
-    InMemoryTransactionManager,
-)
-from smb_requirement_agent.infrastructure.persistence.knowledge_payloads import (
+from smb_requirement_agent.references.infrastructure.knowledge_payloads import (
     PayloadKnowledgeStateDecoder,
     reference_document_state_from_payload,
     reference_document_state_to_payload,
 )
-from smb_requirement_agent.infrastructure.persistence.reference_publications import (
+from smb_requirement_agent.references.infrastructure.reference_publications import (
     InMemoryReferencePublications,
 )
 from smb_requirement_agent.requirements.domain.document.errors import InvalidDocumentError

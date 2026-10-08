@@ -10,7 +10,6 @@ from smb_requirement_agent.application.ports.prior_art import (
     PriorArtCandidateInput,
     PriorArtJudgement,
 )
-from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidence
 from smb_requirement_agent.application.ports.requirement_knowledge import (
     AnswerSuggestionCandidate,
     Embedding,
@@ -21,6 +20,7 @@ from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeMatch,
     KnowledgeRelationshipKind,
 )
+from smb_requirement_agent.references.application.ports.reference_grounding import ReferenceEvidence
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 
 _WORDS = re.compile(r"[a-z0-9]+")

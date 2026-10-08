@@ -19,7 +19,6 @@ from smb_requirement_agent.application.use_cases.requirement_indexing import (
 from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     RequirementKnowledgeCorpus,
 )
-from smb_requirement_agent.domain.knowledge.bounded_text import bounded_knowledge_text
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import IndexReadyJobQueue
 from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import (
@@ -34,6 +33,7 @@ from smb_requirement_agent.jobs.domain.entities import (
     AiJobStatus,
     NotificationKind,
 )
+from smb_requirement_agent.references.domain.bounded_text import bounded_knowledge_text
 from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
     CreateRequirementInput,
 )

@@ -31,16 +31,9 @@ from smb_requirement_agent.analysis.application.ports.requirement_analyzer impor
 from smb_requirement_agent.analysis.application.ports.requirement_evidence_analyzer import (
     RequirementEvidenceAnalyzerPort,
 )
-from smb_requirement_agent.application.ports.architecture_knowledge import (
-    ArchitectureKnowledgePort,
-)
 from smb_requirement_agent.application.ports.prior_art import (
     PriorArtJudgePort,
     PriorArtSchedulerPort,
-)
-from smb_requirement_agent.application.ports.reference_grounding import (
-    ReferenceKnowledgePort,
-    ReferenceSearchPort,
 )
 from smb_requirement_agent.application.ports.requirement_knowledge import (
     AnswerSuggestionSchedulerPort,
@@ -59,6 +52,13 @@ from smb_requirement_agent.interfaces.api.container import Container
 from smb_requirement_agent.interfaces.api.dependencies import limit_provider_calls
 from smb_requirement_agent.interfaces.api.main import create_app
 from smb_requirement_agent.interfaces.api.schemas.generation import GenerationRequest
+from smb_requirement_agent.references.application.ports.architecture_knowledge import (
+    ArchitectureKnowledgePort,
+)
+from smb_requirement_agent.references.application.ports.reference_grounding import (
+    ReferenceKnowledgePort,
+    ReferenceSearchPort,
+)
 
 PROVIDER_OPERATIONS = {
     ("POST", "/requirements/{requirement_id}/ai-jobs"),

@@ -1,7 +1,7 @@
 """Read-only views of knowledge a Requirement relies on (ADR-0099)."""
 
 from smb_requirement_agent.application.errors import KnowledgeViewUnavailableError
-from smb_requirement_agent.application.ports.knowledge_views import (
+from smb_requirement_agent.references.application.ports.knowledge_views import (
     ArchitectureEvidence,
     CitedPassage,
     KnowledgeViewsPort,

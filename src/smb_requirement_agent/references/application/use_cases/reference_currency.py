@@ -14,26 +14,28 @@ from smb_requirement_agent.application.errors import (
     PersistenceError,
     RequirementAnalysisConflictError,
 )
-from smb_requirement_agent.application.ports.architecture_knowledge import (
+from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
+from smb_requirement_agent.references.application.ports.architecture_knowledge import (
     ActiveRelease,
     ArchitectureReleaseStatePort,
 )
-from smb_requirement_agent.application.ports.knowledge_events import (
+from smb_requirement_agent.references.application.ports.knowledge_events import (
     ARCHITECTURE_RELEASE_ACTIVATED,
     REFERENCE_DOCUMENT_CHANGED,
     KnowledgeEventSourcePort,
     KnowledgeStateDecoderPort,
 )
-from smb_requirement_agent.application.ports.reference_grounding import (
+from smb_requirement_agent.references.application.ports.reference_grounding import (
     CitationCurrencyPort,
     ReferenceEvidence,
     ReferenceKnowledgePort,
 )
-from smb_requirement_agent.application.ports.reference_publications import (
+from smb_requirement_agent.references.application.ports.reference_publications import (
     ReferencePublicationStatePort,
 )
-from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.knowledge_event_cursor import contiguous_reach
+from smb_requirement_agent.references.application.use_cases.knowledge_event_cursor import (
+    contiguous_reach,
+)
 from smb_requirement_agent.shared_kernel.citation import PublishedReference
 
 

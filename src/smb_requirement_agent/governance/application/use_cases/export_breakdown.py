@@ -9,14 +9,6 @@ from smb_requirement_agent.application.errors import (
     RequirementNotFoundError,
 )
 from smb_requirement_agent.breakdown.domain.architecture.entities import ArchitectureImpact
-from smb_requirement_agent.domain.architecture.catalogue import (
-    ArchitectureDependency,
-    JourneyNeighbour,
-    JourneyStep,
-    OrganisationReference,
-    ProductContext,
-    SystemReference,
-)
 from smb_requirement_agent.governance.application.exports import (
     EXPORT_SCHEMA_VERSION,
     ExportAcceptanceCriterion,
@@ -54,6 +46,14 @@ from smb_requirement_agent.governance.domain.revision.errors import RevisionNotF
 from smb_requirement_agent.identity.application.ports.requirement_access import (
     RequirementAccessPort,
     RequirementPermission,
+)
+from smb_requirement_agent.references.domain.architecture.catalogue import (
+    ArchitectureDependency,
+    JourneyNeighbour,
+    JourneyStep,
+    OrganisationReference,
+    ProductContext,
+    SystemReference,
 )
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,

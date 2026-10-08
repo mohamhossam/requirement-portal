@@ -12,9 +12,6 @@ from uuid import uuid4
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.errors import ArchitectureMappingProfileChangedError
-from smb_requirement_agent.application.ports.architecture_knowledge import (
-    ActiveArchitectureReleasePort,
-)
 from smb_requirement_agent.breakdown.application.ports.architecture_jobs import (
     ArchitectureJob,
     ArchitectureJobKind,
@@ -31,6 +28,9 @@ from smb_requirement_agent.breakdown.application.use_cases.leased_jobs import (
     LeasedJobs,
 )
 from smb_requirement_agent.identity.application.ports.identity import Actor, require_reader
+from smb_requirement_agent.references.application.ports.architecture_knowledge import (
+    ActiveArchitectureReleasePort,
+)
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,

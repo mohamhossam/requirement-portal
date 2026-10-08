@@ -5,8 +5,8 @@ from __future__ import annotations
 from threading import RLock
 from typing import cast
 
-from smb_requirement_agent.application.ports.architecture_knowledge import ActiveRelease
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
+from smb_requirement_agent.references.application.ports.architecture_knowledge import ActiveRelease
 
 
 class InMemoryArchitectureReleaseState:

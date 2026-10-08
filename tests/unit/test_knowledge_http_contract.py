@@ -22,27 +22,27 @@ from fastapi.testclient import TestClient
 from smb_kernel.errors import ServiceResponseError, ServiceUnavailableError
 from smb_kernel.http.client import InternalHttpClient
 
-from smb_requirement_agent.application.ports.architecture_knowledge import (
+from smb_requirement_agent.breakdown.domain.architecture.entities import ArchitectureImpact
+from smb_requirement_agent.references.application.ports.architecture_knowledge import (
     ArchitectureKnowledgeMatch,
     ArchitectureKnowledgePort,
     ArchitectureQuery,
 )
-from smb_requirement_agent.application.ports.historic_corpus import (
+from smb_requirement_agent.references.application.ports.historic_corpus import (
     ContentPart,
     HistoricContentGoneError,
 )
-from smb_requirement_agent.application.ports.knowledge_events import (
+from smb_requirement_agent.references.application.ports.knowledge_events import (
     ARCHITECTURE_RELEASE_ACTIVATED,
     REFERENCE_DOCUMENT_CHANGED,
     KnowledgeEvent,
     KnowledgeEventSourcePort,
 )
-from smb_requirement_agent.application.ports.reference_grounding import (
+from smb_requirement_agent.references.application.ports.reference_grounding import (
     ReferenceEvidence,
     ReferenceKnowledgePort,
 )
-from smb_requirement_agent.breakdown.domain.architecture.entities import ArchitectureImpact
-from smb_requirement_agent.domain.architecture.catalogue import (
+from smb_requirement_agent.references.domain.architecture.catalogue import (
     ArchitectureCitation,
     ArchitectureDependency,
     DomainSuggestion,
@@ -54,8 +54,8 @@ from smb_requirement_agent.domain.architecture.catalogue import (
     SystemCapability,
     SystemReference,
 )
-from smb_requirement_agent.domain.architecture.knowledge import RelationshipKind
-from smb_requirement_agent.infrastructure.knowledge_client import (
+from smb_requirement_agent.references.domain.architecture.knowledge import RelationshipKind
+from smb_requirement_agent.references.infrastructure.knowledge_client import (
     OFFLINE_RELEASE_ID,
     OFFLINE_RELEASE_NAME,
     FakeArchitectureKnowledge,

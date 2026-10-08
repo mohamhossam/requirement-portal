@@ -791,7 +791,7 @@ class TestKnowledgeService:
         assert self.TOKEN not in repr(settings)
 
     def test_configured_it_answers_over_http(self) -> None:
-        from smb_requirement_agent.infrastructure.knowledge_client import (
+        from smb_requirement_agent.references.infrastructure.knowledge_client import (
             HttpArchitectureKnowledge,
             HttpKnowledgeViews,
             HttpReferenceKnowledge,
@@ -812,7 +812,7 @@ class TestKnowledgeService:
             container.close_resources()
 
     def test_unconfigured_offline_fakes_answer(self) -> None:
-        from smb_requirement_agent.infrastructure.knowledge_client import (
+        from smb_requirement_agent.references.infrastructure.knowledge_client import (
             FakeArchitectureKnowledge,
             FakeKnowledgeViews,
             FakeReferenceKnowledge,

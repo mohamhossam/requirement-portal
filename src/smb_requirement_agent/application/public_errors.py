@@ -99,12 +99,6 @@ from smb_requirement_agent.breakdown.domain.story.errors import (
     StoryProposalConflictError,
     StoryRegenerationConflictError,
 )
-from smb_requirement_agent.domain.architecture.catalogue import InvalidArchitectureContentError
-from smb_requirement_agent.domain.architecture.knowledge import (
-    InvalidRelationshipKindError,
-    KnowledgeConflictError,
-)
-from smb_requirement_agent.domain.knowledge.errors import InvalidKnowledgeError
 from smb_requirement_agent.domain.knowledge.screening_errors import (
     CorpusMembershipConflictError,
     KnowledgeFindingConflictError,
@@ -127,6 +121,14 @@ from smb_requirement_agent.identity.domain.errors import (
     RequirementAccessConflictError,
 )
 from smb_requirement_agent.jobs.domain.errors import AiJobConflictError, InvalidAiJobError
+from smb_requirement_agent.references.domain.architecture.catalogue import (
+    InvalidArchitectureContentError,
+)
+from smb_requirement_agent.references.domain.architecture.knowledge import (
+    InvalidRelationshipKindError,
+    KnowledgeConflictError,
+)
+from smb_requirement_agent.references.domain.errors import InvalidKnowledgeError
 from smb_requirement_agent.requirements.domain.document.errors import (
     DocumentInclusionError,
     InvalidDocumentError,

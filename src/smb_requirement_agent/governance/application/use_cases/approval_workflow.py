@@ -17,10 +17,6 @@ from smb_requirement_agent.application.errors import (
     RequirementNotFoundError,
     StoryNotFoundError,
 )
-from smb_requirement_agent.application.ports.knowledge_handoff import (
-    ApprovedBacklogOutboxPort,
-    BacklogHandoff,
-)
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.breakdown.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.breakdown.application.ports.feature_repository import (
@@ -62,6 +58,10 @@ from smb_requirement_agent.identity.application.ports.requirement_access import 
     RequirementPermission,
 )
 from smb_requirement_agent.identity.domain.entities import RequirementAccess
+from smb_requirement_agent.references.application.ports.knowledge_handoff import (
+    ApprovedBacklogOutboxPort,
+    BacklogHandoff,
+)
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )

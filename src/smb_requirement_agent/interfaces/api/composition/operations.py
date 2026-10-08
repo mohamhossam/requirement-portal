@@ -25,9 +25,6 @@ from smb_kernel.persistence.connector import (
 from smb_kernel.time.system import SystemClock
 
 from smb_requirement_agent.application.errors import ModelTransportError
-from smb_requirement_agent.application.use_cases.qualify_chunk_tokens import (
-    qualify_chunk_tokens,
-)
 from smb_requirement_agent.governance.infrastructure.postgres_revisions import (
     PostgresRevisionRepository,
     PostgresRevisionWriter,
@@ -47,6 +44,9 @@ from smb_requirement_agent.interfaces.api.composition.projections import (
 from smb_requirement_agent.jobs.application.use_cases.retention import PruneReadNotifications
 from smb_requirement_agent.jobs.infrastructure.postgres_ai_jobs import (
     PostgresNotificationRepository,
+)
+from smb_requirement_agent.references.application.use_cases.qualify_chunk_tokens import (
+    qualify_chunk_tokens,
 )
 from smb_requirement_agent.reporting.application.use_cases.dependency_projection import (
     DependencyProjection,

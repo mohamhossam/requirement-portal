@@ -18,10 +18,6 @@ from smb_kernel.time.clock import ClockPort
 from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration import (
     AnalysisCollaboration,
 )
-from smb_requirement_agent.application.ports.architecture_knowledge import (
-    ActiveArchitectureReleasePort,
-    ArchitectureKnowledgePort,
-)
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.breakdown.application.ports.epic_generator import EpicGeneratorPort
 from smb_requirement_agent.breakdown.application.ports.feature_generator import FeatureGeneratorPort
@@ -88,6 +84,10 @@ from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.interfaces.api.composition.governance import ReviewWiring
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
+from smb_requirement_agent.references.application.ports.architecture_knowledge import (
+    ActiveArchitectureReleasePort,
+    ArchitectureKnowledgePort,
+)
 from smb_requirement_agent.workflows.application.use_cases.ai_jobs import AnalysisProgressReporter
 from smb_requirement_agent.workflows.application.use_cases.generation_context import (
     GenerationContextTokens,

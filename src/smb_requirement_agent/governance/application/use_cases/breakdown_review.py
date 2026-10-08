@@ -31,9 +31,6 @@ from smb_requirement_agent.application.errors import (
     RequirementNotFoundError,
     ReviewFlagNotFoundError,
 )
-from smb_requirement_agent.application.ports.architecture_knowledge import (
-    ActiveArchitectureReleasePort,
-)
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.breakdown.application.ports.candidate_review import CandidateCritique
 from smb_requirement_agent.breakdown.application.ports.epic_repository import EpicRepositoryPort
@@ -78,6 +75,9 @@ from smb_requirement_agent.governance.domain.review.policy import (
 from smb_requirement_agent.identity.application.ports.requirement_access import (
     RequirementAccessPort,
     RequirementPermission,
+)
+from smb_requirement_agent.references.application.ports.architecture_knowledge import (
+    ActiveArchitectureReleasePort,
 )
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,

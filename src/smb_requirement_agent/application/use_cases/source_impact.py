@@ -14,9 +14,6 @@ from smb_requirement_agent.application.errors import (
     ArtifactVersionConflictError,
     DocumentNotFoundError,
 )
-from smb_requirement_agent.application.ports.reference_publications import (
-    ReferencePublicationStatePort,
-)
 from smb_requirement_agent.application.ports.source_dependencies import (
     SourceDependency,
     SourceDependencyPort,
@@ -28,6 +25,9 @@ from smb_requirement_agent.identity.application.ports.requirement_access import 
     RequirementPermission,
 )
 from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedError
+from smb_requirement_agent.references.application.ports.reference_publications import (
+    ReferencePublicationStatePort,
+)
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.citation import PublishedReference
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId

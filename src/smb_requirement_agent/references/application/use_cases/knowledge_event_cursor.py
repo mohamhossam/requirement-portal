@@ -9,7 +9,7 @@ run of numbers. A gap older than `gap_grace` is a rolled-back write and is stepp
 from collections.abc import Sequence
 from datetime import datetime, timedelta
 
-from smb_requirement_agent.application.ports.knowledge_events import KnowledgeEvent
+from smb_requirement_agent.references.application.ports.knowledge_events import KnowledgeEvent
 
 
 def contiguous_reach(

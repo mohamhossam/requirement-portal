@@ -18,23 +18,23 @@ from pydantic import TypeAdapter
 from smb_kernel.errors import ServiceResponseError, ServiceUnavailableError
 from smb_kernel.http.client import InternalHttpClient
 
-from smb_requirement_agent.application.ports.architecture_knowledge import (
+from smb_requirement_agent.references.application.ports.architecture_knowledge import (
     ArchitectureKnowledgeMatch,
     ArchitectureQuery,
 )
-from smb_requirement_agent.application.ports.historic_corpus import (
+from smb_requirement_agent.references.application.ports.historic_corpus import (
     ContentPart,
     HistoricContentGoneError,
     HistoricContentPage,
 )
-from smb_requirement_agent.application.ports.knowledge_events import KnowledgeEvent
-from smb_requirement_agent.application.ports.knowledge_views import (
+from smb_requirement_agent.references.application.ports.knowledge_events import KnowledgeEvent
+from smb_requirement_agent.references.application.ports.knowledge_views import (
     ArchitectureEvidence,
     CitedPassage,
     PassageCitation,
 )
-from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidence
-from smb_requirement_agent.domain.architecture.catalogue import SystemReference
+from smb_requirement_agent.references.application.ports.reference_grounding import ReferenceEvidence
+from smb_requirement_agent.references.domain.architecture.catalogue import SystemReference
 
 _QUERY = TypeAdapter(ArchitectureQuery)
 _MATCH = TypeAdapter(ArchitectureKnowledgeMatch)

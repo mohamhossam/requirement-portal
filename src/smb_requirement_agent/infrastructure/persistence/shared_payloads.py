@@ -21,7 +21,16 @@ from smb_requirement_agent.breakdown.domain.story.quality import (
 from smb_requirement_agent.breakdown.domain.story.value_objects import (
     StoryId,
 )
-from smb_requirement_agent.domain.architecture.catalogue import (
+from smb_requirement_agent.infrastructure.persistence.payload_fields import (
+    JsonObject,
+    boolean_field,
+    json_array,
+    json_object,
+    nullable_text,
+    optional_json_array,
+    required_text,
+)
+from smb_requirement_agent.references.domain.architecture.catalogue import (
     ArchitectureCitation,
     ArchitectureDependency,
     DomainSuggestion,
@@ -33,16 +42,7 @@ from smb_requirement_agent.domain.architecture.catalogue import (
     SystemCapability,
     SystemReference,
 )
-from smb_requirement_agent.domain.architecture.knowledge import RelationshipKind
-from smb_requirement_agent.infrastructure.persistence.payload_fields import (
-    JsonObject,
-    boolean_field,
-    json_array,
-    json_object,
-    nullable_text,
-    optional_json_array,
-    required_text,
-)
+from smb_requirement_agent.references.domain.architecture.knowledge import RelationshipKind
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,

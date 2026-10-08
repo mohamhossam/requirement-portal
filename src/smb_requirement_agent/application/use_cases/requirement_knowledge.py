@@ -43,7 +43,6 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
     RequirementRelationshipClassifierPort,
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.domain.knowledge.bounded_text import bounded_knowledge_text
 from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeChunk,
     KnowledgeChunkId,
@@ -67,6 +66,7 @@ from smb_requirement_agent.identity.application.ports.requirement_access import 
 )
 from smb_requirement_agent.identity.domain.entities import RequirementAccess
 from smb_requirement_agent.jobs.domain.entities import AiJobOperation
+from smb_requirement_agent.references.domain.bounded_text import bounded_knowledge_text
 from smb_requirement_agent.requirements.application.ports.document_repository import (
     DocumentRepositoryPort,
 )

@@ -12,14 +12,14 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
-from smb_requirement_agent.domain.document.reference import (
-    CurrentPublication,
-    ReferenceDocumentState,
-)
-from smb_requirement_agent.domain.knowledge.errors import InvalidKnowledgeError
-from smb_requirement_agent.domain.knowledge.historic import (
+from smb_requirement_agent.references.domain.errors import InvalidKnowledgeError
+from smb_requirement_agent.references.domain.historic import (
     HistoricPublication,
     HistoricRequirementState,
+)
+from smb_requirement_agent.references.domain.reference import (
+    CurrentPublication,
+    ReferenceDocumentState,
 )
 from smb_requirement_agent.requirements.domain.document.errors import InvalidDocumentError
 

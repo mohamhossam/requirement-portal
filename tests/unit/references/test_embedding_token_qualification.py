@@ -12,7 +12,9 @@ from smb_kernel.llm.compatible_transport import (
 from smb_kernel.llm.profiles import EmbeddingProfile
 
 from smb_requirement_agent.application.errors import ModelTransportError
-from smb_requirement_agent.application.use_cases.qualify_chunk_tokens import qualify_chunk_tokens
+from smb_requirement_agent.references.application.use_cases.qualify_chunk_tokens import (
+    qualify_chunk_tokens,
+)
 
 
 def test_qualification_fixture_matches_actual_requirement_chunk_output() -> None:

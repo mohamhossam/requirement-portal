@@ -10,7 +10,7 @@ from __future__ import annotations
 import inspect
 import typing
 
-from smb_requirement_agent.application.ports import historic_corpus, prior_art
+from smb_requirement_agent.application.ports import prior_art
 from smb_requirement_agent.application.use_cases.answer_suggestions import (
     SuggestClarificationAnswers,
 )
@@ -26,6 +26,7 @@ from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeRelationshipKind,
     KnowledgeSourceKind,
 )
+from smb_requirement_agent.references.application.ports import historic_corpus
 
 HISTORIC_MODULES = (historic_corpus.__name__, prior_art.__name__)
 

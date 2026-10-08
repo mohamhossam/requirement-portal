@@ -88,22 +88,6 @@ from smb_requirement_agent.breakdown.domain.story.value_objects import (
     StoryProposalId,
     UserRole,
 )
-from smb_requirement_agent.domain.architecture.catalogue import (
-    ArchitectureCitation,
-    ArchitectureDependency,
-    OrganisationReference,
-    SystemCapability,
-    SystemReference,
-)
-from smb_requirement_agent.domain.architecture.knowledge import RelationshipKind
-from smb_requirement_agent.domain.document.reference import (
-    CurrentPublication,
-    ReferenceDocumentState,
-)
-from smb_requirement_agent.domain.knowledge.historic import (
-    HistoricPublication,
-    HistoricRequirementState,
-)
 from smb_requirement_agent.governance.domain.review.entities import (
     BreakdownReview,
     BreakdownStatus,
@@ -133,6 +117,22 @@ from smb_requirement_agent.identity.domain.entities import (
     DraftOwnership,
     RequirementAccess,
     RequirementAssignment,
+)
+from smb_requirement_agent.references.domain.architecture.catalogue import (
+    ArchitectureCitation,
+    ArchitectureDependency,
+    OrganisationReference,
+    SystemCapability,
+    SystemReference,
+)
+from smb_requirement_agent.references.domain.architecture.knowledge import RelationshipKind
+from smb_requirement_agent.references.domain.historic import (
+    HistoricPublication,
+    HistoricRequirementState,
+)
+from smb_requirement_agent.references.domain.reference import (
+    CurrentPublication,
+    ReferenceDocumentState,
 )
 from smb_requirement_agent.reporting.application.ports.activity import (
     ActivityAction,

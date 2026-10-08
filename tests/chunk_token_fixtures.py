@@ -6,7 +6,7 @@ the knowledge service owns (ADR-0099), and are regenerated there. This module
 owns only the `requirement-*` samples: requirement work's own bounded chunks.
 """
 
-from smb_requirement_agent.domain.knowledge.bounded_text import bounded_knowledge_text
+from smb_requirement_agent.references.domain.bounded_text import bounded_knowledge_text
 
 FIXTURE_PATH = "docs/evaluation/chunk-token-fixtures.json"
 REQUIREMENT_PREFIX = "requirement-"

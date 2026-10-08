@@ -20,8 +20,9 @@ from smb_requirement_agent.application.errors import (
     ModelTransportError,
     ServiceUnavailableError,
 )
-from smb_requirement_agent.application.ports.embedding import KnowledgeEmbeddingPort
-from smb_requirement_agent.application.ports.historic_corpus import (
+from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
+from smb_requirement_agent.references.application.ports.embedding import KnowledgeEmbeddingPort
+from smb_requirement_agent.references.application.ports.historic_corpus import (
     CONTENT_PAGE_MAX,
     ContentPart,
     HistoricChunk,
@@ -30,16 +31,17 @@ from smb_requirement_agent.application.ports.historic_corpus import (
     HistoricCorpusIndexPort,
     HistoricRequirementStatePort,
 )
-from smb_requirement_agent.application.ports.knowledge_events import (
+from smb_requirement_agent.references.application.ports.knowledge_events import (
     HISTORIC_REQUIREMENT_CHANGED,
     KnowledgeEventSourcePort,
     KnowledgeStateDecoderPort,
 )
-from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.knowledge_event_cursor import contiguous_reach
-from smb_requirement_agent.domain.knowledge.bounded_text import bounded_knowledge_text
-from smb_requirement_agent.domain.knowledge.errors import InvalidKnowledgeError
-from smb_requirement_agent.domain.knowledge.historic import (
+from smb_requirement_agent.references.application.use_cases.knowledge_event_cursor import (
+    contiguous_reach,
+)
+from smb_requirement_agent.references.domain.bounded_text import bounded_knowledge_text
+from smb_requirement_agent.references.domain.errors import InvalidKnowledgeError
+from smb_requirement_agent.references.domain.historic import (
     HistoricPassage,
     HistoricSourceKind,
     HistoricWorkItem,

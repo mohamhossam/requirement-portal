@@ -44,17 +44,12 @@ from smb_requirement_agent.analysis.infrastructure.postgres_analysis import (
     PostgresAnalysisAuditRepository,
     PostgresAnalysisRepository,
 )
-from smb_requirement_agent.application.ports.architecture_knowledge import (
-    ArchitectureReleaseStatePort,
-)
 from smb_requirement_agent.application.ports.corpus_membership import (
     CorpusActionsPort,
     CorpusMembershipPort,
     SourceChangesPort,
 )
 from smb_requirement_agent.application.ports.corpus_summary import CorpusCountsPort
-from smb_requirement_agent.application.ports.historic_corpus import HistoricCorpusPort
-from smb_requirement_agent.application.ports.knowledge_handoff import ApprovedBacklogOutboxPort
 from smb_requirement_agent.application.ports.knowledge_index_generations import (
     KnowledgeIndexGenerationsPort,
 )
@@ -63,9 +58,6 @@ from smb_requirement_agent.application.ports.knowledge_portfolio import (
     KnowledgePortfolioPort,
 )
 from smb_requirement_agent.application.ports.prior_art import PriorArtStorePort
-from smb_requirement_agent.application.ports.reference_publications import (
-    ReferencePublicationStatePort,
-)
 from smb_requirement_agent.application.ports.requirement_indexing import (
     RequirementIndexProgressPort,
 )
@@ -173,14 +165,6 @@ from smb_requirement_agent.infrastructure.persistence import (
     postgres_knowledge_generations,
     postgres_requirement_knowledge,
 )
-from smb_requirement_agent.infrastructure.persistence.architecture_release_state import (
-    InMemoryArchitectureReleaseState,
-    PostgresArchitectureReleaseState,
-)
-from smb_requirement_agent.infrastructure.persistence.backlog_handoffs import (
-    InMemoryBacklogHandoffs,
-    PostgresBacklogHandoffs,
-)
 from smb_requirement_agent.infrastructure.persistence.corpus_counts import (
     PostgresCorpusCounts,
     RepositoryCorpusCounts,
@@ -192,10 +176,6 @@ from smb_requirement_agent.infrastructure.persistence.corpus_membership import (
     PostgresCorpusActions,
     PostgresCorpusMembership,
     PostgresSourceChanges,
-)
-from smb_requirement_agent.infrastructure.persistence.historic_corpus import (
-    InMemoryHistoricCorpus,
-    PostgresHistoricCorpus,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_transaction import (
     InMemoryTransactionManager,
@@ -210,10 +190,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_store import Post
 from smb_requirement_agent.infrastructure.persistence.prior_art import (
     InMemoryPriorArt,
     PostgresPriorArt,
-)
-from smb_requirement_agent.infrastructure.persistence.reference_publications import (
-    InMemoryReferencePublications,
-    PostgresReferencePublications,
 )
 from smb_requirement_agent.infrastructure.persistence.requirement_indexing import (
     MemoryRequirementIndexProgress,
@@ -241,6 +217,32 @@ from smb_requirement_agent.jobs.infrastructure.in_memory_ai_jobs import (
 from smb_requirement_agent.jobs.infrastructure.postgres_ai_jobs import (
     PostgresAiJobStore,
     PostgresNotificationRepository,
+)
+from smb_requirement_agent.references.application.ports.architecture_knowledge import (
+    ArchitectureReleaseStatePort,
+)
+from smb_requirement_agent.references.application.ports.historic_corpus import HistoricCorpusPort
+from smb_requirement_agent.references.application.ports.knowledge_handoff import (
+    ApprovedBacklogOutboxPort,
+)
+from smb_requirement_agent.references.application.ports.reference_publications import (
+    ReferencePublicationStatePort,
+)
+from smb_requirement_agent.references.infrastructure.architecture_release_state import (
+    InMemoryArchitectureReleaseState,
+    PostgresArchitectureReleaseState,
+)
+from smb_requirement_agent.references.infrastructure.backlog_handoffs import (
+    InMemoryBacklogHandoffs,
+    PostgresBacklogHandoffs,
+)
+from smb_requirement_agent.references.infrastructure.historic_corpus import (
+    InMemoryHistoricCorpus,
+    PostgresHistoricCorpus,
+)
+from smb_requirement_agent.references.infrastructure.reference_publications import (
+    InMemoryReferencePublications,
+    PostgresReferencePublications,
 )
 from smb_requirement_agent.reporting.application.ports.activity import (
     ActivityReadPort,

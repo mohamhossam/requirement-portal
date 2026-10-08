@@ -26,8 +26,8 @@ from smb_requirement_agent.breakdown.application.ports.architecture_jobs import 
 from smb_requirement_agent.breakdown.infrastructure.postgres_architecture_jobs import (
     PostgresArchitectureJobs,
 )
-from smb_requirement_agent.domain.architecture.knowledge import KnowledgeConflictError
 from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
+from smb_requirement_agent.references.domain.architecture.knowledge import KnowledgeConflictError
 
 DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 pytestmark = pytest.mark.skipif(not DATABASE_URL, reason="TEST_DATABASE_URL is not configured")

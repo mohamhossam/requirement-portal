@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 
 from smb_requirement_agent.analysis.domain.entities import ClarificationQuestion
-from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidence
 from smb_requirement_agent.domain.knowledge.entities import KnowledgeChunk, KnowledgeMatch
+from smb_requirement_agent.references.application.ports.reference_grounding import ReferenceEvidence
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 
 SCREEN_PROMPT_VERSION = "knowledge-screen-v1"

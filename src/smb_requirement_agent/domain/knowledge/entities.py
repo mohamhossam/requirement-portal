@@ -7,8 +7,8 @@ from datetime import datetime
 from enum import StrEnum
 
 from smb_requirement_agent.analysis.domain.value_objects import QuestionId
-from smb_requirement_agent.domain.knowledge.errors import InvalidKnowledgeError
 from smb_requirement_agent.domain.knowledge.screening_errors import KnowledgeFindingConflictError
+from smb_requirement_agent.references.domain.errors import InvalidKnowledgeError
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,

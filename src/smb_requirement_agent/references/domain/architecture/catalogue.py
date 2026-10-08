@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from smb_requirement_agent.domain.architecture.knowledge import (
+from smb_requirement_agent.references.domain.architecture.knowledge import (
     InvalidRelationshipKindError,
     RelationshipKind,
     relationship_kind,

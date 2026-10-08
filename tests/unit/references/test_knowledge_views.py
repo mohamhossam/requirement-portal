@@ -21,23 +21,23 @@ from pydantic import TypeAdapter
 from smb_kernel.errors import ServiceResponseError, ServiceUnavailableError
 from smb_kernel.http.client import InternalHttpClient
 
-from smb_requirement_agent.application.ports.architecture_knowledge import ActiveRelease
-from smb_requirement_agent.application.ports.knowledge_views import (
+from smb_requirement_agent.interfaces.api.container import Container
+from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.references.application.ports.architecture_knowledge import ActiveRelease
+from smb_requirement_agent.references.application.ports.knowledge_views import (
     ArchitectureEvidence,
     CitedPassage,
     KnowledgeViewsPort,
     PassageCitation,
 )
-from smb_requirement_agent.application.use_cases.knowledge_views import KnowledgeViews
-from smb_requirement_agent.infrastructure.knowledge_client import (
+from smb_requirement_agent.references.application.use_cases.knowledge_views import KnowledgeViews
+from smb_requirement_agent.references.infrastructure.knowledge_client import (
     FakeKnowledgeViews,
     HttpKnowledgeViews,
 )
-from smb_requirement_agent.interfaces.api.container import Container
-from smb_requirement_agent.interfaces.api.main import create_app
 
 CONTRACT = json.loads(
-    (Path(__file__).parents[2] / "contracts" / "knowledge-internal.openapi.json").read_text(
+    (Path(__file__).parents[3] / "contracts" / "knowledge-internal.openapi.json").read_text(
         encoding="utf-8"
     )
 )

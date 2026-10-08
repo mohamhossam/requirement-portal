@@ -19,7 +19,6 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     QuestionId,
 )
 from smb_requirement_agent.application.errors import KnowledgeGenerationError
-from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidence
 from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeChunk,
     KnowledgeChunkId,
@@ -38,6 +37,7 @@ from smb_requirement_agent.infrastructure.llm.schemas.knowledge_schema import (
     AnswerSuggestionListSchema,
     AnswerSuggestionSchema,
 )
+from smb_requirement_agent.references.application.ports.reference_grounding import ReferenceEvidence
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.requirements.domain.requirement.value_objects import (
     RequirementDescription,

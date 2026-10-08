@@ -22,7 +22,6 @@ from smb_requirement_agent.application.ports.prior_art import (
     PriorArtCandidateInput,
     PriorArtJudgement,
 )
-from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidence
 from smb_requirement_agent.application.ports.requirement_knowledge import (
     AnswerSuggestionCandidate,
     Embedding,
@@ -53,6 +52,7 @@ from smb_requirement_agent.infrastructure.llm.schemas.knowledge_schema import (
 from smb_requirement_agent.infrastructure.llm.schemas.prior_art_schema import (
     PriorArtJudgementSchema,
 )
+from smb_requirement_agent.references.application.ports.reference_grounding import ReferenceEvidence
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 

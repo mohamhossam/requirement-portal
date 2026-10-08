@@ -14,8 +14,8 @@ from psycopg.types.json import Jsonb
 from pydantic import TypeAdapter
 
 from smb_requirement_agent.application.errors import PersistenceError
-from smb_requirement_agent.application.ports.knowledge_handoff import BacklogHandoff
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
+from smb_requirement_agent.references.application.ports.knowledge_handoff import BacklogHandoff
 
 _CHANGED = "The approved-backlog handoff changed. Claim it again."
 

@@ -48,9 +48,6 @@ from smb_requirement_agent.analysis.application.use_cases.get_requirement_analys
     GetRequirementAnalysis,
 )
 from smb_requirement_agent.application.events import InProcessEventDispatcher
-from smb_requirement_agent.application.ports.architecture_knowledge import ArchitectureKnowledgePort
-from smb_requirement_agent.application.ports.historic_corpus import HistoricCorpusPort
-from smb_requirement_agent.application.ports.knowledge_handoff import ApprovedBacklogOutboxPort
 from smb_requirement_agent.application.ports.knowledge_index_generations import (
     KnowledgeIndexGenerationsPort,
 )
@@ -68,24 +65,13 @@ from smb_requirement_agent.application.use_cases.corpus_actions import (
     ReinstateToCorpus,
     RetireFromCorpus,
 )
-from smb_requirement_agent.application.use_cases.historic_corpus import (
-    IndexHistoricCorpus,
-    ProjectHistoricRequirements,
-)
 from smb_requirement_agent.application.use_cases.knowledge_portfolio import (
     KnowledgePortfolio,
     NudgeFindingOwners,
 )
-from smb_requirement_agent.application.use_cases.knowledge_views import KnowledgeViews
 from smb_requirement_agent.application.use_cases.prior_art import GetPriorArt, HistoricCitations
 from smb_requirement_agent.application.use_cases.rebuild_knowledge_index import (
     RebuildKnowledgeIndex,
-)
-from smb_requirement_agent.application.use_cases.reference_currency import (
-    CurrentArchitectureRelease,
-    CurrentReferences,
-    ProjectKnowledgeEvents,
-    ReferenceCurrency,
 )
 from smb_requirement_agent.application.use_cases.requirement_indexing import (
     IndexBacklogReader,
@@ -230,6 +216,24 @@ from smb_requirement_agent.jobs.application.ports.ai_jobs import (
 from smb_requirement_agent.jobs.application.ports.notifications import NotificationRepositoryPort
 from smb_requirement_agent.jobs.application.use_cases.provider_call_rate import (
     ProviderCallRateLimit,
+)
+from smb_requirement_agent.references.application.ports.architecture_knowledge import (
+    ArchitectureKnowledgePort,
+)
+from smb_requirement_agent.references.application.ports.historic_corpus import HistoricCorpusPort
+from smb_requirement_agent.references.application.ports.knowledge_handoff import (
+    ApprovedBacklogOutboxPort,
+)
+from smb_requirement_agent.references.application.use_cases.historic_corpus import (
+    IndexHistoricCorpus,
+    ProjectHistoricRequirements,
+)
+from smb_requirement_agent.references.application.use_cases.knowledge_views import KnowledgeViews
+from smb_requirement_agent.references.application.use_cases.reference_currency import (
+    CurrentArchitectureRelease,
+    CurrentReferences,
+    ProjectKnowledgeEvents,
+    ReferenceCurrency,
 )
 from smb_requirement_agent.reporting.application.ports.activity import (
     ActivityReadPort,

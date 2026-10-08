@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 
-from smb_requirement_agent.domain.architecture.catalogue import (
+from smb_requirement_agent.references.domain.architecture.catalogue import (
     ArchitectureCitation,
     ArchitectureDependency,
     DomainSuggestion,

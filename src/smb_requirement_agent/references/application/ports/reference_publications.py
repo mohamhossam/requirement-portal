@@ -2,7 +2,7 @@
 
 from typing import Protocol
 
-from smb_requirement_agent.domain.document.reference import ReferenceDocumentState
+from smb_requirement_agent.references.domain.reference import ReferenceDocumentState
 
 
 class ReferencePublicationStatePort(Protocol):

@@ -14,10 +14,6 @@ from datetime import UTC, datetime
 import pytest
 from fastapi.testclient import TestClient
 
-from smb_requirement_agent.application.ports.architecture_knowledge import (
-    ArchitectureKnowledgeMatch,
-    ArchitectureQuery,
-)
 from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping import (
     MapBreakdownArchitecture,
     MapFeatureArchitecture,
@@ -30,16 +26,20 @@ from smb_requirement_agent.breakdown.infrastructure.backlog_payloads import (
     story_from_payload,
     story_to_payload,
 )
-from smb_requirement_agent.domain.architecture.catalogue import (
+from smb_requirement_agent.identity.application.ports.identity import Actor
+from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
+from smb_requirement_agent.interfaces.api.container import Container, build_container
+from smb_requirement_agent.references.application.ports.architecture_knowledge import (
+    ArchitectureKnowledgeMatch,
+    ArchitectureQuery,
+)
+from smb_requirement_agent.references.domain.architecture.catalogue import (
     ArchitectureDependency,
     InvalidArchitectureContentError,
     SystemCapability,
     SystemReference,
 )
-from smb_requirement_agent.identity.application.ports.identity import Actor
-from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
-from smb_requirement_agent.infrastructure.knowledge_client import OFFLINE_RELEASE_ID
-from smb_requirement_agent.interfaces.api.container import Container, build_container
+from smb_requirement_agent.references.infrastructure.knowledge_client import OFFLINE_RELEASE_ID
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.conftest import FAKE_PROVIDER_SETTINGS, make_event_publisher
 from tests.knowledge_doubles import PublishedLibrary, service_for, sync

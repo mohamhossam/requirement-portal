@@ -14,8 +14,10 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     IntentProposal,
     IntentProposalStatus,
 )
-from smb_requirement_agent.application.ports.reference_grounding import PublicationCurrencyPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
+from smb_requirement_agent.references.application.ports.reference_grounding import (
+    PublicationCurrencyPort,
+)
 from smb_requirement_agent.shared_kernel.citation import PublishedReference
 
 

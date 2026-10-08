@@ -9,14 +9,8 @@ from smb_kernel.time.clock import ClockPort
 from smb_requirement_agent.analysis.application.use_cases.reference_staleness import (
     AnalysisReferenceCurrency,
 )
-from smb_requirement_agent.application.ports.reference_grounding import ReferenceKnowledgePort
 from smb_requirement_agent.application.use_cases.answer_suggestions import (
     SuggestClarificationAnswers,
-)
-from smb_requirement_agent.application.use_cases.historic_corpus import (
-    IndexHistoricCorpus,
-    ProjectHistoricRequirements,
-    historic_identity,
 )
 from smb_requirement_agent.application.use_cases.prior_art import (
     GetPriorArt,
@@ -26,12 +20,6 @@ from smb_requirement_agent.application.use_cases.prior_art import (
 )
 from smb_requirement_agent.application.use_cases.rebuild_knowledge_index import (
     RebuildKnowledgeIndex,
-)
-from smb_requirement_agent.application.use_cases.reference_currency import (
-    CurrentArchitectureRelease,
-    CurrentReferences,
-    ProjectKnowledgeEvents,
-    ReferenceCurrency,
 )
 from smb_requirement_agent.application.use_cases.requirement_indexing import (
     IndexRequirementKnowledge,
@@ -52,12 +40,26 @@ from smb_requirement_agent.infrastructure.documents.ingestion_loop import Ingest
 from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import (
     RequirementIndexWorker,
 )
-from smb_requirement_agent.infrastructure.persistence.knowledge_payloads import (
-    PayloadKnowledgeStateDecoder,
-)
 from smb_requirement_agent.interfaces.api.composition.knowledge_service import KnowledgeService
 from smb_requirement_agent.interfaces.api.composition.llm import LLMAdapters
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
+from smb_requirement_agent.references.application.ports.reference_grounding import (
+    ReferenceKnowledgePort,
+)
+from smb_requirement_agent.references.application.use_cases.historic_corpus import (
+    IndexHistoricCorpus,
+    ProjectHistoricRequirements,
+    historic_identity,
+)
+from smb_requirement_agent.references.application.use_cases.reference_currency import (
+    CurrentArchitectureRelease,
+    CurrentReferences,
+    ProjectKnowledgeEvents,
+    ReferenceCurrency,
+)
+from smb_requirement_agent.references.infrastructure.knowledge_payloads import (
+    PayloadKnowledgeStateDecoder,
+)
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,

@@ -17,26 +17,26 @@ from smb_kernel.persistence.connector import DirectPostgresConnector
 from smb_kernel.time.system import SystemClock
 
 from smb_requirement_agent.application.errors import RequirementAnalysisConflictError
-from smb_requirement_agent.application.ports.architecture_knowledge import ActiveRelease
-from smb_requirement_agent.application.use_cases.reference_currency import (
+from smb_requirement_agent.infrastructure.persistence import migration_runner
+from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
+from smb_requirement_agent.references.application.ports.architecture_knowledge import ActiveRelease
+from smb_requirement_agent.references.application.use_cases.reference_currency import (
     CurrentArchitectureRelease,
     ProjectKnowledgeEvents,
     ReferenceCurrency,
 )
-from smb_requirement_agent.domain.document.reference import (
+from smb_requirement_agent.references.domain.reference import (
     CurrentPublication,
     ReferenceDocumentState,
 )
-from smb_requirement_agent.infrastructure.persistence import migration_runner
-from smb_requirement_agent.infrastructure.persistence.architecture_release_state import (
+from smb_requirement_agent.references.infrastructure.architecture_release_state import (
     PostgresArchitectureReleaseState,
 )
-from smb_requirement_agent.infrastructure.persistence.knowledge_payloads import (
+from smb_requirement_agent.references.infrastructure.knowledge_payloads import (
     PayloadKnowledgeStateDecoder,
     reference_document_state_from_payload,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
-from smb_requirement_agent.infrastructure.persistence.reference_publications import (
+from smb_requirement_agent.references.infrastructure.reference_publications import (
     PostgresReferencePublications,
 )
 from tests.knowledge_doubles import PublishedLibrary

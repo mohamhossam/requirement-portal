@@ -22,11 +22,6 @@ from uuid import uuid4
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.errors import ServiceResponseError, ServiceUnavailableError
-from smb_requirement_agent.application.ports.knowledge_handoff import (
-    ApprovedBacklogOutboxPort,
-    BacklogHandoff,
-    ChangeRequestInboxPort,
-)
 from smb_requirement_agent.governance.application.exports import ExportFormat, NeutralBacklogExport
 from smb_requirement_agent.governance.application.ports.backlog_export import BacklogExportPort
 from smb_requirement_agent.governance.application.ports.breakdown_repository import (
@@ -35,6 +30,11 @@ from smb_requirement_agent.governance.application.ports.breakdown_repository imp
 from smb_requirement_agent.governance.application.use_cases.export_breakdown import (
     approved_backlog_document,
     formal_final_approval,
+)
+from smb_requirement_agent.references.application.ports.knowledge_handoff import (
+    ApprovedBacklogOutboxPort,
+    BacklogHandoff,
+    ChangeRequestInboxPort,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 

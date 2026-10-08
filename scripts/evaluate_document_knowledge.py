@@ -7,7 +7,7 @@ from pathlib import Path
 
 from pydantic import TypeAdapter
 
-from smb_requirement_agent.application.retrieval_evaluation import (
+from smb_requirement_agent.references.application.retrieval_evaluation import (
     EvaluationQuery,
     QueryResult,
     evaluate_retrieval,

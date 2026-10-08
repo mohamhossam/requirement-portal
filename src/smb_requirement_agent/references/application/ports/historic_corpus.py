@@ -15,7 +15,7 @@ from typing import Protocol
 
 from smb_kernel.embeddings import Embedding
 
-from smb_requirement_agent.domain.knowledge.historic import (
+from smb_requirement_agent.references.domain.historic import (
     HistoricRequirementState,
     HistoricSourceKind,
 )

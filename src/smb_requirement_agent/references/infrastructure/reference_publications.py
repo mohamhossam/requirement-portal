@@ -7,12 +7,12 @@ from typing import cast
 
 from psycopg.types.json import Jsonb
 
-from smb_requirement_agent.domain.document.reference import ReferenceDocumentState
-from smb_requirement_agent.infrastructure.persistence.knowledge_payloads import (
+from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
+from smb_requirement_agent.references.domain.reference import ReferenceDocumentState
+from smb_requirement_agent.references.infrastructure.knowledge_payloads import (
     reference_document_state_from_payload,
     reference_document_state_to_payload,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 
 
 class InMemoryReferencePublications:

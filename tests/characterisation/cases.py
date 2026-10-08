@@ -71,7 +71,7 @@ from smb_requirement_agent.identity.infrastructure.identity_payloads import (
 from smb_requirement_agent.infrastructure.persistence.in_memory_transaction import (
     InMemoryTransactionManager,
 )
-from smb_requirement_agent.infrastructure.persistence.knowledge_payloads import (
+from smb_requirement_agent.references.infrastructure.knowledge_payloads import (
     historic_requirement_state_from_payload,
     historic_requirement_state_to_payload,
     reference_document_state_from_payload,

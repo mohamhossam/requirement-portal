@@ -9,8 +9,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
 
-from smb_requirement_agent.domain.document.reference import ReferenceDocumentState
-from smb_requirement_agent.domain.knowledge.historic import HistoricRequirementState
+from smb_requirement_agent.references.domain.historic import HistoricRequirementState
+from smb_requirement_agent.references.domain.reference import ReferenceDocumentState
 
 REFERENCE_DOCUMENT_CHANGED = "reference_document_changed"
 ARCHITECTURE_RELEASE_ACTIVATED = "architecture_release_activated"

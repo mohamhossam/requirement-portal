@@ -8,7 +8,7 @@ from smb_requirement_agent.breakdown.application.ports.architecture_jobs import 
     ArchitectureJobKind,
     ArchitectureJobStatus,
 )
-from smb_requirement_agent.domain.architecture.knowledge import KnowledgeConflictError
+from smb_requirement_agent.references.domain.architecture.knowledge import KnowledgeConflictError
 
 
 class InMemoryArchitectureJobs:

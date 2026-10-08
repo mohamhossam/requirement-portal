@@ -6,7 +6,6 @@ from fastapi import APIRouter, Depends
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.analysis.domain.value_objects import QuestionId
-from smb_requirement_agent.application.ports.reference_grounding import ReferenceReviewPort
 from smb_requirement_agent.application.ports.requirement_knowledge import KnowledgeReview
 from smb_requirement_agent.application.use_cases.answer_suggestions import (
     SuggestClarificationAnswers,
@@ -57,6 +56,9 @@ from smb_requirement_agent.interfaces.api.schemas.knowledge import (
     PriorArtMatchResponse,
     PriorArtPassageResponse,
     PriorArtResponse,
+)
+from smb_requirement_agent.references.application.ports.reference_grounding import (
+    ReferenceReviewPort,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 

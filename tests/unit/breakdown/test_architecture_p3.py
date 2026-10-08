@@ -14,16 +14,16 @@ from dataclasses import replace
 import pytest
 from fastapi.testclient import TestClient
 
-from smb_requirement_agent.application.ports.architecture_knowledge import (
-    ArchitectureKnowledgeMatch,
-    ArchitectureQuery,
-)
 from smb_requirement_agent.breakdown.application.ports.architecture_mapping_stats import (
     MappingCount,
 )
-from smb_requirement_agent.domain.architecture.catalogue import SystemReference
-from smb_requirement_agent.infrastructure.knowledge_client import OFFLINE_RELEASE_ID
 from smb_requirement_agent.interfaces.api.container import Container, build_container
+from smb_requirement_agent.references.application.ports.architecture_knowledge import (
+    ArchitectureKnowledgeMatch,
+    ArchitectureQuery,
+)
+from smb_requirement_agent.references.domain.architecture.catalogue import SystemReference
+from smb_requirement_agent.references.infrastructure.knowledge_client import OFFLINE_RELEASE_ID
 from tests.conftest import FAKE_PROVIDER_SETTINGS
 from tests.knowledge_doubles import PublishedLibrary, service_for, sync
 from tests.unit.workflow_helpers import (

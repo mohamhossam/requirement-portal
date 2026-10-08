@@ -8,27 +8,27 @@ from typing import cast
 
 import pytest
 
-from smb_requirement_agent.application.ports.historic_corpus import ContentPart
-from smb_requirement_agent.application.use_cases.historic_corpus import (
+from smb_requirement_agent.infrastructure.config.options import LLMProvider
+from smb_requirement_agent.infrastructure.config.settings import Settings
+from smb_requirement_agent.interfaces.api.container import Container
+from smb_requirement_agent.references.application.ports.historic_corpus import ContentPart
+from smb_requirement_agent.references.application.use_cases.historic_corpus import (
     CHUNKS_PER_RECORD,
     SPANS_PER_ENTRY,
     historic_chunks,
 )
-from smb_requirement_agent.domain.knowledge.errors import InvalidKnowledgeError
-from smb_requirement_agent.domain.knowledge.historic import (
+from smb_requirement_agent.references.domain.errors import InvalidKnowledgeError
+from smb_requirement_agent.references.domain.historic import (
     HistoricSourceKind,
     HistoricWorkItem,
     ancestors,
     safe_url,
 )
-from smb_requirement_agent.infrastructure.config.options import LLMProvider
-from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.persistence.historic_corpus import any_of
-from smb_requirement_agent.infrastructure.persistence.knowledge_payloads import (
+from smb_requirement_agent.references.infrastructure.historic_corpus import any_of
+from smb_requirement_agent.references.infrastructure.knowledge_payloads import (
     historic_requirement_state_from_payload,
     historic_requirement_state_to_payload,
 )
-from smb_requirement_agent.interfaces.api.container import Container
 from tests.knowledge_doubles import (
     PublishedLibrary,
     container_with_library,
@@ -38,7 +38,7 @@ from tests.knowledge_doubles import (
 )
 
 EXAMPLE = (
-    Path(__file__).resolve().parents[2] / "contracts" / "historic-requirement-changed.example.json"
+    Path(__file__).resolve().parents[3] / "contracts" / "historic-requirement-changed.example.json"
 )
 
 BACKLOG = (

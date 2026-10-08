@@ -12,7 +12,7 @@ from smb_requirement_agent.breakdown.application.ports.architecture_jobs import 
     ArchitectureJobStatus,
 )
 from smb_requirement_agent.breakdown.domain.architecture.entities import ArchitectureImpact
-from smb_requirement_agent.domain.architecture.catalogue import (
+from smb_requirement_agent.references.domain.architecture.catalogue import (
     ArchitectureDependency,
     JourneyNeighbour,
     JourneyStep,
@@ -20,7 +20,7 @@ from smb_requirement_agent.domain.architecture.catalogue import (
     ProductContext,
     SystemReference,
 )
-from smb_requirement_agent.domain.architecture.knowledge import RelationshipKind
+from smb_requirement_agent.references.domain.architecture.knowledge import RelationshipKind
 
 
 class SystemCapabilityResponse(BaseModel):

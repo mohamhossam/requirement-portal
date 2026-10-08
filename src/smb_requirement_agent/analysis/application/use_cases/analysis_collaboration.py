@@ -71,7 +71,6 @@ from smb_requirement_agent.application.errors import (
     RequirementAnalysisNotFoundError,
     RequirementNotFoundError,
 )
-from smb_requirement_agent.application.ports.reference_grounding import ReferenceReviewPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.identity.application.ports.actor_directory import ActorDirectoryPort
@@ -81,6 +80,9 @@ from smb_requirement_agent.identity.application.ports.requirement_access import 
 )
 from smb_requirement_agent.identity.domain.entities import RequirementAccess
 from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedError
+from smb_requirement_agent.references.application.ports.reference_grounding import (
+    ReferenceReviewPort,
+)
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )

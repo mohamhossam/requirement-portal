@@ -1,6 +1,6 @@
 """Domain errors for requirement knowledge screening (ADR-0103 PR 15a; split from `errors.py`)."""
 
-from smb_requirement_agent.domain.knowledge.errors import KnowledgeError
+from smb_requirement_agent.references.domain.errors import KnowledgeError
 
 
 class KnowledgeFindingConflictError(KnowledgeError):

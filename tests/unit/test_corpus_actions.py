@@ -23,7 +23,6 @@ from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeDecisionKind,
     KnowledgeFindingStatus,
 )
-from smb_requirement_agent.domain.knowledge.errors import InvalidKnowledgeError
 from smb_requirement_agent.domain.knowledge.membership import CorpusActionKind
 from smb_requirement_agent.domain.knowledge.screening_errors import (
     CorpusMembershipConflictError,
@@ -46,6 +45,7 @@ from smb_requirement_agent.infrastructure.persistence.requirement_knowledge_repo
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.interfaces.api.main import create_app
 from smb_requirement_agent.jobs.domain.entities import NotificationKind
+from smb_requirement_agent.references.domain.errors import InvalidKnowledgeError
 from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
     CreateRequirementInput,
 )

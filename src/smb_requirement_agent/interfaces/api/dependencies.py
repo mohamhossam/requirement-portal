@@ -33,7 +33,6 @@ from smb_requirement_agent.analysis.application.use_cases.get_requirement_analys
     GetRequirementAnalysis,
 )
 from smb_requirement_agent.application.errors import AuthenticationRequiredError
-from smb_requirement_agent.application.ports.reference_grounding import ReferenceReviewPort
 from smb_requirement_agent.application.use_cases.answer_suggestions import (
     SuggestClarificationAnswers,
 )
@@ -46,11 +45,7 @@ from smb_requirement_agent.application.use_cases.knowledge_portfolio import (
     KnowledgePortfolio,
     NudgeFindingOwners,
 )
-from smb_requirement_agent.application.use_cases.knowledge_views import KnowledgeViews
 from smb_requirement_agent.application.use_cases.prior_art import GetPriorArt, HistoricCitations
-from smb_requirement_agent.application.use_cases.reference_currency import (
-    CurrentArchitectureRelease,
-)
 from smb_requirement_agent.application.use_cases.requirement_indexing import (
     IndexRequirementKnowledge,
 )
@@ -120,6 +115,13 @@ from smb_requirement_agent.identity.application.ports.identity import Actor
 from smb_requirement_agent.infrastructure.config.options import IdentityProvider
 from smb_requirement_agent.interfaces.api.container import Container
 from smb_requirement_agent.interfaces.api.error_handlers import status_code_for
+from smb_requirement_agent.references.application.ports.reference_grounding import (
+    ReferenceReviewPort,
+)
+from smb_requirement_agent.references.application.use_cases.knowledge_views import KnowledgeViews
+from smb_requirement_agent.references.application.use_cases.reference_currency import (
+    CurrentArchitectureRelease,
+)
 from smb_requirement_agent.reporting.application.use_cases.activity_reporting import (
     GetOperationalReport,
     ListActivity,

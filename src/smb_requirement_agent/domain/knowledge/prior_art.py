@@ -11,8 +11,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 
-from smb_requirement_agent.domain.knowledge.errors import InvalidKnowledgeError
-from smb_requirement_agent.domain.knowledge.historic import HistoricSourceKind
+from smb_requirement_agent.references.domain.errors import InvalidKnowledgeError
+from smb_requirement_agent.references.domain.historic import HistoricSourceKind
 from smb_requirement_agent.shared_kernel.generation import Provenance
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 

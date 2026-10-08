@@ -111,11 +111,6 @@ from smb_requirement_agent.breakdown.infrastructure.postgres_backlog import (
     PostgresStoryChangeProposalRepository,
     PostgresStoryRepository,
 )
-from smb_requirement_agent.domain.architecture.catalogue import (
-    ArchitectureDependency,
-    SystemCapability,
-    SystemReference,
-)
 from smb_requirement_agent.domain.knowledge.entities import (
     AnswerSuggestion,
     AnswerSuggestionId,
@@ -184,6 +179,11 @@ from smb_requirement_agent.jobs.domain.entities import (
     AiJobStatus,
 )
 from smb_requirement_agent.jobs.infrastructure.postgres_ai_jobs import PostgresAiJobStore
+from smb_requirement_agent.references.domain.architecture.catalogue import (
+    ArchitectureDependency,
+    SystemCapability,
+    SystemReference,
+)
 from smb_requirement_agent.reporting.application.ports.requirement_worklist import (
     WorkflowStatus,
     WorklistSort,

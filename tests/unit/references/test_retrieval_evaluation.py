@@ -2,7 +2,7 @@
 
 import pytest
 
-from smb_requirement_agent.application.retrieval_evaluation import (
+from smb_requirement_agent.references.application.retrieval_evaluation import (
     EvaluationQuery,
     QueryResult,
     RetrievedSource,

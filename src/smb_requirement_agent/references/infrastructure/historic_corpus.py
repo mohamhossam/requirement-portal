@@ -13,22 +13,22 @@ from typing import cast
 from psycopg.types.json import Jsonb
 from smb_kernel.embeddings import Embedding
 
-from smb_requirement_agent.application.ports.historic_corpus import (
+from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
+from smb_requirement_agent.references.application.ports.historic_corpus import (
     ContentPart,
     HistoricChunk,
     HistoricMatch,
     HistoricStanding,
     PendingHistoric,
 )
-from smb_requirement_agent.domain.knowledge.historic import (
+from smb_requirement_agent.references.domain.historic import (
     HistoricRequirementState,
     HistoricSourceKind,
 )
-from smb_requirement_agent.infrastructure.persistence.knowledge_payloads import (
+from smb_requirement_agent.references.infrastructure.knowledge_payloads import (
     historic_requirement_state_from_payload,
     historic_requirement_state_to_payload,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 
 _WORDS = re.compile(r"\w+", re.UNICODE)
 

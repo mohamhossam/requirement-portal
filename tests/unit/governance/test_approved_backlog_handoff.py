@@ -17,10 +17,6 @@ from smb_requirement_agent.application.errors import (
     ServiceResponseError,
     ServiceUnavailableError,
 )
-from smb_requirement_agent.application.ports.knowledge_handoff import (
-    BacklogHandoff,
-    HandoffStatus,
-)
 from smb_requirement_agent.governance.application.exports import ExportFormat
 from smb_requirement_agent.governance.application.ports.backlog_export import BacklogExportPort
 from smb_requirement_agent.governance.application.use_cases.knowledge_handoff import (
@@ -32,18 +28,22 @@ from smb_requirement_agent.governance.domain.revision.entities import (
     RequirementRevision,
     RevisionNumber,
 )
-from smb_requirement_agent.infrastructure.knowledge_client import (
+from smb_requirement_agent.interfaces.api.composition.knowledge_service import KnowledgeService
+from smb_requirement_agent.interfaces.api.container import Container, build_container
+from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.references.application.ports.knowledge_handoff import (
+    BacklogHandoff,
+    HandoffStatus,
+)
+from smb_requirement_agent.references.infrastructure.backlog_handoffs import (
+    InMemoryBacklogHandoffs,
+)
+from smb_requirement_agent.references.infrastructure.knowledge_client import (
     FakeArchitectureKnowledge,
     FakeKnowledgeEvents,
     FakeKnowledgeViews,
     FakeReferenceKnowledge,
 )
-from smb_requirement_agent.infrastructure.persistence.backlog_handoffs import (
-    InMemoryBacklogHandoffs,
-)
-from smb_requirement_agent.interfaces.api.composition.knowledge_service import KnowledgeService
-from smb_requirement_agent.interfaces.api.container import Container, build_container
-from smb_requirement_agent.interfaces.api.main import create_app
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.conftest import FAKE_PROVIDER_SETTINGS
 from tests.unit.workflow_helpers import approve_fake_breakdown

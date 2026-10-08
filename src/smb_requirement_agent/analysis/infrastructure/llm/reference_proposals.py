@@ -20,7 +20,7 @@ from smb_requirement_agent.analysis.application.ports.requirement_analyzer impor
 )
 from smb_requirement_agent.analysis.domain.value_objects import IntentProposal, IntentProposalKind
 from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
-from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidence
+from smb_requirement_agent.references.application.ports.reference_grounding import ReferenceEvidence
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 
 

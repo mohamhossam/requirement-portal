@@ -9,10 +9,6 @@ from typing import Protocol
 from smb_kernel.embeddings import Embedding as Embedding
 
 from smb_requirement_agent.analysis.domain.entities import ClarificationQuestion
-from smb_requirement_agent.application.ports.embedding import (
-    KnowledgeEmbeddingPort as KnowledgeEmbeddingPort,
-)
-from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidence
 from smb_requirement_agent.domain.knowledge.entities import (
     AnswerSuggestionSet,
     KnowledgeChunk,
@@ -24,6 +20,10 @@ from smb_requirement_agent.domain.knowledge.entities import (
 )
 from smb_requirement_agent.domain.knowledge.membership import CorpusMembership
 from smb_requirement_agent.jobs.domain.entities import AiJobId
+from smb_requirement_agent.references.application.ports.embedding import (
+    KnowledgeEmbeddingPort as KnowledgeEmbeddingPort,
+)
+from smb_requirement_agent.references.application.ports.reference_grounding import ReferenceEvidence
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
