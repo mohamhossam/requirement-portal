@@ -99,6 +99,31 @@ describe("Requirement workspace reads", () => {
     expect(api.getFeatures).not.toHaveBeenCalled();
   });
 
+  it("refreshes a missing analysis token instead of starting the analysis", async () => {
+    vi.mocked(api.getRequirement).mockResolvedValue({ ...requirement, analysis_context_token: "" });
+    vi.mocked(api.getAnalysis).mockResolvedValue(null);
+    const start = vi.spyOn(api, "startAiJob");
+    renderPage("clarify");
+    await userEvent.click(await screen.findByRole("button", { name: "Analyse this requirement" }));
+    expect(await screen.findByText(/This page was out of date and has been refreshed/)).toBeVisible();
+    expect(start).not.toHaveBeenCalled();
+    await waitFor(() => expect(api.getRequirement).toHaveBeenCalledTimes(2));
+  });
+
+  it("reloads the Requirement when the analysis start is refused as changed", async () => {
+    vi.mocked(api.getAnalysis).mockResolvedValue(null);
+    const start = vi.spyOn(api, "startAiJob").mockRejectedValue(
+      new ApiError(409, "The Requirement changed. Reload it.", "stale_generation_context"),
+    );
+    renderPage("clarify");
+    await userEvent.click(await screen.findByRole("button", { name: "Analyse this requirement" }));
+    expect(await screen.findByText("The Requirement changed. Reload it.")).toBeVisible();
+    expect(start).toHaveBeenCalledWith("req-1", {
+      operation: "analyse_requirement", force: false, context_token: "analysis-context",
+    }, expect.any(String));
+    await waitFor(() => expect(api.getRequirement).toHaveBeenCalledTimes(2));
+  });
+
   it("refreshes Breakdown when returning with a fresh cache", async () => {
     const page = renderPage("breakdown");
     await screen.findByText("No Epic yet");

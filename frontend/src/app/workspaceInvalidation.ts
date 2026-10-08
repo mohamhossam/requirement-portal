@@ -1,5 +1,5 @@
 import type { QueryClient } from "@tanstack/react-query";
-import type { AiJob } from "../api/client";
+import type { AiJob, AiJobStartInput } from "../api/client";
 import { queryKeys } from "./queryKeys";
 
 export type WorkspaceChange =
@@ -61,4 +61,17 @@ export function jobCompletionKeys(job: AiJob) {
   const match = job.result_resources?.map((item) => item.path.match(/\/breakdown\/features\/([^/]+)/)).find(Boolean);
   const featureId = match?.[1] ? decodeURIComponent(match[1]) : undefined;
   return workspaceChangeKeys(job.requirement_id, jobChanges[job.operation], featureId);
+}
+
+// What a start's context token was read from, so a stale or missing token can be refreshed.
+export function contextTokenKeys(id: string, input: AiJobStartInput) {
+  switch (input.operation) {
+    case "analyse_requirement":
+    case "generate_epic": return workspaceChangeKeys(id, "analysis");
+    case "generate_features": return workspaceChangeKeys(id, "epic");
+    case "generate_stories":
+    case "regenerate_story":
+    case "regenerate_story_set": return workspaceChangeKeys(id, "features", input.feature_id);
+    default: return [];
+  }
 }
