@@ -145,7 +145,7 @@ Paths are relative to `src/smb_requirement_agent/`. Ports move with the use case
 | `infrastructure/persistence/{in_memory_ai_jobs,postgres_ai_jobs}.py` | `jobs/infrastructure/` (done in PR 8) |
 | `infrastructure/jobs/` (PR 8 correction: these workers run other contexts' work, so `jobs` cannot hold them) | `architecture_job_worker.py` → `breakdown/infrastructure/` (done in PR 11); `polling_worker.py` (drives `ExecuteAiJob`) → `workflows/infrastructure/`; `prior_art_gate.py`, `requirement_index_worker.py` → `knowledge/infrastructure/` |
 | `infrastructure/exports/` | `governance/infrastructure/` |
-| `infrastructure/llm/` adapters for one context's port | that context's `infrastructure/llm/`; the shared transport and provider selection helpers stay in `infrastructure/llm/`. Done as one step after PR 11: `candidate_mappers.py` and the OpenAI and OpenRouter adapter modules mix analysis and breakdown |
+| `infrastructure/llm/` adapters for one context's port | that context's `infrastructure/llm/`; the shared transport and provider selection helpers stay in `infrastructure/llm/`. Done for analysis and breakdown in PR 11b (`candidate_mappers.py` split into `analysis_mappers.py` and `backlog_mappers.py`). What stays shared: `openai_adapters.py` and `openrouter_adapters.py` (provider selection), `response_sanitizer.py`, and knowledge's adapters, prompts and schemas until PR 15b |
 | `infrastructure/config/`, `infrastructure/text/` | unchanged |
 
 ### Interfaces

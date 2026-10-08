@@ -31,3 +31,6 @@ dc3fe018980c18a2f6a42677c1b0ad45c2c75ee3
 
 # PR 11: the breakdown context moved into smb_requirement_agent/breakdown, imports rewritten (ADR-0103).
 e0016f00422925397279e63de089e8718b66b957
+
+# PR 11b: each context's LLM adapters moved into its package, imports rewritten (ADR-0103).
+79b06203ffba1177208077180290abdc9ffcd40c

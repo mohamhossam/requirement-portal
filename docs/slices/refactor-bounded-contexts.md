@@ -1,8 +1,8 @@
 # Refactor — Bounded-context packages and domain events
 
 **Status:** ADR-0103 accepted and the slice scheduled 2026-10-07. PR 1 delivered. The PR 1
-findings were decided the same day (ADR-0103 Amendment 1). PRs 2–11 delivered. Next is the per-context LLM
-adapters step, then PR 12 (move `governance`).
+findings were decided the same day (ADR-0103 Amendment 1). PRs 2–11 and 11b delivered; PR 12
+(move `governance`) is next.
 
 **Related:** [context map](../architecture/context-map.md),
 [ubiquitous language](../architecture/ubiquitous-language.md).
@@ -106,7 +106,8 @@ stays green. A move that also edits code keeps a separate move-only commit.
 | 8 | Move `jobs` | Leaf context |
 | 9 | Move `requirements` (intake + source documents) | Upstream of everything else |
 | 10 | Move `analysis` | |
-| 11 | Move `breakdown`, with its own `BreakdownContextPort` (F2). Then, as its own step, the per-context LLM adapters (deferred from PR 10) | |
+| 11 | Move `breakdown`, with its own `BreakdownContextPort` (F2) | |
+| 11b | The per-context LLM adapters (deferred from PR 10) | Needs both analysis and breakdown moved: the shared candidate mappers held both |
 | 12 | Move `governance` | |
 | 13 | Move `reporting` | |
 | 14 | Move `workflows` | |
@@ -921,6 +922,61 @@ No shims.
   No file under `tests/characterisation/golden/` changed.
 - `ruff check .` and `ruff format --check .`: clean.
 - `mypy src tests`: no issues in 615 source files.
+- `lint-imports`: 25 contracts kept, 0 broken.
+
+## PR 11b — Per-context LLM adapters (2026-10-08)
+
+### Delivered
+
+**1. The candidate mappers split by context.**
+- `infrastructure/llm/candidate_mappers.py` held analysis's mappers (lines 68–695) and breakdown's
+  Epic, Feature and Story mappers (696–792). No private helper was shared between the halves.
+- They split verbatim into `analysis_mappers.py` and `backlog_mappers.py`, checked with `diff`.
+  Each keeps only the imports it uses.
+- Seven importers were repointed: four local adapters and three test modules.
+
+**2. The move.** One commit, in `.git-blame-ignore-revs`. The layout mirrors the shared one
+(`llm/`, `llm/prompts/`, `llm/schemas/`).
+
+| Context | Moved to `<context>/infrastructure/llm/` |
+|---|---|
+| analysis | `fake_requirement_analyzer`, `local_requirement_analyzer`, `reference_proposals`, `analysis_mappers`, `prompts/analysis_prompt`, `schemas/analysis_schema` |
+| breakdown | `fake_` and `local_` `{epic_generator,feature_generator,story_generator,story_quality_evaluator}`, `story_quality_mapping`, `backlog_mappers`, `prompts/{epic,feature,story,story_quality}_prompt`, `prompts/generation_guidance`, `schemas/{epic,feature,story,story_quality}_schema` |
+
+The rewrite covered the dotted `@patch` targets in `test_local_llm_adapters.py`.
+
+**Stays in the shared `infrastructure/llm/`:**
+
+| Module | Why |
+|---|---|
+| `openai_adapters.py`, `openrouter_adapters.py` | Provider selection and transport: they build every context's adapters |
+| `response_sanitizer.py` | Generic text helpers both mapper halves use |
+| `requirement_knowledge_adapters.py`, `fake_requirement_knowledge.py`, the knowledge and prior-art prompts and schemas | Knowledge's; they move with it in PR 15b |
+
+**Tests stay in `tests/unit/`.** `test_local_llm_adapters`, `test_openai_*`, `test_story_adapters`
+and `test_debug_trace` exercise the adapters through the shared provider modules, and several
+cover both contexts in one file.
+
+### Contracts
+
+Still 25 kept. The adapter contracts already named `{analysis,breakdown}.infrastructure`. Two
+moved adapters reach references' unmoved ports through existing ignores, so the ignored counts
+rose:
+
+| Contract | Ignored imports | New import |
+|---|---|---|
+| `analysis_depends_only_upstream` | 10 → 11 | `reference_proposals → application.ports.reference_grounding` |
+| `breakdown_depends_only_upstream` | 31 → 32 | `prompts/generation_guidance → application.ports.architecture_knowledge` |
+
+The dependency report does not cover infrastructure, so it is unchanged: 224 of 224 modules,
+77 pairs, 13 against the order.
+
+### Validation evidence (PR 11b, local, with PostgreSQL)
+
+- `pytest` with `TEST_DATABASE_URL` set: 1865 passed, 0 skipped, exit 0, after each code commit.
+  No file under `tests/characterisation/golden/` changed.
+- `ruff check .` and `ruff format --check .`: clean.
+- `mypy src tests`: no issues in 622 source files.
 - `lint-imports`: 25 contracts kept, 0 broken.
 
 ## Shims
