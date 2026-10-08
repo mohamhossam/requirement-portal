@@ -16,6 +16,7 @@ source_modules =
     smb_requirement_agent.requirements.domain
     smb_requirement_agent.references.domain
     smb_requirement_agent.analysis.domain
+    smb_requirement_agent.knowledge.domain
     smb_requirement_agent.breakdown.domain
     smb_requirement_agent.governance.domain
 forbidden_modules =
@@ -32,6 +33,8 @@ forbidden_modules =
     smb_requirement_agent.references.infrastructure
     smb_requirement_agent.analysis.application
     smb_requirement_agent.analysis.infrastructure
+    smb_requirement_agent.knowledge.application
+    smb_requirement_agent.knowledge.infrastructure
     smb_requirement_agent.breakdown.application
     smb_requirement_agent.breakdown.infrastructure
     smb_requirement_agent.governance.application
@@ -56,6 +59,7 @@ forbidden_modules =
     smb_requirement_agent.requirements
     smb_requirement_agent.references
     smb_requirement_agent.analysis
+    smb_requirement_agent.knowledge
     smb_requirement_agent.breakdown
     smb_requirement_agent.governance
     smb_requirement_agent.reporting
@@ -71,6 +75,7 @@ source_modules =
     smb_requirement_agent.requirements.application
     smb_requirement_agent.references.application
     smb_requirement_agent.analysis.application
+    smb_requirement_agent.knowledge.application
     smb_requirement_agent.breakdown.application
     smb_requirement_agent.governance.application
     smb_requirement_agent.reporting.application
@@ -83,6 +88,7 @@ forbidden_modules =
     smb_requirement_agent.requirements.infrastructure
     smb_requirement_agent.references.infrastructure
     smb_requirement_agent.analysis.infrastructure
+    smb_requirement_agent.knowledge.infrastructure
     smb_requirement_agent.breakdown.infrastructure
     smb_requirement_agent.governance.infrastructure
     smb_requirement_agent.reporting.infrastructure
@@ -99,6 +105,7 @@ source_modules =
     smb_requirement_agent.requirements.domain
     smb_requirement_agent.references.domain
     smb_requirement_agent.analysis.domain
+    smb_requirement_agent.knowledge.domain
     smb_requirement_agent.breakdown.domain
     smb_requirement_agent.governance.domain
 forbidden_modules =
@@ -119,6 +126,7 @@ source_modules =
     smb_requirement_agent.requirements.application
     smb_requirement_agent.references.application
     smb_requirement_agent.analysis.application
+    smb_requirement_agent.knowledge.application
     smb_requirement_agent.breakdown.application
     smb_requirement_agent.governance.application
     smb_requirement_agent.reporting.application
@@ -142,6 +150,7 @@ forbidden_modules =
     smb_requirement_agent.requirements.infrastructure
     smb_requirement_agent.references.infrastructure
     smb_requirement_agent.analysis.infrastructure
+    smb_requirement_agent.knowledge.infrastructure
     smb_requirement_agent.breakdown.infrastructure
     smb_requirement_agent.governance.infrastructure
     smb_requirement_agent.reporting.infrastructure
@@ -161,6 +170,7 @@ forbidden_modules =
     smb_requirement_agent.requirements.infrastructure
     smb_requirement_agent.references.infrastructure
     smb_requirement_agent.analysis.infrastructure
+    smb_requirement_agent.knowledge.infrastructure
     smb_requirement_agent.breakdown.infrastructure
     smb_requirement_agent.governance.infrastructure
     smb_requirement_agent.reporting.infrastructure
@@ -178,6 +188,7 @@ source_modules =
     smb_requirement_agent.requirements.infrastructure
     smb_requirement_agent.references.infrastructure
     smb_requirement_agent.analysis.infrastructure
+    smb_requirement_agent.knowledge.infrastructure
     smb_requirement_agent.breakdown.infrastructure
     smb_requirement_agent.governance.infrastructure
     smb_requirement_agent.reporting.infrastructure
@@ -202,6 +213,8 @@ source_modules =
     smb_requirement_agent.references.application
     smb_requirement_agent.analysis.domain
     smb_requirement_agent.analysis.application
+    smb_requirement_agent.knowledge.domain
+    smb_requirement_agent.knowledge.application
     smb_requirement_agent.breakdown.domain
     smb_requirement_agent.breakdown.application
     smb_requirement_agent.governance.domain
@@ -267,6 +280,7 @@ forbidden_modules =
     smb_requirement_agent.application.use_cases
     smb_requirement_agent.application.ports
     smb_requirement_agent.interfaces
+    smb_requirement_agent.knowledge
     smb_requirement_agent.jobs
     smb_requirement_agent.requirements
     smb_requirement_agent.references
@@ -288,6 +302,8 @@ source_modules =
     smb_requirement_agent.domain
     smb_requirement_agent.application
     smb_requirement_agent.shared_kernel
+    smb_requirement_agent.knowledge.domain
+    smb_requirement_agent.knowledge.application
     smb_requirement_agent.jobs.domain
     smb_requirement_agent.jobs.application
     smb_requirement_agent.requirements.domain
@@ -324,6 +340,7 @@ forbidden_modules =
     smb_requirement_agent.application.use_cases
     smb_requirement_agent.application.ports
     smb_requirement_agent.interfaces
+    smb_requirement_agent.knowledge
     smb_requirement_agent.identity
     smb_requirement_agent.requirements
     smb_requirement_agent.references
@@ -344,6 +361,8 @@ source_modules =
     smb_requirement_agent.domain
     smb_requirement_agent.application
     smb_requirement_agent.shared_kernel
+    smb_requirement_agent.knowledge.domain
+    smb_requirement_agent.knowledge.application
     smb_requirement_agent.identity.domain
     smb_requirement_agent.identity.application
     smb_requirement_agent.requirements.domain
@@ -380,6 +399,7 @@ forbidden_modules =
     smb_requirement_agent.application.use_cases
     smb_requirement_agent.application.ports
     smb_requirement_agent.interfaces
+    smb_requirement_agent.knowledge
     smb_requirement_agent.analysis
     smb_requirement_agent.references
     smb_requirement_agent.breakdown
@@ -401,6 +421,8 @@ source_modules =
     smb_requirement_agent.domain
     smb_requirement_agent.application
     smb_requirement_agent.shared_kernel
+    smb_requirement_agent.knowledge.domain
+    smb_requirement_agent.knowledge.application
     smb_requirement_agent.identity.domain
     smb_requirement_agent.identity.application
     smb_requirement_agent.jobs.domain
@@ -437,6 +459,7 @@ forbidden_modules =
     smb_requirement_agent.application.use_cases
     smb_requirement_agent.application.ports
     smb_requirement_agent.interfaces
+    smb_requirement_agent.knowledge
     smb_requirement_agent.breakdown
     smb_requirement_agent.governance
     smb_requirement_agent.reporting
@@ -456,6 +479,8 @@ source_modules =
     smb_requirement_agent.domain
     smb_requirement_agent.application
     smb_requirement_agent.shared_kernel
+    smb_requirement_agent.knowledge.domain
+    smb_requirement_agent.knowledge.application
     smb_requirement_agent.identity.domain
     smb_requirement_agent.identity.application
     smb_requirement_agent.jobs.domain
@@ -641,6 +666,7 @@ source_modules =
     smb_requirement_agent.requirements
     smb_requirement_agent.references
     smb_requirement_agent.analysis
+    smb_requirement_agent.knowledge
     smb_requirement_agent.breakdown
     smb_requirement_agent.governance
     smb_requirement_agent.reporting
@@ -667,6 +693,7 @@ forbidden_modules =
     smb_requirement_agent.application.use_cases
     smb_requirement_agent.application.ports
     smb_requirement_agent.interfaces
+    smb_requirement_agent.knowledge
     smb_requirement_agent.analysis
     smb_requirement_agent.breakdown
     smb_requirement_agent.governance
@@ -686,6 +713,8 @@ source_modules =
     smb_requirement_agent.domain
     smb_requirement_agent.application
     smb_requirement_agent.shared_kernel
+    smb_requirement_agent.knowledge.domain
+    smb_requirement_agent.knowledge.application
     smb_requirement_agent.identity.domain
     smb_requirement_agent.identity.application
     smb_requirement_agent.jobs.domain
@@ -702,3 +731,60 @@ source_modules =
     smb_requirement_agent.workflows.application
 forbidden_modules =
     smb_requirement_agent.references.infrastructure
+
+[importlinter:contract:knowledge_internal_layers]
+name = knowledge: infrastructure > application > domain
+type = layers
+containers =
+    smb_requirement_agent.knowledge
+layers =
+    infrastructure
+    application
+    domain
+
+[importlinter:contract:knowledge_depends_only_upstream]
+name = knowledge depends only on analysis and the contexts upstream of it (ADR-0103 §2)
+type = forbidden
+source_modules =
+    smb_requirement_agent.knowledge
+forbidden_modules =
+    smb_requirement_agent.domain
+    smb_requirement_agent.application.use_cases
+    smb_requirement_agent.application.ports
+    smb_requirement_agent.interfaces
+    smb_requirement_agent.breakdown
+    smb_requirement_agent.governance
+    smb_requirement_agent.reporting
+ignore_imports =
+    # The shared technical port every context may use.
+    smb_requirement_agent.knowledge.** -> smb_requirement_agent.application.ports.transaction_manager
+# As for the other contexts: the shared technical modules still reach unmoved context code.
+allow_indirect_imports = True
+
+[importlinter:contract:knowledge_published_surface]
+name = Other contexts use knowledge's domain and ports, never its adapters (ADR-0103 §5)
+type = forbidden
+# Context sources are their domain and application layers: infrastructure may reuse another
+# context's codecs (revision snapshots serialise the whole tree, PR 12).
+source_modules =
+    smb_requirement_agent.domain
+    smb_requirement_agent.application
+    smb_requirement_agent.shared_kernel
+    smb_requirement_agent.identity.domain
+    smb_requirement_agent.identity.application
+    smb_requirement_agent.jobs.domain
+    smb_requirement_agent.jobs.application
+    smb_requirement_agent.requirements.domain
+    smb_requirement_agent.requirements.application
+    smb_requirement_agent.references.domain
+    smb_requirement_agent.references.application
+    smb_requirement_agent.analysis.domain
+    smb_requirement_agent.analysis.application
+    smb_requirement_agent.breakdown.domain
+    smb_requirement_agent.breakdown.application
+    smb_requirement_agent.governance.domain
+    smb_requirement_agent.governance.application
+    smb_requirement_agent.reporting.application
+    smb_requirement_agent.workflows.application
+forbidden_modules =
+    smb_requirement_agent.knowledge.infrastructure

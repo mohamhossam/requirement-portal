@@ -53,45 +53,13 @@ TECHNICAL = "technical"
 # Most specific prefix wins. Prefixes are relative to the package root.
 DOMAIN = {
     "shared_kernel": "shared_kernel",
-    # After PR 2 this module holds only ImpactDecision (source impact).
-    "domain.document.lineage": "knowledge",
-    "domain.knowledge": "knowledge",
-}
-
-USE_CASES = {
-    "knowledge": [
-        "requirement_knowledge",
-        "requirement_indexing",
-        "rebuild_knowledge_index",
-        "knowledge_portfolio",
-        "corpus_actions",
-        "unified_knowledge_search",
-        "prior_art",
-        "source_impact",
-        "answer_suggestions",
-    ],
 }
 
 PORTS = {
-    "knowledge": [
-        # Requirement access for knowledge's automatic work (PR 14, F4).
-        "knowledge_access",
-        # The reverse evidence index and impact decisions (PR 9 reassigned it from
-        # requirements: only knowledge, reporting and workflows use it).
-        "source_dependencies",
-        "corpus_membership",
-        "corpus_summary",
-        "knowledge_index_generations",
-        "knowledge_portfolio",
-        "prior_art",
-        "requirement_indexing",
-        "requirement_knowledge",
-    ],
     TECHNICAL: ["domain_events", "expected_context", "external_work", "transaction_manager"],
 }
 
 APPLICATION_MODULES = {
-    "application.prior_art_evaluation": "knowledge",
     # Base errors stay shared; the context errors in it move to their contexts (F5).
     "application.errors": TECHNICAL,
     # The in-process dispatcher (PR 4).
@@ -109,6 +77,7 @@ CONTEXT_PACKAGES = (
     "requirements",
     "references",
     "analysis",
+    "knowledge",
     "breakdown",
     "governance",
     "reporting",
@@ -121,8 +90,6 @@ def _prefixes() -> dict[str, str]:
     for context in CONTEXT_PACKAGES:
         table.update({f"{context}.domain": context, f"{context}.application": context})
     table.update(APPLICATION_MODULES)
-    for context, names in USE_CASES.items():
-        table.update({f"application.use_cases.{name}": context for name in names})
     for context, names in PORTS.items():
         table.update({f"application.ports.{name}": context for name in names})
     return table
@@ -141,10 +108,8 @@ def classify(module: str, table: dict[str, str]) -> str | None:
 
 def _in_scope(module: str) -> bool:
     relative = module.removeprefix(f"{ROOT}.")
-    # domain.document is only the package left around lineage.py (PR 9, PR 15a).
     if relative in (
         "domain",
-        "domain.document",
         "application",
         "application.use_cases",
         "application.ports",
