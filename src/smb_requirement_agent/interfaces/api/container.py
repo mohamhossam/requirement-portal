@@ -163,6 +163,7 @@ from smb_requirement_agent.interfaces.api.composition.references import (
     build_backlog_handoff_worker,
     build_knowledge_service,
 )
+from smb_requirement_agent.interfaces.api.composition.reporting import build_reporting
 from smb_requirement_agent.interfaces.api.composition.requirements import (
     build_documents,
     build_requirement_intake,
@@ -601,7 +602,7 @@ def _build_container(
         domain_events,
         access_service,
     )
-    worklist = persistence.worklist(knowledge.review)
+    reporting = build_reporting(persistence, knowledge.review, resolved_clock)
     intake = build_requirement_intake(
         persistence, resolved_clock, access_service, domain_events, knowledge.screen_scheduler
     )
@@ -780,11 +781,9 @@ def _build_container(
         ai_jobs=jobs.ai_jobs,
         execute_ai_job=jobs.execute_ai_job,
         notifications=jobs.notifications,
-        list_activity=ListActivity(persistence.activity_reader),
-        get_operational_report=GetOperationalReport(
-            persistence.activity_reader, persistence.reporting_reader, resolved_clock
-        ),
-        saved_views=SavedViews(persistence.saved_view_repository, resolved_clock),
+        list_activity=reporting.list_activity,
+        get_operational_report=reporting.get_operational_report,
+        saved_views=reporting.saved_views,
         ai_job_worker=jobs.worker,
         resolve_current_actor=ResolveCurrentActor(resolved_identity, persistence.actor_directory),
         search_known_actors=SearchKnownActors(persistence.actor_directory),
@@ -797,8 +796,8 @@ def _build_container(
         ),
         create_requirement=intake.create_requirement,
         get_requirement=intake.get_requirement,
-        list_requirement_worklist=worklist.reader,
-        worklist_projection=worklist.projection,
+        list_requirement_worklist=reporting.worklist.reader,
+        worklist_projection=reporting.worklist.projection,
         create_requirement_draft=intake.create_requirement_draft,
         get_requirement_draft=intake.get_requirement_draft,
         list_requirement_drafts=intake.list_requirement_drafts,
