@@ -19,7 +19,6 @@ from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration
     AnalysisCollaboration,
 )
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
-from smb_requirement_agent.application.public_errors import describe_public_error
 from smb_requirement_agent.breakdown.application.ports.epic_generator import EpicGeneratorPort
 from smb_requirement_agent.breakdown.application.ports.feature_generator import FeatureGeneratorPort
 from smb_requirement_agent.breakdown.application.ports.story_generator import StoryGeneratorPort
@@ -89,6 +88,7 @@ from smb_requirement_agent.references.application.ports.architecture_knowledge i
     ActiveArchitectureReleasePort,
     ArchitectureKnowledgePort,
 )
+from smb_requirement_agent.workflows.application.public_errors import describe_public_error
 from smb_requirement_agent.workflows.application.use_cases.ai_jobs import AnalysisProgressReporter
 from smb_requirement_agent.workflows.application.use_cases.generation_context import (
     GenerationContextTokens,

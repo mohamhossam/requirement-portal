@@ -48,10 +48,6 @@ from smb_requirement_agent.application.errors import (
     ServiceUnavailableError,
     UnsupportedDocumentError,
 )
-from smb_requirement_agent.application.public_errors import (
-    FailureCategory,
-    describe_public_error,
-)
 from smb_requirement_agent.breakdown.application.errors import (
     ArchitectureJobNotFoundError,
     ArchitectureMappingConflictError,
@@ -183,6 +179,10 @@ from smb_requirement_agent.shared_kernel.errors import (
     InvalidRequirementIdError,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.workflows.application.public_errors import (
+    FailureCategory,
+    describe_public_error,
+)
 from tests.conftest import FAKE_PROVIDER_SETTINGS
 
 

@@ -29,7 +29,6 @@ from smb_kernel.llm.profiles import (
 from smb_kernel.llm.structured_output import truncated
 
 from smb_requirement_agent.application.errors import KnowledgeGenerationError, ModelTransportError
-from smb_requirement_agent.application.public_errors import describe_public_error
 from smb_requirement_agent.infrastructure.config.options import ConfigurationError, LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.interfaces.api.container import build_container
@@ -42,6 +41,7 @@ from smb_requirement_agent.knowledge.infrastructure.requirement_knowledge_reposi
     InMemoryRequirementKnowledgeStore,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.workflows.application.public_errors import describe_public_error
 
 
 class Result(BaseModel):

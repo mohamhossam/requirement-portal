@@ -21,7 +21,6 @@ from smb_requirement_agent.analysis.application.use_cases.clarify_requirement_an
 from smb_requirement_agent.analysis.domain.value_objects import ClarificationKind, QuestionId
 from smb_requirement_agent.application.ports.external_work import guard_external_work
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.public_errors import describe_public_error
 from smb_requirement_agent.breakdown.application.use_cases.generate_epic import GenerateEpic
 from smb_requirement_agent.breakdown.application.use_cases.generate_features import GenerateFeatures
 from smb_requirement_agent.breakdown.application.use_cases.story_change_proposals import (
@@ -86,6 +85,7 @@ from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,
 )
+from smb_requirement_agent.workflows.application.public_errors import describe_public_error
 from smb_requirement_agent.workflows.application.use_cases.generation_context import (
     GenerationContextTokens,
 )
