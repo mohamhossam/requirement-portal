@@ -18,7 +18,7 @@ from smb_requirement_agent.breakdown.application.ports.generation_guidance impor
     GenerationGuidance,
 )
 from smb_requirement_agent.breakdown.domain.epic.entities import Epic
-from smb_requirement_agent.infrastructure.llm.candidate_mappers import to_feature_candidates
+from smb_requirement_agent.infrastructure.llm.backlog_mappers import to_feature_candidates
 from smb_requirement_agent.infrastructure.llm.prompts.feature_prompt import (
     FEATURE_SYSTEM_PROMPT,
     PROMPT_VERSION,

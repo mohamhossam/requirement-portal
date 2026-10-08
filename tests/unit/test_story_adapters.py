@@ -19,7 +19,7 @@ from smb_requirement_agent.breakdown.domain.story.quality import (
     InvestCriterion,
     StoryQualityEvidence,
 )
-from smb_requirement_agent.infrastructure.llm.candidate_mappers import to_story_candidates
+from smb_requirement_agent.infrastructure.llm.backlog_mappers import to_story_candidates
 from smb_requirement_agent.infrastructure.llm.local_story_generator import LocalStoryGenerator
 from smb_requirement_agent.infrastructure.llm.openai_adapters import OpenAIStoryGenerator
 from smb_requirement_agent.infrastructure.llm.prompts.story_prompt import PROMPT_VERSION

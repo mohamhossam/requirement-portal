@@ -19,7 +19,7 @@ from smb_kernel.llm.local_structured_output import (
 )
 
 from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
-from smb_requirement_agent.infrastructure.llm.candidate_mappers import to_analysis_candidate
+from smb_requirement_agent.infrastructure.llm.analysis_mappers import to_analysis_candidate
 from smb_requirement_agent.infrastructure.llm.schemas.analysis_schema import (
     AnalysisEvidenceCitationSchema,
     RequirementAnalysisSchema,

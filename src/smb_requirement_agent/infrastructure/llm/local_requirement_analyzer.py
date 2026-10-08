@@ -32,7 +32,7 @@ from smb_requirement_agent.application.errors import (
     ModelTransportError,
     RequirementAnalysisGenerationError,
 )
-from smb_requirement_agent.infrastructure.llm.candidate_mappers import (
+from smb_requirement_agent.infrastructure.llm.analysis_mappers import (
     analysis_evidence_subjects,
     attach_analysis_evidence,
     normalize_analysis_intent,

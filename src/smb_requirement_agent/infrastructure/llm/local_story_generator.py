@@ -24,7 +24,7 @@ from smb_requirement_agent.breakdown.application.ports.story_generator import St
 from smb_requirement_agent.breakdown.domain.epic.entities import Epic
 from smb_requirement_agent.breakdown.domain.feature.entities import Feature
 from smb_requirement_agent.breakdown.domain.story.entities import UserStory
-from smb_requirement_agent.infrastructure.llm.candidate_mappers import to_story_candidates
+from smb_requirement_agent.infrastructure.llm.backlog_mappers import to_story_candidates
 from smb_requirement_agent.infrastructure.llm.prompts.story_prompt import (
     PROMPT_VERSION,
     SPLIT_OPERATION,
