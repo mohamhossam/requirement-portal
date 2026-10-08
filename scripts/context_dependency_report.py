@@ -83,17 +83,6 @@ USE_CASES = {
         "source_impact",
         "answer_suggestions",
     ],
-    "workflows": [
-        "requirement_commands",
-        "ai_job_execution",
-        "ai_job_scheduling",
-        "ai_jobs",
-        "identity_access",
-        # Reached through ExpectedContextPort once PR 5 adds it.
-        "generation_context",
-        "requirement_impact",
-        "internal_reads",
-    ],
 }
 
 PORTS = {
@@ -149,6 +138,7 @@ CONTEXT_PACKAGES = (
     "breakdown",
     "governance",
     "reporting",
+    "workflows",
 )
 
 

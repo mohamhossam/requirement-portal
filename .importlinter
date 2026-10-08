@@ -35,6 +35,8 @@ forbidden_modules =
     smb_requirement_agent.governance.infrastructure
     smb_requirement_agent.reporting.application
     smb_requirement_agent.reporting.infrastructure
+    smb_requirement_agent.workflows.application
+    smb_requirement_agent.workflows.infrastructure
 
 [importlinter:contract:shared_kernel_pure]
 name = The shared kernel imports nothing else from requirement-portal (ADR-0103)
@@ -53,6 +55,7 @@ forbidden_modules =
     smb_requirement_agent.breakdown
     smb_requirement_agent.governance
     smb_requirement_agent.reporting
+    smb_requirement_agent.workflows
 
 [importlinter:contract:application_independence]
 name = Application must not depend on infrastructure or interfaces
@@ -66,6 +69,7 @@ source_modules =
     smb_requirement_agent.breakdown.application
     smb_requirement_agent.governance.application
     smb_requirement_agent.reporting.application
+    smb_requirement_agent.workflows.application
 forbidden_modules =
     smb_requirement_agent.infrastructure
     smb_requirement_agent.interfaces
@@ -76,6 +80,7 @@ forbidden_modules =
     smb_requirement_agent.breakdown.infrastructure
     smb_requirement_agent.governance.infrastructure
     smb_requirement_agent.reporting.infrastructure
+    smb_requirement_agent.workflows.infrastructure
 
 [importlinter:contract:domain_framework_independence]
 name = Domain must not import frameworks or provider SDKs
@@ -109,6 +114,7 @@ source_modules =
     smb_requirement_agent.breakdown.application
     smb_requirement_agent.governance.application
     smb_requirement_agent.reporting.application
+    smb_requirement_agent.workflows.application
 forbidden_modules =
     fastapi
     psycopg
@@ -130,6 +136,7 @@ forbidden_modules =
     smb_requirement_agent.breakdown.infrastructure
     smb_requirement_agent.governance.infrastructure
     smb_requirement_agent.reporting.infrastructure
+    smb_requirement_agent.workflows.infrastructure
 allow_indirect_imports = True
 
 [importlinter:contract:dependencies_no_adapter_selection]
@@ -147,6 +154,7 @@ forbidden_modules =
     smb_requirement_agent.breakdown.infrastructure
     smb_requirement_agent.governance.infrastructure
     smb_requirement_agent.reporting.infrastructure
+    smb_requirement_agent.workflows.infrastructure
     smb_requirement_agent.infrastructure.documents
     smb_requirement_agent.infrastructure.jobs
 allow_indirect_imports = True
@@ -163,6 +171,7 @@ source_modules =
     smb_requirement_agent.breakdown.infrastructure
     smb_requirement_agent.governance.infrastructure
     smb_requirement_agent.reporting.infrastructure
+    smb_requirement_agent.workflows.infrastructure
 forbidden_modules =
     smb_requirement_agent.interfaces
 
@@ -186,6 +195,7 @@ source_modules =
     smb_requirement_agent.governance.domain
     smb_requirement_agent.governance.application
     smb_requirement_agent.reporting.application
+    smb_requirement_agent.workflows.application
 forbidden_modules =
     smb_kernel.identity.oidc
     smb_kernel.identity.fake
@@ -602,3 +612,30 @@ source_modules =
     smb_requirement_agent.governance.application
 forbidden_modules =
     smb_requirement_agent.reporting.infrastructure
+
+[importlinter:contract:workflows_internal_layers]
+name = workflows: infrastructure > application (no domain layer: it orchestrates)
+type = layers
+containers =
+    smb_requirement_agent.workflows
+layers =
+    infrastructure
+    application
+
+[importlinter:contract:nothing_imports_workflows]
+name = workflows is downstream of every context: only delivery and composition import it (ADR-0103 §2)
+type = forbidden
+source_modules =
+    smb_requirement_agent.domain
+    smb_requirement_agent.application
+    smb_requirement_agent.infrastructure
+    smb_requirement_agent.shared_kernel
+    smb_requirement_agent.identity
+    smb_requirement_agent.jobs
+    smb_requirement_agent.requirements
+    smb_requirement_agent.analysis
+    smb_requirement_agent.breakdown
+    smb_requirement_agent.governance
+    smb_requirement_agent.reporting
+forbidden_modules =
+    smb_requirement_agent.workflows
