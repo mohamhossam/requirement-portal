@@ -10,12 +10,6 @@ from datetime import date, timedelta
 
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
-from smb_requirement_agent.analysis.domain.lineage import analysis_lineage
-from smb_requirement_agent.analysis.domain.value_objects import (
-    IntentProposal,
-    IntentProposalStatus,
-)
 from smb_requirement_agent.application.errors import (
     PersistenceError,
     RequirementAnalysisConflictError,
@@ -31,8 +25,8 @@ from smb_requirement_agent.application.ports.knowledge_events import (
     KnowledgeStateDecoderPort,
 )
 from smb_requirement_agent.application.ports.reference_grounding import (
+    CitationCurrencyPort,
     ReferenceEvidence,
-    ReferenceEvidencePort,
     ReferenceKnowledgePort,
 )
 from smb_requirement_agent.application.ports.reference_publications import (
@@ -50,14 +44,14 @@ class ReferenceCurrency:
         self._states = states
         self._transactions = transactions
 
-    def _current(self, citation: PublishedReference) -> bool:
+    def is_current(self, citation: PublishedReference) -> bool:
         state = self._states.get(citation.document_id)
         return state is not None and state.cites(citation)
 
     def require_current(self, evidence: Sequence[PublishedReference]) -> None:
         with self._transactions.transaction():
             self._states.lock(tuple(sorted({c.document_id for c in evidence})))
-            if any(not self._current(c) for c in evidence):
+            if any(not self.is_current(c) for c in evidence):
                 raise RequirementAnalysisConflictError(
                     "A cited reference was withdrawn or replaced. "
                     "Re-analyse and reconcile its applicability before continuing."
@@ -72,47 +66,14 @@ class ReferenceCurrency:
                     overdue[document_id] = state.review_due_on
         return overdue
 
-    def stale_analysis(
-        self, analysis: RequirementAnalysis, *, target_ids: Sequence[str] | None = None
-    ) -> tuple[str, ...]:
-        with self._transactions.transaction():
-            origins = analysis_lineage(analysis)
-            self._states.lock(tuple(sorted({item.citation.document_id for item in origins})))
-            return (
-                *self.stale_proposals(analysis.intent_proposals),
-                *(
-                    item.citation.publication_id
-                    for item in origins
-                    if not self._current(item.citation)
-                ),
-            )
-
-    def stale_proposals(self, proposals: Sequence[IntentProposal]) -> tuple[str, ...]:
-        with self._transactions.transaction():
-            self._states.lock(
-                tuple(
-                    sorted(
-                        {
-                            c.document_id
-                            for p in proposals
-                            if p.status is not IntentProposalStatus.REJECTED
-                            for c in p.reference_evidence
-                        }
-                    )
-                )
-            )
-            return tuple(
-                p.id.value
-                for p in proposals
-                if p.status is not IntentProposalStatus.REJECTED
-                and any(not self._current(c) for c in p.reference_evidence)
-            )
+    def lock_documents(self, document_ids: tuple[str, ...]) -> None:
+        self._states.lock(document_ids)
 
 
 class CurrentReferences:
     """Library retrieval with local currency checks: one `ReferenceSearchPort`."""
 
-    def __init__(self, knowledge: ReferenceKnowledgePort, currency: ReferenceEvidencePort) -> None:
+    def __init__(self, knowledge: ReferenceKnowledgePort, currency: CitationCurrencyPort) -> None:
         self._knowledge = knowledge
         self._currency = currency
 
@@ -121,14 +82,6 @@ class CurrentReferences:
 
     def require_current(self, evidence: Sequence[PublishedReference]) -> None:
         self._currency.require_current(evidence)
-
-    def stale_analysis(
-        self, analysis: RequirementAnalysis, *, target_ids: Sequence[str] | None = None
-    ) -> tuple[str, ...]:
-        return self._currency.stale_analysis(analysis, target_ids=target_ids)
-
-    def stale_proposals(self, proposals: Sequence[IntentProposal]) -> tuple[str, ...]:
-        return self._currency.stale_proposals(proposals)
 
 
 class ProjectKnowledgeEvents:

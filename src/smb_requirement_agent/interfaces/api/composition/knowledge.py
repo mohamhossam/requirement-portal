@@ -6,6 +6,9 @@ from dataclasses import dataclass
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.application.use_cases.reference_staleness import (
+    AnalysisReferenceCurrency,
+)
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceKnowledgePort
 from smb_requirement_agent.application.use_cases.answer_suggestions import (
     SuggestClarificationAnswers,
@@ -236,7 +239,7 @@ def build_requirement_knowledge(
             access,
             persistence.transaction_manager,
             clock,
-            reference_currency,
+            AnalysisReferenceCurrency(reference_currency, persistence.transaction_manager),
         ),
         suggest_answers=SuggestClarificationAnswers(
             persistence.requirement_repository,

@@ -8,9 +8,6 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Protocol
 
-from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
-from smb_requirement_agent.analysis.domain.value_objects import IntentProposal
-from smb_requirement_agent.application.errors import RequirementAnalysisConflictError
 from smb_requirement_agent.shared_kernel.citation import PublishedReference
 
 
@@ -23,12 +20,22 @@ class ReferenceEvidence:
     context_locations: tuple[str, ...]
 
 
-class ReferenceEvidencePort(Protocol):
-    def stale_analysis(
-        self, analysis: RequirementAnalysis, *, target_ids: Sequence[str] | None = None
-    ) -> tuple[str, ...]: ...
-    def stale_proposals(self, proposals: Sequence[IntentProposal]) -> tuple[str, ...]: ...
+class CitationCurrencyPort(Protocol):
+    """Whether cited publications are still current, answered from the local copy."""
+
     def require_current(self, evidence: Sequence[PublishedReference]) -> None: ...
+
+
+class PublicationCurrencyPort(CitationCurrencyPort, Protocol):
+    """The primitives a staleness check needs, inside the caller's transaction.
+
+    Analysis's reference currency (`AnalysisReferenceCurrency`) is built on these (ADR-0103
+    PR 15a): lock the cited documents' local state, then ask whether each citation is current.
+    """
+
+    def lock_documents(self, document_ids: tuple[str, ...]) -> None: ...
+
+    def is_current(self, citation: PublishedReference) -> bool: ...
 
 
 class ReferenceReviewPort(Protocol):
@@ -41,7 +48,7 @@ class ReferenceReviewPort(Protocol):
         ...
 
 
-class ReferenceSearchPort(ReferenceEvidencePort, Protocol):
+class ReferenceSearchPort(CitationCurrencyPort, Protocol):
     def retrieve(self, query: str) -> tuple[ReferenceEvidence, ...]: ...
 
 
@@ -51,7 +58,7 @@ class ReferenceKnowledgePort(Protocol):
     Everything crosses as this application's own values (`ReferenceEvidence`,
     `PublishedReference`), never the library's chunks, so the library can move to
     its own service behind an HTTP adapter. Whether a citation is still current
-    is answered locally, by `ReferenceEvidencePort`.
+    is answered locally, by `CitationCurrencyPort`.
     """
 
     def retrieve(self, query: str) -> tuple[ReferenceEvidence, ...]: ...
@@ -61,12 +68,3 @@ class ReferenceKnowledgePort(Protocol):
     def search_evidence(self, query: str) -> tuple[ReferenceEvidence, ...]:
         """Every ranked hit for `query`, unbudgeted, each with its citation and context."""
         ...
-
-
-def require_analysis_references(
-    port: ReferenceEvidencePort, analysis: RequirementAnalysis, *, target_ids: Sequence[str] = ()
-) -> None:
-    if port.stale_analysis(analysis, target_ids=target_ids):
-        raise RequirementAnalysisConflictError(
-            "Cited evidence changed. Review source impact before continuing."
-        )

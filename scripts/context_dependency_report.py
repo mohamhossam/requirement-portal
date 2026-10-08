@@ -74,7 +74,8 @@ USE_CASES = {
         "knowledge_event_cursor",
         "knowledge_views",
         "qualify_chunk_tokens",
-        # Split: its analysis half (stale_analysis, stale_proposals) moves to analysis in PR 15a.
+        # Its analysis half (stale_analysis, stale_proposals) is analysis's reference_staleness
+        # since PR 15a.
         "reference_currency",
     ],
     "knowledge": [

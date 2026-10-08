@@ -140,7 +140,7 @@ def check_restored_behavior(database_url: str, manifest: RecoveryManifest) -> No
         if analysis is None or not any(p.reference_evidence for p in analysis.intent_proposals):
             raise RuntimeError("Restored analysis lost its cited reference.")
         # The local copy alone decides currency: no library is connected here.
-        if container.reference_currency.stale_proposals(analysis.intent_proposals):
+        if container.source_impact.stale_proposals(analysis.intent_proposals):
             raise RuntimeError("Restored local copy no longer holds the cited publication.")
         results = container.unified_knowledge_search.execute("XGPON coverage")
         if not any(hit.source_id == manifest.requirement_id for hit in results):

@@ -5,13 +5,15 @@ from dataclasses import dataclass
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.application.ports.reference_analysis import (
+    ReferenceEvidencePort,
+)
 from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
 from smb_requirement_agent.analysis.domain.value_objects import IntentProposal
 from smb_requirement_agent.application.errors import (
     ArtifactVersionConflictError,
     DocumentNotFoundError,
 )
-from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidencePort
 from smb_requirement_agent.application.ports.reference_publications import (
     ReferencePublicationStatePort,
 )

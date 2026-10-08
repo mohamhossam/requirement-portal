@@ -19,6 +19,7 @@ from smb_requirement_agent.analysis.application.ports.knowledge_screening import
 )
 from smb_requirement_agent.analysis.application.ports.reference_analysis import (
     ReferenceAnalysisPort,
+    ReferenceEvidencePort,
 )
 from smb_requirement_agent.analysis.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
@@ -70,10 +71,7 @@ from smb_requirement_agent.application.errors import (
     RequirementAnalysisNotFoundError,
     RequirementNotFoundError,
 )
-from smb_requirement_agent.application.ports.reference_grounding import (
-    ReferenceEvidencePort,
-    ReferenceReviewPort,
-)
+from smb_requirement_agent.application.ports.reference_grounding import ReferenceReviewPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.identity.application.ports.actor_directory import ActorDirectoryPort
