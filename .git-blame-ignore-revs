@@ -43,3 +43,6 @@ eb30eda8c906a69f101c6c93d74017e2e65fb8d9
 
 # PR 14: the workflows context moved into smb_requirement_agent/workflows, imports rewritten (ADR-0103).
 3293b75ef9cf20d6d7efe8bd9dc5887be63240ce
+
+# PR 15a: the references context moved into smb_requirement_agent/references, imports rewritten (ADR-0103).
+148fd91f28cb7652c3ddb71e0921f6cf83b39571

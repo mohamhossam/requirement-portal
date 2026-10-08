@@ -51,7 +51,7 @@ An arrow means "depends on". It runs from downstream to upstream.
 
   A supplier offers a published surface (`application/published.py`, `application/ports/`, `domain/`) and never imports its customer.
 - **`references` → knowledge-portal: anticorruption layer.**
-  - `references/infrastructure/knowledge_client.py`, today `infrastructure/knowledge_client.py` (ADR-0099), translates knowledge-portal's HTTP contract into this service's port types.
+  - `references/infrastructure/knowledge_client.py` (ADR-0099; moved there in PR 15a) translates knowledge-portal's HTTP contract into this service's port types.
   - It is conformist to knowledge-portal's event feed (`knowledge_events`).
   - The contract lives in `contracts/knowledge-internal.openapi.json`.
 - **knowledge-portal → this service: open host service.**
@@ -83,15 +83,15 @@ Paths are relative to `src/smb_requirement_agent/`. Ports move with the use case
 | `domain/requirement/*` | `requirements/domain/requirement/` (done in PR 9) |
 | `domain/document/{entities,attachment,ingestion,value_objects,errors}.py` | `requirements/domain/document/` (done in PR 9) |
 | `domain/document/lineage.py` (`ImpactDecision`, after PR 2) | `knowledge/domain/` (source impact) |
-| `domain/document/reference.py` | `references/domain/`; its `to_payload`/`from_payload` move to infrastructure in PR 2 |
+| `domain/document/reference.py` | `references/domain/reference.py` (done in PR 15a); its `to_payload`/`from_payload` moved to infrastructure in PR 2 |
 | `domain/analysis/*` | `analysis/domain/` (done in PR 10, with `lineage.py`, formerly `application/use_cases/source_lineage.py`) |
 | `domain/epic/*`, `domain/feature/*`, `domain/story/*` | `breakdown/domain/{epic,feature,story}/` (done in PR 11) |
 | `domain/architecture/{entities,errors,events}.py` (impact) | `breakdown/domain/architecture/` (done in PR 11) |
-| `domain/architecture/knowledge.py` (catalogue) | `references/domain/`; its duplicate-named error becomes `InvalidRelationshipKindError` in PR 2 |
+| `domain/architecture/knowledge.py` (catalogue vocabulary) | `references/domain/architecture/knowledge.py` (done in PR 15a); its duplicate-named error became `InvalidRelationshipKindError` in PR 2. The catalogue content breakdown's impact records (`SystemReference`, `ArchitectureDependency`, `ArchitectureCitation` and the rest, with `InvalidArchitectureContentError`) moved from breakdown to `references/domain/architecture/catalogue.py` in PR 15a (F8) |
 | `domain/review/*`, `domain/revision/*` | `governance/domain/{review,revision}/` (done in PR 12) |
-| `domain/knowledge/historic.py` | `references/domain/`; its codec moves to infrastructure in PR 2, and its content-page parsing to the ACL in PR 15a |
+| `domain/knowledge/historic.py` | `references/domain/historic.py` (done in PR 15a); its codec moved to infrastructure in PR 2. Moving its content-page parsing (`from_entry`) into the ACL is deferred to PR 16 |
 | `domain/knowledge/{entities,membership,prior_art}.py` | `knowledge/domain/` |
-| `domain/knowledge/errors.py` | split: `InvalidKnowledgeError` to `references/domain/`; the finding, review, retirement and membership errors to `knowledge/domain/` |
+| `domain/knowledge/errors.py` | split in PR 15a: `KnowledgeError` and `InvalidKnowledgeError` to `references/domain/errors.py`; the finding, review, retirement and membership errors to `domain/knowledge/screening_errors.py` (knowledge, moving in PR 15b) |
 | `domain/identity/*` | `identity/domain/` (done in PR 7) |
 | `domain/jobs/*` | `jobs/domain/` (done in PR 8) |
 
@@ -102,7 +102,7 @@ Paths are relative to `src/smb_requirement_agent/`. Ports move with the use case
 | `identity` | none. `identity_access` moved to `workflows` (F4, PR 14); `identity` publishes `RequirementAccessPort` |
 | `jobs` | `job_execution_context`, `provider_call_rate`, `retention` (in `jobs/application/use_cases/` since PR 8), `command_fingerprint` (from workflows' `ai_jobs`, PR 14). `leased_jobs` is breakdown's (PR 8 correction) |
 | `requirements` | `create_requirement`, `update_requirement`, `get_requirement`, `requirement_drafts`, `owned_requirements`, `requirement_sources`, `documents`, `attachment_ingestion`; plus `application/document_upload_validation.py` (all in `requirements/application/` since PR 9) |
-| `references` | `historic_corpus`, `knowledge_event_cursor`, `knowledge_views`, `qualify_chunk_tokens`, `reference_currency` (its citation half); plus `application/{grounding,retrieval}_evaluation.py` |
+| `references` | `historic_corpus`, `knowledge_event_cursor`, `knowledge_views`, `qualify_chunk_tokens`, `reference_currency` (its citation half); plus `application/{grounding,retrieval}_evaluation.py`; all in `references/application/` since PR 15a. `bounded_knowledge_text` is `references/domain/bounded_text.py` (PR 15a). The analysis half of `reference_currency` is analysis's `reference_staleness` (PR 15a) |
 | `analysis` | `analyze_requirement`, `get_requirement_analysis`, `clarify_requirement_analysis`, `confirm_requirement_analysis`, `analysis_collaboration`, `analysis_mapping`, `analysis_reconciliation`, `evidence_analysis`, `generation_effects`, `analysis_documents` (`AssembleAnalysisDocuments`, split from `documents` in PR 9), `reference_grounding`, `discard_analysis` (the `RequirementRevised` handler, PR 4), all in `analysis/application/use_cases/` since PR 10; and the analysis half of `reference_currency` (`stale_analysis`, `stale_proposals`; split in PR 15a) |
 | `knowledge` | `requirement_knowledge`, `requirement_indexing`, `rebuild_knowledge_index`, `knowledge_portfolio`, `corpus_actions`, `unified_knowledge_search`, `prior_art`, `source_impact`, `answer_suggestions`; plus `application/prior_art_evaluation.py` |
 | `breakdown` | `generate_epic`, `edit_epic`, `get_epic`, `generate_features`, `feature_review` (`GetFeatures`, `EditFeature`), `story_workflow`, `story_change_proposals`, `story_quality`, `generation_checks` (through `CandidateReviewPort`), `architecture_mapping`, `architecture_mapping_jobs`, `leased_jobs` (the mapping queue's lease logic, reassigned from `jobs` in PR 8), `mark_backlog_stale` (the staleness handler, PR 4); all in `breakdown/application/use_cases/` since PR 11 |
@@ -120,7 +120,7 @@ Paths are relative to `src/smb_requirement_agent/`. Ports move with the use case
 | `identity` | `access_repository`, `actor_directory`, `identity` (in `identity/application/ports/` since PR 7), `requirement_access` (`RequirementAccessPort` and `RequirementPermission`, PR 14) |
 | `jobs` | `ai_jobs`, `notifications` (in `jobs/application/ports/` since PR 8) |
 | `requirements` | `attachment_ingestions`, `document_repository`, `requirement_draft_repository`, `requirement_repository`, `screening_requests` (`ScreeningRequestPort`, PR 5); in `requirements/application/ports/` since PR 9 |
-| `references` | `architecture_knowledge` (returning its own match type, F8), `embedding`, `historic_corpus`, `knowledge_events`, `knowledge_views`, `reference_publications`, the outbox and inbox ports of `knowledge_handoff`, the citation half of `reference_grounding` |
+| `references` | `architecture_knowledge` (F8, done in PR 15a: it returns references' own catalogue types), `embedding`, `historic_corpus`, `knowledge_events`, `knowledge_views`, `reference_publications`, the outbox and inbox ports of `knowledge_handoff`, the citation half of `reference_grounding` (`CitationCurrencyPort`, `PublicationCurrencyPort`, `ReferenceSearchPort`, `ReferenceKnowledgePort`, `ReferenceReviewPort`); all in `references/application/ports/` since PR 15a. `ReferenceEvidencePort` is analysis's |
 | `analysis` | `analysis_audit_repository`, `requirement_analysis_repository`, `requirement_analyzer`, `requirement_evidence_analyzer`, `reference_analysis` (the analysis half of `reference_grounding`), `knowledge_screening` (`AnswerSuggestionRequestPort`, `KnowledgeGatePort`, `SuggestionProvenancePort`); all in `analysis/application/ports/` since PR 10. Analysis asks for a screen through requirements' `ScreeningRequestPort` rather than a copy of it |
 | `knowledge` | `knowledge_access` (`KnowledgeAccessPort`: `RequirementAccessPort` plus the automatic-work fence, PR 14), `source_dependencies` (the reverse evidence index and `ImpactDecision`s; reassigned from `requirements` in PR 9), `corpus_membership`, `corpus_summary`, `knowledge_portfolio`, `knowledge_index_generations`, `requirement_indexing`, `requirement_knowledge`, `prior_art` |
 | `breakdown` | `architecture_jobs`, `architecture_mapping_stats`, `epic_generator`, `epic_repository`, `feature_generator`, `feature_repository`, `generation_guidance`, `story_generator`, `story_quality_evaluator`, `story_quality_repository`, `story_repository`, `candidate_review` (`CandidateReviewPort`, PR 5), `breakdown_context` (`BreakdownContextPort`, PR 11); all in `breakdown/application/ports/` since PR 11 |
@@ -134,9 +134,9 @@ Paths are relative to `src/smb_requirement_agent/`. Ports move with the use case
 | `infrastructure/persistence/{postgres_store,postgres_session,migrate,migration_runner,in_memory_transaction,postgres_values}.py`, `migrations/` | stays in shared `infrastructure/persistence/` |
 | `infrastructure/persistence/*_payloads.py` and per-aggregate repositories | the owning context's `infrastructure/` (for example `analysis_payloads.py` → `analysis/infrastructure/`, done in PR 10 with the analysis repositories, now `postgres_analysis.py`, and the evidence-fragment caches) ; and `backlog_payloads.py`, the in-memory backlog repositories, the mapping queue and stats adapters and `story_quality_repository.py` to `breakdown/infrastructure/` in PR 11, with the PostgreSQL backlog repositories, now `postgres_backlog.py` |
 | `infrastructure/persistence/{activity_projection,activity_codec,postgres_activity,postgres_activity_reader,postgres_activity_sources,postgres_worklist,in_memory_worklist,postgres_snapshots,in_memory_saved_views,postgres_saved_views}.py` | `reporting/infrastructure/` (done in PR 13) |
-| `infrastructure/persistence/{historic_corpus,reference_publications,knowledge_payloads}.py` | `references/infrastructure/` |
+| `infrastructure/persistence/{historic_corpus,reference_publications,knowledge_payloads,backlog_handoffs,architecture_release_state}.py` | `references/infrastructure/` (done in PR 15a) |
 | `infrastructure/persistence/{knowledge_portfolio,postgres_requirement_knowledge}.py` | `knowledge/infrastructure/` |
-| `infrastructure/knowledge_client.py` | `references/infrastructure/` (the ACL) |
+| `infrastructure/knowledge_client.py` | `references/infrastructure/` (the ACL; done in PR 15a) |
 | `infrastructure/documents/attachment_worker.py`; `infrastructure/persistence/{attachment_ingestions,document_payloads,in_memory_document_repository,in_memory_requirement_draft_repository,in_memory_requirement_repository,postgres_document_metadata,postgres_document_repository,requirement_snapshot}.py`; `PostgresRequirementRepository` and `PostgresRequirementDraftRepository` from `postgres_repositories.py` | `requirements/infrastructure/` (done in PR 9; the PostgreSQL pair is now `postgres_requirements.py`) |
 | `infrastructure/documents/ingestion_loop.py` | stays shared: the polling loop the requirements, references and knowledge workers all run (PR 9) |
 | `infrastructure/persistence/backfill_document_blobs.py` | stays: operators run it by its module path (`docs/operations/production-readiness-maintenance.md`) |
@@ -160,7 +160,7 @@ The composition builders become one per context:
 | `composition/analysis.py`, `composition/analysis_workflow.py` | merged into `analysis.py` (done in PR 10) |
 | `composition/breakdown.py` | `breakdown.py` (it also holds the mapping-job wiring since PR 11) |
 | `composition/review.py` | `governance.py` (done in PR 12) |
-| `composition/knowledge_service.py` | `references.py` |
+| `composition/knowledge_service.py` | `references.py` (done in PR 15a) |
 | `composition/architecture.py` | merged into `breakdown.py` in PR 11: by then it held only the mapping jobs (`build_architecture_jobs`); catalogue retrieval is in `knowledge_service.py`, which becomes `references.py` |
 | `composition/knowledge.py` | `knowledge.py` |
 | `composition/identity.py` | `identity.py` |

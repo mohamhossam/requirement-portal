@@ -1,8 +1,8 @@
 # Refactor — Bounded-context packages and domain events
 
 **Status:** ADR-0103 accepted and the slice scheduled 2026-10-07. PR 1 delivered. The PR 1
-findings were decided the same day (ADR-0103 Amendment 1). PRs 2–14 and 11b delivered; PR 15a
-(move `references`) is next.
+findings were decided the same day (ADR-0103 Amendment 1). PRs 2–15a and 11b delivered; PR 15b
+(move `knowledge`) is next.
 
 **Related:** [context map](../architecture/context-map.md),
 [ubiquitous language](../architecture/ubiquitous-language.md).
@@ -113,7 +113,7 @@ stays green. A move that also edits code keeps a separate move-only commit.
 | 14 | Move `workflows` | |
 | 15a | Move `references`. The ACL decodes knowledge-portal events into typed state, which replaces PR 2's `KnowledgeStateDecoderPort`, and takes over `HistoricPassage.from_entry` and `HistoricWorkItem.from_entry`. Also splits the analysis half of `reference_currency` (`stale_analysis`, `stale_proposals`) into analysis behind a references currency port that keeps today's lock order (deferred from PR 10) | After Knowledge Center E2 merges, because E2 is the most active area |
 | 15b | Move `knowledge` (screening) | After 15a |
-| 16 | **Finish.** Delete every migration shim; enable `contexts_layered` and `published_surface` without exceptions beyond those ADR-0103 records; remove the empty `domain/` and `application/use_cases/`; retire the AGENTS.md §19 debt row | Locks the boundaries in |
+| 16 | **Finish.** Delete every migration shim; enable `contexts_layered` and `published_surface` without exceptions beyond those ADR-0103 records; remove the empty `domain/` and `application/use_cases/`; retire the AGENTS.md §19 debt row; fold references' event decoding (`KnowledgeStateDecoderPort`) and `HistoricPassage`/`HistoricWorkItem.from_entry` into the ACL (deferred from PR 15a) | Locks the boundaries in |
 
 `references` and `knowledge` sit in the middle of the dependency order but move last, which is safe for two reasons:
 - **Their contracts follow the move.** Contracts are enabled per context as it moves, so until PRs 15a and 15b they are checked only by the existing layer contracts.
@@ -1205,6 +1205,124 @@ before the move.
 - `ruff check .` and `ruff format --check .`: clean.
 - `mypy src tests`: no issues in 643 source files.
 - `lint-imports`: 33 contracts kept, 0 broken.
+
+## PR 15a — The `references` package (2026-10-08)
+
+### Delivered
+
+Knowledge Center E2 (the historic corpus and prior art) had already merged as #47, the commit
+this branch started from, so no merge was needed.
+
+References had three wrong-way pairs. Four commits removed them before the move.
+
+**1. The catalogue content is references' (F8).**
+- `SystemReference`, `SystemCapability`, `ArchitectureDependency`, `ArchitectureCitation`,
+  `DomainSuggestion`, `ProductContext`, `OfferingDuty`, `JourneyStep`, `JourneyNeighbour` and
+  `OrganisationReference` describe the knowledge service's catalogue. Breakdown's
+  `ArchitectureImpact` records them as they were at mapping time.
+- They moved verbatim, checked with `diff`, to `references/domain/architecture/catalogue.py`.
+  `ArchitectureError`, `InvalidArchitectureContentError` and their `_text` helper moved with them.
+- Breakdown's architecture `errors.py` is gone. `ArchitectureImpact` keeps its own four-line
+  `_text`.
+- **The plan changed.** The plan was for the catalogue port to return "its own match type",
+  translated in breakdown. Moving the types instead needs no mapping code: breakdown conforms to
+  references' published language. The port now returns references' own types.
+
+**2. The screening errors leave the shared knowledge errors.**
+- `domain/knowledge/errors.py` keeps `KnowledgeError` and `InvalidKnowledgeError`, which the
+  historic corpus and knowledge share. It is now `references/domain/errors.py`.
+- The four screening errors moved verbatim to knowledge's `domain/knowledge/screening_errors.py`.
+  They still subclass `KnowledgeError`, so the class hierarchy and public codes are unchanged.
+
+**3. `bounded_knowledge_text` is references'** (ADR-0103 Amendment 1). It moved verbatim to
+`references/domain/bounded_text.py`. That removed `historic_corpus → requirement_knowledge`.
+
+**4. The reference staleness checks are analysis's.**
+- `stale_analysis` and `stale_proposals` moved verbatim from references' `ReferenceCurrency` to
+  analysis's `AnalysisReferenceCurrency` (`analysis/application/use_cases/reference_staleness.py`).
+  The diff shows two substitutions: they now lock and check through references' new
+  `PublicationCurrencyPort` (`lock_documents`, `is_current`), which `ReferenceCurrency` already
+  did privately.
+- **Lock order.** They still run in one transaction and lock in the same order: an analysis's
+  origins, then its proposals'.
+- **Ports.** `ReferenceEvidencePort` and `require_analysis_references` moved to analysis's
+  `reference_analysis` ports. References keeps `CitationCurrencyPort` (`require_current`), which
+  `ReferenceSearchPort` and `CurrentReferences` use.
+- **Wiring.** The composition root gives `SourceImpactReview` an `AnalysisReferenceCurrency` over
+  the same `ReferenceCurrency`. The release-recovery check now asks source impact.
+
+**5. The move.** One commit, in `.git-blame-ignore-revs`.
+
+| Was | Now |
+|---|---|
+| `domain/document/reference.py`, `domain/knowledge/{historic,errors,bounded_text}.py` | `references/domain/` |
+| `domain/architecture/{knowledge,catalogue}.py` | `references/domain/architecture/` (the old `domain/architecture/` package is gone) |
+| 8 ports: `architecture_knowledge`, `embedding`, `historic_corpus`, `knowledge_events`, `knowledge_handoff`, `knowledge_views`, `reference_grounding`, `reference_publications` | `references/application/ports/` |
+| 5 use cases: `historic_corpus`, `knowledge_event_cursor`, `knowledge_views`, `qualify_chunk_tokens`, `reference_currency` | `references/application/use_cases/` |
+| `application/{grounding,retrieval}_evaluation.py` | `references/application/` |
+| `infrastructure/persistence/{historic_corpus,reference_publications,knowledge_payloads,backlog_handoffs,architecture_release_state}.py`, `infrastructure/knowledge_client.py` (the ACL) | `references/infrastructure/` |
+| 6 references-only unit test modules | `tests/unit/references/` |
+
+- **Test fixes.** Two moved tests find committed contract files from their own path, so they now
+  look one directory further up. One architecture test imported `historic_corpus` from the ports
+  package.
+- **Ignores removed.** The contracts' "until PR 15a" ignores for references' modules no longer
+  applied, and are gone.
+- No shims.
+
+**6. Composition.** `composition/knowledge_service.py` became `composition/references.py`.
+
+### Deferred to PR 16
+
+**The ACL consolidation.**
+- **What it is.** Folding references' event decoding (`KnowledgeStateDecoderPort` and
+  `PayloadKnowledgeStateDecoder`) and `HistoricPassage.from_entry` / `HistoricWorkItem.from_entry`
+  into `knowledge_client`.
+- **Why it waits.** With references in one package, the port, its adapter and the client are all
+  inside references. So consolidating them changes the event-feed port's shape without improving
+  any boundary.
+
+### Contracts (36 kept, up from 33)
+
+- **New contracts.**
+  - `references_internal_layers`.
+  - `references_depends_only_upstream`: it forbids every unmoved context module, `analysis`,
+    `breakdown`, `governance` and `reporting`. It has 2 ignored imports, both of
+    `transaction_manager`.
+  - `references_published_surface`.
+- **Other contracts.** `nothing_imports_workflows` now lists references. Identity, jobs and
+  requirements forbid references.
+- **Ignored imports fell.** References' modules are no longer under the forbidden packages:
+
+| Contract | Ignored imports |
+|---|---|
+| analysis | 9 → 4 |
+| breakdown | 24 → 16 |
+| governance | 8 → 4 |
+
+- **Probes**, all reverted:
+  - an analysis import in references' `knowledge_views`, and a knowledge use case imported from
+    references' `knowledge_event_cursor`, broke `references_depends_only_upstream`;
+  - a references adapter imported from knowledge's `prior_art` broke
+    `references_published_surface` and `application_independence`;
+  - a references import in requirements' `get_requirement` broke
+    `requirements_depends_only_upstream`.
+
+### Dependency report
+
+244 of 244 modules classified, 69 crossing pairs (72 before), 5 against the order (8 before).
+- **Gone:** `references → analysis`, `references → breakdown` and `references → knowledge`.
+- **Remaining 5:** all F5. Three are context errors in `application/errors.py`
+  (`technical → analysis`, `technical → breakdown`, `technical → requirements`). Two are
+  `breakdown → interfaces` and `workflows → interfaces`, the public error catalogue.
+
+### Validation evidence (PR 15a, local, with PostgreSQL)
+
+- `pytest` with `TEST_DATABASE_URL` set: 1865 passed, 0 skipped, exit 0, after each code commit.
+  No file under `tests/characterisation/golden/` changed.
+- `ruff check .` and `ruff format --check .`: clean.
+- `mypy src tests`: no issues in 653 source files.
+- `lint-imports`: 36 contracts kept, 0 broken.
 
 ## Shims
 
