@@ -17,17 +17,17 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     IntentProposalKind,
     IntentProposalStatus,
 )
-from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
-from smb_requirement_agent.infrastructure.llm.openai_adapters import (
-    OpenAIRequirementAnalyzer,
-)
-from smb_requirement_agent.infrastructure.llm.schemas.analysis_schema import (
+from smb_requirement_agent.analysis.infrastructure.llm.schemas.analysis_schema import (
     AnalysisEvidenceCitationSchema,
     DesiredOutcomeProposalSchema,
     DesiredOutcomeReviewSchema,
     IntentStatementProposalSchema,
     RequirementAnalysisSchema,
     UncertaintySchema,
+)
+from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
+from smb_requirement_agent.infrastructure.llm.openai_adapters import (
+    OpenAIRequirementAnalyzer,
 )
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.requirements.domain.requirement.value_objects import (
@@ -435,7 +435,7 @@ def test_invented_numeric_target_in_intent_proposal_is_rejected(
 
 
 def test_attachment_only_packet_prompt_preserves_source_and_application_association() -> None:
-    from smb_requirement_agent.infrastructure.llm.prompts.analysis_prompt import (
+    from smb_requirement_agent.analysis.infrastructure.llm.prompts.analysis_prompt import (
         REQUIREMENT_ANALYSIS_SYSTEM_PROMPT,
         build_user_prompt,
     )

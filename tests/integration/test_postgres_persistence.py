@@ -57,6 +57,9 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     QuestionChangeAction,
     QuestionId,
 )
+from smb_requirement_agent.analysis.infrastructure.llm.fake_requirement_analyzer import (
+    FakeRequirementAnalyzer,
+)
 from smb_requirement_agent.analysis.infrastructure.postgres_analysis import (
     PostgresAnalysisAuditRepository,
     PostgresAnalysisRepository,
@@ -162,9 +165,6 @@ from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACT
 from smb_requirement_agent.identity.infrastructure.postgres_identity import PostgresActorDirectory
 from smb_requirement_agent.infrastructure.exports.json_exporter import JsonBacklogExporter
 from smb_requirement_agent.infrastructure.exports.xlsx_exporter import XlsxBacklogExporter
-from smb_requirement_agent.infrastructure.llm.fake_requirement_analyzer import (
-    FakeRequirementAnalyzer,
-)
 from smb_requirement_agent.infrastructure.persistence.backfill_document_blobs import backfill
 from smb_requirement_agent.infrastructure.persistence.migration_runner import (
     MIGRATIONS,

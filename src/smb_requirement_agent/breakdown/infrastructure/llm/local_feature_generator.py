@@ -18,13 +18,15 @@ from smb_requirement_agent.breakdown.application.ports.generation_guidance impor
     GenerationGuidance,
 )
 from smb_requirement_agent.breakdown.domain.epic.entities import Epic
-from smb_requirement_agent.infrastructure.llm.backlog_mappers import to_feature_candidates
-from smb_requirement_agent.infrastructure.llm.prompts.feature_prompt import (
+from smb_requirement_agent.breakdown.infrastructure.llm.backlog_mappers import to_feature_candidates
+from smb_requirement_agent.breakdown.infrastructure.llm.prompts.feature_prompt import (
     FEATURE_SYSTEM_PROMPT,
     PROMPT_VERSION,
     build_feature_user_prompt,
 )
-from smb_requirement_agent.infrastructure.llm.schemas.feature_schema import FeatureSetSchema
+from smb_requirement_agent.breakdown.infrastructure.llm.schemas.feature_schema import (
+    FeatureSetSchema,
+)
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 
 

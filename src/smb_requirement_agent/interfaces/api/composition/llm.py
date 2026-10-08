@@ -35,6 +35,17 @@ from smb_requirement_agent.analysis.application.ports.reference_analysis import 
 from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     RequirementAnalyzerPort,
 )
+from smb_requirement_agent.analysis.infrastructure.llm.fake_requirement_analyzer import (
+    FakeRequirementAnalyzer,
+)
+from smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer import (
+    LocalRequirementAnalyzer,
+    StructuredRequirementAnalyzerAdapter,
+)
+from smb_requirement_agent.analysis.infrastructure.llm.reference_proposals import (
+    FakeReferenceProposer,
+    StructuredReferenceProposer,
+)
 from smb_requirement_agent.application.ports.prior_art import (
     PriorArtJudgePort,
 )
@@ -49,42 +60,39 @@ from smb_requirement_agent.breakdown.application.ports.story_generator import St
 from smb_requirement_agent.breakdown.application.ports.story_quality_evaluator import (
     StoryQualityEvaluatorPort,
 )
+from smb_requirement_agent.breakdown.infrastructure.llm.fake_epic_generator import FakeEpicGenerator
+from smb_requirement_agent.breakdown.infrastructure.llm.fake_feature_generator import (
+    FakeFeatureGenerator,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.fake_story_generator import (
+    FakeStoryGenerator,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.fake_story_quality_evaluator import (
+    FakeStoryQualityEvaluator,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.local_epic_generator import (
+    LocalEpicGenerator,
+    StructuredEpicGeneratorAdapter,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.local_feature_generator import (
+    LocalFeatureGenerator,
+    StructuredFeatureGeneratorAdapter,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.local_story_generator import (
+    LocalStoryGenerator,
+    StructuredStoryGeneratorAdapter,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.local_story_quality_evaluator import (
+    LocalStoryQualityEvaluator,
+    StructuredStoryQualityEvaluatorAdapter,
+)
 from smb_requirement_agent.infrastructure.config.options import ConfigurationError, LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.llm.fake_epic_generator import FakeEpicGenerator
-from smb_requirement_agent.infrastructure.llm.fake_feature_generator import FakeFeatureGenerator
-from smb_requirement_agent.infrastructure.llm.fake_requirement_analyzer import (
-    FakeRequirementAnalyzer,
-)
 from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import (
     FakeClarificationAnswerSuggester,
     FakeKnowledgeEmbedding,
     FakePriorArtJudge,
     FakeRequirementRelationshipClassifier,
-)
-from smb_requirement_agent.infrastructure.llm.fake_story_generator import FakeStoryGenerator
-from smb_requirement_agent.infrastructure.llm.fake_story_quality_evaluator import (
-    FakeStoryQualityEvaluator,
-)
-from smb_requirement_agent.infrastructure.llm.local_epic_generator import (
-    LocalEpicGenerator,
-    StructuredEpicGeneratorAdapter,
-)
-from smb_requirement_agent.infrastructure.llm.local_feature_generator import (
-    LocalFeatureGenerator,
-    StructuredFeatureGeneratorAdapter,
-)
-from smb_requirement_agent.infrastructure.llm.local_requirement_analyzer import (
-    LocalRequirementAnalyzer,
-    StructuredRequirementAnalyzerAdapter,
-)
-from smb_requirement_agent.infrastructure.llm.local_story_generator import (
-    LocalStoryGenerator,
-    StructuredStoryGeneratorAdapter,
-)
-from smb_requirement_agent.infrastructure.llm.local_story_quality_evaluator import (
-    LocalStoryQualityEvaluator,
-    StructuredStoryQualityEvaluatorAdapter,
 )
 from smb_requirement_agent.infrastructure.llm.openai_adapters import (
     OpenAIClarificationAnswerSuggester,
@@ -104,10 +112,6 @@ from smb_requirement_agent.infrastructure.llm.openrouter_adapters import (
     OpenRouterRequirementRelationshipClassifier,
     OpenRouterStoryGenerator,
     OpenRouterStoryQualityEvaluator,
-)
-from smb_requirement_agent.infrastructure.llm.reference_proposals import (
-    FakeReferenceProposer,
-    StructuredReferenceProposer,
 )
 from smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters import (
     LocalClarificationAnswerSuggester,

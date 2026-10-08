@@ -28,11 +28,7 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     HumanClarification,
     IntentProposal,
 )
-from smb_requirement_agent.application.errors import (
-    ModelTransportError,
-    RequirementAnalysisGenerationError,
-)
-from smb_requirement_agent.infrastructure.llm.analysis_mappers import (
+from smb_requirement_agent.analysis.infrastructure.llm.analysis_mappers import (
     analysis_evidence_subjects,
     attach_analysis_evidence,
     normalize_analysis_intent,
@@ -42,7 +38,7 @@ from smb_requirement_agent.infrastructure.llm.analysis_mappers import (
     to_clarification_questions,
     to_desired_outcome_review,
 )
-from smb_requirement_agent.infrastructure.llm.prompts.analysis_prompt import (
+from smb_requirement_agent.analysis.infrastructure.llm.prompts.analysis_prompt import (
     CITATION_RECOVERY_SYSTEM_PROMPT,
     CLARIFICATION_REVIEW_SYSTEM_PROMPT,
     COMPLETE_ANALYSIS_RETRY_INSTRUCTION,
@@ -60,7 +56,7 @@ from smb_requirement_agent.infrastructure.llm.prompts.analysis_prompt import (
     format_structured_context,
     vague_terms,
 )
-from smb_requirement_agent.infrastructure.llm.schemas.analysis_schema import (
+from smb_requirement_agent.analysis.infrastructure.llm.schemas.analysis_schema import (
     ActiveQuestionReviewSchema,
     AnalysisEvidenceCitationSchema,
     ClarificationReviewSchema,
@@ -69,6 +65,10 @@ from smb_requirement_agent.infrastructure.llm.schemas.analysis_schema import (
     IndexedUncertaintyRationaleRecoverySchema,
     RequirementAnalysisSchema,
     citation_recovery_schema,
+)
+from smb_requirement_agent.application.errors import (
+    ModelTransportError,
+    RequirementAnalysisGenerationError,
 )
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 

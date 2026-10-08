@@ -15,19 +15,19 @@ from smb_kernel.llm.openai_structured_output import (
     OpenAIStructuredOutputClient,
 )
 
-from smb_requirement_agent.infrastructure.llm.local_epic_generator import (
-    StructuredEpicGeneratorAdapter,
-)
-from smb_requirement_agent.infrastructure.llm.local_feature_generator import (
-    StructuredFeatureGeneratorAdapter,
-)
-from smb_requirement_agent.infrastructure.llm.local_requirement_analyzer import (
+from smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer import (
     StructuredRequirementAnalyzerAdapter,
 )
-from smb_requirement_agent.infrastructure.llm.local_story_generator import (
+from smb_requirement_agent.breakdown.infrastructure.llm.local_epic_generator import (
+    StructuredEpicGeneratorAdapter,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.local_feature_generator import (
+    StructuredFeatureGeneratorAdapter,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.local_story_generator import (
     StructuredStoryGeneratorAdapter,
 )
-from smb_requirement_agent.infrastructure.llm.local_story_quality_evaluator import (
+from smb_requirement_agent.breakdown.infrastructure.llm.local_story_quality_evaluator import (
     StructuredStoryQualityEvaluatorAdapter,
 )
 from smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters import (

@@ -8,7 +8,7 @@ from smb_requirement_agent.breakdown.domain.story.quality import (
     InvestCriterion,
     ValidationFinding,
 )
-from smb_requirement_agent.infrastructure.llm.schemas.story_quality_schema import (
+from smb_requirement_agent.breakdown.infrastructure.llm.schemas.story_quality_schema import (
     StoryQualitySchema,
 )
 

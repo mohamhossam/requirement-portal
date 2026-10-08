@@ -21,11 +21,11 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     QuestionChangeAction,
     QuestionId,
 )
-from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
-from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
-from smb_requirement_agent.infrastructure.llm.fake_requirement_analyzer import (
+from smb_requirement_agent.analysis.infrastructure.llm.fake_requirement_analyzer import (
     FakeRequirementAnalyzer,
 )
+from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
+from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.interfaces.api.container import build_container
 from smb_requirement_agent.interfaces.api.main import create_app
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement

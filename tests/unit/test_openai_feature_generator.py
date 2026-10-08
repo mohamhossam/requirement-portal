@@ -24,10 +24,10 @@ from smb_requirement_agent.breakdown.domain.epic.value_objects import (
     EpicName,
     EpicStatus,
 )
+from smb_requirement_agent.breakdown.infrastructure.llm.prompts.feature_prompt import PROMPT_VERSION
 from smb_requirement_agent.infrastructure.llm.openai_adapters import (
     OpenAIFeatureGenerator,
 )
-from smb_requirement_agent.infrastructure.llm.prompts.feature_prompt import PROMPT_VERSION
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.requirements.domain.requirement.value_objects import (
     RequirementDescription,

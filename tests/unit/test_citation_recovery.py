@@ -40,14 +40,14 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     IntentProposalStatus,
     QuestionId,
 )
-from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
-from smb_requirement_agent.application.public_errors import describe_public_error
-from smb_requirement_agent.infrastructure.llm.local_requirement_analyzer import (
+from smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer import (
     StructuredRequirementAnalyzerAdapter,
 )
-from smb_requirement_agent.infrastructure.llm.schemas.analysis_schema import (
+from smb_requirement_agent.analysis.infrastructure.llm.schemas.analysis_schema import (
     citation_recovery_schema,
 )
+from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
+from smb_requirement_agent.application.public_errors import describe_public_error
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.requirements.domain.requirement.value_objects import (
     RequirementContext,

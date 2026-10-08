@@ -45,11 +45,15 @@ from smb_requirement_agent.breakdown.infrastructure.backlog_payloads import (
     story_proposal_from_payload,
     story_proposal_to_payload,
 )
+from smb_requirement_agent.breakdown.infrastructure.llm.fake_feature_generator import (
+    FakeFeatureGenerator,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.fake_story_generator import (
+    FakeStoryGenerator,
+)
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.knowledge_client import OFFLINE_RELEASE_ID
-from smb_requirement_agent.infrastructure.llm.fake_feature_generator import FakeFeatureGenerator
-from smb_requirement_agent.infrastructure.llm.fake_story_generator import FakeStoryGenerator
 from smb_requirement_agent.interfaces.api.container import build_container
 from smb_requirement_agent.interfaces.api.main import create_app
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement

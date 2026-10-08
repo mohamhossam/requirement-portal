@@ -18,12 +18,12 @@ from smb_requirement_agent.breakdown.application.ports.story_generator import (
     AcceptanceCriterionCandidate,
     StoryCandidate,
 )
-from smb_requirement_agent.infrastructure.llm.schemas.epic_schema import EpicSchema
-from smb_requirement_agent.infrastructure.llm.schemas.feature_schema import (
+from smb_requirement_agent.breakdown.infrastructure.llm.schemas.epic_schema import EpicSchema
+from smb_requirement_agent.breakdown.infrastructure.llm.schemas.feature_schema import (
     FeatureItemSchema,
     FeatureSetSchema,
 )
-from smb_requirement_agent.infrastructure.llm.schemas.story_schema import StorySetSchema
+from smb_requirement_agent.breakdown.infrastructure.llm.schemas.story_schema import StorySetSchema
 
 
 def to_epic_candidate(parsed: EpicSchema, *, model: str, prompt_version: str) -> EpicCandidate:

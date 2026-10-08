@@ -20,15 +20,15 @@ from smb_requirement_agent.breakdown.domain.story.quality import (
     StoryQualityEvidence,
     ValidationFinding,
 )
-from smb_requirement_agent.infrastructure.llm.prompts.story_quality_prompt import (
+from smb_requirement_agent.breakdown.infrastructure.llm.prompts.story_quality_prompt import (
     PROMPT_VERSION,
     STORY_QUALITY_SYSTEM_PROMPT,
     build_story_quality_prompt,
 )
-from smb_requirement_agent.infrastructure.llm.schemas.story_quality_schema import (
+from smb_requirement_agent.breakdown.infrastructure.llm.schemas.story_quality_schema import (
     StoryQualitySchema,
 )
-from smb_requirement_agent.infrastructure.llm.story_quality_mapping import (
+from smb_requirement_agent.breakdown.infrastructure.llm.story_quality_mapping import (
     request_complete_quality_findings,
 )
 

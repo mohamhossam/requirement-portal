@@ -14,6 +14,11 @@ from smb_requirement_agent.analysis.infrastructure.analysis_payloads import (
     analysis_from_payload,
     analysis_to_payload,
 )
+from smb_requirement_agent.analysis.infrastructure.llm.reference_proposals import (
+    ProposalOutput,
+    ReferenceOutput,
+    StructuredReferenceProposer,
+)
 from smb_requirement_agent.application.errors import (
     RequirementAnalysisConflictError,
     RequirementAnalysisGenerationError,
@@ -22,11 +27,6 @@ from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedErro
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.llm.reference_proposals import (
-    ProposalOutput,
-    ReferenceOutput,
-    StructuredReferenceProposer,
-)
 from smb_requirement_agent.interfaces.api.container import Container
 from smb_requirement_agent.interfaces.api.main import create_app
 from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
@@ -208,10 +208,10 @@ def test_reference_withdrawal_during_answer_reanalysis_cannot_commit(
     from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
         RequirementAnalysisCandidate,
     )
-    from smb_requirement_agent.application.errors import ArtifactVersionConflictError
-    from smb_requirement_agent.infrastructure.llm.fake_requirement_analyzer import (
+    from smb_requirement_agent.analysis.infrastructure.llm.fake_requirement_analyzer import (
         FakeRequirementAnalyzer,
     )
+    from smb_requirement_agent.application.errors import ArtifactVersionConflictError
 
     container = grounded.container
     requirement = container.create_requirement.execute(
@@ -340,7 +340,7 @@ def test_reference_adapter_rejects_unusable_output(grounded: Grounded, bad: str)
         transport.parse.return_value = ReferenceOutput(proposals=[], no_applicability_reason=" ")
     if bad == "provider":
         transport.parse.side_effect = StructuredOutputError("offline")
-    from smb_requirement_agent.infrastructure.llm.fake_requirement_analyzer import (
+    from smb_requirement_agent.analysis.infrastructure.llm.fake_requirement_analyzer import (
         FakeRequirementAnalyzer,
     )
 
@@ -374,7 +374,9 @@ def test_withdrawal_during_reference_generation_cannot_persist(
     from smb_requirement_agent.analysis.application.ports.reference_analysis import (
         ReferenceProposalResult,
     )
-    from smb_requirement_agent.infrastructure.llm.reference_proposals import FakeReferenceProposer
+    from smb_requirement_agent.analysis.infrastructure.llm.reference_proposals import (
+        FakeReferenceProposer,
+    )
 
     container = grounded.container
     requirement = container.create_requirement.execute(
@@ -400,7 +402,9 @@ def test_confirmed_reference_withdrawal_blocks_generation_and_preserves_history(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from smb_requirement_agent.breakdown.application.ports.epic_generator import EpicCandidate
-    from smb_requirement_agent.infrastructure.llm.fake_epic_generator import FakeEpicGenerator
+    from smb_requirement_agent.breakdown.infrastructure.llm.fake_epic_generator import (
+        FakeEpicGenerator,
+    )
 
     container = grounded.container
     requirement = container.create_requirement.execute(

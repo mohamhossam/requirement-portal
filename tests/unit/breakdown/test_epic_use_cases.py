@@ -20,6 +20,9 @@ from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_audit_repo
 from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_repository import (
     InMemoryRequirementAnalysisRepository,
 )
+from smb_requirement_agent.analysis.infrastructure.llm.fake_requirement_analyzer import (
+    FakeRequirementAnalyzer,
+)
 from smb_requirement_agent.application.errors import (
     AnalysisConfirmationRequiredError,
     EpicNotFoundError,
@@ -48,19 +51,16 @@ from smb_requirement_agent.breakdown.infrastructure.in_memory_story_repository i
     InMemoryStoryChangeProposalRepository,
     InMemoryStoryRepository,
 )
+from smb_requirement_agent.breakdown.infrastructure.llm.fake_epic_generator import (
+    FAKE_MODEL,
+    FAKE_PROMPT_VERSION,
+    FakeEpicGenerator,
+)
 from smb_requirement_agent.domain.review.fingerprints import artifact_fingerprint
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
     InMemoryAccessRepository,
     InMemoryActorDirectory,
-)
-from smb_requirement_agent.infrastructure.llm.fake_epic_generator import (
-    FAKE_MODEL,
-    FAKE_PROMPT_VERSION,
-    FakeEpicGenerator,
-)
-from smb_requirement_agent.infrastructure.llm.fake_requirement_analyzer import (
-    FakeRequirementAnalyzer,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_breakdown_review_repository import (
     InMemoryBreakdownReviewRepository,

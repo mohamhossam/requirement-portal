@@ -7,6 +7,24 @@ from unittest.mock import MagicMock
 import pytest
 from smb_kernel.observability.metrics import Metrics
 
+from smb_requirement_agent.analysis.infrastructure.llm.fake_requirement_analyzer import (
+    FakeRequirementAnalyzer,
+)
+from smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer import (
+    LocalRequirementAnalyzer,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.local_epic_generator import (
+    LocalEpicGenerator,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.local_feature_generator import (
+    LocalFeatureGenerator,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.local_story_generator import (
+    LocalStoryGenerator,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.local_story_quality_evaluator import (
+    LocalStoryQualityEvaluator,
+)
 from smb_requirement_agent.infrastructure.config.options import (
     DEFAULT_LOCAL_LLM_BASE_URL,
     DEFAULT_LOCAL_LLM_TIMEOUT_SECONDS,
@@ -24,20 +42,8 @@ from smb_requirement_agent.infrastructure.config.options import (
     PersistenceProvider,
 )
 from smb_requirement_agent.infrastructure.config.settings import PersistenceSettings, Settings
-from smb_requirement_agent.infrastructure.llm.fake_requirement_analyzer import (
-    FakeRequirementAnalyzer,
-)
 from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import (
     FakeKnowledgeEmbedding,
-)
-from smb_requirement_agent.infrastructure.llm.local_epic_generator import LocalEpicGenerator
-from smb_requirement_agent.infrastructure.llm.local_feature_generator import LocalFeatureGenerator
-from smb_requirement_agent.infrastructure.llm.local_requirement_analyzer import (
-    LocalRequirementAnalyzer,
-)
-from smb_requirement_agent.infrastructure.llm.local_story_generator import LocalStoryGenerator
-from smb_requirement_agent.infrastructure.llm.local_story_quality_evaluator import (
-    LocalStoryQualityEvaluator,
 )
 from smb_requirement_agent.infrastructure.llm.openai_adapters import (
     OpenAIRequirementAnalyzer,

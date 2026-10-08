@@ -19,14 +19,14 @@ from smb_requirement_agent.breakdown.domain.story.quality import (
     ValidationFinding,
 )
 from smb_requirement_agent.breakdown.domain.story.value_objects import StoryId
-from smb_requirement_agent.infrastructure.llm.fake_story_quality_evaluator import (
+from smb_requirement_agent.breakdown.infrastructure.llm.fake_story_quality_evaluator import (
     FakeStoryQualityEvaluator,
 )
-from smb_requirement_agent.infrastructure.llm.schemas.story_quality_schema import (
+from smb_requirement_agent.breakdown.infrastructure.llm.schemas.story_quality_schema import (
     InvestFindingSchema,
     StoryQualitySchema,
 )
-from smb_requirement_agent.infrastructure.llm.story_quality_mapping import (
+from smb_requirement_agent.breakdown.infrastructure.llm.story_quality_mapping import (
     request_complete_quality_findings,
     to_quality_findings,
 )

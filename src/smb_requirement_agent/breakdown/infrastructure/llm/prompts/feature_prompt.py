@@ -9,7 +9,7 @@ from smb_requirement_agent.breakdown.application.ports.generation_guidance impor
     EMPTY_GENERATION_GUIDANCE,
     GenerationGuidance,
 )
-from smb_requirement_agent.infrastructure.llm.prompts.generation_guidance import (
+from smb_requirement_agent.breakdown.infrastructure.llm.prompts.generation_guidance import (
     GENERATION_RULES,
     render_guidance,
 )
