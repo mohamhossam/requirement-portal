@@ -16,7 +16,6 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from fastapi.testclient import TestClient
 
-from smb_requirement_agent.application.use_cases.ai_jobs import MAX_LIST_LIMIT
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.interfaces.api.main import create_app
@@ -42,6 +41,7 @@ from smb_requirement_agent.shared_kernel.actors import (
     ActorSnapshot,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.workflows.application.use_cases.ai_jobs import MAX_LIST_LIMIT
 from tests.conftest import FAKE_PROVIDER_SETTINGS
 
 # After any real clock, so the automatic screen (real-clock timestamped) is always oldest.

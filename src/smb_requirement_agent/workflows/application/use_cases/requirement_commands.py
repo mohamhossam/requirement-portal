@@ -14,13 +14,17 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
-from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
 from smb_requirement_agent.identity.application.ports.requirement_access import (
     RequirementPermission,
 )
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.workflows.application.use_cases.generation_context import (
+    GenerationContextTokens,
+)
+from smb_requirement_agent.workflows.application.use_cases.identity_access import (
+    RequirementAccessService,
+)
 
 
 @dataclass(frozen=True)

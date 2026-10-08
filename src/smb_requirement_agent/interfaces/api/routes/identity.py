@@ -4,11 +4,6 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 
-from smb_requirement_agent.application.use_cases.identity_access import (
-    RequirementAccessService,
-    RequirementAccessView,
-    SearchKnownActors,
-)
 from smb_requirement_agent.interfaces.api.dependencies import (
     ContainerDep,
     CurrentActorDep,
@@ -32,6 +27,11 @@ from smb_requirement_agent.shared_kernel.actors import (
     ActorSnapshot,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.workflows.application.use_cases.identity_access import (
+    RequirementAccessService,
+    RequirementAccessView,
+    SearchKnownActors,
+)
 
 public_router = APIRouter(prefix="/identity", tags=["identity"])
 router = APIRouter(

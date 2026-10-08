@@ -23,9 +23,6 @@ from smb_requirement_agent.application.ports.architecture_knowledge import (
     ArchitectureKnowledgePort,
 )
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
-from smb_requirement_agent.application.use_cases.ai_jobs import AnalysisProgressReporter
-from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
-from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
 from smb_requirement_agent.breakdown.application.ports.epic_generator import EpicGeneratorPort
 from smb_requirement_agent.breakdown.application.ports.feature_generator import FeatureGeneratorPort
 from smb_requirement_agent.breakdown.application.ports.story_generator import StoryGeneratorPort
@@ -91,6 +88,13 @@ from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.interfaces.api.composition.governance import ReviewWiring
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
+from smb_requirement_agent.workflows.application.use_cases.ai_jobs import AnalysisProgressReporter
+from smb_requirement_agent.workflows.application.use_cases.generation_context import (
+    GenerationContextTokens,
+)
+from smb_requirement_agent.workflows.application.use_cases.identity_access import (
+    RequirementAccessService,
+)
 
 
 @dataclass(frozen=True)

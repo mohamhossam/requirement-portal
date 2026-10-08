@@ -40,8 +40,6 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     IntentProposalStatus,
     QuestionId,
 )
-from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
-from smb_requirement_agent.application.use_cases.requirement_commands import ExpectedContext
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     RequirementCommandsDep,
@@ -95,6 +93,12 @@ from smb_requirement_agent.interfaces.api.schemas.generation import (
 )
 from smb_requirement_agent.shared_kernel.actors import ActorId
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.workflows.application.use_cases.generation_context import (
+    GenerationContextTokens,
+)
+from smb_requirement_agent.workflows.application.use_cases.requirement_commands import (
+    ExpectedContext,
+)
 
 router = APIRouter(
     prefix="/requirements", tags=["analysis"], dependencies=[Depends(require_authenticated_actor)]

@@ -23,11 +23,6 @@ from smb_requirement_agent.application.use_cases.corpus_actions import (
     ReinstateToCorpus,
     RetireFromCorpus,
 )
-from smb_requirement_agent.application.use_cases.internal_reads import (
-    CorpusSummary,
-    DependentsPage,
-    InternalReads,
-)
 from smb_requirement_agent.application.use_cases.knowledge_portfolio import (
     CorpusPage,
     FindingsPage,
@@ -51,6 +46,11 @@ from smb_requirement_agent.interfaces.api.dependencies import (
     get_reinstate_to_corpus,
     get_retire_from_corpus,
     require_service_caller,
+)
+from smb_requirement_agent.workflows.application.use_cases.internal_reads import (
+    CorpusSummary,
+    DependentsPage,
+    InternalReads,
 )
 
 # Mounted with include_in_schema=False (main.py): the browser contract never lists

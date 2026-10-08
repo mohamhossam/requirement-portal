@@ -51,16 +51,22 @@ from smb_requirement_agent.analysis.application.use_cases.get_requirement_analys
 from smb_requirement_agent.analysis.application.use_cases.reference_grounding import (
     ReferenceGrounding,
 )
-from smb_requirement_agent.application.use_cases.ai_jobs import AnalysisProgressReporter
-from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
-from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
-from smb_requirement_agent.application.use_cases.requirement_commands import RequirementCommands
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.text.budget import Utf8BudgetCounter
 from smb_requirement_agent.interfaces.api.composition.knowledge import RequirementKnowledgeWiring
 from smb_requirement_agent.interfaces.api.composition.llm import LLMAdapters
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
+from smb_requirement_agent.workflows.application.use_cases.ai_jobs import AnalysisProgressReporter
+from smb_requirement_agent.workflows.application.use_cases.generation_context import (
+    GenerationContextTokens,
+)
+from smb_requirement_agent.workflows.application.use_cases.identity_access import (
+    RequirementAccessService,
+)
+from smb_requirement_agent.workflows.application.use_cases.requirement_commands import (
+    RequirementCommands,
+)
 
 # A provider without a configured context window gets this evidence budget.
 _DEFAULT_EVIDENCE_CHARACTERS = 60_000

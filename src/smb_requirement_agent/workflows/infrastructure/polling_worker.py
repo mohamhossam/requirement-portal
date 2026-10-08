@@ -12,8 +12,8 @@ from smb_kernel.observability.correlation import correlation_scope
 from smb_kernel.observability.metrics import Metrics
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.use_cases.ai_job_execution import ExecuteAiJob
 from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobQueuePort, AiJobRecord
+from smb_requirement_agent.workflows.application.use_cases.ai_job_execution import ExecuteAiJob
 
 logger = logging.getLogger("smb_requirement_agent.ai_jobs.worker")
 

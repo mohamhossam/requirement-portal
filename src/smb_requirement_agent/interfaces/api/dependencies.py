@@ -34,7 +34,6 @@ from smb_requirement_agent.analysis.application.use_cases.get_requirement_analys
 )
 from smb_requirement_agent.application.errors import AuthenticationRequiredError
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceReviewPort
-from smb_requirement_agent.application.use_cases.ai_jobs import AiJobs, Notifications
 from smb_requirement_agent.application.use_cases.answer_suggestions import (
     SuggestClarificationAnswers,
 )
@@ -43,12 +42,6 @@ from smb_requirement_agent.application.use_cases.corpus_actions import (
     ReinstateToCorpus,
     RetireFromCorpus,
 )
-from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
-from smb_requirement_agent.application.use_cases.identity_access import (
-    RequirementAccessService,
-    SearchKnownActors,
-)
-from smb_requirement_agent.application.use_cases.internal_reads import InternalReads
 from smb_requirement_agent.application.use_cases.knowledge_portfolio import (
     KnowledgePortfolio,
     NudgeFindingOwners,
@@ -57,11 +50,6 @@ from smb_requirement_agent.application.use_cases.knowledge_views import Knowledg
 from smb_requirement_agent.application.use_cases.prior_art import GetPriorArt, HistoricCitations
 from smb_requirement_agent.application.use_cases.reference_currency import (
     CurrentArchitectureRelease,
-)
-from smb_requirement_agent.application.use_cases.requirement_commands import RequirementCommands
-from smb_requirement_agent.application.use_cases.requirement_impact import (
-    PreviewRequirementImpact,
-    UpdateRequirementWithImpact,
 )
 from smb_requirement_agent.application.use_cases.requirement_indexing import (
     IndexRequirementKnowledge,
@@ -161,6 +149,22 @@ from smb_requirement_agent.requirements.application.use_cases.owned_requirements
     SaveOwnedRequirementDraft,
 )
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
+from smb_requirement_agent.workflows.application.use_cases.ai_jobs import AiJobs, Notifications
+from smb_requirement_agent.workflows.application.use_cases.generation_context import (
+    GenerationContextTokens,
+)
+from smb_requirement_agent.workflows.application.use_cases.identity_access import (
+    RequirementAccessService,
+    SearchKnownActors,
+)
+from smb_requirement_agent.workflows.application.use_cases.internal_reads import InternalReads
+from smb_requirement_agent.workflows.application.use_cases.requirement_commands import (
+    RequirementCommands,
+)
+from smb_requirement_agent.workflows.application.use_cases.requirement_impact import (
+    PreviewRequirementImpact,
+    UpdateRequirementWithImpact,
+)
 
 
 def get_container(request: Request) -> Container:

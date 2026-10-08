@@ -33,7 +33,6 @@ from smb_requirement_agent.application.errors import (
     FeaturesNotFoundError,
     RequirementAnalysisNotFoundError,
 )
-from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.breakdown.application.ports.generation_guidance import (
     EMPTY_GENERATION_GUIDANCE,
 )
@@ -104,6 +103,9 @@ from smb_requirement_agent.requirements.infrastructure.in_memory_requirement_rep
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from smb_requirement_agent.shared_kernel.staleness import StaleReason
+from smb_requirement_agent.workflows.application.use_cases.generation_context import (
+    GenerationContextTokens,
+)
 from tests.conftest import (
     AcceptAllSuggestionValidator,
     AlwaysReadyKnowledgeReview,

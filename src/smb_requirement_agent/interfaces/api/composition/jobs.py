@@ -7,14 +7,7 @@ from dataclasses import dataclass
 from smb_kernel.observability.metrics import Metrics
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.use_cases.ai_job_execution import ExecuteAiJob
-from smb_requirement_agent.application.use_cases.ai_jobs import AiJobs, Notifications
-from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.jobs.polling_worker import (
-    AiJobWorkerGroup,
-    PollingAiJobWorker,
-)
 from smb_requirement_agent.infrastructure.jobs.prior_art_gate import PriorArtGatedQueue
 from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import IndexReadyJobQueue
 from smb_requirement_agent.interfaces.api.composition.analysis import (
@@ -24,6 +17,15 @@ from smb_requirement_agent.interfaces.api.composition.breakdown import Breakdown
 from smb_requirement_agent.interfaces.api.composition.knowledge import RequirementKnowledgeWiring
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
 from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobWorkerPort
+from smb_requirement_agent.workflows.application.use_cases.ai_job_execution import ExecuteAiJob
+from smb_requirement_agent.workflows.application.use_cases.ai_jobs import AiJobs, Notifications
+from smb_requirement_agent.workflows.application.use_cases.identity_access import (
+    RequirementAccessService,
+)
+from smb_requirement_agent.workflows.infrastructure.polling_worker import (
+    AiJobWorkerGroup,
+    PollingAiJobWorker,
+)
 
 
 @dataclass(frozen=True)

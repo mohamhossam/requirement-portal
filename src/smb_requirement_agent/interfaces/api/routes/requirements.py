@@ -11,12 +11,6 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 
-from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
-from smb_requirement_agent.application.use_cases.requirement_impact import (
-    PreviewRequirementImpact,
-    RequirementImpactPreview,
-    UpdateRequirementWithImpact,
-)
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     RequirementCommandsDep,
@@ -88,6 +82,14 @@ from smb_requirement_agent.requirements.domain.requirement.entities import (
 from smb_requirement_agent.requirements.domain.requirement.value_objects import RequirementContext
 from smb_requirement_agent.shared_kernel.actors import ActorId
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.workflows.application.use_cases.generation_context import (
+    GenerationContextTokens,
+)
+from smb_requirement_agent.workflows.application.use_cases.requirement_impact import (
+    PreviewRequirementImpact,
+    RequirementImpactPreview,
+    UpdateRequirementWithImpact,
+)
 
 router = APIRouter(
     prefix="/requirements",

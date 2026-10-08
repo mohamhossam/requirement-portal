@@ -422,9 +422,11 @@ def test_stale_attempt_and_synchronous_analysis_cannot_report_new_attempt_progre
 
     from smb_kernel.time.fixed import FixedClock
 
-    from smb_requirement_agent.application.use_cases.ai_jobs import AnalysisProgressReporter
     from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobCommand, AiJobRecord
     from smb_requirement_agent.jobs.application.use_cases.job_execution_context import bind_attempt
+    from smb_requirement_agent.workflows.application.use_cases.ai_jobs import (
+        AnalysisProgressReporter,
+    )
 
     jobs = InMemoryAiJobStore(RLock())
     jobs.add(AiJobRecord(_job(), AiJobCommand({})))

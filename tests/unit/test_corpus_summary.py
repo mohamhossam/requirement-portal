@@ -16,7 +16,6 @@ from fastapi.testclient import TestClient
 from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.application.errors import ModelTransportError
-from smb_requirement_agent.application.use_cases.internal_reads import OpenFindingAges
 from smb_requirement_agent.application.use_cases.requirement_indexing import (
     IndexBacklog,
     IndexBacklogReader,
@@ -35,6 +34,7 @@ from smb_requirement_agent.requirements.application.use_cases.create_requirement
     CreateRequirementInput,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.workflows.application.use_cases.internal_reads import OpenFindingAges
 from tests.conftest import FAKE_PROVIDER_SETTINGS
 from tests.unit.test_requirement_indexing import RecordingEmbedding, corpus
 from tests.unit.workflow_helpers import drain_requirement_index

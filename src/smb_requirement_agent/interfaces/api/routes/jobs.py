@@ -4,12 +4,6 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, Query, Response
 
-from smb_requirement_agent.application.use_cases.ai_jobs import (
-    DEFAULT_LIST_LIMIT,
-    MAX_LIST_LIMIT,
-    AiJobs,
-    Notifications,
-)
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     get_ai_jobs,
@@ -38,6 +32,12 @@ from smb_requirement_agent.jobs.domain.entities import (
     NotificationId,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.workflows.application.use_cases.ai_jobs import (
+    DEFAULT_LIST_LIMIT,
+    MAX_LIST_LIMIT,
+    AiJobs,
+    Notifications,
+)
 
 router = APIRouter(
     prefix="/requirements",

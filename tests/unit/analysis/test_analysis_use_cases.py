@@ -33,7 +33,6 @@ from smb_requirement_agent.application.errors import (
     RequirementAnalysisNotFoundError,
     RequirementNotFoundError,
 )
-from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.breakdown.infrastructure.in_memory_epic_repository import (
     InMemoryEpicRepository,
 )
@@ -68,6 +67,9 @@ from smb_requirement_agent.requirements.infrastructure.in_memory_requirement_rep
     InMemoryRequirementRepository,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.workflows.application.use_cases.generation_context import (
+    GenerationContextTokens,
+)
 from tests.conftest import (
     TEST_NOW,
     AcceptAllSuggestionValidator,

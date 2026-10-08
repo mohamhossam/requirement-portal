@@ -12,7 +12,7 @@ from pathlib import Path
 from smb_requirement_agent.interfaces.api.main import create_app
 from smb_requirement_agent.interfaces.api.routes.internal import contract_openapi
 
-CONTRACT = Path(__file__).resolve().parents[2] / "contracts" / "requirement-internal.openapi.json"
+CONTRACT = Path(__file__).resolve().parents[3] / "contracts" / "requirement-internal.openapi.json"
 
 
 def test_the_internal_api_matches_its_committed_contract() -> None:

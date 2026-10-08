@@ -23,11 +23,6 @@ from smb_requirement_agent.analysis.application.use_cases.analysis_documents imp
     AssembleAnalysisDocuments,
 )
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
-from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
-from smb_requirement_agent.application.use_cases.requirement_impact import (
-    PreviewRequirementImpact,
-    UpdateRequirementWithImpact,
-)
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
 from smb_requirement_agent.requirements.application.ports.screening_requests import (
@@ -68,6 +63,13 @@ from smb_requirement_agent.requirements.application.use_cases.update_requirement
 )
 from smb_requirement_agent.requirements.infrastructure.attachment_worker import (
     AttachmentIngestionWorker,
+)
+from smb_requirement_agent.workflows.application.use_cases.identity_access import (
+    RequirementAccessService,
+)
+from smb_requirement_agent.workflows.application.use_cases.requirement_impact import (
+    PreviewRequirementImpact,
+    UpdateRequirementWithImpact,
 )
 
 

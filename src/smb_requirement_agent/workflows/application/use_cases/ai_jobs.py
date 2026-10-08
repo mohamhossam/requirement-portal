@@ -13,8 +13,6 @@ from smb_requirement_agent.application.errors import (
     RequirementNotFoundError,
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
-from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
 from smb_requirement_agent.jobs.application.ports.ai_jobs import (
     AiJobCommand,
     AiJobRecord,
@@ -44,6 +42,12 @@ from smb_requirement_agent.shared_kernel.actors import (
     ActorProfile,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.workflows.application.use_cases.generation_context import (
+    GenerationContextTokens,
+)
+from smb_requirement_agent.workflows.application.use_cases.identity_access import (
+    RequirementAccessService,
+)
 
 
 @dataclass(frozen=True)

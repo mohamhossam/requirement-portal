@@ -72,7 +72,6 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
     KnowledgeScreenEnsureOutcome,
     KnowledgeScreenEnsureResult,
 )
-from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.breakdown.domain.architecture.entities import (
     ArchitectureDependency,
     ArchitectureImpact,
@@ -239,6 +238,9 @@ from smb_requirement_agent.shared_kernel.approval import (
 )
 from smb_requirement_agent.shared_kernel.generation import GenerationStatus, Provenance
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.workflows.application.use_cases.generation_context import (
+    GenerationContextTokens,
+)
 from tests.integration.postgres_fixture_store import (
     FixturePostgresStore as _PostgresStore,
 )

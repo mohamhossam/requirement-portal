@@ -30,7 +30,6 @@ from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_repository
     InMemoryRequirementAnalysisRepository,
 )
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidencePort
-from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.breakdown.infrastructure.backlog_payloads import (
     epic_from_payload,
     epic_to_payload,
@@ -98,6 +97,9 @@ from smb_requirement_agent.requirements.infrastructure.requirement_snapshot impo
 )
 from smb_requirement_agent.shared_kernel.citation import PublishedReference
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.workflows.application.use_cases.generation_context import (
+    GenerationContextTokens,
+)
 from tests.characterisation import samples
 
 

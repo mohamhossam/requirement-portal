@@ -10,8 +10,6 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Response
 
-from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
-from smb_requirement_agent.application.use_cases.requirement_commands import ExpectedContext
 from smb_requirement_agent.breakdown.application.use_cases.edit_epic import EditEpic, EditEpicInput
 from smb_requirement_agent.breakdown.application.use_cases.generate_epic import (
     GenerateEpic,
@@ -48,6 +46,12 @@ from smb_requirement_agent.interfaces.api.schemas.governance import (
     ApprovalResponse,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.workflows.application.use_cases.generation_context import (
+    GenerationContextTokens,
+)
+from smb_requirement_agent.workflows.application.use_cases.requirement_commands import (
+    ExpectedContext,
+)
 
 router = APIRouter(
     prefix="/requirements", tags=["epic"], dependencies=[Depends(require_authenticated_actor)]

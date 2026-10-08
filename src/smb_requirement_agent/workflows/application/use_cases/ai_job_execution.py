@@ -31,8 +31,6 @@ from smb_requirement_agent.application.public_errors import describe_public_erro
 from smb_requirement_agent.application.use_cases.answer_suggestions import (
     SuggestClarificationAnswers,
 )
-from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
-from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
 from smb_requirement_agent.application.use_cases.prior_art import (
     PriorArtBudgetSpentError,
     ScreenPriorArt,
@@ -87,6 +85,12 @@ from smb_requirement_agent.jobs.domain.errors import AiJobConflictError
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,
+)
+from smb_requirement_agent.workflows.application.use_cases.generation_context import (
+    GenerationContextTokens,
+)
+from smb_requirement_agent.workflows.application.use_cases.identity_access import (
+    RequirementAccessService,
 )
 
 logger = logging.getLogger("smb_requirement_agent.ai_jobs")

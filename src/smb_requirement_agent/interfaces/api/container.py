@@ -60,15 +60,6 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
     RequirementKnowledgeRepositoryPort,
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.ai_job_execution import ExecuteAiJob
-from smb_requirement_agent.application.use_cases.ai_job_scheduling import (
-    AnswerSuggestionScheduler,
-    KnowledgeScreenScheduler,
-)
-from smb_requirement_agent.application.use_cases.ai_jobs import (
-    AiJobs,
-    Notifications,
-)
 from smb_requirement_agent.application.use_cases.answer_suggestions import (
     SuggestClarificationAnswers,
 )
@@ -77,17 +68,10 @@ from smb_requirement_agent.application.use_cases.corpus_actions import (
     ReinstateToCorpus,
     RetireFromCorpus,
 )
-from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.application.use_cases.historic_corpus import (
     IndexHistoricCorpus,
     ProjectHistoricRequirements,
 )
-from smb_requirement_agent.application.use_cases.identity_access import (
-    RequirementAccessService,
-    ResolveCurrentActor,
-    SearchKnownActors,
-)
-from smb_requirement_agent.application.use_cases.internal_reads import InternalReads
 from smb_requirement_agent.application.use_cases.knowledge_portfolio import (
     KnowledgePortfolio,
     NudgeFindingOwners,
@@ -102,11 +86,6 @@ from smb_requirement_agent.application.use_cases.reference_currency import (
     CurrentReferences,
     ProjectKnowledgeEvents,
     ReferenceCurrency,
-)
-from smb_requirement_agent.application.use_cases.requirement_commands import RequirementCommands
-from smb_requirement_agent.application.use_cases.requirement_impact import (
-    PreviewRequirementImpact,
-    UpdateRequirementWithImpact,
 )
 from smb_requirement_agent.application.use_cases.requirement_indexing import (
     IndexBacklogReader,
@@ -299,6 +278,31 @@ from smb_requirement_agent.requirements.application.use_cases.owned_requirements
 )
 from smb_requirement_agent.requirements.infrastructure.attachment_worker import (
     AttachmentIngestionWorker,
+)
+from smb_requirement_agent.workflows.application.use_cases.ai_job_execution import ExecuteAiJob
+from smb_requirement_agent.workflows.application.use_cases.ai_job_scheduling import (
+    AnswerSuggestionScheduler,
+    KnowledgeScreenScheduler,
+)
+from smb_requirement_agent.workflows.application.use_cases.ai_jobs import (
+    AiJobs,
+    Notifications,
+)
+from smb_requirement_agent.workflows.application.use_cases.generation_context import (
+    GenerationContextTokens,
+)
+from smb_requirement_agent.workflows.application.use_cases.identity_access import (
+    RequirementAccessService,
+    ResolveCurrentActor,
+    SearchKnownActors,
+)
+from smb_requirement_agent.workflows.application.use_cases.internal_reads import InternalReads
+from smb_requirement_agent.workflows.application.use_cases.requirement_commands import (
+    RequirementCommands,
+)
+from smb_requirement_agent.workflows.application.use_cases.requirement_impact import (
+    PreviewRequirementImpact,
+    UpdateRequirementWithImpact,
 )
 
 

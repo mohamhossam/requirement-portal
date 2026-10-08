@@ -35,9 +35,7 @@ from smb_kernel.observability.metrics import (
 )
 from smb_kernel.time.fixed import FixedClock
 
-from smb_requirement_agent.application.use_cases.ai_job_execution import ExecuteAiJob
 from smb_requirement_agent.infrastructure.config.options import LogFormat
-from smb_requirement_agent.infrastructure.jobs.polling_worker import PollingAiJobWorker
 from smb_requirement_agent.interfaces.api.container import build_container
 from smb_requirement_agent.interfaces.api.main import create_app
 from smb_requirement_agent.interfaces.runtime import start_metrics
@@ -47,9 +45,11 @@ from smb_requirement_agent.jobs.application.ports.ai_jobs import (
     AiJobRecord,
 )
 from smb_requirement_agent.jobs.domain.entities import AiJob
+from smb_requirement_agent.workflows.application.use_cases.ai_job_execution import ExecuteAiJob
+from smb_requirement_agent.workflows.infrastructure.polling_worker import PollingAiJobWorker
 from tests.conftest import FAKE_PROVIDER_SETTINGS
 from tests.unit.jobs.test_ai_jobs import NOW, _job
-from tests.unit.test_polling_worker import RecordingQueue
+from tests.unit.workflows.test_polling_worker import RecordingQueue
 
 
 def _sample(metrics: Metrics, name: str, labels: dict[str, str]) -> float:

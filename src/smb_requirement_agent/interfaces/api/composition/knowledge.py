@@ -7,10 +7,6 @@ from dataclasses import dataclass
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceKnowledgePort
-from smb_requirement_agent.application.use_cases.ai_job_scheduling import (
-    AnswerSuggestionScheduler,
-    KnowledgeScreenScheduler,
-)
 from smb_requirement_agent.application.use_cases.answer_suggestions import (
     SuggestClarificationAnswers,
 )
@@ -19,7 +15,6 @@ from smb_requirement_agent.application.use_cases.historic_corpus import (
     ProjectHistoricRequirements,
     historic_identity,
 )
-from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
 from smb_requirement_agent.application.use_cases.prior_art import (
     GetPriorArt,
     HistoricCitations,
@@ -63,6 +58,13 @@ from smb_requirement_agent.interfaces.api.composition.persistence import Persist
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,
+)
+from smb_requirement_agent.workflows.application.use_cases.ai_job_scheduling import (
+    AnswerSuggestionScheduler,
+    KnowledgeScreenScheduler,
+)
+from smb_requirement_agent.workflows.application.use_cases.identity_access import (
+    RequirementAccessService,
 )
 
 # The actor recorded on jobs the system schedules for itself.
