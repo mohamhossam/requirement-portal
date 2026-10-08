@@ -57,8 +57,6 @@ DOMAIN = {
     "domain.document.lineage": "knowledge",
     "domain.document.reference": "references",
     "domain.architecture.knowledge": "references",
-    "domain.review": "governance",
-    "domain.revision": "governance",
     "domain.knowledge.historic": "references",
     # Split: InvalidKnowledgeError goes to references, the screening errors to knowledge.
     "domain.knowledge.errors": "references",
@@ -84,18 +82,6 @@ USE_CASES = {
         "prior_art",
         "source_impact",
         "answer_suggestions",
-    ],
-    "governance": [
-        "breakdown_review",
-        "approval_workflow",
-        "approve_epic",
-        # Split from breakdown's feature_review (PR 11).
-        "approve_feature",
-        "revision_history",
-        "export_breakdown",
-        "knowledge_handoff",
-        # The governance handler for every breakdown change (PR 5).
-        "reset_approval_workflow",
     ],
     "reporting": [
         "requirement_worklist",
@@ -141,13 +127,11 @@ PORTS = {
         "requirement_indexing",
         "requirement_knowledge",
     ],
-    "governance": ["backlog_export", "breakdown_repository", "breakdown_review_repository"],
     "reporting": ["activity", "requirement_worklist", "saved_views"],
     TECHNICAL: ["domain_events", "expected_context", "external_work", "transaction_manager"],
 }
 
 APPLICATION_MODULES = {
-    "application.exports": "governance",
     "application.grounding_evaluation": "references",
     "application.retrieval_evaluation": "references",
     "application.prior_art_evaluation": "knowledge",
@@ -162,7 +146,14 @@ APPLICATION_MODULES = {
 
 # Contexts that have moved into their own package (ADR-0103 §1). Their domain and application
 # layers are classified whole; their infrastructure, like the rest, is out of scope.
-CONTEXT_PACKAGES = ("identity", "jobs", "requirements", "analysis", "breakdown")
+CONTEXT_PACKAGES = (
+    "identity",
+    "jobs",
+    "requirements",
+    "analysis",
+    "breakdown",
+    "governance",
+)
 
 
 def _prefixes() -> dict[str, str]:
