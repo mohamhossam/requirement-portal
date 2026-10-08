@@ -1,8 +1,8 @@
 # Refactor — Bounded-context packages and domain events
 
 **Status:** ADR-0103 accepted and the slice scheduled 2026-10-07. PR 1 delivered. The PR 1
-findings were decided the same day (ADR-0103 Amendment 1). PRs 2–12 and 11b delivered; PR 13
-(move `reporting`) is next.
+findings were decided the same day (ADR-0103 Amendment 1). PRs 2–13 and 11b delivered; PR 14
+(move `workflows`) is next.
 
 **Related:** [context map](../architecture/context-map.md),
 [ubiquitous language](../architecture/ubiquitous-language.md).
@@ -1065,6 +1065,60 @@ governance changes no context pair.
 - `ruff check .` and `ruff format --check .`: clean.
 - `mypy src tests`: no issues in 629 source files.
 - `lint-imports`: 28 contracts kept, 0 broken.
+
+## PR 13 — The `reporting` package (2026-10-08)
+
+### Delivered
+
+Reporting is the read side: the Requirement worklist, activity, saved views and the dependency
+pages. It is downstream of every context but workflows, so it had no wrong-way imports to remove.
+
+**1. The move.** One commit, in `.git-blame-ignore-revs`.
+
+| Was | Now |
+|---|---|
+| 4 use cases: `requirement_worklist`, `activity_reporting`, `saved_views`, `dependency_projection` | `reporting/application/use_cases/` |
+| 3 ports: `activity`, `requirement_worklist`, `saved_views` | `reporting/application/ports/` |
+| `infrastructure/persistence/{activity_projection,activity_codec,postgres_activity,postgres_activity_reader,postgres_activity_sources,postgres_worklist,in_memory_worklist,postgres_snapshots,in_memory_saved_views,postgres_saved_views}.py` | `reporting/infrastructure/` |
+| 5 reporting-only unit test modules | `tests/unit/reporting/` |
+
+No code changes and no shims.
+- **No domain layer.** Reporting reads projections that other contexts' changes maintain. Its
+  internal-layers contract therefore has two layers.
+- **No composition builder.** The context map gives reporting none. Its use cases are built in
+  `container.py` and the technical builders (`persistence.py`, `projections.py`, `operations.py`).
+  A `reporting.py` builder would only move those lines, so it is left for PR 16.
+
+**2. Contracts and report.** See below.
+
+### Contracts (31 kept, up from 28)
+
+- **New contracts.**
+  - `reporting_internal_layers`: infrastructure > application.
+  - `reporting_depends_only_upstream`: 6 ignored imports, all knowledge's unmoved modules, which
+    go in PR 15b. They are `application.ports.requirement_knowledge` (3),
+    `application.ports.source_dependencies` (1) and `domain.knowledge.entities` (2).
+  - `reporting_published_surface`.
+- **Upstream contexts.** Every earlier context now forbids `reporting`, and lists reporting's
+  application layer as a consumer of its published surface.
+- **Probes**, all reverted:
+  - a workflows use case imported from `saved_views` broke `reporting_depends_only_upstream`;
+  - a reporting adapter imported from a workflows use case broke `reporting_published_surface` and
+    `application_independence`;
+  - a reporting port imported from governance's `revision_history` broke
+    `governance_depends_only_upstream`.
+
+### Dependency report
+
+231 of 231 modules classified, 77 crossing pairs, 13 against the order. No pair changed.
+
+### Validation evidence (PR 13, local, with PostgreSQL)
+
+- `pytest` with `TEST_DATABASE_URL` set: 1865 passed, 0 skipped, exit 0. No file under
+  `tests/characterisation/golden/` changed.
+- `ruff check .` and `ruff format --check .`: clean.
+- `mypy src tests`: no issues in 635 source files.
+- `lint-imports`: 31 contracts kept, 0 broken.
 
 ## Shims
 

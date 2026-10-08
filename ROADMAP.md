@@ -35,7 +35,7 @@ this ledger.
 | Three-repository platform split (ADR-0098, ADR-0099, ADR-0100; plan `docs/slices/enhancement-platform-split.md`) | **Done 2026-10-05.** Stages 0–5: `platform-kernel` v1.0.2, the untangling and seams here, knowledge-portal v0.1.0, the cutover, and the guarded drop of the moved tables ([#31](https://github.com/mohamhossam/requirement-portal/pull/31)) with the run guides ([#32](https://github.com/mohamhossam/requirement-portal/pull/32)). No data is moved while the platform is in development. The acceptance criteria are checked in the plan, with their evidence: CI proves a withdrawal reaching requirement work, and runs the platform in a browser, on the combined stack | Branch protection on `main` (an owner setting) |
 | The Product Architecture Explorer on the knowledge catalogue (ADR-0101, with Amendments 1 and 2) | **Done 2026-10-05.** Built in [knowledge-portal](https://github.com/mohamhossam/knowledge-portal) (its #22–#36). Here: the ADR, and step 7's handoff of approved backlogs to the catalogue's change-request inbox ([#35](https://github.com/mohamhossam/requirement-portal/pull/35), `docs/slices/enhancement-change-requests-from-requirement-ai.md`) | A handoff status on the approval screen (deferred by decision) |
 | Knowledge Center (`docs/slices/enhancement-knowledge-center.md`, ADR-0099 Amendment 1, ADR-0102) | **Re-planned 2026-10-06 for the three repositories.** A is mostly delivered by the split, and F early. B1, A′, B2, B3, C and D are delivered (each built where its data lives). **E is scheduled 2026-10-06** (ADR-0102): E1, knowledge-portal's read-only ADO import and lineage, is delivered; E2, the historic corpus and prior art here, is in progress | E2; the ADO edition, for the REST adapter |
-| Bounded-context restructure toward Domain-Driven Design (ADR-0103; `docs/slices/refactor-bounded-contexts.md`) | **ADR-0103 accepted and scheduled 2026-10-07.** PRs 1–12 and 11b delivered: characterisation tests, the shared kernel, in-process domain events, governance rules in the domain, and the `identity`, `jobs`, `requirements`, `analysis`, `breakdown` and `governance` packages. Context map and ubiquitous language are in `docs/architecture/` | PRs 13–16, starting with moving `reporting` |
+| Bounded-context restructure toward Domain-Driven Design (ADR-0103; `docs/slices/refactor-bounded-contexts.md`) | **ADR-0103 accepted and scheduled 2026-10-07.** PRs 1–13 and 11b delivered: characterisation tests, the shared kernel, in-process domain events, governance rules in the domain, and the `identity`, `jobs`, `requirements`, `analysis`, `breakdown`, `governance` and `reporting` packages. Context map and ubiquitous language are in `docs/architecture/` | PRs 14–16, starting with moving `workflows` |
 | ADO publication and safe republish (12–13) | Planned; not implemented | Implementation |
 | Advanced workflow optimization (15) | Planned; evidence-gated | Demonstrate a need and measurable benefit before implementation |
 
@@ -1765,7 +1765,7 @@ rehearsal and deployment remain separate operational release prerequisites.
 
 # Refactor — Bounded-Context Packages and Domain Events
 
-**Status:** Scheduled 2026-10-07; PRs 1–12 and 11b delivered; PR 13 next. Decision: ADR-0103 (accepted
+**Status:** Scheduled 2026-10-07; PRs 1–13 and 11b delivered; PR 14 next. Decision: ADR-0103 (accepted
 2026-10-07).
 **Specification:** `docs/slices/refactor-bounded-contexts.md`. **Context map:**
 `docs/architecture/context-map.md`. **Glossary:** `docs/architecture/ubiquitous-language.md`.
