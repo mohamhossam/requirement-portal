@@ -108,6 +108,10 @@ DEFAULT_AI_JOB_HEARTBEAT_SECONDS = 20.0
 DEFAULT_AI_JOB_SHUTDOWN_GRACE_SECONDS = 150.0
 
 
+# Attempts a job may start before it fails as attempts_exhausted (ADR-0020 amendment).
+DEFAULT_AI_JOB_MAX_ATTEMPTS = 3
+
+
 DEFAULT_OIDC_JWKS_TTL_SECONDS = 900.0
 
 

@@ -427,6 +427,45 @@ def test_a_failing_job_is_recorded_with_a_public_error_and_notified(
     assert _notifications(container, NotificationKind.AI_JOB_FAILED) == [job_id]
 
 
+def test_a_job_whose_worker_keeps_dying_fails_once_its_attempts_are_spent(
+    client: TestClient, container: Container, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    requirement_id = _requirement(client)
+    requirement = client.get(f"/requirements/{requirement_id}").json()
+    _drain(container)
+    job_id = _start(
+        client,
+        requirement_id,
+        {
+            "operation": "analyse_requirement",
+            "context_token": requirement["analysis_context_token"],
+        },
+    )
+    # Each worker dies holding the job: its lease expires the moment it is taken.
+    max_attempts = FAKE_PROVIDER_SETTINGS.ai_job_max_attempts
+    for attempt in range(1, max_attempts + 1):
+        now = container.clock.now()
+        dead = container.ai_job_queue.claim_next(WORKER, now, now)
+        assert dead is not None and dead.job.id.value == job_id
+        assert dead.job.attempt_count == attempt
+
+    def must_not_run(*args: object, **kwargs: object) -> None:
+        raise AssertionError("An exhausted job must not reach the provider.")
+
+    monkeypatch.setattr(container.execute_ai_job._analyze, "execute_workspace", must_not_run)
+    now = container.clock.now()
+    last = container.ai_job_queue.claim_next(WORKER, now, now + timedelta(minutes=5))
+    assert last is not None and last.job.attempt_count == max_attempts + 1
+    failed = container.execute_ai_job.execute(last)
+
+    assert failed.status is AiJobStatus.FAILED
+    assert failed.failure is not None
+    assert failed.failure.code == "attempts_exhausted"
+    assert failed.failure.retryable
+    assert failed.failure.correlation_id
+    assert _notifications(container, NotificationKind.AI_JOB_FAILED) == [job_id]
+
+
 def test_an_index_wait_fails_a_job_that_does_not_need_the_index(
     client: TestClient, container: Container, monkeypatch: pytest.MonkeyPatch
 ) -> None:

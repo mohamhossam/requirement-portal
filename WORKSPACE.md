@@ -288,7 +288,10 @@ are never persisted.
 AI operations run through bounded background workers. Defaults are
 `AI_JOB_WORKER_CONCURRENCY=1`, `AI_JOB_POLL_INTERVAL_SECONDS=1`,
 `AI_JOB_LEASE_SECONDS=90`, and `AI_JOB_HEARTBEAT_SECONDS=20`. Heartbeats must be
-less than half the lease duration. With PostgreSQL, jobs and notifications
+less than half the lease duration. `AI_JOB_MAX_ATTEMPTS=3` (minimum 1) caps how many
+attempts one job may start: a job whose worker keeps dying, so its lease keeps
+expiring and it keeps being reclaimed, fails as `attempts_exhausted` (retryable)
+instead of looping forever, and its creator is notified. With PostgreSQL, jobs and notifications
 survive API restarts; memory mode retains the same behavior for offline work but
 loses process-local state on restart. The synchronous generation endpoints
 remain available during migration, while the browser uses `/ai-jobs` and polls

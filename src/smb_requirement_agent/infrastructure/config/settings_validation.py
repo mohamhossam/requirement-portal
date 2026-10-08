@@ -237,6 +237,8 @@ def validate_settings(settings: Settings) -> None:
         )
     if settings.ai_job_shutdown_grace_seconds <= 0:
         raise ConfigurationError("AI_JOB_SHUTDOWN_GRACE_SECONDS must be greater than zero.")
+    if settings.ai_job_max_attempts < 1:
+        raise ConfigurationError("AI_JOB_MAX_ATTEMPTS must be at least 1.")
     if settings.debug_trace_enabled and not settings.debug_trace_path.strip():
         raise ConfigurationError(
             "DEBUG_TRACE_PATH must not be blank when DEBUG_TRACE_ENABLED=true."

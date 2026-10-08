@@ -70,6 +70,7 @@ def build_ai_jobs(
         persistence.access_repository,
         access,
         analysis.generation_context_tokens,
+        max_attempts=settings.ai_job_max_attempts,
         screen_prior_art=knowledge.screen_prior_art,
     )
     # Index-dependent operations wait behind the gate instead of failing.

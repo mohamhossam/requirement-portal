@@ -131,6 +131,7 @@ class ExecuteAiJob:
         authorizer: RequirementAccessService,
         generation_context: GenerationContextTokens,
         *,
+        max_attempts: int,
         screen_prior_art: ScreenPriorArt | None = None,
     ) -> None:
         self._jobs = jobs
@@ -155,6 +156,7 @@ class ExecuteAiJob:
         self._authorizer = authorizer
         self._generation_context = generation_context
         self._screen_prior_art = screen_prior_art
+        self._max_attempts = max_attempts
 
     def execute(self, record: AiJobRecord) -> AiJob:
         with (
@@ -182,6 +184,19 @@ class ExecuteAiJob:
             current = self._require(record.job.id)
             if current.status is AiJobStatus.CANCELLATION_REQUESTED:
                 return self._finish_cancel(record, current)
+            if current.attempt_count > self._max_attempts:
+                # Every reclaim of an expired lease spends an attempt. A job whose worker
+                # keeps dying would otherwise be claimed forever (ADR-0020 amendment).
+                return self._finish_failure(
+                    record,
+                    AiJobFailure(
+                        "attempts_exhausted",
+                        f"The job was started {self._max_attempts} times without finishing."
+                        " Try again.",
+                        True,
+                        str(uuid.uuid4()),
+                    ),
+                )
             with self._transactions.transaction():
                 self._transactions.lock_requirement(record.job.requirement_id)
                 self._require_membership(record)

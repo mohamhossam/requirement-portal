@@ -41,6 +41,7 @@ from smb_requirement_agent.breakdown.infrastructure.llm.openrouter_adapters impo
     OpenRouterStoryQualityEvaluator,
 )
 from smb_requirement_agent.infrastructure.config.options import (
+    DEFAULT_AI_JOB_MAX_ATTEMPTS,
     DEFAULT_LOCAL_LLM_BASE_URL,
     DEFAULT_LOCAL_LLM_TIMEOUT_SECONDS,
     DEFAULT_OPENAI_EMBEDDING_MODEL,
@@ -268,6 +269,26 @@ class TestSettings:
 
         assert Settings.from_env().openai_model == DEFAULT_OPENAI_MODEL
         assert Settings.from_env().openai_embedding_model == DEFAULT_OPENAI_EMBEDDING_MODEL
+
+    def test_ai_job_max_attempts_defaults_to_three_and_is_read(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("LLM_PROVIDER", "fake")
+        monkeypatch.delenv("AI_JOB_MAX_ATTEMPTS", raising=False)
+        assert Settings.from_env().ai_job_max_attempts == DEFAULT_AI_JOB_MAX_ATTEMPTS == 3
+
+        monkeypatch.setenv("AI_JOB_MAX_ATTEMPTS", "5")
+        assert Settings.from_env().ai_job_max_attempts == 5
+
+    @pytest.mark.parametrize(("value", "message"), [("0", "at least 1"), ("many", "numeric")])
+    def test_ai_job_max_attempts_must_be_a_positive_integer(
+        self, monkeypatch: pytest.MonkeyPatch, value: str, message: str
+    ) -> None:
+        monkeypatch.setenv("LLM_PROVIDER", "fake")
+        monkeypatch.setenv("AI_JOB_MAX_ATTEMPTS", value)
+
+        with pytest.raises(ConfigurationError, match=message):
+            Settings.from_env()
 
     def test_from_env_reads_local_provider_settings(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("LLM_PROVIDER", "local")
