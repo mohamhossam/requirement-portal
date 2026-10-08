@@ -2459,3 +2459,4 @@ Each record keeps its own dated validation history; the ledger at the top govern
 | `docs/slices/fix-workspace-request-loading.md` | Scoped workspace requests and shared AI jobs | Merged into `main` |
 | `docs/slices/fix-human-answer-analysis-citations.md` | Human-answer citations during question resolution | Merged into `main`; #65 added the no-evidence case, and #67 merged the salvage commit `0d42039` (all in `smb-ai-requirement-agent`, before the snapshot) |
 | `docs/slices/enhancement-review-remediation*.md` | Four whole-workspace review remediations | Merged into `main`; human review open (ledger above) |
+| `docs/slices/fix-ai-job-trace-gaps.md` | Seven gaps found tracing an AI job from click to completion (attempt cap, claim reset, refusal before enqueue, stale context, key reuse) | In review (PR #48) |
