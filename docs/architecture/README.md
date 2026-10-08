@@ -24,7 +24,7 @@ write a new ADR that supersedes it and update the older one's Status.
 
 Search and AI grounding: [ADR-0064](adr-0064-unified-search-and-reference-answers.md), accepted.
 
-Bounded contexts: [context map](context-map.md) and [ubiquitous language](ubiquitous-language.md), under [ADR-0103](adr-0103-bounded-context-packages-and-domain-events.md), accepted.
+Bounded contexts: [context map](context-map.md) and [ubiquitous language](ubiquitous-language.md), under [ADR-0103](adr-0103-bounded-context-packages-and-domain-events.md), accepted and implemented.
 
 | ADR | Title | Status |
 |---|---|---|
@@ -126,4 +126,4 @@ Bounded contexts: [context map](context-map.md) and [ubiquitous language](ubiqui
 - [ADR-0100: The platform kernel holds mechanisms, never meaning](adr-0100-platform-kernel.md)
 - [ADR-0101: The product architecture explorer lives on the knowledge catalogue](adr-0101-product-architecture-explorer-on-the-catalogue.md)
 - [ADR-0102: Historic Requirements and their Azure DevOps lineage](adr-0102-historic-requirements-and-ado-lineage.md)
-- [ADR-0103: Bounded-context packages and in-process domain events](adr-0103-bounded-context-packages-and-domain-events.md) — Accepted; migration in progress
+- [ADR-0103: Bounded-context packages and in-process domain events](adr-0103-bounded-context-packages-and-domain-events.md) — Accepted; implemented 2026-10-08 (PRs 1–16)

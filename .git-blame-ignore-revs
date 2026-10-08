@@ -49,3 +49,6 @@ eb30eda8c906a69f101c6c93d74017e2e65fb8d9
 
 # PR 15b: the knowledge context moved into smb_requirement_agent/knowledge, imports rewritten (ADR-0103).
 8cbe670637ea2959d31e278f4a8100bf3fe291af
+
+# PR 16: the public error catalogue moved into smb_requirement_agent/workflows, imports rewritten (ADR-0103).
+6f2e57787fe6901ffa17d5f91cb1645e7a0e662a

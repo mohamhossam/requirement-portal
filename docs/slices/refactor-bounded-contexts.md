@@ -1,8 +1,10 @@
 # Refactor — Bounded-context packages and domain events
 
-**Status:** ADR-0103 accepted and the slice scheduled 2026-10-07. PR 1 delivered. The PR 1
-findings were decided the same day (ADR-0103 Amendment 1). PRs 2–15b and 11b delivered: every context
-has its own package. PR 16 (finish) is next.
+**Status:** Delivered 2026-10-08. ADR-0103 was accepted and the slice scheduled 2026-10-07, and
+the PR 1 findings were decided the same day (ADR-0103 Amendment 1). PRs 1–16 and 11b complete the
+migration: every context has its own package, and `lint-imports` enforces the dependency order
+with no exemptions (ADR-0103 Amendment 2). Merging is the owner's step. The work left is under
+*Follow-ups*.
 
 **Related:** [context map](../architecture/context-map.md),
 [ubiquitous language](../architecture/ubiquitous-language.md).
@@ -113,7 +115,7 @@ stays green. A move that also edits code keeps a separate move-only commit.
 | 14 | Move `workflows` | |
 | 15a | Move `references`. The ACL decodes knowledge-portal events into typed state, which replaces PR 2's `KnowledgeStateDecoderPort`, and takes over `HistoricPassage.from_entry` and `HistoricWorkItem.from_entry`. Also splits the analysis half of `reference_currency` (`stale_analysis`, `stale_proposals`) into analysis behind a references currency port that keeps today's lock order (deferred from PR 10) | After Knowledge Center E2 merges, because E2 is the most active area |
 | 15b | Move `knowledge` (screening) | After 15a |
-| 16 | **Finish.** Delete every migration shim; enable `contexts_layered` and `published_surface` without exceptions beyond those ADR-0103 records; remove the empty `domain/` and `application/use_cases/`; retire the AGENTS.md §19 debt row; fold references' event decoding (`KnowledgeStateDecoderPort`) and `HistoricPassage`/`HistoricWorkItem.from_entry` into the ACL (deferred from PR 15a) | Locks the boundaries in |
+| 16 | **Finish.** Delete every migration shim; enable `contexts_layered` and `published_surface` without exceptions beyond those ADR-0103 records; remove the empty `domain/` and `application/use_cases/`; retire the AGENTS.md §19 debt row. Done 2026-10-08; the ACL consolidation deferred from PR 15a became a follow-up | Locks the boundaries in |
 
 `references` and `knowledge` sit in the middle of the dependency order but move last, which is safe for two reasons:
 - **Their contracts follow the move.** Contracts are enabled per context as it moves, so until PRs 15a and 15b they are checked only by the existing layer contracts.
@@ -1406,6 +1408,148 @@ only the move and its contracts.
 - `mypy src tests`: no issues in 660 source files.
 - `lint-imports`: 39 contracts kept, 0 broken.
 
+## PR 16 — Finish (2026-10-08)
+
+### Delivered
+
+1. **Context errors moved into their contexts (F5).**
+   - 51 errors moved verbatim from `application/errors.py` into a new `application/errors.py` in
+     each of the nine contexts. The placement rule: an error goes with its base's family, or else
+     with the most upstream context that raises it.
+   - The shared module keeps the platform-kernel re-exports and `ArtifactVersionConflictError`, and
+     imports no context.
+2. **References raises its own citation error.**
+   - `ReferenceCurrency.require_current` raised analysis's `RequirementAnalysisConflictError`,
+     which ran against the dependency order. It now raises `CitationNotCurrentError` with the same
+     message.
+   - The catalogue maps the new error to `requirement_analysis_conflict` / CONFLICT, so HTTP
+     responses and job failure codes are unchanged. A new `test_error_handlers` case pins this.
+   - Analysis's `AnalysisReferenceCurrency` translates it back, so analysis's callers still see
+     `RequirementAnalysisConflictError`.
+   - Knowledge's search and answer suggestions catch it where they caught the analysis error.
+   - Five tests that reach references without going through analysis now expect the new error.
+3. **The public error catalogue moved into `workflows` (F5, refined).**
+   - `application/public_errors.py` → `workflows/application/public_errors.py`; this is a
+     move-only commit.
+   - Breakdown's `LeasedJobs` takes an injected `FailureCode` instead of importing the catalogue.
+     The composition root passes `describe_public_error(exc).code`.
+4. **The shared persistence helpers lost their context code.** All moves are verbatim.
+   - `shared_payloads`:
+     - the Story-quality and architecture-impact codecs moved to
+       `breakdown/infrastructure/backlog_codecs.py`;
+     - `evidence_payload` moved to `analysis/infrastructure/analysis_payloads.py`.
+   - `postgres_values`: the Epic and Feature lookups moved to
+     `breakdown/infrastructure/postgres_backlog.py`.
+   - `payload_fields`: its three `RequirementContext` helpers had no callers and were deleted.
+   - `in_memory_transaction`: `checkpoint()` is typed with a local protocol.
+5. **The empty packages and the contract exemptions are gone.**
+   - `domain/` and `application/use_cases/` are removed.
+   - The context contracts lose every `ignore_imports` and `allow_indirect_imports`.
+   - `contexts_layered` and `shared_application_uses_no_context` are added.
+6. **A vacuous test was fixed.**
+   - **What was wrong.** `test_authorization_placement` scanned only `application/use_cases/`.
+     From PR 7 on it checked a shrinking set, and since PR 15b none at all, so its two use-case
+     checks passed vacuously.
+   - **The fix.** It now scans every context's use cases, and asserts that the access service is
+     among them.
+7. **The layout checks the spec promised.** `test_context_boundaries` now also checks three
+   things:
+   - each context has exactly its layer packages;
+   - the layer-first packages stay gone;
+   - no migration shim exists.
+
+### Contracts (41 kept, up from 39)
+
+- **New:**
+  - `contexts_layered`: ADR-0103 §2 as one `layers` contract, with `jobs | identity` as
+    independent siblings;
+  - `shared_application_uses_no_context`.
+- **Exemptions.** No context contract has `ignore_imports` or `allow_indirect_imports`. The three
+  that keep `allow_indirect_imports` are the route and dependency-provider contracts, which reach
+  adapters through the composition root by design.
+- **Probes**, all reverted:
+  - an analysis → breakdown import broke `contexts_layered`, `analysis_depends_only_upstream` and
+    `knowledge_depends_only_upstream`;
+  - a breakdown import in `payload_fields`, which identity uses, broke 7 contracts, including
+    `identity_depends_on_no_other_context` (indirect imports are now checked);
+  - a context import in `application/errors.py` broke `shared_application_uses_no_context`,
+    `contexts_layered` and the identity and jobs contracts;
+  - recreating `domain/` failed `test_the_layer_first_packages_stay_gone`.
+
+### Dependency report
+
+256 of 256 modules classified, 53 crossing pairs, **0 against the order** (5 before). Compared
+with PR 15b:
+- **Gone:**
+  - every pair through the old `interfaces` classification of the catalogue;
+  - `technical → {analysis, breakdown, requirements}`;
+  - `jobs → technical` and `reporting → technical`, which were context errors.
+- **New:** `workflows → references`, because the catalogue maps references' errors.
+
+### Smoke flow (acceptance)
+
+With `LLM_PROVIDER=fake`, through the API test client:
+1. create the Requirement, analyse and confirm;
+2. generate and approve the Epic, the Features and the Stories, then submit and approve the
+   breakdown;
+3. edit the Requirement, acknowledging the impact.
+
+Results:
+- the analysis is gone (404);
+- the Epic, both Features and the Stories are kept, each stale with `requirement_changed`;
+- the breakdown review is `needs_revision`, and the worklist shows `stale`.
+
+The same script's output is identical on `84e5cfc`, the commit before PR 1. Two outcomes are
+unchanged from that commit:
+- `GET /approval-workflow` answers 404 `requirement_analysis_not_found` once the analysis is gone;
+- the breakdown review still answers 200.
+
+### Validation evidence (PR 16, local, with PostgreSQL)
+
+- `pytest` with `TEST_DATABASE_URL` set: 1870 passed, 0 skipped, exit 0. Three are new.
+- **Unchanged files:**
+  - `tests/characterisation/golden/` has not changed since PR 1 recorded it (`a0fa37e`);
+  - `frontend/openapi.json`, `contracts/` and the migrations have not changed since `84e5cfc`.
+- `ruff check .` and `ruff format --check .`: clean.
+- `mypy src tests`: no issues in 668 source files.
+- `lint-imports`: 41 contracts kept, 0 broken.
+- **Verbatim moves.** The 52 classes and 36 functions were compared by AST span against their
+  old text, and all match.
+
+## Follow-ups
+
+These were agreed on 2026-10-08 as out of PR 16's scope. Each is a separate change, scheduled
+through ROADMAP.md when a slice next touches the area.
+
+- **ACL consolidation** (deferred from PR 15a). This means folding references' event decoding
+  (`KnowledgeStateDecoderPort`, `PayloadKnowledgeStateDecoder`) and
+  `HistoricPassage.from_entry` / `HistoricWorkItem.from_entry` into `knowledge_client`. It
+  improves no boundary, because all of it is already inside `references`.
+- **Published surfaces for use cases.** ADR-0103 §2 says no context imports another's use cases,
+  and no context has a `published.py`. 25 import statements still reach another context's
+  `application/use_cases`, all of them upstream, so `contexts_layered` accepts them:
+  - 20 are in `workflows`;
+  - 5 are elsewhere:
+    - governance → `AnalysisCollaboration`;
+    - governance → `FeatureLookup` (`feature_review`) and `ValidateStory` (`story_quality`);
+    - analysis → `requirement_sources`;
+    - knowledge → `command_fingerprint`.
+
+  The fix gives governance ports for the upstream use cases it calls, and decides whether
+  `workflows` may call use cases directly. After that, the `<ctx>_published_surface` contracts
+  can forbid `application.use_cases` too.
+- **A reporting builder.** Reporting is still wired in `composition/persistence.py`,
+  `projections.py` and `operations.py`, not in its own `composition/reporting.py`.
+- **Shared infrastructure that imports contexts.** No contract checks shared infrastructure yet.
+  The modules involved:
+  - `infrastructure/llm/{openai,openrouter}_adapters.py`, which select a provider for every
+    context's adapters;
+  - `response_sanitizer.py`, which raises an analysis error;
+  - `postgres_store.py` and `backfill_document_blobs.py`, which raise requirements errors.
+
+  Moving those raises behind ports, and the provider selection into composition, would allow a
+  `shared_infrastructure_uses_no_context` contract.
+
 ## Shims
 
 When a module moves, a re-export module stays at the old path:
@@ -1422,6 +1566,9 @@ The shim needs explicit `__all__` where mypy requires it.
 - `tests/architecture/test_context_boundaries.py` counts imports of shim modules from `src/` and `tests/`, and fails if the count is above zero in `src/`, or rises in `tests/`.
 - The shims are recorded as debt in AGENTS.md §19 until PR 16.
 
+**Outcome:** none was needed. Every PR switched production code and tests to the new paths in the
+same commit. `test_no_migration_shims_remain` keeps it that way.
+
 ## Tests
 
 - **Golden characterisation tests (PR 1).** They are unchanged by every later PR.
@@ -1429,8 +1576,10 @@ The shim needs explicit `__all__` where mypy requires it.
 - **Domain-only unit tests** for every rule moved into an aggregate or domain service in PR 6.
 - **New `tests/architecture/test_context_boundaries.py`:**
   - handlers are subscribed only in `interfaces/api/composition/events.py`;
-  - no shim imports from `src/`;
-  - every context package has the expected layer subpackages.
+  - the dispatcher is built only by the composition root;
+  - no shim exists in `src/` or `tests/` (PR 16);
+  - every context package has exactly its layer subpackages, and `domain/` and
+    `application/use_cases/` stay gone (PR 16).
 - **Existing suites:** API tests, `tests/integration` against PostgreSQL (including legacy-payload loading), and the OpenAPI snapshot all pass unchanged.
 - **Layout:** `tests/unit/<context>/` mirrors the contexts, with `__init__.py` in each directory so equal file names do not collide. `tests/integration` stays flat.
 
@@ -1438,11 +1587,13 @@ The shim needs explicit `__all__` where mypy requires it.
 
 - [x] ADR-0103 accepted by the owner (2026-10-07).
 - [ ] PRs 1–16 merged, each green on `pytest`, `ruff check .`, `ruff format --check .`, `mypy src tests` and `lint-imports`.
-- [ ] The golden fingerprints, golden payloads and OpenAPI snapshot from before PR 1 are byte-identical after PR 16.
-- [ ] No module under `src/smb_requirement_agent/domain/` or `application/use_cases/` remains.
-- [ ] No use case calls a downstream context; `lint-imports` enforces this.
-- [ ] Smoke flow with `LLM_PROVIDER=fake`: create → analyse → confirm → Epic → Features → Stories → approve all → edit the Requirement. The analysis is gone; Epic, Features and Stories are stale and kept; the breakdown review needs revision.
-- [ ] AGENTS.md, WORKSPACE.md (package boundaries and the boundary map) and ADR statuses updated.
+  - Every PR was green locally on all five gates, as recorded in its *Validation evidence*.
+  - All are pushed on `claude/lucid-wright-ba5v7x`. Merging is the owner's step.
+- [x] The golden fingerprints, golden payloads and OpenAPI snapshot from before PR 1 are byte-identical after PR 16. Evidence: `git diff a0fa37e -- tests/characterisation/golden/` and `git diff 84e5cfc -- frontend/openapi.json` are both empty.
+- [x] No module under `src/smb_requirement_agent/domain/` or `application/use_cases/` remains. Both packages are removed, and `test_the_layer_first_packages_stay_gone` checks it.
+- [x] No use case calls a downstream context; `lint-imports` enforces this with `contexts_layered` and the per-context contracts, with no exemptions. Calls to *upstream* use cases remain; see *Follow-ups*.
+- [x] Smoke flow with `LLM_PROVIDER=fake`: create → analyse → confirm → Epic → Features → Stories → approve all → edit the Requirement. The analysis is gone; Epic, Features and Stories are stale and kept; the breakdown review needs revision. Evidence: PR 16, *Smoke flow*.
+- [x] AGENTS.md, WORKSPACE.md (package boundaries and the boundary map) and ADR statuses updated (PR 16).
 
 ## Validation Evidence
 

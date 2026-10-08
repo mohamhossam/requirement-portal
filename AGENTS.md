@@ -93,11 +93,10 @@ Dependency direction is inward:
 
 ### 4.0 Bounded contexts (ADR-0103)
 
-**Status:** accepted 2026-10-07; the migration is in progress. The code moves toward this layout
-only through the PRs in `docs/slices/refactor-bounded-contexts.md`. A context that has not yet
-moved keeps the layer-first layout, and the rules it already follows still apply. New code in
-an unmoved area goes where the context map assigns it once that area moves, and must not add a
-dependency that runs against the order below.
+**Status:** accepted 2026-10-07 and implemented 2026-10-08 (`docs/slices/refactor-bounded-contexts.md`,
+PRs 1–16; ADR-0103 Amendment 2 records where the implementation differs). There is no layer-first
+`domain/` or `application/use_cases/` package any more. New code goes in the context that
+`docs/architecture/context-map.md` assigns it.
 
 The layering above applies **inside each bounded context**. The contexts, their modules and their
 relationships are in `docs/architecture/context-map.md`.
@@ -114,17 +113,24 @@ relationships are in `docs/architecture/context-map.md`.
   `workflows → reporting → governance → breakdown → knowledge → analysis → references → requirements → {jobs | identity} → shared_kernel`
   (ADR-0103 Amendment 1).
   A context never imports one to its left.
-- **Published surface.** From another context, import only its `domain`,
-  `application/ports` or `application/published`. Never import its use cases or its
-  infrastructure.
+- **Published surface.** From another context, import only its `domain`, `application/ports`
+  and `application/errors`. Never import its infrastructure: `<ctx>_published_surface` rejects
+  it. Do not add imports of another context's use cases either. The existing ones are recorded
+  in §19.
 - **No downstream calls from upstream.** When an upstream context needs a downstream effect, it
   publishes a domain event, or calls a port it owns itself that the composition root implements.
 - **How domain events run.** In process and synchronously, inside the caller's unit of work and
   lock. They are never published inside `external_call()`. They carry identities, never
   aggregates.
-- **What stays shared.** `interfaces/` (routes, schemas, dependency providers, the error map and
-  the composition root), `infrastructure/config/settings.py` and the persistence machinery
-  (`PostgresStore`, migrations) stay shared. They are not contexts.
+- **What stays shared.** These are not contexts:
+  - `interfaces/`: routes, schemas, dependency providers, the error map and the composition root;
+  - the shared `application/`: the platform-kernel error re-exports, the event dispatcher and the
+    technical ports. `shared_application_uses_no_context` keeps context code out of it;
+  - `infrastructure/config/settings.py` and the persistence machinery (`PostgresStore`,
+    migrations).
+- **Errors.** A context's application errors are in `<ctx>/application/errors.py`. The public
+  error catalogue, `workflows/application/public_errors.py`, maps every error to its public code
+  and category. `interfaces/api/error_handlers.py` builds the HTTP map from it.
 
 ### 4.1 Domain
 
@@ -233,7 +239,9 @@ refresh, operational entry points — ADR-0071).
 ### 4.4.2 Error translation
 
 Domain and application errors are mapped to HTTP status codes in exactly one
-place: `interfaces/api/error_handlers.py`.
+place: `interfaces/api/error_handlers.py`. It derives the map from the public
+error catalogue, `workflows/application/public_errors.py`, which durable jobs
+also use for their failure codes. A new error is added to that catalogue.
 
 - Route handlers must not contain `try`/`except` for domain errors and must
   not raise `HTTPException` for them. A route calls a use case and returns a
@@ -712,7 +720,7 @@ without reading the note; several get materially harder in later slices.
 | `ai_jobs` rows are kept forever, because they are the activity feed's record of AI work (ADR-0079). | The table grows with use, though reads are bounded and polling cost does not grow. | Archive finished jobs past a horizon into a cold table the activity projection can still read, if the table's size starts to matter. |
 | 2026-09-24 review findings not yet remediated: the provider rate limit is per API process (ADR-0074). | Behind N API replicas an actor can make N times the configured provider calls. | An exact global ceiling at a gateway, or a durable counter if spend control becomes a requirement. Retired: pooling and worker separation (Phase 2, ADR-0069); Slice 14 conventions (Phase 3); route-assembled units of work (Phase 4, ADR-0070); oversized modules, the monolithic container including inline persistence selection, and OpenAI adapter drift (Phase 5, ADR-0071/0072); server-side review action availability and the built app's Content-Security-Policy (Phase 6, ADR-0073); deployment packaging, JSON logs, metrics, the provider rate limit and timestamped migrations (Phase 7, ADR-0074). |
 | Frontend review-remediation items that need frontend logic changes, deferred on 2026-09-24 because CLAUDE.md limits frontend changes to presentation during the UI redesign. (a) `frontend/src/review/rules.ts` still restates the review rules instead of reading the API's `actions` fields (ADR-0073). (b) The knowledge API types in `frontend/src/api/knowledge.ts` are hand-written, not generated from OpenAPI. | (a) The rules now exist on the server, but the browser can still drift from them until it switches over. (b) Hand-written types can silently disagree with the contract; since the third review remediation `src/api/contract.test.ts` checks every client call's method and path against `openapi.json`, but not the payload types. | The UI redesign (`docs/ux-plan.md`), which rebuilds these screens: read `actions`, delete `rules.ts`, and use generated knowledge types. Retired: the 1,790-line `AnalysisPanel.tsx`, split presentationally into seven files (third review remediation, Phase 6.2); identity-dependent queries on the Architecture knowledge page running before identity loaded (fourth review remediation, Phase 5.1); the Clarify panel showing "No analysis yet" after its job finished, because invalidation joined a still-loading read (PR #41: `invalidateWorkspaceKeys` cancels in-flight reads first). These are Phase 6.1 (frontend half), 6.2 and 6.3 of `docs/slices/enhancement-review-remediation.md`. |
-| The layer-first package layout (`domain/`, `application/use_cases/`) predates the bounded contexts in ADR-0103. Every context has its own package and contracts (PRs 7–15b). Left for PR 16: the empty `domain/` and `application/use_cases/` packages, and the context errors still in `application/errors.py` and the public error catalogue (F5). Cross-context invalidation became domain events in PRs 4–5, and governance rules moved into the domain in PR 6. During the migration, `# MIGRATION SHIM` re-export modules may stay at old import paths. | Nothing yet enforces the boundaries between the unmoved contexts, and 5 context pairs still import against the ADR-0103 dependency order. Shims, where present, hide the real location of a module from readers. | `docs/slices/refactor-bounded-contexts.md` (scheduled 2026-10-07). PR 16 deletes every shim and retires this row. |
+| ADR-0103 follow-ups. (a) 25 imports reach another context's use cases, all upstream: 20 from `workflows` and 5 elsewhere (governance → `AnalysisCollaboration`, `FeatureLookup` and `ValidateStory`; analysis → `requirement_sources`; knowledge → `command_fingerprint`). No context has a published surface for them. (b) Shared `infrastructure/` still imports context code: the provider-selection modules in `infrastructure/llm/`, `response_sanitizer.py`, `postgres_store.py` and `backfill_document_blobs.py`. (c) The ACL consolidation in `references`, and a reporting composition builder. | `<ctx>_published_surface` can forbid only infrastructure until (a) is done, so a use-case import between contexts is caught by review, not by tooling. No contract covers (b). | The *Follow-ups* section of `docs/slices/refactor-bounded-contexts.md`, scheduled when a slice next touches the area. Retired by PR 16 of that slice: the layer-first package layout, the context errors in `application/errors.py`, the public error catalogue's placement (F5), and every contract exemption. |
 
 
 Legacy CSV/TSV extraction can retain first-record wording copied into later rows. ADR-0057 fixes

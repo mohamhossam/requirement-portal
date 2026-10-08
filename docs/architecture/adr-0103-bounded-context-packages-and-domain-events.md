@@ -7,7 +7,7 @@ Accepted 2026-10-07 by the repository owner. It:
 - amends ADR-0021, ADR-0070 and ADR-0071 as described under Decision;
 - amends AGENTS.md §4, §5, §15 and §19.
 
-The code reaches this layout one PR at a time. Until a context has moved, its code stays in the layer-first packages, and the rules it already follows still apply.
+Implemented 2026-10-08 by PRs 1–16 of `docs/slices/refactor-bounded-contexts.md`. Every context has its own package, and the layer-first `domain/` and `application/use_cases/` packages are gone. Amendment 2 records where the implementation differs from the text below.
 
 The migration is sequenced in `docs/slices/refactor-bounded-contexts.md`. The contexts and their relationships are in `docs/architecture/context-map.md`, and the terms are in `docs/architecture/ubiquitous-language.md`.
 
@@ -295,3 +295,75 @@ workflows → reporting → governance → breakdown → knowledge → analysis 
 
 **The migration sequence** gains one PR: the `knowledge` move (PR 15) becomes PR 15a (`references`)
 and PR 15b (`knowledge`), both after Knowledge Center E2.
+
+## Amendment 2 — As implemented (PR 16, 2026-10-08)
+
+The migration is complete. Where this amendment differs from the text above or Amendment 1, it
+governs.
+
+**F5, refined: the public error catalogue is in `workflows`.** F5 placed
+`application/public_errors.py` beside `interfaces/api/error_handlers.py`. But durable jobs record
+a failure's public code from application code, through `describe_public_error`, so the catalogue
+cannot live in interfaces. It imports every context's errors, which puts it at the top of the
+order: it is `workflows/application/public_errors.py`.
+- `error_handlers.py` still builds the single HTTP map from it (AGENTS.md §4.4.2).
+- Breakdown's `LeasedJobs` records codes through an injected `FailureCode`, which the composition
+  root supplies, so breakdown does not import workflows.
+
+**F5: context errors live in their contexts.** Each context's application errors are in
+`<ctx>/application/errors.py`. The shared `application/errors.py` keeps the platform-kernel
+re-exports and `ArtifactVersionConflictError`. References raises its own `CitationNotCurrentError`
+for a withdrawn citation, catalogued under the same public code as before
+(`requirement_analysis_conflict`). Analysis's `AnalysisReferenceCurrency` translates it into
+`RequirementAnalysisConflictError` for analysis's callers.
+
+**F8, changed: the catalogue types moved rather than being translated.** F8 had references return
+its own catalogue-match type, which breakdown would map into its `ArchitectureImpact`. Instead
+(PR 15a), the catalogue value types (`SystemReference`, `ArchitectureDependency`,
+`ArchitectureCitation` and the rest) moved to `references/domain/architecture/catalogue.py`.
+Breakdown's `ArchitectureImpact` composes them, because they are the published catalogue's
+vocabulary, which references owns. That gives one type instead of a pair of near-identical types
+and a mapper.
+
+**F6, refined.** `source_lineage` became analysis domain code (`analysis/domain/lineage.py`,
+PR 10), because its functions are pure functions over `RequirementAnalysis`. `requirement_impact`
+moved to `workflows` as planned.
+
+**§5 Enforcement, as built.** `.importlinter` has 41 contracts:
+- **`contexts_layered`**, as specified.
+- **`shared_application_uses_no_context`**, added: the shared `application/` imports no context.
+- **`nothing_imports_workflows`**, added: only delivery and composition import `workflows`.
+- **One `<ctx>_internal_layers` contract per context** (`infrastructure > application > domain`)
+  instead of one `containers` contract. The rule is the same, and each context's report stays
+  separate.
+- **One `<ctx>_depends_only_upstream` contract per context**, a `forbidden` form of §2. None has
+  `ignore_imports` or `allow_indirect_imports`.
+- **The framework and kernel-adapter contracts list each context explicitly**, not as wildcards.
+- **`<ctx>_published_surface` forbids other contexts' infrastructure only.** Its sources are each
+  context's domain and application layers. A context's adapters may reuse another context's
+  codecs, because revision snapshots serialise the whole tree (PR 12).
+
+**§2's "never import another context's use cases" is not yet enforced.** No context has a
+`published.py`. Today 25 import statements reach another context's `application/use_cases`:
+- 20 are in `workflows`, the cross-context orchestrator;
+- 5 are elsewhere:
+  - governance → analysis (`analysis_collaboration`);
+  - governance → breakdown (`FeatureLookup` from `feature_review`, `ValidateStory` from `story_quality`);
+  - analysis → requirements (`requirement_sources`);
+  - knowledge → jobs (`command_fingerprint`).
+
+All 25 point upstream, so `contexts_layered` accepts them. The slice spec's *Follow-ups* section
+records the work to give them published surfaces or ports.
+
+**Shared `infrastructure/` is not yet context-free.** These modules still import context code:
+- the provider-selection modules `infrastructure/llm/{openai,openrouter}_adapters.py`, which build
+  every context's LLM adapters;
+- `infrastructure/llm/response_sanitizer.py`, which raises an analysis error;
+- `infrastructure/persistence/postgres_store.py` and `backfill_document_blobs.py`, which raise
+  requirements errors.
+
+No contract covers shared infrastructure. This is also recorded under *Follow-ups*.
+
+**Shims.** None was needed. Every PR switched production code and tests to the new paths in the
+same commit, so no `# MIGRATION SHIM` module was ever added.
+

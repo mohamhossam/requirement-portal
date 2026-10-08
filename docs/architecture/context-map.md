@@ -7,9 +7,10 @@ places the modules PR 1's dependency report found. The migration that produces t
 [`docs/slices/refactor-bounded-contexts.md`](../slices/refactor-bounded-contexts.md). The terms used
 here are defined in [`ubiquitous-language.md`](ubiquitous-language.md).
 
-Until the migration completes, the "current" column is where the code really is.
-`python scripts/context_dependency_report.py` lists the imports that still run against the
-order below.
+The migration completed in PR 16 (2026-10-08): every module is in its target. The "current"
+column records the layer-first path each module came from. `lint-imports` (`contexts_layered`)
+rejects any import that runs against the order below, and
+`python scripts/context_dependency_report.py` lists the crossings between contexts.
 
 ## Contexts
 
@@ -60,9 +61,9 @@ An arrow means "depends on". It runs from downstream to upstream.
 - **Every context → `smb_kernel`: conformist** (ADR-0100). Only its pure contract modules are visible to domain and application code.
 - **`identity` → `smb_kernel.identity`: conformist.** OIDC and fake adapters live in the kernel.
 
-### Reverse dependencies that exist today, and their replacements
+### Reverse dependencies before ADR-0103, and their replacements
 
-| Today (upstream calls downstream) | After ADR-0103 |
+| Before (upstream calls downstream) | After ADR-0103 |
 |---|---|
 | `requirements` (`UpdateRequirement`, document commands) calls `InvalidateDerivedArtifacts`, which reaches `analysis`, `breakdown` and `governance` | Publishes `RequirementRevised`; each consumer's handler reacts |
 | `breakdown` (Epic, Feature, Story, mapping commands) calls `InvalidateApprovalWorkflow` in `governance` | Publishes `EpicChanged`, `FeatureChanged`, `FeaturesReplaced`, `StoriesChanged`, `ArchitectureImpactChanged`; governance's handler resets the review |
@@ -89,7 +90,7 @@ Paths are relative to `src/smb_requirement_agent/`. Ports move with the use case
 | `domain/architecture/{entities,errors,events}.py` (impact) | `breakdown/domain/architecture/` (done in PR 11) |
 | `domain/architecture/knowledge.py` (catalogue vocabulary) | `references/domain/architecture/knowledge.py` (done in PR 15a); its duplicate-named error became `InvalidRelationshipKindError` in PR 2. The catalogue content breakdown's impact records (`SystemReference`, `ArchitectureDependency`, `ArchitectureCitation` and the rest, with `InvalidArchitectureContentError`) moved from breakdown to `references/domain/architecture/catalogue.py` in PR 15a (F8) |
 | `domain/review/*`, `domain/revision/*` | `governance/domain/{review,revision}/` (done in PR 12) |
-| `domain/knowledge/historic.py` | `references/domain/historic.py` (done in PR 15a); its codec moved to infrastructure in PR 2. Moving its content-page parsing (`from_entry`) into the ACL is deferred to PR 16 |
+| `domain/knowledge/historic.py` | `references/domain/historic.py` (done in PR 15a); its codec moved to infrastructure in PR 2. Moving its content-page parsing (`from_entry`) into the ACL is a follow-up (see the slice spec) |
 | `domain/knowledge/{entities,membership,prior_art}.py`, and `screening_errors.py` (PR 15a) | `knowledge/domain/` (done in PR 15b) |
 | `domain/knowledge/errors.py` | split in PR 15a: `KnowledgeError` and `InvalidKnowledgeError` to `references/domain/errors.py`; the finding, review, retirement and membership errors to `domain/knowledge/screening_errors.py` (knowledge, moving in PR 15b) |
 | `domain/identity/*` | `identity/domain/` (done in PR 7) |
@@ -110,8 +111,8 @@ Paths are relative to `src/smb_requirement_agent/`. Ports move with the use case
 | `reporting` | `requirement_worklist`, `activity_reporting`, `saved_views`, `dependency_projection`; in `reporting/application/use_cases/` since PR 13 |
 | `workflows` | `requirement_commands`, `ai_job_execution`, `ai_job_scheduling`, `ai_jobs` (F3), `identity_access` (F4), `generation_context` (behind `ExpectedContextPort`, F2), `requirement_impact` (F6), `internal_reads`; all in `workflows/application/use_cases/` since PR 14. `source_lineage` is analysis domain code instead (PR 10 correction to F6: pure functions over `RequirementAnalysis`), and `command_fingerprint` is jobs' (PR 14: a pure function over the jobs vocabulary) |
 | removed in PR 5 | `invalidate_derived_artifacts` and `invalidate_approval_workflow`. Use cases publish domain events; the handlers are `discard_analysis`, `mark_backlog_stale` and `reset_approval_workflow` |
-| shared technical `application/` | `application/errors.py` (base errors only; context errors move to their context, F5), `ports/transaction_manager.py`, `ports/external_work.py`, `ports/domain_events.py` and `events.py` (the dispatcher, PR 4), `ports/expected_context.py` (`ExpectedContextPort`, PR 10) |
-| interfaces | `application/public_errors.py` moves beside `interfaces/api/error_handlers.py` (F5) |
+| shared technical `application/` | `application/errors.py` (the kernel re-exports and `ArtifactVersionConflictError` only; each context's errors moved to its `application/errors.py` in PR 16, F5), `ports/transaction_manager.py`, `ports/external_work.py`, `ports/domain_events.py` and `events.py` (the dispatcher, PR 4), `ports/expected_context.py` (`ExpectedContextPort`, PR 10) |
+| `workflows` | `application/public_errors.py`, the public error catalogue: `workflows/application/public_errors.py` (PR 16). F5 placed it beside `interfaces/api/error_handlers.py`, but durable jobs record a failure's public code from application code, and it imports every context's errors (ADR-0103 Amendment 2) |
 
 ### Ports (`application/ports/`)
 
@@ -131,7 +132,8 @@ Paths are relative to `src/smb_requirement_agent/`. Ports move with the use case
 
 | Current | Target |
 |---|---|
-| `infrastructure/persistence/{postgres_store,postgres_session,migrate,migration_runner,in_memory_transaction,postgres_values}.py`, `migrations/` | stays in shared `infrastructure/persistence/` |
+| `infrastructure/persistence/{postgres_store,postgres_session,migrate,migration_runner,in_memory_transaction,postgres_values}.py`, `migrations/` | stays in shared `infrastructure/persistence/`. PR 16 moved `postgres_values`' Epic and Feature lookups to `breakdown/infrastructure/postgres_backlog.py` |
+| `infrastructure/persistence/{shared_payloads,payload_fields}.py` | stay shared, with shared-kernel types only (PR 16): the Story-quality and architecture-impact codecs moved to `breakdown/infrastructure/backlog_codecs.py`, `evidence_payload` to `analysis/infrastructure/analysis_payloads.py`, and `payload_fields`' unused `RequirementContext` helpers were deleted |
 | `infrastructure/persistence/*_payloads.py` and per-aggregate repositories | the owning context's `infrastructure/` (for example `analysis_payloads.py` → `analysis/infrastructure/`, done in PR 10 with the analysis repositories, now `postgres_analysis.py`, and the evidence-fragment caches) ; and `backlog_payloads.py`, the in-memory backlog repositories, the mapping queue and stats adapters and `story_quality_repository.py` to `breakdown/infrastructure/` in PR 11, with the PostgreSQL backlog repositories, now `postgres_backlog.py` |
 | `infrastructure/persistence/{activity_projection,activity_codec,postgres_activity,postgres_activity_reader,postgres_activity_sources,postgres_worklist,in_memory_worklist,postgres_snapshots,in_memory_saved_views,postgres_saved_views}.py` | `reporting/infrastructure/` (done in PR 13) |
 | `infrastructure/persistence/{historic_corpus,reference_publications,knowledge_payloads,backlog_handoffs,architecture_release_state}.py` | `references/infrastructure/` (done in PR 15a) |
@@ -150,7 +152,7 @@ Paths are relative to `src/smb_requirement_agent/`. Ports move with the use case
 
 ### Interfaces
 
-These do not move: `interfaces/api/{routes,schemas,dependencies.py,error_handlers.py,container.py}`, the worker and the CLI. `application/public_errors.py` joins them (F5).
+These do not move: `interfaces/api/{routes,schemas,dependencies.py,error_handlers.py,container.py}`, the worker and the CLI. The public error catalogue went to `workflows` instead (PR 16).
 
 The composition builders become one per context:
 

@@ -58,11 +58,14 @@ Initial structure:
 │   └── slices/
 ├── src/
 │   └── smb_requirement_agent/
-│       ├── domain/
-│       ├── application/
-│       │   ├── ports/
-│       │   └── use_cases/
-│       ├── infrastructure/
+│       ├── shared_kernel/        # pure domain shared by every context (ADR-0103)
+│       ├── identity/ jobs/ requirements/ references/ analysis/
+│       ├── knowledge/ breakdown/ governance/
+│       │   └── {domain, application/{ports, use_cases, errors.py}, infrastructure}/
+│       ├── reporting/            # application and infrastructure only
+│       ├── workflows/            # cross-context orchestration; the public error catalogue
+│       ├── application/          # shared technical: base errors, events, technical ports
+│       ├── infrastructure/       # shared technical: config, persistence, LLM transport, text
 │       │   ├── config/
 │       │   ├── llm/
 │       │   └── persistence/
@@ -686,6 +689,18 @@ Template:
 Infrastructure adapters depend inward on
 Application/Domain ports and models.
 ```
+
+This layering holds inside each bounded context (ADR-0103). Between contexts, a context imports
+only the contexts upstream of it:
+
+```text
+workflows → reporting → governance → breakdown → knowledge → analysis
+  → references → requirements → {jobs | identity} → shared_kernel
+```
+
+`lint-imports` enforces the order (`contexts_layered` and one "depends only upstream" contract per
+context). An upstream context that needs a downstream effect publishes a domain event or calls a
+port it owns. `docs/architecture/context-map.md` places every module.
 
 The object graph is wired in exactly one place,
 `interfaces/api/container.py`, from `Settings`. Nothing is constructed at

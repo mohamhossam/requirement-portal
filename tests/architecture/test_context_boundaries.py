@@ -1,7 +1,8 @@
 """Bounded-context rules import-linter cannot express (ADR-0103).
 
 import-linter checks which modules import which. These tests check where certain calls are
-made: who subscribes domain-event handlers, and who builds the dispatcher.
+made (who subscribes domain-event handlers, and who builds the dispatcher) and the package
+layout itself.
 """
 
 from __future__ import annotations
@@ -51,3 +52,47 @@ def test_the_dispatcher_is_built_only_by_the_composition_root() -> None:
         "InProcessEventDispatcher is constructed only in the composition root "
         f"(AGENTS.md §4.4.1): {offenders}"
     )
+
+
+# Each context's layers (ADR-0103 §1, Amendment 2): reporting reads projections and has no
+# domain; workflows orchestrates the other contexts.
+CONTEXT_LAYERS = {
+    "identity": {"domain", "application", "infrastructure"},
+    "jobs": {"domain", "application", "infrastructure"},
+    "requirements": {"domain", "application", "infrastructure"},
+    "references": {"domain", "application", "infrastructure"},
+    "analysis": {"domain", "application", "infrastructure"},
+    "knowledge": {"domain", "application", "infrastructure"},
+    "breakdown": {"domain", "application", "infrastructure"},
+    "governance": {"domain", "application", "infrastructure"},
+    "reporting": {"application", "infrastructure"},
+    "workflows": {"application", "infrastructure"},
+}
+
+
+def _packages(directory: Path) -> set[str]:
+    return {child.name for child in directory.iterdir() if (child / "__init__.py").is_file()}
+
+
+def test_every_context_has_exactly_its_layers() -> None:
+    layers = {context: _packages(SOURCE / context) for context in CONTEXT_LAYERS}
+
+    assert layers == CONTEXT_LAYERS
+
+
+def test_the_layer_first_packages_stay_gone() -> None:
+    """The contexts replaced the top-level domain/ and application/use_cases/ (PR 16)."""
+    assert "domain" not in _packages(SOURCE)
+    assert "use_cases" not in _packages(SOURCE / "application")
+
+
+def test_no_migration_shims_remain() -> None:
+    tests = SOURCE.parents[1] / "tests"
+    marker = "MIGRATION" + " SHIM"  # Split so this file does not match itself.
+    offenders = [
+        str(path)
+        for path in (*_sources(), *sorted(tests.rglob("*.py")))
+        if marker in path.read_text(encoding="utf-8")
+    ]
+
+    assert offenders == [], f"Import from the context package instead: {offenders}"
