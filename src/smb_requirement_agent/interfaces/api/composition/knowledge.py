@@ -40,9 +40,9 @@ from smb_requirement_agent.infrastructure.documents.ingestion_loop import Ingest
 from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import (
     RequirementIndexWorker,
 )
-from smb_requirement_agent.interfaces.api.composition.knowledge_service import KnowledgeService
 from smb_requirement_agent.interfaces.api.composition.llm import LLMAdapters
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
+from smb_requirement_agent.interfaces.api.composition.references import KnowledgeService
 from smb_requirement_agent.references.application.ports.reference_grounding import (
     ReferenceKnowledgePort,
 )

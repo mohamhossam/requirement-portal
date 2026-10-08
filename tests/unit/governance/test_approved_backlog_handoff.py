@@ -28,7 +28,7 @@ from smb_requirement_agent.governance.domain.revision.entities import (
     RequirementRevision,
     RevisionNumber,
 )
-from smb_requirement_agent.interfaces.api.composition.knowledge_service import KnowledgeService
+from smb_requirement_agent.interfaces.api.composition.references import KnowledgeService
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.interfaces.api.main import create_app
 from smb_requirement_agent.references.application.ports.knowledge_handoff import (

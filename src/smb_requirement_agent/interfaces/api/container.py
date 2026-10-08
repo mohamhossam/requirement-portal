@@ -197,13 +197,13 @@ from smb_requirement_agent.interfaces.api.composition.governance import build_re
 from smb_requirement_agent.interfaces.api.composition.identity import build_identity
 from smb_requirement_agent.interfaces.api.composition.jobs import build_ai_jobs
 from smb_requirement_agent.interfaces.api.composition.knowledge import build_requirement_knowledge
-from smb_requirement_agent.interfaces.api.composition.knowledge_service import (
+from smb_requirement_agent.interfaces.api.composition.llm import build_llm_adapters
+from smb_requirement_agent.interfaces.api.composition.persistence import build_persistence
+from smb_requirement_agent.interfaces.api.composition.references import (
     KnowledgeService,
     build_backlog_handoff_worker,
     build_knowledge_service,
 )
-from smb_requirement_agent.interfaces.api.composition.llm import build_llm_adapters
-from smb_requirement_agent.interfaces.api.composition.persistence import build_persistence
 from smb_requirement_agent.interfaces.api.composition.requirements import (
     build_documents,
     build_requirement_intake,

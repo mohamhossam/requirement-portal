@@ -17,7 +17,7 @@ from dataclasses import dataclass, field, replace
 from datetime import UTC, date, datetime
 
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.interfaces.api.composition.knowledge_service import KnowledgeService
+from smb_requirement_agent.interfaces.api.composition.references import KnowledgeService
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.references.application.ports.historic_corpus import (
     ContentPart,
