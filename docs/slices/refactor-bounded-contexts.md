@@ -1,8 +1,8 @@
 # Refactor — Bounded-context packages and domain events
 
 **Status:** ADR-0103 accepted and the slice scheduled 2026-10-07. PR 1 delivered. The PR 1
-findings were decided the same day (ADR-0103 Amendment 1). PRs 2–15a and 11b delivered; PR 15b
-(move `knowledge`) is next.
+findings were decided the same day (ADR-0103 Amendment 1). PRs 2–15b and 11b delivered: every context
+has its own package. PR 16 (finish) is next.
 
 **Related:** [context map](../architecture/context-map.md),
 [ubiquitous language](../architecture/ubiquitous-language.md).
@@ -1323,6 +1323,88 @@ References had three wrong-way pairs. Four commits removed them before the move.
 - `ruff check .` and `ruff format --check .`: clean.
 - `mypy src tests`: no issues in 653 source files.
 - `lint-imports`: 36 contracts kept, 0 broken.
+
+## PR 15b — The `knowledge` package (2026-10-08)
+
+### Delivered
+
+Knowledge (requirement screening) had no wrong-way imports. It imports only analysis, references,
+requirements, identity, jobs, the shared kernel and technical modules. So it needed no inversion,
+only the move and its contracts.
+
+**1. The move.** One commit, in `.git-blame-ignore-revs`.
+
+| Was | Now |
+|---|---|
+| `domain/knowledge/{entities,membership,prior_art,screening_errors}.py`, `domain/document/lineage.py` (`ImpactDecision`) | `knowledge/domain/` |
+| 9 use cases: `requirement_knowledge`, `requirement_indexing`, `rebuild_knowledge_index`, `knowledge_portfolio`, `corpus_actions`, `unified_knowledge_search`, `prior_art`, `source_impact`, `answer_suggestions` | `knowledge/application/use_cases/` |
+| 9 ports: `knowledge_access`, `source_dependencies`, `corpus_membership`, `corpus_summary`, `knowledge_index_generations`, `knowledge_portfolio`, `prior_art`, `requirement_indexing`, `requirement_knowledge` | `knowledge/application/ports/` |
+| `application/prior_art_evaluation.py` | `knowledge/application/` |
+| 10 persistence adapters, and `infrastructure/jobs/{prior_art_gate,requirement_index_worker}.py` (PR 8 reassignment) | `knowledge/infrastructure/` |
+| `infrastructure/llm/{requirement_knowledge_adapters,fake_requirement_knowledge}.py` and the knowledge and prior-art prompts and schemas | `knowledge/infrastructure/llm/`, mirroring PR 11b |
+| 9 knowledge-only unit test modules | `tests/unit/knowledge/` |
+
+- **Gone.** The emptied `domain/knowledge/`, `domain/document/`, `infrastructure/jobs/` and shared
+  `infrastructure/llm/{prompts,schemas}/` packages.
+- **Hand fixes.**
+  - Three package-level imports were repointed by hand: `composition/persistence.py` and two
+    tests.
+  - `test_prior_art` reads its evaluation fixture from one directory further up.
+  - The contracts lost reporting's three "until PR 15b" ignores and the vanished
+    `infrastructure.jobs` entry.
+- No code changes and no shims.
+
+**2. Contracts and report.** See below.
+
+### What is left outside the contexts
+
+- `domain/__init__.py` and `application/use_cases/__init__.py`: empty packages. The contracts
+  still name them, and PR 16 removes both.
+- **Shared technical modules:**
+  - `application/{errors,events,public_errors}.py`;
+  - the four technical ports (`domain_events`, `expected_context`, `external_work`,
+    `transaction_manager`);
+  - `infrastructure/persistence`'s session, store, migrations and payload helpers;
+  - `infrastructure/llm`'s provider selection and sanitizer;
+  - `infrastructure/{config,documents/ingestion_loop,text}`.
+- **Stays here, as decided earlier:** `moved_knowledge_tables.py`, the operator's drop command,
+  and `backfill_document_blobs.py`.
+
+### Contracts (39 kept, up from 36)
+
+- **New contracts.**
+  - `knowledge_internal_layers`.
+  - `knowledge_depends_only_upstream`: it forbids every unmoved context module, `breakdown`,
+    `governance` and `reporting`. It has 6 ignored imports, all of `transaction_manager`.
+  - `knowledge_published_surface`.
+- **Other contracts.** Identity, jobs, requirements, references and analysis forbid knowledge.
+  `nothing_imports_workflows` lists it.
+- **Ignored imports.** The only exemptions left in any "depends only upstream" contract are the
+  shared technical ports.
+- **Probes**, all reverted:
+  - a breakdown import in `corpus_actions` broke `knowledge_depends_only_upstream`;
+  - a workflows import in `prior_art` broke `nothing_imports_workflows`;
+  - a knowledge adapter imported from workflows' `internal_reads` broke
+    `knowledge_published_surface` and the application contracts;
+  - a knowledge import in analysis broke `analysis_depends_only_upstream`.
+
+### Dependency report
+
+247 of 247 modules classified, 69 crossing pairs, 5 against the order. No pair changed.
+- **Report simplified.** Every context is now a package, so the report no longer needs its
+  per-module tables for domain, use cases and context ports.
+- **The remaining 5 are F5,** for PR 16:
+  - context errors in `application/errors.py`: `technical → analysis`, `technical → breakdown` and
+    `technical → requirements`;
+  - the public error catalogue: `breakdown → interfaces` and `workflows → interfaces`.
+
+### Validation evidence (PR 15b, local, with PostgreSQL)
+
+- `pytest` with `TEST_DATABASE_URL` set: 1865 passed, 0 skipped, exit 0. No file under
+  `tests/characterisation/golden/` changed.
+- `ruff check .` and `ruff format --check .`: clean.
+- `mypy src tests`: no issues in 660 source files.
+- `lint-imports`: 39 contracts kept, 0 broken.
 
 ## Shims
 

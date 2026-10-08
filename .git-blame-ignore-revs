@@ -46,3 +46,6 @@ eb30eda8c906a69f101c6c93d74017e2e65fb8d9
 
 # PR 15a: the references context moved into smb_requirement_agent/references, imports rewritten (ADR-0103).
 148fd91f28cb7652c3ddb71e0921f6cf83b39571
+
+# PR 15b: the knowledge context moved into smb_requirement_agent/knowledge, imports rewritten (ADR-0103).
+8cbe670637ea2959d31e278f4a8100bf3fe291af
