@@ -36,6 +36,9 @@ from smb_requirement_agent.shared_kernel.actors import (
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
+# The operations whose claimed attempt starts in the 'preparing_analysis' phase (AiJob.claim).
+_ANALYZER_OPERATIONS = [operation.value for operation in AiJobOperation if operation.uses_analyzer]
+
 
 class PostgresAiJobStore:
     def __init__(self, store: PostgresSession) -> None:
@@ -393,6 +396,19 @@ class PostgresAiJobStore:
                     started_at=COALESCE(j.started_at,%s),
                     attempt_count=CASE WHEN j.status='cancellation_requested'
                         THEN j.attempt_count ELSE j.attempt_count+1 END,
+                    -- A new attempt starts from nothing, as AiJob.claim does: a reclaimed
+                    -- row must not show the previous attempt's progress or failure.
+                    phase=CASE WHEN j.status='cancellation_requested' THEN j.phase
+                        WHEN j.operation = ANY(%s::text[]) THEN 'preparing_analysis'
+                        ELSE 'running' END,
+                    completed_units=CASE WHEN j.status='cancellation_requested'
+                        THEN j.completed_units ELSE 0 END,
+                    total_units=CASE WHEN j.status='cancellation_requested'
+                        THEN j.total_units ELSE NULL END,
+                    current_section_label=CASE WHEN j.status='cancellation_requested'
+                        THEN j.current_section_label ELSE NULL END,
+                    failure=CASE WHEN j.status='cancellation_requested'
+                        THEN j.failure ELSE NULL END,
                     updated_at=%s, version=j.version+1
                 FROM claimed_lease WHERE j.job_id=claimed_lease.job_id
                 RETURNING j.*
@@ -409,6 +425,7 @@ class PostgresAiJobStore:
                     attempt_token,
                     lease_until,
                     now,
+                    _ANALYZER_OPERATIONS,
                     now,
                 ),
             ).fetchone()
