@@ -20,9 +20,9 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
 )
 from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     RequirementKnowledgeCorpus,
-    bounded_knowledge_text,
     require_index_current,
 )
+from smb_requirement_agent.domain.knowledge.bounded_text import bounded_knowledge_text
 from smb_requirement_agent.domain.knowledge.entities import RelationshipEvidence
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.shared_kernel.citation import (

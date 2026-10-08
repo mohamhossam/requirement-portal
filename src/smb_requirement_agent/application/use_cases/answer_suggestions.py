@@ -30,12 +30,12 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     RequirementKnowledgeCorpus,
-    bounded_knowledge_text,
     question_fingerprint,
     relationship_evidence,
     require_index_current,
     suggestion_input_fingerprint,
 )
+from smb_requirement_agent.domain.knowledge.bounded_text import bounded_knowledge_text
 from smb_requirement_agent.domain.knowledge.entities import (
     AnswerSuggestion,
     AnswerSuggestionId,

@@ -60,6 +60,8 @@ DOMAIN = {
     # The catalogue content breakdown's impact records (PR 15a, F8).
     "domain.architecture.catalogue": "references",
     "domain.knowledge.historic": "references",
+    # Embedding-sized spans; the historic corpus chunks with it too (PR 15a).
+    "domain.knowledge.bounded_text": "references",
     # KnowledgeError and InvalidKnowledgeError; the screening errors are in screening_errors
     # (PR 15a), which the "domain.knowledge" prefix classifies as knowledge.
     "domain.knowledge.errors": "references",

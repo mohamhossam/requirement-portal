@@ -39,8 +39,8 @@ from smb_requirement_agent.application.ports.prior_art import (
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     RequirementKnowledgeCorpus,
-    bounded_knowledge_text,
 )
+from smb_requirement_agent.domain.knowledge.bounded_text import bounded_knowledge_text
 from smb_requirement_agent.domain.knowledge.historic import WORK_ITEM_TYPES, HistoricSourceKind
 from smb_requirement_agent.domain.knowledge.prior_art import (
     MATCHES_MAX,

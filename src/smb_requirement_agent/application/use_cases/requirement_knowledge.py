@@ -43,6 +43,7 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
     RequirementRelationshipClassifierPort,
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
+from smb_requirement_agent.domain.knowledge.bounded_text import bounded_knowledge_text
 from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeChunk,
     KnowledgeChunkId,
@@ -814,21 +815,6 @@ def suggestion_input_fingerprint(
             "current_analysis": [(item.id.value, item.fingerprint) for item in current_analysis],
         }
     )
-
-
-def bounded_knowledge_text(text: str) -> tuple[str, ...]:
-    """Exact contiguous spans, at most 768 UTF-8 budget units, never model tokens."""
-    parts: list[str] = []
-    start = size = 0
-    for position, character in enumerate(text):
-        width = len(character.encode("utf-8"))
-        if size + width > 768:
-            parts.append(text[start:position])
-            start, size = position, 0
-        size += width
-    if start < len(text):
-        parts.append(text[start:])
-    return tuple(parts)
 
 
 def require_index_current(index: RequirementKnowledgeIndexPort) -> None:

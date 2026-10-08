@@ -37,9 +37,7 @@ from smb_requirement_agent.application.ports.knowledge_events import (
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.knowledge_event_cursor import contiguous_reach
-from smb_requirement_agent.application.use_cases.requirement_knowledge import (
-    bounded_knowledge_text,
-)
+from smb_requirement_agent.domain.knowledge.bounded_text import bounded_knowledge_text
 from smb_requirement_agent.domain.knowledge.errors import InvalidKnowledgeError
 from smb_requirement_agent.domain.knowledge.historic import (
     HistoricPassage,
