@@ -223,7 +223,14 @@ class AnalysisCollaboration:
             self._transactions.lock_requirement(requirement_id)
             return self._generate(requirement_id, force=force)
 
-    def _generate(self, requirement_id: RequirementId, *, force: bool) -> AnalysisWorkspace:
+    def require_can_generate(
+        self, requirement_id: RequirementId, *, force: bool
+    ) -> tuple[Requirement, RequirementAnalysis | None]:
+        """Raise unless an analysis round could start now; return what it would start from.
+
+        The job service calls this before queueing, so a request that can only fail is
+        refused at once instead of costing a queued job and a failure notification.
+        """
         requirement = self._require_requirement(requirement_id)
         requirement.require_active()
         current = self._analyses.get_by_requirement_id(requirement_id)
@@ -237,6 +244,10 @@ class AnalysisCollaboration:
                 "Requirement cannot be analysed until these fields are complete: "
                 + ", ".join(eligibility.missing_fields)
             )
+        return requirement, current
+
+    def _generate(self, requirement_id: RequirementId, *, force: bool) -> AnalysisWorkspace:
+        requirement, current = self.require_can_generate(requirement_id, force=force)
         clarifications = current.clarifications if current is not None else ()
         active_questions = tuple(
             item for item in self._audits.list_questions(requirement_id) if item.is_active

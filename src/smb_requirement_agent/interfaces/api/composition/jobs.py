@@ -106,6 +106,7 @@ def build_ai_jobs(
             clock,
             analysis.generation_context_tokens,
             persistence.transaction_manager,
+            analysis.analysis_collaboration,
         ),
         notifications=Notifications(persistence.notification_repository, clock),
         execute_ai_job=execute,

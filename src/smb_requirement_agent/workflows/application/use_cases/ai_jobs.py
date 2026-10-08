@@ -7,6 +7,9 @@ from dataclasses import dataclass, replace
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration import (
+    AnalysisCollaboration,
+)
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.jobs.application.errors import (
     AiJobNotFoundError,
@@ -112,6 +115,7 @@ class AiJobs:
         clock: ClockPort,
         generation_context: GenerationContextTokens,
         transactions: TransactionManagerPort,
+        analysis: AnalysisCollaboration,
     ) -> None:
         self._jobs = jobs
         self._requirements = requirements
@@ -119,6 +123,7 @@ class AiJobs:
         self._clock = clock
         self._generation_context = generation_context
         self._transactions = transactions
+        self._analysis = analysis
 
     def start(
         self,
@@ -158,6 +163,11 @@ class AiJobs:
                 )
             return StartAiJobResult(existing.job, False)
         self._generation_context.require_operation(requirement_id, operation, command.arguments)
+        if operation is AiJobOperation.ANALYSE_REQUIREMENT:
+            # Refuse at once what the worker could only fail: re-analysis without force,
+            # or a Requirement still missing fields (409 and 422, as the direct route).
+            force = command.arguments.get("force", False)
+            self._analysis.require_can_generate(requirement_id, force=force is True)
         equivalent = self._jobs.find_active_equivalent(requirement_id, fingerprint)
         if equivalent is not None:
             self._jobs.bind_idempotency(equivalent.job.id, actor.id, key, fingerprint)

@@ -24,6 +24,7 @@ from smb_requirement_agent.shared_kernel.actors import (
     ActorSnapshot,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from tests.unit.workflow_helpers import post_analysis
 
 OWNER = {"X-Fake-Actor-Id": "fake-owner"}
 NOW = datetime(2026, 9, 3, 12, tzinfo=UTC)
@@ -445,3 +446,78 @@ def test_stale_attempt_and_synchronous_analysis_cannot_report_new_attempt_progre
     updated = jobs.get(first.job.id)
     assert updated is not None
     assert updated.job.phase == "current"
+
+
+def _analysis_jobs(client: TestClient, requirement_id: str) -> list[str]:
+    listed = client.get(f"/requirements/{requirement_id}/ai-jobs", headers=OWNER)
+    assert listed.status_code == 200
+    return [item["id"] for item in listed.json() if item["operation"] == "analyse_requirement"]
+
+
+def test_re_analysis_is_refused_before_enqueue_unless_forced(client: TestClient) -> None:
+    requirement_id = _requirement(client)
+    path = f"/requirements/{requirement_id}/ai-jobs"
+    before = _analysis_body(client, requirement_id)
+    first = client.post(path, json=before, headers={**OWNER, "Idempotency-Key": "first"})
+    assert first.status_code == 202
+    cancelled = client.post(
+        f"{path}/{first.json()['id']}/cancellation",
+        json={"expected_version": first.json()["version"]},
+        headers=OWNER,
+    )
+    assert cancelled.status_code == 200
+    assert post_analysis(client, requirement_id).status_code == 200
+
+    # The worker could only fail this: an analysis exists and force was not asked for.
+    again = client.post(
+        path,
+        json=_analysis_body(client, requirement_id),
+        headers={**OWNER, "Idempotency-Key": "again"},
+    )
+    assert again.status_code == 409
+    assert again.json()["code"] == "requirement_analysis_conflict"
+    assert _analysis_jobs(client, requirement_id) == [first.json()["id"]]
+
+    # A replayed key still answers with the job it started, before any new check runs.
+    replayed = client.post(path, json=before, headers={**OWNER, "Idempotency-Key": "first"})
+    assert replayed.status_code == 200
+    assert replayed.json()["id"] == first.json()["id"]
+
+    forced = client.post(
+        path,
+        json=_analysis_body(client, requirement_id, force=True),
+        headers={**OWNER, "Idempotency-Key": "forced"},
+    )
+    assert forced.status_code == 202
+    assert forced.json()["status"] == "queued"
+
+
+def test_analysis_of_an_ineligible_requirement_is_refused_before_enqueue(
+    client: TestClient,
+) -> None:
+    source = client.post(
+        "/requirements/drafts", json={"title": "Online bundles", "description": ""}
+    ).json()
+    document = client.post(
+        f"/requirement-drafts/{source['id']}/attachments",
+        data={"include_in_analysis": "true"},
+        files={"file": ("need.md", b"Enable ordering.", "text/markdown")},
+    ).json()
+    promoted = client.post(
+        f"/requirements/drafts/{source['id']}/promote", json={"expected_version": source["version"]}
+    ).json()
+    current = client.get(f"/documents/{document['id']}").json()
+    excluded = client.put(
+        f"/requirements/{promoted['id']}/attachments/{document['id']}/analysis-inclusion",
+        json={"included": False, "expected_version": current["version"]},
+    )
+    assert excluded.status_code == 200
+
+    response = client.post(
+        f"/requirements/{promoted['id']}/ai-jobs",
+        json=_analysis_body(client, promoted["id"]),
+        headers={**OWNER, "Idempotency-Key": "ineligible"},
+    )
+
+    assert response.status_code == 422
+    assert _analysis_jobs(client, promoted["id"]) == []

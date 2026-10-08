@@ -143,6 +143,13 @@ NOT_PROVIDER_CALLING = {
         "/requirements/{requirement_id}/architecture-mapping/jobs/{job_id}/cancel",
     ): "cancels a queued mapping job",
     ("GET", "/requirements/{requirement_id}/knowledge-index"): "reads index progress",
+    # AiJobs holds AnalysisCollaboration only to refuse an analysis start that can only fail.
+    ("GET", "/requirements/{requirement_id}/ai-jobs"): "lists AI jobs",
+    ("GET", "/requirements/{requirement_id}/ai-jobs/{job_id}"): "reads one AI job",
+    (
+        "POST",
+        "/requirements/{requirement_id}/ai-jobs/{job_id}/cancellation",
+    ): "cancels an AI job",
     (
         "GET",
         "/requirements/{requirement_id}/analysis/questions/{question_id}/answer-suggestions",
