@@ -99,6 +99,23 @@ describe("Requirement workspace reads", () => {
     expect(api.getFeatures).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ["no analysis yet", "Analyse this requirement", null],
+    ["an analysis", "Start a new analysis", undefined],
+  ] as const)("says what an ineligible Requirement still needs, with %s", async (_, name, analysis) => {
+    vi.mocked(api.getRequirement).mockResolvedValue({
+      ...requirement, analysis_eligibility: { eligible: false, missing_fields: ["description"] },
+    });
+    if (analysis === null) vi.mocked(api.getAnalysis).mockResolvedValue(null);
+    const start = vi.spyOn(api, "startAiJob");
+    renderPage("clarify");
+    const button = await screen.findByRole("button", { name });
+    expect(button).toHaveAttribute("aria-disabled", "true");
+    expect(button).toHaveAccessibleDescription("Still needed: the business need, or a file included in analysis.");
+    await userEvent.click(button);
+    expect(start).not.toHaveBeenCalled();
+  });
+
   it("refreshes a missing analysis token instead of starting the analysis", async () => {
     vi.mocked(api.getRequirement).mockResolvedValue({ ...requirement, analysis_context_token: "" });
     vi.mocked(api.getAnalysis).mockResolvedValue(null);
