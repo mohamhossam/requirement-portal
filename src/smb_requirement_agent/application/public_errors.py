@@ -81,9 +81,6 @@ from smb_requirement_agent.application.errors import (
     StoryQualitySnapshotNotFoundError,
     UnsupportedDocumentError,
 )
-from smb_requirement_agent.breakdown.domain.architecture.errors import (
-    InvalidArchitectureContentError,
-)
 from smb_requirement_agent.breakdown.domain.epic.errors import (
     EpicNotApprovedError,
     EpicRegenerationConflictError,
@@ -102,6 +99,7 @@ from smb_requirement_agent.breakdown.domain.story.errors import (
     StoryProposalConflictError,
     StoryRegenerationConflictError,
 )
+from smb_requirement_agent.domain.architecture.catalogue import InvalidArchitectureContentError
 from smb_requirement_agent.domain.architecture.knowledge import (
     InvalidRelationshipKindError,
     KnowledgeConflictError,

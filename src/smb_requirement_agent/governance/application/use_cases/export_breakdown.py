@@ -8,9 +8,9 @@ from smb_requirement_agent.application.errors import (
     BreakdownRevisionNotExportableError,
     RequirementNotFoundError,
 )
-from smb_requirement_agent.breakdown.domain.architecture.entities import (
+from smb_requirement_agent.breakdown.domain.architecture.entities import ArchitectureImpact
+from smb_requirement_agent.domain.architecture.catalogue import (
     ArchitectureDependency,
-    ArchitectureImpact,
     JourneyNeighbour,
     JourneyStep,
     OrganisationReference,

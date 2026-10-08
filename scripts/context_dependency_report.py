@@ -57,6 +57,8 @@ DOMAIN = {
     "domain.document.lineage": "knowledge",
     "domain.document.reference": "references",
     "domain.architecture.knowledge": "references",
+    # The catalogue content breakdown's impact records (PR 15a, F8).
+    "domain.architecture.catalogue": "references",
     "domain.knowledge.historic": "references",
     # Split: InvalidKnowledgeError goes to references, the screening errors to knowledge.
     "domain.knowledge.errors": "references",

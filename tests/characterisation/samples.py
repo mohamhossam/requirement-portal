@@ -51,14 +51,7 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     QuestionChangeAction,
     QuestionId,
 )
-from smb_requirement_agent.breakdown.domain.architecture.entities import (
-    ArchitectureCitation,
-    ArchitectureDependency,
-    ArchitectureImpact,
-    OrganisationReference,
-    SystemCapability,
-    SystemReference,
-)
+from smb_requirement_agent.breakdown.domain.architecture.entities import ArchitectureImpact
 from smb_requirement_agent.breakdown.domain.epic.entities import Epic
 from smb_requirement_agent.breakdown.domain.epic.value_objects import (
     BusinessCase,
@@ -94,6 +87,13 @@ from smb_requirement_agent.breakdown.domain.story.value_objects import (
     StoryId,
     StoryProposalId,
     UserRole,
+)
+from smb_requirement_agent.domain.architecture.catalogue import (
+    ArchitectureCitation,
+    ArchitectureDependency,
+    OrganisationReference,
+    SystemCapability,
+    SystemReference,
 )
 from smb_requirement_agent.domain.architecture.knowledge import RelationshipKind
 from smb_requirement_agent.domain.document.reference import (

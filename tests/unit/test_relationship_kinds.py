@@ -20,13 +20,11 @@ from smb_requirement_agent.application.ports.architecture_knowledge import (
 from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping import (
     MapFeatureArchitecture,
 )
-from smb_requirement_agent.breakdown.domain.architecture.entities import (
+from smb_requirement_agent.breakdown.domain.architecture.entities import ArchitectureImpact
+from smb_requirement_agent.domain.architecture.catalogue import (
     ArchitectureDependency,
-    ArchitectureImpact,
-    SystemReference,
-)
-from smb_requirement_agent.breakdown.domain.architecture.errors import (
     InvalidArchitectureContentError,
+    SystemReference,
 )
 from smb_requirement_agent.domain.architecture.knowledge import (
     InvalidRelationshipKindError,

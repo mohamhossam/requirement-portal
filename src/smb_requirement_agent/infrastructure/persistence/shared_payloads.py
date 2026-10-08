@@ -11,19 +11,7 @@ from datetime import datetime
 from smb_requirement_agent.analysis.domain.value_objects import (
     AnalysisEvidenceReference,
 )
-from smb_requirement_agent.breakdown.domain.architecture.entities import (
-    ArchitectureCitation,
-    ArchitectureDependency,
-    ArchitectureImpact,
-    DomainSuggestion,
-    JourneyNeighbour,
-    JourneyStep,
-    OfferingDuty,
-    OrganisationReference,
-    ProductContext,
-    SystemCapability,
-    SystemReference,
-)
+from smb_requirement_agent.breakdown.domain.architecture.entities import ArchitectureImpact
 from smb_requirement_agent.breakdown.domain.story.quality import (
     FindingSource,
     InvestAssessment,
@@ -32,6 +20,18 @@ from smb_requirement_agent.breakdown.domain.story.quality import (
 )
 from smb_requirement_agent.breakdown.domain.story.value_objects import (
     StoryId,
+)
+from smb_requirement_agent.domain.architecture.catalogue import (
+    ArchitectureCitation,
+    ArchitectureDependency,
+    DomainSuggestion,
+    JourneyNeighbour,
+    JourneyStep,
+    OfferingDuty,
+    OrganisationReference,
+    ProductContext,
+    SystemCapability,
+    SystemReference,
 )
 from smb_requirement_agent.domain.architecture.knowledge import RelationshipKind
 from smb_requirement_agent.infrastructure.persistence.payload_fields import (

@@ -26,10 +26,6 @@ from smb_requirement_agent.breakdown.application.ports.story_generator import St
 from smb_requirement_agent.breakdown.application.ports.story_quality_evaluator import (
     EMPTY_QUALITY_EVIDENCE,
 )
-from smb_requirement_agent.breakdown.domain.architecture.entities import (
-    ArchitectureDependency,
-    SystemReference,
-)
 from smb_requirement_agent.breakdown.domain.epic.entities import Epic
 from smb_requirement_agent.breakdown.domain.feature.entities import Feature
 from smb_requirement_agent.breakdown.domain.feature.value_objects import FeatureId
@@ -50,6 +46,10 @@ from smb_requirement_agent.breakdown.infrastructure.llm.fake_feature_generator i
 )
 from smb_requirement_agent.breakdown.infrastructure.llm.fake_story_generator import (
     FakeStoryGenerator,
+)
+from smb_requirement_agent.domain.architecture.catalogue import (
+    ArchitectureDependency,
+    SystemReference,
 )
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings

@@ -482,6 +482,7 @@ ignore_imports =
     # references is upstream but has not moved yet; these go when it does (PR 15a).
     smb_requirement_agent.breakdown.** -> smb_requirement_agent.application.ports.architecture_knowledge
     smb_requirement_agent.breakdown.** -> smb_requirement_agent.domain.architecture.knowledge
+    smb_requirement_agent.breakdown.** -> smb_requirement_agent.domain.architecture.catalogue
 # As for the other contexts: the shared technical modules still reach unmoved context code.
 allow_indirect_imports = True
 
@@ -536,6 +537,7 @@ ignore_imports =
     smb_requirement_agent.governance.** -> smb_requirement_agent.application.ports.architecture_knowledge
     smb_requirement_agent.governance.** -> smb_requirement_agent.application.ports.knowledge_handoff
     smb_requirement_agent.governance.** -> smb_requirement_agent.application.ports.reference_grounding
+    smb_requirement_agent.governance.** -> smb_requirement_agent.domain.architecture.catalogue
 # As for the other contexts: the shared technical modules still reach unmoved context code.
 allow_indirect_imports = True
 

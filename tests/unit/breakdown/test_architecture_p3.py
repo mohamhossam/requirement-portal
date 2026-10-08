@@ -21,7 +21,7 @@ from smb_requirement_agent.application.ports.architecture_knowledge import (
 from smb_requirement_agent.breakdown.application.ports.architecture_mapping_stats import (
     MappingCount,
 )
-from smb_requirement_agent.breakdown.domain.architecture.entities import SystemReference
+from smb_requirement_agent.domain.architecture.catalogue import SystemReference
 from smb_requirement_agent.infrastructure.knowledge_client import OFFLINE_RELEASE_ID
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from tests.conftest import FAKE_PROVIDER_SETTINGS

@@ -24,19 +24,17 @@ from smb_requirement_agent.breakdown.application.ports.generation_guidance impor
 from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping import (
     MapFeatureArchitecture,
 )
-from smb_requirement_agent.breakdown.domain.architecture.entities import (
-    ArchitectureImpact,
+from smb_requirement_agent.breakdown.domain.architecture.entities import ArchitectureImpact
+from smb_requirement_agent.breakdown.infrastructure.llm.prompts.generation_guidance import (
+    render_guidance,
+)
+from smb_requirement_agent.domain.architecture.catalogue import (
+    InvalidArchitectureContentError,
     JourneyNeighbour,
     JourneyStep,
     OfferingDuty,
     ProductContext,
     SystemReference,
-)
-from smb_requirement_agent.breakdown.domain.architecture.errors import (
-    InvalidArchitectureContentError,
-)
-from smb_requirement_agent.breakdown.infrastructure.llm.prompts.generation_guidance import (
-    render_guidance,
 )
 from smb_requirement_agent.governance.application.use_cases.export_breakdown import (
     _journey_step,

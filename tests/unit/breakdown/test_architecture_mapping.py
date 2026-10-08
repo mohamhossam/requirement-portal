@@ -23,20 +23,18 @@ from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping 
     MapFeatureArchitecture,
     MapStoryArchitecture,
 )
-from smb_requirement_agent.breakdown.domain.architecture.entities import (
-    ArchitectureDependency,
-    ArchitectureImpact,
-    SystemCapability,
-    SystemReference,
-)
-from smb_requirement_agent.breakdown.domain.architecture.errors import (
-    InvalidArchitectureContentError,
-)
+from smb_requirement_agent.breakdown.domain.architecture.entities import ArchitectureImpact
 from smb_requirement_agent.breakdown.infrastructure.backlog_payloads import (
     feature_from_payload,
     feature_to_payload,
     story_from_payload,
     story_to_payload,
+)
+from smb_requirement_agent.domain.architecture.catalogue import (
+    ArchitectureDependency,
+    InvalidArchitectureContentError,
+    SystemCapability,
+    SystemReference,
 )
 from smb_requirement_agent.identity.application.ports.identity import Actor
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
