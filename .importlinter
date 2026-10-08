@@ -360,8 +360,6 @@ forbidden_modules =
 ignore_imports =
     smb_requirement_agent.requirements.** -> smb_requirement_agent.application.ports.domain_events
     smb_requirement_agent.requirements.** -> smb_requirement_agent.application.ports.transaction_manager
-    # Debt: the access service stays in workflows until PR 14 gives identity RequirementAccessPort (F4).
-    smb_requirement_agent.requirements.** -> smb_requirement_agent.application.use_cases.identity_access
 # As for identity and jobs: the shared technical modules still reach unmoved context code.
 allow_indirect_imports = True
 
@@ -418,8 +416,6 @@ ignore_imports =
     # references is upstream but has not moved yet; these go when it does (PR 15a).
     smb_requirement_agent.analysis.** -> smb_requirement_agent.application.ports.embedding
     smb_requirement_agent.analysis.** -> smb_requirement_agent.application.ports.reference_grounding
-    # Debt: the access service stays in workflows until PR 14 gives identity RequirementAccessPort (F4).
-    smb_requirement_agent.analysis.** -> smb_requirement_agent.application.use_cases.identity_access
 # As for the other contexts: the shared technical modules still reach unmoved context code.
 allow_indirect_imports = True
 
@@ -476,8 +472,6 @@ ignore_imports =
     # references is upstream but has not moved yet; these go when it does (PR 15a).
     smb_requirement_agent.breakdown.** -> smb_requirement_agent.application.ports.architecture_knowledge
     smb_requirement_agent.breakdown.** -> smb_requirement_agent.domain.architecture.knowledge
-    # Debt: the access service stays in workflows until PR 14 gives identity RequirementAccessPort (F4).
-    smb_requirement_agent.breakdown.** -> smb_requirement_agent.application.use_cases.identity_access
 # As for the other contexts: the shared technical modules still reach unmoved context code.
 allow_indirect_imports = True
 
@@ -532,8 +526,6 @@ ignore_imports =
     smb_requirement_agent.governance.** -> smb_requirement_agent.application.ports.architecture_knowledge
     smb_requirement_agent.governance.** -> smb_requirement_agent.application.ports.knowledge_handoff
     smb_requirement_agent.governance.** -> smb_requirement_agent.application.ports.reference_grounding
-    # Debt: the access service stays in workflows until PR 14 gives identity RequirementAccessPort (F4).
-    smb_requirement_agent.governance.** -> smb_requirement_agent.application.use_cases.identity_access
 # As for the other contexts: the shared technical modules still reach unmoved context code.
 allow_indirect_imports = True
 

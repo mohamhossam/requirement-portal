@@ -12,8 +12,8 @@ from smb_requirement_agent.application.errors import (
 )
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.identity_access import (
-    RequirementAccessService,
+from smb_requirement_agent.identity.application.ports.requirement_access import (
+    RequirementAccessPort,
     RequirementPermission,
 )
 from smb_requirement_agent.requirements.application.ports.document_repository import (
@@ -70,7 +70,7 @@ class UpdateRequirement:
         clock: ClockPort,
         transactions: TransactionManagerPort,
         *,
-        authorization: RequirementAccessService,
+        authorization: RequirementAccessPort,
         documents: DocumentRepositoryPort,
     ) -> None:
         self._repository = repository

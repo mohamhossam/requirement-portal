@@ -20,8 +20,8 @@ from smb_requirement_agent.application.ports.reference_grounding import (
     require_analysis_references,
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.identity_access import (
-    RequirementAccessService,
+from smb_requirement_agent.identity.application.ports.requirement_access import (
+    RequirementAccessPort,
     RequirementPermission,
 )
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
@@ -39,7 +39,7 @@ class ConfirmRequirementAnalysis:
         requirements: RequirementRepositoryPort,
         analyses: RequirementAnalysisRepositoryPort,
         clock: ClockPort,
-        authorization: RequirementAccessService,
+        authorization: RequirementAccessPort,
         audits: AnalysisAuditRepositoryPort,
         knowledge: KnowledgeGatePort,
         transactions: TransactionManagerPort,

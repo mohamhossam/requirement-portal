@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from enum import Enum
 from typing import TypeVar
 
 from smb_kernel.identity.ports import (
@@ -26,6 +25,9 @@ from smb_requirement_agent.application.ports.external_work import guard_external
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.identity.application.ports.actor_directory import ActorDirectoryPort
+from smb_requirement_agent.identity.application.ports.requirement_access import (
+    RequirementPermission,
+)
 from smb_requirement_agent.identity.domain.entities import (
     DraftOwnership,
     RequirementAccess,
@@ -49,13 +51,6 @@ from smb_requirement_agent.shared_kernel.actors import (
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 T = TypeVar("T")
-
-
-class RequirementPermission(Enum):
-    """What a Requirement-scoped action needs: any current member, or the owner."""
-
-    MEMBER = "member"
-    OWNER = "owner"
 
 
 @dataclass(frozen=True)

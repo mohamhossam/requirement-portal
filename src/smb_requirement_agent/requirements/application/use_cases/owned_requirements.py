@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
+from smb_requirement_agent.identity.application.ports.requirement_access import (
+    RequirementAccessPort,
+)
 from smb_requirement_agent.requirements.application.ports.screening_requests import (
     ScreeningRequestPort,
 )
@@ -32,7 +34,7 @@ class CreateOwnedRequirement:
     def __init__(
         self,
         create: CreateRequirement,
-        access: RequirementAccessService,
+        access: RequirementAccessPort,
         transactions: TransactionManagerPort,
         knowledge: ScreeningRequestPort,
     ) -> None:
@@ -54,7 +56,7 @@ class CreateOwnedRequirementDraft:
     def __init__(
         self,
         create: CreateRequirementDraft,
-        access: RequirementAccessService,
+        access: RequirementAccessPort,
         transactions: TransactionManagerPort,
     ) -> None:
         self._create = create
@@ -70,7 +72,7 @@ class CreateOwnedRequirementDraft:
 
 
 class GetOwnedRequirementDraft:
-    def __init__(self, get: GetRequirementDraft, access: RequirementAccessService) -> None:
+    def __init__(self, get: GetRequirementDraft, access: RequirementAccessPort) -> None:
         self._get = get
         self._access = access
 
@@ -111,7 +113,7 @@ class SaveOwnedRequirementDraft:
     def __init__(
         self,
         save: SaveRequirementDraft,
-        access: RequirementAccessService,
+        access: RequirementAccessPort,
         transactions: TransactionManagerPort,
     ) -> None:
         self._save = save
@@ -135,7 +137,7 @@ class PromoteOwnedRequirementDraft:
     def __init__(
         self,
         promote: PromoteRequirementDraft,
-        access_service: RequirementAccessService,
+        access_service: RequirementAccessPort,
         access_repository: AccessRepositoryPort,
         transactions: TransactionManagerPort,
         knowledge: ScreeningRequestPort,

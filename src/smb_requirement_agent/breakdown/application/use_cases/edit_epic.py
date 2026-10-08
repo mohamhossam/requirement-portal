@@ -11,10 +11,6 @@ from smb_requirement_agent.application.errors import (
 )
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.identity_access import (
-    RequirementAccessService,
-    RequirementPermission,
-)
 from smb_requirement_agent.breakdown.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.breakdown.domain.epic.entities import Epic
 from smb_requirement_agent.breakdown.domain.epic.events import EpicChanged
@@ -22,6 +18,10 @@ from smb_requirement_agent.breakdown.domain.epic.value_objects import (
     BusinessCase,
     BusinessOutcome,
     EpicName,
+)
+from smb_requirement_agent.identity.application.ports.requirement_access import (
+    RequirementAccessPort,
+    RequirementPermission,
 )
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
@@ -55,7 +55,7 @@ class EditEpic:
         events: DomainEventPublisher,
         transactions: TransactionManagerPort,
         *,
-        authorization: RequirementAccessService,
+        authorization: RequirementAccessPort,
     ) -> None:
         self._requirements = requirement_repository
         self._epics = epic_repository

@@ -19,6 +19,7 @@ from smb_requirement_agent.application.errors import (
     RequirementAnalysisConflictError,
     RequirementNotFoundError,
 )
+from smb_requirement_agent.application.ports.knowledge_access import KnowledgeAccessPort
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceSearchPort
 from smb_requirement_agent.application.ports.requirement_knowledge import (
     ClarificationAnswerSuggesterPort,
@@ -27,10 +28,6 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
     RequirementKnowledgeRepositoryPort,
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.identity_access import (
-    RequirementAccessService,
-    RequirementPermission,
-)
 from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     RequirementKnowledgeCorpus,
     bounded_knowledge_text,
@@ -49,6 +46,9 @@ from smb_requirement_agent.domain.knowledge.errors import (
     KnowledgeFindingConflictError,
 )
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
+from smb_requirement_agent.identity.application.ports.requirement_access import (
+    RequirementPermission,
+)
 from smb_requirement_agent.jobs.domain.entities import AiJobOperation
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
@@ -75,7 +75,7 @@ class SuggestClarificationAnswers:
         transactions: TransactionManagerPort,
         references: ReferenceSearchPort,
         *,
-        authorization: RequirementAccessService,
+        authorization: KnowledgeAccessPort,
     ) -> None:
         self._requirements = requirements
         self._audits = audits

@@ -28,7 +28,9 @@ from smb_requirement_agent.application.errors import (
     UnsupportedDocumentError,
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
+from smb_requirement_agent.identity.application.ports.requirement_access import (
+    RequirementAccessPort,
+)
 from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedError
 from smb_requirement_agent.requirements.application.ports.attachment_ingestions import (
     AttachmentIngestionRepositoryPort,
@@ -81,7 +83,7 @@ class AttachmentIngestion:
         scanner: DocumentScannerPort,
         extractor: DocumentExtractorPort,
         upload: UploadDocument,
-        access: RequirementAccessService,
+        access: RequirementAccessPort,
         transactions: TransactionManagerPort,
         clock: ClockPort,
         max_file_bytes: int,

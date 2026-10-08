@@ -32,6 +32,7 @@ from smb_requirement_agent.application.errors import (
     RequirementNotFoundError,
 )
 from smb_requirement_agent.application.ports.corpus_membership import CorpusMembershipPort
+from smb_requirement_agent.application.ports.knowledge_access import KnowledgeAccessPort
 from smb_requirement_agent.application.ports.requirement_knowledge import (
     KnowledgeEmbeddingPort,
     KnowledgeReview,
@@ -42,10 +43,6 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
     RequirementRelationshipClassifierPort,
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.identity_access import (
-    RequirementAccessService,
-    RequirementPermission,
-)
 from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeChunk,
     KnowledgeChunkId,
@@ -64,6 +61,9 @@ from smb_requirement_agent.domain.knowledge.errors import (
 )
 from smb_requirement_agent.domain.knowledge.membership import CorpusMembership
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
+from smb_requirement_agent.identity.application.ports.requirement_access import (
+    RequirementPermission,
+)
 from smb_requirement_agent.identity.domain.entities import RequirementAccess
 from smb_requirement_agent.jobs.domain.entities import AiJobOperation
 from smb_requirement_agent.requirements.application.ports.document_repository import (
@@ -389,7 +389,7 @@ class ScreenRequirementKnowledge:
         clock: ClockPort,
         transactions: TransactionManagerPort,
         *,
-        authorization: RequirementAccessService,
+        authorization: KnowledgeAccessPort,
     ) -> None:
         self._requirements = requirements
         self._corpus = corpus
@@ -594,7 +594,7 @@ class EnsureKnowledgeScreen:
     def __init__(
         self,
         requirements: RequirementRepositoryPort,
-        authorization: RequirementAccessService,
+        authorization: KnowledgeAccessPort,
         scheduler: KnowledgeScreenSchedulerPort,
     ) -> None:
         self._requirements = requirements
@@ -625,7 +625,7 @@ class DecideKnowledgeFinding:
         transactions: TransactionManagerPort,
         scheduler: KnowledgeScreenSchedulerPort,
         *,
-        authorization: RequirementAccessService,
+        authorization: KnowledgeAccessPort,
         membership: CorpusMembershipPort | None = None,
     ) -> None:
         self._requirements = requirements

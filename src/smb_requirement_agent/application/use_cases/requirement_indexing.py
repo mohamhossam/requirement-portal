@@ -18,9 +18,11 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
     KnowledgeEmbeddingPort,
     RequirementKnowledgeIndexPort,
 )
-from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
 from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     RequirementKnowledgeCorpus,
+)
+from smb_requirement_agent.identity.application.ports.requirement_access import (
+    RequirementAccessPort,
 )
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
@@ -112,7 +114,7 @@ class IndexRequirementKnowledge:
         progress: RequirementIndexProgressPort,
         clock: ClockPort,
         identity: str,
-        access: RequirementAccessService,
+        access: RequirementAccessPort,
     ) -> None:
         self._corpus, self._index, self._embeddings = corpus, index, embeddings
         self._progress, self._clock, self.identity = progress, clock, identity

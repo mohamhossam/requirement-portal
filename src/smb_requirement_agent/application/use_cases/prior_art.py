@@ -26,6 +26,7 @@ from smb_requirement_agent.application.ports.historic_corpus import (
     HistoricMatch,
     HistoricRequirementStatePort,
 )
+from smb_requirement_agent.application.ports.knowledge_access import KnowledgeAccessPort
 from smb_requirement_agent.application.ports.prior_art import (
     HistoricCitation,
     PriorArtBudgetPort,
@@ -36,10 +37,6 @@ from smb_requirement_agent.application.ports.prior_art import (
     PriorArtRepositoryPort,
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.identity_access import (
-    RequirementAccessService,
-    RequirementPermission,
-)
 from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     RequirementKnowledgeCorpus,
     bounded_knowledge_text,
@@ -54,6 +51,9 @@ from smb_requirement_agent.domain.knowledge.prior_art import (
     PriorArtVerdict,
 )
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
+from smb_requirement_agent.identity.application.ports.requirement_access import (
+    RequirementPermission,
+)
 from smb_requirement_agent.jobs.application.ports.ai_jobs import (
     AiJobCommand,
     AiJobRecord,
@@ -153,7 +153,7 @@ class ScreenPriorArt:
         clock: ClockPort,
         transactions: TransactionManagerPort,
         *,
-        authorization: RequirementAccessService,
+        authorization: KnowledgeAccessPort,
         identity: str,
         enabled: bool,
         judge_calls_per_hour: int,

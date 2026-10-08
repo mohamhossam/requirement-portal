@@ -75,12 +75,12 @@ from smb_requirement_agent.application.ports.reference_grounding import (
     ReferenceReviewPort,
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.identity_access import (
-    RequirementAccessService,
-    RequirementPermission,
-)
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.identity.application.ports.actor_directory import ActorDirectoryPort
+from smb_requirement_agent.identity.application.ports.requirement_access import (
+    RequirementAccessPort,
+    RequirementPermission,
+)
 from smb_requirement_agent.identity.domain.entities import RequirementAccess
 from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedError
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
@@ -144,7 +144,7 @@ class AnalysisCollaboration:
         contexts: AnalysisContextPort,
         reference_grounding: ReferenceAnalysisPort,
         references: ReferenceEvidencePort,
-        authorization: RequirementAccessService,
+        authorization: RequirementAccessPort,
         reviews: ReferenceReviewPort | None = None,
     ) -> None:
         self._reviews = reviews

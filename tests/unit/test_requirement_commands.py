@@ -11,13 +11,13 @@ from fastapi.testclient import TestClient
 
 from smb_requirement_agent.application.errors import ArtifactVersionConflictError
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
-from smb_requirement_agent.application.use_cases.identity_access import (
-    RequirementAccessService,
-    RequirementPermission,
-)
+from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
 from smb_requirement_agent.application.use_cases.requirement_commands import (
     ExpectedContext,
     RequirementCommands,
+)
+from smb_requirement_agent.identity.application.ports.requirement_access import (
+    RequirementPermission,
 )
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,

@@ -22,10 +22,6 @@ from smb_requirement_agent.application.ports.knowledge_handoff import (
     BacklogHandoff,
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.identity_access import (
-    RequirementAccessService,
-    RequirementPermission,
-)
 from smb_requirement_agent.breakdown.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.breakdown.application.ports.feature_repository import (
     FeatureRepositoryPort,
@@ -61,6 +57,10 @@ from smb_requirement_agent.governance.domain.review.readiness import (
     readiness_reasons,
 )
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
+from smb_requirement_agent.identity.application.ports.requirement_access import (
+    RequirementAccessPort,
+    RequirementPermission,
+)
 from smb_requirement_agent.identity.domain.entities import RequirementAccess
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
@@ -108,7 +108,7 @@ class ApprovalRecorder:
         self,
         access: AccessRepositoryPort,
         clock: ClockPort,
-        authorization: RequirementAccessService,
+        authorization: RequirementAccessPort,
     ) -> None:
         self._access = access
         self._clock = clock

@@ -15,10 +15,6 @@ from smb_requirement_agent.application.errors import (
     StoryQualitySnapshotNotFoundError,
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.identity_access import (
-    RequirementAccessService,
-    RequirementPermission,
-)
 from smb_requirement_agent.breakdown.application.ports.story_quality_evaluator import (
     StoryQualityEvaluatorPort,
 )
@@ -26,6 +22,10 @@ from smb_requirement_agent.breakdown.application.ports.story_quality_repository 
     StoryQualityRepositoryPort,
 )
 from smb_requirement_agent.breakdown.domain.story.quality import StoryQualityEvidence
+from smb_requirement_agent.identity.application.ports.requirement_access import (
+    RequirementAccessPort,
+    RequirementPermission,
+)
 
 if TYPE_CHECKING:
     from smb_requirement_agent.breakdown.application.use_cases.story_workflow import GetStories
@@ -134,7 +134,7 @@ class EvaluateFeatureStories:
         transactions: TransactionManagerPort,
         clock: ClockPort,
         *,
-        authorization: RequirementAccessService,
+        authorization: RequirementAccessPort,
     ) -> None:
         self._authorization = authorization
         self._get_stories = get_stories

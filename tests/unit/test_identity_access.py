@@ -12,7 +12,7 @@ from smb_requirement_agent.application.errors import (
     AuthenticationRequiredError,
     IdentityProviderUnavailableError,
 )
-from smb_requirement_agent.application.use_cases.identity_access import (
+from smb_requirement_agent.identity.application.ports.requirement_access import (
     RequirementPermission,
 )
 from smb_requirement_agent.identity.domain.entities import RequirementAccess

@@ -20,11 +20,11 @@ from smb_requirement_agent.application.ports.source_dependencies import (
     SourceDependencyPort,
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.identity_access import (
-    RequirementAccessService,
+from smb_requirement_agent.domain.document.lineage import ImpactDecision, ImpactDecisionKind
+from smb_requirement_agent.identity.application.ports.requirement_access import (
+    RequirementAccessPort,
     RequirementPermission,
 )
-from smb_requirement_agent.domain.document.lineage import ImpactDecision, ImpactDecisionKind
 from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedError
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.citation import PublishedReference
@@ -51,7 +51,7 @@ class SourceImpactReview:
         self,
         index: SourceDependencyPort,
         documents: ReferencePublicationStatePort,
-        authorization: RequirementAccessService,
+        authorization: RequirementAccessPort,
         transactions: TransactionManagerPort,
         clock: ClockPort,
         references: ReferenceEvidencePort,

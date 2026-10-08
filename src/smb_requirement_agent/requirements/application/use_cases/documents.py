@@ -22,8 +22,8 @@ from smb_requirement_agent.application.errors import (
 )
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.identity_access import (
-    RequirementAccessService,
+from smb_requirement_agent.identity.application.ports.requirement_access import (
+    RequirementAccessPort,
     RequirementPermission,
 )
 from smb_requirement_agent.requirements.application.ports.document_repository import (
@@ -127,7 +127,7 @@ class UploadDocument:
         drafts: RequirementDraftRepositoryPort,
         events: DomainEventPublisher,
         transactions: TransactionManagerPort,
-        access: RequirementAccessService,
+        access: RequirementAccessPort,
         clock: ClockPort,
         max_file_bytes: int,
     ) -> None:
@@ -348,7 +348,7 @@ class UploadDocument:
 
 
 class ListDocuments:
-    def __init__(self, documents: DocumentRepositoryPort, access: RequirementAccessService) -> None:
+    def __init__(self, documents: DocumentRepositoryPort, access: RequirementAccessPort) -> None:
         self._documents = documents
         self._access = access
 
@@ -389,7 +389,7 @@ class GetDocument:
         documents: DocumentRepositoryPort,
         storage: DocumentStoragePort,
         extractor: DocumentExtractorPort,
-        access: RequirementAccessService,
+        access: RequirementAccessPort,
     ) -> None:
         self._documents = documents
         self._storage = storage
@@ -437,7 +437,7 @@ class SetDocumentInclusion:
         events: DomainEventPublisher,
         transactions: TransactionManagerPort,
         *,
-        authorization: RequirementAccessService,
+        authorization: RequirementAccessPort,
     ) -> None:
         self._authorization = authorization
         self._documents = documents
@@ -509,7 +509,7 @@ class SetHiddenWorksheetInclusion:
         events: DomainEventPublisher,
         transactions: TransactionManagerPort,
         *,
-        authorization: RequirementAccessService,
+        authorization: RequirementAccessPort,
     ) -> None:
         self._authorization = authorization
         self._documents = documents
@@ -563,7 +563,7 @@ class RemoveDocument:
         events: DomainEventPublisher,
         transactions: TransactionManagerPort,
         *,
-        authorization: RequirementAccessService,
+        authorization: RequirementAccessPort,
     ) -> None:
         self._authorization = authorization
         self._documents = documents

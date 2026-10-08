@@ -24,10 +24,6 @@ from smb_requirement_agent.application.ports.architecture_knowledge import (
 )
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.identity_access import (
-    RequirementAccessService,
-    RequirementPermission,
-)
 from smb_requirement_agent.breakdown.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.breakdown.application.ports.feature_repository import (
     FeatureRepositoryPort,
@@ -37,6 +33,10 @@ from smb_requirement_agent.breakdown.domain.architecture.entities import Archite
 from smb_requirement_agent.breakdown.domain.architecture.events import ArchitectureImpactChanged
 from smb_requirement_agent.breakdown.domain.feature.entities import Feature
 from smb_requirement_agent.breakdown.domain.story.entities import UserStory
+from smb_requirement_agent.identity.application.ports.requirement_access import (
+    RequirementAccessPort,
+    RequirementPermission,
+)
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )
@@ -166,7 +166,7 @@ class MapBreakdownArchitecture:
         clock: ClockPort,
         events: DomainEventPublisher,
         *,
-        authorization: RequirementAccessService,
+        authorization: RequirementAccessPort,
     ) -> None:
         self._authorization = authorization
         self._requirements = requirements

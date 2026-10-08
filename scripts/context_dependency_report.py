@@ -110,6 +110,8 @@ PORTS = {
         "reference_publications",
     ],
     "knowledge": [
+        # Requirement access for knowledge's automatic work (PR 14, F4).
+        "knowledge_access",
         # The reverse evidence index and impact decisions (PR 9 reassigned it from
         # requirements: only knowledge, reporting and workflows use it).
         "source_dependencies",

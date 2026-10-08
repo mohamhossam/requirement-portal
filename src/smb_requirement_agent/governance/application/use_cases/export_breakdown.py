@@ -8,10 +8,6 @@ from smb_requirement_agent.application.errors import (
     BreakdownRevisionNotExportableError,
     RequirementNotFoundError,
 )
-from smb_requirement_agent.application.use_cases.identity_access import (
-    RequirementAccessService,
-    RequirementPermission,
-)
 from smb_requirement_agent.breakdown.domain.architecture.entities import (
     ArchitectureDependency,
     ArchitectureImpact,
@@ -55,6 +51,10 @@ from smb_requirement_agent.governance.domain.revision.entities import (
     RevisionNumber,
 )
 from smb_requirement_agent.governance.domain.revision.errors import RevisionNotFoundError
+from smb_requirement_agent.identity.application.ports.requirement_access import (
+    RequirementAccessPort,
+    RequirementPermission,
+)
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )
@@ -106,7 +106,7 @@ class ExportBreakdown:
     def __init__(
         self,
         requirements: RequirementRepositoryPort,
-        authorization: RequirementAccessService,
+        authorization: RequirementAccessPort,
         revisions: BreakdownRepositoryPort,
         exporters: tuple[BacklogExportPort, ...],
     ) -> None:

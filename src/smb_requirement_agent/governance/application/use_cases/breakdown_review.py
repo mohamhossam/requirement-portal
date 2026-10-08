@@ -33,10 +33,6 @@ from smb_requirement_agent.application.ports.architecture_knowledge import (
 )
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidencePort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.identity_access import (
-    RequirementAccessService,
-    RequirementPermission,
-)
 from smb_requirement_agent.breakdown.application.ports.candidate_review import CandidateCritique
 from smb_requirement_agent.breakdown.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.breakdown.application.ports.feature_repository import (
@@ -76,6 +72,10 @@ from smb_requirement_agent.governance.domain.review.evidence import (
 from smb_requirement_agent.governance.domain.review.policy import (
     REVIEW_RULESET_VERSION,
     BreakdownReviewPolicy,
+)
+from smb_requirement_agent.identity.application.ports.requirement_access import (
+    RequirementAccessPort,
+    RequirementPermission,
 )
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
@@ -235,7 +235,7 @@ class GenerateBreakdownReview:
         transactions: TransactionManagerPort,
         knowledge: ActiveArchitectureReleasePort,
         *,
-        authorization: RequirementAccessService,
+        authorization: RequirementAccessPort,
         quality: StoryQualityRepositoryPort,
     ) -> None:
         self._quality = quality
@@ -371,7 +371,7 @@ class RecordDecision:
         clock: ClockPort,
         transactions: TransactionManagerPort,
         *,
-        authorization: RequirementAccessService,
+        authorization: RequirementAccessPort,
     ) -> None:
         self._authorization = authorization
         self._current = current
@@ -443,7 +443,7 @@ class ResolveFlag:
         clock: ClockPort,
         transactions: TransactionManagerPort,
         *,
-        authorization: RequirementAccessService,
+        authorization: RequirementAccessPort,
     ) -> None:
         self._authorization = authorization
         self._current = current
