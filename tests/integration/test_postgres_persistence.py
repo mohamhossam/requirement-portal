@@ -134,7 +134,6 @@ from smb_requirement_agent.identity.domain.entities import (
 from smb_requirement_agent.identity.domain.errors import RequirementAccessConflictError
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.identity.infrastructure.postgres_identity import PostgresActorDirectory
-from smb_requirement_agent.infrastructure.persistence.backfill_document_blobs import backfill
 from smb_requirement_agent.infrastructure.persistence.migration_runner import (
     MIGRATIONS,
     latest_packaged_migration,
@@ -217,6 +216,7 @@ from smb_requirement_agent.requirements.domain.requirement.value_objects import 
     RequirementTitle,
     RequirementVersion,
 )
+from smb_requirement_agent.requirements.infrastructure.backfill_document_blobs import backfill
 from smb_requirement_agent.requirements.infrastructure.in_memory_document_repository import (
     InMemoryDocumentRepository,
     InMemoryDocumentStorage,

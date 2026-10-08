@@ -23,6 +23,7 @@ from smb_requirement_agent.breakdown.infrastructure.llm.backlog_mappers import t
 from smb_requirement_agent.breakdown.infrastructure.llm.local_story_generator import (
     LocalStoryGenerator,
 )
+from smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters import OpenAIStoryGenerator
 from smb_requirement_agent.breakdown.infrastructure.llm.prompts.story_prompt import PROMPT_VERSION
 from smb_requirement_agent.breakdown.infrastructure.llm.prompts.story_quality_prompt import (
     build_story_quality_prompt,
@@ -32,7 +33,6 @@ from smb_requirement_agent.breakdown.infrastructure.llm.schemas.story_schema imp
     StoryItemSchema,
     StorySetSchema,
 )
-from smb_requirement_agent.infrastructure.llm.openai_adapters import OpenAIStoryGenerator
 
 
 def _criterion(
@@ -158,7 +158,7 @@ def _source_story() -> MagicMock:
     return source
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters.OpenAI")
 def test_openai_story_provider_exception_is_mapped(mock_openai: MagicMock) -> None:
     client = MagicMock()
     client.chat.completions.parse.side_effect = OpenAIError("boom")
@@ -170,7 +170,7 @@ def test_openai_story_provider_exception_is_mapped(mock_openai: MagicMock) -> No
         ).generate(*_context())
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters.OpenAI")
 def test_openai_story_empty_choices_is_a_provider_failure(mock_openai: MagicMock) -> None:
     client = MagicMock()
     client.chat.completions.parse.return_value.choices = []
@@ -182,7 +182,7 @@ def test_openai_story_empty_choices_is_a_provider_failure(mock_openai: MagicMock
         ).generate(*_context())
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters.OpenAI")
 def test_openai_story_split_rejects_one_candidate(mock_openai: MagicMock) -> None:
     client = MagicMock()
     response = MagicMock()

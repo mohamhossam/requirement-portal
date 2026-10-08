@@ -32,6 +32,11 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     QuestionChangeAction,
     is_additional_intent_proposal,
 )
+from smb_requirement_agent.analysis.infrastructure.llm.response_sanitizer import (
+    clean_pairs,
+    clean_statements,
+    require_any_content,
+)
 from smb_requirement_agent.analysis.infrastructure.llm.schemas.analysis_schema import (
     AnalysisEvidenceCitationSchema,
     AnalysisEvidenceKind,
@@ -40,11 +45,6 @@ from smb_requirement_agent.analysis.infrastructure.llm.schemas.analysis_schema i
     DesiredOutcomeReviewSchema,
     RequirementAnalysisSchema,
     UncertaintySchema,
-)
-from smb_requirement_agent.infrastructure.llm.response_sanitizer import (
-    clean_pairs,
-    clean_statements,
-    require_any_content,
 )
 
 

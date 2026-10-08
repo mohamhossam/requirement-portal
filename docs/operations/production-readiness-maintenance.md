@@ -29,7 +29,7 @@ and release versions in the change record.
    immutable Requirement or breakdown revision payloads.
 7. Run the document import for every version referenced by current metadata or any historical
    revision with
-   `python -m smb_requirement_agent.infrastructure.persistence.backfill_document_blobs`.
+   `python -m smb_requirement_agent.requirements.infrastructure.backfill_document_blobs`.
    Use its resumable manifest, verify source and stored byte count and SHA-256, and stop on a
    missing or mismatched file. Do not delete legacy files.
 8. Run `python -m smb_requirement_agent.interfaces.maintenance`.

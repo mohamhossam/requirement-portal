@@ -42,6 +42,12 @@ from smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyze
     LocalRequirementAnalyzer,
     StructuredRequirementAnalyzerAdapter,
 )
+from smb_requirement_agent.analysis.infrastructure.llm.openai_adapters import (
+    OpenAIRequirementAnalyzer,
+)
+from smb_requirement_agent.analysis.infrastructure.llm.openrouter_adapters import (
+    OpenRouterRequirementAnalyzer,
+)
 from smb_requirement_agent.analysis.infrastructure.llm.reference_proposals import (
     FakeReferenceProposer,
     StructuredReferenceProposer,
@@ -78,27 +84,21 @@ from smb_requirement_agent.breakdown.infrastructure.llm.local_story_quality_eval
     LocalStoryQualityEvaluator,
     StructuredStoryQualityEvaluatorAdapter,
 )
-from smb_requirement_agent.infrastructure.config.options import ConfigurationError, LLMProvider
-from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.llm.openai_adapters import (
-    OpenAIClarificationAnswerSuggester,
+from smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters import (
     OpenAIEpicGenerator,
     OpenAIFeatureGenerator,
-    OpenAIRequirementAnalyzer,
-    OpenAIRequirementRelationshipClassifier,
     OpenAIStoryGenerator,
     OpenAIStoryQualityEvaluator,
 )
-from smb_requirement_agent.infrastructure.llm.openrouter_adapters import (
-    OpenRouterAdapterSettings,
-    OpenRouterClarificationAnswerSuggester,
+from smb_requirement_agent.breakdown.infrastructure.llm.openrouter_adapters import (
     OpenRouterEpicGenerator,
     OpenRouterFeatureGenerator,
-    OpenRouterRequirementAnalyzer,
-    OpenRouterRequirementRelationshipClassifier,
     OpenRouterStoryGenerator,
     OpenRouterStoryQualityEvaluator,
 )
+from smb_requirement_agent.infrastructure.config.options import ConfigurationError, LLMProvider
+from smb_requirement_agent.infrastructure.config.settings import Settings
+from smb_requirement_agent.infrastructure.llm.openrouter_transport import OpenRouterAdapterSettings
 from smb_requirement_agent.knowledge.application.ports.prior_art import (
     PriorArtJudgePort,
 )
@@ -112,6 +112,14 @@ from smb_requirement_agent.knowledge.infrastructure.llm.fake_requirement_knowled
     FakeKnowledgeEmbedding,
     FakePriorArtJudge,
     FakeRequirementRelationshipClassifier,
+)
+from smb_requirement_agent.knowledge.infrastructure.llm.openai_adapters import (
+    OpenAIClarificationAnswerSuggester,
+    OpenAIRequirementRelationshipClassifier,
+)
+from smb_requirement_agent.knowledge.infrastructure.llm.openrouter_adapters import (
+    OpenRouterClarificationAnswerSuggester,
+    OpenRouterRequirementRelationshipClassifier,
 )
 from smb_requirement_agent.knowledge.infrastructure.llm.requirement_knowledge_adapters import (
     LocalClarificationAnswerSuggester,

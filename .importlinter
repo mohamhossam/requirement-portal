@@ -289,6 +289,23 @@ forbidden_modules =
     smb_requirement_agent.reporting
     smb_requirement_agent.workflows
 
+[importlinter:contract:shared_infrastructure_uses_no_context]
+name = Shared infrastructure (config, persistence machinery, LLM transport, text) imports no context (ADR-0103 Amendment 3)
+type = forbidden
+source_modules =
+    smb_requirement_agent.infrastructure
+forbidden_modules =
+    smb_requirement_agent.identity
+    smb_requirement_agent.jobs
+    smb_requirement_agent.requirements
+    smb_requirement_agent.references
+    smb_requirement_agent.analysis
+    smb_requirement_agent.knowledge
+    smb_requirement_agent.breakdown
+    smb_requirement_agent.governance
+    smb_requirement_agent.reporting
+    smb_requirement_agent.workflows
+
 [importlinter:contract:identity_internal_layers]
 name = identity: infrastructure > application > domain
 type = layers

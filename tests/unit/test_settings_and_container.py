@@ -13,6 +13,12 @@ from smb_requirement_agent.analysis.infrastructure.llm.fake_requirement_analyzer
 from smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer import (
     LocalRequirementAnalyzer,
 )
+from smb_requirement_agent.analysis.infrastructure.llm.openai_adapters import (
+    OpenAIRequirementAnalyzer,
+)
+from smb_requirement_agent.analysis.infrastructure.llm.openrouter_adapters import (
+    OpenRouterRequirementAnalyzer,
+)
 from smb_requirement_agent.breakdown.infrastructure.llm.local_epic_generator import (
     LocalEpicGenerator,
 )
@@ -24,6 +30,15 @@ from smb_requirement_agent.breakdown.infrastructure.llm.local_story_generator im
 )
 from smb_requirement_agent.breakdown.infrastructure.llm.local_story_quality_evaluator import (
     LocalStoryQualityEvaluator,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters import (
+    OpenAIStoryQualityEvaluator,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.openrouter_adapters import (
+    OpenRouterEpicGenerator,
+    OpenRouterFeatureGenerator,
+    OpenRouterStoryGenerator,
+    OpenRouterStoryQualityEvaluator,
 )
 from smb_requirement_agent.infrastructure.config.options import (
     DEFAULT_LOCAL_LLM_BASE_URL,
@@ -42,24 +57,15 @@ from smb_requirement_agent.infrastructure.config.options import (
     PersistenceProvider,
 )
 from smb_requirement_agent.infrastructure.config.settings import PersistenceSettings, Settings
-from smb_requirement_agent.infrastructure.llm.openai_adapters import (
-    OpenAIRequirementAnalyzer,
-    OpenAIStoryQualityEvaluator,
-)
-from smb_requirement_agent.infrastructure.llm.openrouter_adapters import (
-    OpenRouterClarificationAnswerSuggester,
-    OpenRouterEpicGenerator,
-    OpenRouterFeatureGenerator,
-    OpenRouterRequirementAnalyzer,
-    OpenRouterRequirementRelationshipClassifier,
-    OpenRouterStoryGenerator,
-    OpenRouterStoryQualityEvaluator,
-)
 from smb_requirement_agent.interfaces.api.composition import llm as composition
 from smb_requirement_agent.interfaces.api.composition.llm import build_llm_adapters
 from smb_requirement_agent.interfaces.api.container import build_container
 from smb_requirement_agent.knowledge.infrastructure.llm.fake_requirement_knowledge import (
     FakeKnowledgeEmbedding,
+)
+from smb_requirement_agent.knowledge.infrastructure.llm.openrouter_adapters import (
+    OpenRouterClarificationAnswerSuggester,
+    OpenRouterRequirementRelationshipClassifier,
 )
 from smb_requirement_agent.knowledge.infrastructure.llm.requirement_knowledge_adapters import (
     LocalKnowledgeEmbedding,

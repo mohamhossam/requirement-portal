@@ -20,8 +20,10 @@ from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
 from smb_requirement_agent.analysis.domain.value_objects import KnownFact
 from smb_requirement_agent.application.errors import KnowledgeGenerationError
 from smb_requirement_agent.breakdown.application.errors import EpicGenerationError
+from smb_requirement_agent.breakdown.infrastructure.llm.openrouter_adapters import (
+    OpenRouterEpicGenerator,
+)
 from smb_requirement_agent.breakdown.infrastructure.llm.schemas.epic_schema import EpicSchema
-from smb_requirement_agent.infrastructure.llm.openrouter_adapters import OpenRouterEpicGenerator
 from smb_requirement_agent.knowledge.infrastructure.llm.requirement_knowledge_adapters import (
     OpenRouterKnowledgeEmbedding,
 )
@@ -316,7 +318,7 @@ def test_openrouter_epic_adapter_preserves_model_provenance() -> None:
     )
 
     with patch(
-        "smb_requirement_agent.infrastructure.llm.openrouter_adapters._client_from_settings",
+        "smb_requirement_agent.breakdown.infrastructure.llm.openrouter_adapters.openrouter_client_from_settings",
         return_value=client,
     ):
         adapter = OpenRouterEpicGenerator(
@@ -339,7 +341,7 @@ def test_openrouter_epic_adapter_maps_transport_failure() -> None:
     client.model = "google/gemma-4-31b-it:free"
     client.parse.side_effect = OpenRouterError("rate limited")
     with patch(
-        "smb_requirement_agent.infrastructure.llm.openrouter_adapters._client_from_settings",
+        "smb_requirement_agent.breakdown.infrastructure.llm.openrouter_adapters.openrouter_client_from_settings",
         return_value=client,
     ):
         adapter = OpenRouterEpicGenerator(

@@ -16,7 +16,6 @@ from smb_requirement_agent.infrastructure.persistence.migration_runner import (
     latest_packaged_migration,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_values import DbConnection
-from smb_requirement_agent.requirements.application.errors import DuplicateRequirementError
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 # The maintenance backfill a ready database must have completed after migrating.
@@ -75,7 +74,7 @@ class PostgresStore:
                 self._rollback_var.reset(rollback_token)
                 self._dirty_var.reset(dirty_token)
                 self._connection_var.reset(connection_token)
-        except (DuplicateRequirementError, RaiseException):
+        except RaiseException:
             raise
         except psycopg.Error as exc:
             raise PersistenceError("PostgreSQL operation failed.") from exc
