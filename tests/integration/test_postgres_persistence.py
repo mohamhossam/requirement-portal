@@ -68,10 +68,6 @@ from smb_requirement_agent.analysis.infrastructure.postgres_evidence_fragment_ca
     PostgresEvidenceFragmentCache,
 )
 from smb_requirement_agent.application.errors import DocumentStorageError
-from smb_requirement_agent.application.ports.requirement_knowledge import (
-    KnowledgeScreenEnsureOutcome,
-    KnowledgeScreenEnsureResult,
-)
 from smb_requirement_agent.breakdown.domain.architecture.entities import ArchitectureImpact
 from smb_requirement_agent.breakdown.domain.epic.entities import Epic
 from smb_requirement_agent.breakdown.domain.epic.value_objects import (
@@ -111,22 +107,6 @@ from smb_requirement_agent.breakdown.infrastructure.postgres_backlog import (
     PostgresStoryChangeProposalRepository,
     PostgresStoryRepository,
 )
-from smb_requirement_agent.domain.knowledge.entities import (
-    AnswerSuggestion,
-    AnswerSuggestionId,
-    AnswerSuggestionSet,
-    AnswerSuggestionSetId,
-    AnswerSuggestionSource,
-    KnowledgeChunk,
-    KnowledgeChunkId,
-    KnowledgeFinding,
-    KnowledgeFindingId,
-    KnowledgeRelationshipKind,
-    KnowledgeScreen,
-    KnowledgeScreenId,
-    KnowledgeSourceKind,
-    RelationshipEvidence,
-)
 from smb_requirement_agent.governance.application.exports import ExportFormat
 from smb_requirement_agent.governance.application.use_cases.export_breakdown import ExportBreakdown
 from smb_requirement_agent.governance.domain.review.entities import (
@@ -161,9 +141,6 @@ from smb_requirement_agent.infrastructure.persistence.migration_runner import (
     latest_packaged_migration,
     run_migrations,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_requirement_knowledge import (
-    PostgresRequirementKnowledgeStore,
-)
 from smb_requirement_agent.infrastructure.persistence.postgres_store import (
     REQUIRED_MAINTENANCE_MARKER,
 )
@@ -179,6 +156,29 @@ from smb_requirement_agent.jobs.domain.entities import (
     AiJobStatus,
 )
 from smb_requirement_agent.jobs.infrastructure.postgres_ai_jobs import PostgresAiJobStore
+from smb_requirement_agent.knowledge.application.ports.requirement_knowledge import (
+    KnowledgeScreenEnsureOutcome,
+    KnowledgeScreenEnsureResult,
+)
+from smb_requirement_agent.knowledge.domain.entities import (
+    AnswerSuggestion,
+    AnswerSuggestionId,
+    AnswerSuggestionSet,
+    AnswerSuggestionSetId,
+    AnswerSuggestionSource,
+    KnowledgeChunk,
+    KnowledgeChunkId,
+    KnowledgeFinding,
+    KnowledgeFindingId,
+    KnowledgeRelationshipKind,
+    KnowledgeScreen,
+    KnowledgeScreenId,
+    KnowledgeSourceKind,
+    RelationshipEvidence,
+)
+from smb_requirement_agent.knowledge.infrastructure.postgres_requirement_knowledge import (
+    PostgresRequirementKnowledgeStore,
+)
 from smb_requirement_agent.references.domain.architecture.catalogue import (
     ArchitectureDependency,
     SystemCapability,
@@ -1659,7 +1659,7 @@ def test_incremental_activity_matches_audit_sources_and_report_aggregation() -> 
 
 def test_isolated_embedding_generations_resume_switch_and_rollback() -> None:
     from smb_requirement_agent.application.errors import ModelTransportError
-    from smb_requirement_agent.infrastructure.persistence import postgres_knowledge_generations
+    from smb_requirement_agent.knowledge.infrastructure import postgres_knowledge_generations
 
     assert DATABASE_URL is not None
     store = PostgresStore(DATABASE_URL)
@@ -1733,19 +1733,19 @@ def test_isolated_embedding_generations_resume_switch_and_rollback() -> None:
 
 
 def test_requirement_index_batches_survive_restart_and_stale_leases_are_fenced() -> None:
-    from smb_requirement_agent.application.use_cases.requirement_indexing import (
-        IndexRequirementKnowledge,
-    )
     from smb_requirement_agent.infrastructure.config.options import LLMProvider, PersistenceProvider
     from smb_requirement_agent.infrastructure.config.settings import Settings
-    from smb_requirement_agent.infrastructure.persistence.requirement_indexing import (
+    from smb_requirement_agent.interfaces.api.container import build_container
+    from smb_requirement_agent.knowledge.application.use_cases.requirement_indexing import (
+        IndexRequirementKnowledge,
+    )
+    from smb_requirement_agent.knowledge.infrastructure.requirement_indexing import (
         PostgresRequirementIndexProgress,
     )
-    from smb_requirement_agent.interfaces.api.container import build_container
     from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
         CreateRequirementInput,
     )
-    from tests.unit.test_requirement_indexing import RecordingEmbedding, corpus
+    from tests.unit.knowledge.test_requirement_indexing import RecordingEmbedding, corpus
 
     assert DATABASE_URL is not None
     container = build_container(

@@ -99,12 +99,6 @@ from smb_requirement_agent.breakdown.domain.story.errors import (
     StoryProposalConflictError,
     StoryRegenerationConflictError,
 )
-from smb_requirement_agent.domain.knowledge.screening_errors import (
-    CorpusMembershipConflictError,
-    KnowledgeFindingConflictError,
-    KnowledgeReviewRequiredError,
-    RequirementRetiredError,
-)
 from smb_requirement_agent.governance.domain.review.errors import (
     FlagResolutionConflictError,
     FlagResolutionNotAllowedError,
@@ -121,6 +115,12 @@ from smb_requirement_agent.identity.domain.errors import (
     RequirementAccessConflictError,
 )
 from smb_requirement_agent.jobs.domain.errors import AiJobConflictError, InvalidAiJobError
+from smb_requirement_agent.knowledge.domain.screening_errors import (
+    CorpusMembershipConflictError,
+    KnowledgeFindingConflictError,
+    KnowledgeReviewRequiredError,
+    RequirementRetiredError,
+)
 from smb_requirement_agent.references.domain.architecture.catalogue import (
     InvalidArchitectureContentError,
 )

@@ -7,16 +7,16 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Protocol
 
-from smb_requirement_agent.application.ports.requirement_knowledge import (
-    KnowledgeReview,
-    KnowledgeReviewPort,
-)
 from smb_requirement_agent.governance.domain.review.entities import BreakdownStatus
 from smb_requirement_agent.governance.domain.review.evidence import (
     ReviewEvidence,
     evidence_fingerprint,
 )
 from smb_requirement_agent.governance.domain.review.fingerprints import breakdown_fingerprint
+from smb_requirement_agent.knowledge.application.ports.requirement_knowledge import (
+    KnowledgeReview,
+    KnowledgeReviewPort,
+)
 from smb_requirement_agent.reporting.application.ports.activity import (
     ActivityEvent,
     ActivityReadPort,

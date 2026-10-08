@@ -46,14 +46,6 @@ from smb_requirement_agent.analysis.infrastructure.llm.reference_proposals impor
     FakeReferenceProposer,
     StructuredReferenceProposer,
 )
-from smb_requirement_agent.application.ports.prior_art import (
-    PriorArtJudgePort,
-)
-from smb_requirement_agent.application.ports.requirement_knowledge import (
-    ClarificationAnswerSuggesterPort,
-    KnowledgeEmbeddingPort,
-    RequirementRelationshipClassifierPort,
-)
 from smb_requirement_agent.breakdown.application.ports.epic_generator import EpicGeneratorPort
 from smb_requirement_agent.breakdown.application.ports.feature_generator import FeatureGeneratorPort
 from smb_requirement_agent.breakdown.application.ports.story_generator import StoryGeneratorPort
@@ -88,12 +80,6 @@ from smb_requirement_agent.breakdown.infrastructure.llm.local_story_quality_eval
 )
 from smb_requirement_agent.infrastructure.config.options import ConfigurationError, LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import (
-    FakeClarificationAnswerSuggester,
-    FakeKnowledgeEmbedding,
-    FakePriorArtJudge,
-    FakeRequirementRelationshipClassifier,
-)
 from smb_requirement_agent.infrastructure.llm.openai_adapters import (
     OpenAIClarificationAnswerSuggester,
     OpenAIEpicGenerator,
@@ -113,7 +99,21 @@ from smb_requirement_agent.infrastructure.llm.openrouter_adapters import (
     OpenRouterStoryGenerator,
     OpenRouterStoryQualityEvaluator,
 )
-from smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters import (
+from smb_requirement_agent.knowledge.application.ports.prior_art import (
+    PriorArtJudgePort,
+)
+from smb_requirement_agent.knowledge.application.ports.requirement_knowledge import (
+    ClarificationAnswerSuggesterPort,
+    KnowledgeEmbeddingPort,
+    RequirementRelationshipClassifierPort,
+)
+from smb_requirement_agent.knowledge.infrastructure.llm.fake_requirement_knowledge import (
+    FakeClarificationAnswerSuggester,
+    FakeKnowledgeEmbedding,
+    FakePriorArtJudge,
+    FakeRequirementRelationshipClassifier,
+)
+from smb_requirement_agent.knowledge.infrastructure.llm.requirement_knowledge_adapters import (
     LocalClarificationAnswerSuggester,
     LocalKnowledgeEmbedding,
     LocalPriorArtJudge,

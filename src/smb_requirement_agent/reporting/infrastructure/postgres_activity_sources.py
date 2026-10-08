@@ -15,12 +15,12 @@ from smb_requirement_agent.governance.domain.revision.entities import (
 from smb_requirement_agent.governance.infrastructure.postgres_revisions import (
     PostgresRevisionRepository,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_requirement_knowledge import (
-    finding_from_payload,
-)
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 from smb_requirement_agent.infrastructure.persistence.postgres_values import _payload
 from smb_requirement_agent.jobs.infrastructure.postgres_ai_jobs import record_from_row
+from smb_requirement_agent.knowledge.infrastructure.postgres_requirement_knowledge import (
+    finding_from_payload,
+)
 from smb_requirement_agent.reporting.application.ports.requirement_worklist import (
     RequirementWorklistSnapshot,
 )

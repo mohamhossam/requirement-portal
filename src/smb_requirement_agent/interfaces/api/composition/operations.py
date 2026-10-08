@@ -35,15 +35,15 @@ from smb_requirement_agent.infrastructure.persistence.postgres_session import (
     PostgresCommitSession,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
-from smb_requirement_agent.infrastructure.persistence.source_dependencies import (
-    PostgresSourceDependencies,
-)
 from smb_requirement_agent.interfaces.api.composition.projections import (
     refresh_postgres_projections,
 )
 from smb_requirement_agent.jobs.application.use_cases.retention import PruneReadNotifications
 from smb_requirement_agent.jobs.infrastructure.postgres_ai_jobs import (
     PostgresNotificationRepository,
+)
+from smb_requirement_agent.knowledge.infrastructure.source_dependencies import (
+    PostgresSourceDependencies,
 )
 from smb_requirement_agent.references.application.use_cases.qualify_chunk_tokens import (
     qualify_chunk_tokens,

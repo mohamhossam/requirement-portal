@@ -166,7 +166,6 @@ forbidden_modules =
     smb_requirement_agent.reporting.infrastructure
     smb_requirement_agent.workflows.infrastructure
     smb_requirement_agent.infrastructure.documents
-    smb_requirement_agent.infrastructure.jobs
 allow_indirect_imports = True
 
 [importlinter:contract:infrastructure_not_interfaces]
@@ -593,11 +592,6 @@ forbidden_modules =
     smb_requirement_agent.application.use_cases
     smb_requirement_agent.application.ports
     smb_requirement_agent.interfaces
-ignore_imports =
-    # knowledge is upstream but has not moved yet; these go when it does (PR 15b).
-    smb_requirement_agent.reporting.** -> smb_requirement_agent.application.ports.requirement_knowledge
-    smb_requirement_agent.reporting.** -> smb_requirement_agent.application.ports.source_dependencies
-    smb_requirement_agent.reporting.** -> smb_requirement_agent.domain.knowledge.entities
 # As for the other contexts: the shared technical modules still reach unmoved context code.
 allow_indirect_imports = True
 

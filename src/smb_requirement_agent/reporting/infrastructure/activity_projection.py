@@ -8,11 +8,6 @@ from typing import Protocol
 
 from smb_requirement_agent.analysis.domain.entities import AnalysisRound, ClarificationQuestion
 from smb_requirement_agent.analysis.domain.value_objects import QuestionChangeAction
-from smb_requirement_agent.domain.knowledge.entities import (
-    KnowledgeDecisionKind,
-    KnowledgeFinding,
-    KnowledgeFindingStatus,
-)
 from smb_requirement_agent.governance.domain.review.entities import (
     BreakdownStatus,
     FlagSeverity,
@@ -29,6 +24,11 @@ from smb_requirement_agent.governance.domain.revision.entities import (
 from smb_requirement_agent.identity.domain.entities import AccessChangeKind
 from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobRecord
 from smb_requirement_agent.jobs.domain.entities import AiJobOperation, AiJobStatus
+from smb_requirement_agent.knowledge.domain.entities import (
+    KnowledgeDecisionKind,
+    KnowledgeFinding,
+    KnowledgeFindingStatus,
+)
 from smb_requirement_agent.reporting.application.ports.activity import (
     ActivityAction,
     ActivityCategory,

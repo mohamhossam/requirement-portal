@@ -11,16 +11,16 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Response
 from pydantic import BaseModel, Field
 
-from smb_requirement_agent.application.use_cases.unified_knowledge_search import (
-    UnifiedKnowledgeSearch,
-    UnifiedSearchHit,
-)
 from smb_requirement_agent.interfaces.api.dependencies import (
     get_current_release,
     get_knowledge_views,
     get_unified_knowledge_search,
     limit_provider_calls,
     require_authenticated_actor,
+)
+from smb_requirement_agent.knowledge.application.use_cases.unified_knowledge_search import (
+    UnifiedKnowledgeSearch,
+    UnifiedSearchHit,
 )
 from smb_requirement_agent.references.application.ports.architecture_knowledge import ActiveRelease
 from smb_requirement_agent.references.application.ports.knowledge_views import (

@@ -14,12 +14,12 @@ from pathlib import Path
 from pydantic import TypeAdapter
 from smb_kernel.observability.metrics import Metrics
 
-from smb_requirement_agent.application.prior_art_evaluation import (
+from smb_requirement_agent.infrastructure.config.settings import Settings
+from smb_requirement_agent.interfaces.api.composition.llm import build_llm_adapters
+from smb_requirement_agent.knowledge.application.prior_art_evaluation import (
     PriorArtCase,
     evaluate_prior_art,
 )
-from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.interfaces.api.composition.llm import build_llm_adapters
 
 
 def main() -> None:

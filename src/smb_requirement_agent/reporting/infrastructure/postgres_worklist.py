@@ -8,11 +8,13 @@ from typing import cast
 
 from psycopg.types.json import Jsonb
 
-from smb_requirement_agent.application.ports.requirement_knowledge import KnowledgeReviewPort
 from smb_requirement_agent.infrastructure.persistence.payload_fields import JsonObject
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 from smb_requirement_agent.infrastructure.persistence.postgres_values import _integer
 from smb_requirement_agent.infrastructure.persistence.shared_payloads import actor_from_payload
+from smb_requirement_agent.knowledge.application.ports.requirement_knowledge import (
+    KnowledgeReviewPort,
+)
 from smb_requirement_agent.reporting.application.ports.activity import (
     ActivityQuery,
     ActivityReadPort,

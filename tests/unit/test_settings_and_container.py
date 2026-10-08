@@ -42,9 +42,6 @@ from smb_requirement_agent.infrastructure.config.options import (
     PersistenceProvider,
 )
 from smb_requirement_agent.infrastructure.config.settings import PersistenceSettings, Settings
-from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import (
-    FakeKnowledgeEmbedding,
-)
 from smb_requirement_agent.infrastructure.llm.openai_adapters import (
     OpenAIRequirementAnalyzer,
     OpenAIStoryQualityEvaluator,
@@ -58,14 +55,17 @@ from smb_requirement_agent.infrastructure.llm.openrouter_adapters import (
     OpenRouterStoryGenerator,
     OpenRouterStoryQualityEvaluator,
 )
-from smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters import (
+from smb_requirement_agent.interfaces.api.composition import llm as composition
+from smb_requirement_agent.interfaces.api.composition.llm import build_llm_adapters
+from smb_requirement_agent.interfaces.api.container import build_container
+from smb_requirement_agent.knowledge.infrastructure.llm.fake_requirement_knowledge import (
+    FakeKnowledgeEmbedding,
+)
+from smb_requirement_agent.knowledge.infrastructure.llm.requirement_knowledge_adapters import (
     LocalKnowledgeEmbedding,
     OpenAIKnowledgeEmbedding,
     OpenRouterKnowledgeEmbedding,
 )
-from smb_requirement_agent.interfaces.api.composition import llm as composition
-from smb_requirement_agent.interfaces.api.composition.llm import build_llm_adapters
-from smb_requirement_agent.interfaces.api.container import build_container
 
 
 class TestSettings:

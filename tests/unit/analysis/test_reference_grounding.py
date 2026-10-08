@@ -103,8 +103,8 @@ def test_document_answer_preserves_citation_and_hides_after_withdrawal(
     grounded: Grounded,
 ) -> None:
     from smb_requirement_agent.application.errors import AnswerSuggestionNotFoundError
-    from smb_requirement_agent.domain.knowledge.entities import AnswerSuggestionSource
     from smb_requirement_agent.interfaces.api.routes.knowledge import suggestion_response
+    from smb_requirement_agent.knowledge.domain.entities import AnswerSuggestionSource
 
     container = grounded.container
     requirement = container.create_requirement.execute(
@@ -141,10 +141,10 @@ def test_document_withdrawn_during_answer_generation_cannot_persist(
     grounded: Grounded,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from smb_requirement_agent.application.ports.requirement_knowledge import (
+    from smb_requirement_agent.knowledge.application.ports.requirement_knowledge import (
         AnswerSuggestionCandidate,
     )
-    from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import (
+    from smb_requirement_agent.knowledge.infrastructure.llm.fake_requirement_knowledge import (
         FakeClarificationAnswerSuggester,
     )
 

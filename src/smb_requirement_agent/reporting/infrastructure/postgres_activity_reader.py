@@ -16,12 +16,6 @@ from smb_requirement_agent.analysis.application.ports.analysis_audit_repository 
     AnalysisAuditRepositoryPort,
 )
 from smb_requirement_agent.analysis.domain.entities import AnalysisRound, ClarificationQuestion
-from smb_requirement_agent.application.ports.requirement_knowledge import (
-    RequirementKnowledgeRepositoryPort,
-)
-from smb_requirement_agent.domain.knowledge.entities import (
-    KnowledgeFinding,
-)
 from smb_requirement_agent.governance.domain.review.entities import (
     BreakdownStatus,
 )
@@ -30,6 +24,12 @@ from smb_requirement_agent.governance.domain.revision.entities import (
     RequirementRevision,
 )
 from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobRecord
+from smb_requirement_agent.knowledge.application.ports.requirement_knowledge import (
+    RequirementKnowledgeRepositoryPort,
+)
+from smb_requirement_agent.knowledge.domain.entities import (
+    KnowledgeFinding,
+)
 from smb_requirement_agent.reporting.application.ports.activity import (
     ActivityEvent,
     ActivityQuery,

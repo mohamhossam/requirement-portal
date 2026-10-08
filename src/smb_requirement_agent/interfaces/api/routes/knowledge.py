@@ -6,27 +6,6 @@ from fastapi import APIRouter, Depends
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.analysis.domain.value_objects import QuestionId
-from smb_requirement_agent.application.ports.requirement_knowledge import KnowledgeReview
-from smb_requirement_agent.application.use_cases.answer_suggestions import (
-    SuggestClarificationAnswers,
-)
-from smb_requirement_agent.application.use_cases.prior_art import GetPriorArt, PriorArtView
-from smb_requirement_agent.application.use_cases.requirement_indexing import (
-    IndexRequirementKnowledge,
-    RequirementIndexStatus,
-)
-from smb_requirement_agent.application.use_cases.requirement_knowledge import (
-    DecideKnowledgeFinding,
-    EnsureKnowledgeScreen,
-    GetKnowledgeReview,
-)
-from smb_requirement_agent.domain.knowledge.entities import (
-    AnswerSuggestionSet,
-    KnowledgeFinding,
-    KnowledgeFindingId,
-    RelationshipEvidence,
-)
-from smb_requirement_agent.domain.knowledge.prior_art import PriorArtEvidence
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     get_clock,
@@ -57,6 +36,30 @@ from smb_requirement_agent.interfaces.api.schemas.knowledge import (
     PriorArtPassageResponse,
     PriorArtResponse,
 )
+from smb_requirement_agent.knowledge.application.ports.requirement_knowledge import KnowledgeReview
+from smb_requirement_agent.knowledge.application.use_cases.answer_suggestions import (
+    SuggestClarificationAnswers,
+)
+from smb_requirement_agent.knowledge.application.use_cases.prior_art import (
+    GetPriorArt,
+    PriorArtView,
+)
+from smb_requirement_agent.knowledge.application.use_cases.requirement_indexing import (
+    IndexRequirementKnowledge,
+    RequirementIndexStatus,
+)
+from smb_requirement_agent.knowledge.application.use_cases.requirement_knowledge import (
+    DecideKnowledgeFinding,
+    EnsureKnowledgeScreen,
+    GetKnowledgeReview,
+)
+from smb_requirement_agent.knowledge.domain.entities import (
+    AnswerSuggestionSet,
+    KnowledgeFinding,
+    KnowledgeFindingId,
+    RelationshipEvidence,
+)
+from smb_requirement_agent.knowledge.domain.prior_art import PriorArtEvidence
 from smb_requirement_agent.references.application.ports.reference_grounding import (
     ReferenceReviewPort,
 )

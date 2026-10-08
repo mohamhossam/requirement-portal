@@ -30,7 +30,7 @@ from smb_requirement_agent.breakdown.infrastructure.llm.local_story_generator im
 from smb_requirement_agent.breakdown.infrastructure.llm.local_story_quality_evaluator import (
     StructuredStoryQualityEvaluatorAdapter,
 )
-from smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters import (
+from smb_requirement_agent.knowledge.infrastructure.llm.requirement_knowledge_adapters import (
     StructuredClarificationAnswerSuggesterAdapter,
     StructuredRequirementRelationshipClassifierAdapter,
 )

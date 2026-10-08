@@ -31,7 +31,6 @@ from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACT
 from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
     InMemoryActorDirectory,
 )
-from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import IndexReadyJobQueue
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.interfaces.api.main import create_app
 from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobCommand, AiJobRecord
@@ -41,6 +40,9 @@ from smb_requirement_agent.jobs.domain.entities import (
     AiJobOrigin,
     AiJobStatus,
     NotificationKind,
+)
+from smb_requirement_agent.knowledge.infrastructure.requirement_index_worker import (
+    IndexReadyJobQueue,
 )
 from smb_requirement_agent.reporting.application.ports.saved_views import SavedViewCriteria
 from smb_requirement_agent.reporting.infrastructure.in_memory_saved_views import (

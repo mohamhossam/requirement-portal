@@ -8,28 +8,28 @@ from smb_requirement_agent.analysis.infrastructure.postgres_analysis import (
     PostgresAnalysisAuditRepository,
     PostgresAnalysisRepository,
 )
-from smb_requirement_agent.application.use_cases.requirement_knowledge import (
-    GetKnowledgeReview,
-    RequirementKnowledgeCorpus,
-)
 from smb_requirement_agent.governance.infrastructure.postgres_revisions import (
     PostgresRevisionRepository,
 )
 from smb_requirement_agent.identity.infrastructure.postgres_identity import PostgresAccessRepository
-from smb_requirement_agent.infrastructure.persistence.corpus_membership import (
-    PostgresCorpusMembership,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_requirement_knowledge import (
-    PostgresRequirementKnowledgeStore,
-)
 from smb_requirement_agent.infrastructure.persistence.postgres_session import (
     PostgresCommitSession,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_values import DbConnection
-from smb_requirement_agent.infrastructure.persistence.source_dependencies import (
+from smb_requirement_agent.jobs.infrastructure.postgres_ai_jobs import PostgresAiJobStore
+from smb_requirement_agent.knowledge.application.use_cases.requirement_knowledge import (
+    GetKnowledgeReview,
+    RequirementKnowledgeCorpus,
+)
+from smb_requirement_agent.knowledge.infrastructure.corpus_membership import (
+    PostgresCorpusMembership,
+)
+from smb_requirement_agent.knowledge.infrastructure.postgres_requirement_knowledge import (
+    PostgresRequirementKnowledgeStore,
+)
+from smb_requirement_agent.knowledge.infrastructure.source_dependencies import (
     PostgresSourceDependencies,
 )
-from smb_requirement_agent.jobs.infrastructure.postgres_ai_jobs import PostgresAiJobStore
 from smb_requirement_agent.reporting.application.use_cases.dependency_projection import (
     DependencyProjection,
 )

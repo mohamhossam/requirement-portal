@@ -29,20 +29,20 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     QuestionId,
 )
 from smb_requirement_agent.application.errors import KnowledgeGenerationError
-from smb_requirement_agent.domain.knowledge.entities import (
+from smb_requirement_agent.knowledge.domain.entities import (
     KnowledgeChunk,
     KnowledgeChunkId,
     KnowledgeRelationshipKind,
     KnowledgeSourceKind,
 )
-from smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters import (
+from smb_requirement_agent.knowledge.infrastructure.llm.requirement_knowledge_adapters import (
     EMBEDDING_DIMENSIONS,
     LocalKnowledgeEmbedding,
     OpenAIKnowledgeEmbedding,
     StructuredClarificationAnswerSuggesterAdapter,
     StructuredRequirementRelationshipClassifierAdapter,
 )
-from smb_requirement_agent.infrastructure.llm.schemas.knowledge_schema import (
+from smb_requirement_agent.knowledge.infrastructure.llm.schemas.knowledge_schema import (
     AnswerSuggestionListSchema,
     AnswerSuggestionSchema,
     RelationshipFindingSchema,

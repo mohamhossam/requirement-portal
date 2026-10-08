@@ -14,9 +14,6 @@ from smb_requirement_agent.application.errors import (
     ArtifactVersionConflictError,
     RequirementAnalysisConflictError,
 )
-from smb_requirement_agent.application.use_cases.requirement_knowledge import (
-    RequirementKnowledgeCorpus,
-)
 from smb_requirement_agent.breakdown.infrastructure.backlog_payloads import (
     epic_from_payload,
     epic_to_payload,
@@ -25,9 +22,12 @@ from smb_requirement_agent.breakdown.infrastructure.backlog_payloads import (
     story_from_payload,
     story_to_payload,
 )
-from smb_requirement_agent.domain.document.lineage import ImpactDecisionKind
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.knowledge.application.use_cases.requirement_knowledge import (
+    RequirementKnowledgeCorpus,
+)
+from smb_requirement_agent.knowledge.domain.lineage import ImpactDecisionKind
 from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
     CreateRequirementInput,
 )

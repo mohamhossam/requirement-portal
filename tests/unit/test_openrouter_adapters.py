@@ -24,7 +24,7 @@ from smb_requirement_agent.application.errors import (
 )
 from smb_requirement_agent.breakdown.infrastructure.llm.schemas.epic_schema import EpicSchema
 from smb_requirement_agent.infrastructure.llm.openrouter_adapters import OpenRouterEpicGenerator
-from smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters import (
+from smb_requirement_agent.knowledge.infrastructure.llm.requirement_knowledge_adapters import (
     OpenRouterKnowledgeEmbedding,
 )
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
@@ -396,7 +396,7 @@ def test_openrouter_embedding_is_ordered_private_and_768_dimensional() -> None:
         }
     )
     with patch(
-        "smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters.httpx.Client.post",
+        "smb_requirement_agent.knowledge.infrastructure.llm.requirement_knowledge_adapters.httpx.Client.post",
         return_value=response,
     ) as post:
         result = _embedding_adapter().embed(("first", "second"))
@@ -427,7 +427,7 @@ def test_openrouter_embedding_is_ordered_private_and_768_dimensional() -> None:
 def test_openrouter_embedding_rejects_unusable_responses(payload: object, message: str) -> None:
     with (
         patch(
-            "smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters."
+            "smb_requirement_agent.knowledge.infrastructure.llm.requirement_knowledge_adapters."
             "httpx.Client.post",
             return_value=_response(payload),
         ),
@@ -438,7 +438,7 @@ def test_openrouter_embedding_rejects_unusable_responses(payload: object, messag
 
 def test_openrouter_embedding_empty_input_avoids_provider_call() -> None:
     with patch(
-        "smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters.httpx.Client.post"
+        "smb_requirement_agent.knowledge.infrastructure.llm.requirement_knowledge_adapters.httpx.Client.post"
     ) as post:
         assert _embedding_adapter().embed(()) == ()
     post.assert_not_called()
@@ -455,7 +455,7 @@ def test_openrouter_embedding_rejects_duplicate_indices() -> None:
     )
     with (
         patch(
-            "smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters."
+            "smb_requirement_agent.knowledge.infrastructure.llm.requirement_knowledge_adapters."
             "httpx.Client.post",
             return_value=response,
         ),
@@ -474,7 +474,7 @@ def test_openrouter_embedding_maps_http_failure() -> None:
 
     with (
         patch(
-            "smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters."
+            "smb_requirement_agent.knowledge.infrastructure.llm.requirement_knowledge_adapters."
             "httpx.Client.post",
             return_value=response,
         ),

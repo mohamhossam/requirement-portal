@@ -19,21 +19,21 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     QuestionId,
 )
 from smb_requirement_agent.application.errors import KnowledgeGenerationError
-from smb_requirement_agent.domain.knowledge.entities import (
+from smb_requirement_agent.knowledge.domain.entities import (
     KnowledgeChunk,
     KnowledgeChunkId,
     KnowledgeMatch,
     KnowledgeSourceKind,
 )
-from smb_requirement_agent.infrastructure.llm.prompts.knowledge_prompt import (
+from smb_requirement_agent.knowledge.infrastructure.llm.prompts.knowledge_prompt import (
     SUGGESTION_SYSTEM_PROMPT,
     suggestion_prompt,
 )
-from smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters import (
+from smb_requirement_agent.knowledge.infrastructure.llm.requirement_knowledge_adapters import (
     LocalClarificationAnswerSuggester,
     LocalRequirementRelationshipClassifier,
 )
-from smb_requirement_agent.infrastructure.llm.schemas.knowledge_schema import (
+from smb_requirement_agent.knowledge.infrastructure.llm.schemas.knowledge_schema import (
     AnswerSuggestionListSchema,
     AnswerSuggestionSchema,
 )
@@ -103,7 +103,7 @@ def _adapter() -> LocalClarificationAnswerSuggester:
 
 @pytest.mark.parametrize("mode", ["valid", "empty", "blank", "unknown", "provider"])
 @patch(
-    "smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters.LocalStructuredOutputClient"
+    "smb_requirement_agent.knowledge.infrastructure.llm.requirement_knowledge_adapters.LocalStructuredOutputClient"
 )
 def test_reference_answer_contract(client_type: MagicMock, mode: str) -> None:
     citation = PublishedReference(
@@ -151,7 +151,7 @@ def test_reference_answer_contract(client_type: MagicMock, mode: str) -> None:
     [LocalRequirementRelationshipClassifier, LocalClarificationAnswerSuggester],
 )
 @patch(
-    "smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters."
+    "smb_requirement_agent.knowledge.infrastructure.llm.requirement_knowledge_adapters."
     "LocalStructuredOutputClient"
 )
 def test_local_knowledge_adapters_reserve_a_bounded_output_budget(
@@ -213,7 +213,7 @@ def test_local_suggester_accepts_ranked_evidence_that_needs_more_than_half_of_16
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters."
+    "smb_requirement_agent.knowledge.infrastructure.llm.requirement_knowledge_adapters."
     "LocalStructuredOutputClient"
 )
 def test_local_answer_suggester_uses_short_evidence_numbers_and_restores_chunk_ids(
@@ -252,7 +252,7 @@ def test_local_answer_suggester_uses_short_evidence_numbers_and_restores_chunk_i
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters."
+    "smb_requirement_agent.knowledge.infrastructure.llm.requirement_knowledge_adapters."
     "LocalStructuredOutputClient"
 )
 def test_local_answer_suggester_rejects_an_out_of_range_evidence_number(

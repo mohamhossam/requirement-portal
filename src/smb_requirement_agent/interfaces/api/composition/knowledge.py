@@ -9,40 +9,40 @@ from smb_kernel.time.clock import ClockPort
 from smb_requirement_agent.analysis.application.use_cases.reference_staleness import (
     AnalysisReferenceCurrency,
 )
-from smb_requirement_agent.application.use_cases.answer_suggestions import (
+from smb_requirement_agent.infrastructure.config.settings import Settings
+from smb_requirement_agent.infrastructure.documents.ingestion_loop import IngestionLoop
+from smb_requirement_agent.interfaces.api.composition.llm import LLMAdapters
+from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
+from smb_requirement_agent.interfaces.api.composition.references import KnowledgeService
+from smb_requirement_agent.knowledge.application.use_cases.answer_suggestions import (
     SuggestClarificationAnswers,
 )
-from smb_requirement_agent.application.use_cases.prior_art import (
+from smb_requirement_agent.knowledge.application.use_cases.prior_art import (
     GetPriorArt,
     HistoricCitations,
     PriorArtScheduler,
     ScreenPriorArt,
 )
-from smb_requirement_agent.application.use_cases.rebuild_knowledge_index import (
+from smb_requirement_agent.knowledge.application.use_cases.rebuild_knowledge_index import (
     RebuildKnowledgeIndex,
 )
-from smb_requirement_agent.application.use_cases.requirement_indexing import (
+from smb_requirement_agent.knowledge.application.use_cases.requirement_indexing import (
     IndexRequirementKnowledge,
 )
-from smb_requirement_agent.application.use_cases.requirement_knowledge import (
+from smb_requirement_agent.knowledge.application.use_cases.requirement_knowledge import (
     DecideKnowledgeFinding,
     EnsureKnowledgeScreen,
     GetKnowledgeReview,
     RequirementKnowledgeCorpus,
     ScreenRequirementKnowledge,
 )
-from smb_requirement_agent.application.use_cases.source_impact import SourceImpactReview
-from smb_requirement_agent.application.use_cases.unified_knowledge_search import (
+from smb_requirement_agent.knowledge.application.use_cases.source_impact import SourceImpactReview
+from smb_requirement_agent.knowledge.application.use_cases.unified_knowledge_search import (
     UnifiedKnowledgeSearch,
 )
-from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.documents.ingestion_loop import IngestionLoop
-from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import (
+from smb_requirement_agent.knowledge.infrastructure.requirement_index_worker import (
     RequirementIndexWorker,
 )
-from smb_requirement_agent.interfaces.api.composition.llm import LLMAdapters
-from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
-from smb_requirement_agent.interfaces.api.composition.references import KnowledgeService
 from smb_requirement_agent.references.application.ports.reference_grounding import (
     ReferenceKnowledgePort,
 )

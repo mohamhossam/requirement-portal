@@ -29,11 +29,6 @@ from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_repository
     InMemoryRequirementAnalysisRepository,
 )
 from smb_requirement_agent.application.events import InProcessEventDispatcher
-from smb_requirement_agent.application.ports.requirement_knowledge import (
-    KnowledgeReview,
-    KnowledgeScreenEnsureOutcome,
-    KnowledgeScreenEnsureResult,
-)
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.breakdown.infrastructure.in_memory_epic_repository import (
     InMemoryEpicRepository,
@@ -44,7 +39,6 @@ from smb_requirement_agent.breakdown.infrastructure.in_memory_feature_repository
 from smb_requirement_agent.breakdown.infrastructure.in_memory_story_repository import (
     InMemoryStoryRepository,
 )
-from smb_requirement_agent.domain.knowledge.entities import KnowledgeScreen, KnowledgeScreenId
 from smb_requirement_agent.governance.application.ports.breakdown_review_repository import (
     BreakdownReviewRepositoryPort,
 )
@@ -56,6 +50,12 @@ from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.interfaces.api.composition.events import subscribe_domain_event_handlers
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.knowledge.application.ports.requirement_knowledge import (
+    KnowledgeReview,
+    KnowledgeScreenEnsureOutcome,
+    KnowledgeScreenEnsureResult,
+)
+from smb_requirement_agent.knowledge.domain.entities import KnowledgeScreen, KnowledgeScreenId
 from smb_requirement_agent.requirements.infrastructure.in_memory_document_repository import (
     InMemoryDocumentRepository,
     InMemoryDocumentStorage,

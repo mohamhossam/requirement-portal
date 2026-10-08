@@ -44,32 +44,7 @@ from smb_requirement_agent.analysis.infrastructure.postgres_analysis import (
     PostgresAnalysisAuditRepository,
     PostgresAnalysisRepository,
 )
-from smb_requirement_agent.application.ports.corpus_membership import (
-    CorpusActionsPort,
-    CorpusMembershipPort,
-    SourceChangesPort,
-)
-from smb_requirement_agent.application.ports.corpus_summary import CorpusCountsPort
-from smb_requirement_agent.application.ports.knowledge_index_generations import (
-    KnowledgeIndexGenerationsPort,
-)
-from smb_requirement_agent.application.ports.knowledge_portfolio import (
-    FindingNudgesPort,
-    KnowledgePortfolioPort,
-)
-from smb_requirement_agent.application.ports.prior_art import PriorArtStorePort
-from smb_requirement_agent.application.ports.requirement_indexing import (
-    RequirementIndexProgressPort,
-)
-from smb_requirement_agent.application.ports.requirement_knowledge import (
-    RequirementKnowledgeIndexPort,
-    RequirementKnowledgeRepositoryPort,
-)
-from smb_requirement_agent.application.ports.source_dependencies import SourceDependencyPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.requirement_knowledge import (
-    GetKnowledgeReview,
-)
 from smb_requirement_agent.breakdown.application.ports.architecture_jobs import (
     ArchitectureJobRepositoryPort,
 )
@@ -160,48 +135,10 @@ from smb_requirement_agent.infrastructure.config.options import (
     PersistenceProvider,
 )
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.persistence import (
-    knowledge_index_generations,
-    postgres_knowledge_generations,
-    postgres_requirement_knowledge,
-)
-from smb_requirement_agent.infrastructure.persistence.corpus_counts import (
-    PostgresCorpusCounts,
-    RepositoryCorpusCounts,
-)
-from smb_requirement_agent.infrastructure.persistence.corpus_membership import (
-    InMemoryCorpusActions,
-    InMemoryCorpusMembership,
-    InMemorySourceChanges,
-    PostgresCorpusActions,
-    PostgresCorpusMembership,
-    PostgresSourceChanges,
-)
 from smb_requirement_agent.infrastructure.persistence.in_memory_transaction import (
     InMemoryTransactionManager,
 )
-from smb_requirement_agent.infrastructure.persistence.knowledge_portfolio import (
-    InMemoryFindingNudges,
-    PostgresFindingNudges,
-    PostgresKnowledgePortfolio,
-    RepositoryKnowledgePortfolio,
-)
 from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
-from smb_requirement_agent.infrastructure.persistence.prior_art import (
-    InMemoryPriorArt,
-    PostgresPriorArt,
-)
-from smb_requirement_agent.infrastructure.persistence.requirement_indexing import (
-    MemoryRequirementIndexProgress,
-    PostgresRequirementIndexProgress,
-)
-from smb_requirement_agent.infrastructure.persistence.requirement_knowledge_repository import (  # noqa: E501
-    InMemoryRequirementKnowledgeStore,
-)
-from smb_requirement_agent.infrastructure.persistence.source_dependencies import (
-    InMemorySourceDependencies,
-    PostgresSourceDependencies,
-)
 from smb_requirement_agent.interfaces.api.composition.projections import (
     refresh_postgres_projections,
 )
@@ -217,6 +154,71 @@ from smb_requirement_agent.jobs.infrastructure.in_memory_ai_jobs import (
 from smb_requirement_agent.jobs.infrastructure.postgres_ai_jobs import (
     PostgresAiJobStore,
     PostgresNotificationRepository,
+)
+from smb_requirement_agent.knowledge.application.ports.corpus_membership import (
+    CorpusActionsPort,
+    CorpusMembershipPort,
+    SourceChangesPort,
+)
+from smb_requirement_agent.knowledge.application.ports.corpus_summary import CorpusCountsPort
+from smb_requirement_agent.knowledge.application.ports.knowledge_index_generations import (
+    KnowledgeIndexGenerationsPort,
+)
+from smb_requirement_agent.knowledge.application.ports.knowledge_portfolio import (
+    FindingNudgesPort,
+    KnowledgePortfolioPort,
+)
+from smb_requirement_agent.knowledge.application.ports.prior_art import PriorArtStorePort
+from smb_requirement_agent.knowledge.application.ports.requirement_indexing import (
+    RequirementIndexProgressPort,
+)
+from smb_requirement_agent.knowledge.application.ports.requirement_knowledge import (
+    RequirementKnowledgeIndexPort,
+    RequirementKnowledgeRepositoryPort,
+)
+from smb_requirement_agent.knowledge.application.ports.source_dependencies import (
+    SourceDependencyPort,
+)
+from smb_requirement_agent.knowledge.application.use_cases.requirement_knowledge import (
+    GetKnowledgeReview,
+)
+from smb_requirement_agent.knowledge.infrastructure import (
+    knowledge_index_generations,
+    postgres_knowledge_generations,
+    postgres_requirement_knowledge,
+)
+from smb_requirement_agent.knowledge.infrastructure.corpus_counts import (
+    PostgresCorpusCounts,
+    RepositoryCorpusCounts,
+)
+from smb_requirement_agent.knowledge.infrastructure.corpus_membership import (
+    InMemoryCorpusActions,
+    InMemoryCorpusMembership,
+    InMemorySourceChanges,
+    PostgresCorpusActions,
+    PostgresCorpusMembership,
+    PostgresSourceChanges,
+)
+from smb_requirement_agent.knowledge.infrastructure.knowledge_portfolio import (
+    InMemoryFindingNudges,
+    PostgresFindingNudges,
+    PostgresKnowledgePortfolio,
+    RepositoryKnowledgePortfolio,
+)
+from smb_requirement_agent.knowledge.infrastructure.prior_art import (
+    InMemoryPriorArt,
+    PostgresPriorArt,
+)
+from smb_requirement_agent.knowledge.infrastructure.requirement_indexing import (
+    MemoryRequirementIndexProgress,
+    PostgresRequirementIndexProgress,
+)
+from smb_requirement_agent.knowledge.infrastructure.requirement_knowledge_repository import (  # noqa: E501
+    InMemoryRequirementKnowledgeStore,
+)
+from smb_requirement_agent.knowledge.infrastructure.source_dependencies import (
+    InMemorySourceDependencies,
+    PostgresSourceDependencies,
 )
 from smb_requirement_agent.references.application.ports.architecture_knowledge import (
     ArchitectureReleaseStatePort,

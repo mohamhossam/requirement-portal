@@ -28,16 +28,6 @@ from smb_requirement_agent.application.errors import (
 from smb_requirement_agent.application.ports.external_work import guard_external_work
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.public_errors import describe_public_error
-from smb_requirement_agent.application.use_cases.answer_suggestions import (
-    SuggestClarificationAnswers,
-)
-from smb_requirement_agent.application.use_cases.prior_art import (
-    PriorArtBudgetSpentError,
-    ScreenPriorArt,
-)
-from smb_requirement_agent.application.use_cases.requirement_knowledge import (
-    ScreenRequirementKnowledge,
-)
 from smb_requirement_agent.breakdown.application.use_cases.generate_epic import GenerateEpic
 from smb_requirement_agent.breakdown.application.use_cases.generate_features import GenerateFeatures
 from smb_requirement_agent.breakdown.application.use_cases.story_change_proposals import (
@@ -82,6 +72,16 @@ from smb_requirement_agent.jobs.domain.entities import (
     NotificationKind,
 )
 from smb_requirement_agent.jobs.domain.errors import AiJobConflictError
+from smb_requirement_agent.knowledge.application.use_cases.answer_suggestions import (
+    SuggestClarificationAnswers,
+)
+from smb_requirement_agent.knowledge.application.use_cases.prior_art import (
+    PriorArtBudgetSpentError,
+    ScreenPriorArt,
+)
+from smb_requirement_agent.knowledge.application.use_cases.requirement_knowledge import (
+    ScreenRequirementKnowledge,
+)
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,

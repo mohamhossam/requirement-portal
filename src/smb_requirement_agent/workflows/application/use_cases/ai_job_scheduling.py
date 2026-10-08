@@ -10,17 +10,6 @@ from smb_requirement_agent.analysis.domain.entities import ClarificationQuestion
 from smb_requirement_agent.application.errors import (
     RequirementNotFoundError,
 )
-from smb_requirement_agent.application.ports.corpus_membership import CorpusMembershipPort
-from smb_requirement_agent.application.ports.prior_art import PriorArtSchedulerPort
-from smb_requirement_agent.application.ports.requirement_knowledge import (
-    AnswerSuggestionSchedulerPort,
-    KnowledgeReviewPort,
-    KnowledgeScreenEnsureOutcome,
-    KnowledgeScreenEnsureResult,
-    KnowledgeScreenSchedulerPort,
-    RequirementKnowledgeRepositoryPort,
-)
-from smb_requirement_agent.domain.knowledge.screening_errors import RequirementRetiredError
 from smb_requirement_agent.jobs.application.ports.ai_jobs import (
     AiJobCommand,
     AiJobRecord,
@@ -35,6 +24,17 @@ from smb_requirement_agent.jobs.domain.entities import (
     AiJobOrigin,
     AiJobStatus,
 )
+from smb_requirement_agent.knowledge.application.ports.corpus_membership import CorpusMembershipPort
+from smb_requirement_agent.knowledge.application.ports.prior_art import PriorArtSchedulerPort
+from smb_requirement_agent.knowledge.application.ports.requirement_knowledge import (
+    AnswerSuggestionSchedulerPort,
+    KnowledgeReviewPort,
+    KnowledgeScreenEnsureOutcome,
+    KnowledgeScreenEnsureResult,
+    KnowledgeScreenSchedulerPort,
+    RequirementKnowledgeRepositoryPort,
+)
+from smb_requirement_agent.knowledge.domain.screening_errors import RequirementRetiredError
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )

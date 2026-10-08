@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel, Field
 
-from smb_requirement_agent.domain.document.lineage import ImpactDecisionKind
+from smb_requirement_agent.knowledge.domain.lineage import ImpactDecisionKind
 
 
 class ImpactDecisionRequest(BaseModel):

@@ -48,45 +48,7 @@ from smb_requirement_agent.analysis.application.use_cases.get_requirement_analys
     GetRequirementAnalysis,
 )
 from smb_requirement_agent.application.events import InProcessEventDispatcher
-from smb_requirement_agent.application.ports.knowledge_index_generations import (
-    KnowledgeIndexGenerationsPort,
-)
-from smb_requirement_agent.application.ports.prior_art import PriorArtStorePort
-from smb_requirement_agent.application.ports.requirement_knowledge import (
-    RequirementKnowledgeIndexPort,
-    RequirementKnowledgeRepositoryPort,
-)
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.answer_suggestions import (
-    SuggestClarificationAnswers,
-)
-from smb_requirement_agent.application.use_cases.corpus_actions import (
-    BulkReindexRequirements,
-    ReinstateToCorpus,
-    RetireFromCorpus,
-)
-from smb_requirement_agent.application.use_cases.knowledge_portfolio import (
-    KnowledgePortfolio,
-    NudgeFindingOwners,
-)
-from smb_requirement_agent.application.use_cases.prior_art import GetPriorArt, HistoricCitations
-from smb_requirement_agent.application.use_cases.rebuild_knowledge_index import (
-    RebuildKnowledgeIndex,
-)
-from smb_requirement_agent.application.use_cases.requirement_indexing import (
-    IndexBacklogReader,
-    IndexRequirementKnowledge,
-)
-from smb_requirement_agent.application.use_cases.requirement_knowledge import (
-    DecideKnowledgeFinding,
-    EnsureKnowledgeScreen,
-    GetKnowledgeReview,
-    ScreenRequirementKnowledge,
-)
-from smb_requirement_agent.application.use_cases.source_impact import SourceImpactReview
-from smb_requirement_agent.application.use_cases.unified_knowledge_search import (
-    UnifiedKnowledgeSearch,
-)
 from smb_requirement_agent.breakdown.application.ports.epic_generator import EpicGeneratorPort
 from smb_requirement_agent.breakdown.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.breakdown.application.ports.feature_generator import FeatureGeneratorPort
@@ -178,9 +140,6 @@ from smb_requirement_agent.identity.application.ports.actor_directory import Act
 from smb_requirement_agent.infrastructure.config.settings import (
     Settings,
 )
-from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import (
-    RequirementIndexWorker,
-)
 from smb_requirement_agent.interfaces.api.composition.analysis import (
     build_analysis_workflow,
     build_requirement_analyzer,
@@ -216,6 +175,50 @@ from smb_requirement_agent.jobs.application.ports.ai_jobs import (
 from smb_requirement_agent.jobs.application.ports.notifications import NotificationRepositoryPort
 from smb_requirement_agent.jobs.application.use_cases.provider_call_rate import (
     ProviderCallRateLimit,
+)
+from smb_requirement_agent.knowledge.application.ports.knowledge_index_generations import (
+    KnowledgeIndexGenerationsPort,
+)
+from smb_requirement_agent.knowledge.application.ports.prior_art import PriorArtStorePort
+from smb_requirement_agent.knowledge.application.ports.requirement_knowledge import (
+    RequirementKnowledgeIndexPort,
+    RequirementKnowledgeRepositoryPort,
+)
+from smb_requirement_agent.knowledge.application.use_cases.answer_suggestions import (
+    SuggestClarificationAnswers,
+)
+from smb_requirement_agent.knowledge.application.use_cases.corpus_actions import (
+    BulkReindexRequirements,
+    ReinstateToCorpus,
+    RetireFromCorpus,
+)
+from smb_requirement_agent.knowledge.application.use_cases.knowledge_portfolio import (
+    KnowledgePortfolio,
+    NudgeFindingOwners,
+)
+from smb_requirement_agent.knowledge.application.use_cases.prior_art import (
+    GetPriorArt,
+    HistoricCitations,
+)
+from smb_requirement_agent.knowledge.application.use_cases.rebuild_knowledge_index import (
+    RebuildKnowledgeIndex,
+)
+from smb_requirement_agent.knowledge.application.use_cases.requirement_indexing import (
+    IndexBacklogReader,
+    IndexRequirementKnowledge,
+)
+from smb_requirement_agent.knowledge.application.use_cases.requirement_knowledge import (
+    DecideKnowledgeFinding,
+    EnsureKnowledgeScreen,
+    GetKnowledgeReview,
+    ScreenRequirementKnowledge,
+)
+from smb_requirement_agent.knowledge.application.use_cases.source_impact import SourceImpactReview
+from smb_requirement_agent.knowledge.application.use_cases.unified_knowledge_search import (
+    UnifiedKnowledgeSearch,
+)
+from smb_requirement_agent.knowledge.infrastructure.requirement_index_worker import (
+    RequirementIndexWorker,
 )
 from smb_requirement_agent.references.application.ports.architecture_knowledge import (
     ArchitectureKnowledgePort,
