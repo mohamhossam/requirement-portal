@@ -34,10 +34,6 @@ from smb_requirement_agent.analysis.application.use_cases.get_requirement_analys
 )
 from smb_requirement_agent.application.errors import AuthenticationRequiredError
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceReviewPort
-from smb_requirement_agent.application.use_cases.activity_reporting import (
-    GetOperationalReport,
-    ListActivity,
-)
 from smb_requirement_agent.application.use_cases.ai_jobs import AiJobs, Notifications
 from smb_requirement_agent.application.use_cases.answer_suggestions import (
     SuggestClarificationAnswers,
@@ -75,10 +71,6 @@ from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     EnsureKnowledgeScreen,
     GetKnowledgeReview,
 )
-from smb_requirement_agent.application.use_cases.requirement_worklist import (
-    RequirementWorklistReader,
-)
-from smb_requirement_agent.application.use_cases.saved_views import SavedViews
 from smb_requirement_agent.application.use_cases.source_impact import SourceImpactReview
 from smb_requirement_agent.application.use_cases.unified_knowledge_search import (
     UnifiedKnowledgeSearch,
@@ -140,6 +132,14 @@ from smb_requirement_agent.identity.application.ports.identity import Actor
 from smb_requirement_agent.infrastructure.config.options import IdentityProvider
 from smb_requirement_agent.interfaces.api.container import Container
 from smb_requirement_agent.interfaces.api.error_handlers import status_code_for
+from smb_requirement_agent.reporting.application.use_cases.activity_reporting import (
+    GetOperationalReport,
+    ListActivity,
+)
+from smb_requirement_agent.reporting.application.use_cases.requirement_worklist import (
+    RequirementWorklistReader,
+)
+from smb_requirement_agent.reporting.application.use_cases.saved_views import SavedViews
 from smb_requirement_agent.requirements.application.use_cases.attachment_ingestion import (
     AttachmentIngestion,
 )

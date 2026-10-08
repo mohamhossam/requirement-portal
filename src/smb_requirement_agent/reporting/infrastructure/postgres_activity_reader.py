@@ -16,23 +16,8 @@ from smb_requirement_agent.analysis.application.ports.analysis_audit_repository 
     AnalysisAuditRepositoryPort,
 )
 from smb_requirement_agent.analysis.domain.entities import AnalysisRound, ClarificationQuestion
-from smb_requirement_agent.application.ports.activity import (
-    ActivityEvent,
-    ActivityQuery,
-    ActivityReadPort,
-    ActivityReportEvidence,
-    ActivityResult,
-    BlockerEvidence,
-    ReportingReadPort,
-)
 from smb_requirement_agent.application.ports.requirement_knowledge import (
     RequirementKnowledgeRepositoryPort,
-)
-from smb_requirement_agent.application.ports.requirement_worklist import (
-    RequirementWorklistSnapshot,
-)
-from smb_requirement_agent.application.use_cases.activity_reporting import (
-    aggregate_activity_events,
 )
 from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeFinding,
@@ -44,11 +29,26 @@ from smb_requirement_agent.governance.domain.revision.entities import (
     BreakdownRevision,
     RequirementRevision,
 )
-from smb_requirement_agent.infrastructure.persistence.activity_projection import (
+from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobRecord
+from smb_requirement_agent.reporting.application.ports.activity import (
+    ActivityEvent,
+    ActivityQuery,
+    ActivityReadPort,
+    ActivityReportEvidence,
+    ActivityResult,
+    BlockerEvidence,
+    ReportingReadPort,
+)
+from smb_requirement_agent.reporting.application.ports.requirement_worklist import (
+    RequirementWorklistSnapshot,
+)
+from smb_requirement_agent.reporting.application.use_cases.activity_reporting import (
+    aggregate_activity_events,
+)
+from smb_requirement_agent.reporting.infrastructure.activity_projection import (
     ActivityJobSource,
     RepositoryActivityProjection,
 )
-from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobRecord
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 

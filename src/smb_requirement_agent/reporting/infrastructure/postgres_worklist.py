@@ -8,19 +8,23 @@ from typing import cast
 
 from psycopg.types.json import Jsonb
 
-from smb_requirement_agent.application.ports.activity import (
+from smb_requirement_agent.application.ports.requirement_knowledge import KnowledgeReviewPort
+from smb_requirement_agent.infrastructure.persistence.payload_fields import JsonObject
+from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
+from smb_requirement_agent.infrastructure.persistence.postgres_values import _integer
+from smb_requirement_agent.infrastructure.persistence.shared_payloads import actor_from_payload
+from smb_requirement_agent.reporting.application.ports.activity import (
     ActivityQuery,
     ActivityReadPort,
 )
-from smb_requirement_agent.application.ports.requirement_knowledge import KnowledgeReviewPort
-from smb_requirement_agent.application.ports.requirement_worklist import (
+from smb_requirement_agent.reporting.application.ports.requirement_worklist import (
     CurrentWorklistProjectionPort,
     RequirementWorklistSnapshot,
     RequirementWorklistSnapshotPort,
     WorkflowStatus,
     WorklistSort,
 )
-from smb_requirement_agent.application.use_cases.requirement_worklist import (
+from smb_requirement_agent.reporting.application.use_cases.requirement_worklist import (
     ArtifactCounts,
     ListRequirementWorklist,
     NextAction,
@@ -30,15 +34,11 @@ from smb_requirement_agent.application.use_cases.requirement_worklist import (
     RequirementWorklistResult,
     WorkflowStage,
 )
-from smb_requirement_agent.infrastructure.persistence.activity_codec import (
+from smb_requirement_agent.reporting.infrastructure.activity_codec import (
     activity_from_payload,
     activity_to_payload,
     actor_to_payload,
 )
-from smb_requirement_agent.infrastructure.persistence.payload_fields import JsonObject
-from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
-from smb_requirement_agent.infrastructure.persistence.postgres_values import _integer
-from smb_requirement_agent.infrastructure.persistence.shared_payloads import actor_from_payload
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 

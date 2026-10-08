@@ -10,13 +10,13 @@ from smb_requirement_agent.application.errors import (
     SavedViewConflictError,
     SavedViewNotFoundError,
 )
-from smb_requirement_agent.application.ports.requirement_worklist import (
+from smb_requirement_agent.reporting.application.ports.requirement_worklist import (
     WorkflowStatus,
     WorklistSort,
 )
-from smb_requirement_agent.application.ports.saved_views import SavedViewCriteria
-from smb_requirement_agent.application.use_cases.saved_views import SavedViews
-from smb_requirement_agent.infrastructure.persistence.in_memory_saved_views import (
+from smb_requirement_agent.reporting.application.ports.saved_views import SavedViewCriteria
+from smb_requirement_agent.reporting.application.use_cases.saved_views import SavedViews
+from smb_requirement_agent.reporting.infrastructure.in_memory_saved_views import (
     InMemorySavedViewRepository,
 )
 from smb_requirement_agent.shared_kernel.actors import (

@@ -16,22 +16,6 @@ from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_audit_repo
 from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_repository import (
     InMemoryRequirementAnalysisRepository,
 )
-from smb_requirement_agent.application.ports.activity import (
-    ActivityEvent,
-    ActivityQuery,
-    ActivityReportEvidence,
-    ActivityResult,
-)
-from smb_requirement_agent.application.ports.requirement_worklist import (
-    RequirementWorklistSnapshot,
-    WorkflowStatus,
-    WorklistSort,
-)
-from smb_requirement_agent.application.use_cases.requirement_worklist import (
-    ListRequirementWorklist,
-    NextAction,
-    RequirementWorklistQuery,
-)
 from smb_requirement_agent.breakdown.domain.epic.entities import Epic
 from smb_requirement_agent.breakdown.domain.epic.value_objects import (
     BusinessCase,
@@ -81,11 +65,27 @@ from smb_requirement_agent.governance.infrastructure.in_memory_revision_reposito
 from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
     InMemoryAccessRepository,
 )
-from smb_requirement_agent.infrastructure.persistence.in_memory_worklist import (
-    InMemoryRequirementWorklistSnapshotAdapter,
-)
 from smb_requirement_agent.jobs.domain.entities import AiJobOperation
 from smb_requirement_agent.jobs.infrastructure.in_memory_ai_jobs import InMemoryAiJobStore
+from smb_requirement_agent.reporting.application.ports.activity import (
+    ActivityEvent,
+    ActivityQuery,
+    ActivityReportEvidence,
+    ActivityResult,
+)
+from smb_requirement_agent.reporting.application.ports.requirement_worklist import (
+    RequirementWorklistSnapshot,
+    WorkflowStatus,
+    WorklistSort,
+)
+from smb_requirement_agent.reporting.application.use_cases.requirement_worklist import (
+    ListRequirementWorklist,
+    NextAction,
+    RequirementWorklistQuery,
+)
+from smb_requirement_agent.reporting.infrastructure.in_memory_worklist import (
+    InMemoryRequirementWorklistSnapshotAdapter,
+)
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.requirements.domain.requirement.value_objects import (
     RequirementDescription,

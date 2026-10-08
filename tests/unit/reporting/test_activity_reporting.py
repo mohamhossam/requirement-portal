@@ -4,7 +4,7 @@ from datetime import UTC, datetime, timedelta
 
 from smb_kernel.time.fixed import FixedClock
 
-from smb_requirement_agent.application.ports.activity import (
+from smb_requirement_agent.reporting.application.ports.activity import (
     ActivityAction,
     ActivityCategory,
     ActivityEvent,
@@ -14,7 +14,7 @@ from smb_requirement_agent.application.ports.activity import (
     AuditSourceReference,
     BlockerEvidence,
 )
-from smb_requirement_agent.application.use_cases.activity_reporting import (
+from smb_requirement_agent.reporting.application.use_cases.activity_reporting import (
     ActivityQuery,
     GetOperationalReport,
     ListActivity,

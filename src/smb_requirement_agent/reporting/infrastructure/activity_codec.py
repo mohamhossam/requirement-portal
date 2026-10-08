@@ -3,15 +3,15 @@
 from datetime import datetime
 from typing import cast
 
-from smb_requirement_agent.application.ports.activity import (
+from smb_requirement_agent.infrastructure.persistence.payload_fields import JsonObject
+from smb_requirement_agent.infrastructure.persistence.shared_payloads import actor_from_payload
+from smb_requirement_agent.reporting.application.ports.activity import (
     ActivityAction,
     ActivityCategory,
     ActivityEvent,
     AuditSourceKind,
     AuditSourceReference,
 )
-from smb_requirement_agent.infrastructure.persistence.payload_fields import JsonObject
-from smb_requirement_agent.infrastructure.persistence.shared_payloads import actor_from_payload
 from smb_requirement_agent.shared_kernel.actors import ActorSnapshot
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 

@@ -28,9 +28,6 @@ from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     RequirementKnowledgeCorpus,
     ScreenRequirementKnowledge,
 )
-from smb_requirement_agent.application.use_cases.requirement_worklist import (
-    RequirementWorklistQuery,
-)
 from smb_requirement_agent.domain.knowledge.entities import (
     AnswerSuggestionSource,
     KnowledgeChunk,
@@ -53,6 +50,9 @@ from smb_requirement_agent.infrastructure.persistence.requirement_knowledge_repo
 )
 from smb_requirement_agent.interfaces.api.container import Container
 from smb_requirement_agent.jobs.domain.entities import AiJobFailure
+from smb_requirement_agent.reporting.application.use_cases.requirement_worklist import (
+    RequirementWorklistQuery,
+)
 from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
     CreateRequirementInput,
 )

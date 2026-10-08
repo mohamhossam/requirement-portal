@@ -7,16 +7,9 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Protocol
 
-from smb_requirement_agent.application.ports.activity import ActivityEvent, ActivityReadPort
 from smb_requirement_agent.application.ports.requirement_knowledge import (
     KnowledgeReview,
     KnowledgeReviewPort,
-)
-from smb_requirement_agent.application.ports.requirement_worklist import (
-    RequirementWorklistSnapshot,
-    RequirementWorklistSnapshotPort,
-    WorkflowStatus,
-    WorklistSort,
 )
 from smb_requirement_agent.governance.domain.review.entities import BreakdownStatus
 from smb_requirement_agent.governance.domain.review.evidence import (
@@ -24,6 +17,16 @@ from smb_requirement_agent.governance.domain.review.evidence import (
     evidence_fingerprint,
 )
 from smb_requirement_agent.governance.domain.review.fingerprints import breakdown_fingerprint
+from smb_requirement_agent.reporting.application.ports.activity import (
+    ActivityEvent,
+    ActivityReadPort,
+)
+from smb_requirement_agent.reporting.application.ports.requirement_worklist import (
+    RequirementWorklistSnapshot,
+    RequirementWorklistSnapshotPort,
+    WorkflowStatus,
+    WorklistSort,
+)
 from smb_requirement_agent.requirements.domain.requirement.value_objects import RequirementStatus
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,

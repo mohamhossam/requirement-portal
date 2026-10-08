@@ -44,7 +44,6 @@ from smb_requirement_agent.analysis.infrastructure.postgres_analysis import (
     PostgresAnalysisAuditRepository,
     PostgresAnalysisRepository,
 )
-from smb_requirement_agent.application.ports.activity import ActivityReadPort, ReportingReadPort
 from smb_requirement_agent.application.ports.architecture_knowledge import (
     ArchitectureReleaseStatePort,
 )
@@ -74,20 +73,10 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
     RequirementKnowledgeIndexPort,
     RequirementKnowledgeRepositoryPort,
 )
-from smb_requirement_agent.application.ports.requirement_worklist import (
-    CurrentWorklistProjectionPort,
-    RequirementWorklistSnapshotPort,
-)
-from smb_requirement_agent.application.ports.saved_views import SavedViewRepositoryPort
 from smb_requirement_agent.application.ports.source_dependencies import SourceDependencyPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.dependency_projection import DependencyProjection
 from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     GetKnowledgeReview,
-)
-from smb_requirement_agent.application.use_cases.requirement_worklist import (
-    ListRequirementWorklist,
-    RequirementWorklistReader,
 )
 from smb_requirement_agent.breakdown.application.ports.architecture_jobs import (
     ArchitectureJobRepositoryPort,
@@ -184,9 +173,6 @@ from smb_requirement_agent.infrastructure.persistence import (
     postgres_knowledge_generations,
     postgres_requirement_knowledge,
 )
-from smb_requirement_agent.infrastructure.persistence.activity_projection import (
-    InMemoryActivityReadAdapter,
-)
 from smb_requirement_agent.infrastructure.persistence.architecture_release_state import (
     InMemoryArchitectureReleaseState,
     PostgresArchitectureReleaseState,
@@ -211,15 +197,8 @@ from smb_requirement_agent.infrastructure.persistence.historic_corpus import (
     InMemoryHistoricCorpus,
     PostgresHistoricCorpus,
 )
-from smb_requirement_agent.infrastructure.persistence.in_memory_saved_views import (
-    InMemorySavedViewRepository,
-)
 from smb_requirement_agent.infrastructure.persistence.in_memory_transaction import (
     InMemoryTransactionManager,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_worklist import (
-    InMemoryCurrentWorklistProjection,
-    InMemoryRequirementWorklistSnapshotAdapter,
 )
 from smb_requirement_agent.infrastructure.persistence.knowledge_portfolio import (
     InMemoryFindingNudges,
@@ -227,26 +206,7 @@ from smb_requirement_agent.infrastructure.persistence.knowledge_portfolio import
     PostgresKnowledgePortfolio,
     RepositoryKnowledgePortfolio,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_activity import (
-    PostgresProjectedActivity,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader import (
-    PostgresActivityReadAdapter,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_activity_sources import (
-    PostgresActivitySources,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_saved_views import (
-    PostgresSavedViewRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_snapshots import (
-    PostgresSnapshotReader,
-)
 from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
-from smb_requirement_agent.infrastructure.persistence.postgres_worklist import (
-    PostgresRequirementWorklistReader,
-    PostgresWorklistProjectionMaintainer,
-)
 from smb_requirement_agent.infrastructure.persistence.prior_art import (
     InMemoryPriorArt,
     PostgresPriorArt,
@@ -281,6 +241,51 @@ from smb_requirement_agent.jobs.infrastructure.in_memory_ai_jobs import (
 from smb_requirement_agent.jobs.infrastructure.postgres_ai_jobs import (
     PostgresAiJobStore,
     PostgresNotificationRepository,
+)
+from smb_requirement_agent.reporting.application.ports.activity import (
+    ActivityReadPort,
+    ReportingReadPort,
+)
+from smb_requirement_agent.reporting.application.ports.requirement_worklist import (
+    CurrentWorklistProjectionPort,
+    RequirementWorklistSnapshotPort,
+)
+from smb_requirement_agent.reporting.application.ports.saved_views import SavedViewRepositoryPort
+from smb_requirement_agent.reporting.application.use_cases.dependency_projection import (
+    DependencyProjection,
+)
+from smb_requirement_agent.reporting.application.use_cases.requirement_worklist import (
+    ListRequirementWorklist,
+    RequirementWorklistReader,
+)
+from smb_requirement_agent.reporting.infrastructure.activity_projection import (
+    InMemoryActivityReadAdapter,
+)
+from smb_requirement_agent.reporting.infrastructure.in_memory_saved_views import (
+    InMemorySavedViewRepository,
+)
+from smb_requirement_agent.reporting.infrastructure.in_memory_worklist import (
+    InMemoryCurrentWorklistProjection,
+    InMemoryRequirementWorklistSnapshotAdapter,
+)
+from smb_requirement_agent.reporting.infrastructure.postgres_activity import (
+    PostgresProjectedActivity,
+)
+from smb_requirement_agent.reporting.infrastructure.postgres_activity_reader import (
+    PostgresActivityReadAdapter,
+)
+from smb_requirement_agent.reporting.infrastructure.postgres_activity_sources import (
+    PostgresActivitySources,
+)
+from smb_requirement_agent.reporting.infrastructure.postgres_saved_views import (
+    PostgresSavedViewRepository,
+)
+from smb_requirement_agent.reporting.infrastructure.postgres_snapshots import (
+    PostgresSnapshotReader,
+)
+from smb_requirement_agent.reporting.infrastructure.postgres_worklist import (
+    PostgresRequirementWorklistReader,
+    PostgresWorklistProjectionMaintainer,
 )
 from smb_requirement_agent.requirements.application.ports.attachment_ingestions import (
     AttachmentIngestionRepositoryPort,

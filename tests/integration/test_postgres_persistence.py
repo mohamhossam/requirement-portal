@@ -72,14 +72,6 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
     KnowledgeScreenEnsureOutcome,
     KnowledgeScreenEnsureResult,
 )
-from smb_requirement_agent.application.ports.requirement_worklist import (
-    WorkflowStatus,
-    WorklistSort,
-)
-from smb_requirement_agent.application.ports.saved_views import (
-    SavedRequirementView,
-    SavedViewCriteria,
-)
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.breakdown.domain.architecture.entities import (
     ArchitectureDependency,
@@ -175,14 +167,8 @@ from smb_requirement_agent.infrastructure.persistence.migration_runner import (
     latest_packaged_migration,
     run_migrations,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader import (
-    PostgresActivityReadAdapter,
-)
 from smb_requirement_agent.infrastructure.persistence.postgres_requirement_knowledge import (
     PostgresRequirementKnowledgeStore,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_saved_views import (
-    PostgresSavedViewRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_store import (
     REQUIRED_MAINTENANCE_MARKER,
@@ -199,6 +185,20 @@ from smb_requirement_agent.jobs.domain.entities import (
     AiJobStatus,
 )
 from smb_requirement_agent.jobs.infrastructure.postgres_ai_jobs import PostgresAiJobStore
+from smb_requirement_agent.reporting.application.ports.requirement_worklist import (
+    WorkflowStatus,
+    WorklistSort,
+)
+from smb_requirement_agent.reporting.application.ports.saved_views import (
+    SavedRequirementView,
+    SavedViewCriteria,
+)
+from smb_requirement_agent.reporting.infrastructure.postgres_activity_reader import (
+    PostgresActivityReadAdapter,
+)
+from smb_requirement_agent.reporting.infrastructure.postgres_saved_views import (
+    PostgresSavedViewRepository,
+)
 from smb_requirement_agent.requirements.domain.document.entities import (
     SourceDocument,
     SourceDocumentVersion,
@@ -1485,10 +1485,10 @@ def test_approved_revision_exports_after_postgres_restart() -> None:
 
 
 def test_real_composition_commits_a_requirement_and_its_projections() -> None:
-    from smb_requirement_agent.application.ports.activity import ActivityQuery
     from smb_requirement_agent.infrastructure.config.options import LLMProvider, PersistenceProvider
     from smb_requirement_agent.infrastructure.config.settings import Settings
     from smb_requirement_agent.interfaces.api.container import build_container
+    from smb_requirement_agent.reporting.application.ports.activity import ActivityQuery
 
     assert DATABASE_URL is not None
     run_migrations(DATABASE_URL)
@@ -1577,25 +1577,25 @@ def test_incremental_activity_matches_audit_sources_and_report_aggregation() -> 
     from smb_requirement_agent.analysis.infrastructure.postgres_analysis import (
         PostgresAnalysisAuditRepository,
     )
-    from smb_requirement_agent.application.use_cases.activity_reporting import (
-        aggregate_activity_events,
-    )
     from smb_requirement_agent.governance.infrastructure.postgres_revisions import (
         PostgresRevisionRepository,
     )
     from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
     from smb_requirement_agent.infrastructure.config.options import LLMProvider, PersistenceProvider
     from smb_requirement_agent.infrastructure.config.settings import Settings
-    from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader import (
+    from smb_requirement_agent.interfaces.api.container import build_container
+    from smb_requirement_agent.reporting.application.use_cases.activity_reporting import (
+        aggregate_activity_events,
+    )
+    from smb_requirement_agent.reporting.infrastructure.postgres_activity_reader import (
         PostgresActivityReadAdapter,
     )
-    from smb_requirement_agent.infrastructure.persistence.postgres_activity_sources import (
+    from smb_requirement_agent.reporting.infrastructure.postgres_activity_sources import (
         PostgresActivitySources,
     )
-    from smb_requirement_agent.infrastructure.persistence.postgres_snapshots import (
+    from smb_requirement_agent.reporting.infrastructure.postgres_snapshots import (
         PostgresSnapshotReader,
     )
-    from smb_requirement_agent.interfaces.api.container import build_container
     from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
         CreateRequirementInput,
     )

@@ -48,7 +48,6 @@ from smb_requirement_agent.analysis.application.use_cases.get_requirement_analys
     GetRequirementAnalysis,
 )
 from smb_requirement_agent.application.events import InProcessEventDispatcher
-from smb_requirement_agent.application.ports.activity import ActivityReadPort, ReportingReadPort
 from smb_requirement_agent.application.ports.architecture_knowledge import ArchitectureKnowledgePort
 from smb_requirement_agent.application.ports.historic_corpus import HistoricCorpusPort
 from smb_requirement_agent.application.ports.knowledge_handoff import ApprovedBacklogOutboxPort
@@ -60,15 +59,7 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
     RequirementKnowledgeIndexPort,
     RequirementKnowledgeRepositoryPort,
 )
-from smb_requirement_agent.application.ports.requirement_worklist import (
-    CurrentWorklistProjectionPort,
-)
-from smb_requirement_agent.application.ports.saved_views import SavedViewRepositoryPort
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.activity_reporting import (
-    GetOperationalReport,
-    ListActivity,
-)
 from smb_requirement_agent.application.use_cases.ai_job_execution import ExecuteAiJob
 from smb_requirement_agent.application.use_cases.ai_job_scheduling import (
     AnswerSuggestionScheduler,
@@ -127,10 +118,6 @@ from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     GetKnowledgeReview,
     ScreenRequirementKnowledge,
 )
-from smb_requirement_agent.application.use_cases.requirement_worklist import (
-    RequirementWorklistReader,
-)
-from smb_requirement_agent.application.use_cases.saved_views import SavedViews
 from smb_requirement_agent.application.use_cases.source_impact import SourceImpactReview
 from smb_requirement_agent.application.use_cases.unified_knowledge_search import (
     UnifiedKnowledgeSearch,
@@ -265,6 +252,22 @@ from smb_requirement_agent.jobs.application.ports.notifications import Notificat
 from smb_requirement_agent.jobs.application.use_cases.provider_call_rate import (
     ProviderCallRateLimit,
 )
+from smb_requirement_agent.reporting.application.ports.activity import (
+    ActivityReadPort,
+    ReportingReadPort,
+)
+from smb_requirement_agent.reporting.application.ports.requirement_worklist import (
+    CurrentWorklistProjectionPort,
+)
+from smb_requirement_agent.reporting.application.ports.saved_views import SavedViewRepositoryPort
+from smb_requirement_agent.reporting.application.use_cases.activity_reporting import (
+    GetOperationalReport,
+    ListActivity,
+)
+from smb_requirement_agent.reporting.application.use_cases.requirement_worklist import (
+    RequirementWorklistReader,
+)
+from smb_requirement_agent.reporting.application.use_cases.saved_views import SavedViews
 from smb_requirement_agent.requirements.application.ports.document_repository import (
     DocumentRepositoryPort,
 )

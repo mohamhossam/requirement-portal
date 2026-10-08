@@ -16,10 +16,6 @@ from smb_requirement_agent.analysis.infrastructure.postgres_analysis import (
     PostgresAnalysisAuditRepository,
     PostgresAnalysisRepository,
 )
-from smb_requirement_agent.application.ports.requirement_worklist import (
-    CurrentWorklistProjectionPort,
-    RequirementWorklistSnapshot,
-)
 from smb_requirement_agent.breakdown.domain.epic.entities import Epic
 from smb_requirement_agent.breakdown.domain.epic.value_objects import EpicId
 from smb_requirement_agent.breakdown.domain.feature.entities import Feature
@@ -53,17 +49,21 @@ from smb_requirement_agent.identity.infrastructure.postgres_identity import (
     PostgresAccessRepository,
     PostgresActorDirectory,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader import (
-    ActivityInputDelta,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_activity_sources import (
-    PostgresActivitySources,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_snapshots import (
-    PostgresSnapshotReader,
-)
 from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
 from smb_requirement_agent.infrastructure.persistence.postgres_values import DbConnection
+from smb_requirement_agent.reporting.application.ports.requirement_worklist import (
+    CurrentWorklistProjectionPort,
+    RequirementWorklistSnapshot,
+)
+from smb_requirement_agent.reporting.infrastructure.postgres_activity_reader import (
+    ActivityInputDelta,
+)
+from smb_requirement_agent.reporting.infrastructure.postgres_activity_sources import (
+    PostgresActivitySources,
+)
+from smb_requirement_agent.reporting.infrastructure.postgres_snapshots import (
+    PostgresSnapshotReader,
+)
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )

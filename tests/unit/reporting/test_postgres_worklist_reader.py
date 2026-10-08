@@ -7,16 +7,16 @@ from contextlib import contextmanager
 from datetime import UTC, datetime
 from typing import cast
 
-from smb_requirement_agent.application.ports.requirement_worklist import (
+from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
+from smb_requirement_agent.reporting.application.ports.requirement_worklist import (
     RequirementWorklistSnapshot,
     RequirementWorklistSnapshotPort,
     WorklistSort,
 )
-from smb_requirement_agent.application.use_cases.requirement_worklist import (
+from smb_requirement_agent.reporting.application.use_cases.requirement_worklist import (
     RequirementWorklistQuery,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
-from smb_requirement_agent.infrastructure.persistence.postgres_worklist import (
+from smb_requirement_agent.reporting.infrastructure.postgres_worklist import (
     PostgresRequirementWorklistReader,
 )
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement

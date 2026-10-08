@@ -11,7 +11,7 @@ from smb_requirement_agent.application.errors import (
     SavedViewConflictError,
     SavedViewNotFoundError,
 )
-from smb_requirement_agent.application.ports.saved_views import (
+from smb_requirement_agent.reporting.application.ports.saved_views import (
     SavedRequirementView,
     SavedViewCriteria,
     SavedViewRepositoryPort,

@@ -51,13 +51,6 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     QuestionChangeAction,
     QuestionId,
 )
-from smb_requirement_agent.application.ports.activity import (
-    ActivityAction,
-    ActivityCategory,
-    ActivityEvent,
-    AuditSourceKind,
-    AuditSourceReference,
-)
 from smb_requirement_agent.breakdown.domain.architecture.entities import (
     ArchitectureCitation,
     ArchitectureDependency,
@@ -140,6 +133,13 @@ from smb_requirement_agent.identity.domain.entities import (
     DraftOwnership,
     RequirementAccess,
     RequirementAssignment,
+)
+from smb_requirement_agent.reporting.application.ports.activity import (
+    ActivityAction,
+    ActivityCategory,
+    ActivityEvent,
+    AuditSourceKind,
+    AuditSourceReference,
 )
 from smb_requirement_agent.requirements.domain.document.entities import (
     SourceDocument,

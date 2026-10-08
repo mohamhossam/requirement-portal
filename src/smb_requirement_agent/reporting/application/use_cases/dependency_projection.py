@@ -5,10 +5,6 @@ import json
 from dataclasses import asdict, replace
 
 from smb_requirement_agent.analysis.domain.lineage import analysis_lineage
-from smb_requirement_agent.application.ports.requirement_worklist import (
-    RequirementWorklistSnapshot,
-    RequirementWorklistSnapshotPort,
-)
 from smb_requirement_agent.application.ports.source_dependencies import (
     SourceDependency,
     SourceDependencyPort,
@@ -16,6 +12,10 @@ from smb_requirement_agent.application.ports.source_dependencies import (
 from smb_requirement_agent.breakdown.domain.story.entities import UserStory
 from smb_requirement_agent.governance.application.ports.breakdown_repository import (
     BreakdownRepositoryPort,
+)
+from smb_requirement_agent.reporting.application.ports.requirement_worklist import (
+    RequirementWorklistSnapshot,
+    RequirementWorklistSnapshotPort,
 )
 from smb_requirement_agent.requirements.domain.requirement.value_objects import RequirementStatus
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId

@@ -13,15 +13,15 @@ from smb_requirement_agent.application.errors import (
     PersistenceError,
     SavedViewConflictError,
 )
-from smb_requirement_agent.application.ports.requirement_worklist import (
+from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
+from smb_requirement_agent.reporting.application.ports.requirement_worklist import (
     WorkflowStatus,
     WorklistSort,
 )
-from smb_requirement_agent.application.ports.saved_views import (
+from smb_requirement_agent.reporting.application.ports.saved_views import (
     SavedRequirementView,
     SavedViewCriteria,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 from smb_requirement_agent.shared_kernel.actors import ActorId
 
 

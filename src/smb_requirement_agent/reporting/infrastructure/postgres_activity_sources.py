@@ -8,7 +8,6 @@ from smb_requirement_agent.analysis.infrastructure.analysis_payloads import (
     analysis_round_from_payload,
     clarification_question_from_payload,
 )
-from smb_requirement_agent.application.ports.requirement_worklist import RequirementWorklistSnapshot
 from smb_requirement_agent.governance.domain.revision.entities import (
     BreakdownRevision,
     RequirementRevision,
@@ -16,18 +15,21 @@ from smb_requirement_agent.governance.domain.revision.entities import (
 from smb_requirement_agent.governance.infrastructure.postgres_revisions import (
     PostgresRevisionRepository,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader import (
-    ActivityInputDelta,
-)
 from smb_requirement_agent.infrastructure.persistence.postgres_requirement_knowledge import (
     finding_from_payload,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
-from smb_requirement_agent.infrastructure.persistence.postgres_snapshots import (
-    PostgresSnapshotReader,
-)
 from smb_requirement_agent.infrastructure.persistence.postgres_values import _payload
 from smb_requirement_agent.jobs.infrastructure.postgres_ai_jobs import record_from_row
+from smb_requirement_agent.reporting.application.ports.requirement_worklist import (
+    RequirementWorklistSnapshot,
+)
+from smb_requirement_agent.reporting.infrastructure.postgres_activity_reader import (
+    ActivityInputDelta,
+)
+from smb_requirement_agent.reporting.infrastructure.postgres_snapshots import (
+    PostgresSnapshotReader,
+)
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 

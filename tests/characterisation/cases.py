@@ -67,10 +67,6 @@ from smb_requirement_agent.identity.infrastructure.identity_payloads import (
     draft_ownership_from_payload,
     draft_ownership_to_payload,
 )
-from smb_requirement_agent.infrastructure.persistence.activity_codec import (
-    activity_from_payload,
-    activity_to_payload,
-)
 from smb_requirement_agent.infrastructure.persistence.in_memory_transaction import (
     InMemoryTransactionManager,
 )
@@ -79,6 +75,10 @@ from smb_requirement_agent.infrastructure.persistence.knowledge_payloads import 
     historic_requirement_state_to_payload,
     reference_document_state_from_payload,
     reference_document_state_to_payload,
+)
+from smb_requirement_agent.reporting.infrastructure.activity_codec import (
+    activity_from_payload,
+    activity_to_payload,
 )
 from smb_requirement_agent.requirements.infrastructure.document_payloads import (
     document_from_payload,

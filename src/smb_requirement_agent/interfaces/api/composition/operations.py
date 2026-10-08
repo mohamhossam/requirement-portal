@@ -25,7 +25,6 @@ from smb_kernel.persistence.connector import (
 from smb_kernel.time.system import SystemClock
 
 from smb_requirement_agent.application.errors import ModelTransportError
-from smb_requirement_agent.application.use_cases.dependency_projection import DependencyProjection
 from smb_requirement_agent.application.use_cases.qualify_chunk_tokens import (
     qualify_chunk_tokens,
 )
@@ -38,9 +37,6 @@ from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.persistence.postgres_session import (
     PostgresCommitSession,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_snapshots import (
-    PostgresSnapshotReader,
-)
 from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
 from smb_requirement_agent.infrastructure.persistence.source_dependencies import (
     PostgresSourceDependencies,
@@ -51,6 +47,12 @@ from smb_requirement_agent.interfaces.api.composition.projections import (
 from smb_requirement_agent.jobs.application.use_cases.retention import PruneReadNotifications
 from smb_requirement_agent.jobs.infrastructure.postgres_ai_jobs import (
     PostgresNotificationRepository,
+)
+from smb_requirement_agent.reporting.application.use_cases.dependency_projection import (
+    DependencyProjection,
+)
+from smb_requirement_agent.reporting.infrastructure.postgres_snapshots import (
+    PostgresSnapshotReader,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 

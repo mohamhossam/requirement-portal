@@ -6,7 +6,12 @@ from typing import cast
 from psycopg.types.json import Jsonb
 
 from smb_requirement_agent.application.errors import PersistenceError
-from smb_requirement_agent.application.ports.activity import (
+from smb_requirement_agent.governance.domain.review.entities import BreakdownStatus
+from smb_requirement_agent.infrastructure.persistence.payload_fields import JsonObject
+from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
+from smb_requirement_agent.infrastructure.persistence.postgres_values import _integer
+from smb_requirement_agent.infrastructure.persistence.shared_payloads import actor_from_payload
+from smb_requirement_agent.reporting.application.ports.activity import (
     ActivityAction,
     ActivityEvent,
     ActivityQuery,
@@ -17,19 +22,14 @@ from smb_requirement_agent.application.ports.activity import (
     BlockerEvidence,
     WeeklyActivityEvidence,
 )
-from smb_requirement_agent.governance.domain.review.entities import BreakdownStatus
-from smb_requirement_agent.infrastructure.persistence.activity_codec import (
+from smb_requirement_agent.reporting.infrastructure.activity_codec import (
     activity_from_payload,
     activity_to_payload,
     actor_to_payload,
 )
-from smb_requirement_agent.infrastructure.persistence.payload_fields import JsonObject
-from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader import (
+from smb_requirement_agent.reporting.infrastructure.postgres_activity_reader import (
     PostgresActivityReadAdapter,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
-from smb_requirement_agent.infrastructure.persistence.postgres_values import _integer
-from smb_requirement_agent.infrastructure.persistence.shared_payloads import actor_from_payload
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 

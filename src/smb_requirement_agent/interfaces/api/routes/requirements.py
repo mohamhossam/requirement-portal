@@ -11,20 +11,11 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 
-from smb_requirement_agent.application.ports.requirement_worklist import (
-    WorkflowStatus,
-    WorklistSort,
-)
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.application.use_cases.requirement_impact import (
     PreviewRequirementImpact,
     RequirementImpactPreview,
     UpdateRequirementWithImpact,
-)
-from smb_requirement_agent.application.use_cases.requirement_worklist import (
-    RequirementWorklistItem,
-    RequirementWorklistQuery,
-    RequirementWorklistReader,
 )
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
@@ -61,6 +52,15 @@ from smb_requirement_agent.interfaces.api.schemas.requirements import (
     SaveRequirementDraftRequest,
     UpdateRequirementRequest,
     WorkflowStatusCountsResponse,
+)
+from smb_requirement_agent.reporting.application.ports.requirement_worklist import (
+    WorkflowStatus,
+    WorklistSort,
+)
+from smb_requirement_agent.reporting.application.use_cases.requirement_worklist import (
+    RequirementWorklistItem,
+    RequirementWorklistQuery,
+    RequirementWorklistReader,
 )
 from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
     CreateRequirementInput,

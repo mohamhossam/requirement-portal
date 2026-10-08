@@ -9,7 +9,7 @@ from statistics import median
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.errors import InvalidReportingWindowError
-from smb_requirement_agent.application.ports.activity import (
+from smb_requirement_agent.reporting.application.ports.activity import (
     ActivityAction,
     ActivityEvent,
     ActivityReadPort,
@@ -18,10 +18,10 @@ from smb_requirement_agent.application.ports.activity import (
     ReportingReadPort,
     WeeklyActivityEvidence,
 )
-from smb_requirement_agent.application.ports.activity import (
+from smb_requirement_agent.reporting.application.ports.activity import (
     ActivityQuery as ActivityQuery,
 )
-from smb_requirement_agent.application.ports.activity import (
+from smb_requirement_agent.reporting.application.ports.activity import (
     ActivityResult as ActivityResult,
 )
 
