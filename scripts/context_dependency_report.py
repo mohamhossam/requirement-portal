@@ -55,29 +55,10 @@ DOMAIN = {
     "shared_kernel": "shared_kernel",
     # After PR 2 this module holds only ImpactDecision (source impact).
     "domain.document.lineage": "knowledge",
-    "domain.document.reference": "references",
-    "domain.architecture.knowledge": "references",
-    # The catalogue content breakdown's impact records (PR 15a, F8).
-    "domain.architecture.catalogue": "references",
-    "domain.knowledge.historic": "references",
-    # Embedding-sized spans; the historic corpus chunks with it too (PR 15a).
-    "domain.knowledge.bounded_text": "references",
-    # KnowledgeError and InvalidKnowledgeError; the screening errors are in screening_errors
-    # (PR 15a), which the "domain.knowledge" prefix classifies as knowledge.
-    "domain.knowledge.errors": "references",
     "domain.knowledge": "knowledge",
 }
 
 USE_CASES = {
-    "references": [
-        "historic_corpus",
-        "knowledge_event_cursor",
-        "knowledge_views",
-        "qualify_chunk_tokens",
-        # Its analysis half (stale_analysis, stale_proposals) is analysis's reference_staleness
-        # since PR 15a.
-        "reference_currency",
-    ],
     "knowledge": [
         "requirement_knowledge",
         "requirement_indexing",
@@ -92,18 +73,6 @@ USE_CASES = {
 }
 
 PORTS = {
-    "references": [
-        "architecture_knowledge",
-        "embedding",
-        "historic_corpus",
-        "knowledge_events",
-        "knowledge_handoff",
-        "knowledge_views",
-        # Split: its analysis half (ReferenceAnalysisPort, ReferenceProposerPort) moves to
-        # analysis.
-        "reference_grounding",
-        "reference_publications",
-    ],
     "knowledge": [
         # Requirement access for knowledge's automatic work (PR 14, F4).
         "knowledge_access",
@@ -122,8 +91,6 @@ PORTS = {
 }
 
 APPLICATION_MODULES = {
-    "application.grounding_evaluation": "references",
-    "application.retrieval_evaluation": "references",
     "application.prior_art_evaluation": "knowledge",
     # Base errors stay shared; the context errors in it move to their contexts (F5).
     "application.errors": TECHNICAL,
@@ -140,6 +107,7 @@ CONTEXT_PACKAGES = (
     "identity",
     "jobs",
     "requirements",
+    "references",
     "analysis",
     "breakdown",
     "governance",
@@ -173,11 +141,9 @@ def classify(module: str, table: dict[str, str]) -> str | None:
 
 def _in_scope(module: str) -> bool:
     relative = module.removeprefix(f"{ROOT}.")
-    # domain.document is only the package left around lineage.py and reference.py (PR 9),
-    # and domain.architecture the one around knowledge.py (PR 11).
+    # domain.document is only the package left around lineage.py (PR 9, PR 15a).
     if relative in (
         "domain",
-        "domain.architecture",
         "domain.document",
         "application",
         "application.use_cases",
