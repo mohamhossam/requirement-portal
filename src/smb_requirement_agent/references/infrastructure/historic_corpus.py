@@ -20,6 +20,7 @@ from smb_requirement_agent.references.application.ports.historic_corpus import (
     HistoricMatch,
     HistoricStanding,
     PendingHistoric,
+    StagedHistoricContent,
 )
 from smb_requirement_agent.references.domain.historic import (
     HistoricRequirementState,
@@ -28,6 +29,7 @@ from smb_requirement_agent.references.domain.historic import (
 from smb_requirement_agent.references.infrastructure.knowledge_payloads import (
     historic_requirement_state_from_payload,
     historic_requirement_state_to_payload,
+    staged_historic_content,
 )
 
 _WORDS = re.compile(r"\w+", re.UNICODE)
@@ -194,12 +196,14 @@ class InMemoryHistoricCorpus:
             record.stage_part, record.stage_offset = next_part, next_offset
             record.failures = 0
 
-    def staged(self, historic_id: str, seq: int) -> dict[ContentPart, tuple[object, ...]]:
+    def staged(self, historic_id: str, seq: int) -> StagedHistoricContent:
         with self._lock:
             record = self._records.get(historic_id)
             if record is None or record.stage_seq != seq:
-                return {}
-            return {part: tuple(entries) for part, entries in record.staged.items()}
+                return StagedHistoricContent()
+            return staged_historic_content(
+                {part: tuple(entries) for part, entries in record.staged.items()}
+            )
 
     def stage_chunks(
         self, historic_id: str, seq: int, identity: str, chunks: tuple[HistoricChunk, ...]
@@ -563,7 +567,7 @@ class PostgresHistoricCorpus:
                     ],
                 )
 
-    def staged(self, historic_id: str, seq: int) -> dict[ContentPart, tuple[object, ...]]:
+    def staged(self, historic_id: str, seq: int) -> StagedHistoricContent:
         with self._store.connection() as connection:
             rows = connection.execute(
                 "SELECT part, entry FROM historic_content_staging "
@@ -573,7 +577,7 @@ class PostgresHistoricCorpus:
         found: dict[ContentPart, list[object]] = {}
         for part, entry in rows:
             found.setdefault(ContentPart(str(part)), []).append(entry)
-        return {part: tuple(entries) for part, entries in found.items()}
+        return staged_historic_content({part: tuple(entries) for part, entries in found.items()})
 
     def stage_chunks(
         self, historic_id: str, seq: int, identity: str, chunks: tuple[HistoricChunk, ...]

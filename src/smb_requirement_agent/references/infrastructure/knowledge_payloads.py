@@ -4,18 +4,28 @@ They moved out of the domain in PR 2 of the bounded-context migration (ADR-0103)
 the same fields, the same tolerance of older copies, the same errors on malformed input. The
 characterisation goldens `reference_document_state` and `historic_requirement_state` pin that.
 
-`PayloadKnowledgeStateDecoder` lets the event-feed use cases decode without naming this module.
-PR 15a replaces it with typed events decoded in the knowledge-portal ACL.
+`PayloadKnowledgeStateDecoder` lets the event-feed use cases decode an event only when they handle
+its kind, so a malformed event of one kind never stops a consumer of another (ADR-0103
+Amendment 3). The content-page entries knowledge-portal serves for a historic publication are
+decoded here too, so the domain never parses its wire format.
 """
 
 from __future__ import annotations
 
 from datetime import date, datetime
 
+from smb_requirement_agent.references.application.ports.historic_corpus import (
+    ContentPart,
+    StagedHistoricContent,
+)
 from smb_requirement_agent.references.domain.errors import InvalidKnowledgeError
 from smb_requirement_agent.references.domain.historic import (
+    WORK_ITEM_TYPES,
+    HistoricPassage,
     HistoricPublication,
     HistoricRequirementState,
+    HistoricWorkItem,
+    safe_url,
 )
 from smb_requirement_agent.references.domain.reference import (
     CurrentPublication,
@@ -131,6 +141,53 @@ class PayloadKnowledgeStateDecoder:
 
     def historic_requirement(self, payload: object) -> HistoricRequirementState:
         return historic_requirement_state_from_payload(payload)
+
+
+def historic_passage_from_entry(entry: object) -> HistoricPassage:
+    try:
+        data = _mapping(entry)
+        return HistoricPassage(
+            _text(data["brd_id"]),
+            _text(data["filename"]),
+            _text(data["block_id"]),
+            _text(data["label"]),
+            tuple(_text(part) for part in _list(data["section_path"])),
+            _text(data["text"]).strip(),
+        )
+    except (KeyError, TypeError, ValueError) as exc:
+        raise InvalidKnowledgeError("Historic passage is malformed.") from exc
+
+
+def historic_work_item_from_entry(entry: object) -> HistoricWorkItem:
+    try:
+        data = _mapping(entry)
+        kind = _text(data["type"])
+        if kind not in WORK_ITEM_TYPES:
+            raise ValueError("unknown work item type")
+        parent = data.get("parent_id")
+        return HistoricWorkItem(
+            _positive(data["id"]),
+            kind,
+            _text(data["title"]).strip(),
+            _text(data["state"]),
+            safe_url(_text(data["url"])),
+            _text(data["description"]).strip(),
+            _text(data["acceptance_criteria"]).strip(),
+            _text(data["area_path"]),
+            _text(data["iteration_path"]),
+            tuple(_text(tag) for tag in _list(data["tags"])),
+            None if parent is None else _positive(parent),
+        )
+    except (KeyError, TypeError, ValueError) as exc:
+        raise InvalidKnowledgeError("Historic work item is malformed.") from exc
+
+
+def staged_historic_content(staged: dict[ContentPart, tuple[object, ...]]) -> StagedHistoricContent:
+    """Staged content-page entries as typed passages and work items, refusing malformed ones."""
+    return StagedHistoricContent(
+        tuple(historic_passage_from_entry(entry) for entry in staged.get(ContentPart.PASSAGES, ())),
+        tuple(historic_work_item_from_entry(entry) for entry in staged.get(ContentPart.ITEMS, ())),
+    )
 
 
 def _day(value: object) -> date | None:

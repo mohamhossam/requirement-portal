@@ -12,8 +12,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 
-from smb_requirement_agent.references.domain.errors import InvalidKnowledgeError
-
 
 class HistoricSourceKind(StrEnum):
     """Where a historic chunk comes from. Kept apart from the live corpus's source kinds."""
@@ -65,21 +63,6 @@ class HistoricPassage:
     section_path: tuple[str, ...]
     text: str
 
-    @classmethod
-    def from_entry(cls, entry: object) -> HistoricPassage:
-        try:
-            data = _mapping(entry)
-            return cls(
-                _text(data["brd_id"]),
-                _text(data["filename"]),
-                _text(data["block_id"]),
-                _text(data["label"]),
-                tuple(_text(part) for part in _list(data["section_path"])),
-                _text(data["text"]).strip(),
-            )
-        except (KeyError, TypeError, ValueError) as exc:
-            raise InvalidKnowledgeError("Historic passage is malformed.") from exc
-
 
 @dataclass(frozen=True)
 class HistoricWorkItem:
@@ -101,30 +84,6 @@ class HistoricWorkItem:
     def type_label(self) -> str:
         return WORK_ITEM_TYPES[self.type]
 
-    @classmethod
-    def from_entry(cls, entry: object) -> HistoricWorkItem:
-        try:
-            data = _mapping(entry)
-            kind = _text(data["type"])
-            if kind not in WORK_ITEM_TYPES:
-                raise ValueError("unknown work item type")
-            parent = data.get("parent_id")
-            return cls(
-                _positive(data["id"]),
-                kind,
-                _text(data["title"]).strip(),
-                _text(data["state"]),
-                safe_url(_text(data["url"])),
-                _text(data["description"]).strip(),
-                _text(data["acceptance_criteria"]).strip(),
-                _text(data["area_path"]),
-                _text(data["iteration_path"]),
-                tuple(_text(tag) for tag in _list(data["tags"])),
-                None if parent is None else _positive(parent),
-            )
-        except (KeyError, TypeError, ValueError) as exc:
-            raise InvalidKnowledgeError("Historic work item is malformed.") from exc
-
 
 def safe_url(value: str) -> str | None:
     """Only a web address is kept as a link; anything else is shown without one."""
@@ -142,27 +101,3 @@ def ancestors(items: dict[int, HistoricWorkItem], item_id: int) -> tuple[Histori
         chain.append(current)
         current = None if current.parent_id is None else items.get(current.parent_id)
     return tuple(reversed(chain))
-
-
-def _mapping(value: object) -> dict[str, object]:
-    if not isinstance(value, dict):
-        raise TypeError("expected an object")
-    return value
-
-
-def _list(value: object) -> list[object]:
-    if not isinstance(value, list | tuple):
-        raise TypeError("expected a list")
-    return list(value)
-
-
-def _text(value: object) -> str:
-    if not isinstance(value, str):
-        raise TypeError("expected text")
-    return value
-
-
-def _positive(value: object) -> int:
-    if not isinstance(value, int) or isinstance(value, bool) or value < 1:
-        raise ValueError("expected a positive whole number")
-    return value

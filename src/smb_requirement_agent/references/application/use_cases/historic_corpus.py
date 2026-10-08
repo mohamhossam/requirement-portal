@@ -30,6 +30,7 @@ from smb_requirement_agent.references.application.ports.historic_corpus import (
     HistoricContentSourcePort,
     HistoricCorpusIndexPort,
     HistoricRequirementStatePort,
+    StagedHistoricContent,
 )
 from smb_requirement_agent.references.application.ports.knowledge_events import (
     HISTORIC_REQUIREMENT_CHANGED,
@@ -42,9 +43,7 @@ from smb_requirement_agent.references.application.use_cases.knowledge_event_curs
 from smb_requirement_agent.references.domain.bounded_text import bounded_knowledge_text
 from smb_requirement_agent.references.domain.errors import InvalidKnowledgeError
 from smb_requirement_agent.references.domain.historic import (
-    HistoricPassage,
     HistoricSourceKind,
-    HistoricWorkItem,
     ancestors,
 )
 
@@ -122,9 +121,7 @@ def _spans(text: str) -> tuple[str, ...]:
     return tuple(span for span in bounded_knowledge_text(text) if span.strip())[:SPANS_PER_ENTRY]
 
 
-def historic_chunks(
-    historic_id: str, staged: dict[ContentPart, tuple[object, ...]]
-) -> tuple[HistoricChunk, ...]:
+def historic_chunks(historic_id: str, staged: StagedHistoricContent) -> tuple[HistoricChunk, ...]:
     """A publication's passages and work items as chunks, each with what a reader is shown.
 
     A passage keeps its BRD and location; a work item keeps its lineage, Epic first.
@@ -141,8 +138,7 @@ def historic_chunks(
                 HistoricChunk(chunk_id, historic_id, kind, field, span, text_hash, evidence)
             )
 
-    for entry in staged.get(ContentPart.PASSAGES, ()):
-        passage = HistoricPassage.from_entry(entry)
+    for passage in staged.passages:
         if passage.text:
             add(
                 HistoricSourceKind.HISTORIC_BRD,
@@ -154,12 +150,7 @@ def historic_chunks(
                     "section_path": list(passage.section_path),
                 },
             )
-    items = {
-        item.id: item
-        for item in (
-            HistoricWorkItem.from_entry(entry) for entry in staged.get(ContentPart.ITEMS, ())
-        )
-    }
+    items = {item.id: item for item in staged.items}
     for item in items.values():
         lines = [f"{item.type_label} #{item.id} {item.title}"]
         if item.description:

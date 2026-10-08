@@ -39,8 +39,9 @@ class KnowledgeEventSourcePort(Protocol):
 class KnowledgeStateDecoderPort(Protocol):
     """Turns an event's payload into the state it carries, refusing anything malformed.
 
-    The codec is infrastructure (ADR-0103, PR 2). The knowledge-portal ACL decodes events
-    itself once `references` moves (PR 15a), and this port goes.
+    The codec is infrastructure (ADR-0103, PR 2). A consumer decodes only the kinds it handles,
+    so a malformed event of one kind never stops a consumer of another; that is why decoding
+    stays behind this port instead of in the feed (ADR-0103 Amendment 3).
     """
 
     def reference_document(self, payload: object) -> ReferenceDocumentState: ...

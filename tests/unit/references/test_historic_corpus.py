@@ -20,7 +20,6 @@ from smb_requirement_agent.references.application.use_cases.historic_corpus impo
 from smb_requirement_agent.references.domain.errors import InvalidKnowledgeError
 from smb_requirement_agent.references.domain.historic import (
     HistoricSourceKind,
-    HistoricWorkItem,
     ancestors,
     safe_url,
 )
@@ -28,6 +27,8 @@ from smb_requirement_agent.references.infrastructure.historic_corpus import any_
 from smb_requirement_agent.references.infrastructure.knowledge_payloads import (
     historic_requirement_state_from_payload,
     historic_requirement_state_to_payload,
+    historic_work_item_from_entry,
+    staged_historic_content,
 )
 from tests.knowledge_doubles import (
     PublishedLibrary,
@@ -98,12 +99,12 @@ def test_a_malformed_event_is_refused() -> None:
 def test_only_web_addresses_become_links_and_lineage_is_epic_first() -> None:
     assert safe_url(" https://dev.azure.com/x ") == "https://dev.azure.com/x"
     assert safe_url("javascript:alert(1)") is None
-    items = {entry.id: entry for entry in map(HistoricWorkItem.from_entry, BACKLOG)}
+    items = {entry.id: entry for entry in map(historic_work_item_from_entry, BACKLOG)}
     assert [item.id for item in ancestors(items, 48216)] == [48213, 48214, 48216]
     # A cycle in what was read never loops.
     looped = {
-        1: HistoricWorkItem.from_entry(work_item(1, "epic", "A", parent_id=2)),
-        2: HistoricWorkItem.from_entry(work_item(2, "feature", "B", parent_id=1)),
+        1: historic_work_item_from_entry(work_item(1, "epic", "A", parent_id=2)),
+        2: historic_work_item_from_entry(work_item(2, "feature", "B", parent_id=1)),
     }
     assert [item.id for item in ancestors(looped, 1)] == [2, 1]
 
@@ -117,7 +118,10 @@ def test_chunks_keep_where_they_came_from_and_stay_bounded() -> None:
         "section_path": ["Scope"],
         "text": "Business customers order XGPON fibre bundles.",
     }
-    chunks = historic_chunks("h1", {ContentPart.PASSAGES: (passage,), ContentPart.ITEMS: BACKLOG})
+    chunks = historic_chunks(
+        "h1",
+        staged_historic_content({ContentPart.PASSAGES: (passage,), ContentPart.ITEMS: BACKLOG}),
+    )
     brd = [c for c in chunks if c.source_kind is HistoricSourceKind.HISTORIC_BRD]
     assert brd[0].field == "brd:b1:p2" and brd[0].evidence["label"] == "Paragraph 2"
     story = next(c for c in chunks if c.field == "item:48216")
@@ -125,11 +129,17 @@ def test_chunks_keep_where_they_came_from_and_stay_bounded() -> None:
     lineage = cast(list[dict[str, object]], story.evidence["lineage"])
     assert [link["id"] for link in lineage] == [48213, 48214, 48216]
     # Ids are stable, so the same content keeps the same chunks.
-    again = historic_chunks("h1", {ContentPart.PASSAGES: (passage,), ContentPart.ITEMS: BACKLOG})
+    again = historic_chunks(
+        "h1",
+        staged_historic_content({ContentPart.PASSAGES: (passage,), ContentPart.ITEMS: BACKLOG}),
+    )
     assert [c.chunk_id for c in again] == [c.chunk_id for c in chunks]
     # A very long description is cut to a bounded number of spans.
     long_story = work_item(9, "user_story", "Long", description="word " * 5000)
-    assert len(historic_chunks("h2", {ContentPart.ITEMS: (long_story,)})) == SPANS_PER_ENTRY
+    assert (
+        len(historic_chunks("h2", staged_historic_content({ContentPart.ITEMS: (long_story,)})))
+        == SPANS_PER_ENTRY
+    )
     assert CHUNKS_PER_RECORD == 20_000
 
 

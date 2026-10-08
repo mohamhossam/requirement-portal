@@ -16,8 +16,10 @@ from typing import Protocol
 from smb_kernel.embeddings import Embedding
 
 from smb_requirement_agent.references.domain.historic import (
+    HistoricPassage,
     HistoricRequirementState,
     HistoricSourceKind,
+    HistoricWorkItem,
 )
 
 # The knowledge portal answers at most this many entries a page (ADR-0102, amendment 1).
@@ -27,6 +29,14 @@ CONTENT_PAGE_MAX = 200
 class ContentPart(StrEnum):
     PASSAGES = "passages"
     ITEMS = "items"
+
+
+@dataclass(frozen=True)
+class StagedHistoricContent:
+    """A publication's staged passages and work items, decoded by the knowledge-portal ACL."""
+
+    passages: tuple[HistoricPassage, ...] = ()
+    items: tuple[HistoricWorkItem, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -126,7 +136,7 @@ class HistoricCorpusIndexPort(Protocol):
         """Keep a page of raw content and move the reading on."""
         ...
 
-    def staged(self, historic_id: str, seq: int) -> dict[ContentPart, tuple[object, ...]]: ...
+    def staged(self, historic_id: str, seq: int) -> StagedHistoricContent: ...
 
     def stage_chunks(
         self, historic_id: str, seq: int, identity: str, chunks: tuple[HistoricChunk, ...]
