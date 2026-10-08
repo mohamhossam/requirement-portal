@@ -19,6 +19,7 @@ from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration
     AnalysisCollaboration,
 )
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
+from smb_requirement_agent.application.public_errors import describe_public_error
 from smb_requirement_agent.breakdown.application.ports.epic_generator import EpicGeneratorPort
 from smb_requirement_agent.breakdown.application.ports.feature_generator import FeatureGeneratorPort
 from smb_requirement_agent.breakdown.application.ports.story_generator import StoryGeneratorPort
@@ -344,6 +345,7 @@ def build_architecture_jobs(
         f"knowledge-service:{matcher}",
         "knowledge-service:architecture-impact-v1",
         clock,
+        lambda exc: describe_public_error(exc).code,
     )
     return ArchitectureJobWiring(
         mapping_jobs=mapping_jobs,

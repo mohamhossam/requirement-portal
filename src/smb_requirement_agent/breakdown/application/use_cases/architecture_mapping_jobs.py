@@ -19,6 +19,7 @@ from smb_requirement_agent.breakdown.application.ports.architecture_jobs import 
     ArchitectureJobKind,
     ArchitectureJobRepositoryPort,
     ArchitectureJobStatus,
+    FailureCode,
     MappingJobInput,
 )
 from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping import (
@@ -50,8 +51,9 @@ class ArchitectureMappingJobs(LeasedJobs):
         embedding_profile: str,
         reasoning_profile: str,
         clock: ClockPort,
+        failure_code: FailureCode,
     ) -> None:
-        super().__init__(jobs, execution, clock)
+        super().__init__(jobs, execution, clock, failure_code)
         self._releases = releases
         self._mapper = mapper
         self._embedding_profile = embedding_profile

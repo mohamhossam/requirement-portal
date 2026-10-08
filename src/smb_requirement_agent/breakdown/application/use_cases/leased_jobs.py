@@ -13,12 +13,12 @@ from enum import Enum
 
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.public_errors import describe_public_error
 from smb_requirement_agent.breakdown.application.errors import ArchitectureJobNotFoundError
 from smb_requirement_agent.breakdown.application.ports.architecture_jobs import (
     ArchitectureJob,
     ArchitectureJobRepositoryPort,
     ArchitectureJobStatus,
+    FailureCode,
 )
 from smb_requirement_agent.identity.application.ports.identity import Actor, require_maintainer
 
@@ -52,10 +52,12 @@ class LeasedJobs:
         jobs: ArchitectureJobRepositoryPort,
         execution: ArchitectureJobExecution,
         clock: ClockPort,
+        failure_code: FailureCode,
     ) -> None:
         self._jobs = jobs
         self._execution = execution
         self._clock = clock
+        self._failure_code = failure_code
 
     def owns(self, job_id: str) -> bool:
         return self._jobs.get(job_id) is not None
@@ -123,7 +125,7 @@ class LeasedJobs:
             # The job boundary: every failure becomes a recorded, public outcome.
             _LOGGER.exception("Architecture job %s failed", job.id)
             status = ArchitectureJobStatus.FAILED
-            error: str | None = describe_public_error(exc).code
+            error: str | None = self._failure_code(exc)
         else:
             status = ArchitectureJobStatus.SUCCEEDED
             error = None

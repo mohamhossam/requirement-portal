@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
@@ -10,6 +11,9 @@ from typing import Protocol
 from smb_requirement_agent.application.errors import PersistenceError
 
 _KEY_SEPARATOR = "|"
+
+# The public code a failed attempt records, from the catalogue the composition root supplies.
+FailureCode = Callable[[Exception], str]
 
 
 class ArchitectureJobKind(StrEnum):
