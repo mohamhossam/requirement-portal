@@ -1457,6 +1457,8 @@ only the move and its contracts.
    - each context has exactly its layer packages;
    - the layer-first packages stay gone;
    - no migration shim exists.
+8. **`pyproject.toml` package data.** The stale `smb_requirement_agent.infrastructure.architecture`
+   entry is removed: that package no longer exists. This item was in scope from the start.
 
 ### Contracts (41 kept, up from 39)
 

@@ -45,7 +45,6 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "smb_requirement_agent.infrastructure.persistence" = ["migrations/*.sql"]
-"smb_requirement_agent.infrastructure.architecture" = ["knowledge/*.yaml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
