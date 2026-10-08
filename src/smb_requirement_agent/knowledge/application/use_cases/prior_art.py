@@ -28,7 +28,7 @@ from smb_requirement_agent.jobs.application.ports.ai_jobs import (
     AiJobRepositoryPort,
     JsonValue,
 )
-from smb_requirement_agent.jobs.application.use_cases.command_fingerprint import command_fingerprint
+from smb_requirement_agent.jobs.application.published import command_fingerprint
 from smb_requirement_agent.jobs.domain.entities import (
     AiJob,
     AiJobId,

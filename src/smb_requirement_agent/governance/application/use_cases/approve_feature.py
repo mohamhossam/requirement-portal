@@ -11,7 +11,7 @@ from smb_requirement_agent.breakdown.application.ports.epic_repository import Ep
 from smb_requirement_agent.breakdown.application.ports.feature_repository import (
     FeatureRepositoryPort,
 )
-from smb_requirement_agent.breakdown.application.use_cases.feature_review import FeatureLookup
+from smb_requirement_agent.breakdown.application.published import FeatureLookup
 from smb_requirement_agent.breakdown.domain.feature.entities import Feature
 from smb_requirement_agent.breakdown.domain.feature.value_objects import FeatureId
 from smb_requirement_agent.governance.application.errors import ApprovalWorkflowNotReadyError

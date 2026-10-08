@@ -22,15 +22,15 @@ from smb_requirement_agent.requirements.application.ports.document_repository im
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )
-from smb_requirement_agent.requirements.application.use_cases.requirement_sources import (
-    require_usable_source,
-)
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.requirements.domain.requirement.events import RequirementRevised
 from smb_requirement_agent.requirements.domain.requirement.value_objects import (
     RequirementContext,
     RequirementDescription,
     RequirementTitle,
+)
+from smb_requirement_agent.requirements.domain.source_policy import (
+    require_usable_source,
 )
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId

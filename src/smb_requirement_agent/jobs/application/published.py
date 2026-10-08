@@ -1,7 +1,8 @@
-"""The fingerprint that binds an AI job to the exact command it runs.
+"""What other contexts may call in jobs (ADR-0103 §1): the AI-job command fingerprint.
 
-Pure function over the jobs vocabulary, so it is jobs' (ADR-0103 PR 14); it was in workflows'
-`ai_jobs`, which knowledge's `prior_art` imported it from.
+The fingerprint binds an AI job to the exact command it runs. It is a pure function over the
+jobs vocabulary, so it is jobs' (PR 14), and knowledge's prior-art screening uses it to
+deduplicate its jobs.
 """
 
 from __future__ import annotations

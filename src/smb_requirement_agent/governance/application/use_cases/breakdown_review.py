@@ -17,9 +17,6 @@ from smb_requirement_agent.analysis.application.ports.reference_analysis import 
 from smb_requirement_agent.analysis.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
-from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration import (
-    AnalysisCollaboration,
-)
 from smb_requirement_agent.analysis.domain.entities import (
     RequirementAnalysis,
 )
@@ -35,10 +32,7 @@ from smb_requirement_agent.breakdown.application.ports.story_quality_repository 
     StoryQualityRepositoryPort,
 )
 from smb_requirement_agent.breakdown.application.ports.story_repository import StoryRepositoryPort
-from smb_requirement_agent.breakdown.application.use_cases.story_quality import (
-    ValidateStory,
-    story_set_fingerprint,
-)
+from smb_requirement_agent.breakdown.application.published import story_set_fingerprint
 from smb_requirement_agent.breakdown.domain.feature.entities import Feature
 from smb_requirement_agent.breakdown.domain.story.quality import (
     FeatureQualitySnapshot,
@@ -53,6 +47,8 @@ from smb_requirement_agent.governance.application.errors import (
 from smb_requirement_agent.governance.application.ports.breakdown_review_repository import (
     BreakdownReviewRepositoryPort,
 )
+from smb_requirement_agent.governance.application.ports.open_questions import OpenQuestionPort
+from smb_requirement_agent.governance.application.ports.story_assessment import StoryAssessmentPort
 from smb_requirement_agent.governance.domain.review.entities import (
     BreakdownReview,
     Decision,
@@ -231,7 +227,7 @@ class GenerateBreakdownReview:
         self,
         evidence: ReviewEvidenceLoader,
         reviews: BreakdownReviewRepositoryPort,
-        validator: ValidateStory,
+        validator: StoryAssessmentPort,
         policy: BreakdownReviewPolicy,
         clock: ClockPort,
         transactions: TransactionManagerPort,
@@ -515,7 +511,7 @@ class ResolveOpenQuestion:
         self,
         current: GetBreakdownReview,
         reviews: BreakdownReviewRepositoryPort,
-        collaboration: AnalysisCollaboration,
+        collaboration: OpenQuestionPort,
         clock: ClockPort,
         transactions: TransactionManagerPort,
     ) -> None:

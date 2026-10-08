@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from smb_kernel.time.clock import ClockPort
@@ -21,6 +19,7 @@ from smb_requirement_agent.breakdown.application.ports.story_quality_evaluator i
 from smb_requirement_agent.breakdown.application.ports.story_quality_repository import (
     StoryQualityRepositoryPort,
 )
+from smb_requirement_agent.breakdown.application.published import story_set_fingerprint
 from smb_requirement_agent.breakdown.domain.story.quality import StoryQualityEvidence
 from smb_requirement_agent.identity.application.ports.requirement_access import (
     RequirementAccessPort,
@@ -207,26 +206,6 @@ class GetFeatureQualitySnapshot:
                 current, self._get_stories.quality_evidence(requirement_id, feature_id)
             ),
         )
-
-
-def story_set_fingerprint(stories: tuple[UserStory, ...], evidence: StoryQualityEvidence) -> str:
-    payload = [
-        {
-            "id": story.id.value,
-            "voice": story.voice,
-            "criteria": [
-                [criterion.given, criterion.when, criterion.then]
-                for criterion in story.acceptance_criteria
-            ],
-        }
-        for story in stories
-    ]
-    canonical = json.dumps(
-        {"stories": payload, "evidence": asdict(evidence)},
-        sort_keys=True,
-        separators=(",", ":"),
-    )
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 class SuggestStorySplit:

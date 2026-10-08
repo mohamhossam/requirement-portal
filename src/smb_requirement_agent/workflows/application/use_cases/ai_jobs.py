@@ -18,7 +18,7 @@ from smb_requirement_agent.jobs.application.ports.ai_jobs import (
     AiJobRepositoryPort,
 )
 from smb_requirement_agent.jobs.application.ports.notifications import NotificationRepositoryPort
-from smb_requirement_agent.jobs.application.use_cases.command_fingerprint import command_fingerprint
+from smb_requirement_agent.jobs.application.published import command_fingerprint
 from smb_requirement_agent.jobs.application.use_cases.job_execution_context import (
     current_attempt,
 )

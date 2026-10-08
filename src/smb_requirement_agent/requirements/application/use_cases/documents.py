@@ -37,9 +37,6 @@ from smb_requirement_agent.requirements.application.ports.requirement_draft_repo
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )
-from smb_requirement_agent.requirements.application.use_cases.requirement_sources import (
-    source_eligibility,
-)
 from smb_requirement_agent.requirements.domain.document.entities import (
     SourceDocument,
     SourceDocumentVersion,
@@ -56,6 +53,9 @@ from smb_requirement_agent.requirements.domain.requirement.entities import (
     RequirementDraft,
 )
 from smb_requirement_agent.requirements.domain.requirement.events import RequirementRevised
+from smb_requirement_agent.requirements.domain.source_policy import (
+    source_eligibility,
+)
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 

@@ -14,15 +14,13 @@ from smb_requirement_agent.application.errors import ArtifactVersionConflictErro
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.breakdown.application.errors import (
-    EpicNotFoundError,
-    FeatureNotFoundError,
     FeaturesNotFoundError,
 )
 from smb_requirement_agent.breakdown.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.breakdown.application.ports.feature_repository import (
     FeatureRepositoryPort,
 )
-from smb_requirement_agent.breakdown.domain.epic.entities import Epic
+from smb_requirement_agent.breakdown.application.published import FeatureLookup
 from smb_requirement_agent.breakdown.domain.feature.entities import Feature
 from smb_requirement_agent.breakdown.domain.feature.errors import (
     InvalidFeatureContentError,
@@ -40,7 +38,6 @@ from smb_requirement_agent.identity.application.ports.requirement_access import 
     RequirementAccessPort,
     RequirementPermission,
 )
-from smb_requirement_agent.requirements.application.errors import RequirementNotFoundError
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )
@@ -60,40 +57,6 @@ class EditFeatureInput:
     splitting_rationale: str
     source_reconciled: bool = False
     expected_version: int = 1
-
-
-class FeatureLookup:
-    """Shared resolution from a requirement down to one Feature."""
-
-    def __init__(
-        self,
-        requirement_repository: RequirementRepositoryPort,
-        epic_repository: EpicRepositoryPort,
-        feature_repository: FeatureRepositoryPort,
-    ) -> None:
-        self._requirements = requirement_repository
-        self._epics = epic_repository
-        self._features = feature_repository
-
-    def _epic(self, requirement_id: RequirementId) -> Epic:
-        if self._requirements.get(requirement_id) is None:
-            raise RequirementNotFoundError(f"Requirement {requirement_id.value!r} not found.")
-        epic = self._epics.get_by_requirement_id(requirement_id)
-        if epic is None:
-            raise EpicNotFoundError(f"No Epic exists for requirement {requirement_id.value!r}.")
-        return epic
-
-    def _feature(self, requirement_id: RequirementId, feature_id: FeatureId) -> Feature:
-        epic = self._epic(requirement_id)
-        feature = self._features.get(epic.id, feature_id)
-        if feature is None:
-            # Scoped by Epic, so a Feature belonging to a different Epic reads
-            # as absent here rather than being editable through this path.
-            raise FeatureNotFoundError(
-                f"No Feature {feature_id.value!r} under the Epic for requirement "
-                f"{requirement_id.value!r}."
-            )
-        return feature
 
 
 class GetFeatures(FeatureLookup):

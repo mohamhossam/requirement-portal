@@ -22,10 +22,6 @@ from smb_requirement_agent.requirements.application.use_cases.create_requirement
     CreateRequirement,
     CreateRequirementInput,
 )
-from smb_requirement_agent.requirements.application.use_cases.requirement_sources import (
-    has_usable_attachment,
-    require_usable_source,
-)
 from smb_requirement_agent.requirements.domain.requirement.entities import (
     Requirement,
     RequirementDraft,
@@ -34,6 +30,10 @@ from smb_requirement_agent.requirements.domain.requirement.intake_limits import 
     require_within_intake_limits,
 )
 from smb_requirement_agent.requirements.domain.requirement.value_objects import RequirementVersion
+from smb_requirement_agent.requirements.domain.source_policy import (
+    has_usable_attachment,
+    require_usable_source,
+)
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 

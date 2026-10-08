@@ -30,10 +30,8 @@ from smb_requirement_agent.breakdown.application.ports.story_repository import (
     StoryChangeProposalRepositoryPort,
     StoryRepositoryPort,
 )
+from smb_requirement_agent.breakdown.application.published import story_set_fingerprint
 from smb_requirement_agent.breakdown.application.use_cases.generation_checks import GenerationChecks
-from smb_requirement_agent.breakdown.application.use_cases.story_quality import (
-    story_set_fingerprint,
-)
 from smb_requirement_agent.breakdown.application.use_cases.story_workflow import (
     StoryWorkflow,
     atomic_story_change,

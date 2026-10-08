@@ -336,7 +336,8 @@ forbidden_modules =
 name = Other contexts use identity's domain and ports, never its adapters (ADR-0103 §5)
 type = forbidden
 # Context sources are their domain and application layers: infrastructure may reuse another
-# context's codecs (revision snapshots serialise the whole tree, PR 12).
+# context's codecs (revision snapshots serialise the whole tree, PR 12). workflows is not a
+# source: it orchestrates, and may call other contexts' use cases (ADR-0103 Amendment 3).
 source_modules =
     smb_requirement_agent.application
     smb_requirement_agent.shared_kernel
@@ -385,10 +386,11 @@ forbidden_modules =
     smb_requirement_agent.reporting
 
 [importlinter:contract:jobs_published_surface]
-name = Other contexts use jobs's domain and ports, never its adapters (ADR-0103 §5)
+name = Other contexts use jobs' domain, ports, errors and published surface; only workflows calls its use cases (ADR-0103 Amendment 3)
 type = forbidden
 # Context sources are their domain and application layers: infrastructure may reuse another
-# context's codecs (revision snapshots serialise the whole tree, PR 12).
+# context's codecs (revision snapshots serialise the whole tree, PR 12). workflows is not a
+# source: it orchestrates, and may call other contexts' use cases (ADR-0103 Amendment 3).
 source_modules =
     smb_requirement_agent.application
     smb_requirement_agent.shared_kernel
@@ -408,6 +410,7 @@ source_modules =
     smb_requirement_agent.governance.application
     smb_requirement_agent.reporting.application
 forbidden_modules =
+    smb_requirement_agent.jobs.application.use_cases
     smb_requirement_agent.jobs.infrastructure
 
 [importlinter:contract:requirements_internal_layers]
@@ -435,10 +438,11 @@ forbidden_modules =
     smb_requirement_agent.reporting
 
 [importlinter:contract:requirements_published_surface]
-name = Other contexts use requirements' domain and ports, never its adapters (ADR-0103 §5)
+name = Other contexts use requirements' domain, ports, errors and published surface; only workflows calls its use cases (ADR-0103 Amendment 3)
 type = forbidden
 # Context sources are their domain and application layers: infrastructure may reuse another
-# context's codecs (revision snapshots serialise the whole tree, PR 12).
+# context's codecs (revision snapshots serialise the whole tree, PR 12). workflows is not a
+# source: it orchestrates, and may call other contexts' use cases (ADR-0103 Amendment 3).
 source_modules =
     smb_requirement_agent.application
     smb_requirement_agent.shared_kernel
@@ -458,6 +462,7 @@ source_modules =
     smb_requirement_agent.governance.application
     smb_requirement_agent.reporting.application
 forbidden_modules =
+    smb_requirement_agent.requirements.application.use_cases
     smb_requirement_agent.requirements.infrastructure
 
 [importlinter:contract:analysis_internal_layers]
@@ -483,10 +488,11 @@ forbidden_modules =
     smb_requirement_agent.reporting
 
 [importlinter:contract:analysis_published_surface]
-name = Other contexts use analysis's domain and ports, never its adapters (ADR-0103 §5)
+name = Other contexts use analysis's domain, ports, errors and published surface; only workflows calls its use cases (ADR-0103 Amendment 3)
 type = forbidden
 # Context sources are their domain and application layers: infrastructure may reuse another
-# context's codecs (revision snapshots serialise the whole tree, PR 12).
+# context's codecs (revision snapshots serialise the whole tree, PR 12). workflows is not a
+# source: it orchestrates, and may call other contexts' use cases (ADR-0103 Amendment 3).
 source_modules =
     smb_requirement_agent.application
     smb_requirement_agent.shared_kernel
@@ -504,6 +510,7 @@ source_modules =
     smb_requirement_agent.governance.application
     smb_requirement_agent.reporting.application
 forbidden_modules =
+    smb_requirement_agent.analysis.application.use_cases
     smb_requirement_agent.analysis.infrastructure
 
 [importlinter:contract:breakdown_internal_layers]
@@ -527,10 +534,11 @@ forbidden_modules =
     smb_requirement_agent.reporting
 
 [importlinter:contract:breakdown_published_surface]
-name = Other contexts use breakdown's domain and ports, never its adapters (ADR-0103 §5)
+name = Other contexts use breakdown's domain, ports, errors and published surface; only workflows calls its use cases (ADR-0103 Amendment 3)
 type = forbidden
 # Context sources are their domain and application layers: infrastructure may reuse another
-# context's codecs (revision snapshots serialise the whole tree, PR 12).
+# context's codecs (revision snapshots serialise the whole tree, PR 12). workflows is not a
+# source: it orchestrates, and may call other contexts' use cases (ADR-0103 Amendment 3).
 source_modules =
     smb_requirement_agent.application
     smb_requirement_agent.shared_kernel
@@ -546,6 +554,7 @@ source_modules =
     smb_requirement_agent.governance.application
     smb_requirement_agent.reporting.application
 forbidden_modules =
+    smb_requirement_agent.breakdown.application.use_cases
     smb_requirement_agent.breakdown.infrastructure
 
 [importlinter:contract:governance_internal_layers]
@@ -568,10 +577,11 @@ forbidden_modules =
     smb_requirement_agent.reporting
 
 [importlinter:contract:governance_published_surface]
-name = Other contexts use governance's domain and ports, never its adapters (ADR-0103 §5)
+name = Other contexts use governance's domain, ports, errors and published surface; only workflows calls its use cases (ADR-0103 Amendment 3)
 type = forbidden
 # Context sources are their domain and application layers: infrastructure may reuse another
-# context's codecs (revision snapshots serialise the whole tree, PR 12).
+# context's codecs (revision snapshots serialise the whole tree, PR 12). workflows is not a
+# source: it orchestrates, and may call other contexts' use cases (ADR-0103 Amendment 3).
 source_modules =
     smb_requirement_agent.application
     smb_requirement_agent.shared_kernel
@@ -587,6 +597,7 @@ source_modules =
     smb_requirement_agent.breakdown.application
     smb_requirement_agent.reporting.application
 forbidden_modules =
+    smb_requirement_agent.governance.application.use_cases
     smb_requirement_agent.governance.infrastructure
 
 [importlinter:contract:reporting_internal_layers]
@@ -607,10 +618,11 @@ forbidden_modules =
     smb_requirement_agent.interfaces
 
 [importlinter:contract:reporting_published_surface]
-name = Other contexts use reporting's ports, never its adapters (ADR-0103 §5)
+name = Other contexts use reporting's domain, ports, errors and published surface; only workflows calls its use cases (ADR-0103 Amendment 3)
 type = forbidden
 # Context sources are their domain and application layers: infrastructure may reuse another
-# context's codecs (revision snapshots serialise the whole tree, PR 12).
+# context's codecs (revision snapshots serialise the whole tree, PR 12). workflows is not a
+# source: it orchestrates, and may call other contexts' use cases (ADR-0103 Amendment 3).
 source_modules =
     smb_requirement_agent.application
     smb_requirement_agent.shared_kernel
@@ -627,6 +639,7 @@ source_modules =
     smb_requirement_agent.governance.domain
     smb_requirement_agent.governance.application
 forbidden_modules =
+    smb_requirement_agent.reporting.application.use_cases
     smb_requirement_agent.reporting.infrastructure
 
 [importlinter:contract:workflows_internal_layers]
@@ -681,10 +694,11 @@ forbidden_modules =
     smb_requirement_agent.reporting
 
 [importlinter:contract:references_published_surface]
-name = Other contexts use references' domain and ports, never its adapters (ADR-0103 §5)
+name = Other contexts use references' domain, ports, errors and published surface; only workflows calls its use cases (ADR-0103 Amendment 3)
 type = forbidden
 # Context sources are their domain and application layers: infrastructure may reuse another
-# context's codecs (revision snapshots serialise the whole tree, PR 12).
+# context's codecs (revision snapshots serialise the whole tree, PR 12). workflows is not a
+# source: it orchestrates, and may call other contexts' use cases (ADR-0103 Amendment 3).
 source_modules =
     smb_requirement_agent.application
     smb_requirement_agent.shared_kernel
@@ -703,8 +717,8 @@ source_modules =
     smb_requirement_agent.governance.domain
     smb_requirement_agent.governance.application
     smb_requirement_agent.reporting.application
-    smb_requirement_agent.workflows.application
 forbidden_modules =
+    smb_requirement_agent.references.application.use_cases
     smb_requirement_agent.references.infrastructure
 
 [importlinter:contract:knowledge_internal_layers]
@@ -729,10 +743,11 @@ forbidden_modules =
     smb_requirement_agent.reporting
 
 [importlinter:contract:knowledge_published_surface]
-name = Other contexts use knowledge's domain and ports, never its adapters (ADR-0103 §5)
+name = Other contexts use knowledge's domain, ports, errors and published surface; only workflows calls its use cases (ADR-0103 Amendment 3)
 type = forbidden
 # Context sources are their domain and application layers: infrastructure may reuse another
-# context's codecs (revision snapshots serialise the whole tree, PR 12).
+# context's codecs (revision snapshots serialise the whole tree, PR 12). workflows is not a
+# source: it orchestrates, and may call other contexts' use cases (ADR-0103 Amendment 3).
 source_modules =
     smb_requirement_agent.application
     smb_requirement_agent.shared_kernel
@@ -751,6 +766,6 @@ source_modules =
     smb_requirement_agent.governance.domain
     smb_requirement_agent.governance.application
     smb_requirement_agent.reporting.application
-    smb_requirement_agent.workflows.application
 forbidden_modules =
+    smb_requirement_agent.knowledge.application.use_cases
     smb_requirement_agent.knowledge.infrastructure

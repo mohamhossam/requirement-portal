@@ -1,4 +1,8 @@
-"""Usable source policy shared by intake and analysis without reading blobs."""
+"""Usable source policy shared by intake and analysis without reading blobs.
+
+Pure rules over a Requirement and its source documents, so it is requirements' domain
+(ADR-0103 Amendment 3); analysis reads a Requirement's eligibility through it.
+"""
 
 from collections.abc import Sequence
 

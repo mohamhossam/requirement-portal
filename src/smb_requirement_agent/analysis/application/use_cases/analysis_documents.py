@@ -18,13 +18,13 @@ from smb_requirement_agent.analysis.domain.entities import AnalysisDocumentRefer
 from smb_requirement_agent.requirements.application.ports.document_repository import (
     DocumentRepositoryPort,
 )
-from smb_requirement_agent.requirements.application.use_cases.requirement_sources import (
-    source_eligibility,
-)
 from smb_requirement_agent.requirements.domain.document.entities import SourceDocument
 from smb_requirement_agent.requirements.domain.requirement.entities import (
     AnalysisEligibility,
     Requirement,
+)
+from smb_requirement_agent.requirements.domain.source_policy import (
+    source_eligibility,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 

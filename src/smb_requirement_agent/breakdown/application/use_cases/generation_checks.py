@@ -18,6 +18,7 @@ from smb_requirement_agent.breakdown.application.ports.generation_guidance impor
 from smb_requirement_agent.breakdown.application.ports.story_quality_repository import (
     StoryQualityRepositoryPort,
 )
+from smb_requirement_agent.breakdown.application.published import story_set_fingerprint
 from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping import (
     MapFeatureArchitecture,
     MapStoryArchitecture,
@@ -25,7 +26,6 @@ from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping 
 from smb_requirement_agent.breakdown.application.use_cases.story_quality import (
     AssessStoryCandidate,
     SuggestStorySplit,
-    story_set_fingerprint,
 )
 from smb_requirement_agent.breakdown.domain.feature.entities import Feature
 from smb_requirement_agent.breakdown.domain.story.entities import UserStory
