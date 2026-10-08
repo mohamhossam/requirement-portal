@@ -17,13 +17,15 @@ from smb_kernel.observability.metrics import MeteredTransport, Metrics
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.ports.architecture_knowledge import ArchitectureKnowledgePort
-from smb_requirement_agent.application.ports.backlog_export import BacklogExportPort
 from smb_requirement_agent.application.ports.historic_corpus import HistoricContentSourcePort
 from smb_requirement_agent.application.ports.knowledge_events import KnowledgeEventSourcePort
 from smb_requirement_agent.application.ports.knowledge_handoff import ChangeRequestInboxPort
 from smb_requirement_agent.application.ports.knowledge_views import KnowledgeViewsPort
 from smb_requirement_agent.application.ports.reference_grounding import ReferenceKnowledgePort
-from smb_requirement_agent.application.use_cases.knowledge_handoff import DeliverApprovedBacklogs
+from smb_requirement_agent.governance.application.ports.backlog_export import BacklogExportPort
+from smb_requirement_agent.governance.application.use_cases.knowledge_handoff import (
+    DeliverApprovedBacklogs,
+)
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.documents.ingestion_loop import IngestionLoop
 from smb_requirement_agent.infrastructure.knowledge_client import (

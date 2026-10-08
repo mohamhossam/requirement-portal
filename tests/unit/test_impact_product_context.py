@@ -20,10 +20,6 @@ from smb_requirement_agent.application.ports.architecture_knowledge import (
     ArchitectureKnowledgeMatch,
     ArchitectureQuery,
 )
-from smb_requirement_agent.application.use_cases.export_breakdown import (
-    _journey_step,
-    _product_context,
-)
 from smb_requirement_agent.breakdown.application.ports.generation_guidance import GenerationGuidance
 from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping import (
     MapFeatureArchitecture,
@@ -42,9 +38,17 @@ from smb_requirement_agent.breakdown.domain.architecture.errors import (
 from smb_requirement_agent.breakdown.infrastructure.llm.prompts.generation_guidance import (
     render_guidance,
 )
-from smb_requirement_agent.domain.review.fingerprints import artifact_fingerprint
-from smb_requirement_agent.infrastructure.exports.json_exporter import JsonBacklogExporter
-from smb_requirement_agent.infrastructure.exports.xlsx_exporter import XlsxBacklogExporter
+from smb_requirement_agent.governance.application.use_cases.export_breakdown import (
+    _journey_step,
+    _product_context,
+)
+from smb_requirement_agent.governance.domain.review.fingerprints import artifact_fingerprint
+from smb_requirement_agent.governance.infrastructure.exports.json_exporter import (
+    JsonBacklogExporter,
+)
+from smb_requirement_agent.governance.infrastructure.exports.xlsx_exporter import (
+    XlsxBacklogExporter,
+)
 from smb_requirement_agent.infrastructure.persistence.shared_payloads import (
     architecture_from_payload,
     architecture_to_payload,
@@ -57,7 +61,7 @@ from smb_requirement_agent.requirements.domain.requirement.value_objects import 
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.unit.breakdown.test_feature_domain import make_feature
-from tests.unit.test_backlog_export import _document
+from tests.unit.governance.test_backlog_export import _document
 
 NOW = datetime(2026, 10, 1, tzinfo=UTC)
 

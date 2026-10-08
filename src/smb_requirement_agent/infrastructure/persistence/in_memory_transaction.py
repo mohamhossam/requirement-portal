@@ -7,8 +7,10 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from typing import Protocol
 
-from smb_requirement_agent.application.ports.breakdown_repository import BreakdownRepositoryPort
 from smb_requirement_agent.application.ports.external_work import check_external_result
+from smb_requirement_agent.governance.application.ports.breakdown_repository import (
+    BreakdownRepositoryPort,
+)
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 

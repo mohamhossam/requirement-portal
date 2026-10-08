@@ -125,13 +125,16 @@ from smb_requirement_agent.domain.knowledge.errors import (
     KnowledgeReviewRequiredError,
     RequirementRetiredError,
 )
-from smb_requirement_agent.domain.review.errors import (
+from smb_requirement_agent.governance.domain.review.errors import (
     FlagResolutionConflictError,
     FlagResolutionNotAllowedError,
     InvalidReviewContentError,
     InvalidReviewTransitionError,
 )
-from smb_requirement_agent.domain.revision.errors import InvalidRevisionError, RevisionNotFoundError
+from smb_requirement_agent.governance.domain.revision.errors import (
+    InvalidRevisionError,
+    RevisionNotFoundError,
+)
 from smb_requirement_agent.identity.domain.errors import (
     AuthorizationDeniedError,
     InvalidIdentityError,

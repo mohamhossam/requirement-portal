@@ -29,12 +29,12 @@ from smb_requirement_agent.application.use_cases.dependency_projection import De
 from smb_requirement_agent.application.use_cases.qualify_chunk_tokens import (
     qualify_chunk_tokens,
 )
-from smb_requirement_agent.infrastructure.config.options import ConfigurationError
-from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.persistence.postgres_revisions import (
+from smb_requirement_agent.governance.infrastructure.postgres_revisions import (
     PostgresRevisionRepository,
     PostgresRevisionWriter,
 )
+from smb_requirement_agent.infrastructure.config.options import ConfigurationError
+from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.persistence.postgres_session import (
     PostgresCommitSession,
 )

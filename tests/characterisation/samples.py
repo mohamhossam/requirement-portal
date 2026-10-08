@@ -111,7 +111,7 @@ from smb_requirement_agent.domain.knowledge.historic import (
     HistoricPublication,
     HistoricRequirementState,
 )
-from smb_requirement_agent.domain.review.entities import (
+from smb_requirement_agent.governance.domain.review.entities import (
     BreakdownReview,
     BreakdownStatus,
     Decision,
@@ -132,7 +132,7 @@ from smb_requirement_agent.domain.review.entities import (
     Risk,
     RiskId,
 )
-from smb_requirement_agent.domain.review.evidence import ReviewEvidence
+from smb_requirement_agent.governance.domain.review.evidence import ReviewEvidence
 from smb_requirement_agent.identity.domain.entities import (
     AccessChange,
     AccessChangeKind,

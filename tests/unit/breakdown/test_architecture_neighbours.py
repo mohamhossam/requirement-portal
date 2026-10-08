@@ -34,7 +34,7 @@ from smb_requirement_agent.breakdown.domain.architecture.errors import (
 from smb_requirement_agent.breakdown.infrastructure.llm.prompts.generation_guidance import (
     render_guidance,
 )
-from smb_requirement_agent.domain.review.fingerprints import artifact_fingerprint
+from smb_requirement_agent.governance.domain.review.fingerprints import artifact_fingerprint
 from smb_requirement_agent.infrastructure.persistence.shared_payloads import (
     architecture_from_payload,
     architecture_to_payload,

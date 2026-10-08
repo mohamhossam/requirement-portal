@@ -68,7 +68,6 @@ from smb_requirement_agent.analysis.infrastructure.postgres_evidence_fragment_ca
     PostgresEvidenceFragmentCache,
 )
 from smb_requirement_agent.application.errors import DocumentStorageError
-from smb_requirement_agent.application.exports import ExportFormat
 from smb_requirement_agent.application.ports.requirement_knowledge import (
     KnowledgeScreenEnsureOutcome,
     KnowledgeScreenEnsureResult,
@@ -81,7 +80,6 @@ from smb_requirement_agent.application.ports.saved_views import (
     SavedRequirementView,
     SavedViewCriteria,
 )
-from smb_requirement_agent.application.use_cases.export_breakdown import ExportBreakdown
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.breakdown.domain.architecture.entities import (
     ArchitectureDependency,
@@ -143,7 +141,9 @@ from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeSourceKind,
     RelationshipEvidence,
 )
-from smb_requirement_agent.domain.review.entities import (
+from smb_requirement_agent.governance.application.exports import ExportFormat
+from smb_requirement_agent.governance.application.use_cases.export_breakdown import ExportBreakdown
+from smb_requirement_agent.governance.domain.review.entities import (
     BreakdownReview,
     BreakdownStatus,
     Decision,
@@ -156,6 +156,12 @@ from smb_requirement_agent.domain.review.entities import (
     ReviewSource,
     ReviewSourceKind,
 )
+from smb_requirement_agent.governance.infrastructure.exports.json_exporter import (
+    JsonBacklogExporter,
+)
+from smb_requirement_agent.governance.infrastructure.exports.xlsx_exporter import (
+    XlsxBacklogExporter,
+)
 from smb_requirement_agent.identity.domain.entities import (
     DraftOwnership,
     RequirementAccess,
@@ -163,8 +169,6 @@ from smb_requirement_agent.identity.domain.entities import (
 from smb_requirement_agent.identity.domain.errors import RequirementAccessConflictError
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.identity.infrastructure.postgres_identity import PostgresActorDirectory
-from smb_requirement_agent.infrastructure.exports.json_exporter import JsonBacklogExporter
-from smb_requirement_agent.infrastructure.exports.xlsx_exporter import XlsxBacklogExporter
 from smb_requirement_agent.infrastructure.persistence.backfill_document_blobs import backfill
 from smb_requirement_agent.infrastructure.persistence.migration_runner import (
     MIGRATIONS,
@@ -1576,6 +1580,9 @@ def test_incremental_activity_matches_audit_sources_and_report_aggregation() -> 
     from smb_requirement_agent.application.use_cases.activity_reporting import (
         aggregate_activity_events,
     )
+    from smb_requirement_agent.governance.infrastructure.postgres_revisions import (
+        PostgresRevisionRepository,
+    )
     from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
     from smb_requirement_agent.infrastructure.config.options import LLMProvider, PersistenceProvider
     from smb_requirement_agent.infrastructure.config.settings import Settings
@@ -1584,9 +1591,6 @@ def test_incremental_activity_matches_audit_sources_and_report_aggregation() -> 
     )
     from smb_requirement_agent.infrastructure.persistence.postgres_activity_sources import (
         PostgresActivitySources,
-    )
-    from smb_requirement_agent.infrastructure.persistence.postgres_revisions import (
-        PostgresRevisionRepository,
     )
     from smb_requirement_agent.infrastructure.persistence.postgres_snapshots import (
         PostgresSnapshotReader,

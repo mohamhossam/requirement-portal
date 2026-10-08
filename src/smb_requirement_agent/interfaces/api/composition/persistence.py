@@ -48,10 +48,6 @@ from smb_requirement_agent.application.ports.activity import ActivityReadPort, R
 from smb_requirement_agent.application.ports.architecture_knowledge import (
     ArchitectureReleaseStatePort,
 )
-from smb_requirement_agent.application.ports.breakdown_repository import BreakdownRepositoryPort
-from smb_requirement_agent.application.ports.breakdown_review_repository import (
-    BreakdownReviewRepositoryPort,
-)
 from smb_requirement_agent.application.ports.corpus_membership import (
     CorpusActionsPort,
     CorpusMembershipPort,
@@ -140,6 +136,34 @@ from smb_requirement_agent.breakdown.infrastructure.story_quality_repository imp
     InMemoryStoryQualityRepository,
     PostgresStoryQualityRepository,
 )
+from smb_requirement_agent.governance.application.ports.breakdown_repository import (
+    BreakdownRepositoryPort,
+)
+from smb_requirement_agent.governance.application.ports.breakdown_review_repository import (
+    BreakdownReviewRepositoryPort,
+)
+from smb_requirement_agent.governance.infrastructure.in_memory_breakdown_review_repository import (
+    InMemoryBreakdownReviewRepository,
+)
+from smb_requirement_agent.governance.infrastructure.in_memory_revision_repository import (
+    InMemoryRevisionRepository,
+)
+from smb_requirement_agent.governance.infrastructure.postgres_breakdown_review import (
+    PostgresBreakdownReviewRepository,
+)
+from smb_requirement_agent.governance.infrastructure.postgres_revisions import (
+    PostgresRevisionRepository,
+    PostgresRevisionWriter,
+)
+from smb_requirement_agent.governance.infrastructure.revision_tracking import (
+    TrackingAccessRepository,
+    TrackingAnalysisRepository,
+    TrackingBreakdownReviewRepository,
+    TrackingEpicRepository,
+    TrackingFeatureRepository,
+    TrackingRequirementRepository,
+    TrackingStoryRepository,
+)
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.identity.application.ports.actor_directory import ActorDirectoryPort
 from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
@@ -187,12 +211,6 @@ from smb_requirement_agent.infrastructure.persistence.historic_corpus import (
     InMemoryHistoricCorpus,
     PostgresHistoricCorpus,
 )
-from smb_requirement_agent.infrastructure.persistence.in_memory_breakdown_review_repository import (
-    InMemoryBreakdownReviewRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_revision_repository import (
-    InMemoryRevisionRepository,
-)
 from smb_requirement_agent.infrastructure.persistence.in_memory_saved_views import (
     InMemorySavedViewRepository,
 )
@@ -217,13 +235,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader i
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_activity_sources import (
     PostgresActivitySources,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_repositories import (
-    PostgresBreakdownReviewRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_revisions import (
-    PostgresRevisionRepository,
-    PostgresRevisionWriter,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_saved_views import (
     PostgresSavedViewRepository,
@@ -250,15 +261,6 @@ from smb_requirement_agent.infrastructure.persistence.requirement_indexing impor
 )
 from smb_requirement_agent.infrastructure.persistence.requirement_knowledge_repository import (  # noqa: E501
     InMemoryRequirementKnowledgeStore,
-)
-from smb_requirement_agent.infrastructure.persistence.revision_tracking import (
-    TrackingAccessRepository,
-    TrackingAnalysisRepository,
-    TrackingBreakdownReviewRepository,
-    TrackingEpicRepository,
-    TrackingFeatureRepository,
-    TrackingRequirementRepository,
-    TrackingStoryRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.source_dependencies import (
     InMemorySourceDependencies,

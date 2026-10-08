@@ -51,12 +51,16 @@ from smb_requirement_agent.breakdown.infrastructure.in_memory_story_repository i
     InMemoryStoryChangeProposalRepository,
     InMemoryStoryRepository,
 )
-from smb_requirement_agent.domain.review.evidence import evidence_fingerprint
-from smb_requirement_agent.domain.review.fingerprints import (
+from smb_requirement_agent.governance.domain.review.evidence import evidence_fingerprint
+from smb_requirement_agent.governance.domain.review.fingerprints import (
     artifact_fingerprint,
     breakdown_fingerprint,
 )
-from smb_requirement_agent.domain.review.policy import BreakdownReviewPolicy
+from smb_requirement_agent.governance.domain.review.policy import BreakdownReviewPolicy
+from smb_requirement_agent.governance.infrastructure.review_payloads import (
+    review_from_payload,
+    review_to_payload,
+)
 from smb_requirement_agent.identity.infrastructure.identity_payloads import (
     access_from_payload,
     access_to_payload,
@@ -75,10 +79,6 @@ from smb_requirement_agent.infrastructure.persistence.knowledge_payloads import 
     historic_requirement_state_to_payload,
     reference_document_state_from_payload,
     reference_document_state_to_payload,
-)
-from smb_requirement_agent.infrastructure.persistence.review_payloads import (
-    review_from_payload,
-    review_to_payload,
 )
 from smb_requirement_agent.requirements.infrastructure.document_payloads import (
     document_from_payload,

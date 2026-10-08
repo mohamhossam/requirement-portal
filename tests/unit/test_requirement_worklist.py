@@ -65,21 +65,21 @@ from smb_requirement_agent.breakdown.infrastructure.in_memory_feature_repository
 from smb_requirement_agent.breakdown.infrastructure.in_memory_story_repository import (
     InMemoryStoryRepository,
 )
-from smb_requirement_agent.domain.review.entities import BreakdownReview, BreakdownStatus
-from smb_requirement_agent.domain.review.evidence import (
+from smb_requirement_agent.governance.domain.review.entities import BreakdownReview, BreakdownStatus
+from smb_requirement_agent.governance.domain.review.evidence import (
     ReviewEvidence,
     evidence_fingerprint,
 )
-from smb_requirement_agent.domain.review.fingerprints import breakdown_fingerprint
-from smb_requirement_agent.domain.review.policy import REVIEW_RULESET_VERSION
-from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
-    InMemoryAccessRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_breakdown_review_repository import (
+from smb_requirement_agent.governance.domain.review.fingerprints import breakdown_fingerprint
+from smb_requirement_agent.governance.domain.review.policy import REVIEW_RULESET_VERSION
+from smb_requirement_agent.governance.infrastructure.in_memory_breakdown_review_repository import (
     InMemoryBreakdownReviewRepository,
 )
-from smb_requirement_agent.infrastructure.persistence.in_memory_revision_repository import (
+from smb_requirement_agent.governance.infrastructure.in_memory_revision_repository import (
     InMemoryRevisionRepository,
+)
+from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
+    InMemoryAccessRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_worklist import (
     InMemoryRequirementWorklistSnapshotAdapter,

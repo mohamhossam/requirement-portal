@@ -31,10 +31,6 @@ from smb_requirement_agent.application.public_errors import describe_public_erro
 from smb_requirement_agent.application.use_cases.answer_suggestions import (
     SuggestClarificationAnswers,
 )
-from smb_requirement_agent.application.use_cases.breakdown_review import (
-    GenerateBreakdownReview,
-    ResolveOpenQuestion,
-)
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
 from smb_requirement_agent.application.use_cases.prior_art import (
@@ -59,7 +55,11 @@ from smb_requirement_agent.breakdown.application.use_cases.story_workflow import
 from smb_requirement_agent.breakdown.domain.feature.value_objects import FeatureId
 from smb_requirement_agent.breakdown.domain.story.entities import StoryChangeOperation
 from smb_requirement_agent.breakdown.domain.story.value_objects import StoryId
-from smb_requirement_agent.domain.review.entities import FlagId
+from smb_requirement_agent.governance.application.use_cases.breakdown_review import (
+    GenerateBreakdownReview,
+    ResolveOpenQuestion,
+)
+from smb_requirement_agent.governance.domain.review.entities import FlagId
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.identity.application.ports.actor_directory import ActorDirectoryPort
 from smb_requirement_agent.jobs.application.ports.ai_jobs import (

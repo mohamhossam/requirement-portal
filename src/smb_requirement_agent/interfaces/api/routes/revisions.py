@@ -4,17 +4,20 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Path, Query, Response
 
-from smb_requirement_agent.application.exports import ExportFormat
-from smb_requirement_agent.application.use_cases.export_breakdown import (
+from smb_requirement_agent.governance.application.exports import ExportFormat
+from smb_requirement_agent.governance.application.use_cases.export_breakdown import (
     ExportBreakdown,
     formal_final_approval,
     is_exportable_revision,
 )
-from smb_requirement_agent.application.use_cases.revision_history import (
+from smb_requirement_agent.governance.application.use_cases.revision_history import (
     CompareBreakdownVersions,
     GetRevisionHistory,
 )
-from smb_requirement_agent.domain.revision.entities import BreakdownRevision, RevisionNumber
+from smb_requirement_agent.governance.domain.revision.entities import (
+    BreakdownRevision,
+    RevisionNumber,
+)
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     get_compare_breakdown_versions,

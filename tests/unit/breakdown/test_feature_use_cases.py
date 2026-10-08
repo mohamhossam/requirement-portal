@@ -33,9 +33,6 @@ from smb_requirement_agent.application.errors import (
     FeaturesNotFoundError,
     RequirementAnalysisNotFoundError,
 )
-from smb_requirement_agent.application.use_cases.approval_workflow import ApprovalRecorder
-from smb_requirement_agent.application.use_cases.approve_epic import ApproveEpic
-from smb_requirement_agent.application.use_cases.approve_feature import ApproveFeature
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.breakdown.application.ports.generation_guidance import (
     EMPTY_GENERATION_GUIDANCE,
@@ -77,14 +74,19 @@ from smb_requirement_agent.breakdown.infrastructure.llm.fake_epic_generator impo
 from smb_requirement_agent.breakdown.infrastructure.llm.fake_feature_generator import (
     FakeFeatureGenerator,
 )
-from smb_requirement_agent.domain.review.fingerprints import artifact_fingerprint
+from smb_requirement_agent.governance.application.use_cases.approval_workflow import (
+    ApprovalRecorder,
+)
+from smb_requirement_agent.governance.application.use_cases.approve_epic import ApproveEpic
+from smb_requirement_agent.governance.application.use_cases.approve_feature import ApproveFeature
+from smb_requirement_agent.governance.domain.review.fingerprints import artifact_fingerprint
+from smb_requirement_agent.governance.infrastructure.in_memory_breakdown_review_repository import (
+    InMemoryBreakdownReviewRepository,
+)
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
     InMemoryAccessRepository,
     InMemoryActorDirectory,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_breakdown_review_repository import (
-    InMemoryBreakdownReviewRepository,
 )
 from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
     CreateRequirementInput,

@@ -48,14 +48,8 @@ from smb_requirement_agent.analysis.application.use_cases.get_requirement_analys
     GetRequirementAnalysis,
 )
 from smb_requirement_agent.application.events import InProcessEventDispatcher
-from smb_requirement_agent.application.exports import ExportFormat
 from smb_requirement_agent.application.ports.activity import ActivityReadPort, ReportingReadPort
 from smb_requirement_agent.application.ports.architecture_knowledge import ArchitectureKnowledgePort
-from smb_requirement_agent.application.ports.backlog_export import BacklogExportPort
-from smb_requirement_agent.application.ports.breakdown_repository import BreakdownRepositoryPort
-from smb_requirement_agent.application.ports.breakdown_review_repository import (
-    BreakdownReviewRepositoryPort,
-)
 from smb_requirement_agent.application.ports.historic_corpus import HistoricCorpusPort
 from smb_requirement_agent.application.ports.knowledge_handoff import ApprovedBacklogOutboxPort
 from smb_requirement_agent.application.ports.knowledge_index_generations import (
@@ -87,29 +81,11 @@ from smb_requirement_agent.application.use_cases.ai_jobs import (
 from smb_requirement_agent.application.use_cases.answer_suggestions import (
     SuggestClarificationAnswers,
 )
-from smb_requirement_agent.application.use_cases.approval_workflow import (
-    AddReviewComment,
-    ApproveBreakdown,
-    ApproveStory,
-    GetApprovalWorkflow,
-    RejectStory,
-    SubmitForReview,
-)
-from smb_requirement_agent.application.use_cases.approve_epic import ApproveEpic
-from smb_requirement_agent.application.use_cases.approve_feature import ApproveFeature
-from smb_requirement_agent.application.use_cases.breakdown_review import (
-    GenerateBreakdownReview,
-    GetBreakdownReview,
-    RecordDecision,
-    ResolveFlag,
-    ResolveOpenQuestion,
-)
 from smb_requirement_agent.application.use_cases.corpus_actions import (
     BulkReindexRequirements,
     ReinstateToCorpus,
     RetireFromCorpus,
 )
-from smb_requirement_agent.application.use_cases.export_breakdown import ExportBreakdown
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.application.use_cases.historic_corpus import (
     IndexHistoricCorpus,
@@ -153,10 +129,6 @@ from smb_requirement_agent.application.use_cases.requirement_knowledge import (
 )
 from smb_requirement_agent.application.use_cases.requirement_worklist import (
     RequirementWorklistReader,
-)
-from smb_requirement_agent.application.use_cases.revision_history import (
-    CompareBreakdownVersions,
-    GetRevisionHistory,
 )
 from smb_requirement_agent.application.use_cases.saved_views import SavedViews
 from smb_requirement_agent.application.use_cases.source_impact import SourceImpactReview
@@ -213,13 +185,47 @@ from smb_requirement_agent.breakdown.application.use_cases.story_workflow import
     RegenerateStory,
     SplitStory,
 )
+from smb_requirement_agent.governance.application.exports import ExportFormat
+from smb_requirement_agent.governance.application.ports.backlog_export import BacklogExportPort
+from smb_requirement_agent.governance.application.ports.breakdown_repository import (
+    BreakdownRepositoryPort,
+)
+from smb_requirement_agent.governance.application.ports.breakdown_review_repository import (
+    BreakdownReviewRepositoryPort,
+)
+from smb_requirement_agent.governance.application.use_cases.approval_workflow import (
+    AddReviewComment,
+    ApproveBreakdown,
+    ApproveStory,
+    GetApprovalWorkflow,
+    RejectStory,
+    SubmitForReview,
+)
+from smb_requirement_agent.governance.application.use_cases.approve_epic import ApproveEpic
+from smb_requirement_agent.governance.application.use_cases.approve_feature import ApproveFeature
+from smb_requirement_agent.governance.application.use_cases.breakdown_review import (
+    GenerateBreakdownReview,
+    GetBreakdownReview,
+    RecordDecision,
+    ResolveFlag,
+    ResolveOpenQuestion,
+)
+from smb_requirement_agent.governance.application.use_cases.export_breakdown import ExportBreakdown
+from smb_requirement_agent.governance.application.use_cases.revision_history import (
+    CompareBreakdownVersions,
+    GetRevisionHistory,
+)
+from smb_requirement_agent.governance.infrastructure.exports.json_exporter import (
+    JsonBacklogExporter,
+)
+from smb_requirement_agent.governance.infrastructure.exports.xlsx_exporter import (
+    XlsxBacklogExporter,
+)
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.identity.application.ports.actor_directory import ActorDirectoryPort
 from smb_requirement_agent.infrastructure.config.settings import (
     Settings,
 )
-from smb_requirement_agent.infrastructure.exports.json_exporter import JsonBacklogExporter
-from smb_requirement_agent.infrastructure.exports.xlsx_exporter import XlsxBacklogExporter
 from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import (
     RequirementIndexWorker,
 )

@@ -9,15 +9,18 @@ from smb_requirement_agent.analysis.infrastructure.analysis_payloads import (
     clarification_question_from_payload,
 )
 from smb_requirement_agent.application.ports.requirement_worklist import RequirementWorklistSnapshot
-from smb_requirement_agent.domain.revision.entities import BreakdownRevision, RequirementRevision
+from smb_requirement_agent.governance.domain.revision.entities import (
+    BreakdownRevision,
+    RequirementRevision,
+)
+from smb_requirement_agent.governance.infrastructure.postgres_revisions import (
+    PostgresRevisionRepository,
+)
 from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader import (
     ActivityInputDelta,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_requirement_knowledge import (
     finding_from_payload,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_revisions import (
-    PostgresRevisionRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 from smb_requirement_agent.infrastructure.persistence.postgres_snapshots import (

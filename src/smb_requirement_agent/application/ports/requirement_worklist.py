@@ -14,7 +14,7 @@ from smb_requirement_agent.analysis.domain.entities import (
 from smb_requirement_agent.breakdown.domain.epic.entities import Epic
 from smb_requirement_agent.breakdown.domain.feature.entities import Feature
 from smb_requirement_agent.breakdown.domain.story.entities import UserStory
-from smb_requirement_agent.domain.review.entities import BreakdownReview
+from smb_requirement_agent.governance.domain.review.entities import BreakdownReview
 from smb_requirement_agent.identity.domain.entities import RequirementAccess
 from smb_requirement_agent.jobs.domain.entities import AiJobOperation
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement

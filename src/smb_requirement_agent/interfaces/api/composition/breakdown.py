@@ -24,18 +24,6 @@ from smb_requirement_agent.application.ports.architecture_knowledge import (
 )
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.use_cases.ai_jobs import AnalysisProgressReporter
-from smb_requirement_agent.application.use_cases.approval_workflow import (
-    ApproveStory,
-    RejectStory,
-)
-from smb_requirement_agent.application.use_cases.approve_epic import ApproveEpic
-from smb_requirement_agent.application.use_cases.approve_feature import ApproveFeature
-from smb_requirement_agent.application.use_cases.breakdown_review import (
-    GenerateBreakdownReview,
-    GovernanceCandidateReview,
-    RefreshSavedBreakdownReview,
-    ResolveOpenQuestion,
-)
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
 from smb_requirement_agent.breakdown.application.ports.epic_generator import EpicGeneratorPort
@@ -86,7 +74,19 @@ from smb_requirement_agent.breakdown.application.use_cases.story_workflow import
 from smb_requirement_agent.breakdown.infrastructure.architecture_job_worker import (
     ArchitectureJobWorker,
 )
-from smb_requirement_agent.domain.review.policy import BreakdownReviewPolicy
+from smb_requirement_agent.governance.application.use_cases.approval_workflow import (
+    ApproveStory,
+    RejectStory,
+)
+from smb_requirement_agent.governance.application.use_cases.approve_epic import ApproveEpic
+from smb_requirement_agent.governance.application.use_cases.approve_feature import ApproveFeature
+from smb_requirement_agent.governance.application.use_cases.breakdown_review import (
+    GenerateBreakdownReview,
+    GovernanceCandidateReview,
+    RefreshSavedBreakdownReview,
+    ResolveOpenQuestion,
+)
+from smb_requirement_agent.governance.domain.review.policy import BreakdownReviewPolicy
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters

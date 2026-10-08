@@ -13,6 +13,9 @@ from smb_requirement_agent.application.use_cases.requirement_knowledge import (
     GetKnowledgeReview,
     RequirementKnowledgeCorpus,
 )
+from smb_requirement_agent.governance.infrastructure.postgres_revisions import (
+    PostgresRevisionRepository,
+)
 from smb_requirement_agent.identity.infrastructure.postgres_identity import PostgresAccessRepository
 from smb_requirement_agent.infrastructure.persistence.corpus_membership import (
     PostgresCorpusMembership,
@@ -28,9 +31,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_activity_sources 
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_requirement_knowledge import (
     PostgresRequirementKnowledgeStore,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_revisions import (
-    PostgresRevisionRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_session import (
     PostgresCommitSession,

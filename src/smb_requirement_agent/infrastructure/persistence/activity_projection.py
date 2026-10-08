@@ -34,16 +34,19 @@ from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeFinding,
     KnowledgeFindingStatus,
 )
-from smb_requirement_agent.domain.review.entities import (
+from smb_requirement_agent.governance.domain.review.entities import (
     BreakdownStatus,
     FlagSeverity,
     FlagStatus,
 )
-from smb_requirement_agent.domain.review.evidence import (
+from smb_requirement_agent.governance.domain.review.evidence import (
     ReviewEvidence,
     evidence_fingerprint,
 )
-from smb_requirement_agent.domain.revision.entities import BreakdownRevision, RequirementRevision
+from smb_requirement_agent.governance.domain.revision.entities import (
+    BreakdownRevision,
+    RequirementRevision,
+)
 from smb_requirement_agent.identity.domain.entities import AccessChangeKind
 from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobRecord
 from smb_requirement_agent.jobs.domain.entities import AiJobOperation, AiJobStatus

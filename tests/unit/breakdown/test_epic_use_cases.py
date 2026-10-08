@@ -29,8 +29,6 @@ from smb_requirement_agent.application.errors import (
     RequirementAnalysisNotFoundError,
     RequirementNotFoundError,
 )
-from smb_requirement_agent.application.use_cases.approval_workflow import ApprovalRecorder
-from smb_requirement_agent.application.use_cases.approve_epic import ApproveEpic
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.breakdown.application.use_cases.edit_epic import EditEpic, EditEpicInput
 from smb_requirement_agent.breakdown.application.use_cases.generate_epic import GenerateEpic
@@ -56,14 +54,18 @@ from smb_requirement_agent.breakdown.infrastructure.llm.fake_epic_generator impo
     FAKE_PROMPT_VERSION,
     FakeEpicGenerator,
 )
-from smb_requirement_agent.domain.review.fingerprints import artifact_fingerprint
+from smb_requirement_agent.governance.application.use_cases.approval_workflow import (
+    ApprovalRecorder,
+)
+from smb_requirement_agent.governance.application.use_cases.approve_epic import ApproveEpic
+from smb_requirement_agent.governance.domain.review.fingerprints import artifact_fingerprint
+from smb_requirement_agent.governance.infrastructure.in_memory_breakdown_review_repository import (
+    InMemoryBreakdownReviewRepository,
+)
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
     InMemoryAccessRepository,
     InMemoryActorDirectory,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_breakdown_review_repository import (
-    InMemoryBreakdownReviewRepository,
 )
 from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
     CreateRequirementInput,

@@ -17,12 +17,6 @@ from smb_requirement_agent.analysis.application.ports.requirement_analysis_repos
 )
 from smb_requirement_agent.analysis.application.use_cases.discard_analysis import DiscardAnalysis
 from smb_requirement_agent.application.events import InProcessEventDispatcher
-from smb_requirement_agent.application.ports.breakdown_review_repository import (
-    BreakdownReviewRepositoryPort,
-)
-from smb_requirement_agent.application.use_cases.reset_approval_workflow import (
-    ResetApprovalWorkflow,
-)
 from smb_requirement_agent.breakdown.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.breakdown.application.ports.feature_repository import (
     FeatureRepositoryPort,
@@ -35,6 +29,12 @@ from smb_requirement_agent.breakdown.domain.architecture.events import Architect
 from smb_requirement_agent.breakdown.domain.epic.events import EpicChanged
 from smb_requirement_agent.breakdown.domain.feature.events import FeatureChanged, FeaturesReplaced
 from smb_requirement_agent.breakdown.domain.story.events import StoriesChanged
+from smb_requirement_agent.governance.application.ports.breakdown_review_repository import (
+    BreakdownReviewRepositoryPort,
+)
+from smb_requirement_agent.governance.application.use_cases.reset_approval_workflow import (
+    ResetApprovalWorkflow,
+)
 from smb_requirement_agent.requirements.domain.requirement.events import RequirementRevised
 
 

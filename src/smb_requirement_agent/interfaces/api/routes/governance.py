@@ -4,7 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from smb_requirement_agent.application.use_cases.approval_workflow import (
+from smb_requirement_agent.governance.application.use_cases.approval_workflow import (
     AddReviewComment,
     ApprovalWorkflowView,
     ApproveBreakdown,

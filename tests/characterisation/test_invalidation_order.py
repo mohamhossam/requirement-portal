@@ -38,8 +38,8 @@ from smb_requirement_agent.breakdown.infrastructure.in_memory_feature_repository
 from smb_requirement_agent.breakdown.infrastructure.in_memory_story_repository import (
     InMemoryStoryRepository,
 )
-from smb_requirement_agent.domain.review.entities import BreakdownReview
-from smb_requirement_agent.infrastructure.persistence.in_memory_breakdown_review_repository import (
+from smb_requirement_agent.governance.domain.review.entities import BreakdownReview
+from smb_requirement_agent.governance.infrastructure.in_memory_breakdown_review_repository import (
     InMemoryBreakdownReviewRepository,
 )
 from smb_requirement_agent.infrastructure.persistence.in_memory_transaction import (

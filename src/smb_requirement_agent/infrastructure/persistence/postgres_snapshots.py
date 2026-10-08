@@ -21,6 +21,7 @@ from smb_requirement_agent.breakdown.infrastructure.backlog_payloads import (
     feature_from_payload,
     story_from_payload,
 )
+from smb_requirement_agent.governance.infrastructure.review_payloads import review_from_payload
 from smb_requirement_agent.identity.infrastructure.identity_payloads import access_from_payload
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 from smb_requirement_agent.infrastructure.persistence.postgres_values import (
@@ -28,7 +29,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_values import (
     _payload,
     _string,
 )
-from smb_requirement_agent.infrastructure.persistence.review_payloads import review_from_payload
 from smb_requirement_agent.jobs.domain.entities import AiJobOperation
 from smb_requirement_agent.requirements.infrastructure.requirement_snapshot import (
     requirement_from_payload,

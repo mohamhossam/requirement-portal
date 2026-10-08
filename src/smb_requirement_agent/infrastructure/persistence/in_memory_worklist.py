@@ -8,10 +8,6 @@ from smb_requirement_agent.analysis.application.ports.analysis_audit_repository 
 from smb_requirement_agent.analysis.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
-from smb_requirement_agent.application.ports.breakdown_repository import BreakdownRepositoryPort
-from smb_requirement_agent.application.ports.breakdown_review_repository import (
-    BreakdownReviewRepositoryPort,
-)
 from smb_requirement_agent.application.ports.requirement_worklist import (
     CurrentWorklistProjectionPort,
     RequirementWorklistSnapshot,
@@ -21,6 +17,12 @@ from smb_requirement_agent.breakdown.application.ports.feature_repository import
     FeatureRepositoryPort,
 )
 from smb_requirement_agent.breakdown.application.ports.story_repository import StoryRepositoryPort
+from smb_requirement_agent.governance.application.ports.breakdown_repository import (
+    BreakdownRepositoryPort,
+)
+from smb_requirement_agent.governance.application.ports.breakdown_review_repository import (
+    BreakdownReviewRepositoryPort,
+)
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobRepositoryPort
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (

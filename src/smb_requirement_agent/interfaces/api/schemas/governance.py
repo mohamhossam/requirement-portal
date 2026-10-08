@@ -6,7 +6,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from smb_requirement_agent.domain.review.entities import BreakdownStatus
+from smb_requirement_agent.governance.domain.review.entities import BreakdownStatus
 from smb_requirement_agent.interfaces.api.schemas.bounds import (
     MAX_IDENTIFIER_CHARACTERS,
     RequiredText,

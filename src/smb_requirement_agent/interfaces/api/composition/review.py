@@ -14,29 +14,29 @@ from smb_kernel.time.clock import ClockPort
 from smb_requirement_agent.application.ports.architecture_knowledge import (
     ActiveArchitectureReleasePort,
 )
-from smb_requirement_agent.application.ports.backlog_export import BacklogExportPort
 from smb_requirement_agent.application.ports.knowledge_handoff import ApprovedBacklogOutboxPort
-from smb_requirement_agent.application.use_cases.approval_workflow import (
+from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
+from smb_requirement_agent.application.use_cases.source_impact import SourceImpactReview
+from smb_requirement_agent.governance.application.ports.backlog_export import BacklogExportPort
+from smb_requirement_agent.governance.application.use_cases.approval_workflow import (
     AddReviewComment,
     ApprovalRecorder,
     ApproveBreakdown,
     GetApprovalWorkflow,
     SubmitForReview,
 )
-from smb_requirement_agent.application.use_cases.breakdown_review import (
+from smb_requirement_agent.governance.application.use_cases.breakdown_review import (
     GetBreakdownReview,
     RecordDecision,
     ResolveFlag,
     ReviewEvidenceLoader,
 )
-from smb_requirement_agent.application.use_cases.export_breakdown import ExportBreakdown
-from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
-from smb_requirement_agent.application.use_cases.revision_history import (
+from smb_requirement_agent.governance.application.use_cases.export_breakdown import ExportBreakdown
+from smb_requirement_agent.governance.application.use_cases.revision_history import (
     CompareBreakdownVersions,
     GetRevisionHistory,
 )
-from smb_requirement_agent.application.use_cases.source_impact import SourceImpactReview
-from smb_requirement_agent.domain.review.policy import ApprovalPolicy
+from smb_requirement_agent.governance.domain.review.policy import ApprovalPolicy
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
 
 

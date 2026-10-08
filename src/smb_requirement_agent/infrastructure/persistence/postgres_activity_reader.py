@@ -37,10 +37,13 @@ from smb_requirement_agent.application.use_cases.activity_reporting import (
 from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeFinding,
 )
-from smb_requirement_agent.domain.review.entities import (
+from smb_requirement_agent.governance.domain.review.entities import (
     BreakdownStatus,
 )
-from smb_requirement_agent.domain.revision.entities import BreakdownRevision, RequirementRevision
+from smb_requirement_agent.governance.domain.revision.entities import (
+    BreakdownRevision,
+    RequirementRevision,
+)
 from smb_requirement_agent.infrastructure.persistence.activity_projection import (
     ActivityJobSource,
     RepositoryActivityProjection,

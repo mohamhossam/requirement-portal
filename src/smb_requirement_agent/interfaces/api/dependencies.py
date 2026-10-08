@@ -42,29 +42,11 @@ from smb_requirement_agent.application.use_cases.ai_jobs import AiJobs, Notifica
 from smb_requirement_agent.application.use_cases.answer_suggestions import (
     SuggestClarificationAnswers,
 )
-from smb_requirement_agent.application.use_cases.approval_workflow import (
-    AddReviewComment,
-    ApproveBreakdown,
-    ApproveStory,
-    GetApprovalWorkflow,
-    RejectStory,
-    SubmitForReview,
-)
-from smb_requirement_agent.application.use_cases.approve_epic import ApproveEpic
-from smb_requirement_agent.application.use_cases.approve_feature import ApproveFeature
-from smb_requirement_agent.application.use_cases.breakdown_review import (
-    GenerateBreakdownReview,
-    GetBreakdownReview,
-    RecordDecision,
-    ResolveFlag,
-    ResolveOpenQuestion,
-)
 from smb_requirement_agent.application.use_cases.corpus_actions import (
     BulkReindexRequirements,
     ReinstateToCorpus,
     RetireFromCorpus,
 )
-from smb_requirement_agent.application.use_cases.export_breakdown import ExportBreakdown
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.application.use_cases.identity_access import (
     RequirementAccessService,
@@ -95,10 +77,6 @@ from smb_requirement_agent.application.use_cases.requirement_knowledge import (
 )
 from smb_requirement_agent.application.use_cases.requirement_worklist import (
     RequirementWorklistReader,
-)
-from smb_requirement_agent.application.use_cases.revision_history import (
-    CompareBreakdownVersions,
-    GetRevisionHistory,
 )
 from smb_requirement_agent.application.use_cases.saved_views import SavedViews
 from smb_requirement_agent.application.use_cases.source_impact import SourceImpactReview
@@ -135,6 +113,28 @@ from smb_requirement_agent.breakdown.application.use_cases.story_workflow import
     MergeStories,
     RegenerateStory,
     SplitStory,
+)
+from smb_requirement_agent.governance.application.use_cases.approval_workflow import (
+    AddReviewComment,
+    ApproveBreakdown,
+    ApproveStory,
+    GetApprovalWorkflow,
+    RejectStory,
+    SubmitForReview,
+)
+from smb_requirement_agent.governance.application.use_cases.approve_epic import ApproveEpic
+from smb_requirement_agent.governance.application.use_cases.approve_feature import ApproveFeature
+from smb_requirement_agent.governance.application.use_cases.breakdown_review import (
+    GenerateBreakdownReview,
+    GetBreakdownReview,
+    RecordDecision,
+    ResolveFlag,
+    ResolveOpenQuestion,
+)
+from smb_requirement_agent.governance.application.use_cases.export_breakdown import ExportBreakdown
+from smb_requirement_agent.governance.application.use_cases.revision_history import (
+    CompareBreakdownVersions,
+    GetRevisionHistory,
 )
 from smb_requirement_agent.identity.application.ports.identity import Actor
 from smb_requirement_agent.infrastructure.config.options import IdentityProvider

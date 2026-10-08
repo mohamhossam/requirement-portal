@@ -7,7 +7,9 @@ from typing import cast
 
 import pytest
 
-from smb_requirement_agent.application.ports.breakdown_repository import BreakdownRepositoryPort
+from smb_requirement_agent.governance.application.ports.breakdown_repository import (
+    BreakdownRepositoryPort,
+)
 from smb_requirement_agent.infrastructure.persistence.in_memory_transaction import (
     InMemoryTransactionManager,
 )

@@ -6,7 +6,6 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Response
 
-from smb_requirement_agent.application.use_cases.approval_workflow import ApproveStory, RejectStory
 from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
 from smb_requirement_agent.application.use_cases.requirement_commands import ExpectedContext
 from smb_requirement_agent.breakdown.application.use_cases.story_change_proposals import (
@@ -39,7 +38,11 @@ from smb_requirement_agent.breakdown.domain.story.quality import (
     SpidrRecommendation,
 )
 from smb_requirement_agent.breakdown.domain.story.value_objects import StoryId, StoryProposalId
-from smb_requirement_agent.domain.review.fingerprints import artifact_fingerprint
+from smb_requirement_agent.governance.application.use_cases.approval_workflow import (
+    ApproveStory,
+    RejectStory,
+)
+from smb_requirement_agent.governance.domain.review.fingerprints import artifact_fingerprint
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     RequirementCommandsDep,

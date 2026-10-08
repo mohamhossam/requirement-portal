@@ -32,11 +32,18 @@ from smb_requirement_agent.breakdown.infrastructure.postgres_backlog import (
     PostgresStoryChangeProposalRepository,
     PostgresStoryRepository,
 )
-from smb_requirement_agent.domain.review.entities import BreakdownReview
-from smb_requirement_agent.domain.revision.entities import (
+from smb_requirement_agent.governance.domain.review.entities import BreakdownReview
+from smb_requirement_agent.governance.domain.revision.entities import (
     BreakdownRevision,
     RequirementRevision,
     RevisionNumber,
+)
+from smb_requirement_agent.governance.infrastructure.postgres_breakdown_review import (
+    PostgresBreakdownReviewRepository,
+)
+from smb_requirement_agent.governance.infrastructure.postgres_revisions import (
+    PostgresRevisionRepository,
+    PostgresRevisionWriter,
 )
 from smb_requirement_agent.identity.domain.entities import (
     DraftOwnership,
@@ -51,13 +58,6 @@ from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader i
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_activity_sources import (
     PostgresActivitySources,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_repositories import (
-    PostgresBreakdownReviewRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_revisions import (
-    PostgresRevisionRepository,
-    PostgresRevisionWriter,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_snapshots import (
     PostgresSnapshotReader,

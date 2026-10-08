@@ -33,7 +33,7 @@ from smb_requirement_agent.domain.architecture.knowledge import (
     RelationshipKind,
     relationship_kind,
 )
-from smb_requirement_agent.domain.review.fingerprints import artifact_fingerprint
+from smb_requirement_agent.governance.domain.review.fingerprints import artifact_fingerprint
 from smb_requirement_agent.infrastructure.persistence.shared_payloads import (
     architecture_from_payload,
     architecture_to_payload,

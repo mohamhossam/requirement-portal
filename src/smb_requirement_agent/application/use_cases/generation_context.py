@@ -33,7 +33,7 @@ from smb_requirement_agent.breakdown.application.ports.story_repository import (
 )
 from smb_requirement_agent.breakdown.domain.feature.value_objects import FeatureId
 from smb_requirement_agent.breakdown.domain.story.value_objects import StoryId
-from smb_requirement_agent.domain.review.fingerprints import artifact_fingerprint
+from smb_requirement_agent.governance.domain.review.fingerprints import artifact_fingerprint
 from smb_requirement_agent.jobs.domain.entities import AiJobOperation
 from smb_requirement_agent.requirements.application.ports.document_repository import (
     DocumentRepositoryPort,
