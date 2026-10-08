@@ -19,14 +19,14 @@ from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping 
     MapFeatureArchitecture,
 )
 from smb_requirement_agent.breakdown.domain.architecture.entities import ArchitectureImpact
+from smb_requirement_agent.breakdown.infrastructure.backlog_codecs import (
+    architecture_from_payload,
+    architecture_to_payload,
+)
 from smb_requirement_agent.breakdown.infrastructure.llm.prompts.generation_guidance import (
     render_guidance,
 )
 from smb_requirement_agent.governance.domain.review.fingerprints import artifact_fingerprint
-from smb_requirement_agent.infrastructure.persistence.shared_payloads import (
-    architecture_from_payload,
-    architecture_to_payload,
-)
 from smb_requirement_agent.references.application.ports.architecture_knowledge import (
     ArchitectureKnowledgeMatch,
     ArchitectureQuery,

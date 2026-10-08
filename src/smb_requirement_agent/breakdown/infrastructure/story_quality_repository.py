@@ -10,12 +10,12 @@ from psycopg.types.json import Jsonb
 
 from smb_requirement_agent.breakdown.domain.feature.value_objects import FeatureId
 from smb_requirement_agent.breakdown.domain.story.quality import FeatureQualitySnapshot
-from smb_requirement_agent.infrastructure.persistence.payload_fields import JsonObject
-from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
-from smb_requirement_agent.infrastructure.persistence.shared_payloads import (
+from smb_requirement_agent.breakdown.infrastructure.backlog_codecs import (
     quality_assessment_from_payload,
     quality_assessment_to_payload,
 )
+from smb_requirement_agent.infrastructure.persistence.payload_fields import JsonObject
+from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 
 
 class InMemoryStoryQualityRepository:

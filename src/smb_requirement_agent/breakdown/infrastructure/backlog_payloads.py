@@ -39,6 +39,12 @@ from smb_requirement_agent.breakdown.domain.story.value_objects import (
     StoryProposalId,
     UserRole,
 )
+from smb_requirement_agent.breakdown.infrastructure.backlog_codecs import (
+    architecture_from_payload,
+    architecture_to_payload,
+    quality_assessment_from_payload,
+    quality_assessment_to_payload,
+)
 from smb_requirement_agent.infrastructure.persistence.payload_fields import (
     JsonObject,
     item_text,
@@ -50,12 +56,8 @@ from smb_requirement_agent.infrastructure.persistence.payload_fields import (
     required_text,
 )
 from smb_requirement_agent.infrastructure.persistence.shared_payloads import (
-    architecture_from_payload,
-    architecture_to_payload,
     generation_from_payload,
     generation_to_payload,
-    quality_assessment_from_payload,
-    quality_assessment_to_payload,
 )
 from smb_requirement_agent.shared_kernel.generation import Provenance
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId

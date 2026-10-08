@@ -25,10 +25,10 @@ from smb_requirement_agent.breakdown.infrastructure.backlog_payloads import (
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 from smb_requirement_agent.infrastructure.persistence.postgres_values import (
+    DbConnection,
     _integer,
     _payload,
-    requirement_id_for_epic,
-    requirement_id_for_feature,
+    _string,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
@@ -364,3 +364,24 @@ class PostgresStoryChangeProposalRepository:
             requirement_id = requirement_id_for_feature(feature_id, connection)
             if requirement_id is not None:
                 self._store.mark_requirement_dirty(requirement_id)
+
+
+def requirement_id_for_epic(epic_id: EpicId, connection: DbConnection) -> RequirementId | None:
+    row = connection.execute(
+        "SELECT requirement_id FROM epics WHERE epic_id = %s", (epic_id.value,)
+    ).fetchone()
+    return RequirementId(_string(row[0])) if row is not None else None
+
+
+def requirement_id_for_feature(
+    feature_id: FeatureId, connection: DbConnection
+) -> RequirementId | None:
+    row = connection.execute(
+        """
+        SELECT e.requirement_id FROM features f
+        JOIN epics e ON e.epic_id = f.epic_id
+        WHERE f.feature_id = %s
+        """,
+        (feature_id.value,),
+    ).fetchone()
+    return RequirementId(_string(row[0])) if row is not None else None

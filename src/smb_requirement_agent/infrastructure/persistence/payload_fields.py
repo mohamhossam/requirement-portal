@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import datetime
 from typing import cast
 
-from smb_requirement_agent.requirements.domain.requirement.value_objects import RequirementContext
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 type JsonObject = dict[str, object]
@@ -39,29 +38,6 @@ def json_array(data: JsonObject, key: str) -> list[object]:
 
 def optional_json_array(data: JsonObject, key: str) -> list[object]:
     return json_array(data, key) if key in data else []
-
-
-def context_value(value: RequirementContext | None) -> str | None:
-    return value.value if value is not None else None
-
-
-def optional_context(
-    data: JsonObject, key: str, *, fallback: str | None = None
-) -> RequirementContext | None:
-    value = data.get(key)
-    if key not in data and fallback is not None:
-        value = data.get(fallback)
-    if value is None:
-        return None
-    if not isinstance(value, str):
-        raise TypeError(f"Snapshot field {key!r} must be text or null.")
-    return RequirementContext(value) if value.strip() else None
-
-
-def context_array(data: JsonObject, key: str) -> tuple[RequirementContext, ...]:
-    if key not in data:
-        return ()
-    return tuple(RequirementContext(item) for item in text_array(data, key))
 
 
 def text_array(data: JsonObject, key: str) -> tuple[str, ...]:

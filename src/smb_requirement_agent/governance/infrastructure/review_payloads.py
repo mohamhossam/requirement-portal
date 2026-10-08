@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from smb_requirement_agent.breakdown.infrastructure.backlog_codecs import (
+    quality_assessment_from_payload,
+)
 from smb_requirement_agent.governance.domain.review.entities import (
     BreakdownReview,
     BreakdownStatus,
@@ -43,7 +46,6 @@ from smb_requirement_agent.infrastructure.persistence.shared_payloads import (
     as_snapshot,
     comment_from_payload,
     comment_to_payload,
-    quality_assessment_from_payload,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 

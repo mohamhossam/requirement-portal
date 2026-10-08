@@ -8,10 +8,13 @@ from contextlib import contextmanager
 from typing import Protocol
 
 from smb_requirement_agent.application.ports.external_work import check_external_result
-from smb_requirement_agent.governance.application.ports.breakdown_repository import (
-    BreakdownRepositoryPort,
-)
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+
+
+class _RevisionWriter(Protocol):
+    """The part of governance's breakdown repository a checkpoint needs."""
+
+    def create_current_revisions(self, requirement_id: RequirementId) -> None: ...
 
 
 class MemoryTransactionParticipant(Protocol):
@@ -107,7 +110,7 @@ class InMemoryTransactionManager:
     def checkpoint(
         self,
         requirement_id: RequirementId,
-        revisions: BreakdownRepositoryPort,
+        revisions: _RevisionWriter,
     ) -> None:
         """Capture only the final workspace state for one logical mutation."""
         self._source_changed(requirement_id)

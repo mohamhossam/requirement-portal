@@ -57,7 +57,6 @@ from smb_requirement_agent.infrastructure.persistence.shared_payloads import (
     actor_fields_from_payload,
     actor_fields_to_payload,
     as_snapshot,
-    evidence_payload,
     optional_actor_snapshot,
     required_actor_snapshot,
 )
@@ -545,3 +544,18 @@ def _analysis_item_evidence(value: object) -> tuple[AnalysisEvidenceReference, .
         )
         for item in optional_json_array(data, "evidence_references")
     )
+
+
+def evidence_payload(
+    values: tuple[AnalysisEvidenceReference, ...],
+) -> list[JsonObject]:
+    return [
+        {
+            "document_id": item.document_id,
+            "version_id": item.version_id,
+            "checksum_sha256": item.checksum_sha256,
+            "block_id": item.block_id,
+            "label": item.label,
+        }
+        for item in values
+    ]
