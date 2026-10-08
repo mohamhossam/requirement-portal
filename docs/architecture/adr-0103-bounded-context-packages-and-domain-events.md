@@ -7,7 +7,7 @@ Accepted 2026-10-07 by the repository owner. It:
 - amends ADR-0021, ADR-0070 and ADR-0071 as described under Decision;
 - amends AGENTS.md §4, §5, §15 and §19.
 
-Implemented 2026-10-08 by PRs 1–16 of `docs/slices/refactor-bounded-contexts.md`. Every context has its own package, and the layer-first `domain/` and `application/use_cases/` packages are gone. Amendment 2 records where the implementation differs from the text below.
+Implemented 2026-10-08 by PRs 1–16 of `docs/slices/refactor-bounded-contexts.md`. Every context has its own package, and the layer-first `domain/` and `application/use_cases/` packages are gone. Amendment 2 records where the implementation differs from the text below, and Amendment 3 records the follow-ups that completed it the same day.
 
 The migration is sequenced in `docs/slices/refactor-bounded-contexts.md`. The contexts and their relationships are in `docs/architecture/context-map.md`, and the terms are in `docs/architecture/ubiquitous-language.md`.
 
@@ -343,7 +343,7 @@ moved to `workflows` as planned.
   context's domain and application layers. A context's adapters may reuse another context's
   codecs, because revision snapshots serialise the whole tree (PR 12).
 
-**§2's "never import another context's use cases" is not yet enforced.** No context has a
+**§2's "never import another context's use cases" is not yet enforced** (done by Amendment 3). No context has a
 `published.py`. Today 25 import statements reach another context's `application/use_cases`:
 - 20 are in `workflows`, the cross-context orchestrator;
 - 5 are elsewhere:
@@ -355,7 +355,7 @@ moved to `workflows` as planned.
 All 25 point upstream, so `contexts_layered` accepts them. The slice spec's *Follow-ups* section
 records the work to give them published surfaces or ports.
 
-**Shared `infrastructure/` is not yet context-free.** These modules still import context code:
+**Shared `infrastructure/` is not yet context-free** (done by Amendment 3). These modules still import context code:
 - the provider-selection modules `infrastructure/llm/{openai,openrouter}_adapters.py`, which build
   every context's LLM adapters;
 - `infrastructure/llm/response_sanitizer.py`, which raises an analysis error;
@@ -366,4 +366,56 @@ No contract covers shared infrastructure. This is also recorded under *Follow-up
 
 **Shims.** None was needed. Every PR switched production code and tests to the new paths in the
 same commit, so no `# MIGRATION SHIM` module was ever added.
+
+## Amendment 3 — Follow-ups delivered (2026-10-08)
+
+The owner asked for the four follow-ups Amendment 2 recorded to be done on the same branch. Where
+this amendment differs from the text above, it governs.
+
+**Only `workflows` calls another context's use cases (§2, decided by the owner).** `workflows` is
+the orchestration context: `RequirementCommands` composes other contexts' use cases, and
+`ai_job_execution` runs them as durable jobs. Giving each of those calls a port would mirror about
+15 use-case signatures for no change in behaviour, so `workflows` keeps calling them directly.
+Every other context reaches another context only through:
+- its `domain`;
+- its `application/ports`;
+- its `application/errors.py`;
+- its `application/published.py`.
+
+`published.py` now exists where another context needs more than ports:
+- **jobs:** the AI-job command fingerprint, which knowledge uses to deduplicate prior-art jobs;
+- **breakdown:** `FeatureLookup`, which governance's `ApproveFeature` builds on, and
+  `story_set_fingerprint`, the key of a Story-quality snapshot.
+
+The other three use-case imports have different fixes:
+- **Requirements' source-eligibility rules** are pure rules over its domain types. They are now
+  domain code: `requirements/domain/source_policy.py`.
+- **Governance** owns `StoryAssessmentPort` and `OpenQuestionPort`. The composition root fills
+  them with breakdown's `ValidateStory` and analysis's `AnalysisCollaboration`.
+
+**Enforcement.** Each `<ctx>_published_surface` contract also forbids
+`<ctx>.application.use_cases`, and `workflows` is no longer one of its sources.
+
+**Shared `infrastructure/` imports no context.** The new contract
+`shared_infrastructure_uses_no_context` enforces this. Four modules changed:
+- **The provider modules.** Each context keeps its own `infrastructure/llm/openai_adapters.py`
+  and `openrouter_adapters.py`. The shared `openai_transport.py` and `openrouter_transport.py`
+  hold only the transport and client helpers.
+- **`response_sanitizer`** moves to analysis, its only user.
+- **`PostgresStore`** no longer names a requirements error. The name sat in a re-raising
+  `except` clause, and it is not a `psycopg.Error`, so it was never caught anyway.
+- **`backfill_document_blobs`**, requirements' operator tool, moves to
+  `requirements/infrastructure/`. The upgrade runbook's command changes with it.
+
+**Reporting has its own composition builder.** `composition/reporting.py` builds reporting's use
+cases. Its backend-specific readers stay in the persistence wiring, beside every other context's
+repositories.
+
+**References' ACL, settled.**
+- **Historic content.** Knowledge-portal's content-page entries are decoded in references'
+  infrastructure, and the staged-content port returns typed passages and work items, so the
+  domain no longer parses the portal's wire format. Stored data does not change.
+- **The event decoder port stays.** A consumer decodes only the event kinds it handles, so a
+  malformed event of one kind never stops a consumer of another. Decoding every event in the feed
+  would change that behaviour.
 

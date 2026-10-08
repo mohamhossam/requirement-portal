@@ -113,10 +113,10 @@ relationships are in `docs/architecture/context-map.md`.
   `workflows → reporting → governance → breakdown → knowledge → analysis → references → requirements → {jobs | identity} → shared_kernel`
   (ADR-0103 Amendment 1).
   A context never imports one to its left.
-- **Published surface.** From another context, import only its `domain`, `application/ports`
-  and `application/errors`. Never import its infrastructure: `<ctx>_published_surface` rejects
-  it. Do not add imports of another context's use cases either. The existing ones are recorded
-  in §19.
+- **Published surface.** From another context, import only its `domain`, `application/ports`,
+  `application/errors` and `application/published`. Never import its use cases or its
+  infrastructure: `<ctx>_published_surface` rejects both. The one exception is `workflows`,
+  the orchestration context, which may call other contexts' use cases (ADR-0103 Amendment 3).
 - **No downstream calls from upstream.** When an upstream context needs a downstream effect, it
   publishes a domain event, or calls a port it owns itself that the composition root implements.
 - **How domain events run.** In process and synchronously, inside the caller's unit of work and
@@ -126,8 +126,9 @@ relationships are in `docs/architecture/context-map.md`.
   - `interfaces/`: routes, schemas, dependency providers, the error map and the composition root;
   - the shared `application/`: the platform-kernel error re-exports, the event dispatcher and the
     technical ports. `shared_application_uses_no_context` keeps context code out of it;
-  - `infrastructure/config/settings.py` and the persistence machinery (`PostgresStore`,
-    migrations).
+  - the shared `infrastructure/`: settings, the persistence machinery (`PostgresStore`,
+    migrations) and the LLM transports. `shared_infrastructure_uses_no_context` keeps context
+    code out of it, so a context's adapters live in that context.
 - **Errors.** A context's application errors are in `<ctx>/application/errors.py`. The public
   error catalogue, `workflows/application/public_errors.py`, maps every error to its public code
   and category. `interfaces/api/error_handlers.py` builds the HTTP map from it.
@@ -720,7 +721,6 @@ without reading the note; several get materially harder in later slices.
 | `ai_jobs` rows are kept forever, because they are the activity feed's record of AI work (ADR-0079). | The table grows with use, though reads are bounded and polling cost does not grow. | Archive finished jobs past a horizon into a cold table the activity projection can still read, if the table's size starts to matter. |
 | 2026-09-24 review findings not yet remediated: the provider rate limit is per API process (ADR-0074). | Behind N API replicas an actor can make N times the configured provider calls. | An exact global ceiling at a gateway, or a durable counter if spend control becomes a requirement. Retired: pooling and worker separation (Phase 2, ADR-0069); Slice 14 conventions (Phase 3); route-assembled units of work (Phase 4, ADR-0070); oversized modules, the monolithic container including inline persistence selection, and OpenAI adapter drift (Phase 5, ADR-0071/0072); server-side review action availability and the built app's Content-Security-Policy (Phase 6, ADR-0073); deployment packaging, JSON logs, metrics, the provider rate limit and timestamped migrations (Phase 7, ADR-0074). |
 | Frontend review-remediation items that need frontend logic changes, deferred on 2026-09-24 because CLAUDE.md limits frontend changes to presentation during the UI redesign. (a) `frontend/src/review/rules.ts` still restates the review rules instead of reading the API's `actions` fields (ADR-0073). (b) The knowledge API types in `frontend/src/api/knowledge.ts` are hand-written, not generated from OpenAPI. | (a) The rules now exist on the server, but the browser can still drift from them until it switches over. (b) Hand-written types can silently disagree with the contract; since the third review remediation `src/api/contract.test.ts` checks every client call's method and path against `openapi.json`, but not the payload types. | The UI redesign (`docs/ux-plan.md`), which rebuilds these screens: read `actions`, delete `rules.ts`, and use generated knowledge types. Retired: the 1,790-line `AnalysisPanel.tsx`, split presentationally into seven files (third review remediation, Phase 6.2); identity-dependent queries on the Architecture knowledge page running before identity loaded (fourth review remediation, Phase 5.1); the Clarify panel showing "No analysis yet" after its job finished, because invalidation joined a still-loading read (PR #41: `invalidateWorkspaceKeys` cancels in-flight reads first). These are Phase 6.1 (frontend half), 6.2 and 6.3 of `docs/slices/enhancement-review-remediation.md`. |
-| ADR-0103 follow-ups. (a) 25 imports reach another context's use cases, all upstream: 20 from `workflows` and 5 elsewhere (governance → `AnalysisCollaboration`, `FeatureLookup` and `ValidateStory`; analysis → `requirement_sources`; knowledge → `command_fingerprint`). No context has a published surface for them. (b) Shared `infrastructure/` still imports context code: the provider-selection modules in `infrastructure/llm/`, `response_sanitizer.py`, `postgres_store.py` and `backfill_document_blobs.py`. (c) The ACL consolidation in `references`, and a reporting composition builder. | `<ctx>_published_surface` can forbid only infrastructure until (a) is done, so a use-case import between contexts is caught by review, not by tooling. No contract covers (b). | The *Follow-ups* section of `docs/slices/refactor-bounded-contexts.md`, scheduled when a slice next touches the area. Retired by PR 16 of that slice: the layer-first package layout, the context errors in `application/errors.py`, the public error catalogue's placement (F5), and every contract exemption. |
 
 
 Legacy CSV/TSV extraction can retain first-record wording copied into later rows. ADR-0057 fixes
@@ -740,6 +740,12 @@ Retired by Slice 4A: the missing human-review UI. Requirement intake, analysis,
 Epic review and Feature review are now usable in a browser, with ownership,
 provenance and staleness made explicit and guarded regeneration covered by a
 full-flow browser test.
+
+Retired by the bounded-context restructure (ADR-0103, `docs/slices/refactor-bounded-contexts.md`):
+the layer-first package layout, the context errors in `application/errors.py`, the public error
+catalogue's placement, every contract exemption (PR 16), and the four follow-ups: use-case imports
+between contexts outside `workflows`, shared infrastructure importing contexts, reporting's
+inline wiring, and domain parsing of knowledge-portal content (Amendment 3).
 
 Retired by the analysis clarification enhancement: duplicated analysis value-object
 validation and the inconsistent `entities.py` placement. Analysis values now share one
