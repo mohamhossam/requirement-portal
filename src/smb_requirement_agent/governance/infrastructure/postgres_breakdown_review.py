@@ -1,4 +1,4 @@
-"""Aggregate-owned PostgreSQL SQL over the shared unit of work."""
+"""PostgreSQL repository for breakdown reviews (ADR-0103 PR 12; was postgres_repositories)."""
 
 from __future__ import annotations
 

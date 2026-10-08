@@ -89,8 +89,8 @@ from smb_requirement_agent.governance.application.use_cases.breakdown_review imp
 from smb_requirement_agent.governance.domain.review.policy import BreakdownReviewPolicy
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
+from smb_requirement_agent.interfaces.api.composition.governance import ReviewWiring
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
-from smb_requirement_agent.interfaces.api.composition.review import ReviewWiring
 
 
 @dataclass(frozen=True)

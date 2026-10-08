@@ -241,6 +241,7 @@ from smb_requirement_agent.interfaces.api.composition.breakdown import (
 from smb_requirement_agent.interfaces.api.composition.events import (
     subscribe_domain_event_handlers,
 )
+from smb_requirement_agent.interfaces.api.composition.governance import build_review
 from smb_requirement_agent.interfaces.api.composition.identity import build_identity
 from smb_requirement_agent.interfaces.api.composition.jobs import build_ai_jobs
 from smb_requirement_agent.interfaces.api.composition.knowledge import build_requirement_knowledge
@@ -255,7 +256,6 @@ from smb_requirement_agent.interfaces.api.composition.requirements import (
     build_documents,
     build_requirement_intake,
 )
-from smb_requirement_agent.interfaces.api.composition.review import build_review
 from smb_requirement_agent.jobs.application.ports.ai_jobs import (
     AiJobQueuePort,
     AiJobRepositoryPort,
