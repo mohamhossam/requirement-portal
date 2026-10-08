@@ -6,15 +6,15 @@ from dataclasses import dataclass
 
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.errors import (
-    RequirementNotFoundError,
-    RequirementVersionConflictError,
-)
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.identity.application.ports.requirement_access import (
     RequirementAccessPort,
     RequirementPermission,
+)
+from smb_requirement_agent.requirements.application.errors import (
+    RequirementNotFoundError,
+    RequirementVersionConflictError,
 )
 from smb_requirement_agent.requirements.application.ports.document_repository import (
     DocumentRepositoryPort,

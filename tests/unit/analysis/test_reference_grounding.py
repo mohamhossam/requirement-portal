@@ -8,6 +8,10 @@ import pytest
 from fastapi.testclient import TestClient
 from smb_kernel.llm.structured_output import StructuredOutputError
 
+from smb_requirement_agent.analysis.application.errors import (
+    RequirementAnalysisConflictError,
+    RequirementAnalysisGenerationError,
+)
 from smb_requirement_agent.analysis.domain.errors import InvalidIntentProposalDecisionError
 from smb_requirement_agent.analysis.domain.value_objects import IntentProposalStatus
 from smb_requirement_agent.analysis.infrastructure.analysis_payloads import (
@@ -19,16 +23,13 @@ from smb_requirement_agent.analysis.infrastructure.llm.reference_proposals impor
     ReferenceOutput,
     StructuredReferenceProposer,
 )
-from smb_requirement_agent.application.errors import (
-    RequirementAnalysisConflictError,
-    RequirementAnalysisGenerationError,
-)
 from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedError
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.interfaces.api.container import Container
 from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.references.application.errors import CitationNotCurrentError
 from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
     CreateRequirementInput,
 )
@@ -102,8 +103,8 @@ def test_unified_search_balances_sources_across_the_workspace(
 def test_document_answer_preserves_citation_and_hides_after_withdrawal(
     grounded: Grounded,
 ) -> None:
-    from smb_requirement_agent.application.errors import AnswerSuggestionNotFoundError
     from smb_requirement_agent.interfaces.api.routes.knowledge import suggestion_response
+    from smb_requirement_agent.knowledge.application.errors import AnswerSuggestionNotFoundError
     from smb_requirement_agent.knowledge.domain.entities import AnswerSuggestionSource
 
     container = grounded.container
@@ -165,7 +166,7 @@ def test_document_withdrawn_during_answer_generation_cannot_persist(
         )
 
     monkeypatch.setattr(FakeClarificationAnswerSuggester, "suggest", withdrawing)
-    with pytest.raises(RequirementAnalysisConflictError):
+    with pytest.raises(CitationNotCurrentError):
         container.suggest_clarification_answers.execute(
             requirement.id, question.id, question.version, FAKE_ACTORS[0]
         )
@@ -361,7 +362,7 @@ def test_tampered_citation_is_not_current(grounded: Grounded) -> None:
     container = grounded.container
     citation = grounded.library.search_evidence("XGPON")[0].citation
     container.reference_currency.require_current((citation,))
-    with pytest.raises(RequirementAnalysisConflictError):
+    with pytest.raises(CitationNotCurrentError):
         container.reference_currency.require_current(
             (replace(citation, excerpt="X" * len(citation.excerpt)),)
         )

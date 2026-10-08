@@ -13,8 +13,8 @@ from enum import Enum
 
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.errors import ArchitectureJobNotFoundError
 from smb_requirement_agent.application.public_errors import describe_public_error
+from smb_requirement_agent.breakdown.application.errors import ArchitectureJobNotFoundError
 from smb_requirement_agent.breakdown.application.ports.architecture_jobs import (
     ArchitectureJob,
     ArchitectureJobRepositoryPort,

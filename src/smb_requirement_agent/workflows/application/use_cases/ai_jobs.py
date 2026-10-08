@@ -7,12 +7,11 @@ from dataclasses import dataclass, replace
 
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.errors import (
+from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
+from smb_requirement_agent.jobs.application.errors import (
     AiJobNotFoundError,
     NotificationNotFoundError,
-    RequirementNotFoundError,
 )
-from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.jobs.application.ports.ai_jobs import (
     AiJobCommand,
     AiJobRecord,
@@ -34,6 +33,7 @@ from smb_requirement_agent.jobs.domain.entities import (
     NotificationPreference,
 )
 from smb_requirement_agent.jobs.domain.errors import AiJobConflictError
+from smb_requirement_agent.requirements.application.errors import RequirementNotFoundError
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )

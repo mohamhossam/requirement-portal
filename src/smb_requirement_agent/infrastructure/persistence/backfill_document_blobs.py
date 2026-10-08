@@ -8,9 +8,9 @@ from typing import Any, cast
 
 import psycopg
 
-from smb_requirement_agent.application.errors import DocumentStorageError
 from smb_requirement_agent.infrastructure.config.options import PersistenceProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
+from smb_requirement_agent.requirements.application.errors import DocumentStorageError
 
 
 def _references(value: object) -> list[tuple[str, str, int | None]]:

@@ -5,15 +5,13 @@ from dataclasses import replace
 import pytest
 from fastapi.testclient import TestClient
 
+from smb_requirement_agent.analysis.application.errors import RequirementAnalysisConflictError
 from smb_requirement_agent.analysis.domain.value_objects import IntentProposalStatus
 from smb_requirement_agent.analysis.infrastructure.analysis_payloads import (
     analysis_from_payload,
     analysis_to_payload,
 )
-from smb_requirement_agent.application.errors import (
-    ArtifactVersionConflictError,
-    RequirementAnalysisConflictError,
-)
+from smb_requirement_agent.application.errors import ArtifactVersionConflictError
 from smb_requirement_agent.breakdown.infrastructure.backlog_payloads import (
     epic_from_payload,
     epic_to_payload,

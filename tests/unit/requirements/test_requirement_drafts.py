@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 from smb_kernel.time.fixed import FixedClock
 
-from smb_requirement_agent.application.errors import RequirementVersionConflictError
+from smb_requirement_agent.requirements.application.errors import RequirementVersionConflictError
 from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
     CreateRequirement,
 )

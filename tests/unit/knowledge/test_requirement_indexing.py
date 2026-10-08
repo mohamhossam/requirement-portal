@@ -7,17 +7,17 @@ import pytest
 from fastapi.testclient import TestClient
 from smb_kernel.time.fixed import FixedClock
 
-from smb_requirement_agent.application.errors import (
-    KnowledgeGenerationError,
-    KnowledgeIndexPendingError,
-    KnowledgeScreenConflictError,
-)
+from smb_requirement_agent.application.errors import KnowledgeGenerationError
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.interfaces.api.container import Container
 from smb_requirement_agent.jobs.domain.entities import (
     AiJobOperation,
     AiJobStatus,
     NotificationKind,
+)
+from smb_requirement_agent.knowledge.application.errors import (
+    KnowledgeIndexPendingError,
+    KnowledgeScreenConflictError,
 )
 from smb_requirement_agent.knowledge.application.ports.requirement_indexing import (
     RequirementIndexProgress,

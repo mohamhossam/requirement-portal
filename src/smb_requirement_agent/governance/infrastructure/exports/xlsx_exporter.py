@@ -13,7 +13,7 @@ from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.worksheet import Worksheet
 
-from smb_requirement_agent.application.errors import BacklogExportFormatError
+from smb_requirement_agent.governance.application.errors import BacklogExportFormatError
 from smb_requirement_agent.governance.application.exports import (
     ExportArchitecture,
     ExportFormat,

@@ -10,7 +10,7 @@ from smb_kernel.llm.structured_output import (
     StructuredOutputError,
 )
 
-from smb_requirement_agent.application.errors import StoryQualityEvaluationError
+from smb_requirement_agent.breakdown.application.errors import StoryQualityEvaluationError
 from smb_requirement_agent.breakdown.application.ports.story_quality_evaluator import (
     EMPTY_QUALITY_EVIDENCE,
 )

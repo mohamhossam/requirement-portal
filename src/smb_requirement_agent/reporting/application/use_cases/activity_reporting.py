@@ -8,7 +8,7 @@ from statistics import median
 
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.errors import InvalidReportingWindowError
+from smb_requirement_agent.reporting.application.errors import InvalidReportingWindowError
 from smb_requirement_agent.reporting.application.ports.activity import (
     ActivityAction,
     ActivityEvent,

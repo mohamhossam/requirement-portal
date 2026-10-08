@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from smb_requirement_agent.analysis.application.errors import RequirementAnalysisGenerationError
 from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     AnalysisDocumentContext,
 )
@@ -25,7 +26,6 @@ from smb_requirement_agent.analysis.infrastructure.llm.schemas.analysis_schema i
     RequirementAnalysisSchema,
     UncertaintySchema,
 )
-from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
 from smb_requirement_agent.infrastructure.llm.openai_adapters import (
     OpenAIRequirementAnalyzer,
 )

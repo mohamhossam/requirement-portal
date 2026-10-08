@@ -13,7 +13,7 @@ from smb_kernel.llm.local_structured_output import (
     LocalStructuredOutputClient,
 )
 
-from smb_requirement_agent.application.errors import StoryGenerationError
+from smb_requirement_agent.breakdown.application.errors import StoryGenerationError
 from smb_requirement_agent.breakdown.application.ports.generation_guidance import GenerationGuidance
 from smb_requirement_agent.breakdown.domain.story.quality import (
     InvestCriterion,

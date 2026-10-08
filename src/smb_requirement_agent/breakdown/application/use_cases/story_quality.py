@@ -9,12 +9,12 @@ from typing import TYPE_CHECKING
 
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.errors import (
+from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
+from smb_requirement_agent.breakdown.application.errors import (
     StoryNotFoundError,
     StoryQualitySnapshotConflictError,
     StoryQualitySnapshotNotFoundError,
 )
-from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.breakdown.application.ports.story_quality_evaluator import (
     StoryQualityEvaluatorPort,
 )

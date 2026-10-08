@@ -10,11 +10,9 @@ from datetime import date, timedelta
 
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.errors import (
-    PersistenceError,
-    RequirementAnalysisConflictError,
-)
+from smb_requirement_agent.application.errors import PersistenceError
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
+from smb_requirement_agent.references.application.errors import CitationNotCurrentError
 from smb_requirement_agent.references.application.ports.architecture_knowledge import (
     ActiveRelease,
     ArchitectureReleaseStatePort,
@@ -54,7 +52,7 @@ class ReferenceCurrency:
         with self._transactions.transaction():
             self._states.lock(tuple(sorted({c.document_id for c in evidence})))
             if any(not self.is_current(c) for c in evidence):
-                raise RequirementAnalysisConflictError(
+                raise CitationNotCurrentError(
                     "A cited reference was withdrawn or replaced. "
                     "Re-analyse and reconcile its applicability before continuing."
                 )

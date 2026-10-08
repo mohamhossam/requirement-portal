@@ -32,9 +32,9 @@ from smb_requirement_agent.application.errors import (
     DocumentExtractionBusyError,
     DocumentExtractionError,
     DocumentExtractionTimeoutError,
-    DocumentStorageError,
     UnsupportedDocumentError,
 )
+from smb_requirement_agent.requirements.application.errors import DocumentStorageError
 from smb_requirement_agent.requirements.domain.document.entities import (
     SourceDocument,
     SourceDocumentVersion,

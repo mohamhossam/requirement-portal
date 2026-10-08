@@ -2,14 +2,14 @@
 
 from dataclasses import dataclass
 
-from smb_requirement_agent.application.errors import (
-    RequirementImpactAcknowledgementRequiredError,
-    RequirementNotFoundError,
-)
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.reporting.application.ports.requirement_worklist import (
     RequirementWorklistSnapshot,
     RequirementWorklistSnapshotPort,
+)
+from smb_requirement_agent.requirements.application.errors import (
+    RequirementImpactAcknowledgementRequiredError,
+    RequirementNotFoundError,
 )
 from smb_requirement_agent.requirements.application.ports.screening_requests import (
     ScreeningRequestPort,

@@ -14,7 +14,6 @@ from uuid import uuid4
 
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.errors import KnowledgeFindingNotFoundError
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.jobs.application.ports.notifications import NotificationRepositoryPort
@@ -23,6 +22,7 @@ from smb_requirement_agent.jobs.domain.entities import (
     NotificationId,
     NotificationKind,
 )
+from smb_requirement_agent.knowledge.application.errors import KnowledgeFindingNotFoundError
 from smb_requirement_agent.knowledge.application.ports.knowledge_portfolio import (
     CorpusQuery,
     FindingAge,

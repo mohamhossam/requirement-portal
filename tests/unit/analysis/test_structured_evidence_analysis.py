@@ -9,6 +9,7 @@ from typing import Any
 import pytest
 from smb_kernel.time.fixed import FixedClock
 
+from smb_requirement_agent.analysis.application.errors import RequirementAnalysisGenerationError
 from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     ActiveQuestionContext,
     AnalysisDocumentContext,
@@ -36,7 +37,6 @@ from smb_requirement_agent.analysis.domain.value_objects import (
 from smb_requirement_agent.analysis.infrastructure.in_memory_evidence_fragment_cache import (
     InMemoryEvidenceFragmentCache,
 )
-from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.requirements.domain.requirement.value_objects import (
     RequirementDescription,

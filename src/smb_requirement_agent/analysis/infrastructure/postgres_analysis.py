@@ -5,6 +5,7 @@ from __future__ import annotations
 from psycopg.errors import RaiseException, UniqueViolation
 from psycopg.types.json import Jsonb
 
+from smb_requirement_agent.analysis.application.errors import RequirementAnalysisConflictError
 from smb_requirement_agent.analysis.domain.entities import (
     AnalysisRound,
     ClarificationQuestion,
@@ -23,10 +24,7 @@ from smb_requirement_agent.analysis.infrastructure.analysis_payloads import (
     clarification_question_from_payload,
     clarification_question_to_payload,
 )
-from smb_requirement_agent.application.errors import (
-    PersistenceError,
-    RequirementAnalysisConflictError,
-)
+from smb_requirement_agent.application.errors import PersistenceError
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 from smb_requirement_agent.infrastructure.persistence.postgres_values import (
     _payload,

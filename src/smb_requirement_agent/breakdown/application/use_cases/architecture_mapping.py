@@ -12,13 +12,10 @@ from smb_kernel.time.clock import ClockPort
 from smb_requirement_agent.analysis.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
-from smb_requirement_agent.application.errors import (
-    ArchitectureMappingConflictError,
-    ArtifactVersionConflictError,
-    RequirementNotFoundError,
-)
+from smb_requirement_agent.application.errors import ArtifactVersionConflictError
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
+from smb_requirement_agent.breakdown.application.errors import ArchitectureMappingConflictError
 from smb_requirement_agent.breakdown.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.breakdown.application.ports.feature_repository import (
     FeatureRepositoryPort,
@@ -37,6 +34,7 @@ from smb_requirement_agent.references.application.ports.architecture_knowledge i
     ArchitectureKnowledgePort,
     ArchitectureQuery,
 )
+from smb_requirement_agent.requirements.application.errors import RequirementNotFoundError
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )

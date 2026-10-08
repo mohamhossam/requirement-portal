@@ -9,6 +9,13 @@ from datetime import date
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.application.errors import (
+    AnalysisRoundNotFoundError,
+    ClarificationQuestionNotFoundError,
+    IntentProposalNotFoundError,
+    RequirementAnalysisConflictError,
+    RequirementAnalysisNotFoundError,
+)
 from smb_requirement_agent.analysis.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
@@ -61,17 +68,8 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     IntentProposalStatus,
     QuestionId,
 )
-from smb_requirement_agent.application.errors import (
-    ActorNotFoundError,
-    AnalysisRoundNotFoundError,
-    ClarificationQuestionNotFoundError,
-    IntentProposalNotFoundError,
-    RequirementAnalysisConflictError,
-    RequirementAnalysisIneligibleError,
-    RequirementAnalysisNotFoundError,
-    RequirementNotFoundError,
-)
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
+from smb_requirement_agent.identity.application.errors import ActorNotFoundError
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.identity.application.ports.actor_directory import ActorDirectoryPort
 from smb_requirement_agent.identity.application.ports.requirement_access import (
@@ -82,6 +80,10 @@ from smb_requirement_agent.identity.domain.entities import RequirementAccess
 from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedError
 from smb_requirement_agent.references.application.ports.reference_grounding import (
     ReferenceReviewPort,
+)
+from smb_requirement_agent.requirements.application.errors import (
+    RequirementAnalysisIneligibleError,
+    RequirementNotFoundError,
 )
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,

@@ -9,6 +9,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
+from smb_requirement_agent.analysis.application.errors import RequirementAnalysisConflictError
 from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     RequirementAnalysisCandidate,
 )
@@ -17,7 +18,6 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     IntentProposal,
     IntentProposalKind,
 )
-from smb_requirement_agent.application.errors import RequirementAnalysisConflictError
 from smb_requirement_agent.references.application.ports.reference_grounding import ReferenceEvidence
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.shared_kernel.citation import PublishedReference

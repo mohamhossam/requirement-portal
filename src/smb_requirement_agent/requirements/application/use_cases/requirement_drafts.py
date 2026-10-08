@@ -7,11 +7,11 @@ from dataclasses import dataclass
 
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.errors import (
+from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
+from smb_requirement_agent.requirements.application.errors import (
     RequirementDraftNotFoundError,
     RequirementVersionConflictError,
 )
-from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.requirements.application.ports.document_repository import (
     DocumentRepositoryPort,
 )

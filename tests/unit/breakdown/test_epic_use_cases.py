@@ -8,6 +8,10 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from smb_kernel.time.fixed import FixedClock
 
+from smb_requirement_agent.analysis.application.errors import (
+    AnalysisConfirmationRequiredError,
+    RequirementAnalysisNotFoundError,
+)
 from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration import (
     AnalysisCollaboration,
 )
@@ -23,12 +27,7 @@ from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_repository
 from smb_requirement_agent.analysis.infrastructure.llm.fake_requirement_analyzer import (
     FakeRequirementAnalyzer,
 )
-from smb_requirement_agent.application.errors import (
-    AnalysisConfirmationRequiredError,
-    EpicNotFoundError,
-    RequirementAnalysisNotFoundError,
-    RequirementNotFoundError,
-)
+from smb_requirement_agent.breakdown.application.errors import EpicNotFoundError
 from smb_requirement_agent.breakdown.application.use_cases.edit_epic import EditEpic, EditEpicInput
 from smb_requirement_agent.breakdown.application.use_cases.generate_epic import GenerateEpic
 from smb_requirement_agent.breakdown.application.use_cases.get_epic import GetEpic
@@ -66,6 +65,7 @@ from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
     InMemoryAccessRepository,
     InMemoryActorDirectory,
 )
+from smb_requirement_agent.requirements.application.errors import RequirementNotFoundError
 from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
     CreateRequirementInput,
 )

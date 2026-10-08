@@ -2,6 +2,10 @@
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.application.errors import (
+    RequirementAnalysisConflictError,
+    RequirementAnalysisNotFoundError,
+)
 from smb_requirement_agent.analysis.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
@@ -14,16 +18,12 @@ from smb_requirement_agent.analysis.application.ports.requirement_analysis_repos
     RequirementAnalysisRepositoryPort,
 )
 from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
-from smb_requirement_agent.application.errors import (
-    RequirementAnalysisConflictError,
-    RequirementAnalysisNotFoundError,
-    RequirementNotFoundError,
-)
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.identity.application.ports.requirement_access import (
     RequirementAccessPort,
     RequirementPermission,
 )
+from smb_requirement_agent.requirements.application.errors import RequirementNotFoundError
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )

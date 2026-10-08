@@ -10,8 +10,8 @@ from typing import cast
 from psycopg.types.json import Jsonb
 from pydantic import TypeAdapter
 
-from smb_requirement_agent.application.errors import DocumentVersionConflictError
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
+from smb_requirement_agent.requirements.application.errors import DocumentVersionConflictError
 from smb_requirement_agent.requirements.domain.document.attachment import AttachmentUpload
 from smb_requirement_agent.requirements.domain.document.ingestion import IngestionStage
 

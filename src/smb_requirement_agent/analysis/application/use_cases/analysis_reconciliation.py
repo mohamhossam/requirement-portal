@@ -12,6 +12,7 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass
 
+from smb_requirement_agent.analysis.application.errors import RequirementAnalysisGenerationError
 from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     QuestionReviewCandidate,
     RequirementAnalysisCandidate,
@@ -29,7 +30,6 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     QuestionChangeAction,
     QuestionId,
 )
-from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
 
 
 @dataclass(frozen=True)

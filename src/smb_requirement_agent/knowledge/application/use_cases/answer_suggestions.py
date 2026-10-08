@@ -6,25 +6,21 @@ import uuid
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.application.errors import ClarificationQuestionNotFoundError
 from smb_requirement_agent.analysis.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
 from smb_requirement_agent.analysis.domain.value_objects import (
     QuestionId,
 )
-from smb_requirement_agent.application.errors import (
-    AnswerSuggestionNotFoundError,
-    ClarificationQuestionNotFoundError,
-    KnowledgeGenerationError,
-    RequirementAnalysisConflictError,
-    RequirementNotFoundError,
-)
+from smb_requirement_agent.application.errors import KnowledgeGenerationError
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.identity.application.ports.requirement_access import (
     RequirementPermission,
 )
 from smb_requirement_agent.jobs.domain.entities import AiJobOperation
+from smb_requirement_agent.knowledge.application.errors import AnswerSuggestionNotFoundError
 from smb_requirement_agent.knowledge.application.ports.knowledge_access import KnowledgeAccessPort
 from smb_requirement_agent.knowledge.application.ports.requirement_knowledge import (
     ClarificationAnswerSuggesterPort,
@@ -46,10 +42,12 @@ from smb_requirement_agent.knowledge.domain.entities import (
     AnswerSuggestionSetId,
 )
 from smb_requirement_agent.knowledge.domain.screening_errors import KnowledgeFindingConflictError
+from smb_requirement_agent.references.application.errors import CitationNotCurrentError
 from smb_requirement_agent.references.application.ports.reference_grounding import (
     ReferenceSearchPort,
 )
 from smb_requirement_agent.references.domain.bounded_text import bounded_knowledge_text
+from smb_requirement_agent.requirements.application.errors import RequirementNotFoundError
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )
@@ -308,7 +306,7 @@ class SuggestClarificationAnswers:
                     )
                 )
             )
-        except RequirementAnalysisConflictError:
+        except CitationNotCurrentError:
             return None
         return result
 

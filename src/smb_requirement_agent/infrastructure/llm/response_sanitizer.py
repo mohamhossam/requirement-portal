@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
+from smb_requirement_agent.analysis.application.errors import RequirementAnalysisGenerationError
 
 
 def clean_statements(values: Iterable[str]) -> list[str]:

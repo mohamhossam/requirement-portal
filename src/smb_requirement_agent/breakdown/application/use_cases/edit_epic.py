@@ -4,13 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from smb_requirement_agent.application.errors import (
-    ArtifactVersionConflictError,
-    EpicNotFoundError,
-    RequirementNotFoundError,
-)
+from smb_requirement_agent.application.errors import ArtifactVersionConflictError
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
+from smb_requirement_agent.breakdown.application.errors import EpicNotFoundError
 from smb_requirement_agent.breakdown.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.breakdown.domain.epic.entities import Epic
 from smb_requirement_agent.breakdown.domain.epic.events import EpicChanged
@@ -23,6 +20,7 @@ from smb_requirement_agent.identity.application.ports.requirement_access import 
     RequirementAccessPort,
     RequirementPermission,
 )
+from smb_requirement_agent.requirements.application.errors import RequirementNotFoundError
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )

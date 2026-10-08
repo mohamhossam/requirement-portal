@@ -24,13 +24,7 @@ from smb_requirement_agent.analysis.domain.lineage import analysis_lineage
 from smb_requirement_agent.analysis.domain.value_objects import (
     IntentProposalStatus,
 )
-from smb_requirement_agent.application.errors import (
-    KnowledgeFindingNotFoundError,
-    KnowledgeGenerationError,
-    KnowledgeIndexPendingError,
-    KnowledgeScreenConflictError,
-    RequirementNotFoundError,
-)
+from smb_requirement_agent.application.errors import KnowledgeGenerationError
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.identity.application.ports.requirement_access import (
@@ -38,6 +32,11 @@ from smb_requirement_agent.identity.application.ports.requirement_access import 
 )
 from smb_requirement_agent.identity.domain.entities import RequirementAccess
 from smb_requirement_agent.jobs.domain.entities import AiJobOperation
+from smb_requirement_agent.knowledge.application.errors import (
+    KnowledgeFindingNotFoundError,
+    KnowledgeIndexPendingError,
+    KnowledgeScreenConflictError,
+)
 from smb_requirement_agent.knowledge.application.ports.corpus_membership import CorpusMembershipPort
 from smb_requirement_agent.knowledge.application.ports.knowledge_access import KnowledgeAccessPort
 from smb_requirement_agent.knowledge.application.ports.requirement_knowledge import (
@@ -67,6 +66,7 @@ from smb_requirement_agent.knowledge.domain.screening_errors import (
     RequirementRetiredError,
 )
 from smb_requirement_agent.references.domain.bounded_text import bounded_knowledge_text
+from smb_requirement_agent.requirements.application.errors import RequirementNotFoundError
 from smb_requirement_agent.requirements.application.ports.document_repository import (
     DocumentRepositoryPort,
 )

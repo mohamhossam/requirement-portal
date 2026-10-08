@@ -21,10 +21,6 @@ from smb_kernel.time.clock import ClockPort
 from smb_requirement_agent.application.errors import (
     DocumentExtractionError,
     DocumentExtractionTimeoutError,
-    DocumentNotFoundError,
-    DocumentVersionConflictError,
-    RequirementDraftNotFoundError,
-    RequirementNotFoundError,
     UnsupportedDocumentError,
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
@@ -32,6 +28,12 @@ from smb_requirement_agent.identity.application.ports.requirement_access import 
     RequirementAccessPort,
 )
 from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedError
+from smb_requirement_agent.requirements.application.errors import (
+    DocumentNotFoundError,
+    DocumentVersionConflictError,
+    RequirementDraftNotFoundError,
+    RequirementNotFoundError,
+)
 from smb_requirement_agent.requirements.application.ports.attachment_ingestions import (
     AttachmentIngestionRepositoryPort,
 )

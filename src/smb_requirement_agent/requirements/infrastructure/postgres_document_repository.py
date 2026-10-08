@@ -4,9 +4,12 @@ import hashlib
 
 from smb_kernel.documents.ports import DocumentStoragePort
 
-from smb_requirement_agent.application.errors import DocumentNotFoundError, DocumentStorageError
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 from smb_requirement_agent.infrastructure.persistence.postgres_values import _integer
+from smb_requirement_agent.requirements.application.errors import (
+    DocumentNotFoundError,
+    DocumentStorageError,
+)
 from smb_requirement_agent.requirements.domain.document.value_objects import DocumentVersionId
 from smb_requirement_agent.requirements.infrastructure.postgres_document_metadata import (
     PostgresDocumentRepository as PostgresDocumentRepository,

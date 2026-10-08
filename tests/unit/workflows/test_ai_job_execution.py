@@ -23,10 +23,6 @@ from fastapi.testclient import TestClient
 
 from smb_requirement_agent.analysis.domain.entities import ClarificationQuestion
 from smb_requirement_agent.analysis.domain.value_objects import QuestionId
-from smb_requirement_agent.application.errors import (
-    DocumentNotFoundError,
-    KnowledgeIndexPendingError,
-)
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
     InMemoryActorDirectory,
@@ -41,6 +37,7 @@ from smb_requirement_agent.jobs.domain.entities import (
     AiJobStatus,
     NotificationKind,
 )
+from smb_requirement_agent.knowledge.application.errors import KnowledgeIndexPendingError
 from smb_requirement_agent.knowledge.infrastructure.requirement_index_worker import (
     IndexReadyJobQueue,
 )
@@ -48,6 +45,7 @@ from smb_requirement_agent.reporting.application.ports.saved_views import SavedV
 from smb_requirement_agent.reporting.infrastructure.in_memory_saved_views import (
     InMemorySavedViewRepository,
 )
+from smb_requirement_agent.requirements.application.errors import DocumentNotFoundError
 from smb_requirement_agent.requirements.domain.document.value_objects import DocumentVersionId
 from smb_requirement_agent.requirements.infrastructure.in_memory_document_repository import (
     InMemoryDocumentStorage,

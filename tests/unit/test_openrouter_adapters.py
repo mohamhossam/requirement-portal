@@ -18,10 +18,8 @@ from smb_kernel.llm.structured_output import truncated
 
 from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
 from smb_requirement_agent.analysis.domain.value_objects import KnownFact
-from smb_requirement_agent.application.errors import (
-    EpicGenerationError,
-    KnowledgeGenerationError,
-)
+from smb_requirement_agent.application.errors import KnowledgeGenerationError
+from smb_requirement_agent.breakdown.application.errors import EpicGenerationError
 from smb_requirement_agent.breakdown.infrastructure.llm.schemas.epic_schema import EpicSchema
 from smb_requirement_agent.infrastructure.llm.openrouter_adapters import OpenRouterEpicGenerator
 from smb_requirement_agent.knowledge.infrastructure.llm.requirement_knowledge_adapters import (

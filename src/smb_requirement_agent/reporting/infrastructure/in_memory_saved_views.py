@@ -6,7 +6,7 @@ from copy import deepcopy
 from threading import RLock
 from typing import Any
 
-from smb_requirement_agent.application.errors import SavedViewConflictError
+from smb_requirement_agent.reporting.application.errors import SavedViewConflictError
 from smb_requirement_agent.reporting.application.ports.saved_views import SavedRequirementView
 from smb_requirement_agent.shared_kernel.actors import ActorId
 

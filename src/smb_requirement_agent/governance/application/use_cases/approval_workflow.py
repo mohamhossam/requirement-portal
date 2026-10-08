@@ -7,17 +7,13 @@ from dataclasses import dataclass
 
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.errors import (
-    ApprovalPolicyBlockedError,
-    ApprovalWorkflowNotReadyError,
-    ArtifactVersionConflictError,
-    BreakdownReviewNotFoundError,
+from smb_requirement_agent.application.errors import ArtifactVersionConflictError
+from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
+from smb_requirement_agent.breakdown.application.errors import (
     EpicNotFoundError,
     FeatureNotFoundError,
-    RequirementNotFoundError,
     StoryNotFoundError,
 )
-from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.breakdown.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.breakdown.application.ports.feature_repository import (
     FeatureRepositoryPort,
@@ -26,6 +22,11 @@ from smb_requirement_agent.breakdown.application.ports.story_repository import S
 from smb_requirement_agent.breakdown.domain.feature.value_objects import FeatureId
 from smb_requirement_agent.breakdown.domain.story.entities import UserStory
 from smb_requirement_agent.breakdown.domain.story.value_objects import StoryId
+from smb_requirement_agent.governance.application.errors import (
+    ApprovalPolicyBlockedError,
+    ApprovalWorkflowNotReadyError,
+    BreakdownReviewNotFoundError,
+)
 from smb_requirement_agent.governance.application.ports.breakdown_review_repository import (
     BreakdownReviewRepositoryPort,
 )
@@ -62,6 +63,7 @@ from smb_requirement_agent.references.application.ports.knowledge_handoff import
     ApprovedBacklogOutboxPort,
     BacklogHandoff,
 )
+from smb_requirement_agent.requirements.application.errors import RequirementNotFoundError
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )

@@ -7,7 +7,7 @@ from dataclasses import replace
 
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.errors import (
+from smb_requirement_agent.reporting.application.errors import (
     SavedViewConflictError,
     SavedViewNotFoundError,
 )

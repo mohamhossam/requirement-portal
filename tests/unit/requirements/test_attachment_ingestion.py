@@ -6,16 +6,16 @@ from collections.abc import Iterator
 
 import pytest
 
-from smb_requirement_agent.application.errors import (
-    DocumentNotFoundError,
-    DocumentVersionConflictError,
-    RequirementDraftNotFoundError,
-    UnsupportedDocumentError,
-)
+from smb_requirement_agent.application.errors import UnsupportedDocumentError
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.interfaces.api.container import Container, build_container
+from smb_requirement_agent.requirements.application.errors import (
+    DocumentNotFoundError,
+    DocumentVersionConflictError,
+    RequirementDraftNotFoundError,
+)
 from smb_requirement_agent.requirements.application.use_cases.attachment_ingestion import (
     AttachmentIngestion,
 )

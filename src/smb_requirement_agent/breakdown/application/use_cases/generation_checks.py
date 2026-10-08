@@ -9,7 +9,10 @@ from smb_requirement_agent.analysis.application.ports.requirement_evidence_analy
     AnalysisProgressPort,
 )
 from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
-from smb_requirement_agent.application.errors import FeatureGenerationError, StoryGenerationError
+from smb_requirement_agent.breakdown.application.errors import (
+    FeatureGenerationError,
+    StoryGenerationError,
+)
 from smb_requirement_agent.breakdown.application.ports.candidate_review import CandidateReviewPort
 from smb_requirement_agent.breakdown.application.ports.generation_guidance import GenerationGuidance
 from smb_requirement_agent.breakdown.application.ports.story_quality_repository import (

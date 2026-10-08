@@ -13,9 +13,9 @@ import pytest
 from smb_kernel.documents.model import DocumentEvidenceBlock, EvidenceBlockKind
 from smb_kernel.persistence.connector import DirectPostgresConnector
 
-from smb_requirement_agent.application.errors import DocumentVersionConflictError
 from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
 from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
+from smb_requirement_agent.requirements.application.errors import DocumentVersionConflictError
 from smb_requirement_agent.requirements.domain.document.attachment import (
     AttachmentFile,
     AttachmentTarget,

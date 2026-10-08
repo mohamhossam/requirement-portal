@@ -4,11 +4,8 @@ from __future__ import annotations
 
 import re
 
-from smb_requirement_agent.application.errors import (
-    BreakdownRevisionNotExportableError,
-    RequirementNotFoundError,
-)
 from smb_requirement_agent.breakdown.domain.architecture.entities import ArchitectureImpact
+from smb_requirement_agent.governance.application.errors import BreakdownRevisionNotExportableError
 from smb_requirement_agent.governance.application.exports import (
     EXPORT_SCHEMA_VERSION,
     ExportAcceptanceCriterion,
@@ -55,6 +52,7 @@ from smb_requirement_agent.references.domain.architecture.catalogue import (
     ProductContext,
     SystemReference,
 )
+from smb_requirement_agent.requirements.application.errors import RequirementNotFoundError
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )

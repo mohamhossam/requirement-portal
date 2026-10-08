@@ -11,7 +11,9 @@ from uuid import uuid4
 
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.errors import ArchitectureMappingProfileChangedError
+from smb_requirement_agent.breakdown.application.errors import (
+    ArchitectureMappingProfileChangedError,
+)
 from smb_requirement_agent.breakdown.application.ports.architecture_jobs import (
     ArchitectureJob,
     ArchitectureJobKind,

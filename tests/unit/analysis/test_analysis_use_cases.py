@@ -3,6 +3,7 @@
 import pytest
 from smb_kernel.time.fixed import FixedClock
 
+from smb_requirement_agent.analysis.application.errors import RequirementAnalysisNotFoundError
 from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration import (
     AnalysisCollaboration,
 )
@@ -29,10 +30,6 @@ from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_repository
 from smb_requirement_agent.analysis.infrastructure.llm.fake_requirement_analyzer import (
     FakeRequirementAnalyzer,
 )
-from smb_requirement_agent.application.errors import (
-    RequirementAnalysisNotFoundError,
-    RequirementNotFoundError,
-)
 from smb_requirement_agent.breakdown.infrastructure.in_memory_epic_repository import (
     InMemoryEpicRepository,
 )
@@ -49,6 +46,7 @@ from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
     InMemoryAccessRepository,
     InMemoryActorDirectory,
 )
+from smb_requirement_agent.requirements.application.errors import RequirementNotFoundError
 from smb_requirement_agent.requirements.application.use_cases.update_requirement import (
     UpdateRequirement,
     UpdateRequirementInput,

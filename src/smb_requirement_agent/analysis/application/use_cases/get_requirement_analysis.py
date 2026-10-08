@@ -1,13 +1,11 @@
 """GetRequirementAnalysis use case."""
 
+from smb_requirement_agent.analysis.application.errors import RequirementAnalysisNotFoundError
 from smb_requirement_agent.analysis.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
 from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
-from smb_requirement_agent.application.errors import (
-    RequirementAnalysisNotFoundError,
-    RequirementNotFoundError,
-)
+from smb_requirement_agent.requirements.application.errors import RequirementNotFoundError
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )

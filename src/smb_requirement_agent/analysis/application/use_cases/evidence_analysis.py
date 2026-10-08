@@ -11,6 +11,7 @@ from dataclasses import asdict, dataclass
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.application.errors import RequirementAnalysisGenerationError
 from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     ActiveQuestionContext,
     AnalysisDocumentContext,
@@ -44,7 +45,6 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     IntentProposalKind,
     QuestionChangeAction,
 )
-from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 
 PACKET_PROMPT_RESERVE_CHARACTERS = 12_000

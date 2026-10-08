@@ -3,7 +3,7 @@
 from copy import deepcopy
 from typing import Any
 
-from smb_requirement_agent.application.errors import RequirementVersionConflictError
+from smb_requirement_agent.requirements.application.errors import RequirementVersionConflictError
 from smb_requirement_agent.requirements.application.ports.requirement_draft_repository import (
     RequirementDraftRepositoryPort,
 )

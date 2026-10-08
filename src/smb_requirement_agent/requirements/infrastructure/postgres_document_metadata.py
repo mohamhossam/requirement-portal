@@ -4,13 +4,11 @@ from __future__ import annotations
 
 from psycopg.types.json import Jsonb
 
-from smb_requirement_agent.application.errors import (
-    DocumentVersionConflictError,
-)
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 from smb_requirement_agent.infrastructure.persistence.postgres_values import (
     _payload,
 )
+from smb_requirement_agent.requirements.application.errors import DocumentVersionConflictError
 from smb_requirement_agent.requirements.domain.document.entities import SourceDocument
 from smb_requirement_agent.requirements.domain.document.value_objects import DocumentId
 from smb_requirement_agent.requirements.infrastructure.document_payloads import (

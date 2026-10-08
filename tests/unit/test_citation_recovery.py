@@ -23,6 +23,7 @@ from smb_kernel.llm.openrouter_structured_output import (
 from smb_kernel.llm.profiles import ModelProfile
 from smb_kernel.llm.structured_output import StructuredOutputClient
 
+from smb_requirement_agent.analysis.application.errors import RequirementAnalysisGenerationError
 from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     AnalysisDocumentContext,
     RequirementAnalysisCandidate,
@@ -46,7 +47,6 @@ from smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyze
 from smb_requirement_agent.analysis.infrastructure.llm.schemas.analysis_schema import (
     citation_recovery_schema,
 )
-from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
 from smb_requirement_agent.application.public_errors import describe_public_error
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.requirements.domain.requirement.value_objects import (

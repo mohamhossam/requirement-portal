@@ -16,9 +16,9 @@ from psycopg.types.json import Jsonb
 from smb_kernel.persistence.connector import DirectPostgresConnector
 from smb_kernel.time.system import SystemClock
 
-from smb_requirement_agent.application.errors import RequirementAnalysisConflictError
 from smb_requirement_agent.infrastructure.persistence import migration_runner
 from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
+from smb_requirement_agent.references.application.errors import CitationNotCurrentError
 from smb_requirement_agent.references.application.ports.architecture_knowledge import ActiveRelease
 from smb_requirement_agent.references.application.use_cases.reference_currency import (
     CurrentArchitectureRelease,
@@ -202,7 +202,7 @@ def test_the_knowledge_service_feed_brings_the_postgres_copy_along(isolated_url:
     )
     library.withdraw(citation.document_id)
     projector.drain()
-    with pytest.raises(RequirementAnalysisConflictError, match="withdrawn or replaced"):
+    with pytest.raises(CitationNotCurrentError, match="withdrawn or replaced"):
         currency.require_current((citation,))
     state = states.get(citation.document_id)
     assert state is not None and state.published is None

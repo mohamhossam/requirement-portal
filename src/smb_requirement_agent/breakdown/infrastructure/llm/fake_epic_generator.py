@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
-from smb_requirement_agent.application.errors import EpicGenerationError
+from smb_requirement_agent.breakdown.application.errors import EpicGenerationError
 from smb_requirement_agent.breakdown.application.ports.epic_generator import EpicCandidate
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 

@@ -10,13 +10,11 @@ from threading import RLock
 import pytest
 from smb_kernel.time.fixed import FixedClock
 
-from smb_requirement_agent.application.errors import (
-    PersistenceError,
-    RequirementAnalysisConflictError,
-)
+from smb_requirement_agent.application.errors import PersistenceError
 from smb_requirement_agent.infrastructure.persistence.in_memory_transaction import (
     InMemoryTransactionManager,
 )
+from smb_requirement_agent.references.application.errors import CitationNotCurrentError
 from smb_requirement_agent.references.application.ports.architecture_knowledge import ActiveRelease
 from smb_requirement_agent.references.application.ports.knowledge_events import (
     ARCHITECTURE_RELEASE_ACTIVATED,
@@ -161,7 +159,7 @@ def _currency() -> tuple[
 def test_the_copy_catches_up_from_the_event_feed_and_checks_citations_locally() -> None:
     currency, states, events, projector = _currency()
     events.append(REFERENCE_DOCUMENT_CHANGED, "doc-1", reference_document_state_to_payload(STATE))
-    with pytest.raises(RequirementAnalysisConflictError):
+    with pytest.raises(CitationNotCurrentError):
         currency.require_current((_citation(),))
 
     assert projector.project_next()
@@ -174,7 +172,7 @@ def test_the_copy_catches_up_from_the_event_feed_and_checks_citations_locally() 
         reference_document_state_to_payload(replace(STATE, published=None)),
     )
     assert projector.project_next()
-    with pytest.raises(RequirementAnalysisConflictError, match="withdrawn or replaced"):
+    with pytest.raises(CitationNotCurrentError, match="withdrawn or replaced"):
         currency.require_current((_citation(),))
     assert states.cursor() == 2
 
@@ -267,7 +265,7 @@ def test_the_containers_copy_follows_the_knowledge_services_feed() -> None:
     """A withdrawal reaches requirement work through the feed, never by reading the library."""
     container, library = container_with_library(FAKE_PROVIDER_SETTINGS)
     (citation,) = library.publish("Eligibility", (TEXT,))
-    with pytest.raises(RequirementAnalysisConflictError):
+    with pytest.raises(CitationNotCurrentError):
         container.reference_currency.require_current((citation,))
     sync(container)
     container.reference_currency.require_current((citation,))
@@ -276,12 +274,12 @@ def test_the_containers_copy_follows_the_knowledge_services_feed() -> None:
     # Until the feed is read, the copy still holds the publication it last saw.
     container.reference_currency.require_current((citation,))
     sync(container)
-    with pytest.raises(RequirementAnalysisConflictError, match="withdrawn or replaced"):
+    with pytest.raises(CitationNotCurrentError, match="withdrawn or replaced"):
         container.reference_currency.require_current((citation,))
     republished = library.publish("Eligibility", (TEXT,), document_id=citation.document_id)
     sync(container)
     container.reference_currency.require_current(republished)
-    with pytest.raises(RequirementAnalysisConflictError):
+    with pytest.raises(CitationNotCurrentError):
         container.reference_currency.require_current((citation,))
 
 

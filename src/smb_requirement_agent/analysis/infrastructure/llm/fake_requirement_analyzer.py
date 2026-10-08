@@ -2,6 +2,7 @@
 
 from collections.abc import Sequence
 
+from smb_requirement_agent.analysis.application.errors import RequirementAnalysisGenerationError
 from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     ActiveQuestionContext,
     AmbiguityCandidate,
@@ -24,9 +25,6 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     IntentProposal,
     IntentProposalKind,
     QuestionChangeAction,
-)
-from smb_requirement_agent.application.errors import (
-    RequirementAnalysisGenerationError,
 )
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 

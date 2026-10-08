@@ -17,6 +17,7 @@ from smb_kernel.llm.structured_output import (
     response_validation_error,
 )
 
+from smb_requirement_agent.analysis.application.errors import RequirementAnalysisGenerationError
 from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     ActiveQuestionContext,
     AnalysisDocumentContext,
@@ -66,10 +67,7 @@ from smb_requirement_agent.analysis.infrastructure.llm.schemas.analysis_schema i
     RequirementAnalysisSchema,
     citation_recovery_schema,
 )
-from smb_requirement_agent.application.errors import (
-    ModelTransportError,
-    RequirementAnalysisGenerationError,
-)
+from smb_requirement_agent.application.errors import ModelTransportError
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 
 logger = logging.getLogger("smb_requirement_agent.llm.local_analysis")

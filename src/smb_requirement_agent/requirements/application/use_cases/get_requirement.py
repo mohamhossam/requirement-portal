@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from smb_requirement_agent.application.errors import RequirementNotFoundError
+from smb_requirement_agent.requirements.application.errors import RequirementNotFoundError
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )

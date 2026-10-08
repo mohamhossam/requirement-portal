@@ -16,8 +16,6 @@ from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.errors import (
     DocumentExtractionError,
-    DocumentNotFoundError,
-    DocumentVersionConflictError,
     UnsupportedDocumentError,
 )
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
@@ -25,6 +23,10 @@ from smb_requirement_agent.application.ports.transaction_manager import Transact
 from smb_requirement_agent.identity.application.ports.requirement_access import (
     RequirementAccessPort,
     RequirementPermission,
+)
+from smb_requirement_agent.requirements.application.errors import (
+    DocumentNotFoundError,
+    DocumentVersionConflictError,
 )
 from smb_requirement_agent.requirements.application.ports.document_repository import (
     DocumentRepositoryPort,

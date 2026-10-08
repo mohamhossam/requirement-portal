@@ -11,7 +11,7 @@ import pytest
 from fastapi.testclient import TestClient
 from openpyxl import load_workbook
 
-from smb_requirement_agent.application.errors import BacklogExportFormatError
+from smb_requirement_agent.governance.application.errors import BacklogExportFormatError
 from smb_requirement_agent.governance.application.exports import (
     ExportAcceptanceCriterion,
     ExportActor,

@@ -7,7 +7,7 @@ duplicate-add rejection.
 
 import pytest
 
-from smb_requirement_agent.application.errors import DuplicateRequirementError
+from smb_requirement_agent.requirements.application.errors import DuplicateRequirementError
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.requirements.domain.requirement.value_objects import (
     RequirementDescription,

@@ -16,10 +16,7 @@ from datetime import datetime
 
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.errors import (
-    KnowledgeGenerationError,
-    RequirementNotFoundError,
-)
+from smb_requirement_agent.application.errors import KnowledgeGenerationError
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.identity.application.ports.requirement_access import (
@@ -68,6 +65,7 @@ from smb_requirement_agent.references.application.ports.historic_corpus import (
 )
 from smb_requirement_agent.references.domain.bounded_text import bounded_knowledge_text
 from smb_requirement_agent.references.domain.historic import WORK_ITEM_TYPES, HistoricSourceKind
+from smb_requirement_agent.requirements.application.errors import RequirementNotFoundError
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )

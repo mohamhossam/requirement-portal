@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 import pytest
 from fastapi.testclient import TestClient
 
-from smb_requirement_agent.application.errors import StoryQualityEvaluationError
+from smb_requirement_agent.breakdown.application.errors import StoryQualityEvaluationError
 from smb_requirement_agent.breakdown.application.use_cases.story_quality import SuggestStorySplit
 from smb_requirement_agent.breakdown.domain.story.errors import InvalidStoryContentError
 from smb_requirement_agent.breakdown.domain.story.quality import (

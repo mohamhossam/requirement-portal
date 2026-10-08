@@ -9,6 +9,7 @@ from unittest.mock import Mock
 import pytest
 from smb_kernel.time.fixed import FixedClock
 
+from smb_requirement_agent.analysis.application.errors import RequirementAnalysisNotFoundError
 from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration import (
     AnalysisCollaboration,
 )
@@ -27,11 +28,10 @@ from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_repository
 from smb_requirement_agent.analysis.infrastructure.llm.fake_requirement_analyzer import (
     FakeRequirementAnalyzer,
 )
-from smb_requirement_agent.application.errors import (
+from smb_requirement_agent.breakdown.application.errors import (
     EpicNotFoundError,
     FeatureNotFoundError,
     FeaturesNotFoundError,
-    RequirementAnalysisNotFoundError,
 )
 from smb_requirement_agent.breakdown.application.ports.generation_guidance import (
     EMPTY_GENERATION_GUIDANCE,

@@ -5,6 +5,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
+from smb_requirement_agent.analysis.application.errors import (
+    AnalysisConfirmationRequiredError,
+    AnalysisRoundNotFoundError,
+    ClarificationQuestionNotFoundError,
+    DocumentContextTooLargeError,
+    IntentProposalNotFoundError,
+    RequirementAnalysisConflictError,
+    RequirementAnalysisGenerationError,
+    RequirementAnalysisNotFoundError,
+)
 from smb_requirement_agent.analysis.domain.errors import (
     AnalysisClarificationConflictError,
     AnalysisConfirmationBlockedError,
@@ -17,69 +27,34 @@ from smb_requirement_agent.analysis.domain.errors import (
     InvalidIntentProposalTransitionError,
 )
 from smb_requirement_agent.application.errors import (
-    ActorNotFoundError,
-    AiJobNotFoundError,
-    AnalysisConfirmationRequiredError,
-    AnalysisRoundNotFoundError,
-    AnswerSuggestionNotFoundError,
-    ApprovalPolicyBlockedError,
-    ApprovalWorkflowNotReadyError,
-    ArchitectureJobNotFoundError,
-    ArchitectureMappingConflictError,
-    ArchitectureMappingProfileChangedError,
     ArtifactVersionConflictError,
     AuthenticationRequiredError,
-    BacklogExportFormatError,
-    BreakdownReviewNotFoundError,
-    BreakdownReviewStaleError,
-    BreakdownRevisionNotExportableError,
-    ClarificationQuestionNotFoundError,
-    DocumentContextTooLargeError,
     DocumentExtractionBusyError,
     DocumentExtractionError,
     DocumentExtractionTimeoutError,
-    DocumentNotFoundError,
-    DocumentStorageError,
-    DocumentVersionConflictError,
-    DuplicateRequirementError,
+    IdentityProviderUnavailableError,
+    KnowledgeGenerationError,
+    ModelTransportError,
+    PersistenceError,
+    ServiceResponseError,
+    ServiceUnavailableError,
+    UnsupportedDocumentError,
+)
+from smb_requirement_agent.breakdown.application.errors import (
+    ArchitectureJobNotFoundError,
+    ArchitectureMappingConflictError,
+    ArchitectureMappingProfileChangedError,
     EpicGenerationError,
     EpicNotFoundError,
     FeatureGenerationError,
     FeatureNotFoundError,
     FeaturesNotFoundError,
-    IdentityProviderUnavailableError,
-    IntentProposalNotFoundError,
-    InvalidReportingWindowError,
-    InvalidSavedViewError,
-    KnowledgeFindingNotFoundError,
-    KnowledgeGenerationError,
-    KnowledgeIndexPendingError,
-    KnowledgeScreenConflictError,
-    KnowledgeViewUnavailableError,
-    ModelTransportError,
-    NotificationNotFoundError,
-    PersistenceError,
-    ProviderRateLimitExceededError,
-    RequirementAnalysisConflictError,
-    RequirementAnalysisGenerationError,
-    RequirementAnalysisIneligibleError,
-    RequirementAnalysisNotFoundError,
-    RequirementDraftNotFoundError,
-    RequirementImpactAcknowledgementRequiredError,
-    RequirementNotFoundError,
-    RequirementVersionConflictError,
-    ReviewFlagNotFoundError,
-    SavedViewConflictError,
-    SavedViewNotFoundError,
-    ServiceResponseError,
-    ServiceUnavailableError,
     StoryGenerationError,
     StoryNotFoundError,
     StoryProposalNotFoundError,
     StoryQualityEvaluationError,
     StoryQualitySnapshotConflictError,
     StoryQualitySnapshotNotFoundError,
-    UnsupportedDocumentError,
 )
 from smb_requirement_agent.breakdown.domain.epic.errors import (
     EpicNotApprovedError,
@@ -99,6 +74,15 @@ from smb_requirement_agent.breakdown.domain.story.errors import (
     StoryProposalConflictError,
     StoryRegenerationConflictError,
 )
+from smb_requirement_agent.governance.application.errors import (
+    ApprovalPolicyBlockedError,
+    ApprovalWorkflowNotReadyError,
+    BacklogExportFormatError,
+    BreakdownReviewNotFoundError,
+    BreakdownReviewStaleError,
+    BreakdownRevisionNotExportableError,
+    ReviewFlagNotFoundError,
+)
 from smb_requirement_agent.governance.domain.review.errors import (
     FlagResolutionConflictError,
     FlagResolutionNotAllowedError,
@@ -109,17 +93,33 @@ from smb_requirement_agent.governance.domain.revision.errors import (
     InvalidRevisionError,
     RevisionNotFoundError,
 )
+from smb_requirement_agent.identity.application.errors import ActorNotFoundError
 from smb_requirement_agent.identity.domain.errors import (
     AuthorizationDeniedError,
     InvalidIdentityError,
     RequirementAccessConflictError,
 )
+from smb_requirement_agent.jobs.application.errors import (
+    AiJobNotFoundError,
+    NotificationNotFoundError,
+    ProviderRateLimitExceededError,
+)
 from smb_requirement_agent.jobs.domain.errors import AiJobConflictError, InvalidAiJobError
+from smb_requirement_agent.knowledge.application.errors import (
+    AnswerSuggestionNotFoundError,
+    KnowledgeFindingNotFoundError,
+    KnowledgeIndexPendingError,
+    KnowledgeScreenConflictError,
+)
 from smb_requirement_agent.knowledge.domain.screening_errors import (
     CorpusMembershipConflictError,
     KnowledgeFindingConflictError,
     KnowledgeReviewRequiredError,
     RequirementRetiredError,
+)
+from smb_requirement_agent.references.application.errors import (
+    CitationNotCurrentError,
+    KnowledgeViewUnavailableError,
 )
 from smb_requirement_agent.references.domain.architecture.catalogue import (
     InvalidArchitectureContentError,
@@ -129,6 +129,23 @@ from smb_requirement_agent.references.domain.architecture.knowledge import (
     KnowledgeConflictError,
 )
 from smb_requirement_agent.references.domain.errors import InvalidKnowledgeError
+from smb_requirement_agent.reporting.application.errors import (
+    InvalidReportingWindowError,
+    InvalidSavedViewError,
+    SavedViewConflictError,
+    SavedViewNotFoundError,
+)
+from smb_requirement_agent.requirements.application.errors import (
+    DocumentNotFoundError,
+    DocumentStorageError,
+    DocumentVersionConflictError,
+    DuplicateRequirementError,
+    RequirementAnalysisIneligibleError,
+    RequirementDraftNotFoundError,
+    RequirementImpactAcknowledgementRequiredError,
+    RequirementNotFoundError,
+    RequirementVersionConflictError,
+)
 from smb_requirement_agent.requirements.domain.document.errors import (
     DocumentInclusionError,
     InvalidDocumentError,
@@ -272,6 +289,8 @@ ERROR_CATALOGUE: tuple[tuple[type[Exception], str, FailureCategory], ...] = (
     (ServiceUnavailableError, "platform_service_unavailable", FailureCategory.UNAVAILABLE),
     (ServiceResponseError, "platform_service_refused", FailureCategory.PROVIDER),
     (RequirementAnalysisConflictError, "requirement_analysis_conflict", FailureCategory.CONFLICT),
+    # References report a withdrawn citation as the analysis conflict clients already handle.
+    (CitationNotCurrentError, "requirement_analysis_conflict", FailureCategory.CONFLICT),
     (AnalysisConfirmationRequiredError, "analysis_confirmation_required", FailureCategory.CONFLICT),
     (DuplicateRequirementError, "duplicate_requirement", FailureCategory.CONFLICT),
     (RequirementVersionConflictError, "requirement_version_conflict", FailureCategory.CONFLICT),

@@ -10,7 +10,6 @@ from typing import Literal
 
 from smb_requirement_agent.application.errors import (
     KnowledgeGenerationError,
-    RequirementAnalysisConflictError,
     UnsupportedDocumentError,
 )
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
@@ -23,6 +22,7 @@ from smb_requirement_agent.knowledge.application.use_cases.requirement_knowledge
     require_index_current,
 )
 from smb_requirement_agent.knowledge.domain.entities import RelationshipEvidence
+from smb_requirement_agent.references.application.errors import CitationNotCurrentError
 from smb_requirement_agent.references.application.ports.reference_grounding import (
     ReferenceSearchPort,
 )
@@ -83,7 +83,7 @@ class UnifiedKnowledgeSearch:
                 continue
             try:
                 self._references.require_current(tuple(o.citation for o in c.source_lineage))
-            except RequirementAnalysisConflictError:
+            except CitationNotCurrentError:
                 # Historical copies remain in dependency review, not fresh evidence search.
                 continue
             requirements.append(
@@ -138,7 +138,7 @@ class UnifiedKnowledgeSearch:
                             self._references.require_current(
                                 tuple(o.citation for o in evidence.source_lineage)
                             )
-                        except RequirementAnalysisConflictError:
+                        except CitationNotCurrentError:
                             continue
                     key = normalize_search(hit.excerpt)
                     origins = (

@@ -10,11 +10,11 @@ from dataclasses import dataclass
 
 from smb_kernel.documents.ports import DocumentExtractorPort, DocumentStoragePort
 
+from smb_requirement_agent.analysis.application.errors import DocumentContextTooLargeError
 from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     AnalysisDocumentContext,
 )
 from smb_requirement_agent.analysis.domain.entities import AnalysisDocumentReference
-from smb_requirement_agent.application.errors import DocumentContextTooLargeError
 from smb_requirement_agent.requirements.application.ports.document_repository import (
     DocumentRepositoryPort,
 )

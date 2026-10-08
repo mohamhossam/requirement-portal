@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 
-from smb_requirement_agent.application.errors import StoryQualityEvaluationError
+from smb_requirement_agent.breakdown.application.errors import StoryQualityEvaluationError
 from smb_requirement_agent.breakdown.domain.story.quality import (
     FindingSource,
     InvestCriterion,

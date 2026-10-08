@@ -11,7 +11,7 @@ from smb_kernel.llm.structured_output import (
 )
 
 from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
-from smb_requirement_agent.application.errors import FeatureGenerationError
+from smb_requirement_agent.breakdown.application.errors import FeatureGenerationError
 from smb_requirement_agent.breakdown.application.ports.feature_generator import FeatureCandidate
 from smb_requirement_agent.breakdown.application.ports.generation_guidance import (
     EMPTY_GENERATION_GUIDANCE,

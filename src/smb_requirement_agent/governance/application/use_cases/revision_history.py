@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from smb_requirement_agent.application.errors import RequirementNotFoundError
 from smb_requirement_agent.governance.application.ports.breakdown_repository import (
     BreakdownRepositoryPort,
 )
@@ -14,6 +13,7 @@ from smb_requirement_agent.governance.domain.revision.entities import (
     RevisionNumber,
 )
 from smb_requirement_agent.governance.domain.revision.errors import RevisionNotFoundError
+from smb_requirement_agent.requirements.application.errors import RequirementNotFoundError
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )

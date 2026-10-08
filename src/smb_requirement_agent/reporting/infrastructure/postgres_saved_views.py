@@ -8,12 +8,12 @@ from typing import Any
 from psycopg.errors import UniqueViolation
 from psycopg.types.json import Jsonb
 
-from smb_requirement_agent.application.errors import (
+from smb_requirement_agent.application.errors import PersistenceError
+from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
+from smb_requirement_agent.reporting.application.errors import (
     InvalidSavedViewError,
-    PersistenceError,
     SavedViewConflictError,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 from smb_requirement_agent.reporting.application.ports.requirement_worklist import (
     WorkflowStatus,
     WorklistSort,

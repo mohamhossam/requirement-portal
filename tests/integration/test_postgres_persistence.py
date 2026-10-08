@@ -67,7 +67,6 @@ from smb_requirement_agent.analysis.infrastructure.postgres_analysis import (
 from smb_requirement_agent.analysis.infrastructure.postgres_evidence_fragment_cache import (
     PostgresEvidenceFragmentCache,
 )
-from smb_requirement_agent.application.errors import DocumentStorageError
 from smb_requirement_agent.breakdown.domain.architecture.entities import ArchitectureImpact
 from smb_requirement_agent.breakdown.domain.epic.entities import Epic
 from smb_requirement_agent.breakdown.domain.epic.value_objects import (
@@ -198,6 +197,7 @@ from smb_requirement_agent.reporting.infrastructure.postgres_activity_reader imp
 from smb_requirement_agent.reporting.infrastructure.postgres_saved_views import (
     PostgresSavedViewRepository,
 )
+from smb_requirement_agent.requirements.application.errors import DocumentStorageError
 from smb_requirement_agent.requirements.domain.document.entities import (
     SourceDocument,
     SourceDocumentVersion,

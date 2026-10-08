@@ -12,6 +12,7 @@ from collections.abc import Iterable, Sequence
 
 from smb_kernel.diagnostics import DebugTrace
 
+from smb_requirement_agent.analysis.application.errors import RequirementAnalysisGenerationError
 from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     ActiveQuestionContext,
     AmbiguityCandidate,
@@ -39,9 +40,6 @@ from smb_requirement_agent.analysis.infrastructure.llm.schemas.analysis_schema i
     DesiredOutcomeReviewSchema,
     RequirementAnalysisSchema,
     UncertaintySchema,
-)
-from smb_requirement_agent.application.errors import (
-    RequirementAnalysisGenerationError,
 )
 from smb_requirement_agent.infrastructure.llm.response_sanitizer import (
     clean_pairs,

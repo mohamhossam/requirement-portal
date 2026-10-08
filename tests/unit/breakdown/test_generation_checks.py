@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 
 from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
 from smb_requirement_agent.analysis.domain.value_objects import KnownFact
-from smb_requirement_agent.application.errors import (
+from smb_requirement_agent.breakdown.application.errors import (
     StoryGenerationError,
     StoryQualityEvaluationError,
 )

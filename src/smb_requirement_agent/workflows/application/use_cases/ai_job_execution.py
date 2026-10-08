@@ -19,12 +19,6 @@ from smb_requirement_agent.analysis.application.use_cases.clarify_requirement_an
     ClarifyRequirementAnalysis,
 )
 from smb_requirement_agent.analysis.domain.value_objects import ClarificationKind, QuestionId
-from smb_requirement_agent.application.errors import (
-    ActorNotFoundError,
-    AiJobNotFoundError,
-    KnowledgeIndexPendingError,
-    KnowledgeScreenConflictError,
-)
 from smb_requirement_agent.application.ports.external_work import guard_external_work
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.public_errors import describe_public_error
@@ -48,8 +42,10 @@ from smb_requirement_agent.governance.application.use_cases.breakdown_review imp
     ResolveOpenQuestion,
 )
 from smb_requirement_agent.governance.domain.review.entities import FlagId
+from smb_requirement_agent.identity.application.errors import ActorNotFoundError
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.identity.application.ports.actor_directory import ActorDirectoryPort
+from smb_requirement_agent.jobs.application.errors import AiJobNotFoundError
 from smb_requirement_agent.jobs.application.ports.ai_jobs import (
     AiJobRecord,
     AiJobRepositoryPort,
@@ -72,6 +68,10 @@ from smb_requirement_agent.jobs.domain.entities import (
     NotificationKind,
 )
 from smb_requirement_agent.jobs.domain.errors import AiJobConflictError
+from smb_requirement_agent.knowledge.application.errors import (
+    KnowledgeIndexPendingError,
+    KnowledgeScreenConflictError,
+)
 from smb_requirement_agent.knowledge.application.use_cases.answer_suggestions import (
     SuggestClarificationAnswers,
 )

@@ -4,7 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from smb_requirement_agent.application.errors import ArchitectureJobNotFoundError
+from smb_requirement_agent.breakdown.application.errors import ArchitectureJobNotFoundError
 from smb_requirement_agent.breakdown.application.ports.architecture_jobs import ArchitectureJob
 from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping import (
     MapBreakdownArchitecture,

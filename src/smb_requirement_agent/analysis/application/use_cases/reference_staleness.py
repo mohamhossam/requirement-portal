@@ -8,6 +8,7 @@ an analysis's origins, then its proposals'.
 
 from collections.abc import Sequence
 
+from smb_requirement_agent.analysis.application.errors import RequirementAnalysisConflictError
 from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
 from smb_requirement_agent.analysis.domain.lineage import analysis_lineage
 from smb_requirement_agent.analysis.domain.value_objects import (
@@ -15,6 +16,7 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     IntentProposalStatus,
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
+from smb_requirement_agent.references.application.errors import CitationNotCurrentError
 from smb_requirement_agent.references.application.ports.reference_grounding import (
     PublicationCurrencyPort,
 )
@@ -31,7 +33,11 @@ class AnalysisReferenceCurrency:
         self._transactions = transactions
 
     def require_current(self, evidence: Sequence[PublishedReference]) -> None:
-        self._currency.require_current(evidence)
+        # A withdrawn citation is an analysis conflict to analysis's callers, as it always was.
+        try:
+            self._currency.require_current(evidence)
+        except CitationNotCurrentError as exc:
+            raise RequirementAnalysisConflictError(str(exc)) from exc
 
     def stale_analysis(
         self, analysis: RequirementAnalysis, *, target_ids: Sequence[str] | None = None

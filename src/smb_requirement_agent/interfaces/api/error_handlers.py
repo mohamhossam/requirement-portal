@@ -14,13 +14,13 @@ from smb_kernel.http.body_limit import RequestBodyTooLargeError
 from smb_requirement_agent.application.errors import (
     DocumentExtractionBusyError,
     DocumentExtractionTimeoutError,
-    ProviderRateLimitExceededError,
 )
 from smb_requirement_agent.application.public_errors import (
     ERROR_CATALOGUE,
     FailureCategory,
     describe_public_error,
 )
+from smb_requirement_agent.jobs.application.errors import ProviderRateLimitExceededError
 
 logger = logging.getLogger("smb_requirement_agent.api.errors")
 

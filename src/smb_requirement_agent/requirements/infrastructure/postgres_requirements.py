@@ -5,12 +5,12 @@ from __future__ import annotations
 from psycopg.errors import UniqueViolation
 from psycopg.types.json import Jsonb
 
-from smb_requirement_agent.application.errors import (
+from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
+from smb_requirement_agent.infrastructure.persistence.postgres_values import _payload
+from smb_requirement_agent.requirements.application.errors import (
     DuplicateRequirementError,
     RequirementVersionConflictError,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
-from smb_requirement_agent.infrastructure.persistence.postgres_values import _payload
 from smb_requirement_agent.requirements.application.ports.requirement_draft_repository import (
     RequirementDraftRepositoryPort,
 )

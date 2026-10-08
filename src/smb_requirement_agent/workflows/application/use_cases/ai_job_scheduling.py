@@ -7,9 +7,6 @@ import uuid
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.analysis.domain.entities import ClarificationQuestion
-from smb_requirement_agent.application.errors import (
-    RequirementNotFoundError,
-)
 from smb_requirement_agent.jobs.application.ports.ai_jobs import (
     AiJobCommand,
     AiJobRecord,
@@ -35,6 +32,7 @@ from smb_requirement_agent.knowledge.application.ports.requirement_knowledge imp
     RequirementKnowledgeRepositoryPort,
 )
 from smb_requirement_agent.knowledge.domain.screening_errors import RequirementRetiredError
+from smb_requirement_agent.requirements.application.errors import RequirementNotFoundError
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )

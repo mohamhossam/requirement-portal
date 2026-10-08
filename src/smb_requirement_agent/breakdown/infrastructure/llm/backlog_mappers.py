@@ -7,7 +7,7 @@ in ADR-0103 PR 11b.
 
 from __future__ import annotations
 
-from smb_requirement_agent.application.errors import (
+from smb_requirement_agent.breakdown.application.errors import (
     EpicGenerationError,
     FeatureGenerationError,
     StoryGenerationError,

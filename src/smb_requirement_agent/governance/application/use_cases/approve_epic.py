@@ -2,19 +2,17 @@
 
 from __future__ import annotations
 
-from smb_requirement_agent.application.errors import (
-    ApprovalWorkflowNotReadyError,
-    ArtifactVersionConflictError,
-    EpicNotFoundError,
-    RequirementNotFoundError,
-)
+from smb_requirement_agent.application.errors import ArtifactVersionConflictError
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
+from smb_requirement_agent.breakdown.application.errors import EpicNotFoundError
 from smb_requirement_agent.breakdown.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.breakdown.domain.epic.entities import Epic
+from smb_requirement_agent.governance.application.errors import ApprovalWorkflowNotReadyError
 from smb_requirement_agent.governance.application.use_cases.approval_workflow import (
     ApprovalRecorder,
 )
 from smb_requirement_agent.governance.domain.review.fingerprints import artifact_fingerprint
+from smb_requirement_agent.requirements.application.errors import RequirementNotFoundError
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )

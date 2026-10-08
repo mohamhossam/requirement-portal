@@ -3,11 +3,11 @@
 from copy import deepcopy
 from typing import Any
 
+from smb_requirement_agent.analysis.application.errors import RequirementAnalysisConflictError
 from smb_requirement_agent.analysis.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
 from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
-from smb_requirement_agent.application.errors import RequirementAnalysisConflictError
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 

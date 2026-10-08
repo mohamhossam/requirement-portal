@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 import pytest
 from smb_kernel.time.fixed import FixedClock
 
-from smb_requirement_agent.application.errors import (
+from smb_requirement_agent.reporting.application.errors import (
     InvalidSavedViewError,
     SavedViewConflictError,
     SavedViewNotFoundError,

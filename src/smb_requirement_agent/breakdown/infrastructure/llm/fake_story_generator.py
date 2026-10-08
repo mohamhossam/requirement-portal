@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
-from smb_requirement_agent.application.errors import StoryGenerationError
+from smb_requirement_agent.breakdown.application.errors import StoryGenerationError
 from smb_requirement_agent.breakdown.application.ports.generation_guidance import (
     EMPTY_GENERATION_GUIDANCE,
     GenerationGuidance,

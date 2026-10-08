@@ -12,22 +12,21 @@ from typing import Concatenate, cast
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.application.errors import RequirementAnalysisNotFoundError
 from smb_requirement_agent.analysis.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
 from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
 from smb_requirement_agent.analysis.domain.lineage import generation_lineage
-from smb_requirement_agent.application.errors import (
-    ArtifactVersionConflictError,
+from smb_requirement_agent.application.errors import ArtifactVersionConflictError
+from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
+from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
+from smb_requirement_agent.breakdown.application.errors import (
     EpicNotFoundError,
     FeatureNotFoundError,
-    RequirementAnalysisNotFoundError,
-    RequirementNotFoundError,
     StoryGenerationError,
     StoryNotFoundError,
 )
-from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
-from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.breakdown.application.ports.breakdown_context import BreakdownContextPort
 from smb_requirement_agent.breakdown.application.ports.epic_repository import EpicRepositoryPort
 from smb_requirement_agent.breakdown.application.ports.feature_repository import (
@@ -68,6 +67,7 @@ from smb_requirement_agent.identity.application.ports.requirement_access import 
     RequirementAccessPort,
     RequirementPermission,
 )
+from smb_requirement_agent.requirements.application.errors import RequirementNotFoundError
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )

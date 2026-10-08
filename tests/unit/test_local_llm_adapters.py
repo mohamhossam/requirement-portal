@@ -15,6 +15,7 @@ from smb_kernel.llm.local_structured_output import (
 )
 from smb_kernel.llm.structured_output import truncated
 
+from smb_requirement_agent.analysis.application.errors import RequirementAnalysisGenerationError
 from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     ActiveQuestionContext,
     AnalysisDocumentContext,
@@ -48,10 +49,9 @@ from smb_requirement_agent.analysis.infrastructure.llm.schemas.analysis_schema i
     RequirementAnalysisSchema,
     UncertaintySchema,
 )
-from smb_requirement_agent.application.errors import (
+from smb_requirement_agent.breakdown.application.errors import (
     EpicGenerationError,
     FeatureGenerationError,
-    RequirementAnalysisGenerationError,
 )
 from smb_requirement_agent.breakdown.domain.epic.entities import Epic
 from smb_requirement_agent.breakdown.domain.epic.value_objects import (

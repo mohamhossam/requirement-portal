@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
 
-from smb_requirement_agent.application.errors import InvalidSavedViewError
+from smb_requirement_agent.reporting.application.errors import InvalidSavedViewError
 from smb_requirement_agent.reporting.application.ports.requirement_worklist import (
     WorkflowStatus,
     WorklistSort,

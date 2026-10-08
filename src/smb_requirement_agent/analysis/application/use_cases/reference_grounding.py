@@ -7,6 +7,7 @@ from dataclasses import asdict
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.application.errors import RequirementAnalysisGenerationError
 from smb_requirement_agent.analysis.application.ports.reference_analysis import (
     ReferenceProposerPort,
 )
@@ -15,7 +16,6 @@ from smb_requirement_agent.analysis.application.ports.requirement_analyzer impor
     RequirementAnalysisCandidate,
 )
 from smb_requirement_agent.analysis.domain.value_objects import IntentProposal
-from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
 from smb_requirement_agent.references.application.ports.embedding import TokenCounterPort
 from smb_requirement_agent.references.application.ports.reference_grounding import (
     ReferenceEvidence,

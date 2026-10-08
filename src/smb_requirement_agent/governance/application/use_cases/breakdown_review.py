@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.application.errors import RequirementAnalysisNotFoundError
 from smb_requirement_agent.analysis.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
@@ -23,14 +24,7 @@ from smb_requirement_agent.analysis.domain.entities import (
     RequirementAnalysis,
 )
 from smb_requirement_agent.analysis.domain.value_objects import QuestionId
-from smb_requirement_agent.application.errors import (
-    ArtifactVersionConflictError,
-    BreakdownReviewNotFoundError,
-    BreakdownReviewStaleError,
-    RequirementAnalysisNotFoundError,
-    RequirementNotFoundError,
-    ReviewFlagNotFoundError,
-)
+from smb_requirement_agent.application.errors import ArtifactVersionConflictError
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.breakdown.application.ports.candidate_review import CandidateCritique
 from smb_requirement_agent.breakdown.application.ports.epic_repository import EpicRepositoryPort
@@ -50,6 +44,11 @@ from smb_requirement_agent.breakdown.domain.story.quality import (
     FeatureQualitySnapshot,
     InvestAssessment,
     StoryQualityEvidence,
+)
+from smb_requirement_agent.governance.application.errors import (
+    BreakdownReviewNotFoundError,
+    BreakdownReviewStaleError,
+    ReviewFlagNotFoundError,
 )
 from smb_requirement_agent.governance.application.ports.breakdown_review_repository import (
     BreakdownReviewRepositoryPort,
@@ -79,6 +78,7 @@ from smb_requirement_agent.identity.application.ports.requirement_access import 
 from smb_requirement_agent.references.application.ports.architecture_knowledge import (
     ActiveArchitectureReleasePort,
 )
+from smb_requirement_agent.requirements.application.errors import RequirementNotFoundError
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )

@@ -9,7 +9,7 @@ from typing import Any
 
 from smb_kernel.documents.ports import DocumentStoragePort
 
-from smb_requirement_agent.application.errors import (
+from smb_requirement_agent.requirements.application.errors import (
     DocumentNotFoundError,
     DocumentStorageError,
     DocumentVersionConflictError,
