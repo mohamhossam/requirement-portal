@@ -20,7 +20,7 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
     KnowledgeScreenSchedulerPort,
     RequirementKnowledgeRepositoryPort,
 )
-from smb_requirement_agent.domain.knowledge.errors import RequirementRetiredError
+from smb_requirement_agent.domain.knowledge.screening_errors import RequirementRetiredError
 from smb_requirement_agent.jobs.application.ports.ai_jobs import (
     AiJobCommand,
     AiJobRecord,

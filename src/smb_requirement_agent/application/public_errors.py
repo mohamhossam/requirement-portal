@@ -104,9 +104,9 @@ from smb_requirement_agent.domain.architecture.knowledge import (
     InvalidRelationshipKindError,
     KnowledgeConflictError,
 )
-from smb_requirement_agent.domain.knowledge.errors import (
+from smb_requirement_agent.domain.knowledge.errors import InvalidKnowledgeError
+from smb_requirement_agent.domain.knowledge.screening_errors import (
     CorpusMembershipConflictError,
-    InvalidKnowledgeError,
     KnowledgeFindingConflictError,
     KnowledgeReviewRequiredError,
     RequirementRetiredError,

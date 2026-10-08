@@ -19,7 +19,7 @@ from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeMatch,
     KnowledgeScreen,
 )
-from smb_requirement_agent.domain.knowledge.errors import KnowledgeFindingConflictError
+from smb_requirement_agent.domain.knowledge.screening_errors import KnowledgeFindingConflictError
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 _WORDS = re.compile(r"[a-z0-9]+")

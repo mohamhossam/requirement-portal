@@ -60,7 +60,8 @@ DOMAIN = {
     # The catalogue content breakdown's impact records (PR 15a, F8).
     "domain.architecture.catalogue": "references",
     "domain.knowledge.historic": "references",
-    # Split: InvalidKnowledgeError goes to references, the screening errors to knowledge.
+    # KnowledgeError and InvalidKnowledgeError; the screening errors are in screening_errors
+    # (PR 15a), which the "domain.knowledge" prefix classifies as knowledge.
     "domain.knowledge.errors": "references",
     "domain.knowledge": "knowledge",
 }

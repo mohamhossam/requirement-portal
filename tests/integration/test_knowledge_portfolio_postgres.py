@@ -20,7 +20,7 @@ from smb_requirement_agent.application.ports.knowledge_portfolio import (
     IndexState,
     PersonName,
 )
-from smb_requirement_agent.domain.knowledge.errors import KnowledgeFindingConflictError
+from smb_requirement_agent.domain.knowledge.screening_errors import KnowledgeFindingConflictError
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.config.options import LLMProvider, PersistenceProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings

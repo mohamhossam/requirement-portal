@@ -42,9 +42,7 @@ from smb_requirement_agent.domain.knowledge.entities import (
     AnswerSuggestionSet,
     AnswerSuggestionSetId,
 )
-from smb_requirement_agent.domain.knowledge.errors import (
-    KnowledgeFindingConflictError,
-)
+from smb_requirement_agent.domain.knowledge.screening_errors import KnowledgeFindingConflictError
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.identity.application.ports.requirement_access import (
     RequirementPermission,

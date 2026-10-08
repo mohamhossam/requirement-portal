@@ -30,7 +30,7 @@ from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeSourceKind,
     RelationshipEvidence,
 )
-from smb_requirement_agent.domain.knowledge.errors import KnowledgeFindingConflictError
+from smb_requirement_agent.domain.knowledge.screening_errors import KnowledgeFindingConflictError
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 from smb_requirement_agent.infrastructure.persistence.postgres_values import _integer
 from smb_requirement_agent.shared_kernel.actors import (

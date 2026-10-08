@@ -36,10 +36,8 @@ from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeRelationshipKind,
     KnowledgeSourceKind,
 )
-from smb_requirement_agent.domain.knowledge.errors import (
-    InvalidKnowledgeError,
-    KnowledgeFindingConflictError,
-)
+from smb_requirement_agent.domain.knowledge.errors import InvalidKnowledgeError
+from smb_requirement_agent.domain.knowledge.screening_errors import KnowledgeFindingConflictError
 from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedError
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import (

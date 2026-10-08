@@ -27,7 +27,6 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
 )
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.application.use_cases.requirement_indexing import IndexBacklogReader
-from smb_requirement_agent.domain.knowledge.errors import CorpusMembershipConflictError
 from smb_requirement_agent.domain.knowledge.membership import (
     CorpusAction,
     CorpusActionKind,
@@ -35,6 +34,7 @@ from smb_requirement_agent.domain.knowledge.membership import (
     CorpusState,
     corpus_reason,
 )
+from smb_requirement_agent.domain.knowledge.screening_errors import CorpusMembershipConflictError
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
 from smb_requirement_agent.jobs.application.ports.notifications import NotificationRepositoryPort
 from smb_requirement_agent.jobs.domain.entities import (
