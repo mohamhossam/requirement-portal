@@ -88,7 +88,7 @@ Paths are relative to `src/smb_requirement_agent/`. Ports move with the use case
 | `domain/epic/*`, `domain/feature/*`, `domain/story/*` | `breakdown/domain/{epic,feature,story}/` (done in PR 11) |
 | `domain/architecture/{entities,errors,events}.py` (impact) | `breakdown/domain/architecture/` (done in PR 11) |
 | `domain/architecture/knowledge.py` (catalogue) | `references/domain/`; its duplicate-named error becomes `InvalidRelationshipKindError` in PR 2 |
-| `domain/review/*`, `domain/revision/*` | `governance/domain/` |
+| `domain/review/*`, `domain/revision/*` | `governance/domain/{review,revision}/` (done in PR 12) |
 | `domain/knowledge/historic.py` | `references/domain/`; its codec moves to infrastructure in PR 2, and its content-page parsing to the ACL in PR 15a |
 | `domain/knowledge/{entities,membership,prior_art}.py` | `knowledge/domain/` |
 | `domain/knowledge/errors.py` | split: `InvalidKnowledgeError` to `references/domain/`; the finding, review, retirement and membership errors to `knowledge/domain/` |
@@ -106,7 +106,7 @@ Paths are relative to `src/smb_requirement_agent/`. Ports move with the use case
 | `analysis` | `analyze_requirement`, `get_requirement_analysis`, `clarify_requirement_analysis`, `confirm_requirement_analysis`, `analysis_collaboration`, `analysis_mapping`, `analysis_reconciliation`, `evidence_analysis`, `generation_effects`, `analysis_documents` (`AssembleAnalysisDocuments`, split from `documents` in PR 9), `reference_grounding`, `discard_analysis` (the `RequirementRevised` handler, PR 4), all in `analysis/application/use_cases/` since PR 10; and the analysis half of `reference_currency` (`stale_analysis`, `stale_proposals`; split in PR 15a) |
 | `knowledge` | `requirement_knowledge`, `requirement_indexing`, `rebuild_knowledge_index`, `knowledge_portfolio`, `corpus_actions`, `unified_knowledge_search`, `prior_art`, `source_impact`, `answer_suggestions`; plus `application/prior_art_evaluation.py` |
 | `breakdown` | `generate_epic`, `edit_epic`, `get_epic`, `generate_features`, `feature_review` (`GetFeatures`, `EditFeature`), `story_workflow`, `story_change_proposals`, `story_quality`, `generation_checks` (through `CandidateReviewPort`), `architecture_mapping`, `architecture_mapping_jobs`, `leased_jobs` (the mapping queue's lease logic, reassigned from `jobs` in PR 8), `mark_backlog_stale` (the staleness handler, PR 4); all in `breakdown/application/use_cases/` since PR 11 |
-| `governance` | `breakdown_review` (with `GovernanceCandidateReview`, which implements breakdown's `CandidateReviewPort`), `reset_approval_workflow` (the review-reset handler, PR 5), `breakdown_review_evidence`, `approval_workflow`, `approve_epic`, `approve_feature` (`ApproveFeature`, split from breakdown's `feature_review` in PR 11), `revision_history`, `export_breakdown`, `knowledge_handoff` (F7); plus `application/exports.py`. Governance domain code since PR 6: `domain/review/{fingerprints,evidence,policy,readiness}.py` (formerly `approval_policy`, `breakdown_review_evidence`, `breakdown_review_policy`, and the readiness helpers of `approval_workflow`) |
+| `governance` | `breakdown_review` (with `GovernanceCandidateReview`, which implements breakdown's `CandidateReviewPort`), `reset_approval_workflow` (the review-reset handler, PR 5), `breakdown_review_evidence`, `approval_workflow`, `approve_epic`, `approve_feature` (`ApproveFeature`, split from breakdown's `feature_review` in PR 11), `revision_history`, `export_breakdown`, `knowledge_handoff` (F7); plus `application/exports.py`. Governance domain code since PR 6: `domain/review/{fingerprints,evidence,policy,readiness}.py` (formerly `approval_policy`, `breakdown_review_evidence`, `breakdown_review_policy`, and the readiness helpers of `approval_workflow`); all in `governance/application/use_cases/` since PR 12 |
 | `reporting` | `requirement_worklist`, `activity_reporting`, `saved_views`, `dependency_projection` |
 | `workflows` | `requirement_commands`, `ai_job_execution`, `ai_job_scheduling`, `ai_jobs` (F3), `identity_access` (F4), `generation_context` (behind `ExpectedContextPort`, F2), `requirement_impact` (F6), `internal_reads`. `source_lineage` is analysis domain code instead (PR 10 correction to F6: pure functions over `RequirementAnalysis`) |
 | removed in PR 5 | `invalidate_derived_artifacts` and `invalidate_approval_workflow`. Use cases publish domain events; the handlers are `discard_analysis`, `mark_backlog_stale` and `reset_approval_workflow` |
@@ -124,7 +124,7 @@ Paths are relative to `src/smb_requirement_agent/`. Ports move with the use case
 | `analysis` | `analysis_audit_repository`, `requirement_analysis_repository`, `requirement_analyzer`, `requirement_evidence_analyzer`, `reference_analysis` (the analysis half of `reference_grounding`), `knowledge_screening` (`AnswerSuggestionRequestPort`, `KnowledgeGatePort`, `SuggestionProvenancePort`); all in `analysis/application/ports/` since PR 10. Analysis asks for a screen through requirements' `ScreeningRequestPort` rather than a copy of it |
 | `knowledge` | `source_dependencies` (the reverse evidence index and `ImpactDecision`s; reassigned from `requirements` in PR 9), `corpus_membership`, `corpus_summary`, `knowledge_portfolio`, `knowledge_index_generations`, `requirement_indexing`, `requirement_knowledge`, `prior_art` |
 | `breakdown` | `architecture_jobs`, `architecture_mapping_stats`, `epic_generator`, `epic_repository`, `feature_generator`, `feature_repository`, `generation_guidance`, `story_generator`, `story_quality_evaluator`, `story_quality_repository`, `story_repository`, `candidate_review` (`CandidateReviewPort`, PR 5), `breakdown_context` (`BreakdownContextPort`, PR 11); all in `breakdown/application/ports/` since PR 11 |
-| `governance` | `backlog_export`, `breakdown_repository`, `breakdown_review_repository` |
+| `governance` | `backlog_export`, `breakdown_repository`, `breakdown_review_repository`; in `governance/application/ports/` since PR 12 |
 | `reporting` | `activity`, `requirement_worklist`, `saved_views` |
 
 ### Infrastructure
@@ -144,7 +144,7 @@ Paths are relative to `src/smb_requirement_agent/`. Ports move with the use case
 | `infrastructure/identity/`, `infrastructure/persistence/{identity_payloads,in_memory_identity}.py`, and `PostgresAccessRepository` and `PostgresActorDirectory` from `postgres_repositories.py` | `identity/infrastructure/` (done in PR 7; the PostgreSQL pair is now `postgres_identity.py`) |
 | `infrastructure/persistence/{in_memory_ai_jobs,postgres_ai_jobs}.py` | `jobs/infrastructure/` (done in PR 8) |
 | `infrastructure/jobs/` (PR 8 correction: these workers run other contexts' work, so `jobs` cannot hold them) | `architecture_job_worker.py` → `breakdown/infrastructure/` (done in PR 11); `polling_worker.py` (drives `ExecuteAiJob`) → `workflows/infrastructure/`; `prior_art_gate.py`, `requirement_index_worker.py` → `knowledge/infrastructure/` |
-| `infrastructure/exports/` | `governance/infrastructure/` |
+| `infrastructure/exports/` | `governance/infrastructure/exports/` (done in PR 12, with `application/exports.py` → `governance/application/exports.py`, the review and revision repositories and codecs, `revision_tracking.py`, and `postgres_repositories.py` → `postgres_breakdown_review.py`) |
 | `infrastructure/llm/` adapters for one context's port | that context's `infrastructure/llm/`; the shared transport and provider selection helpers stay in `infrastructure/llm/`. Done for analysis and breakdown in PR 11b (`candidate_mappers.py` split into `analysis_mappers.py` and `backlog_mappers.py`). What stays shared: `openai_adapters.py` and `openrouter_adapters.py` (provider selection), `response_sanitizer.py`, and knowledge's adapters, prompts and schemas until PR 15b |
 | `infrastructure/config/`, `infrastructure/text/` | unchanged |
 
@@ -159,7 +159,7 @@ The composition builders become one per context:
 | `composition/requirements.py`, `composition/documents.py` | merged into `requirements.py` (done in PR 9) |
 | `composition/analysis.py`, `composition/analysis_workflow.py` | merged into `analysis.py` (done in PR 10) |
 | `composition/breakdown.py` | `breakdown.py` (it also holds the mapping-job wiring since PR 11) |
-| `composition/review.py` | `governance.py` |
+| `composition/review.py` | `governance.py` (done in PR 12) |
 | `composition/knowledge_service.py` | `references.py` |
 | `composition/architecture.py` | merged into `breakdown.py` in PR 11: by then it held only the mapping jobs (`build_architecture_jobs`); catalogue retrieval is in `knowledge_service.py`, which becomes `references.py` |
 | `composition/knowledge.py` | `knowledge.py` |

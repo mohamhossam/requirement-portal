@@ -1,8 +1,8 @@
 # Refactor — Bounded-context packages and domain events
 
 **Status:** ADR-0103 accepted and the slice scheduled 2026-10-07. PR 1 delivered. The PR 1
-findings were decided the same day (ADR-0103 Amendment 1). PRs 2–11 and 11b delivered; PR 12
-(move `governance`) is next.
+findings were decided the same day (ADR-0103 Amendment 1). PRs 2–12 and 11b delivered; PR 13
+(move `reporting`) is next.
 
 **Related:** [context map](../architecture/context-map.md),
 [ubiquitous language](../architecture/ubiquitous-language.md).
@@ -978,6 +978,93 @@ The dependency report does not cover infrastructure, so it is unchanged: 224 of 
 - `ruff check .` and `ruff format --check .`: clean.
 - `mypy src tests`: no issues in 622 source files.
 - `lint-imports`: 25 contracts kept, 0 broken.
+
+## PR 12 — The `governance` package (2026-10-08)
+
+### Delivered
+
+Governance needed no inversion before the move. Its only wrong-way imports are the three
+`identity_access` imports owed to PR 14. Everything else points upstream.
+
+**1. The move.** One commit, in `.git-blame-ignore-revs`.
+
+| Was | Now |
+|---|---|
+| `domain/review/*`, `domain/revision/*` | `governance/domain/{review,revision}/` |
+| 8 use cases: `breakdown_review`, `approval_workflow`, `approve_epic`, `approve_feature`, `revision_history`, `export_breakdown`, `knowledge_handoff` (F7), `reset_approval_workflow` | `governance/application/use_cases/` |
+| 3 ports: `backlog_export`, `breakdown_repository`, `breakdown_review_repository` | `governance/application/ports/` |
+| `application/exports.py` | `governance/application/exports.py` |
+| `infrastructure/persistence/{review_payloads,in_memory_breakdown_review_repository,in_memory_revision_repository,postgres_revisions,revision_tracking}.py` | `governance/infrastructure/` |
+| `infrastructure/persistence/postgres_repositories.py`, which by now held only `PostgresBreakdownReviewRepository` | `governance/infrastructure/postgres_breakdown_review.py` |
+| `infrastructure/exports/` (the JSON and XLSX exporters) | `governance/infrastructure/exports/` |
+| 7 governance-only unit test modules | `tests/unit/governance/` |
+
+- One line changed besides the rewrite. `revision_tracking.py` imported the shared
+  `in_memory_transaction` relatively (`from .in_memory_transaction import …`), which broke once
+  the file moved. It is now an absolute import.
+- No shims.
+
+**2. Composition.** `composition/review.py` became `composition/governance.py`. `build_review` and
+`ReviewWiring` keep their names.
+
+**3. Contracts and report.** See below.
+
+### Stays where it is
+
+| Module | Why |
+|---|---|
+| `application/ports/knowledge_handoff.py`, `infrastructure/persistence/backlog_handoffs.py` | The approved-backlog outbox and inbox are references' ports, moving in PR 15a. Governance writes to them through the port |
+| `infrastructure/persistence/postgres_snapshots.py` | Worklist snapshots, reporting (PR 13) |
+| `test_review_actions{,_api}` | They test the shared kernel's `actions` across contexts |
+
+### Observation, not fixed here
+
+`breakdown_review` holds analysis's `AnalysisCollaboration` (`breakdown_review.py:516`) and
+breakdown's `ValidateStory` and `story_set_fingerprint`. These are upstream use cases, not ports.
+The direction is legal and the published-surface contracts forbid only adapters. It is a
+candidate for ports when PR 16 tightens the published surfaces.
+
+### Contracts (28 kept, up from 25)
+
+- **New contracts.** `governance_internal_layers`, `governance_depends_only_upstream` and
+  `governance_published_surface`.
+- **Ignored imports.** The upstream contract reports 11:
+  - `transaction_manager` (4);
+  - references' `architecture_knowledge` (1), `knowledge_handoff` (2) and `reference_grounding`
+    (1), which go in PR 15a;
+  - `identity_access` (3), which goes in PR 14.
+- **Upstream contexts.** Every earlier context's "depends only upstream" contract now forbids
+  `governance`.
+- **Published surfaces, refined.** A context's sources are now its `domain` and `application`
+  layers, not the whole package.
+  - Why: adding governance as a consumer broke four of them. `postgres_revisions` snapshots the
+    whole Requirement tree into a revision, so it reuses the identity, requirements, analysis and
+    breakdown payload codecs.
+  - The contracts exist to stop domain and application code from reaching adapters.
+    Infrastructure reusing another context's codecs is allowed and now recorded in the contract
+    comments.
+  - A probe confirmed the narrowed contracts still catch governance *application* code importing
+    analysis's adapters.
+- **Probes**, all reverted:
+  - a reporting use case (`requirement_worklist`) imported from `revision_history` broke
+    `governance_depends_only_upstream` and `governance_internal_layers`;
+  - a governance adapter imported from an unmoved use case broke `governance_published_surface`
+    and `application_independence`;
+  - a governance import in breakdown's `get_epic` broke `breakdown_depends_only_upstream`;
+  - an analysis adapter imported from `revision_history` broke `analysis_published_surface`.
+
+### Dependency report
+
+228 of 228 modules classified, 77 crossing pairs, 13 against the order. Unchanged: moving
+governance changes no context pair.
+
+### Validation evidence (PR 12, local, with PostgreSQL)
+
+- `pytest` with `TEST_DATABASE_URL` set: 1865 passed, 0 skipped, exit 0, after each code commit.
+  No file under `tests/characterisation/golden/` changed.
+- `ruff check .` and `ruff format --check .`: clean.
+- `mypy src tests`: no issues in 629 source files.
+- `lint-imports`: 28 contracts kept, 0 broken.
 
 ## Shims
 
