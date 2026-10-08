@@ -20,7 +20,6 @@ from smb_requirement_agent.application.ports.requirement_knowledge import (
     KnowledgeScreenSchedulerPort,
     RequirementKnowledgeRepositoryPort,
 )
-from smb_requirement_agent.application.use_cases.ai_jobs import command_fingerprint
 from smb_requirement_agent.domain.knowledge.errors import RequirementRetiredError
 from smb_requirement_agent.jobs.application.ports.ai_jobs import (
     AiJobCommand,
@@ -28,6 +27,7 @@ from smb_requirement_agent.jobs.application.ports.ai_jobs import (
     AiJobRepositoryPort,
     JsonValue,
 )
+from smb_requirement_agent.jobs.application.use_cases.command_fingerprint import command_fingerprint
 from smb_requirement_agent.jobs.domain.entities import (
     AiJob,
     AiJobId,

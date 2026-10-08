@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 import uuid
 from dataclasses import dataclass, replace
 
@@ -23,6 +21,7 @@ from smb_requirement_agent.jobs.application.ports.ai_jobs import (
     AiJobRepositoryPort,
 )
 from smb_requirement_agent.jobs.application.ports.notifications import NotificationRepositoryPort
+from smb_requirement_agent.jobs.application.use_cases.command_fingerprint import command_fingerprint
 from smb_requirement_agent.jobs.application.use_cases.job_execution_context import (
     current_attempt,
 )
@@ -53,29 +52,9 @@ class StartAiJobResult:
     created: bool
 
 
-COMMAND_FINGERPRINT_VERSION = 2
 # Job and notification lists are polled, so they are bounded (ADR-0079).
 DEFAULT_LIST_LIMIT = 100
 MAX_LIST_LIMIT = 500
-
-
-def command_fingerprint(
-    requirement_id: RequirementId,
-    operation: AiJobOperation,
-    command: AiJobCommand,
-) -> str:
-    payload = json.dumps(
-        {
-            "version": COMMAND_FINGERPRINT_VERSION,
-            "requirement_id": requirement_id.value,
-            "operation": operation.value,
-            "arguments": command.arguments,
-        },
-        sort_keys=True,
-        separators=(",", ":"),
-    )
-    digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
-    return f"v{COMMAND_FINGERPRINT_VERSION}:{digest}"
 
 
 class AnalysisProgressReporter:
