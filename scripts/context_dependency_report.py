@@ -83,12 +83,6 @@ USE_CASES = {
         "source_impact",
         "answer_suggestions",
     ],
-    "reporting": [
-        "requirement_worklist",
-        "activity_reporting",
-        "saved_views",
-        "dependency_projection",
-    ],
     "workflows": [
         "requirement_commands",
         "ai_job_execution",
@@ -127,7 +121,6 @@ PORTS = {
         "requirement_indexing",
         "requirement_knowledge",
     ],
-    "reporting": ["activity", "requirement_worklist", "saved_views"],
     TECHNICAL: ["domain_events", "expected_context", "external_work", "transaction_manager"],
 }
 
@@ -153,6 +146,7 @@ CONTEXT_PACKAGES = (
     "analysis",
     "breakdown",
     "governance",
+    "reporting",
 )
 
 
