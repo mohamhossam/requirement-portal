@@ -1,8 +1,8 @@
 # Refactor — Bounded-context packages and domain events
 
 **Status:** ADR-0103 accepted and the slice scheduled 2026-10-07. PR 1 delivered. The PR 1
-findings were decided the same day (ADR-0103 Amendment 1). PRs 2–13 and 11b delivered; PR 14
-(move `workflows`) is next.
+findings were decided the same day (ADR-0103 Amendment 1). PRs 2–14 and 11b delivered; PR 15a
+(move `references`) is next.
 
 **Related:** [context map](../architecture/context-map.md),
 [ubiquitous language](../architecture/ubiquitous-language.md).
@@ -1119,6 +1119,92 @@ No code changes and no shims.
 - `ruff check .` and `ruff format --check .`: clean.
 - `mypy src tests`: no issues in 635 source files.
 - `lint-imports`: 31 contracts kept, 0 broken.
+
+## PR 14 — The `workflows` package and the identity access port (2026-10-08)
+
+### Delivered
+
+This PR paid off the access-service debt that every earlier context carried (F4). Two commits came
+before the move.
+
+**1. The command fingerprint is jobs'.**
+- `command_fingerprint` and `COMMAND_FINGERPRINT_VERSION` are a pure function over the jobs
+  vocabulary.
+- They moved verbatim, checked with `diff`, from workflows' `ai_jobs` to
+  `jobs/application/use_cases/command_fingerprint.py`.
+- This removed knowledge's `prior_art → ai_jobs` import.
+
+**2. Contexts authorize through `RequirementAccessPort` (F4).**
+- **Identity's port.** Identity publishes `RequirementAccessPort` and `RequirementPermission` in
+  `identity/application/ports/requirement_access.py`.
+  - The port holds the ten methods other contexts call: `require`,
+    `require_requirement_member`, `require_answerer`, `require_owner_of_either`, `mutation`,
+    `execute_mutation`, `create_requirement_owner`, `create_draft_owner`, `require_draft_owner`
+    and `can_access_draft`.
+  - `RequirementPermission` moved verbatim. Its 22 importers were repointed.
+- **Knowledge's port.** Knowledge's automatic work also calls `automatic_mutation`, which takes
+  jobs' `AiJobOperation`. Identity cannot import jobs, its sibling, so knowledge owns
+  `KnowledgeAccessPort` (`application/ports/knowledge_access.py`), extending the port with it.
+  This is the same per-context extension pattern as the PR 11 context-token ports.
+- **Implementation.** Workflows' `RequirementAccessService` satisfies both ports structurally, and
+  mypy checks it at every wiring site.
+- **Consumers.** Requirements, analysis, breakdown, governance and knowledge now type their access
+  collaborator with a port. That removed all 22 `identity_access` imports outside workflows, and
+  the four F4 ignores from the contracts:
+
+| Contract | Ignored imports |
+|---|---|
+| requirements | 11 → 7 |
+| analysis | 11 → 9 |
+| breakdown | 32 → 24 |
+| governance | 11 → 8 |
+
+**3. The move.** One commit, in `.git-blame-ignore-revs`.
+
+| Was | Now |
+|---|---|
+| 8 use cases: `requirement_commands`, `ai_job_execution`, `ai_job_scheduling`, `ai_jobs`, `identity_access`, `generation_context`, `requirement_impact`, `internal_reads` | `workflows/application/use_cases/` |
+| `infrastructure/jobs/polling_worker.py` (PR 8 reassignment) | `workflows/infrastructure/` |
+| 7 workflows-only unit test modules | `tests/unit/workflows/` |
+
+- **No domain layer.** Workflows orchestrates the other contexts.
+- **One test path.** `test_requirement_internal_contract` finds the committed OpenAPI contract
+  from its own path, so it now looks one directory further up.
+
+**4. Contracts and report.** See below.
+
+### Contracts (33 kept, up from 31)
+
+- **New contracts.**
+  - `workflows_internal_layers`: infrastructure > application.
+  - **`nothing_imports_workflows`.** Workflows is downstream of every context, so instead of a
+    published surface it has one rule: nothing in `domain`, `application`, `infrastructure`, the
+    shared kernel or any context may import it. That includes indirect imports, so it needs no
+    exemption. Only delivery and composition use workflows.
+- **Probes**, all reverted:
+  - an `ai_jobs` import in knowledge's `prior_art` and an `identity_access` import in analysis
+    both broke `nothing_imports_workflows`;
+  - an `interfaces` import in `internal_reads` broke `application_independence` and the framework
+    contracts.
+
+### Dependency report
+
+236 of 236 modules classified, 72 crossing pairs (77 before), 8 against the order (13 before).
+- **Gone:** `requirements`, `analysis`, `breakdown`, `governance` and `knowledge → workflows`, the
+  last of them its `ai_jobs` import as well.
+- **Remaining 8:**
+  - `references → analysis`, `references → breakdown`, `references → knowledge`: PR 15a;
+  - `technical → analysis`, `technical → breakdown`, `technical → requirements`: context errors
+    in `application/errors.py`, F5;
+  - `breakdown → interfaces` and `workflows → interfaces`: `public_errors`, F5.
+
+### Validation evidence (PR 14, local, with PostgreSQL)
+
+- `pytest` with `TEST_DATABASE_URL` set: 1865 passed, 0 skipped, exit 0, after each code commit.
+  No file under `tests/characterisation/golden/` changed.
+- `ruff check .` and `ruff format --check .`: clean.
+- `mypy src tests`: no issues in 643 source files.
+- `lint-imports`: 33 contracts kept, 0 broken.
 
 ## Shims
 
