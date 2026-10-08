@@ -9,7 +9,6 @@ include_external_packages = True
 name = Domain must not depend on outer layers
 type = forbidden
 source_modules =
-    smb_requirement_agent.domain
     smb_requirement_agent.shared_kernel
     smb_requirement_agent.identity.domain
     smb_requirement_agent.jobs.domain
@@ -50,7 +49,6 @@ type = forbidden
 source_modules =
     smb_requirement_agent.shared_kernel
 forbidden_modules =
-    smb_requirement_agent.domain
     smb_requirement_agent.application
     smb_requirement_agent.infrastructure
     smb_requirement_agent.interfaces
@@ -98,7 +96,6 @@ forbidden_modules =
 name = Domain must not import frameworks or provider SDKs
 type = forbidden
 source_modules =
-    smb_requirement_agent.domain
     smb_requirement_agent.shared_kernel
     smb_requirement_agent.identity.domain
     smb_requirement_agent.jobs.domain
@@ -200,7 +197,6 @@ forbidden_modules =
 name = Domain and application use only platform-kernel's pure contract modules (ADR-0100)
 type = forbidden
 source_modules =
-    smb_requirement_agent.domain
     smb_requirement_agent.shared_kernel
     smb_requirement_agent.application
     smb_requirement_agent.identity.domain
@@ -258,7 +254,40 @@ forbidden_modules =
     smb_kernel.persistence
 allow_indirect_imports = True
 
-# Bounded contexts (ADR-0103). A context gains these as it moves into its own package.
+# Bounded contexts (ADR-0103). Each context has its own package and these three contracts; the
+# context-level contracts below state the dependency order for the whole package.
+
+[importlinter:contract:contexts_layered]
+name = Contexts depend only on the contexts upstream of them (ADR-0103 §2)
+type = layers
+layers =
+    smb_requirement_agent.workflows
+    smb_requirement_agent.reporting
+    smb_requirement_agent.governance
+    smb_requirement_agent.breakdown
+    smb_requirement_agent.knowledge
+    smb_requirement_agent.analysis
+    smb_requirement_agent.references
+    smb_requirement_agent.requirements
+    smb_requirement_agent.jobs | smb_requirement_agent.identity
+    smb_requirement_agent.shared_kernel
+
+[importlinter:contract:shared_application_uses_no_context]
+name = Shared application code (errors, events, technical ports) imports no context (ADR-0103 §2)
+type = forbidden
+source_modules =
+    smb_requirement_agent.application
+forbidden_modules =
+    smb_requirement_agent.identity
+    smb_requirement_agent.jobs
+    smb_requirement_agent.requirements
+    smb_requirement_agent.references
+    smb_requirement_agent.analysis
+    smb_requirement_agent.knowledge
+    smb_requirement_agent.breakdown
+    smb_requirement_agent.governance
+    smb_requirement_agent.reporting
+    smb_requirement_agent.workflows
 
 [importlinter:contract:identity_internal_layers]
 name = identity: infrastructure > application > domain
@@ -276,9 +305,6 @@ type = forbidden
 source_modules =
     smb_requirement_agent.identity
 forbidden_modules =
-    smb_requirement_agent.domain
-    smb_requirement_agent.application.use_cases
-    smb_requirement_agent.application.ports
     smb_requirement_agent.interfaces
     smb_requirement_agent.knowledge
     smb_requirement_agent.jobs
@@ -288,10 +314,6 @@ forbidden_modules =
     smb_requirement_agent.breakdown
     smb_requirement_agent.governance
     smb_requirement_agent.reporting
-# Identity imports only the shared kernel and shared technical modules (application.errors, the
-# payload and PostgreSQL helpers). Those still reach unmoved context code until their own contexts
-# move, so only direct imports are checked here; PR 16 removes this exemption.
-allow_indirect_imports = True
 
 [importlinter:contract:identity_published_surface]
 name = Other contexts use identity's domain and ports, never its adapters (ADR-0103 §5)
@@ -299,7 +321,6 @@ type = forbidden
 # Context sources are their domain and application layers: infrastructure may reuse another
 # context's codecs (revision snapshots serialise the whole tree, PR 12).
 source_modules =
-    smb_requirement_agent.domain
     smb_requirement_agent.application
     smb_requirement_agent.shared_kernel
     smb_requirement_agent.knowledge.domain
@@ -336,9 +357,6 @@ type = forbidden
 source_modules =
     smb_requirement_agent.jobs
 forbidden_modules =
-    smb_requirement_agent.domain
-    smb_requirement_agent.application.use_cases
-    smb_requirement_agent.application.ports
     smb_requirement_agent.interfaces
     smb_requirement_agent.knowledge
     smb_requirement_agent.identity
@@ -348,9 +366,6 @@ forbidden_modules =
     smb_requirement_agent.breakdown
     smb_requirement_agent.governance
     smb_requirement_agent.reporting
-# As for identity: jobs imports only the shared kernel and shared technical modules
-# (application.errors, postgres_session, postgres_values), which still reach unmoved context code.
-allow_indirect_imports = True
 
 [importlinter:contract:jobs_published_surface]
 name = Other contexts use jobs's domain and ports, never its adapters (ADR-0103 §5)
@@ -358,7 +373,6 @@ type = forbidden
 # Context sources are their domain and application layers: infrastructure may reuse another
 # context's codecs (revision snapshots serialise the whole tree, PR 12).
 source_modules =
-    smb_requirement_agent.domain
     smb_requirement_agent.application
     smb_requirement_agent.shared_kernel
     smb_requirement_agent.knowledge.domain
@@ -395,9 +409,6 @@ type = forbidden
 source_modules =
     smb_requirement_agent.requirements
 forbidden_modules =
-    smb_requirement_agent.domain
-    smb_requirement_agent.application.use_cases
-    smb_requirement_agent.application.ports
     smb_requirement_agent.interfaces
     smb_requirement_agent.knowledge
     smb_requirement_agent.analysis
@@ -405,12 +416,6 @@ forbidden_modules =
     smb_requirement_agent.breakdown
     smb_requirement_agent.governance
     smb_requirement_agent.reporting
-# The shared technical ports requirements uses, which every context may use.
-ignore_imports =
-    smb_requirement_agent.requirements.** -> smb_requirement_agent.application.ports.domain_events
-    smb_requirement_agent.requirements.** -> smb_requirement_agent.application.ports.transaction_manager
-# As for identity and jobs: the shared technical modules still reach unmoved context code.
-allow_indirect_imports = True
 
 [importlinter:contract:requirements_published_surface]
 name = Other contexts use requirements' domain and ports, never its adapters (ADR-0103 §5)
@@ -418,7 +423,6 @@ type = forbidden
 # Context sources are their domain and application layers: infrastructure may reuse another
 # context's codecs (revision snapshots serialise the whole tree, PR 12).
 source_modules =
-    smb_requirement_agent.domain
     smb_requirement_agent.application
     smb_requirement_agent.shared_kernel
     smb_requirement_agent.knowledge.domain
@@ -455,20 +459,11 @@ type = forbidden
 source_modules =
     smb_requirement_agent.analysis
 forbidden_modules =
-    smb_requirement_agent.domain
-    smb_requirement_agent.application.use_cases
-    smb_requirement_agent.application.ports
     smb_requirement_agent.interfaces
     smb_requirement_agent.knowledge
     smb_requirement_agent.breakdown
     smb_requirement_agent.governance
     smb_requirement_agent.reporting
-ignore_imports =
-    # The shared technical ports every context may use.
-    smb_requirement_agent.analysis.** -> smb_requirement_agent.application.ports.expected_context
-    smb_requirement_agent.analysis.** -> smb_requirement_agent.application.ports.transaction_manager
-# As for the other contexts: the shared technical modules still reach unmoved context code.
-allow_indirect_imports = True
 
 [importlinter:contract:analysis_published_surface]
 name = Other contexts use analysis's domain and ports, never its adapters (ADR-0103 §5)
@@ -476,7 +471,6 @@ type = forbidden
 # Context sources are their domain and application layers: infrastructure may reuse another
 # context's codecs (revision snapshots serialise the whole tree, PR 12).
 source_modules =
-    smb_requirement_agent.domain
     smb_requirement_agent.application
     smb_requirement_agent.shared_kernel
     smb_requirement_agent.knowledge.domain
@@ -511,19 +505,9 @@ type = forbidden
 source_modules =
     smb_requirement_agent.breakdown
 forbidden_modules =
-    smb_requirement_agent.domain
-    smb_requirement_agent.application.use_cases
-    smb_requirement_agent.application.ports
     smb_requirement_agent.interfaces
     smb_requirement_agent.governance
     smb_requirement_agent.reporting
-ignore_imports =
-    # The shared technical ports every context may use.
-    smb_requirement_agent.breakdown.** -> smb_requirement_agent.application.ports.domain_events
-    smb_requirement_agent.breakdown.** -> smb_requirement_agent.application.ports.expected_context
-    smb_requirement_agent.breakdown.** -> smb_requirement_agent.application.ports.transaction_manager
-# As for the other contexts: the shared technical modules still reach unmoved context code.
-allow_indirect_imports = True
 
 [importlinter:contract:breakdown_published_surface]
 name = Other contexts use breakdown's domain and ports, never its adapters (ADR-0103 §5)
@@ -531,7 +515,6 @@ type = forbidden
 # Context sources are their domain and application layers: infrastructure may reuse another
 # context's codecs (revision snapshots serialise the whole tree, PR 12).
 source_modules =
-    smb_requirement_agent.domain
     smb_requirement_agent.application
     smb_requirement_agent.shared_kernel
     smb_requirement_agent.identity.domain
@@ -564,16 +547,8 @@ type = forbidden
 source_modules =
     smb_requirement_agent.governance
 forbidden_modules =
-    smb_requirement_agent.domain
-    smb_requirement_agent.application.use_cases
-    smb_requirement_agent.application.ports
     smb_requirement_agent.interfaces
     smb_requirement_agent.reporting
-ignore_imports =
-    # The shared technical ports every context may use.
-    smb_requirement_agent.governance.** -> smb_requirement_agent.application.ports.transaction_manager
-# As for the other contexts: the shared technical modules still reach unmoved context code.
-allow_indirect_imports = True
 
 [importlinter:contract:governance_published_surface]
 name = Other contexts use governance's domain and ports, never its adapters (ADR-0103 §5)
@@ -581,7 +556,6 @@ type = forbidden
 # Context sources are their domain and application layers: infrastructure may reuse another
 # context's codecs (revision snapshots serialise the whole tree, PR 12).
 source_modules =
-    smb_requirement_agent.domain
     smb_requirement_agent.application
     smb_requirement_agent.shared_kernel
     smb_requirement_agent.identity.domain
@@ -613,12 +587,7 @@ type = forbidden
 source_modules =
     smb_requirement_agent.reporting
 forbidden_modules =
-    smb_requirement_agent.domain
-    smb_requirement_agent.application.use_cases
-    smb_requirement_agent.application.ports
     smb_requirement_agent.interfaces
-# As for the other contexts: the shared technical modules still reach unmoved context code.
-allow_indirect_imports = True
 
 [importlinter:contract:reporting_published_surface]
 name = Other contexts use reporting's ports, never its adapters (ADR-0103 §5)
@@ -626,7 +595,6 @@ type = forbidden
 # Context sources are their domain and application layers: infrastructure may reuse another
 # context's codecs (revision snapshots serialise the whole tree, PR 12).
 source_modules =
-    smb_requirement_agent.domain
     smb_requirement_agent.application
     smb_requirement_agent.shared_kernel
     smb_requirement_agent.identity.domain
@@ -657,7 +625,6 @@ layers =
 name = workflows is downstream of every context: only delivery and composition import it (ADR-0103 §2)
 type = forbidden
 source_modules =
-    smb_requirement_agent.domain
     smb_requirement_agent.application
     smb_requirement_agent.infrastructure
     smb_requirement_agent.shared_kernel
@@ -689,20 +656,12 @@ type = forbidden
 source_modules =
     smb_requirement_agent.references
 forbidden_modules =
-    smb_requirement_agent.domain
-    smb_requirement_agent.application.use_cases
-    smb_requirement_agent.application.ports
     smb_requirement_agent.interfaces
     smb_requirement_agent.knowledge
     smb_requirement_agent.analysis
     smb_requirement_agent.breakdown
     smb_requirement_agent.governance
     smb_requirement_agent.reporting
-ignore_imports =
-    # The shared technical port every context may use.
-    smb_requirement_agent.references.** -> smb_requirement_agent.application.ports.transaction_manager
-# As for the other contexts: the shared technical modules still reach unmoved context code.
-allow_indirect_imports = True
 
 [importlinter:contract:references_published_surface]
 name = Other contexts use references' domain and ports, never its adapters (ADR-0103 §5)
@@ -710,7 +669,6 @@ type = forbidden
 # Context sources are their domain and application layers: infrastructure may reuse another
 # context's codecs (revision snapshots serialise the whole tree, PR 12).
 source_modules =
-    smb_requirement_agent.domain
     smb_requirement_agent.application
     smb_requirement_agent.shared_kernel
     smb_requirement_agent.knowledge.domain
@@ -748,18 +706,10 @@ type = forbidden
 source_modules =
     smb_requirement_agent.knowledge
 forbidden_modules =
-    smb_requirement_agent.domain
-    smb_requirement_agent.application.use_cases
-    smb_requirement_agent.application.ports
     smb_requirement_agent.interfaces
     smb_requirement_agent.breakdown
     smb_requirement_agent.governance
     smb_requirement_agent.reporting
-ignore_imports =
-    # The shared technical port every context may use.
-    smb_requirement_agent.knowledge.** -> smb_requirement_agent.application.ports.transaction_manager
-# As for the other contexts: the shared technical modules still reach unmoved context code.
-allow_indirect_imports = True
 
 [importlinter:contract:knowledge_published_surface]
 name = Other contexts use knowledge's domain and ports, never its adapters (ADR-0103 §5)
@@ -767,7 +717,6 @@ type = forbidden
 # Context sources are their domain and application layers: infrastructure may reuse another
 # context's codecs (revision snapshots serialise the whole tree, PR 12).
 source_modules =
-    smb_requirement_agent.domain
     smb_requirement_agent.application
     smb_requirement_agent.shared_kernel
     smb_requirement_agent.identity.domain

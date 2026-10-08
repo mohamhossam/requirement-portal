@@ -7,9 +7,9 @@ flags the ones that run against the dependency order:
     workflows > reporting > governance > breakdown > knowledge > analysis > references
     > requirements > {jobs | identity} > shared_kernel
 
-A flagged edge is work the migration must remove before that context moves: an event, a port
-the importing context owns, or a recorded change to the context map. Infrastructure and
-interfaces are not classified; they follow their application layer when it moves.
+A flagged edge runs against ADR-0103 §2; the `contexts_layered` import-linter contract rejects
+it too. Infrastructure and interfaces are not classified: a context's adapters may use other
+contexts' codecs, and the composition root wires every context.
 
 Usage:
 
@@ -47,9 +47,7 @@ RANK = {
 # and they must use no context.
 TECHNICAL = "technical"
 
-# Every module is classified by its TARGET context in docs/architecture/context-map.md, so a
-# reported crossing is migration work still to do. Modules the migration splits are classified
-# by the side most of them goes to; their other half shows up as crossings until it moves.
+# Every module is classified by the context docs/architecture/context-map.md assigns it.
 # Most specific prefix wins. Prefixes are relative to the package root.
 DOMAIN = {
     "shared_kernel": "shared_kernel",
@@ -60,17 +58,15 @@ PORTS = {
 }
 
 APPLICATION_MODULES = {
-    # Base errors stay shared; the context errors in it move to their contexts (F5).
+    # Base errors only; the context errors moved to their contexts (F5, PR 16).
     "application.errors": TECHNICAL,
     # The in-process dispatcher (PR 4).
     "application.events": TECHNICAL,
-    # The client-facing error catalogue moves beside interfaces/api/error_handlers.py (F5).
-    "application.public_errors": "interfaces",
 }
 
 
-# Contexts that have moved into their own package (ADR-0103 §1). Their domain and application
-# layers are classified whole; their infrastructure, like the rest, is out of scope.
+# The context packages (ADR-0103 §1). Their domain and application layers are classified whole;
+# their infrastructure, like the rest, is out of scope.
 CONTEXT_PACKAGES = (
     "identity",
     "jobs",
@@ -108,17 +104,12 @@ def classify(module: str, table: dict[str, str]) -> str | None:
 
 def _in_scope(module: str) -> bool:
     relative = module.removeprefix(f"{ROOT}.")
-    if relative in (
-        "domain",
-        "application",
-        "application.use_cases",
-        "application.ports",
-    ):
+    if relative in ("application", "application.ports"):
         return False
     moved = tuple(
         f"{context}.{layer}" for context in CONTEXT_PACKAGES for layer in ("domain", "application")
     )
-    return relative.startswith(("domain.", "application.", "shared_kernel", *moved))
+    return relative.startswith(("application.", "shared_kernel", *moved))
 
 
 def allowed(source: str, target: str) -> bool:
