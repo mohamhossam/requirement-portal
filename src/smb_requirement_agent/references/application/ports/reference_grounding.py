@@ -63,6 +63,14 @@ class ReferenceKnowledgePort(Protocol):
 
     def retrieve(self, query: str) -> tuple[ReferenceEvidence, ...]: ...
 
+    def is_connected(self) -> bool:
+        """Whether a knowledge portal stands behind this port, or the offline stand-in.
+
+        The portal is optional (ADR-0104): without one, nothing is published by design,
+        which a reviewer must be able to tell from a portal that could not be reached.
+        """
+        ...
+
     def has_published(self) -> bool: ...
 
     def search_evidence(self, query: str) -> tuple[ReferenceEvidence, ...]:

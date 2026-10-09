@@ -64,3 +64,25 @@ the two to be independent applications that still work together when both are pr
   Requirement knowledge screens.
 - **Keep the platform deployment here and only relax the startup check.** Rejected: the knowledge
   portal still could not be deployed or signed into without this repository.
+
+## Amendment — An unreachable portal degrades, it does not fail (2026-10-09)
+
+Slice `production-hardening` (PR 8). The text above stays as accepted; where it differs, this
+amendment governs.
+
+An optional link can be down as well as absent. Until now a connected knowledge portal that could
+not be reached failed every analysis after its model call had been paid for, and failed unified
+search outright.
+
+- **Analysis keeps its primary result.** Reference grounding catches `ServiceUnavailableError`
+  (including a failed client-credentials grant) and returns the primary analysis without reference
+  proposals. The analysis records its *reference grounding*: `grounded`, `no_evidence`,
+  `not_connected` (no portal configured) or `unavailable`. The review UI says references were not
+  checked only for `unavailable`; with no portal connected there was nothing to check.
+- **The reference port says whether a portal stands behind it** (`is_connected()`), so "nothing is
+  published" and "nothing is connected" are not confused.
+- **Unified search keeps its local half.** With the library unreachable it answers with
+  Requirement hits only and sets `X-Reference-Library: unavailable`; the body keeps its shape.
+- **Recorded only when known.** Analyses from before this amendment, and re-analysis rounds that do
+  not consult the library, carry no grounding; their stored payloads and generation-context tokens
+  are unchanged.

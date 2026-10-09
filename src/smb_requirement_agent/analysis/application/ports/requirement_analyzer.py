@@ -11,6 +11,7 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     IntentProposal,
     IntentProposalKind,
     QuestionChangeAction,
+    ReferenceGroundingStatus,
 )
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.shared_kernel.citation import PublishedReference
@@ -119,6 +120,7 @@ class RequirementAnalysisCandidate(TypedDict):
     evidence_references: NotRequired[dict[str, list[AnalysisEvidenceReferenceCandidate]]]
     clarification_references: NotRequired[dict[str, list[int]]]
     stage_provenance: NotRequired[list[AnalysisStageProvenanceCandidate]]
+    reference_grounding: NotRequired[ReferenceGroundingStatus]
 
 
 class RequirementAnalyzerPort(Protocol):

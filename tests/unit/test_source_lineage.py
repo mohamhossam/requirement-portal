@@ -85,7 +85,7 @@ def test_answer_origin_survives_reanalysis_and_is_not_independent(
     copies = [chunk for chunk in corpus.chunks(requirement) if chunk.source_lineage]
     assert copies and all(c.source_lineage[0].citation.document_id == document_id for c in copies)
     drain_requirement_index(container)
-    hits = container.unified_knowledge_search.execute("XGPON coverage")
+    hits = container.unified_knowledge_search.execute("XGPON coverage").hits
     assert any(hit.reference_evidence for hit in hits)
     assert not any(
         hit.requirement_evidence and hit.requirement_evidence.source_lineage for hit in hits

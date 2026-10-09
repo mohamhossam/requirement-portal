@@ -375,6 +375,9 @@ def analysis_response(
             )
             for item in analysis.stage_provenance
         ],
+        reference_grounding=(
+            analysis.reference_grounding.value if analysis.reference_grounding else None
+        ),
     )
 
 

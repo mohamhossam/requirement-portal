@@ -168,4 +168,5 @@ def build_analysis(
             for item in candidate.get("stage_provenance", [])
         ),
         version=version,
+        reference_grounding=candidate.get("reference_grounding"),
     )

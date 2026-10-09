@@ -226,6 +226,9 @@ class PublishedLibrary:
         )
 
     # ReferenceKnowledgePort: what requirement work searches and cites.
+    def is_connected(self) -> bool:
+        return True
+
     def has_published(self) -> bool:
         return bool(self._evidence)
 

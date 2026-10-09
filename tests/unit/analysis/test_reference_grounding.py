@@ -84,7 +84,7 @@ def test_unified_search_balances_sources_across_the_workspace(
         RequirementDraftInput("Draft XGPON", "XGPON bundles still being written."), FAKE_ACTORS[1]
     )
     drain_requirement_index(container)
-    hits = container.unified_knowledge_search.execute("XGPON bundles")
+    hits = container.unified_knowledge_search.execute("XGPON bundles").hits
     assert {h.source_type for h in hits} == {"requirement", "published_document"}
     assert any(h.source_id == owned.id.value for h in hits)
     assert any(h.source_id == colleague.id.value for h in hits)

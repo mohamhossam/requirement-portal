@@ -34,6 +34,8 @@ from smb_requirement_agent.references.application.use_cases.reference_currency i
 )
 
 router = APIRouter(tags=["knowledge views"], dependencies=[Depends(require_authenticated_actor)])
+# Set on a unified search answered without the reference library (ADR-0104).
+REFERENCE_LIBRARY_HEADER = "X-Reference-Library"
 ViewsDep = Annotated[KnowledgeViews, Depends(get_knowledge_views)]
 ReleaseDep = Annotated[CurrentArchitectureRelease, Depends(get_current_release)]
 Identifier = Annotated[str, Query(min_length=1, max_length=200)]
@@ -78,7 +80,15 @@ class KnowledgeSearchRequest(BaseModel):
 @router.post("/knowledge/search/unified", dependencies=[Depends(limit_provider_calls)])
 def unified_search(
     data: KnowledgeSearchRequest,
+    response: Response,
     service: Annotated[UnifiedKnowledgeSearch, Depends(get_unified_knowledge_search)],
 ) -> tuple[UnifiedSearchHit, ...]:
-    """Requirement knowledge the member may see, and published library passages (ADR-0075)."""
-    return service.execute(data.query)
+    """Requirement knowledge the member may see, and published library passages (ADR-0075).
+
+    With a connected knowledge portal that cannot be reached, the hits are Requirements only
+    and `X-Reference-Library: unavailable` says so; the body keeps its shape.
+    """
+    result = service.execute(data.query)
+    if result.references_unavailable:
+        response.headers[REFERENCE_LIBRARY_HEADER] = "unavailable"
+    return result.hits

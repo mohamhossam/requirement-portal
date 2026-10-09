@@ -226,6 +226,9 @@ export interface paths {
         /**
          * Unified Search
          * @description Requirement knowledge the member may see, and published library passages (ADR-0075).
+         *
+         *     With a connected knowledge portal that cannot be reached, the hits are Requirements only
+         *     and `X-Reference-Library: unavailable` says so; the body keeps its shape.
          */
         post: operations["unified_search_knowledge_search_unified_post"];
         delete?: never;
@@ -4245,6 +4248,8 @@ export interface components {
             question_changes: components["schemas"]["AnalysisQuestionChangeResponse"][];
             /** Questions */
             questions: components["schemas"]["ClarificationQuestionResponse"][];
+            /** Reference Grounding */
+            reference_grounding?: ("grounded" | "no_evidence" | "not_connected" | "unavailable") | null;
             /** Requirement Id */
             requirement_id: string;
             /** Round Number */

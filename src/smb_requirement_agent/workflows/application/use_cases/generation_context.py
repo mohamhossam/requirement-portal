@@ -20,6 +20,7 @@ from smb_requirement_agent.analysis.application.ports.reference_analysis import 
 from smb_requirement_agent.analysis.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
+from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
 from smb_requirement_agent.application.errors import ArtifactVersionConflictError
 from smb_requirement_agent.application.ports.external_work import guard_external_work
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
@@ -243,7 +244,7 @@ class GenerationContextTokens:
             {
                 "scope": "stories",
                 "requirement": asdict(requirement) if requirement else None,
-                "analysis": asdict(analysis) if analysis else None,
+                "analysis": _analysis_state(analysis) if analysis else None,
                 "epic": asdict(epic) if epic else None,
                 "feature_id": feature_id.value,
                 "feature": asdict(feature) if feature else None,
@@ -325,6 +326,14 @@ class GenerationContextTokens:
             raise ArtifactVersionConflictError(
                 "The generation context changed. Reload and reconcile before trying again."
             )
+
+
+def _analysis_state(analysis: RequirementAnalysis) -> dict[str, Any]:
+    state = asdict(analysis)
+    # Unrecorded grounding stays out, so tokens minted before it was recorded stay valid.
+    if state["reference_grounding"] is None:
+        del state["reference_grounding"]
+    return state
 
 
 def _token(payload: dict[str, Any]) -> str:

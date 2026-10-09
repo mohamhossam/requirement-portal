@@ -2,7 +2,7 @@
 
 ## Status
 
-**Specified 2026-10-08; in progress since 2026-10-09.** PR 1 is delivered (see its entry and Validation Evidence); everything else is not implemented yet. This record keeps the
+**Specified 2026-10-08; in progress since 2026-10-09.** PR 1 and PR 8 are delivered (see their entries and Validation Evidence); everything else is not implemented yet. This record keeps the
 plan for closing every finding of the second production-readiness review (security, deployment and
 CI, reliability and observability, frontend) so it can be scheduled later. When work starts, each
 PR converts its part into the `WORKSPACE.md` §10 sections and fills in Validation Evidence here.
@@ -92,13 +92,13 @@ Then bump `pyproject.toml:12` and `uv.lock`, and wire the new settings. Phase 1 
 - **Production boots in CI, without Keycloak.** OIDC discovery is lazy, so the CI `deployment` job starts the manifest alone (no demo overlay) with a placeholder HTTPS issuer and `LLM_PROVIDER=openai` with a placeholder key. It checks the preflight exits 0, `/ready` answers, `/identity/me` answers 401 with and without `X-Fake-Actor-Id`, fake identity stops the boot and the fake model makes the preflight exit 2. A real sign-in against an issuer stays with the knowledge-portal and Keycloak guides.
 - **Launchers.** `start.sh --migrate`, `start.ps1 -Migrate` and `start.bat -Migrate`: an external PostgreSQL named by `DATABASE_URL` is never migrated without it; local PostgreSQL still is.
 
-**PR 8 · Analysis survives a knowledge outage** (lands before PR 2)
-- **Three grounding states**, recorded as a `reference_applicability` `stage_provenance` entry (`analysis/domain/entities.py:280-298`, exposed in `schemas/analysis.py`):
-  - `not_connected`: no portal configured. `FakeReferenceKnowledge.has_published()` is False (`knowledge_client.py:264-268`).
-  - `no_evidence`
-  - `unavailable`: catch `ServiceUnavailableError` in `reference_grounding.py:43-115`, including a failed token grant, using the pattern at `knowledge_handoff.py:109-125`.
-- **UI:** "References could not be checked — re-run analysis" shows **only** for `unavailable`. `not_connected` follows ADR-0104's "not connected" wording.
-- **Unified search** (`unified_knowledge_search.py:59+`): when a configured portal is down, return the requirement hits with a `references_unavailable` flag instead of a 503.
+**PR 8 · Analysis survives a knowledge outage** — *delivered on `claude/production-hardening-pr8`, 2026-10-09*
+- **Grounding recorded on the analysis**, as a new `RequirementAnalysis.reference_grounding` (`ReferenceGroundingStatus`: `grounded`, `no_evidence`, `not_connected`, `unavailable`) rather than a `stage_provenance` entry: a stage record needs a model, prompt version and input fingerprint that a skipped check does not have. It is persisted only when set, so older payloads and the characterisation goldens are unchanged, and the stories generation-context token leaves it out while unset so tokens minted before the change stay valid. Glossary: "Reference grounding".
+- **The reference port says whether a portal stands behind it** (`ReferenceKnowledgePort.is_connected()`: the offline stand-in `False`, the HTTP adapter and the test library `True`), so `not_connected` is not confused with `no_evidence`.
+- **`ReferenceGrounding.augment`** catches `ServiceUnavailableError` from `has_published` or any `search_evidence` call (including a failed client-credentials grant) and returns the primary analysis marked `unavailable`, with no reference proposals; the paid-for primary result is kept.
+- **API and UI.** `GET /requirements/{id}/analysis` returns `reference_grounding`; the analysis panel shows "References were not checked" only for `unavailable`.
+- **Unified search** answers with Requirement hits only when a connected library is unreachable, and sets `X-Reference-Library: unavailable`; the response body keeps its shape (`tests/release_load.py` reads it).
+- ADR-0104 amendment "An unreachable portal degrades, it does not fail".
 
 **PR 2 · AI-job retry with backoff** (ADR-0107; the cap already exists from G1)
 - **Migration** `2026101xxxxx_ai_job_retry_backoff.sql`: `ai_jobs.next_attempt_at` plus an index.
@@ -319,4 +319,23 @@ python -m smb_requirement_agent.interfaces.deployment_preflight
 Settings.from_env() under APP_ENV=production
                             refuses LOG_FORMAT=text and IDENTITY_PROVIDER=fake, naming the setting
 bash -n start.sh            syntax OK
+```
+
+### PR 8 (2026-10-09, branch `claude/production-hardening-pr8`)
+
+Run locally on Python 3.13 with platform-kernel v1.1.0; no Docker daemon, so the PostgreSQL suites
+skipped locally and CI runs them. The one local vitest failure is the known Node 22 export test
+(CI runs Node 24; PR 12 fixes it).
+
+```text
+pytest                      1841 passed, 78 skipped in 163.95s
+ruff check .                All checks passed!
+ruff format --check .       1239 files already formatted
+mypy src tests              Success: no issues found in 678 source files
+lint-imports                Contracts: 43 kept, 0 broken.
+npm run test                522 passed, 1 failed (client.test.ts export, Node 22 only)
+npm run typecheck / lint    clean
+npm run api:check           OpenAPI types match frontend/openapi.json
+npm run build               ✓ built in 1.29s
+tests/characterisation      70 passed (goldens unchanged)
 ```

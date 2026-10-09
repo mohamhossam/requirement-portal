@@ -142,7 +142,7 @@ def check_restored_behavior(database_url: str, manifest: RecoveryManifest) -> No
         # The local copy alone decides currency: no library is connected here.
         if container.source_impact.stale_proposals(analysis.intent_proposals):
             raise RuntimeError("Restored local copy no longer holds the cited publication.")
-        results = container.unified_knowledge_search.execute("XGPON coverage")
+        results = container.unified_knowledge_search.execute("XGPON coverage").hits
         if not any(hit.source_id == manifest.requirement_id for hit in results):
             raise RuntimeError("Restored search lost the submitted Requirement.")
         if any("PRIVATE" in hit.excerpt or "PRIVATE" in hit.title for hit in results):

@@ -75,6 +75,9 @@ class HttpReferenceKnowledge:
     def __init__(self, client: InternalHttpClient) -> None:
         self._client = client
 
+    def is_connected(self) -> bool:
+        return True
+
     def has_published(self) -> bool:
         body = self._client.get_json("/internal/library/published")
         if not isinstance(body, dict) or not isinstance(body.get("has_published"), bool):
@@ -263,6 +266,9 @@ class FakeArchitectureKnowledge:
 
 class FakeReferenceKnowledge:
     """An empty library: nothing published, nothing found."""
+
+    def is_connected(self) -> bool:
+        return False
 
     def has_published(self) -> bool:
         return False
