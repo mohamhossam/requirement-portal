@@ -86,3 +86,28 @@ time and never telling its creator.
 The PostgreSQL claim now also resets the attempt's progress (`phase`, `completed_units`,
 `total_units`, `current_section_label`) and clears `failure`, as `AiJob.claim` always has in
 memory (G7). A reclaimed job no longer shows the dead attempt's progress. No migration is needed.
+
+## Amendment — Retry with backoff (2026-10-09)
+
+Slice `production-hardening` (PR 2). The text above and the capped-attempts amendment stay as
+accepted; where they differ, this amendment governs.
+
+A provider rate limit or outage, or a platform service (ADR-0099) that cannot be reached, passes on
+its own, but the attempt that met it failed the job at once and left the retry to its creator.
+
+- **A transient failure requeues the job.** When an attempt fails with `model_rate_limit`,
+  `model_unavailable` or `platform_service_unavailable` and attempts remain under
+  `AI_JOB_MAX_ATTEMPTS`, the job returns to `queued` with `next_attempt_at` set, through the new
+  `AiJob.requeue` transition. Unlike `defer`, the attempt stays spent, so retries count toward the
+  cap. The attempt that reaches the cap fails with the outage's own code, retryable, and its
+  creator is notified as before.
+- **Timeouts and unusable output are not retried.** The call may already have been billed, and a
+  second one is likely to fail the same way.
+- **Backoff.** `AI_JOB_RETRY_FIRST_SECONDS` (30), doubling per attempt up to
+  `AI_JOB_RETRY_MAX_SECONDS` (300).
+- **Order holds.** No claim takes a job before its `next_attempt_at`, and while one waits, its
+  Requirement's other jobs wait behind it (migration `202610091400_ai_job_retry_backoff.sql`, an
+  additive column and index). Cancelling a waiting job works as for any queued job.
+- **Visible.** The job API returns `next_attempt_at`; the job panel says the job will try again and
+  when. `smb_ai_jobs_total` labels a requeued attempt `retrying` and a job failed at the cap
+  `attempts_exhausted`, and the `AiJobsFailing` alert counts both failures.

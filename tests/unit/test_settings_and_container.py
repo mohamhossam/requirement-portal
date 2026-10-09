@@ -290,6 +290,37 @@ class TestSettings:
         with pytest.raises(ConfigurationError, match=message):
             Settings.from_env()
 
+    def test_ai_job_retry_backoff_defaults_and_is_read(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("LLM_PROVIDER", "fake")
+        monkeypatch.delenv("AI_JOB_RETRY_FIRST_SECONDS", raising=False)
+        monkeypatch.delenv("AI_JOB_RETRY_MAX_SECONDS", raising=False)
+        defaults = Settings.from_env()
+        assert (defaults.ai_job_retry_first_seconds, defaults.ai_job_retry_max_seconds) == (
+            30.0,
+            300.0,
+        )
+
+        monkeypatch.setenv("AI_JOB_RETRY_FIRST_SECONDS", "5")
+        monkeypatch.setenv("AI_JOB_RETRY_MAX_SECONDS", "40")
+        read = Settings.from_env()
+        assert (read.ai_job_retry_first_seconds, read.ai_job_retry_max_seconds) == (5.0, 40.0)
+
+    @pytest.mark.parametrize(
+        ("first", "longest", "message"),
+        [("0", "300", "greater than zero"), ("60", "30", "no more than"), ("soon", "1", "numeric")],
+    )
+    def test_ai_job_retry_backoff_must_be_positive_and_ordered(
+        self, monkeypatch: pytest.MonkeyPatch, first: str, longest: str, message: str
+    ) -> None:
+        monkeypatch.setenv("LLM_PROVIDER", "fake")
+        monkeypatch.setenv("AI_JOB_RETRY_FIRST_SECONDS", first)
+        monkeypatch.setenv("AI_JOB_RETRY_MAX_SECONDS", longest)
+
+        with pytest.raises(ConfigurationError, match=message):
+            Settings.from_env()
+
     def test_from_env_reads_local_provider_settings(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("LLM_PROVIDER", "local")
         monkeypatch.setenv("LOCAL_LLM_MODEL", "qwen-local")

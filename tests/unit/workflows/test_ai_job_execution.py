@@ -23,6 +23,7 @@ from fastapi.testclient import TestClient
 
 from smb_requirement_agent.analysis.domain.entities import ClarificationQuestion
 from smb_requirement_agent.analysis.domain.value_objects import QuestionId
+from smb_requirement_agent.application.errors import ModelTransportError
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
     InMemoryActorDirectory,
@@ -464,6 +465,83 @@ def test_a_job_whose_worker_keeps_dying_fails_once_its_attempts_are_spent(
     assert failed.failure.retryable
     assert failed.failure.correlation_id
     assert _notifications(container, NotificationKind.AI_JOB_FAILED) == [job_id]
+
+
+def test_a_provider_outage_retries_with_backoff_until_the_cap(
+    client: TestClient, container: Container, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Retries count toward the cap; the last one fails with the outage, not exhaustion."""
+    requirement_id = _requirement(client)
+    requirement = client.get(f"/requirements/{requirement_id}").json()
+    _drain(container)
+    job_id = _start(
+        client,
+        requirement_id,
+        {
+            "operation": "analyse_requirement",
+            "context_token": requirement["analysis_context_token"],
+        },
+    )
+    calls: list[int] = []
+
+    def unavailable(*args: object, **kwargs: object) -> None:
+        calls.append(1)
+        raise ModelTransportError("unavailable")
+
+    monkeypatch.setattr(container.execute_ai_job._analyze, "execute_workspace", unavailable)
+    max_attempts = FAKE_PROVIDER_SETTINGS.ai_job_max_attempts
+    first_wait = timedelta(seconds=FAKE_PROVIDER_SETTINGS.ai_job_retry_first_seconds)
+    now = container.clock.now()
+    for attempt in range(1, max_attempts):
+        claimed = container.ai_job_queue.claim_next(WORKER, now, now + timedelta(minutes=5))
+        assert claimed is not None and claimed.job.id.value == job_id
+        waiting = container.execute_ai_job.execute(claimed)
+        assert waiting.status is AiJobStatus.QUEUED
+        assert waiting.attempt_count == attempt
+        assert waiting.next_attempt_at is not None
+        # The wait runs from the requeue and doubles per attempt.
+        assert waiting.next_attempt_at - waiting.updated_at == first_wait * 2 ** (attempt - 1)
+        # Nothing claims it before its time, and its creator has not been told it failed.
+        early = waiting.next_attempt_at - timedelta(seconds=1)
+        assert container.ai_job_queue.claim_next(WORKER, early, early) is None
+        assert _notifications(container, NotificationKind.AI_JOB_FAILED) == []
+        now = waiting.next_attempt_at
+    last = container.ai_job_queue.claim_next(WORKER, now, now + timedelta(minutes=5))
+    assert last is not None and last.job.attempt_count == max_attempts
+    failed = container.execute_ai_job.execute(last)
+
+    assert failed.status is AiJobStatus.FAILED
+    assert failed.failure is not None and failed.failure.code == "model_unavailable"
+    assert failed.failure.retryable
+    assert len(calls) == max_attempts
+    assert _notifications(container, NotificationKind.AI_JOB_FAILED) == [job_id]
+
+
+def test_a_failure_that_will_not_pass_on_its_own_is_not_retried(
+    client: TestClient, container: Container, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    requirement_id = _requirement(client)
+    requirement = client.get(f"/requirements/{requirement_id}").json()
+    job_id = _start(
+        client,
+        requirement_id,
+        {
+            "operation": "analyse_requirement",
+            "context_token": requirement["analysis_context_token"],
+        },
+    )
+    claimed = _claim(container, job_id)
+
+    def timed_out(*args: object, **kwargs: object) -> None:
+        # The call may have been billed; a second one may time out the same way.
+        raise ModelTransportError("timeout")
+
+    monkeypatch.setattr(container.execute_ai_job._analyze, "execute_workspace", timed_out)
+    failed = container.execute_ai_job.execute(claimed)
+
+    assert failed.status is AiJobStatus.FAILED
+    assert failed.failure is not None and failed.failure.code == "model_timeout"
+    assert failed.next_attempt_at is None
 
 
 def test_an_index_wait_fails_a_job_that_does_not_need_the_index(

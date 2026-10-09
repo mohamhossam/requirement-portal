@@ -2,7 +2,7 @@
 
 ## Status
 
-**Specified 2026-10-08; in progress since 2026-10-09.** PR 1 and PR 8 are delivered (see their entries and Validation Evidence); everything else is not implemented yet. This record keeps the
+**Specified 2026-10-08; in progress since 2026-10-09.** PR 1, PR 8 and PR 2 are delivered (see their entries and Validation Evidence); everything else is not implemented yet. This record keeps the
 plan for closing every finding of the second production-readiness review (security, deployment and
 CI, reliability and observability, frontend) so it can be scheduled later. When work starts, each
 PR converts its part into the `WORKSPACE.md` §10 sections and fills in Validation Evidence here.
@@ -100,14 +100,11 @@ Then bump `pyproject.toml:12` and `uv.lock`, and wire the new settings. Phase 1 
 - **Unified search** answers with Requirement hits only when a connected library is unreachable, and sets `X-Reference-Library: unavailable`; the response body keeps its shape (`tests/release_load.py` reads it).
 - ADR-0104 amendment "An unreachable portal degrades, it does not fail".
 
-**PR 2 · AI-job retry with backoff** (ADR-0107; the cap already exists from G1)
-- **Migration** `2026101xxxxx_ai_job_retry_backoff.sql`: `ai_jobs.next_attempt_at` plus an index.
-- **Domain:** a `requeue(next_attempt_at)` transition that keeps `attempt_count`, unlike `defer()` (`entities.py:193`).
-- **Which failures retry:** only `model_rate_limit`, `model_unavailable` and `platform_service_unavailable` (`public_errors.py:289,393`), with backoff from `knowledge_handoff.py:129-143`, under `AI_JOB_MAX_ATTEMPTS`.
-- **Claims:** `in_memory_ai_jobs.py:233-283` and `postgres_ai_jobs.py:354-436` (which includes G7's reset) skip a job until `next_attempt_at`, and block other jobs on the same requirement meanwhile.
-- **Exhausted metric:** `polling_worker.py:153-159` records `smb_ai_jobs_total{status="attempts_exhausted"}` when the failure code is `attempts_exhausted`. Today those jobs count as `failed`.
-- **Settings:** `AI_JOB_RETRY_FIRST_SECONDS` and `AI_JOB_RETRY_MAX_SECONDS`.
-- **Dependency on PR 8:** only when a portal is connected.
+**PR 2 · AI-job retry with backoff** — *delivered on `claude/production-hardening-pr2`, 2026-10-09* (recorded as an ADR-0020 amendment beside G1's cap, instead of a separate ADR-0107)
+- **Requeue, not fail.** An attempt that fails with `model_rate_limit`, `model_unavailable` or `platform_service_unavailable` while attempts remain returns the job to `queued` through `AiJob.requeue` (the attempt stays spent, unlike `defer`) with `next_attempt_at`; the attempt at `AI_JOB_MAX_ATTEMPTS` fails with the outage's own code. Timeouts and invalid output stay terminal.
+- **Backoff** `RetryBackoff`: `AI_JOB_RETRY_FIRST_SECONDS` (30) doubling to `AI_JOB_RETRY_MAX_SECONDS` (300), validated at boot and documented in `.env.example` and WORKSPACE.md.
+- **Claims** (`postgres_ai_jobs.py`, `in_memory_ai_jobs.py`) skip a job before its `next_attempt_at` and hold its Requirement's other jobs behind it; migration `202610091400_ai_job_retry_backoff.sql` adds the column and a partial index.
+- **Visible.** The job API returns `next_attempt_at`; the job panel says "will try again" and when. `smb_ai_jobs_total` labels requeued attempts `retrying` and capped jobs `attempts_exhausted` (closing the gap G1 left), and `AiJobsFailing` counts `attempts_exhausted`.
 
 **PR 4a · Mapping becomes a job; probes and shutdown** (ADR-0105, part 1)
 - **Frontend (exception):**
@@ -338,4 +335,22 @@ npm run typecheck / lint    clean
 npm run api:check           OpenAPI types match frontend/openapi.json
 npm run build               ✓ built in 1.29s
 tests/characterisation      70 passed (goldens unchanged)
+```
+
+### PR 2 (2026-10-09, branch `claude/production-hardening-pr2`)
+
+Run locally on Python 3.13 with platform-kernel v1.1.0; no Docker daemon, so the PostgreSQL suites
+(including the new `test_a_job_waiting_out_an_outage_is_stored_and_not_claimed_before_its_time`)
+skipped locally and CI runs them. The one local vitest failure is the known Node 22 export test.
+
+```text
+pytest                      1860 passed, 79 skipped in 168.85s
+ruff check .                All checks passed!
+ruff format --check .       1240 files already formatted
+mypy src tests              Success: no issues found in 679 source files
+lint-imports                Contracts: 43 kept, 0 broken.
+npm run test                523 passed, 1 failed (client.test.ts export, Node 22 only)
+npm run typecheck / lint    clean
+npm run api:check           OpenAPI types match frontend/openapi.json
+npm run build               ✓ built in 1.24s
 ```

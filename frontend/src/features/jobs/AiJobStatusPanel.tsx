@@ -19,8 +19,15 @@ const phaseLabels: Record<string, string> = {
   analyzing_evidence: "Analyzing evidence",
   consolidating_findings: "Consolidating findings",
   validating_evidence_references: "Validating evidence references",
+  waiting_to_retry: "Waiting to try again",
   completed: "Completed",
 };
+
+/** A queued job waiting out a provider or platform outage before it runs again. */
+function retryTime(job: AiJob): string | null {
+  if (job.status !== "queued" || !job.next_attempt_at) return null;
+  return new Date(job.next_attempt_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
 
 function latestInterventions(jobs: AiJob[]): AiJob[] {
   const latestByOperation = new Map<AiJob["operation"], AiJob>();
@@ -55,11 +62,14 @@ export function AiJobStatusPanel({ requirementId, featureNames = {}, focused = f
     return name ? `${operation} · ${name}` : operation;
   };
   const headline = (job: AiJob) => {
+    if (retryTime(job)) return `${label(job)} will try again`;
     if (job.status === "queued") return `${label(job)} queued`;
     if (!focused && (job.operation === "analyse_requirement" || generationOperations.has(job.operation)) && job.phase) return phaseLabels[job.phase] ?? label(job);
     return label(job);
   };
   const description = (job: AiJob) => {
+    const retryAt = retryTime(job);
+    if (retryAt) return `The AI provider or a connected service was unavailable. It tries again at ${retryAt}.`;
     if (job.status === "queued") return focused ? "Waiting for an AI worker." : "Waiting for an AI worker. User-requested work is processed before automatic background screening.";
     if (focused) return `${job.phase ? `${phaseLabels[job.phase] ?? job.phase} · ` : ""}Work continues in the background.`;
     if (job.operation === "analyse_requirement" && job.current_section_label) return `Current section: ${job.current_section_label}`;

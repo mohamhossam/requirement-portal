@@ -1,8 +1,9 @@
 """No knowledge table outlives the upgrade (ADR-0099, ADR-0104).
 
 The real migrations run in a throwaway schema standing in for the requirements
-database. Every migration but the last two runs first, so the schema is an earlier
-system's, still holding the knowledge tables.
+database. Every migration ordered before the two knowledge table drops runs first, so
+the schema is an earlier system's, still holding the knowledge tables; the drops and
+any later migrations then run as an upgrade would run them.
 """
 
 from __future__ import annotations
@@ -47,7 +48,7 @@ def earlier_system(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[
     with psycopg.connect(DATABASE_URL, autocommit=True) as connection:
         connection.execute(f'CREATE SCHEMA "{schema}"')
     for path in REAL_MIGRATIONS.glob("*.sql"):
-        if path.name not in KNOWLEDGE_TABLE_DROPS:
+        if path.name < DROP_EMPTY_MIGRATION:
             shutil.copy(path, tmp_path / path.name)
     monkeypatch.setattr(migration_runner, "MIGRATIONS", tmp_path)
     migration_runner.run_migrations(_schema_url(schema))
@@ -72,9 +73,11 @@ def _migrate_to_latest(url: str, monkeypatch: pytest.MonkeyPatch) -> None:
     migration_runner.run_migrations(url)
 
 
-def test_the_last_two_migrations_are_the_knowledge_table_drops() -> None:
+def test_the_knowledge_table_drops_run_back_to_back() -> None:
+    """The guard runs right after the drop: no migration may come between them."""
     names = sorted(path.name for path in REAL_MIGRATIONS.glob("*.sql"))
-    assert names[-2:] == [DROP_EMPTY_MIGRATION, REQUIRE_GONE_MIGRATION]
+    drop = names.index(DROP_EMPTY_MIGRATION)
+    assert names[drop : drop + 2] == [DROP_EMPTY_MIGRATION, REQUIRE_GONE_MIGRATION]
 
 
 @pytest.mark.parametrize("migration", sorted(KNOWLEDGE_TABLE_DROPS))

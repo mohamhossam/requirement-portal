@@ -245,6 +245,14 @@ class InMemoryAiJobStore:
                 and item.job.id in self._leases
                 and self._leases[item.job.id][2] > now
             }
+            # A job waiting out a transient outage holds its Requirement's later jobs.
+            waiting_requirements = {
+                item.job.requirement_id
+                for item in self._jobs.values()
+                if item.job.status is AiJobStatus.QUEUED
+                and item.job.next_attempt_at is not None
+                and item.job.next_attempt_at > now
+            }
             candidates = sorted(
                 self._jobs.values(),
                 key=lambda item: (
@@ -268,6 +276,8 @@ class InMemoryAiJobStore:
                 if not expired and job.status is not AiJobStatus.QUEUED:
                     continue
                 if job.requirement_id in running_requirements and not expired:
+                    continue
+                if not expired and job.requirement_id in waiting_requirements:
                     continue
                 if expired and job.status is AiJobStatus.CANCELLATION_REQUESTED:
                     token = str(uuid.uuid4())
