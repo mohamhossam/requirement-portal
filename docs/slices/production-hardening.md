@@ -7,373 +7,301 @@ plan for closing every finding of the second production-readiness review (securi
 CI, reliability and observability, frontend) so it can be scheduled later. When work starts, each
 PR converts its part into the `WORKSPACE.md` §10 sections and fills in Validation Evidence here.
 
+**Revalidated 2026-10-09 against `main` 6f255d9.** Every item was rechecked after ADR-0104
+(independent portals), the platform-kernel v1.1.0 pin and the AI job trace-gap fixes
+(`docs/slices/fix-ai-job-trace-gaps.md`) merged; the plan below reflects that state.
+
 Review baseline (2026-10-08, commit `41a7516`): `pytest` 1795 passed / 75 skipped, `ruff check`,
-`ruff format --check`, `mypy src tests` (678 files) and `lint-imports` (42 contracts) green;
-frontend build, lint, typecheck, OpenAPI drift and `npm audit` green, vitest 501/502 (the failure
-is a Node 22 vs Node 24 test-environment difference, fixed in PR 12).
+`ruff format --check`, `mypy src tests` and `lint-imports` green (43 import contracts on `main`
+6f255d9); frontend build, lint, typecheck, OpenAPI drift and `npm audit` green, vitest 501/502
+(the failure is a Node 22 vs Node 24 test-environment difference, fixed in PR 12).
 
-## Context
+## What changed since 2026-10-08
 
-A production-readiness review covered security, deployment and CI, reliability and observability, and the frontend. The codebase is strong:
-- **Backend:** 1795 tests pass, mypy strict is clean, and all 42 import contracts hold.
-- **Frontend:** 501 of the 502 vitest tests pass. The one failure is a Node 22 versus Node 24 difference in the test environment, fixed in PR 12.
-
-The gaps are in how the app is released, recovered and operated, plus some failure modes under real load. This plan closes every finding. It was checked against the code in a design review before being recorded.
-
-Decisions taken by the repository owner (2026-10-08):
-- **Frontend logic fixes:** allowed as an explicit, recorded exception to CLAUDE.md's "presentation only" rule. They go in their own PRs and are never mixed with redesign work.
-- **Kernel fixes:** shipped as a **platform-kernel v1.1.0 release**, after which this repo bumps the pin (AGENTS.md §2.1).
-- **Synchronous provider routes:** moved to the durable job queue now.
-- **Provider rate limit across replicas:** counted in **Postgres**.
-
-Why the job-queue move is smaller than it sounds:
-- The UI already starts every AI operation as a durable job, except architecture mapping. `frontend/src/app/requirement/BreakdownView.tsx:88-91` still calls the synchronous `POST /architecture-mapping`.
-- That route already has its own durable path: `POST /architecture-mapping/jobs` plus `GET …/jobs/{id}` (`routes/architecture.py:41-90`), on a separate queue from AI jobs.
-- The synchronous routes are therefore mostly unused API surface. Their main users are about 25 test files that call them for setup.
-
-## Process (AGENTS.md compliance)
-
-**Roadmap and slice**
-- Recorded in the ROADMAP.md status ledger and in "Bounded Enhancements and Maintenance Record", both pointing to this file.
-- When implementation starts, this file is restructured to the WORKSPACE.md §10 template.
-- The slice's UI field lists the UI items below.
-- Validation Evidence is updated in every PR.
-
-**ADRs** (template: `docs/architecture/adr-template.md`)
-
-| ADR | Decision |
+| Change on main | Effect on the plan |
 |---|---|
-| 0104 | Provider work runs only as durable jobs; the synchronous routes are retired |
-| 0105 | Provider rate limit shared across replicas, stored in Postgres. Retires debt row AGENTS.md:722 |
-| 0106 | AI-job retry with backoff (the attempt cap is already an ADR-0020 amendment) |
-| 0107 | Release images, deploy by tag, backups, and expand/contract migrations |
-| 0108 | Scope of the frontend logic exception. Updates debt row AGENTS.md:723 |
+| **ADR-0104 independent portals.** This compose runs requirement work only, with an optional `deploy/compose.peer.yaml`. The knowledge portal is optional in production: `/knowledge-api/` → 404 and `/knowledge/` → 301 to `KNOWLEDGE_PORTAL_URL`. | All `x-knowledge`, `knowledge-*` and `/knowledge-api/` items are **obsolete**. PR 8 gets a third state, "not connected". The fail-closed fix for the knowledge portal moves to that repo (PR 16). |
+| **ADR-0104 number taken.** | Plan ADRs become **0105–0109**. |
+| **platform-kernel v1.1.0 released and pinned**, adding service credentials, `OidcSigningKeys` and service JWT verifiers. | Phase 0 ships as **v1.2.0**. JWKS work moves to `OidcSigningKeys` and also protects `/internal`. |
+| **G1 attempt cap merged** (`ai_job_execution.py:134,159,187-199`). | PR 2 shrinks to backoff plus the exhausted metric. Exhausted jobs are still counted as `status="failed"`, so that metric is **not** delivered. |
+| **G2 refuses a doomed analysis before enqueue.** The trace-gap doc defers the same check for Epic, Features and Stories. | Folded into PR 4b. |
+| **Frontend exceptions on record:** G3/G4/G6, plus the portal URL and role logic. | ADR-0109 consolidates the policy. |
+| **One requirements database only.** Monitoring scrapes only `api` and `worker`. | PR 6 and PR 9 shrink. |
+| **New secrets:** `REQUIREMENT_SERVICE_CLIENT_SECRET`, and service tokens now set in `production.env`. | Added to PR 10. |
+| **New migrations `202610091000`/`202610091200`** (a dynamic `DROP` inside `EXECUTE`). | The expand/contract cutoff must be at or after `202610091200`, and the scan must also catch `EXECUTE`. |
+| **`.importlinter` now has 43 contracts.** | Baseline wording. |
 
-**Rules for every PR**
-- All five backend gates pass, plus `cd frontend && npm run build`, lint, typecheck and tests.
-- Every new error is added to `workflows/application/public_errors.py` with a status-code test. New errors in this plan: `attempts_exhausted`, `database_busy`, and the client-errors 429.
-- New constructor parameters are required, never defaulted to `None` (§12).
-- Variables read by `settings.py` are documented in `.env.example`. Compose-only variables (`WEB_PORT`, `IMAGE_TAG`, `POSTGRES_MAX_CONNECTIONS`, `DATABASE_SSLMODE`, …) are documented in `docs/operations/deployment.md`, not in `.env.example` (§4.5).
+Everything else was rechecked and is still valid; line references below are against `main` 6f255d9.
 
-**Existing tests and checks the work must keep passing**
+## Decisions (owner, 2026-10-08, unchanged)
+- **Frontend logic fixes:** allowed as a recorded exception to CLAUDE.md's "presentation only" rule, in their own PRs.
+- **Kernel fixes:** shipped as a kernel release, now **v1.2.0**, followed by a pin bump here.
+- **Synchronous provider routes:** move to the durable job queue now.
+- **Provider rate limit across replicas:** counted in Postgres.
 
-| Constraint | What it requires |
+## Process
+- **ADRs:**
+
+  | ADR | Decision |
+  |---|---|
+  | 0105 | Durable-only provider work |
+  | 0106 | Postgres provider rate limit and spend cap; retires debt row AGENTS.md:722 |
+  | 0107 | AI-job retry with backoff, amending ADR-0020 next to G1's cap |
+  | 0108 | Release images, deploy by tag, backups, expand/contract migrations |
+  | 0109 | Policy for frontend logic exceptions; consolidates G3/G4/G6, the portal-link exception and this plan; updates AGENTS.md:723 |
+
+- **Rules for every PR:**
+  - The five backend gates pass, plus the frontend build, lint, typecheck and tests.
+  - New public errors go in `public_errors.py` with a status test.
+  - Constructor parameters are required (§12).
+  - Variables read by `settings.py` go in `.env.example`. Compose-only variables (`WEB_PORT`, `IMAGE_TAG`, `POSTGRES_MAX_CONNECTIONS`, `DATABASE_SSLMODE`, `KNOWLEDGE_PORTAL_URL`, `PEER_NETWORK`, …) go in `deployment.md`.
+- **Constraint tests on main:**
+
+  | Test or check | Constraint |
+  |---|---|
+  | `test_action_pins.py` | Actions pinned by SHA |
+  | `test_image_pins.py` | `OWN_IMAGES` at :16; scans the 3 compose files plus ci.yml |
+  | `test_platform_deployment.py` | Rewritten for ADR-0104: no knowledge services, volumes `{postgres_data, clamav_data}` at :51, `web.depends_on` only `api` at :80-81 |
+  | `test_deployment_mounts.py` | 5 backend services |
+  | `test_monitoring_metrics.py` | `smb_*` names must exist in the kernel |
+  | `test_route_authentication.py` | Public routes allow-list |
+  | `test_provider_rate_limit.py` | Every provider-calling route is limited |
+  | `test_migration_catalogue.py` | Migration naming and ordering |
+  | `ci.yml:275` | CI greps for the CSP `<meta>` tag |
+
+## Phase 0: platform-kernel v1.2.0
+| Change | Note |
 |---|---|
-| `test_action_pins.py` | Actions pinned by SHA with a `# vX.Y.Z` comment |
-| `test_image_pins.py` | Images pinned by digest, exactly one pgvector image |
-| `test_platform_deployment.py` | Compose structure assertions; updated where noted below |
-| `test_deployment_mounts.py` | Identical volumes on all backend services |
-| `test_monitoring_metrics.py` | Every `smb_*` metric must exist in the installed kernel's `metrics.py`; this plan adds a pinned allow-list for `pg_*`, `process_*` and `node_*` names |
-| `test_route_authentication.py` | Allow-list of public routes |
-| `test_provider_rate_limit.py` | Every provider-calling route is rate limited |
-| `test_migration_catalogue.py` | Migration naming and ordering; new migrations use timestamp names |
-| `ci.yml:256` | CI greps for the CSP `<meta>` tag, so it must stay |
+| Migration runner: session advisory lock, plus per-file `lock_timeout` | Not in 1.1.0 |
+| Pooled connector: `configure(conn)` hook and public `stats()` | App pool built at `composition/persistence.py:407-415` |
+| OIDC leeway (default 60s); `typ`/`azp` checks for user tokens | Service tokens already check `azp` |
+| `OidcSigningKeys`: fetch outside the lock, and serve the last good keys while refreshing or when the IdP errors | Now shared by sign-in and `/internal` (`composition/identity.py:58-90`) |
+| `max_completion_tokens` for the plain `LLM_PROVIDER=openai` client | Profiles already support output limits (`profiles.py:29`) |
+| Process/Platform/GC collectors and new metrics: `smb_build_info`, `smb_ai_jobs_queued`, `smb_ai_job_oldest_queued_age_seconds`, `smb_db_pool_connections`, `smb_ready`, `smb_ingestion_failures_total`, `smb_client_errors_total`, `smb_provider_spend_blocked_total` | |
+| `InternalHttpClient` circuit breaker, which also covers failed client-credential grants | Note in the changelog that knowledge-portal is affected too |
 
----
+Then bump `pyproject.toml:12` and `uv.lock`, and wire the new settings. Phase 1 doesn't wait for this; PRs 3, 9 and 10 do.
 
-## Phase 0: platform-kernel v1.1.0 (separate repo, attached with add_repo when implementing)
+## Phase 1: P0, the pilot gate
 
-| Change | Kernel file |
-|---|---|
-| **Migration runner:** session `pg_advisory_lock` around the run; `SET lock_timeout` per file | `persistence/migrations.py:29-65` |
-| **Pooled connector:** a `configure(conn)` hook (for timeouts) and a public `stats()` (for pool metrics) | `persistence/connector.py:77-100` |
-| **OIDC:** configurable leeway (default 60s); check `typ`/`azp` when present | `identity/oidc.py:53,68-75,140-157` |
-| **JWKS:** fetch keys outside the lock; keep serving the last good keys while refreshing or when the identity provider errors | `identity/oidc.py:53,68-75,140-157` |
-| **OpenAI:** send a configurable `max_completion_tokens` | `llm/openai_structured_output.py:65-76` |
-| **Metrics:** register Process/Platform/GC collectors | `observability/metrics.py:33-77` |
-| **New metrics:** `smb_build_info`, `smb_ai_jobs_queued`, `smb_ai_job_oldest_queued_age_seconds`, `smb_db_pool_connections{state}`, `smb_ready`, `smb_ingestion_failures_total`, `smb_client_errors_total`, `smb_provider_spend_blocked_total` | `observability/metrics.py:33-77` |
-| **`InternalHttpClient` circuit breaker:** consecutive failures open it, a half-open probe tests recovery, and it fails fast with `ServiceUnavailableError`. Note the effect on knowledge-portal, which shares the kernel, in the kernel changelog | `http/client.py:24-81` |
-
-Then, in this repo:
-- Bump `pyproject.toml:12` and `uv.lock`.
-- Wire the new settings in `settings.py`, `composition/identity.py`, `composition/llm.py` and `composition/persistence.py:405-415`.
-
-Phase 1 is designed not to wait for this release. PRs 3, 9 and 10 do wait for it.
-
----
-
-## Phase 1: P0, required before a controlled pilot
-
-### PR 1 · Production config fails closed
-- **Hard-code production values.** In `deploy/compose.production.yaml`, set `APP_ENV: production` and `IDENTITY_PROVIDER: oidc` in both the `x-backend` and `x-knowledge` environment blocks.
-  - Compose `environment:` overrides `env_file` and isn't affected by stray values in the operator's shell.
-- **Separate demo override.** New `deploy/compose.demo.yaml`, used by the CI `deployment` job and the demo instructions:
+**PR 1 · Production config fails closed**
+- **Pin production values.** In `compose.production.yaml`, the `x-backend.environment` block (:31-38) gets `APP_ENV: production` and `IDENTITY_PROVIDER: oidc`. There's no knowledge block any more.
+- **Demo and CI override.** New `deploy/compose.demo.yaml`:
   - restores `development` and `fake`;
-  - publishes `127.0.0.1:${WEB_PORT:-8080}:8080`.
-  - Update `deploy/demo.env.example` and `test_platform_deployment.py` to match.
-- **Stricter production validation** in `settings_validation.py` (~141-206, 240). In production, also reject:
-  - `LLM_PROVIDER=fake`, including any fake entry inside an `LLM_CONFIG_PATH` profile set (`settings.py:256-259`);
+  - replaces the `web` ports with `ports: !override ["127.0.0.1:${WEB_PORT:-8080}:8080"]`. Today it's `:165-166`, published on all interfaces.
+  - CI `COMPOSE` (`ci.yml:203`) becomes production + peer + demo.
+  - Update the demo commands in `README.md:130,688` and `START_GUIDE.md:84-90,165`. Note that `demo.env.example` is also used by the knowledge-portal demo (`START_GUIDE.md:56,170`).
+- **Stricter production validation** in `settings_validation.py` (production branches :161-167, :216-220; debug-trace check :256-259). Reject:
+  - `LLM_PROVIDER=fake`, including fake profiles (`settings.py:288-298`);
   - `DEBUG_TRACE_ENABLED=true`;
-  - `LOG_FORMAT` other than `json`.
-  - `interfaces/deployment_preflight.py` gets the same checks.
-- **Close the public API docs at the edge.** In `deploy/web/default.conf.template`, return 404 for `/api/docs`, `/api/redoc` and `/api/openapi.json`.
-  - Settings load only in the lifespan (`main.py:116-120`), after the app has been constructed, so the app itself can't decide this.
-  - Add the paths to the CI edge check.
-- **Production actually boots in CI.** The `deployment` job starts `api` and `worker` in production mode, using:
-  - the dev Keycloak compose (`deploy/keycloak/compose.yaml`) behind a TLS sidecar with a CI-generated certificate as the OIDC issuer;
-  - `LLM_PROVIDER` set to a profile that points at the local compatible fake.
-  - The job asserts `/ready`, asserts a 401 without a token, runs `deployment_preflight` (expects exit 0), and checks that a fake-identity variant refuses to boot.
-- **Gate `start.sh` migrations.** `start.sh:281-289` asks for confirmation (or needs `--migrate`) before migrating any `DATABASE_URL` that isn't localhost.
+  - any `LOG_FORMAT` other than `json`.
+  - `deployment_preflight.py:9-14` gets the same checks.
+- **Close the API docs at the edge.** nginx returns 404 for `/api/docs` (including `/api/docs/oauth2-redirect`), `/api/redoc` and `/api/openapi.json`, following the `^~ /api/internal` pattern at `default.conf.template:48-51`. Extend the CI edge loop at `ci.yml:277-281`.
+- **Production really boots in CI**, in a separate job, because the existing deployment job depends on fake identity for its cross-portal and Playwright checks:
+  - requirement work only, with no knowledge portal (allowed since ADR-0104);
+  - `deploy/keycloak/compose.yaml` as the issuer, with CI-generated certs, dummy `ENTRA_*`/`SMTP_*` values, and `KC_HOSTNAME` overridden to a name the `api` container can reach;
+  - a small OpenAI-compatible stub container as the LLM;
+  - asserts `/ready`, a 401 without a token, and `deployment_preflight` exit 0, and that a fake-identity variant refuses to boot.
+- **`start.sh:286-289`** asks for confirmation (or `--migrate`) before migrating a `DATABASE_URL` that isn't localhost.
 
-### PR 2 · AI-job retry with backoff (ADR-0106; attempt cap already delivered by G1)
+**PR 8 · Analysis survives a knowledge outage** (lands before PR 2)
+- **Three grounding states**, recorded as a `reference_applicability` `stage_provenance` entry (`analysis/domain/entities.py:280-298`, exposed in `schemas/analysis.py`):
+  - `not_connected`: no portal configured. `FakeReferenceKnowledge.has_published()` is False (`knowledge_client.py:264-268`).
+  - `no_evidence`
+  - `unavailable`: catch `ServiceUnavailableError` in `reference_grounding.py:43-115`, including a failed token grant, using the pattern at `knowledge_handoff.py:109-125`.
+- **UI:** "References could not be checked — re-run analysis" shows **only** for `unavailable`. `not_connected` follows ADR-0104's "not connected" wording.
+- **Unified search** (`unified_knowledge_search.py:59+`): when a configured portal is down, return the requirement hits with a `references_unavailable` flag instead of a 503.
 
-Depends on PR 8, so a knowledge outage isn't retried by re-running a paid analysis.
+**PR 2 · AI-job retry with backoff** (ADR-0107; the cap already exists from G1)
+- **Migration** `2026101xxxxx_ai_job_retry_backoff.sql`: `ai_jobs.next_attempt_at` plus an index.
+- **Domain:** a `requeue(next_attempt_at)` transition that keeps `attempt_count`, unlike `defer()` (`entities.py:193`).
+- **Which failures retry:** only `model_rate_limit`, `model_unavailable` and `platform_service_unavailable` (`public_errors.py:289,393`), with backoff from `knowledge_handoff.py:129-143`, under `AI_JOB_MAX_ATTEMPTS`.
+- **Claims:** `in_memory_ai_jobs.py:233-283` and `postgres_ai_jobs.py:354-436` (which includes G7's reset) skip a job until `next_attempt_at`, and block other jobs on the same requirement meanwhile.
+- **Exhausted metric:** `polling_worker.py:153-159` records `smb_ai_jobs_total{status="attempts_exhausted"}` when the failure code is `attempts_exhausted`. Today those jobs count as `failed`.
+- **Settings:** `AI_JOB_RETRY_FIRST_SECONDS` and `AI_JOB_RETRY_MAX_SECONDS`.
+- **Dependency on PR 8:** only when a portal is connected.
 
-- **Attempt cap: already delivered elsewhere.** `docs/slices/fix-ai-job-trace-gaps.md` (G1, commit
-  `79d28a9`) added `AI_JOB_MAX_ATTEMPTS` and fails a claim past the cap as `attempts_exhausted`,
-  as an ADR-0020 amendment. Before starting this PR, check what remains against that work; the
-  bullets below are the original design, kept for reference.
-  - Claim jobs as today.
-  - At the start of `execute()` in `workflows/application/use_cases/ai_job_execution.py`, when `attempt_count > AI_JOB_MAX_ATTEMPTS`, finish with `AiJobAttemptsExhaustedError` (`attempts_exhausted`, retryable) through the existing `_finish_failure`/`_notify` path (469-485). The owner is notified, and the existing `fail()` transition already allows running → failed.
-  - Explicit retry already creates a new job (`ai_jobs.py:334-343`), so nothing needs resetting.
-  - Count exhausted jobs in the existing `smb_ai_jobs_total{status="attempts_exhausted"}`. No kernel dependency.
-- **Retry with backoff:**
-  - New migration `2026101xxxxx_ai_job_retry_backoff.sql` adds `ai_jobs.next_attempt_at timestamptz NULL` and an index.
-  - New domain transition `requeue(next_attempt_at)` in `jobs/domain/entities.py`. It keeps `attempt_count`, unlike `defer()` (193-210).
-  - Retry only on these failure **codes** from `describe_public_error` (`public_errors.py:393-404`): `model_rate_limit`, `model_unavailable`, `platform_service_unavailable`.
-  - Timeouts and invalid model output stay terminal, which avoids paying twice.
-  - Backoff follows `knowledge_handoff.py:129-143`.
-  - Both claim implementations (`in_memory_ai_jobs.py:233-283`, `postgres_ai_jobs.py:351-419`) skip a job until its `next_attempt_at`. While it waits, they also block other jobs on the same requirement, so ordering is preserved.
-- **Settings:** `AI_JOB_MAX_ATTEMPTS` (3), `AI_JOB_RETRY_FIRST_SECONDS`, `AI_JOB_RETRY_MAX_SECONDS`.
-- **Tests:**
-  - domain transitions;
-  - a crash-looping job ends as `attempts_exhausted` and the queue keeps moving;
-  - a backed-off job isn't claimable early, and same-requirement jobs wait for it;
-  - Postgres integration in `tests/integration/test_postgres_persistence.py`.
-
-### PR 4a · Architecture mapping becomes a job; probes and timeouts (ADR-0104, part 1)
+**PR 4a · Mapping becomes a job; probes and shutdown** (ADR-0105, part 1)
 - **Frontend (exception):**
-  - `BreakdownView.tsx:88-91` starts `POST /architecture-mapping/jobs` and polls `GET /architecture-mapping/jobs/{id}` through a new hook. That queue is separate from the AI-jobs provider.
-  - New client functions; `npm run api:generate`.
-- **Probes:**
-  - `/health` becomes `async def`.
-  - `/ready` becomes `async def`, running the DB check via `anyio.to_thread.run_sync` with its own small limiter and a 2s timeout, so probes never wait behind request threads.
-  - `/ready` still reports false when the DB pool is saturated. That is intended.
-- **Shutdown:**
-  - `serve.py:38` sets `timeout_graceful_shutdown`.
-  - Compose sets `stop_grace_period: 30s` on `api` and adds a `web` healthcheck.
-- **Startup coupling:** `web.depends_on` for `knowledge-web` changes to `service_started`, so `knowledge-unavailable.html` can show while the knowledge web app starts. Update `test_platform_deployment.py:120` to match.
+  - `BreakdownView.tsx:88-90` calls the job routes `routes/architecture.py:40-90`, which are typed in `schema.d.ts:843-894`.
+  - New client functions and a polling hook.
+  - Handle the "no architecture catalogue connected" state and the `architecture_reader`/`architecture_maintainer` role requirement.
+- **Probes:** `/health` and `/ready` (`main.py:234-249`) become `async`. `/ready` runs its check through `anyio.to_thread.run_sync` with its own limiter and a 2s timeout, and still doesn't check the knowledge portal.
+- **Shutdown:** `serve.py:38-46` sets `timeout_graceful_shutdown`. Compose sets `api.stop_grace_period: 30s` and adds a `web` healthcheck.
 
-### PR 4b · Retire the synchronous provider routes (ADR-0104, part 2)
-- **Routes deleted** (all listed in `tests/architecture/test_provider_rate_limit.py:63-105`), each of which has a durable equivalent:
-  - analysis, clarifications, question resolutions;
-  - epic, features;
-  - stories, story regeneration, change proposals;
-  - feature quality;
-  - breakdown review and its resolution;
-  - architecture mapping.
-- **Also deleted:** the two synchronous-only quality routes `story.py:301,318`, which nothing calls.
-- **Kept:** `POST /knowledge/search/unified`, which only embeds the query and is used by `tests/release_load.py`.
-- **Cleanup:**
-  - Remove the now-unused frontend client functions.
-  - Regenerate `frontend/openapi.json` (`test_openapi_snapshot.py`).
-  - Check `contracts/requirement-internal.openapi.json` and `scripts/` for references.
-- **Tests:** `tests/job_driver.py` starts jobs through the public API and drains them through the container's existing executor and queue, with no test-only production code. Migrate the roughly 25 affected test files and the rate-limit sets.
-- **Timeouts:** nginx `/api/` `proxy_read_timeout` goes from 600s to 60s. `/knowledge-api/` stays at 600s, because the knowledge service still has long synchronous routes.
+**PR 4b · Retire the synchronous provider routes** (ADR-0105, part 2)
+- **Delete:**
+  - `analysis.py:405,463,499,569,662,689`;
+  - `epic.py:96`;
+  - the `features` and `story.py` POSTs, plus the unused `story.py:301,318`;
+  - the review routes;
+  - `architecture.py:103`.
+- **Keep:** `knowledge_views.py:78` unified search.
+- **Tests:** a new `tests/job_driver.py` drives jobs through the public API and the container's existing executor. Migrate the 26 test files that use these routes and the sets at `test_provider_rate_limit.py:63-105`.
+- **Regenerate** `frontend/openapi.json` and remove the unused client functions.
+- **Early refusal:** extend G2's pre-enqueue `require_can_generate` refusal to Epic, Features and Stories, so they keep their immediate 409/422 now that the synchronous routes are gone.
+- **Timeouts:** nginx `/api/` `proxy_read_timeout` goes from 600s to 60s (`default.conf.template:85-86`).
 
-### PR 5 · Frontend session safety and crash handling (exception, ADR-0108)
-- **Token renewal stops cancelling requests:**
-  - `src/api/client.ts:165-169` gains `replaceAuthenticationHeaders()`, which swaps headers without aborting.
-  - `src/auth/AuthProvider.tsx:139-143`: when `renewed.profile.sub` matches the current subject, it only replaces the headers. A different subject still aborts.
-  - After a successful renewal, call `queryClient.invalidateQueries()` so queries that failed with 401 recover.
-- **Consistent abort errors:** aborts after the response arrives (`client.ts:177,215,310,350`) become `ApiError(0)`, and `app/mutationErrors.ts` shows no toast for them.
-- **Error boundaries:** new `components/states/ErrorBoundary.tsx` built on `ErrorState`.
-  - A root boundary goes in `main.tsx`, and a route boundary around `<Suspense>` at `app/App.tsx:46`.
-  - A chunk-load error shows "A new version is available — reload".
-- **Tests:** same-subject renewal keeps an in-flight request alive; a different subject aborts it; the boundary renders on a crash and on a chunk-load error.
+**PR 5 · Session safety and crash handling** (exception, ADR-0109)
+- **Renewal stops aborting requests:**
+  - `client.ts:163-169`: new `replaceAuthenticationHeaders()`, which doesn't abort.
+  - `AuthProvider.tsx:139-145`: on renewal with the same `profile.sub`, only replace the headers; then `queryClient.invalidateQueries()`.
+- **Aborts after the response arrives** (`client.ts:177,215,310,350`) become `ApiError(0)`, with no toast. Add a `startKeys.ts` test, because G6 keeps a start's key on a status-0 error.
+- **Error boundaries:** `components/states/ErrorBoundary.tsx` built on `ErrorState`, as a root boundary in `main.tsx` and around `<Suspense>` at `App.tsx:46`, with a reload prompt for chunk-load errors.
 
-### PR 6 · Releases, backups, upgrade and rollback (ADR-0107)
-- **Release workflow** `.github/workflows/release.yml`, triggered by `v*` tags, with SHA-pinned actions and per-job permissions (`packages: write`, `id-token: write`):
-  - checks that the tag matches both `pyproject.toml` and `frontend/package.json`;
-  - builds once, with the kernel token as a BuildKit secret;
-  - runs Trivy, generates an SBOM with syft, and signs with cosign keyless;
-  - pushes `ghcr.io/mohamhossam/requirement-{api,web}` tagged `vX.Y.Z` and `sha-…`;
-  - creates a GitHub release from the CHANGELOG.
-- **Compose:** `image: ${REQUIREMENT_API_IMAGE:-requirement-platform/api}:${IMAGE_TAG:-local}`, and the same for web. Update the prefix assertion in `test_platform_deployment.py`.
-- **Version reporting:** `FastAPI(version=importlib.metadata.version(...))`, and `/health` returns the version. `smb_build_info` follows the kernel bump.
+**PR 6 · Releases, backups, upgrade and rollback** (ADR-0108)
+- **Release workflow:** `release.yml` on `v*` tags:
+  - checks the tag matches `pyproject.toml:7` and `package.json:4`;
+  - builds once, then runs Trivy, generates an SBOM with syft, and signs with cosign;
+  - pushes `ghcr.io/mohamhossam/requirement-{api,web}`;
+  - creates the GitHub release from the CHANGELOG.
+- **Compose images:** `${REQUIREMENT_API_IMAGE:-requirement-platform/api}:${IMAGE_TAG:-local}` (:21, :153), and the same for web. Update `test_platform_deployment.py:42-45`, `test_image_pins.py:16,36` and the Trivy loop at `ci.yml:254`.
+- **Version reporting:** `FastAPI(version=importlib.metadata.version(...))` (`main.py:158-161`), and `/health` returns the version.
 - **Backups:**
-  - New `backup` compose service under a `backup` profile, using the pinned pgvector image. It runs `pg_dump -Fc` for both databases into a `backups` volume and keeps the last N dumps.
-  - New `docs/operations/backup-restore.md` covering:
-    - the schedule (host cron or a systemd timer) and the off-host copy;
-    - restore steps, checked with `tests/release_recovery.py verify`;
-    - RPO/RTO targets, which the owner confirms.
-- **Upgrade runbook:** rewrite `deployment.md` "Upgrades" (202-217) as backup → `pull` by tag → `migrate` → `up`.
-  - Rollback means redeploying the previous tag.
-  - When a release notes a contract step, roll back by restoring the backup instead.
-- **Migration policy:**
-  - Document the expand/contract policy in WORKSPACE.md.
-  - An architecture test rejects `DROP`, `RENAME` and `ALTER … TYPE` unless the file carries a `-- contract-step:` marker. Migrations dated before the policy are grandfathered by a timestamp cutoff.
+  - One `backup` service (profile `backup`) runs `pg_dump -Fc` for `smb_requirements` into a `backups` volume. Update the volume set at `test_platform_deployment.py:51`.
+  - New `docs/operations/backup-restore.md`: schedule, off-host copy, restore checked by `tests.release_recovery verify`, and RPO/RTO for the owner to confirm.
+- **Upgrade runbook:** rewrite `deployment.md` "Upgrades" (:168-181) as backup → pull by tag → migrate → up. Roll back by redeploying the previous tag, or by restoring the backup when a release has a contract step.
+- **Migration policy:** document expand/contract in WORKSPACE.md, with an architecture test that:
+  - rejects `DROP`/`RENAME`/`ALTER … TYPE`, including inside `EXECUTE`/`DO`, unless the file has a `-- contract-step:` marker;
+  - grandfathers migrations up to `202610091200`.
 
----
+## Phase 2: P1 (PRs 3, 9 and 10 need kernel v1.2.0)
 
-## Phase 2: P1
-
-### PR 8 · Analysis survives a knowledge-service outage (lands before PR 2)
-- `analysis/application/use_cases/reference_grounding.py:43-115` catches `ServiceUnavailableError` and returns the primary analysis, following the pattern at `knowledge_handoff.py:109-125`.
-- Record the outcome as a `stage_provenance` entry `reference_applicability` with status `unavailable`.
-  - This uses the existing `AnalysisStageProvenance` (`analysis/domain/entities.py:280-298`), so no new aggregate field is needed.
-  - Expose it in `schemas/analysis.py`.
-- **UI:** the analysis view shows "References could not be checked — re-run analysis to ground them".
-- Unified search keeps returning 503. The kernel circuit breaker makes it fail fast.
-
-### PR 3 · Postgres timeouts and connection budget (after the kernel bump)
-- **Timeouts on every pooled connection:**
-  - Use the kernel `configure` hook to set `statement_timeout`, `lock_timeout` and `idle_in_transaction_session_timeout` on every pooled connection, including those used after `external_call`, and in the four adapters that call `connector.connection()` directly.
-  - `lock_timeout` also bounds `pg_advisory_xact_lock` (`postgres_store.py:125`).
-  - The one-shot maintenance, retention and migrate commands use their own direct connections, which keep no limits.
-  - Settings: `DATABASE_STATEMENT_TIMEOUT_MS` (30000), `DATABASE_LOCK_TIMEOUT_MS` (5000), `DATABASE_IDLE_TX_TIMEOUT_MS` (60000).
-  - Postgres errors 57014 and 55P03 map to a public 503 `database_busy`.
+**PR 3 · Postgres timeouts and connection budget**
+- **Timeouts:**
+  - Use the kernel `configure` hook to set `statement_timeout` (30s), `lock_timeout` (5s) and `idle_in_transaction_session_timeout` (60s) on every pooled connection, including those used after `external_call`, and in `architecture_mapping_stats.py`, `postgres_architecture_jobs.py`, `corpus_counts.py` and `knowledge_portfolio.py`.
+  - `lock_timeout` also bounds `pg_advisory_xact_lock` (`postgres_store.py:125-128`).
+  - One-shot commands keep using direct connections, with no limits.
+  - Errors 57014 and 55P03 map to a 503 `database_busy`.
 - **Connection budget:**
-  - Compose postgres: `command: ["postgres","-c","max_connections=${POSTGRES_MAX_CONNECTIONS:-200}"]`.
+  - Postgres runs with `-c max_connections=${POSTGRES_MAX_CONNECTIONS:-200}`.
   - `deployment.md` gets a sizing formula.
-  - Publish `smb_db_pool_connections` from the pool's `stats()`.
+  - The pool reports `smb_db_pool_connections` from `stats()`.
 
-### PR 7 · Shared provider rate limit, edge limits and spend cap (ADR-0105)
-- **Shared limit:**
-  - New port `jobs/application/ports/provider_call_rate.py`.
-  - `ProviderCallRateLimit` (`provider_call_rate.py:32-95`) keeps `acquire`/`refund` and sits on top of the port.
-  - In-memory adapter: today's deque logic.
-  - Postgres adapter: new table `provider_call_windows(actor_id, window_start, calls)`, upserted with the pattern from `knowledge/infrastructure/prior_art.py:212-228`. It estimates the sliding window from the current and previous minute, and prunes old windows in the same statement.
-  - Wire it in `container.py:794-796`.
-- **Spend cap:**
-  - New `PROVIDER_DAILY_TOKEN_BUDGET`, stored in a Postgres daily counter that the provider metering path updates.
-  - Once the budget is spent, provider calls are refused with a public error, and the refusal is counted in `smb_provider_spend_blocked_total`.
+**PR 7 · Shared rate limit, spend cap and edge limits** (ADR-0106)
+- **Shared limit:** a port under `ProviderCallRateLimit` (`provider_call_rate.py:32-95`):
+  - The in-memory adapter keeps today's logic.
+  - The Postgres adapter uses a `provider_call_windows(actor_id, window_start, calls)` upsert, following `knowledge/infrastructure/prior_art.py:212-228`.
+  - Wired at `container.py:794-796`.
+- **Spend cap:** `PROVIDER_DAILY_TOKEN_BUDGET`, kept in a Postgres daily counter.
 - **Edge limits:**
-  - nginx `real_ip` from `TRUSTED_PROXY_CIDR` (with a Dockerfile `ENV` default, so the template always renders), then a per-IP `limit_req_zone`.
-  - Applied to `/api/` and `/knowledge-api/`, returning a JSON 429.
-  - A stricter location for expensive non-provider routes such as `POST /requirements/{id}/impact-preview` (`requirements.py:432`).
-- **Docs:** remove debt row AGENTS.md:722; update `deployment.md` "Rate limiting" (326).
+  - nginx `real_ip` from `TRUSTED_PROXY_CIDR`, defaulted with an `ENV` line as in `deploy/web/Dockerfile:43-44`.
+  - Per-IP `limit_req` on `location /api/` (:74-87) only, returning a JSON 429.
+  - A stricter limit on `impact-preview` (`requirements.py:431`).
+- **Docs:** remove the debt row at AGENTS.md:722; update `deployment.md` "Rate limiting" (:313-330).
 
-### PR 9 · Alerting, SLOs and runbooks (after the kernel bump)
-- **Monitoring stack** in `deploy/compose.monitoring.yaml`, all images digest-pinned:
-  - Alertmanager, with its config rendered by an entrypoint script and receiver secrets read through `*_file` fields;
-  - postgres-exporter for both databases;
-  - node-exporter for disk space.
-  - Add all of them to `prometheus.yml`.
-- **Alerts** in `alerts.yml`:
-  - Fix `AiJobsFailing` to use a ratio with `for: 15m`.
-  - Add ReadinessFailing, QueueBacklog/OldestQueuedJobAge (with `max()` across workers), AiJobsExhausted, HttpLatencyP95, DbPoolSaturation, PostgresConnectionsHigh, DatabaseSizeGrowth, DiskLow and ProcessMemoryHigh.
-  - Every alert has a `runbook_url`.
-- **Metrics:** the worker loop publishes queue depth and oldest-job age; Grafana panels for the new metrics.
-- **Docs:** `docs/operations/slos.md` (availability, API p95 latency, job start latency) and `docs/operations/alerts.md` (a runbook per alert).
-- **CI:** `promtool check rules` and `amtool check-config`; add the metric-name allow-list to `test_monitoring_metrics.py`.
+**PR 9 · Alerting, SLOs and runbooks**
+- **Monitoring stack** (`compose.monitoring.yaml`, currently Prometheus and Grafana only): add Alertmanager (config rendered by an entrypoint, secrets through `*_file`), one postgres-exporter and node-exporter, all digest-pinned. Scrape them in `prometheus.yml:13-30`.
+- **Alerts:**
+  - Fix `AiJobsFailing` (`alerts.yml:39-44`) to use a ratio with `for: 15m`.
+  - Add ReadinessFailing, QueueBacklog/OldestQueuedJobAge (with `max()`), AiJobsExhausted (needs PR 2's metric), HttpLatencyP95, DbPoolSaturation, PostgresConnectionsHigh, DatabaseSizeGrowth, DiskLow and ProcessMemoryHigh.
+  - Every alert gets a `runbook_url`. `DailyTokenBudgetExceeded` already exists.
+- **Docs:** `docs/operations/slos.md` and `docs/operations/alerts.md`.
+- **CI:** `promtool check rules` and `amtool check-config` next to `ci.yml:353`, plus a metric-name allow-list in `test_monitoring_metrics.py`.
 
-### PR 10 · Container and edge hardening
+**PR 10 · Container and edge hardening**
 - **Compose:**
-  - `x-logging` (json-file with `max-size`/`max-file`) on every service;
-  - `mem_limit`, `cpus` and `pids_limit` on every service;
-  - healthchecks for `clamav` and `worker`.
-- **Secrets:**
-  - A `*_FILE` convention, read only in `settings.py`, for the database password, service tokens and provider keys, backed by Docker secrets.
+  - `x-logging` with rotation, and `mem_limit`/`cpus`/`pids_limit` on postgres, clamav, migrate, maintenance, retention, api, worker and web;
+  - healthchecks for `clamav` and `worker`;
+  - the CI clamav step waits for it (`ci.yml:265`).
+- **Secrets:** a `*_FILE` convention, read only in `settings.py`, for:
+  - the database password;
+  - `REQUIREMENT_SERVICE_TOKEN` and `KNOWLEDGE_SERVICE_TOKEN`;
+  - `REQUIREMENT_SERVICE_CLIENT_SECRET`;
+  - provider keys.
   - New `docs/operations/secrets.md` with rotation steps for each.
-- **Managed Postgres:** `DATABASE_URL: ${DATABASE_URL:-postgresql://…?sslmode=${DATABASE_SSLMODE:-prefer}}`, so a managed database needs no manifest edit. Update the test's substring assertion.
+- **Managed Postgres:** `DATABASE_URL: ${DATABASE_URL:-postgresql://…?sslmode=${DATABASE_SSLMODE:-prefer}}` (:33). Fix the wording at `deployment.md:437-438`.
 - **Forwarded headers:**
-  - nginx forwards the original scheme with a `map` on `$http_x_forwarded_proto` that defaults to `$scheme`.
-  - HSTS is set through a `map` in `default.conf.template`; `security-headers.conf` isn't templated.
-  - Compose sets a fixed network subnet, and uvicorn's `--forwarded-allow-ips` names it instead of `*`.
-- **Logging and shutdown:**
-  - `IngestionLoop` (`ingestion_loop.py:28-47`) logs a traceback with document text stripped, increments `smb_ingestion_failures_total`, and joins for the configured shutdown grace instead of 1s.
-  - `error_handlers.py:58-67` logs the exception type and correlation ID only; the full message stays in the opt-in debug trace.
-- **Heartbeat** (`polling_worker.py:125-143`):
-  - Tolerate transient renewal errors until the lease is actually at risk.
-  - When the lease is lost, set cooperative cancellation. Documented: a provider HTTP call already in progress finishes first.
+  - nginx forwards the original scheme with a `map` (instead of `$scheme` at :81) and adds HSTS through a `map`.
+  - Give `networks.default` a fixed subnet, and set uvicorn `--forwarded-allow-ips` (:123) to it instead of `*`. This matters more now, because `compose.peer.yaml` lets other services reach `api` directly.
+- **IngestionLoop** (`ingestion_loop.py:28-47`):
+  - log a sanitised traceback, rate-limited, because the loop retries about every second while a connected portal is down;
+  - increment `smb_ingestion_failures_total`;
+  - join for the shutdown grace period instead of 1s.
+- **Errors and heartbeat:**
+  - `error_handlers.py:58-67` logs the exception type and correlation ID only.
+  - The heartbeat (`polling_worker.py:125-143`) tolerates transient errors until the lease is at risk, then cancels cooperatively. A provider call already in progress finishes first.
 
-### PR 11 · CI and supply chain
+**PR 11 · CI and supply chain**
 - **`ci.yml`:**
   - top-level `permissions: contents: read`;
-  - a gitleaks job;
-  - ruff `S` rules, with tests ignoring `S101` and justified per-line `noqa` for the existing f-string SQL that only inserts constant fragments.
-- **More scanning:** a new `codeql.yml` for Python and JavaScript, and a weekly scheduled Trivy rescan of the latest release images.
-- **Keycloak images:** pin both in `deploy/keycloak/compose.yaml:3,17` by digest, add a restart policy, and add them to `test_image_pins.py` and to `dependabot.yml` (`/deploy/keycloak`).
-- **Identity-provider guidance:** new `docs/operations/identity-provider.md` on production settings: token lifespans, and issuing refresh tokens so silent renewal doesn't depend on third-party cookies in an iframe.
+  - a gitleaks job, with an allowlist for the CI-only tokens at `ci.yml:193-197`;
+  - ruff `S` rules (`pyproject.toml:58`), ignoring `S101` in tests and with justified `noqa` comments for the constant-fragment SQL.
+- **More scanning:** `codeql.yml`, and a weekly Trivy rescan of release images (after PR 6).
+- **Keycloak images:** digest-pin both lines in `deploy/keycloak/compose.yaml` (:3, :17) and add `restart:`. Add the file to `test_image_pins.py:28-33` and `dependabot.yml:54-62`.
+- **`docs/operations/identity-provider.md`:**
+  - token lifespans and refresh tokens, so silent renewal doesn't need third-party cookies;
+  - the public `requirement-spa` and confidential `requirement-service` clients.
 
-### PR 12 · Frontend resilience and support (exception)
+**PR 12 · Frontend resilience** (exception)
 - **Timeouts and cancellation:**
-  - `sessionFetch` gets default timeouts through `AbortSignal.timeout`: 30s for JSON, 120s for uploads and downloads.
-  - `api` methods accept an optional `{ signal }`, and query functions pass React Query's signal through, starting with the polling providers and workspace hooks.
-- **Correlation IDs:** show `ApiError.correlationId` as "Reference: …" in `ErrorNotice`, `ErrorState` and error toasts.
-- **Client error reporting:**
-  - `window.onerror`, `unhandledrejection` and the error boundary post to a new `POST /api/client-errors`.
-  - It is public but rate-limited, so failures before login and chunk-load failures still get reported. Add it to `test_route_authentication.py`.
-  - The body is size-bounded and logged as JSON, and counted in `smb_client_errors_total`.
-- **CSP identity origins at runtime:**
-  - The build emits a placeholder in the CSP `<meta>` tag.
-  - A `/docker-entrypoint.d/` script writes the final `index.html` to a separate tmpfs (`/run/web`), served via `location = /index.html`.
-  - The script refuses to start when `IDENTITY_PROVIDER=oidc` (now passed to `web`) and `CSP_IDENTITY_ORIGINS` is empty.
-- **Node version:** `package.json` gets `engines.node >=24` and an `.nvmrc`; `src/api/client.test.ts:219` uses a string body instead of a jsdom Blob.
-
----
+  - `sessionFetch` default timeouts: 30s for JSON, 120s for uploads and downloads.
+  - `api` methods accept an optional `{ signal }`, and query functions pass it through.
+- **Correlation IDs:** show `ApiError.correlationId` (`errors.ts:6`) in `ErrorNotice`, `ErrorState` and toasts.
+- **Client error reporting:** a new public, rate-limited `POST /api/client-errors`. Add it to `test_route_authentication.py`.
+- **Runtime build-time values:**
+  - Render `CSP_IDENTITY_ORIGINS`, and the `VITE_KNOWLEDGE_PORTAL_URL`/`ROLE` values that are now baked into the build, at container start.
+  - Use a `/docker-entrypoint.d/` script that follows the `check-knowledge-portal-url.sh` precedent (`Dockerfile:39`) and writes `index.html` to a `/run/web` tmpfs.
+  - Refuse to start when OIDC is used and the origins are empty. Keep the `<meta>` tag.
+- **Node version:** `engines.node >=24` plus `.nvmrc`. `client.test.ts:218` uses a string body, closing the item the trace-gap doc deferred.
 
 ## Phase 3: P2 and scale
 
-### PR 13 · Bounded reads and data lifecycle
-- **Paging for documents and drafts:**
-  - `GET /documents` and `GET /requirements/drafts` get `offset`/`limit` (max 100) plus server-side `q` and sort, following the worklist convention (`routes/requirements.py:288-289`, `schemas/requirements.py:174-180`).
-  - Visibility is filtered in SQL.
-  - A batch ownership lookup (`get_draft_ownerships(ids)`) removes the N+1 queries in `identity_access.py:383-389` and `owned_requirements.py:94-109`.
-- **Frontend (exception):** `DocumentsPage.tsx` and `DashboardPage.tsx` move to `useInfiniteQuery`.
-- **Retention:**
-  - Prune payloads of **succeeded and cancelled** AI jobs older than `AI_JOB_PAYLOAD_RETENTION_DAYS`. Failed jobs keep their `command`, because retry reuses it.
-  - Keep the job rows, which activity rebuilds read.
-  - Orphaned document blobs: report them and add a size metric only. Deleting them stays a separately authorised change.
-  - Document a daily schedule for the `retention` profile.
+**PR 13 · Bounded reads and payload retention**
+- **Paging:**
+  - `GET /documents` (`documents.py:361`) and `GET /requirements/drafts` (`requirements.py:334`) get `offset`/`limit` plus `q` and sort, following `requirements.py:290-291` and `schemas/requirements.py:178-179`.
+  - Batch the ownership lookups (`identity_access.py:371-384`, `owned_requirements.py:98-99`).
+  - `DocumentsPage` and `DashboardPage` move to `useInfiniteQuery` (exception).
+- **Retention:** prune payloads of succeeded and cancelled AI jobs only. Report orphaned document blobs, and add a size metric. The daily retention schedule is already documented.
 
-### PR 14 · Tracing
-- Optional OpenTelemetry, disabled when no OTLP endpoint is set, so the app still runs offline.
-- Instrument FastAPI, httpx and psycopg in the composition root.
-- Propagate `traceparent` to the knowledge service, and record the correlation ID as a span attribute.
+**PR 14 · Tracing**
+- Optional OpenTelemetry, off when no OTLP endpoint is set.
+- Instrument FastAPI, httpx (which also covers the token client at `references.py:133`) and psycopg.
+- Send `traceparent` to the portal only when one is connected.
 
-### PR 15 · Frontend polish (presentation only)
-- A 404 page built on `EmptyState`, replacing `App.tsx:73`.
-- On route change, focus the page's `<h1>`, and give `<main>` `tabIndex={-1}` (`AppShell.tsx:124`).
-- A guarded storage helper, used at `RequirementPage.tsx:153` and `NewRequirementPage.tsx:146`.
-- Only allow `https:` links in `PriorArtPanel.tsx:30`.
-- Delay `revokeObjectURL` (`client.ts:319`).
+**PR 15 · Frontend polish**
+- **Presentation only:**
+  - a 404 page from `EmptyState` (`App.tsx:73`);
+  - focus on route change, with `<main tabIndex={-1}>` (`AppShell.tsx:124`);
+  - `https:`-only links in `PriorArtPanel.tsx:30`.
+- **Under the exception:**
+  - a guarded storage helper at `RequirementPage.tsx:153` and `NewRequirementPage.tsx:149`;
+  - delay `revokeObjectURL` (`client.ts:319`).
 
-### PR 16 · Repository governance and accepted risks
-- **Files:**
-  - LICENSE, with the owner choosing the licence;
-  - CHANGELOG.md in Keep a Changelog format, used by the release workflow;
-  - SECURITY.md, `.github/CODEOWNERS` and a PR template.
-- **Recorded in the slice spec as accepted risks or decisions:**
-  - tokens in `sessionStorage`, mitigated by the strict CSP;
-  - the silent-renewal iframe (see the identity-provider doc);
-  - workspace-wide read access (ADR-0075), to be confirmed by the product owner;
-  - no i18n framework (English only).
-- **Follow-up issue** for knowledge-portal: its images share the fail-open config, CSP and deployment findings.
-
----
+**PR 16 · Governance and accepted risks**
+- **Files:** LICENSE (owner chooses), CHANGELOG.md, SECURITY.md, `.github/CODEOWNERS` and a PR template.
+- **Accepted risks to record:**
+  - tokens in `sessionStorage`;
+  - the silent-renewal iframe;
+  - workspace-wide read access (ADR-0075), for the product owner to confirm;
+  - English only.
+- **Follow-up issue for knowledge-portal:** it now owns its own compose, edge and realm entities (ADR-0104), so PR 1's fail-closed pinning and demo split, the CSP runtime change and the backups all need doing there too. CI runs its v0.2.0 in development/fake mode.
 
 ## Order of work
-
 ```text
-Phase 0 kernel release   (runs in parallel with Phase 1)
-PR 1 → PR 8 → PR 2 → PR 4a → PR 4b → PR 5 → PR 6           pilot gate
+Phase 0 kernel v1.2.0  (in parallel with Phase 1)
+PR 1 → PR 8 → PR 2 → PR 4a → PR 4b → PR 5 → PR 6        pilot gate
 kernel bump → PR 3, PR 7, PR 9, PR 10, PR 11, PR 12
 PR 13 → PR 14 → PR 15 → PR 16
 ```
 
 ## Verification
-
 **Every PR:**
-- Backend: `pytest`, `ruff check .`, `ruff format --check .`, `mypy src tests`, `lint-imports`.
-- Postgres adapters and migrations: tests run with `TEST_DATABASE_URL` against the pinned pgvector image.
-- Frontend: `npm run api:check && npm run lint && npm run typecheck && npm run test:coverage && npm run build`.
+- Backend gates, with `TEST_DATABASE_URL` against the pinned pgvector image.
+- Frontend: `api:check`, `lint`, `typecheck`, `test:coverage` and `build`.
 
 **Specific checks:**
 
 | PR | Check |
 |---|---|
-| PR 1 | The production-mode CI boot passes. The fake-identity variant refuses to start. `/api/docs` returns 404 at the edge. |
-| PR 2 | A job that crashes its worker repeatedly ends as `failed/attempts_exhausted` and the queue keeps moving. A provider 503 retries with backoff and keeps requirement order. |
-| PR 8 | With the knowledge service stopped, analysis succeeds and is marked as not grounded. |
-| PR 4a/4b | No synchronous provider route is left. The Playwright smoke and platform specs pass, with mapping running as a job. `/ready` stays under 2s while requests are saturated. |
-| PR 5 | vitest covers renewal and the error boundary. Manually: with a tab open across a deploy, the user gets a reload prompt instead of a blank page. |
-| PR 6 | Run `release.yml` on a test tag. Then `compose pull && up` by tag; backup → restore → `tests.release_recovery verify`. |
-| PR 3 | Holding a lock makes a second transaction fail after `lock_timeout` with 503 `database_busy`. |
-| PR 7 | With two API replicas in the CI deployment job, the N+1th call within one minute returns 429. Spending the token budget blocks the next provider call. |
-| PR 9 | `promtool` and `amtool` pass in CI. A forced readiness failure fires its alert. |
+| PR 1 | The production-mode CI job boots, the fake-identity variant refuses to start, and `/api/docs` returns 404 at the edge. |
+| PR 8 | Analysis works in all three grounding states. With the portal down, unified search returns requirement hits plus the flag. |
+| PR 2 | A provider 503 is retried with backoff, in requirement order. An exhausted job shows up in the new metric label. |
+| PR 4a/4b | No synchronous provider route is left, and smoke plus platform Playwright pass. `/ready` stays under 2s while requests are saturated. |
+| PR 5 | Same-subject renewal keeps in-flight requests alive, and the reload prompt replaces the blank page after a deploy. |
+| PR 6 | A test-tag release can be pulled and run by tag. Backup → restore → verify succeeds. |
+| PR 3 | Holding a lock produces a 503 `database_busy` after `lock_timeout`. |
+| PR 7 | Two replicas share one limit, and a spent budget blocks the next call. |
+| PR 9 | `promtool` and `amtool` pass, and a forced readiness failure fires its alert. |
 
-**Final:**
-- The full CI suite is green: deployment, recovery, smoke, Trivy and the audits.
-- Each review finding is closed in the slice spec with a link to its PR.
+**Final:** CI is all green, and every finding is closed in the spec with a link to its PR.
