@@ -98,3 +98,27 @@ also missing:
 - **A global spend ceiling in PostgreSQL.** Deferred. The per-actor limit
   covers the realistic failure (a loop or script). A durable counter would add
   a write to every provider call.
+
+## Amendment — The manifest fails closed (2026-10-09)
+
+Slice `production-hardening` (PR 1). The text above stays as accepted; where it differs, this
+amendment governs.
+
+`APP_ENV` and `IDENTITY_PROVIDER` used to come only from `deploy/production.env`. Both default to
+development, so a settings file missing those two lines booted the reference manifest with
+header-based development personas, and the demo published that on every network interface.
+
+- **The manifest pins production.** `deploy/compose.production.yaml` sets `APP_ENV=production`
+  and `IDENTITY_PROVIDER=oidc` in the backend environment, which overrides the settings file.
+  A missing line now fails the boot on the missing OIDC settings instead of opening the stack.
+- **The demo is an overlay.** `deploy/compose.demo.yaml` restores the development personas for a
+  local demo and CI, and publishes `web` on `127.0.0.1` only.
+- **Production refuses development conveniences.** With `APP_ENV=production` the settings refuse
+  `LLM_PROVIDER=fake`, `DEBUG_TRACE_ENABLED=true` and any `LOG_FORMAT` other than `json`. The
+  deployment preflight refuses the same fake model and debug trace under any `APP_ENV`.
+- **The edge hides the API documentation.** `/api/docs`, `/api/redoc` and `/api/openapi.json`
+  answer 404 at the bundled nginx, as `/api/internal` does. They stay available to a developer
+  calling the API directly.
+- **CI boots the manifest in production.** OIDC discovery is lazy, so the API boots, reports
+  ready and refuses an unauthenticated request with a placeholder HTTPS issuer; the deployment
+  job checks that, and that fake identity or the fake model is refused.

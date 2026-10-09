@@ -11,6 +11,7 @@ set "PROFILE_CHECK_ARGS="
 set "SETUP=0"
 set "CHECKONLY=0"
 set "DEBUGTRACE=0"
+set "MIGRATE=0"
 
 set "PROJECT_ROOT=%~dp0"
 if "%PROJECT_ROOT:~-1%"=="\" set "PROJECT_ROOT=%PROJECT_ROOT:~0,-1%"
@@ -41,6 +42,11 @@ if /i "%PARAM%"=="-Setup" (
 )
 if /i "%PARAM%"=="-CheckOnly" (
     set "CHECKONLY=1"
+    shift
+    goto parse_args
+)
+if /i "%PARAM%"=="-Migrate" (
+    set "MIGRATE=1"
     shift
     goto parse_args
 )
@@ -157,6 +163,10 @@ if /i "%PERSISTENCE_TARGET%"=="local-postgres" (
     call :WriteStep "Checking external PostgreSQL readiness..."
     "%PYTHON_PATH%" -m smb_requirement_agent.infrastructure.persistence.startup_check
     if errorlevel 1 ( popd & exit /b 1 )
+    if not "%MIGRATE%"=="1" (
+        echo [ERROR] DATABASE_URL names an external PostgreSQL. Rerun with -Migrate to apply pending migrations to it.
+        popd & exit /b 1
+    )
 )
 
 :: Step 9: Apply pending database migrations

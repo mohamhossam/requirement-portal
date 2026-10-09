@@ -29,7 +29,10 @@ The Docker stack and the launchers keep separate data and use different ports
 ## 2. Run with Docker
 
 `deploy/compose.production.yaml` starts requirement work, every process in its
-own container, built from this repository. The knowledge portal runs from its
+own container, built from this repository. For the demo, every command also
+passes `-f deploy/compose.demo.yaml`: the manifest on its own always runs in
+production mode with OIDC sign-in, and the demo overlay switches it to the
+development personas and publishes it on this machine only. The knowledge portal runs from its
 own repository; "Add the knowledge portal" below starts it beside this stack.
 
 | Container | Purpose |
@@ -110,9 +113,9 @@ set it in every new terminal before running any `docker compose` command.
 ### Step 2: build and start
 
 ```bash
-docker compose -f deploy/compose.production.yaml build
-docker compose -f deploy/compose.production.yaml run --rm maintenance
-docker compose -f deploy/compose.production.yaml up -d
+docker compose -f deploy/compose.production.yaml -f deploy/compose.demo.yaml build
+docker compose -f deploy/compose.production.yaml -f deploy/compose.demo.yaml run --rm maintenance
+docker compose -f deploy/compose.production.yaml -f deploy/compose.demo.yaml up -d
 ```
 
 - `build` creates the `requirement-platform/api` and `requirement-platform/web` images. It
@@ -126,7 +129,7 @@ docker compose -f deploy/compose.production.yaml up -d
 ### Step 3: confirm it is running
 
 ```bash
-docker compose -f deploy/compose.production.yaml ps
+docker compose -f deploy/compose.production.yaml -f deploy/compose.demo.yaml ps
 ```
 
 After up to a minute, `api` shows `(healthy)`, and `web`, `worker`, `postgres`
@@ -142,9 +145,8 @@ Port `8080` is the only one the stack publishes. The API, worker, database and
 scanner are reachable only from inside the stack. Continue with section 5 to
 walk through a first Requirement.
 
-The port is published on all network interfaces. The demo lets anyone who can
-reach it act as any development persona, so keep it on your own machine or
-behind a firewall that blocks port `8080` from other computers.
+The demo overlay publishes the port on `127.0.0.1` only: anyone who can reach a
+demo can act as any development persona, so other computers cannot open it.
 
 ### Add the knowledge portal
 
@@ -163,7 +165,7 @@ REQUIREMENT_SERVICE_TOKEN=$(openssl rand -hex 32)
 KNOWLEDGE_SERVICE_TOKEN=$(openssl rand -hex 32)
 SETTINGS
 echo "KNOWLEDGE_PORTAL_URL=http://localhost:8090/knowledge/" >> deploy/.env
-docker compose -f deploy/compose.production.yaml -f deploy/compose.peer.yaml up -d --build
+docker compose -f deploy/compose.production.yaml -f deploy/compose.demo.yaml -f deploy/compose.peer.yaml up -d --build
 ```
 
 Then, in a clone of knowledge-portal, follow its `docs/operations/deployment.md`:
@@ -178,12 +180,12 @@ every command here too.
 ### Everyday commands
 
 ```bash
-docker compose -f deploy/compose.production.yaml ps            # container status
-docker compose -f deploy/compose.production.yaml logs -f api   # follow API logs (also: worker, web, clamav)
-docker compose -f deploy/compose.production.yaml stop          # stop; data is kept
-docker compose -f deploy/compose.production.yaml up -d         # start again
-docker compose -f deploy/compose.production.yaml down          # stop and remove the containers; data is kept
-docker compose -f deploy/compose.production.yaml down -v       # stop and delete all data
+docker compose -f deploy/compose.production.yaml -f deploy/compose.demo.yaml ps            # container status
+docker compose -f deploy/compose.production.yaml -f deploy/compose.demo.yaml logs -f api   # follow API logs (also: worker, web, clamav)
+docker compose -f deploy/compose.production.yaml -f deploy/compose.demo.yaml stop          # stop; data is kept
+docker compose -f deploy/compose.production.yaml -f deploy/compose.demo.yaml up -d         # start again
+docker compose -f deploy/compose.production.yaml -f deploy/compose.demo.yaml down          # stop and remove the containers; data is kept
+docker compose -f deploy/compose.production.yaml -f deploy/compose.demo.yaml down -v       # stop and delete all data
 ```
 
 The containers restart automatically with Docker unless you stopped them. After
@@ -193,8 +195,8 @@ The containers restart automatically with Docker unless you stopped them. After
 
 ```bash
 git pull
-docker compose -f deploy/compose.production.yaml build
-docker compose -f deploy/compose.production.yaml up -d
+docker compose -f deploy/compose.production.yaml -f deploy/compose.demo.yaml build
+docker compose -f deploy/compose.production.yaml -f deploy/compose.demo.yaml up -d
 ```
 
 `up` reapplies any new migrations before it restarts the API and worker. Data
@@ -204,7 +206,7 @@ is kept.
 
 The demo uses OpenRouter. To switch, edit `deploy/production.env`, set the
 provider and its key, then run
-`docker compose -f deploy/compose.production.yaml up -d` again:
+`docker compose -f deploy/compose.production.yaml -f deploy/compose.demo.yaml up -d` again:
 
 ```dotenv
 LLM_PROVIDER=openai
@@ -243,7 +245,7 @@ GRAFANA_ADMIN_PASSWORD=choose-another-password
 ```
 
 ```bash
-docker compose -f deploy/compose.production.yaml -f deploy/compose.monitoring.yaml up -d
+docker compose -f deploy/compose.production.yaml -f deploy/compose.demo.yaml -f deploy/compose.monitoring.yaml up -d
 ```
 
 Open `http://localhost:3000` and sign in as `admin` with that password. The
@@ -265,7 +267,7 @@ alert rules are in `docs/operations/deployment.md` ("Metrics").
 ## 3. Deploy to a server with Docker
 
 A real deployment uses the same manifest and commands as section 2, with
-production settings. `docs/operations/deployment.md` is the full operations
+production settings and **without** `-f deploy/compose.demo.yaml`. `docs/operations/deployment.md` is the full operations
 reference: process model, health probes, logs, metrics, rate limits and image
 updates.
 
@@ -274,14 +276,15 @@ updates.
 | Demo | Deployment |
 |---|---|
 | `deploy/demo.env.example` | `deploy/production.env.example`, with every blank filled in |
-| `APP_ENV=development` | `APP_ENV=production` |
-| Development personas, no sign-in | OIDC sign-in (`IDENTITY_PROVIDER=oidc`) |
+| `deploy/compose.demo.yaml` layered on: `APP_ENV=development`, port `8080` on `127.0.0.1` only | The manifest alone: `APP_ENV=production`, port `8080` on every interface |
+| Development personas, no sign-in | OIDC sign-in (`IDENTITY_PROVIDER=oidc`, set by the manifest) |
 | OpenRouter's free chat model, also used for architecture mapping | A production `LLM_PROVIDER` or model profiles, used for architecture mapping too |
 | Plain HTTP on port `8080` | A TLS reverse proxy in front of port `8080` |
 
 With `APP_ENV=production`, the API and worker refuse to start on the fake
-personas, and the error names the setting. A half-converted demo file fails fast instead of
-running insecurely.
+personas, the fake model (`LLM_PROVIDER=fake`), the debug trace or text logs,
+and the error names the setting. A half-converted demo file fails fast instead
+of running insecurely.
 
 Architecture mapping uses the same models as the rest of the application
 (`LLM_PROVIDER` or the model profiles); it needs no separate model server or
@@ -836,10 +839,12 @@ Copy `deploy/demo.env.example` (demo) or `deploy/production.env.example`
 #### `web` never starts and `api` stays unhealthy
 
 Usually the one-time `maintenance` step was skipped. Run
-`docker compose -f deploy/compose.production.yaml run --rm maintenance`, then
-`up -d` again. Otherwise read
+`docker compose -f deploy/compose.production.yaml run --rm maintenance` (add
+`-f deploy/compose.demo.yaml` for the demo), then `up -d` again. Otherwise read
 `docker compose -f deploy/compose.production.yaml logs api`; a configuration
-error names the setting to fix.
+error names the setting to fix. A demo started without
+`-f deploy/compose.demo.yaml` runs in production mode and stops at the missing
+OIDC settings.
 
 #### 'password authentication failed for user "smb"'
 
@@ -849,8 +854,8 @@ deletes the volume so the next first start uses the new password.
 
 #### Port 8080 is already in use
 
-Stop the other program using it, or change the published port in
-`deploy/compose.production.yaml` (`"8081:8080"` publishes it on `8081`).
+Stop the other program using it, or set `WEB_PORT=8081` in `deploy/.env` to
+publish it on `8081`.
 
 #### Shared-library uploads say the scanner is unavailable
 

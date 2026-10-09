@@ -856,25 +856,58 @@ class TestKnowledgeService:
             container.close_resources()
 
     def test_production_runs_with_or_without_the_knowledge_portal(self) -> None:
-        production = {
-            "llm_provider": LLMProvider.FAKE,
-            "app_environment": "production",
-            "persistence_provider": PersistenceProvider.POSTGRES,
-            "database_url": "postgresql://example/test",
-            "identity_provider": IdentityProvider.OIDC,
-            "oidc_issuer_url": "https://identity.example/tenant",
-            "oidc_audience": "api://smb",
-            "oidc_client_id": "browser",
-        }
         # ADR-0104: the knowledge portal is an optional link, in production too.
-        alone = Settings(**production)  # type: ignore[arg-type]
+        alone = Settings(**PRODUCTION)  # type: ignore[arg-type]
         assert alone.knowledge_service_url is None
         connected = Settings(
-            **production,  # type: ignore[arg-type]
+            **PRODUCTION,  # type: ignore[arg-type]
             knowledge_api_base_url="http://knowledge-api:8000",
             requirement_service_token=self.TOKEN,
         )
         assert connected.knowledge_api_base_url == "http://knowledge-api:8000"
+
+
+# The smallest settings APP_ENV=production accepts.
+PRODUCTION: dict[str, object] = {
+    "llm_provider": LLMProvider.OPENAI,
+    "openai_api_key": "test-only",
+    "app_environment": "production",
+    "persistence_provider": PersistenceProvider.POSTGRES,
+    "database_url": "postgresql://example/test",
+    "identity_provider": IdentityProvider.OIDC,
+    "oidc_issuer_url": "https://identity.example/tenant",
+    "oidc_audience": "api://smb",
+    "oidc_client_id": "browser",
+    "log_format": LogFormat.JSON,
+}
+
+
+@pytest.mark.parametrize(
+    ("override", "named"),
+    [
+        ({"identity_provider": IdentityProvider.FAKE}, "IDENTITY_PROVIDER=oidc"),
+        ({"llm_provider": LLMProvider.FAKE, "openai_api_key": None}, "LLM_PROVIDER=fake"),
+        ({"debug_trace_enabled": True}, "DEBUG_TRACE_ENABLED=true"),
+        ({"log_format": LogFormat.TEXT}, "LOG_FORMAT=json"),
+    ],
+)
+def test_production_refuses_development_conveniences(
+    override: dict[str, object], named: str
+) -> None:
+    with pytest.raises(ConfigurationError, match=named):
+        Settings(**{**PRODUCTION, **override})  # type: ignore[arg-type]
+
+
+def test_development_keeps_its_conveniences() -> None:
+    development = {
+        **PRODUCTION,
+        "app_environment": "development",
+        "identity_provider": IdentityProvider.FAKE,
+        "llm_provider": LLMProvider.FAKE,
+        "debug_trace_enabled": True,
+        "log_format": LogFormat.TEXT,
+    }
+    assert Settings(**development).app_environment == "development"  # type: ignore[arg-type]
 
 
 def test_prior_art_is_off_by_default_and_its_caps_are_read_from_the_environment(

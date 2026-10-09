@@ -25,6 +25,21 @@ MANIFEST: dict[str, Any] = yaml.safe_load(
     (DEPLOY / "compose.production.yaml").read_text(encoding="utf-8")
 )
 PEER: dict[str, Any] = yaml.safe_load((DEPLOY / "compose.peer.yaml").read_text(encoding="utf-8"))
+
+
+class _ComposeLoader(yaml.SafeLoader):
+    """SafeLoader that also reads Compose's `!override` tag (replace, do not merge)."""
+
+
+def _override(loader: yaml.SafeLoader, node: yaml.Node) -> dict[str, Any]:
+    assert isinstance(node, yaml.SequenceNode)
+    return {"!override": loader.construct_sequence(node)}
+
+
+_ComposeLoader.add_constructor("!override", _override)
+DEMO: dict[str, Any] = yaml.load(
+    (DEPLOY / "compose.demo.yaml").read_text(encoding="utf-8"), Loader=_ComposeLoader
+)
 SERVICES: dict[str, Any] = MANIFEST["services"]
 EDGE = (DEPLOY / "web" / "default.conf.template").read_text(encoding="utf-8")
 WEB_IMAGE = (DEPLOY / "web" / "Dockerfile").read_text(encoding="utf-8")
@@ -87,6 +102,42 @@ def test_no_internal_route_passes_the_edge() -> None:
     assert block is not None
     assert "return 404;" in block.group(1)
     assert "proxy_pass ${API_UPSTREAM}$api_request_uri;" in EDGE
+
+
+@pytest.mark.parametrize(
+    "location",
+    ["location ^~ /api/docs {", "location = /api/redoc {", "location = /api/openapi.json {"],
+)
+def test_the_api_documentation_is_not_served_at_the_edge(location: str) -> None:
+    block = re.search(re.escape(location) + r"(.*?)\}", EDGE, re.S)
+
+    assert block is not None, location
+    assert "return 404;" in block.group(1)
+
+
+BACKEND_PROCESSES = ("migrate", "maintenance", "retention", "api", "worker")
+
+
+def test_the_manifest_always_runs_production_with_real_sign_in() -> None:
+    """Set in the manifest, not production.env, so a missing line fails closed."""
+    environment = MANIFEST["x-backend"]["environment"]
+
+    assert environment["APP_ENV"] == "production"
+    assert environment["IDENTITY_PROVIDER"] == "oidc"
+    for name in BACKEND_PROCESSES:
+        assert SERVICES[name]["environment"]["APP_ENV"] == "production", name
+        assert SERVICES[name]["environment"]["IDENTITY_PROVIDER"] == "oidc", name
+
+
+def test_the_demo_overlay_keeps_development_personas_on_this_machine() -> None:
+    demo = DEMO["services"]
+
+    assert set(demo) == {*BACKEND_PROCESSES, "web"}
+    for name in BACKEND_PROCESSES:
+        assert demo[name] == {
+            "environment": {"APP_ENV": "development", "IDENTITY_PROVIDER": "fake"}
+        }, name
+    assert demo["web"] == {"ports": {"!override": ["127.0.0.1:${WEB_PORT:-8080}:8080"]}}
 
 
 def test_the_edge_proxies_nothing_of_the_knowledge_portal() -> None:

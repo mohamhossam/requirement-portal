@@ -4,6 +4,11 @@
 #
 # Usage:
 #   ./start.sh [--provider fake|local|openai|openrouter] [--setup] [--check-only] [--debug-trace]
+#              [--migrate]
+#
+# --migrate applies pending migrations to an external PostgreSQL named by
+# DATABASE_URL. Local PostgreSQL is always migrated; an external database never
+# is without it, so a stray DATABASE_URL cannot change a shared schema.
 #
 set -euo pipefail
 
@@ -12,6 +17,7 @@ EXPLICIT_PROVIDER=false
 SETUP=false
 CHECK_ONLY=false
 DEBUG_TRACE=false
+MIGRATE_EXTERNAL=false
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -29,6 +35,10 @@ while [[ $# -gt 0 ]]; do
             SETUP=true
             shift
             ;;
+        --migrate)
+            MIGRATE_EXTERNAL=true
+            shift
+            ;;
         --check-only)
             CHECK_ONLY=true
             shift
@@ -38,7 +48,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         -h|--help)
-            echo "Usage: $0 [--provider fake|local|openai|openrouter] [--setup] [--check-only] [--debug-trace]"
+            echo "Usage: $0 [--provider fake|local|openai|openrouter] [--setup] [--check-only] [--debug-trace] [--migrate]"
             echo ""
             echo "  --setup        Create .venv if needed, install backend and locked frontend dependencies, then start."
             echo "  --check-only   Validate prerequisites, model configuration and persistence without starting servers."
@@ -281,6 +291,8 @@ if [[ "$PERSISTENCE_TARGET" == "local-postgres" ]]; then
 elif [[ "$PERSISTENCE_TARGET" == "external-postgres" ]]; then
     step "Checking external PostgreSQL readiness..."
     "$PYTHON_PATH" -m smb_requirement_agent.infrastructure.persistence.startup_check
+    [[ "$MIGRATE_EXTERNAL" == true ]] \
+        || fail "DATABASE_URL names an external PostgreSQL. Rerun with --migrate to apply pending migrations to it."
 fi
 
 if [[ "$PERSISTENCE_TARGET" != "memory" ]]; then

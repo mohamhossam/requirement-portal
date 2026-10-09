@@ -133,12 +133,14 @@ put `POSTGRES_PASSWORD=<your password>` in `deploy/.env` (both are
 git-ignored), then:
 
 ```bash
-docker compose -f deploy/compose.production.yaml build
-docker compose -f deploy/compose.production.yaml run --rm maintenance
-docker compose -f deploy/compose.production.yaml up -d
+docker compose -f deploy/compose.production.yaml -f deploy/compose.demo.yaml build
+docker compose -f deploy/compose.production.yaml -f deploy/compose.demo.yaml run --rm maintenance
+docker compose -f deploy/compose.production.yaml -f deploy/compose.demo.yaml up -d
 ```
 
-Open `http://localhost:8080`. The [Application Start Guide](START_GUIDE.md)
+`deploy/compose.demo.yaml` switches the stack to the development personas and
+publishes it on this machine only; without it the manifest runs in production
+mode with OIDC sign-in. Open `http://localhost:8080`. The [Application Start Guide](START_GUIDE.md)
 sections "Run with Docker" and "Deploy to a server with Docker" cover everyday
 commands, real providers, server deployment and Docker troubleshooting.
 
@@ -150,6 +152,7 @@ commands, real providers, server deployment and Docker troubleshooting.
 | Check prerequisites, configuration and database readiness only | `-CheckOnly` | `--check-only` |
 | Choose the provider: `fake` (default), `local`, `openai`, `openrouter` | `-Provider openai` | `--provider openai` |
 | Write one detailed backend/LLM debug trace to `logs/debug.log` | `-DebugTrace` | `--debug-trace` |
+| Apply pending migrations to an external PostgreSQL named by `DATABASE_URL` | `-Migrate` | `--migrate` |
 
 ```powershell
 .\start.ps1 -Setup -Provider openai
@@ -685,9 +688,10 @@ OpenAPI document, and TypeScript definitions together.
 - an nginx image serving the built app and proxying `/api`;
 - PostgreSQL and ClamAV.
 
-With `deploy/demo.env.example` copied to `deploy/production.env`, the same stack
-runs as a local demo with OpenRouter AI output and no sign-in (see
-**Quick start**). The optional
+With `deploy/demo.env.example` copied to `deploy/production.env` and
+`deploy/compose.demo.yaml` layered over the manifest, the same stack runs as a
+local demo with OpenRouter AI output and no sign-in (see **Quick start**). The
+manifest on its own always runs `APP_ENV=production` with OIDC sign-in. The optional
 `deploy/compose.monitoring.yaml` overlay adds Prometheus and a provisioned
 Grafana dashboard for the API and worker metrics.
 

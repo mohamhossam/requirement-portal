@@ -5,6 +5,11 @@
 #   cp deploy/production.env.example deploy/production.env   # then fill it in
 #   docker compose -f deploy/compose.production.yaml up -d --build
 #
+# It always runs in production mode with OIDC sign-in: APP_ENV and
+# IDENTITY_PROVIDER are set below, not in production.env, so a missing line there
+# cannot open the stack to development personas. A local demo layers
+# deploy/compose.demo.yaml over this file; never deploy with it.
+#
 # The browser reaches only `web` (port 8080; put TLS in front of it). It serves
 # the app at / and the API at /api/. The API, worker, database, scanner and
 # metrics ports stay on the private network, and /internal never passes the
@@ -29,6 +34,8 @@ x-backend: &backend
     - path: production.env
       required: true
   environment: &backend-environment
+    APP_ENV: production
+    IDENTITY_PROVIDER: oidc
     PERSISTENCE_PROVIDER: postgres
     DATABASE_URL: postgresql://smb:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/smb_requirements
     ATTACHMENT_SCANNER_HOST: clamav

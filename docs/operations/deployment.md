@@ -10,6 +10,14 @@ releases publish (ADR-0104). Requirement work runs without it; "Connecting the k
 links the two. CI builds both images and starts this manifest beside the knowledge portal's
 pinned release, on every push.
 
+The manifest always runs in production mode: it sets `APP_ENV=production` and
+`IDENTITY_PROVIDER=oidc` itself, so a line missing from `production.env` cannot
+open the stack to the development personas. With `APP_ENV=production` the API,
+worker and one-shot commands also refuse `LLM_PROVIDER=fake`,
+`DEBUG_TRACE_ENABLED=true` and any `LOG_FORMAT` other than `json`, naming the
+setting. `deploy/compose.demo.yaml` is the local demo overlay (development
+personas, published on `127.0.0.1` only); never deploy with it.
+
 The Compose project is `requirement-platform`, so its containers, images and
 volumes never collide with the earlier single-repository deployment
 (`requirement-ai`) on the same host. Set `WEB_PORT` to publish the proxy on a
@@ -37,7 +45,8 @@ image installs dependencies from `uv.lock` (`uv sync --locked --no-dev`).
   - Put TLS termination in front of it.
   - The API, worker, PostgreSQL, ClamAV and metrics ports stay on the private
     network.
-  - `/internal` answers 404 at the edge.
+  - `/internal` answers 404 at the edge, and so does the API's generated
+    documentation (`/api/docs`, `/api/redoc`, `/api/openapi.json`).
   - `/knowledge-api/` answers 404, and `/knowledge/` redirects old bookmarks to
     the knowledge portal's own address for one release (see "Connecting the
     knowledge portal").
@@ -82,6 +91,15 @@ seconds.
 `CSP_IDENTITY_ORIGINS` is built into the page's Content-Security-Policy. If it
 is missing, the browser blocks the OIDC sign-in and token calls. Rebuild the web
 image when the issuer changes.
+
+Before opening the edge to users, run the preflight with the deployment's
+settings. It exits 2, naming the setting, while identity is not OIDC or the fake
+model or the debug trace is configured:
+
+```bash
+docker compose -f deploy/compose.production.yaml run --rm api \
+  python -m smb_requirement_agent.interfaces.deployment_preflight
+```
 
 ## Knowledge tables left behind
 

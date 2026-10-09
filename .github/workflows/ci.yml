@@ -200,7 +200,9 @@ jobs:
       # Each portal's links to the other, through the other's edge.
       KNOWLEDGE_PORTAL_URL: http://127.0.0.1:8090/knowledge/
       REQUIREMENT_PORTAL_URL: http://127.0.0.1:8080/
-      COMPOSE: docker compose -f deploy/compose.production.yaml -f deploy/compose.peer.yaml
+      # The demo overlay runs the development personas these checks sign in as; the
+      # production manifest on its own is checked in its own step below.
+      COMPOSE: docker compose -f deploy/compose.production.yaml -f deploy/compose.peer.yaml -f deploy/compose.demo.yaml
       KNOWLEDGE: docker compose -f knowledge-portal/deploy/compose.production.yaml -f knowledge-portal/deploy/compose.peer.yaml
       # Passed to the image build as a BuildKit secret, never as a build arg.
       KERNEL_READ_TOKEN: ${{ secrets.KERNEL_READ_TOKEN }}
@@ -279,6 +281,11 @@ jobs:
             code=$(curl --silent --output /dev/null --write-out '%{http_code}' "$url")
             test "$code" = 404 || { echo "$url answered $code at the edge"; exit 1; }
           done
+          # Nor does the API's generated documentation.
+          for path in /api/docs /api/docs/oauth2-redirect /api/redoc /api/openapi.json; do
+            code=$(curl --silent --output /dev/null --write-out '%{http_code}' "http://127.0.0.1:8080$path")
+            test "$code" = 404 || { echo "$path answered $code at the edge"; exit 1; }
+          done
           # Requirement work's edge serves nothing of the knowledge portal, and
           # sends old bookmarks to its own address (ADR-0104).
           code=$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:8080/knowledge-api/ready)
@@ -290,6 +297,53 @@ jobs:
           # The knowledge portal's browser app, on its own edge, client routes included.
           curl --fail --silent http://127.0.0.1:8090/knowledge/ | grep -q '<title>Knowledge portal</title>'
           curl --fail --silent http://127.0.0.1:8090/knowledge/library | grep -q '<title>Knowledge portal</title>'
+
+      - name: The production manifest boots in production and refuses development settings
+        # Without the demo overlay the manifest pins APP_ENV=production and OIDC sign-in.
+        # OIDC discovery is lazy, so a placeholder HTTPS issuer is enough to boot and to
+        # refuse a request without a token; a placeholder OpenAI key is never called.
+        env:
+          PROD: docker compose -f deploy/compose.production.yaml
+          PRODUCTION_SETTINGS: >-
+            -e OIDC_ISSUER_URL=https://identity.ci.invalid/realms/requirement-ai
+            -e OIDC_AUDIENCE=requirement-api
+            -e OIDC_CLIENT_ID=requirement-spa
+            -e LLM_PROVIDER=openai
+            -e OPENAI_API_KEY=ci-only
+        run: |
+          $PROD run --rm --no-deps $PRODUCTION_SETTINGS api \
+            python -m smb_requirement_agent.interfaces.deployment_preflight
+          $PROD run -d --no-deps --name api-production $PRODUCTION_SETTINGS api
+          trap 'docker logs api-production; docker rm -f api-production > /dev/null' EXIT
+          for attempt in $(seq 1 30); do
+            docker exec api-production python -c \
+              "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/ready', timeout=3)" \
+              2> /dev/null && break
+            sleep 2
+          done
+          docker exec api-production python -c "
+          import urllib.error, urllib.request
+          for headers in ({}, {'X-Fake-Actor-Id': 'fake-owner'}):
+              request = urllib.request.Request('http://127.0.0.1:8000/identity/me', headers=headers)
+              try:
+                  urllib.request.urlopen(request, timeout=3)
+              except urllib.error.HTTPError as error:
+                  assert error.code == 401, (headers, error.code)
+              else:
+                  raise SystemExit(f'Answered without a token: {headers}')
+          "
+          # A development setting slipped into production stops the boot (an API still
+          # running at the timeout answers 124) or the preflight.
+          set +e
+          timeout 120 $PROD run --rm --no-deps $PRODUCTION_SETTINGS -e IDENTITY_PROVIDER=fake api
+          boot=$?
+          $PROD run --rm --no-deps $PRODUCTION_SETTINGS -e LLM_PROVIDER=fake api \
+            python -m smb_requirement_agent.interfaces.deployment_preflight
+          preflight=$?
+          set -e
+          test "$boot" != 0 && test "$boot" != 124 ||
+            { echo "The API booted with fake identity in production ($boot)"; exit 1; }
+          test "$preflight" = 2 || { echo "The preflight answered $preflight for the fake model"; exit 1; }
 
       - name: The portals reach each other on the peer network
         run: |
