@@ -1,8 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 
-// The whole platform, started by deploy/compose.production.yaml with fake identity: requirement
-// work and the knowledge portal behind one edge (ADR-0099). CI's deployment job runs this after
-// the stack is up; nothing is started here.
+// Both portals, each started from its own manifest with fake identity and joined on the peer
+// network (ADR-0104): requirement work's edge at PLATFORM_URL, the knowledge portal's at
+// KNOWLEDGE_URL (platform-tests/platform.spec.ts reads it). CI's deployment job runs this after
+// both are up; nothing is started here.
 const platformUrl = process.env.PLATFORM_URL ?? "http://127.0.0.1:8080";
 
 export default defineConfig({

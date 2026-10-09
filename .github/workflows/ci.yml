@@ -182,48 +182,62 @@ jobs:
         run: npm audit --audit-level=high
 
   deployment:
-    # Builds both images and brings the whole platform up offline, with the
-    # knowledge service's pinned release, so a broken Dockerfile, nginx template,
-    # entrypoint or service wiring fails here, not in a deploy.
+    # Builds both images and brings requirement work up offline beside the
+    # knowledge portal's pinned release, each from its own repository's manifest
+    # and joined on the peer network (ADR-0104), so a broken Dockerfile, nginx
+    # template, entrypoint or service wiring fails here, not in a deploy.
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      # The knowledge service's image (ghcr.io/mohamhossam/knowledge-api). The
-      # package must grant this repository read access (package settings).
-      packages: read
     env:
       POSTGRES_PASSWORD: ci-only
       KNOWLEDGE_POSTGRES_PASSWORD: ci-only
       REQUIREMENT_SERVICE_TOKEN: ci-only-requirement-service-token-0000
       KNOWLEDGE_SERVICE_TOKEN: ci-only-knowledge-service-token-000000
       GRAFANA_ADMIN_PASSWORD: ci-only
-      COMPOSE: docker compose -f deploy/compose.production.yaml
+      # The knowledge-portal release both its manifest and its images come from.
+      KNOWLEDGE_IMAGE_TAG: v0.2.0
+      # Each portal's links to the other, through the other's edge.
+      KNOWLEDGE_PORTAL_URL: http://127.0.0.1:8090/knowledge/
+      REQUIREMENT_PORTAL_URL: http://127.0.0.1:8080/
+      COMPOSE: docker compose -f deploy/compose.production.yaml -f deploy/compose.peer.yaml
+      KNOWLEDGE: docker compose -f knowledge-portal/deploy/compose.production.yaml -f knowledge-portal/deploy/compose.peer.yaml
       # Passed to the image build as a BuildKit secret, never as a build arg.
       KERNEL_READ_TOKEN: ${{ secrets.KERNEL_READ_TOKEN }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Check out the knowledge portal's release
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: mohamhossam/knowledge-portal
+          ref: ${{ env.KNOWLEDGE_IMAGE_TAG }}
+          path: knowledge-portal
+          persist-credentials: false
+
       - name: Offline deployment settings
         run: |
-          cat > deploy/production.env <<'SETTINGS'
+          cat > deploy/production.env <<SETTINGS
           APP_ENV=development
           IDENTITY_PROVIDER=fake
           LLM_PROVIDER=fake
           LIBRARY_SCAN_MODE=clamav
+          KNOWLEDGE_API_BASE_URL=http://knowledge-api:8000
+          REQUIREMENT_SERVICE_TOKEN=$REQUIREMENT_SERVICE_TOKEN
+          KNOWLEDGE_SERVICE_TOKEN=$KNOWLEDGE_SERVICE_TOKEN
           SETTINGS
-          cat > deploy/knowledge.env <<'SETTINGS'
+          cat > knowledge-portal/deploy/production.env <<SETTINGS
           APP_ENV=development
           IDENTITY_PROVIDER=fake
           LLM_PROVIDER=fake
-          LIBRARY_SCAN_MODE=clamav
+          REQUIREMENT_API_BASE_URL=http://requirement-api:8000
+          REQUIREMENT_SERVICE_TOKEN=$REQUIREMENT_SERVICE_TOKEN
+          KNOWLEDGE_SERVICE_TOKEN=$KNOWLEDGE_SERVICE_TOKEN
           SETTINGS
+          docker network create platform-internal
 
-      - name: Pull the knowledge service's release
-        env:
-          REGISTRY_TOKEN: ${{ github.token }}
-        run: |
-          echo "$REGISTRY_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-          $COMPOSE pull knowledge-api knowledge-web
+      - name: Pull the knowledge portal's release
+        run: $KNOWLEDGE pull api web
 
       - name: Build images
         run: $COMPOSE build
@@ -237,43 +251,47 @@ jobs:
               --exit-code 1 "$image"
           done
 
-      - name: First install, then start
+      - name: First install, then start both portals
         # A fresh install's migrations leave no moved knowledge table, so the
-        # guarded drop finds nothing to do; every check below runs without them
-        # (ADR-0099).
+        # guarded drop finds nothing to do and needs no knowledge database.
         run: |
           $COMPOSE run --rm maintenance
           $COMPOSE run --rm drop-knowledge-tables --dry-run
           $COMPOSE run --rm drop-knowledge-tables
-          # The scanner loads its signatures while the checks below run.
+          # The scanners load their signatures while the checks below run.
           $COMPOSE up -d clamav
-          $COMPOSE up -d --wait web worker knowledge-worker
+          $KNOWLEDGE up -d clamav
+          $COMPOSE up -d --wait web worker
+          $KNOWLEDGE up -d --wait edge worker
 
-      - name: Ready through the proxy, with security headers
+      - name: Ready through each edge, with security headers
         run: |
           curl --fail --silent http://127.0.0.1:8080/api/ready
-          curl --fail --silent http://127.0.0.1:8080/knowledge-api/ready
+          curl --fail --silent http://127.0.0.1:8090/knowledge-api/ready
           curl --fail --silent --head http://127.0.0.1:8080/ | grep -i "frame-ancestors 'none'"
           curl --fail --silent http://127.0.0.1:8080/ | grep -q 'http-equiv="Content-Security-Policy"'
-          # Service-to-service routes never pass the edge, on either service (ADR-0099).
-          for path in /api/internal/architecture-mapping/stats /knowledge-api/internal/events; do
-            code=$(curl --silent --output /dev/null --write-out '%{http_code}' "http://127.0.0.1:8080$path")
-            test "$code" = 404 || { echo "$path answered $code at the edge"; exit 1; }
+          # Service-to-service routes never pass an edge (ADR-0099).
+          for url in http://127.0.0.1:8080/api/internal/architecture-mapping/stats \
+                     http://127.0.0.1:8090/knowledge-api/internal/events; do
+            code=$(curl --silent --output /dev/null --write-out '%{http_code}' "$url")
+            test "$code" = 404 || { echo "$url answered $code at the edge"; exit 1; }
           done
-          # The knowledge portal's browser app, under /knowledge/, client routes included.
-          curl --fail --silent http://127.0.0.1:8080/knowledge/ | grep -q '<title>Knowledge portal</title>'
-          curl --fail --silent http://127.0.0.1:8080/knowledge/library | grep -q '<title>Knowledge portal</title>'
-          # With the portal's app down, admins get a page saying so, not a bare 502.
-          $COMPOSE stop knowledge-web
-          code=$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:8080/knowledge/)
-          test "$code" = 503
-          curl --silent http://127.0.0.1:8080/knowledge/ | grep -q "The knowledge portal is not available"
-          $COMPOSE start knowledge-web
+          # Requirement work's edge serves nothing of the knowledge portal, and
+          # sends old bookmarks to its own address (ADR-0104).
+          code=$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:8080/knowledge-api/ready)
+          test "$code" = 404 || { echo "/knowledge-api/ready answered $code on requirement work's edge"; exit 1; }
+          location=$(curl --silent --output /dev/null --write-out '%{http_code} %{redirect_url}' \
+            'http://127.0.0.1:8080/knowledge/library?view=all')
+          test "$location" = "301 http://127.0.0.1:8090/knowledge/library?view=all" ||
+            { echo "An old bookmark answered: $location"; exit 1; }
+          # The knowledge portal's browser app, on its own edge, client routes included.
+          curl --fail --silent http://127.0.0.1:8090/knowledge/ | grep -q '<title>Knowledge portal</title>'
+          curl --fail --silent http://127.0.0.1:8090/knowledge/library | grep -q '<title>Knowledge portal</title>'
 
-      - name: Requirement work reads the knowledge service
+      - name: The portals reach each other on the peer network
         run: |
-          # The knowledge database starts with its initial catalogue version, and
-          # requirement work learns of it through the knowledge event feed.
+          # Requirement work learns of the knowledge database's initial catalogue
+          # version through the knowledge event feed.
           for attempt in $(seq 1 30); do
             release=$(curl --fail --silent http://127.0.0.1:8080/api/architecture/active-release)
             echo "$release" | grep -q '"id":"smb-source-reference-v1"' && break
@@ -281,21 +299,24 @@ jobs:
           done
           echo "$release" | grep -q '"id":"smb-source-reference-v1"' ||
             { echo "Requirement work never saw the active catalogue: $release"; exit 1; }
-          # And the knowledge service answers its own admins, through the edge.
+          # And the knowledge portal finds requirement work by its peer name.
+          $KNOWLEDGE exec -T api python -c \
+            "import urllib.request as u; u.urlopen('http://requirement-api:8000/ready', timeout=5)"
+          # The knowledge portal answers its own admins, through its own edge.
           curl --fail --silent -H "X-Fake-Actor-Id: fake-owner" \
-            http://127.0.0.1:8080/knowledge-api/library/documents > /dev/null
+            http://127.0.0.1:8090/knowledge-api/library/documents > /dev/null
           code=$(curl --silent --output /dev/null --write-out '%{http_code}' \
-            -H "X-Fake-Actor-Id: fake-observer" http://127.0.0.1:8080/knowledge-api/library/documents)
+            -H "X-Fake-Actor-Id: fake-observer" http://127.0.0.1:8090/knowledge-api/library/documents)
           test "$code" = 403
 
       - name: A withdrawal reaches requirement work within one poll
         # A library document is published and withdrawn in the knowledge portal, through
-        # the edge; requirement work's copy, which judges citations current, follows the
+        # its edge; requirement work's copy, which judges citations current, follows the
         # event feed (ADR-0099). Uploads are scanned, so the scanner must be ready first.
         run: |
-          $COMPOSE up -d --wait --wait-timeout 600 clamav
+          $KNOWLEDGE up -d --wait --wait-timeout 600 clamav
           python3 tests/platform_withdrawal.py \
-            --knowledge-url http://127.0.0.1:8080/knowledge-api \
+            --knowledge-url http://127.0.0.1:8090/knowledge-api \
             --requirements-psql "$COMPOSE exec -T postgres psql -U smb -d smb_requirements"
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -305,9 +326,11 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: The platform in a browser
-        # Playwright against the edge of the running platform (frontend/platform-tests): a
-        # citation read-only by a member, the knowledge portal for admins only.
+        # Playwright against both edges (frontend/platform-tests): a citation read-only
+        # by a member, the knowledge portal for admins only.
         working-directory: frontend
+        env:
+          KNOWLEDGE_URL: http://127.0.0.1:8090
         run: |
           npm ci
           npx playwright install --with-deps chromium
@@ -315,11 +338,10 @@ jobs:
 
       - name: Model files are mounted read-only
         run: |
-          for service in api worker knowledge-api knowledge-worker; do
+          for service in api worker; do
             $COMPOSE exec -T "$service" test -r /app/config/llm.yaml
           done
           ! $COMPOSE exec -T api touch /app/config/written
-          ! $COMPOSE exec -T knowledge-api touch /app/config/written
 
       - name: Monitoring add-on scrapes both exporters and serves its dashboard
         run: |
@@ -328,12 +350,12 @@ jobs:
           $MONITORING exec -T prometheus promtool check config /etc/prometheus/prometheus.yml
           for attempt in $(seq 1 30); do
             up=$($MONITORING exec -T prometheus wget -qO- \
-              'http://127.0.0.1:9090/api/v1/query?query=count(up%7Bjob%3D~%22api%7Cworker%7Cknowledge-api%7Cknowledge-worker%22%7D%3D%3D1)' |
+              'http://127.0.0.1:9090/api/v1/query?query=count(up%7Bjob%3D~%22api%7Cworker%22%7D%3D%3D1)' |
               python3 -c 'import json, sys; r = json.load(sys.stdin)["data"]["result"]; print(r[0]["value"][1] if r else 0)')
-            [ "$up" = "4" ] && break
+            [ "$up" = "2" ] && break
             sleep 2
           done
-          [ "$up" = "4" ] || { echo "Prometheus scrapes $up of 4 exporters"; exit 1; }
+          [ "$up" = "2" ] || { echo "Prometheus scrapes $up of 2 exporters"; exit 1; }
           curl --fail --silent -u admin:ci-only \
             'http://127.0.0.1:3000/api/dashboards/uid/requirement-ai-overview' > /dev/null
           curl --fail --silent -u admin:ci-only \
@@ -341,7 +363,9 @@ jobs:
 
       - name: Container logs
         if: failure()
-        run: $COMPOSE -f deploy/compose.monitoring.yaml logs
+        run: |
+          $COMPOSE -f deploy/compose.monitoring.yaml logs
+          $KNOWLEDGE logs
 
   recovery:
     # A nonempty backup/restore rehearsal (docs/operations/release-qualification.md):

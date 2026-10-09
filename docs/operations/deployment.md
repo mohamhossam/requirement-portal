@@ -1,12 +1,14 @@
 # Deployment
 
-The reference deployment is `deploy/compose.production.yaml`. It runs the whole
-platform on one host, every process in its own container: requirement work,
-built from this repository, and the knowledge service, from the image
-knowledge-portal publishes (ADR-0098, ADR-0099). Use it as it stands for a
-single-host install, or as the specification to translate for Kubernetes or
-another orchestrator. CI builds both images and starts this manifest, with the
-knowledge service, on every push.
+The reference deployment is `deploy/compose.production.yaml`. It runs requirement work on one
+host, every process in its own container, built from this repository. Use it as it stands for a
+single-host install, or as the specification to translate for Kubernetes or another
+orchestrator.
+
+The knowledge portal deploys on its own, from knowledge-portal's repository and the images its
+releases publish (ADR-0104). Requirement work runs without it; "Connecting the knowledge portal"
+links the two. CI builds both images and starts this manifest beside the knowledge portal's
+pinned release, on every push.
 
 The Compose project is `requirement-platform`, so its containers, images and
 volumes never collide with the earlier single-repository deployment
@@ -18,9 +20,7 @@ port other than 8080 while both run.
 | Image | Built from | Runs |
 |---|---|---|
 | `requirement-platform/api` | `deploy/api/Dockerfile` | Four processes, each chosen by the container command: the **API** (`python -m smb_requirement_agent.interfaces.api.serve`); the **worker** (`python -m smb_requirement_agent.interfaces.worker`); **migrate** (`python -m smb_requirement_agent.infrastructure.persistence.migrate`); and **maintenance** (`python -m smb_requirement_agent.interfaces.maintenance`). |
-| `requirement-platform/web` | `deploy/web/Dockerfile` | nginx serving the built browser app, proxying `/api/` to the API, and `/knowledge-api/` and `/knowledge/` to the knowledge service. |
-| `ghcr.io/mohamhossam/knowledge-api` | knowledge-portal's release workflow, pinned by `KNOWLEDGE_IMAGE_TAG` | The knowledge service's four processes: `knowledge-api`, `knowledge-worker`, `knowledge-migrate` and the one-off `knowledge-import`. |
-| `ghcr.io/mohamhossam/knowledge-web` | the same release, same tag | `knowledge-web`: nginx serving the knowledge portal's browser app under `/knowledge/`. |
+| `requirement-platform/web` | `deploy/web/Dockerfile` | nginx serving the built browser app and proxying `/api/` to the API. |
 
 Both images run as non-root users on read-only root filesystems. The backend
 image installs dependencies from `uv.lock` (`uv sync --locked --no-dev`).
@@ -33,22 +33,16 @@ image installs dependencies from `uv.lock` (`uv sync --locked --no-dev`).
   non-zero when a worker stops being healthy, and the restart policy replaces it.
 - **Migrate.** Runs to completion before the API and worker start. Migrations
   never run on application boot.
-- **The knowledge service.** `knowledge-api` serves HTTP only, and
-  `knowledge-worker` runs library ingestion and catalogue jobs; both scale like
-  their requirement counterparts. `knowledge-migrate` runs its migrations first.
-  It has its own database, `knowledge-postgres`, and shares ClamAV.
 - **Web.** The only published port (8080, or `WEB_PORT`).
   - Put TLS termination in front of it.
-  - The APIs, workers, both PostgreSQL servers, ClamAV and metrics ports stay on
-    the private network.
-  - `/internal` on either service answers 404 at the edge.
-  - `/knowledge/` is the knowledge portal's browser app, served by
-    `knowledge-web`. While that container is down, it answers 503 with a page
-    saying the portal is not available, not a bare 502.
-  - `CSP_IDENTITY_ORIGINS` reaches both apps: it is built into the `web`
-    image, and `knowledge-web` reads it when it starts (its image is published
-    once, so it cannot be built in). Set it in `deploy/.env` and restart
-    `knowledge-web` when the issuer changes.
+  - The API, worker, PostgreSQL, ClamAV and metrics ports stay on the private
+    network.
+  - `/internal` answers 404 at the edge.
+  - `/knowledge-api/` answers 404, and `/knowledge/` redirects old bookmarks to
+    the knowledge portal's own address for one release (see "Connecting the
+    knowledge portal").
+  - `CSP_IDENTITY_ORIGINS` is built into the `web` image. Set it in
+    `deploy/.env`.
   - nginx passes its `$request_id` as `X-Request-ID`, so one ID links the edge
     log, the API's log line and any error body the browser receives.
 
@@ -63,30 +57,18 @@ stored in an image layer:
 export KERNEL_READ_TOKEN=...   # Contents: read-only on platform-kernel
 ```
 
-The knowledge service's image is private on ghcr.io. Sign in once with a token
-that can read packages:
-
-```bash
-echo "$GHCR_READ_TOKEN" | docker login ghcr.io -u <github-user> --password-stdin
-```
-
 Compose reads its own variables from the shell or from `deploy/.env`
 (git-ignored). Generate each secret, for example with `openssl rand -hex 32`:
 
 ```bash
 # deploy/.env
 POSTGRES_PASSWORD=...              # requirement work's database
-KNOWLEDGE_POSTGRES_PASSWORD=...    # the knowledge service's database
-REQUIREMENT_SERVICE_TOKEN=...      # 32+ characters; requirement work presents it
-KNOWLEDGE_SERVICE_TOKEN=...        # 32+ characters; the knowledge service presents it
-KNOWLEDGE_IMAGE_TAG=v0.1.0         # a knowledge-portal release
 CSP_IDENTITY_ORIGINS=https://login.example.com   # the OIDC issuer origin
+KNOWLEDGE_PORTAL_URL=https://knowledge.example.com/knowledge/   # optional; ends in /
 ```
 
 ```bash
 cp deploy/production.env.example deploy/production.env   # fill in every blank; git-ignored
-cp deploy/knowledge.env.example deploy/knowledge.env     # fill in every blank; git-ignored
-docker compose -f deploy/compose.production.yaml pull knowledge-api knowledge-web
 docker compose -f deploy/compose.production.yaml build
 docker compose -f deploy/compose.production.yaml run --rm maintenance
 docker compose -f deploy/compose.production.yaml up -d
@@ -103,21 +85,11 @@ image when the issuer changes.
 
 ## Moving knowledge from an earlier system
 
-A new install starts with an empty library and the knowledge service's initial
-catalogue; skip this section. To carry over an earlier system's library and
-catalogues, restore its database backup into this platform's requirements
-database first (the earlier system's own database is never written). Then:
-
-```bash
-docker compose -f deploy/compose.production.yaml run --rm maintenance
-docker compose -f deploy/compose.production.yaml run --rm knowledge-import
-```
-
-`maintenance` runs requirement work's migrations, which move attachments out of
-the library tables. `knowledge-import` copies the library, the architecture and
-squad catalogues and their blobs into the knowledge database, keeping every id,
-then compares every table (`--verify`). It is safe to repeat. Run it before the
-APIs and workers start.
+A new install starts with an empty library; skip this section. The import that copies an
+earlier system's library and catalogues into the knowledge database ran beside the knowledge
+service this manifest used to bundle. Run it with requirement-portal's last release before the
+cutover (its `knowledge-import` service), then move the knowledge database to the knowledge
+portal's own deployment (see "Moving to a separate knowledge portal").
 
 ## Dropping the moved knowledge tables
 
@@ -128,10 +100,12 @@ here reads or writes them.
 
 A database moved from an earlier system keeps them all while any holds rows, so
 `knowledge-import` can copy them. Once it has finished, drop them, with the
-platform stopped:
+platform stopped. `--knowledge-database-url` names the knowledge portal's database, at an
+address this container reaches:
 
 ```bash
-docker compose -f deploy/compose.production.yaml run --rm drop-knowledge-tables
+docker compose -f deploy/compose.production.yaml run --rm drop-knowledge-tables \
+  --knowledge-database-url=postgresql://knowledge:...@knowledge-db.internal:5432/smb_knowledge
 ```
 
 It checks every table first and drops all of them or none. An empty table is
@@ -139,11 +113,7 @@ dropped. A table holding rows is dropped only when the knowledge database holds
 an identical copy (the same row count and content checksum); otherwise the
 command lists what would be lost, drops nothing and exits non-zero. Tables
 already gone are skipped, so it is safe to repeat. To see the report without
-dropping anything:
-
-```bash
-docker compose -f deploy/compose.production.yaml run --rm drop-knowledge-tables --dry-run
-```
+dropping anything, add `--dry-run`.
 
 ## Knowledge admins
 
@@ -151,14 +121,13 @@ Only actors with the `knowledge_admin` role open the knowledge portal, and only
 they see the link to it in requirement work. Everyone else keeps the read-only
 passage and evidence views.
 
-- **Keycloak** (`deploy/keycloak/`): add the person to the `knowledge-admins`
-  group. The realm puts realm roles in each access token's `roles` claim
-  (`OIDC_ROLES_CLAIM`, default `roles`), for both browser clients:
-  `requirement-spa` (audience `requirement-api`) and `knowledge-spa` (audience
-  `knowledge-api`, signing in under `/knowledge/`). Set `KNOWLEDGE_APP_ORIGIN`
-  when the portal is served from another origin than requirement work.
+- **Keycloak:** the knowledge portal defines its client, audience, roles and groups in its own
+  repository (`deploy/keycloak/`) and adds them to the shared realm (ADR-0104); this realm
+  file holds only requirement work's. Add the person to the `knowledge-admins` group there.
+  `requirement-spa` puts realm roles in each access token's `roles` claim
+  (`OIDC_ROLES_CLAIM`, default `roles`), so the link follows the same group.
 - **Another identity provider:** issue `knowledge_admin` in the claim
-  `OIDC_ROLES_CLAIM` names, and register a second public client for the portal.
+  `OIDC_ROLES_CLAIM` names.
 - **Offline (fake identity):** Amina Owner and Ravi Reviewer are knowledge
   admins in both portals; Omar Observer is not.
 
@@ -189,7 +158,6 @@ every backend container (`api`, `worker`, `migrate`, `maintenance`,
 | Host directory | Default | Mounted at | Setting that names the file |
 |---|---|---|---|
 | `LLM_CONFIG_DIR` | `config/` | `/app/config` | `LLM_CONFIG_PATH=/app/config/llm.yaml`, only when you use model profiles |
-| `KNOWLEDGE_LLM_CONFIG_DIR` | `config/` | `/app/config` in the knowledge containers | the same, in `deploy/knowledge.env` |
 
 - **Model profiles.** The default mounts the repository's `config/`. To keep
   your own profiles outside the checkout, set `LLM_CONFIG_DIR`. Setting
@@ -215,15 +183,37 @@ docker compose -f deploy/compose.production.yaml build
 docker compose -f deploy/compose.production.yaml up -d
 ```
 
-To move to a knowledge-portal release, change `KNOWLEDGE_IMAGE_TAG` and
-`pull knowledge-api knowledge-web` first. `up` re-runs `migrate` and `knowledge-migrate`
-before recreating the APIs and workers. Run
+`up` re-runs `migrate` before recreating the API and worker. Run
 `maintenance` again only when a release's notes require it, and follow
 `production-readiness-maintenance.md`: stop the API and every worker first, and
 never run it against live traffic.
 
 New migrations are named `YYYYMMDDHHMM_description.sql` (UTC); see
 `WORKSPACE.md`.
+
+### Moving to a separate knowledge portal
+
+Releases before ADR-0104's cutover ran the knowledge portal in this manifest, as `knowledge-*`
+containers behind this edge. This release removes them. Before upgrading:
+
+1. Stand up the knowledge portal from its own repository, `v0.2.0` or later, restoring this
+   deployment's knowledge database into it (knowledge-portal's `docs/operations/deployment.md`,
+   "Moving over from requirement-portal's deployment"). Add its sign-in entities to the realm
+   with its `deploy/keycloak/apply.py`. People sign in to it again once.
+2. Set `KNOWLEDGE_API_BASE_URL` in `production.env` and move the two service tokens there
+   from `deploy/.env` (see "Connecting the knowledge portal"). Set `KNOWLEDGE_PORTAL_URL` in
+   `deploy/.env` to the portal's address.
+3. Upgrade, removing the old containers:
+
+   ```bash
+   docker compose -f deploy/compose.production.yaml -f deploy/compose.peer.yaml up -d --build --remove-orphans
+   ```
+
+4. Keep the old `requirement-platform_knowledge_postgres_data` volume, and a backup of it,
+   until the knowledge portal has run cleanly; then remove it with `docker volume rm`.
+
+Keycloak keeps the knowledge portal's client, roles and groups it already holds: removing them
+from this realm file changes only new realms.
 
 ## Retention
 
@@ -245,7 +235,6 @@ newest 100, so their cost does not grow with a workspace's age.
 |---|---|
 | `GET /api/health` | The process is serving HTTP. |
 | `GET /api/ready` | The API accepts requests, the schema is at the newest packaged migration, the maintenance marker exists, and (when the API runs them) its background workers are healthy. The compose healthcheck uses it. |
-| `GET /knowledge-api/ready` | The same for the knowledge service; `web` waits for both. |
 
 ## Logs
 
@@ -296,9 +285,9 @@ Suggested alerts:
 `deploy/compose.monitoring.yaml` is an optional overlay that collects and
 shows these metrics. It adds two containers:
 
-- **Prometheus** scrapes every `api`, `worker`, `knowledge-api` and
-  `knowledge-worker` container through Docker's DNS, so `--scale` needs no
-  configuration change. The dashboard shows requirement work. It evaluates the alerts
+- **Prometheus** scrapes every `api` and `worker` container through Docker's
+  DNS, so `--scale` needs no configuration change. The knowledge portal's
+  exporters belong to its own deployment. It evaluates the alerts
   above (`deploy/monitoring/prometheus/alerts.yml`) and keeps 15 days of data
   (`PROMETHEUS_RETENTION`). It is not published.
 - **Grafana** opens on the provisioned **Requirement AI — overview**
@@ -317,7 +306,7 @@ Pass both `-f` files to every command for these containers (`ps`, `logs`,
 preinstaller off, so it uses the plugins in the pinned image and never updates them online.
 `tests/architecture/test_monitoring_metrics.py`
 fails when a panel or alert names a metric the application does not export,
-and CI starts the overlay and checks that all four exporters are scraped.
+and CI starts the overlay and checks that both exporters are scraped.
 
 Before relying on it in production:
 
@@ -361,23 +350,39 @@ The knowledge service reads a few things from this service over `/internal`
 
 - **Off by default.** Every `/internal` path answers 404 until
   `KNOWLEDGE_SERVICE_TOKEN` or `KNOWLEDGE_SERVICE_CLIENT_ID` is set (see "Service
-  credentials"). The reference deployment sets the token, from `deploy/.env`.
-- **Turning it on.** Set it to a random secret of 32 characters or more, and give the same
-  value to the knowledge service. The manifest passes both tokens to both services. Requests must then carry `Authorization: Bearer <token>`;
-  no user sign-in is involved.
-- **Never public.** The bundled nginx answers 404 for `/api/internal` and
-  `/knowledge-api/internal` whatever the tokens hold, and the CI deployment job checks both.
+  credentials").
+- **Turning it on.** Set it in `production.env` to a random secret of 32 characters or more,
+  and give the same value to the knowledge service. Requests must then carry
+  `Authorization: Bearer <token>`; no user sign-in is involved.
+- **Never public.** The bundled nginx answers 404 for `/api/internal` whatever the tokens
+  hold, and the CI deployment job checks it, and the knowledge portal's edge.
 
-## Reaching the knowledge service
+## Connecting the knowledge portal
 
 This service reads from the knowledge service over its internal API (ADR-0099): library search
 and retrieval, architecture matching, the knowledge event feed, and the read-only viewers'
-passages and evidence.
+passages and evidence. The link is optional (ADR-0104), and set in `production.env`.
 
-- **Configure both or neither:** `KNOWLEDGE_API_BASE_URL` (for example
-  `http://knowledge-api:8000`) and `REQUIREMENT_SERVICE_TOKEN`, the secret this service
-  presents. It is 32+ characters, and the knowledge service holds the same value. Startup
-  refuses one without the other.
+- **Configure both or neither:** `KNOWLEDGE_API_BASE_URL` and `REQUIREMENT_SERVICE_TOKEN`, the
+  secret this service presents. It is 32+ characters, and the knowledge service holds the same
+  value. Startup refuses one without the other.
+- **On one Docker host,** layer `deploy/compose.peer.yaml` over the manifest. It joins `api`
+  and `worker` to the external network `platform-internal` (`PEER_NETWORK`), where `api` is
+  `requirement-api`; the knowledge portal joins it with its own overlay as `knowledge-api`.
+  Set `KNOWLEDGE_API_BASE_URL=http://knowledge-api:8000`:
+
+  ```bash
+  docker network create platform-internal          # once per host
+  docker compose -f deploy/compose.production.yaml -f deploy/compose.peer.yaml up -d
+  ```
+
+  On separate hosts, skip the overlay and point `KNOWLEDGE_API_BASE_URL` at a private address
+  that reaches the knowledge API directly, never its edge.
+- **Links.** `KNOWLEDGE_PORTAL_URL` in `deploy/.env` is the knowledge portal's address, ending
+  in `/` (for example `https://knowledge.example.com/knowledge/`). It is built into the web
+  image for the links to it, and read when `web` starts to redirect old `/knowledge/`
+  bookmarks there, keeping the rest of the path. Unset, the links are hidden and `/knowledge/`
+  answers 404. Rebuild `web` when it changes.
 - **Or a client of its own** in place of the token: see "Service credentials".
 - **Neither set:** deterministic fakes stand in, with no library, one empty catalogue version
   (`offline-catalogue`), and nothing for the viewers to show. Production may run this way too
@@ -416,8 +421,7 @@ them against the issuer's signing keys and holds no secret at all.
    knowledge service sets its own client's ID and secret, and `REQUIREMENT_SERVICE_CLIENT_ID`.
 3. With client credentials, they are used in place of `REQUIREMENT_SERVICE_TOKEN`. `/internal`
    admits either `KNOWLEDGE_SERVICE_TOKEN` or a granted token while both are set, so the two
-   services can move over one at a time. Remove the shared tokens once both use their clients;
-   until the cutover, the reference manifest still sets them for the bundled knowledge service.
+   services can move over one at a time. Remove the shared tokens once both use their clients.
 
 Tokens are renewed before they expire. If the issuer cannot be reached, calls to the knowledge
 service report it as unavailable, and `/internal` answers 503 to a granted token it cannot check.
@@ -441,9 +445,8 @@ code changed (ADR-0077).
 - **OCR and office previews.** The image omits the optional `document-ocr` extra
   (docling) and LibreOffice. Extend the image if you need
   `LIBRARY_OCR_ARTIFACTS_PATH` or `DOCUMENT_OFFICE_PREVIEW_EXECUTABLE`.
-- **Backups.** Back up the `postgres_data` and `knowledge_postgres_data`
-  volumes, or use managed PostgreSQL servers and point each service's
-  `DATABASE_URL` at its own.
+- **Backups.** Back up the `postgres_data` volume, or use a managed PostgreSQL
+  server and point `DATABASE_URL` at it.
 
 - **Identity.** `deploy/keycloak/` is a development identity provider, not a
   production one.

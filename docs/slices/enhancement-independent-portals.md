@@ -62,3 +62,29 @@ work's own roles in place of the knowledge portal's, with no transition.
   for are recorded against the calling service (`service:knowledge`), keeping the admin's name as
   display text only (`interfaces/api/routes/internal.py`). The `actor_id` those requests carry is
   still accepted, so the internal contract is unchanged, but it is not recorded.
+
+## Cutover here
+
+Requirement work's manifest stops running the knowledge portal. It merges once the knowledge
+portal runs from its own repository (`v0.2.0` or later), with its database restored there.
+
+- **Manifest.** `deploy/compose.production.yaml` has no `knowledge-*` services, volume or
+  settings file (`deploy/knowledge.env.example` is gone). `KNOWLEDGE_API_BASE_URL` and the
+  service tokens move to `production.env`, optional. `drop-knowledge-tables` takes the
+  knowledge database's address as an argument. `knowledge-import` stays with the last release
+  that bundled the portal.
+- **Peer network.** `deploy/compose.peer.yaml` joins `api` and `worker` to the external
+  network `platform-internal`, where `api` is `requirement-api`; knowledge-portal's overlay of
+  the same name joins it as `knowledge-api`.
+- **Edge.** `/knowledge-api/` answers 404. `/knowledge/` redirects to `KNOWLEDGE_PORTAL_URL`
+  with the rest of the path for one release, and answers 404 when it is unset. The web image
+  refuses a value that is not an http(s) URL ending in `/`, since the path is appended. The
+  same setting is built in for the links; the image's default is now empty, hiding them.
+- **Realm.** `knowledge-spa`, the `knowledge_*` roles and the `knowledge-*` groups leave
+  `deploy/keycloak/realm-requirement-ai.json`. A realm that already holds them keeps them.
+- **Monitoring.** Prometheus scrapes requirement work's exporters only.
+- **CI.** The deployment job checks out knowledge-portal at its pinned release, starts it from
+  that repository's manifest and peer overlay, and runs the cross-portal checks through both
+  edges (decided 2026-10-09 by the repository owner).
+- **Not in this change.** Retiring the old knowledge volume, which waits on a quiet period
+  and a backup, and Phase 6.

@@ -1,11 +1,13 @@
 import { type APIRequestContext, expect, type Page, test } from "@playwright/test";
 
 /*
- * The platform as one product (ADR-0098, ADR-0099): requirement work and the knowledge portal
- * behind one edge, offline with fake identity. A knowledge admin publishes a library passage in
- * the knowledge portal; anyone in requirement work reads it as a citation, read-only; only
- * knowledge admins cross into the portal.
+ * The two portals together (ADR-0099, ADR-0104): requirement work and the knowledge portal, each
+ * behind its own edge, offline with fake identity. A knowledge admin publishes a library passage
+ * in the knowledge portal; anyone in requirement work reads it as a citation, read-only; only
+ * knowledge admins cross into the portal, at its own address.
  */
+
+const KNOWLEDGE = process.env.KNOWLEDGE_URL ?? "http://127.0.0.1:8090";
 
 const ADMIN = { "X-Fake-Actor-Id": "fake-owner" };
 const TEXT = "Fibre coverage is checked before every activation.";
@@ -13,7 +15,7 @@ const TEXT = "Fibre coverage is checked before every activation.";
 type Citation = { document: string; publication: string; version: string; revision: string; passage: string };
 
 async function published(request: APIRequestContext): Promise<Citation> {
-  const uploaded = await request.post("/knowledge-api/library/ingestions", {
+  const uploaded = await request.post(`${KNOWLEDGE}/knowledge-api/library/ingestions`, {
     headers: ADMIN,
     multipart: {
       title: "Platform citation check",
@@ -22,7 +24,7 @@ async function published(request: APIRequestContext): Promise<Citation> {
     },
   });
   expect(uploaded.status()).toBe(202);
-  const path = `/knowledge-api/library/documents/${(await uploaded.json()).id}`;
+  const path = `${KNOWLEDGE}/knowledge-api/library/documents/${(await uploaded.json()).id}`;
   const read = async () => (await (await request.get(path, { headers: ADMIN })).json());
   // Uploads are scanned, then read.
   await expect.poll(async () => (await read()).versions[0].stage, { timeout: 300_000 }).toBe("ready_for_review");
@@ -86,14 +88,14 @@ test("a knowledge admin crosses into the knowledge portal and finds the document
   await page.goto("/documents");
   await page.getByRole("link", { name: "Open knowledge portal" }).click();
 
-  await expect(page).toHaveURL(/\/knowledge\/?$/);
-  await page.goto("/knowledge/library");
+  await expect(page).toHaveURL((url) => url.origin === new URL(KNOWLEDGE).origin && /^\/knowledge\/?$/.test(url.pathname));
+  await page.goto(`${KNOWLEDGE}/knowledge/library`);
   await expect(page.getByText("Platform citation check").first()).toBeVisible();
 });
 
 test("the knowledge portal turns away someone who is not a knowledge admin", async ({ page }) => {
   await as(page, "fake-observer");
-  await page.goto("/knowledge/library");
+  await page.goto(`${KNOWLEDGE}/knowledge/library`);
 
   await expect(page.getByRole("heading", { level: 1, name: "This portal is for knowledge admins" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Go to Requirement AI" })).toBeVisible();

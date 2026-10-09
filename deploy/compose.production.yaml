@@ -1,27 +1,21 @@
-# Reference deployment of the whole platform: one host, every process in its
-# own container. Requirement work is built here; the knowledge service runs the
-# image knowledge-portal publishes, pinned by tag (ADR-0098, ADR-0099).
+# Reference deployment of requirement work: one host, every process in its own
+# container, built from this repository. The knowledge portal deploys on its
+# own, from knowledge-portal's repository (ADR-0104).
 #
 #   cp deploy/production.env.example deploy/production.env   # then fill it in
-#   cp deploy/knowledge.env.example deploy/knowledge.env     # then fill it in
 #   docker compose -f deploy/compose.production.yaml up -d --build
 #
 # The browser reaches only `web` (port 8080; put TLS in front of it). It serves
-# requirement work at / and /api/, and proxies the knowledge portal's app at
-# /knowledge/ (`knowledge-web`) and its API at /knowledge-api/. The APIs, workers, databases, scanner and metrics ports stay
-# on the private network, and neither service's /internal routes pass the edge.
-# See docs/operations/deployment.md for the process model, secrets and scaling.
+# the app at / and the API at /api/. The API, worker, database, scanner and
+# metrics ports stay on the private network, and /internal never passes the
+# edge. The knowledge portal is optional: with KNOWLEDGE_API_BASE_URL unset in
+# production.env, requirement work runs alone; deploy/compose.peer.yaml
+# connects the two on one host. See docs/operations/deployment.md for the
+# process model, secrets and scaling.
 
 # Not `requirement-ai`: the earlier single-repository deployment uses that name,
 # and the two may run side by side on one host.
 name: requirement-platform
-
-# The two services call each other's /internal routes (ADR-0099). Each token is
-# named after the service that presents it and is at least 32 characters; both
-# services hold both, one to present and one to check.
-x-service-tokens: &service-tokens
-  REQUIREMENT_SERVICE_TOKEN: ${REQUIREMENT_SERVICE_TOKEN:?set REQUIREMENT_SERVICE_TOKEN}
-  KNOWLEDGE_SERVICE_TOKEN: ${KNOWLEDGE_SERVICE_TOKEN:?set KNOWLEDGE_SERVICE_TOKEN}
 
 x-backend: &backend
   image: requirement-platform/api:${IMAGE_TAG:-local}
@@ -42,8 +36,6 @@ x-backend: &backend
     LOG_FORMAT: json
     METRICS_HOST: 0.0.0.0
     METRICS_PORT: "9464"
-    <<: *service-tokens
-    KNOWLEDGE_API_BASE_URL: http://knowledge-api:8000
   restart: unless-stopped
   read_only: true
   tmpfs:
@@ -55,40 +47,6 @@ x-backend: &backend
     # Model profiles: LLM_CONFIG_PATH=/app/config/llm.yaml
     - type: bind
       source: ${LLM_CONFIG_DIR:-../config}
-      target: /app/config
-      read_only: true
-      bind:
-        create_host_path: false
-  security_opt:
-    - no-new-privileges:true
-
-# The knowledge service: library, architecture catalogue and squad catalogue,
-# with its own database. One image runs every process, chosen by command. Pin
-# KNOWLEDGE_IMAGE_TAG to a knowledge-portal release; pulling it from ghcr.io
-# needs a `docker login ghcr.io` with read access to the package.
-x-knowledge: &knowledge
-  image: ghcr.io/mohamhossam/knowledge-api:${KNOWLEDGE_IMAGE_TAG:-v0.1.0}
-  env_file:
-    - path: knowledge.env
-      required: true
-  environment: &knowledge-environment
-    PERSISTENCE_PROVIDER: postgres
-    DATABASE_URL: postgresql://knowledge:${KNOWLEDGE_POSTGRES_PASSWORD:?set KNOWLEDGE_POSTGRES_PASSWORD}@knowledge-postgres:5432/smb_knowledge
-    LIBRARY_SCANNER_HOST: clamav
-    LIBRARY_SCANNER_PORT: "3310"
-    LOG_FORMAT: json
-    METRICS_HOST: 0.0.0.0
-    METRICS_PORT: "9464"
-    <<: *service-tokens
-    REQUIREMENT_API_BASE_URL: http://api:8000
-  restart: unless-stopped
-  read_only: true
-  tmpfs:
-    - /tmp
-  # Its model profiles, as for requirement work: LLM_CONFIG_PATH=/app/config/llm.yaml
-  volumes:
-    - type: bind
-      source: ${KNOWLEDGE_LLM_CONFIG_DIR:-../config}
       target: /app/config
       read_only: true
       bind:
@@ -112,7 +70,7 @@ services:
       retries: 20
     restart: unless-stopped
 
-  # Uploads to either service are scanned before extraction. Loading signatures takes a
+  # Uploads are scanned before extraction. Loading signatures takes a
   # few minutes on first start; ingestion waits, the rest of the app does not.
   clamav:
     image: clamav/clamav:1.5@sha256:ebec5bc138401b36ae987caa1a3fa3c3b2a21ed3d51f0bfa5852825e663e67b0
@@ -153,26 +111,21 @@ services:
       migrate:
         condition: service_completed_successfully
 
-  # Once, offline, after knowledge-import: drops the library, catalogue and event
-  # tables the knowledge service now owns (docs/operations/deployment.md).
-  # `migrate` already drops them while all are empty, so only a moved system
-  # needs this. A table holding rows is dropped only if the knowledge database
-  # holds an identical copy; otherwise nothing is dropped. Arguments after the service name are appended, so
-  # `... run --rm drop-knowledge-tables --dry-run` reports without dropping:
-  #   docker compose -f deploy/compose.production.yaml run --rm drop-knowledge-tables
+  # Once, offline: drops the library, catalogue and event tables the knowledge
+  # portal owns (docs/operations/deployment.md). `migrate` already drops them
+  # while all are empty, so only a moved system needs this. A table holding rows
+  # is dropped only if the knowledge database holds an identical copy, named by
+  # --knowledge-database-url; otherwise nothing is dropped. Arguments after the
+  # service name are appended:
+  #   docker compose -f deploy/compose.production.yaml run --rm drop-knowledge-tables \
+  #     --knowledge-database-url=postgresql://... --dry-run
   drop-knowledge-tables:
     <<: *backend
-    entrypoint:
-      - python
-      - -m
-      - smb_requirement_agent.interfaces.drop_knowledge_tables
-      - --knowledge-database-url=postgresql://knowledge:${KNOWLEDGE_POSTGRES_PASSWORD:?set KNOWLEDGE_POSTGRES_PASSWORD}@knowledge-postgres:5432/smb_knowledge
+    entrypoint: ["python", "-m", "smb_requirement_agent.interfaces.drop_knowledge_tables"]
     restart: "no"
     profiles: ["drop-knowledge-tables"]
     depends_on:
       migrate:
-        condition: service_completed_successfully
-      knowledge-migrate:
         condition: service_completed_successfully
 
   api:
@@ -213,105 +166,6 @@ services:
       migrate:
         condition: service_completed_successfully
 
-  knowledge-postgres:
-    image: pgvector/pgvector:pg17@sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f
-    environment:
-      POSTGRES_DB: smb_knowledge
-      POSTGRES_USER: knowledge
-      POSTGRES_PASSWORD: ${KNOWLEDGE_POSTGRES_PASSWORD:?set KNOWLEDGE_POSTGRES_PASSWORD}
-    volumes:
-      - knowledge_postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U knowledge -d smb_knowledge"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
-    restart: unless-stopped
-
-  knowledge-migrate:
-    <<: *knowledge
-    command: ["python", "-m", "knowledge_portal.infrastructure.persistence.migrate"]
-    restart: "no"
-    depends_on:
-      knowledge-postgres:
-        condition: service_healthy
-
-  # Once, when moving an earlier system's knowledge over (docs/operations/deployment.md):
-  #   docker compose -f deploy/compose.production.yaml run --rm knowledge-import
-  # Copies the library and catalogues out of this platform's requirements
-  # database, keeping every id, then compares every table. Safe to repeat.
-  knowledge-import:
-    <<: *knowledge
-    command:
-      - knowledge-portal
-      - import
-      - --source-database-url=postgresql://smb:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/smb_requirements
-      - --verify
-    restart: "no"
-    profiles: ["knowledge-import"]
-    depends_on:
-      migrate:
-        condition: service_completed_successfully
-      knowledge-migrate:
-        condition: service_completed_successfully
-
-  knowledge-api:
-    <<: *knowledge
-    command:
-      - python
-      - -m
-      - knowledge_portal.interfaces.api.serve
-      - --host=0.0.0.0
-      - --port=8000
-      - --forwarded-allow-ips=*
-    environment:
-      <<: *knowledge-environment
-      # HTTP only; background work runs in `knowledge-worker`.
-      API_BACKGROUND_WORKERS: "false"
-    healthcheck:
-      test:
-        - CMD
-        - python
-        - -c
-        - "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/ready', timeout=3)"
-      interval: 10s
-      timeout: 5s
-      retries: 6
-      start_period: 20s
-    depends_on:
-      knowledge-migrate:
-        condition: service_completed_successfully
-
-  # Library ingestion and catalogue jobs. Leased in PostgreSQL, so it scales
-  # with `--scale knowledge-worker=N` like `worker`.
-  knowledge-worker:
-    <<: *knowledge
-    command: ["python", "-m", "knowledge_portal.interfaces.worker"]
-    stop_grace_period: 3m
-    depends_on:
-      knowledge-migrate:
-        condition: service_completed_successfully
-
-  # The knowledge portal's browser app: nginx serving /knowledge/, from the same
-  # knowledge-portal release as the API. The issuer origins reach its page's
-  # Content-Security-Policy when the container starts.
-  knowledge-web:
-    image: ghcr.io/mohamhossam/knowledge-web:${KNOWLEDGE_IMAGE_TAG:-v0.1.0}
-    environment:
-      CSP_IDENTITY_ORIGINS: ${CSP_IDENTITY_ORIGINS:-}
-    restart: unless-stopped
-    read_only: true
-    tmpfs:
-      - /tmp:uid=101,gid=101
-      - /etc/nginx/conf.d:uid=101,gid=101
-    security_opt:
-      - no-new-privileges:true
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
-      interval: 10s
-      timeout: 3s
-      retries: 6
-
   web:
     image: requirement-platform/web:${IMAGE_TAG:-local}
     build:
@@ -319,6 +173,11 @@ services:
       dockerfile: deploy/web/Dockerfile
       args:
         CSP_IDENTITY_ORIGINS: ${CSP_IDENTITY_ORIGINS:-}
+        # Where the knowledge portal is, for its links; empty hides them (ADR-0104).
+        VITE_KNOWLEDGE_PORTAL_URL: ${KNOWLEDGE_PORTAL_URL:-}
+    environment:
+      # Old /knowledge/ bookmarks redirect here for one release; empty answers 404.
+      KNOWLEDGE_PORTAL_URL: ${KNOWLEDGE_PORTAL_URL:-}
     # WEB_PORT moves it off 8080, e.g. beside the earlier deployment.
     ports:
       - "${WEB_PORT:-8080}:8080"
@@ -333,10 +192,6 @@ services:
     depends_on:
       api:
         condition: service_healthy
-      knowledge-api:
-        condition: service_healthy
-      knowledge-web:
-        condition: service_healthy
 
 # A fine-grained, read-only token for mohamhossam/platform-kernel, used only while
 # building the backend image. Export KERNEL_READ_TOKEN before `docker compose build`.
@@ -346,5 +201,4 @@ secrets:
 
 volumes:
   postgres_data:
-  knowledge_postgres_data:
   clamav_data:
