@@ -259,12 +259,8 @@ jobs:
           done
 
       - name: First install, then start both portals
-        # A fresh install's migrations leave no moved knowledge table, so the
-        # guarded drop finds nothing to do and needs no knowledge database.
         run: |
           $COMPOSE run --rm maintenance
-          $COMPOSE run --rm drop-knowledge-tables --dry-run
-          $COMPOSE run --rm drop-knowledge-tables
           # The scanners load their signatures while the checks below run.
           $COMPOSE up -d clamav
           $KNOWLEDGE up -d clamav

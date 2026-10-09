@@ -2,9 +2,8 @@
 
 The library, the catalogues, their blobs and the event outbox belong to the knowledge
 service. Requirement code reaches them only through its ports, over HTTP. Earlier
-migrations still create the tables here, and the guarded drop command names them to drop
-them; no other code may name one, so no requirement transaction reads, writes or locks a
-knowledge row.
+migrations still create the tables here, and the last two drop them again; no code may
+name one, so no requirement transaction reads, writes or locks a knowledge row.
 """
 
 from __future__ import annotations
@@ -13,13 +12,10 @@ import ast
 import re
 from pathlib import Path
 
-from smb_requirement_agent.infrastructure.persistence import moved_knowledge_tables
-from smb_requirement_agent.infrastructure.persistence.moved_knowledge_tables import MOVED_TABLES
+from tests.knowledge_tables import KNOWLEDGE_TABLES
 
 SOURCE = Path(__file__).resolve().parents[2] / "src" / "smb_requirement_agent"
-# The drop command's own list of what it drops.
-ALLOWED = {Path(moved_knowledge_tables.__file__).resolve()}
-NAMED = re.compile(r"\b(" + "|".join(MOVED_TABLES) + r")\b")
+NAMED = re.compile(r"\b(" + "|".join(KNOWLEDGE_TABLES) + r")\b")
 
 
 def _named_tables(path: Path) -> list[str]:
@@ -35,12 +31,7 @@ def _named_tables(path: Path) -> list[str]:
 
 def test_no_requirement_code_names_a_knowledge_table() -> None:
     # Migrations are SQL files, so they are not read here.
-    found = [
-        line
-        for path in sorted(SOURCE.rglob("*.py"))
-        if path.resolve() not in ALLOWED
-        for line in _named_tables(path)
-    ]
+    found = [line for path in sorted(SOURCE.rglob("*.py")) for line in _named_tables(path)]
 
     assert found == []
 

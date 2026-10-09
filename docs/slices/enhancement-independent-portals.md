@@ -104,3 +104,18 @@ the production knowledge import.
   release (`KNOWLEDGE_IMAGE_TAG`) ships, so moving the pin means copying its contract too.
 - **CI.** The deployment job runs the knowledge portal from its own repository (see
   "Cutover here"), so the planned contract stub is not needed.
+
+## Phase 6 here
+
+Started 2026-10-09, once the repository owner confirmed that all 18 knowledge tables in
+production are empty (`drop-knowledge-tables --dry-run`).
+
+- **Tables.** The existing last migration drops them on the next upgrade, since all are
+  empty. A new final migration, `202610091200_require_knowledge_tables_gone.sql`, stops the
+  upgrade while any is left, so no database keeps rows the removed commands can no longer
+  move. `docs/operations/deployment.md`, "Knowledge tables left behind", gives the way out.
+- **Commands.** `drop-knowledge-tables` (its module, `moved_knowledge_tables.py`, the compose
+  service and the CI steps) is gone, and so is knowledge-portal's `import` command. Their last
+  versions are requirement-portal `d3ee708` and knowledge-portal `v0.2.0`.
+- **Tests.** The table list and the two migration names live in `tests/knowledge_tables.py`;
+  the architecture test now forbids naming a knowledge table anywhere in requirement work.

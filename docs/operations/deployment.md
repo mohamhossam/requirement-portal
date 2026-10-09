@@ -83,37 +83,26 @@ seconds.
 is missing, the browser blocks the OIDC sign-in and token calls. Rebuild the web
 image when the issuer changes.
 
-## Moving knowledge from an earlier system
+## Knowledge tables left behind
 
-A new install starts with an empty library; skip this section. The import that copies an
-earlier system's library and catalogues into the knowledge database ran beside the knowledge
-service this manifest used to bundle. Run it with requirement-portal's last release before the
-cutover (its `knowledge-import` service), then move the knowledge database to the knowledge
-portal's own deployment (see "Moving to a separate knowledge portal").
+Requirement work's earlier migrations create the library, catalogue and event tables the
+knowledge portal owns. The last two drop them again while every one is empty, and stop the
+upgrade if any is left (ADR-0104). A fresh install, or one whose tables were already moved,
+never sees this.
 
-## Dropping the moved knowledge tables
+An upgrade that stops with "Knowledge tables still hold rows" changes nothing: the upgrade
+runs in one transaction. Those rows were never copied to the knowledge portal. The commands
+that move them were removed with this check, so use the last versions that have them:
 
-A fresh install never keeps the library, catalogue and event tables the
-knowledge service now owns: requirement work's earlier migrations still create
-them, and its last migration drops them again while every one is empty. Nothing
-here reads or writes them.
-
-A database moved from an earlier system keeps them all while any holds rows, so
-`knowledge-import` can copy them. Once it has finished, drop them, with the
-platform stopped. `--knowledge-database-url` names the knowledge portal's database, at an
-address this container reaches:
-
-```bash
-docker compose -f deploy/compose.production.yaml run --rm drop-knowledge-tables \
-  --knowledge-database-url=postgresql://knowledge:...@knowledge-db.internal:5432/smb_knowledge
-```
-
-It checks every table first and drops all of them or none. An empty table is
-dropped. A table holding rows is dropped only when the knowledge database holds
-an identical copy (the same row count and content checksum); otherwise the
-command lists what would be lost, drops nothing and exits non-zero. Tables
-already gone are skipped, so it is safe to repeat. To see the report without
-dropping anything, add `--dry-run`.
+1. With knowledge-portal `v0.2.0`'s image, copy the rows into the knowledge portal's
+   database and compare every table:
+   `knowledge-portal import --source-database-url postgresql://…/requirements --verify`.
+2. Back up the requirements database.
+3. With requirement-portal at commit `d3ee708`, drop the tables. It drops all of them or
+   none, and a table holding rows only when the knowledge database holds an identical copy:
+   `docker compose -f deploy/compose.production.yaml run --rm drop-knowledge-tables
+   --knowledge-database-url=postgresql://…/smb_knowledge`.
+4. Upgrade again.
 
 ## Knowledge admins
 

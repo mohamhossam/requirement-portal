@@ -21,15 +21,13 @@ from psycopg.types.json import Jsonb
 from smb_kernel.persistence.connector import DirectPostgresConnector
 
 from smb_requirement_agent.infrastructure.persistence import migration_runner
-from smb_requirement_agent.infrastructure.persistence.moved_knowledge_tables import (
-    DROP_EMPTY_MIGRATION,
-)
 from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
 from smb_requirement_agent.requirements.application.errors import DocumentNotFoundError
 from smb_requirement_agent.requirements.domain.document.value_objects import DocumentVersionId
 from smb_requirement_agent.requirements.infrastructure.postgres_document_repository import (
     PostgresDocumentStorage,
 )
+from tests.knowledge_tables import KNOWLEDGE_TABLE_DROPS
 
 DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 pytestmark = pytest.mark.skipif(not DATABASE_URL, reason="TEST_DATABASE_URL is not configured")
@@ -61,7 +59,7 @@ def test_knowledge_blobs_move_and_requirement_blobs_stay(
 ) -> None:
     real = Path(migration_runner.MIGRATIONS)
     for path in real.glob("*.sql"):
-        if path.name not in {MOVING, DROP_EMPTY_MIGRATION}:
+        if path.name not in {MOVING, *KNOWLEDGE_TABLE_DROPS}:
             shutil.copy(path, tmp_path / path.name)
     monkeypatch.setattr(migration_runner, "MIGRATIONS", tmp_path)
     migration_runner.run_migrations(isolated_url)

@@ -77,22 +77,6 @@ def test_the_peer_overlay_names_requirement_work_on_an_external_network() -> Non
     assert network["name"] == "${PEER_NETWORK:-platform-internal}"
 
 
-def test_the_knowledge_tables_drop_only_on_request() -> None:
-    dropper = SERVICES["drop-knowledge-tables"]
-
-    assert dropper["profiles"] == ["drop-knowledge-tables"]
-    assert set(dropper["depends_on"]) == {"migrate"}
-    # An entrypoint, not a command, so `run --rm drop-knowledge-tables --dry-run`
-    # appends the flag, and the knowledge database's address, instead of
-    # replacing the command.
-    assert "command" not in dropper
-    assert dropper["entrypoint"] == [
-        "python",
-        "-m",
-        "smb_requirement_agent.interfaces.drop_knowledge_tables",
-    ]
-
-
 def test_the_edge_waits_only_for_requirement_work() -> None:
     assert SERVICES["web"]["depends_on"] == {"api": {"condition": "service_healthy"}}
 
