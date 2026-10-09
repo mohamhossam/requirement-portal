@@ -1,5 +1,6 @@
 """Slice 8A actor, ownership, assignment, and authorization behavior."""
 
+from collections.abc import Callable
 from dataclasses import replace
 from datetime import UTC, datetime
 from threading import Thread
@@ -11,6 +12,12 @@ from smb_kernel.identity.ports import IdentityCredential
 from smb_requirement_agent.application.errors import (
     AuthenticationRequiredError,
     IdentityProviderUnavailableError,
+)
+from smb_requirement_agent.identity.application.ports.identity import (
+    Actor,
+    AuthorizationError,
+    require_maintainer,
+    require_reader,
 )
 from smb_requirement_agent.identity.application.ports.requirement_access import (
     RequirementPermission,
@@ -420,3 +427,31 @@ def test_offline_personas_match_the_knowledge_portal_admins(client: TestClient) 
     }
 
     assert admins == {"fake-owner", "fake-reviewer"}
+
+
+@pytest.mark.parametrize(
+    ("roles", "reads", "maintains"),
+    [
+        ({"architecture_reader"}, True, False),
+        ({"architecture_maintainer"}, True, True),
+        # The knowledge portal's roles are its own and grant nothing here (ADR-0104).
+        ({"knowledge_reader"}, False, False),
+        ({"knowledge_maintainer"}, False, False),
+        ({"knowledge_admin"}, False, False),
+        (set(), False, False),
+    ],
+)
+def test_architecture_mapping_checks_its_own_roles(
+    roles: set[str], reads: bool, maintains: bool
+) -> None:
+    actor = Actor("someone", frozenset(roles))
+
+    def allowed(check: Callable[[Actor], None]) -> bool:
+        try:
+            check(actor)
+        except AuthorizationError:
+            return False
+        return True
+
+    assert allowed(require_reader) is reads
+    assert allowed(require_maintainer) is maintains

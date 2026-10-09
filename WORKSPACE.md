@@ -862,8 +862,8 @@ The architecture catalogue, its drafts, documents and published releases moved t
 - **The read-only views.** Cited library passages and architecture evidence open read-only here,
   fetched from the knowledge service. Curation stays in the knowledge portal, open to
   `knowledge_admin` only.
-- **The roles.** Assign `knowledge_reader` or `knowledge_maintainer` for architecture mapping;
-  maintainers inherit reader access.
+- **The roles.** Assign `architecture_reader` or `architecture_maintainer` for architecture
+  mapping; maintainers inherit reader access (ADR-0104).
 
 Mapping uses the configured models (`LLM_PROVIDER` or the model profiles: the `knowledge` task and
 the embedding), as ADR-0082 records. `LLM_PROVIDER=fake` and memory persistence remain the

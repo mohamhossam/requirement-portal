@@ -28,24 +28,46 @@ export interface PassageCitation {
  * deployment has no knowledge portal (ADR-0104). `VITE_KNOWLEDGE_PORTAL_URL` names it; unset,
  * it is the platform path `/knowledge/`, and set empty, every link to it is hidden.
  */
-export function knowledgePortalUrl(configured: string | undefined): string | null {
+export function knowledgePortalUrl(
+  configured: string | undefined,
+): string | null {
   if (configured === undefined) return "/knowledge/";
   const url = configured.trim();
   return url === "" ? null : url;
 }
 
-export const KNOWLEDGE_PORTAL_URL = knowledgePortalUrl(import.meta.env.VITE_KNOWLEDGE_PORTAL_URL);
-/** The role that opens the knowledge portal. */
-export const KNOWLEDGE_ADMIN_ROLE = "knowledge_admin";
+export const KNOWLEDGE_PORTAL_URL = knowledgePortalUrl(
+  import.meta.env.VITE_KNOWLEDGE_PORTAL_URL,
+);
+/**
+ * Who sees the links to the knowledge portal: people holding this role, which the portal
+ * itself defines (ADR-0104). `VITE_KNOWLEDGE_PORTAL_ROLE` names it; unset, it is the
+ * portal's `knowledge_admin`; empty, everyone signed in sees the links and the portal
+ * decides who gets in, as when it signs people in from another realm.
+ */
+export function knowledgePortalRole(
+  configured: string | undefined,
+): string | null {
+  if (configured === undefined) return "knowledge_admin";
+  const role = configured.trim();
+  return role === "" ? null : role;
+}
+
+export const KNOWLEDGE_ADMIN_ROLE = knowledgePortalRole(
+  import.meta.env.VITE_KNOWLEDGE_PORTAL_ROLE,
+);
 
 export const knowledgeApi = {
-  activeRelease: () => apiRequest<ActiveRelease | null>("/architecture/active-release"),
+  activeRelease: () =>
+    apiRequest<ActiveRelease | null>("/architecture/active-release"),
   evidence: (releaseId: string, chunkId: string) =>
     apiRequest<ArchitectureEvidence>(
       `/architecture-evidence/${encodeURIComponent(releaseId)}/${encodeURIComponent(chunkId)}`,
     ),
   passage: (citation: PassageCitation) =>
-    apiRequest<CitedPassage>(`/references/passage?${new URLSearchParams({ ...citation })}`),
+    apiRequest<CitedPassage>(
+      `/references/passage?${new URLSearchParams({ ...citation })}`,
+    ),
 };
 
 /** The in-app link to a cited passage's read-only view. */

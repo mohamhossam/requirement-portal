@@ -16,9 +16,12 @@ ARG VITE_API_BASE=/api
 # Where the knowledge portal is (ADR-0104): the platform path by default, an
 # absolute URL when it has its own host, or empty to hide every link to it.
 ARG VITE_KNOWLEDGE_PORTAL_URL=/knowledge/
+# Who sees those links: holders of this role, or everyone signed in when empty.
+ARG VITE_KNOWLEDGE_PORTAL_ROLE=knowledge_admin
 ARG CSP_IDENTITY_ORIGINS=
 ENV VITE_API_BASE=$VITE_API_BASE \
     VITE_KNOWLEDGE_PORTAL_URL=$VITE_KNOWLEDGE_PORTAL_URL \
+    VITE_KNOWLEDGE_PORTAL_ROLE=$VITE_KNOWLEDGE_PORTAL_ROLE \
     CSP_IDENTITY_ORIGINS=$CSP_IDENTITY_ORIGINS
 RUN npm run build
 
