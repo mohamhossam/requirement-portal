@@ -11,9 +11,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 PINNED = re.compile(r"^[\w./:-]+@sha256:[0-9a-f]{64}$")
-# The images this repository builds, tagged rather than pulled. The knowledge
-# portal's are pinned by its own deployment (ADR-0104).
-OWN_IMAGES = ("requirement-platform/",)
+# The images this repository builds, tagged rather than pulled; a release names
+# them by variable and tag (ADR-0108). The knowledge portal's are pinned by its
+# own deployment (ADR-0104).
+OWN_IMAGES = ("requirement-platform/", "${REQUIREMENT_API_IMAGE:-", "${REQUIREMENT_WEB_IMAGE:-")
 
 
 def _references() -> list[tuple[str, str]]:

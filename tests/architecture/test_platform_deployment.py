@@ -58,13 +58,33 @@ PEER_SETTINGS = (
 def test_the_project_never_collides_with_the_earlier_deployment() -> None:
     assert MANIFEST["name"] == "requirement-platform"
     built = [SERVICES[name].get("image", "") for name in ("api", "web")]
-    assert all(image.startswith("requirement-platform/") for image in built)
+    assert built == [
+        "${REQUIREMENT_API_IMAGE:-requirement-platform/api}:${IMAGE_TAG:-local}",
+        "${REQUIREMENT_WEB_IMAGE:-requirement-platform/web}:${IMAGE_TAG:-local}",
+    ]
+
+
+def test_a_release_deploys_by_tag_and_a_backup_is_one_command_away() -> None:
+    """Published images replace the local build by name and tag (ADR-0108)."""
+    backup = SERVICES["backup"]
+    postgres = SERVICES["postgres"]
+
+    assert backup["image"] == postgres["image"]
+    assert backup["profiles"] == ["backup"]
+    assert backup["restart"] == "no"
+    assert backup["volumes"] == ["backups:/backups"]
+    script = backup["command"][0]
+    assert "pg_dump --format=custom" in script
+    assert "--dbname=smb_requirements" in script
+    # A dump is visible under its final name only once it is complete.
+    assert '"$$target.partial"' in script and 'mv "$$target.partial" "$$target"' in script
+    assert backup["environment"]["BACKUP_RETENTION_DAYS"] == "${BACKUP_RETENTION_DAYS:-14}"
 
 
 def test_nothing_of_the_knowledge_portal_runs_here() -> None:
     assert not [name for name in SERVICES if name.startswith("knowledge")]
     assert "x-knowledge" not in MANIFEST
-    assert set(MANIFEST["volumes"]) == {"postgres_data", "clamav_data"}
+    assert set(MANIFEST["volumes"]) == {"postgres_data", "clamav_data", "backups"}
     images = [service.get("image", "") for service in SERVICES.values()]
     assert not [image for image in images if "knowledge" in image]
     assert not (DEPLOY / "knowledge.env.example").exists()

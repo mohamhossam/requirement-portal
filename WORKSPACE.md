@@ -259,6 +259,21 @@ timestamp sorts after every legacy number, so the runner's lexical order is
 still creation order. Never rename an applied migration — the runner would
 apply it again. `tests/unit/test_migration_catalogue.py` enforces both rules.
 
+**Migrations: expand, then contract (ADR-0108).**
+- **Expanding is the default.** A release migrates before its new processes start. The previous
+  release may still be serving at that moment, and a rollback redeploys it onto the migrated
+  database. So a migration adds: new tables, nullable or defaulted columns, indexes, relaxed
+  constraints.
+- **Contracting is a separate, later step.** Dropping, renaming or retyping a table or column,
+  or emptying a table, removes what the previous release reads. It ships only once no deployed
+  release needs the old shape, usually one release after the code stopped using it.
+  - The file starts with a `-- contract-step: <why it is safe now>` line.
+  - The release's `CHANGELOG.md` section names it, because rolling back past it means restoring
+    a backup.
+- **Enforced.** `tests/architecture/test_migration_expand_contract.py` refuses any contracting
+  statement without the marker, including one built inside `EXECUTE`. Migrations up to
+  `202610091200` predate the rule.
+
 Source-document defaults are `DOCUMENT_MAX_FILE_BYTES=10485760` and
 `DOCUMENT_CONTEXT_MAX_CHARACTERS=60000`. Memory persistence keeps metadata and
 blobs in process. PostgreSQL persistence stores immutable bytes in the database,

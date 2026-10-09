@@ -1,7 +1,9 @@
 import inspect
+import re
 import threading
 import time
 from dataclasses import replace
+from pathlib import Path
 
 import pytest
 from fastapi.routing import APIRoute
@@ -12,13 +14,23 @@ from smb_requirement_agent.interfaces.api.container import build_container
 from smb_requirement_agent.interfaces.api.main import app
 from tests.conftest import FAKE_PROVIDER_SETTINGS
 
+PYPROJECT = Path(__file__).resolve().parents[2] / "pyproject.toml"
+
 
 def test_health() -> None:
     with TestClient(app) as client:
         response = client.get("/health")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    assert response.json() == {"status": "ok", "version": main.APPLICATION_VERSION}
+
+
+def test_the_api_reports_the_version_the_package_declares() -> None:
+    declared = re.search(r'^version = "([^"]+)"', PYPROJECT.read_text(encoding="utf-8"), re.M)
+
+    assert declared is not None
+    assert main.APPLICATION_VERSION == declared.group(1)
+    assert app.version == declared.group(1)
 
 
 def test_readiness_answers_in_time_when_the_database_check_hangs(
