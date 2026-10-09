@@ -61,7 +61,8 @@ environment explicitly and run:
 ```
 
 Omit `--token-file` only for the fake-identity local test app. The file contains an existing access
-token, not a username/password; never commit it. The command requires HTTPS for non-loopback bearer
+token, not a username/password; never commit it. Take it from a browser session: the API accepts
+only tokens issued to `OIDC_CLIENT_ID`, or to a client listed in `OIDC_AUTHORIZED_PARTIES`. The command requires HTTPS for non-loopback bearer
 tokens, does not follow redirects and does not print tokens, queries or response bodies. The target
 must pass health/readiness before load begins. It invokes only read-only search, but a real provider
 can incur query-embedding usage. Stop on provider quota errors; do not treat them as successful latency.

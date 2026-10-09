@@ -12,7 +12,7 @@ restoring a backup.
 ## v0.1.0
 
 The first published release: the pilot candidate, closing the pilot gate of
-`docs/slices/production-hardening.md`.
+`docs/slices/production-hardening.md`, with its shared provider limits and platform-kernel 1.2.0.
 
 - **Production configuration fails closed.**
   - The production manifest always runs `APP_ENV=production` with OIDC sign-in.
@@ -39,5 +39,21 @@ The first published release: the pilot candidate, closing the pilot gate of
   - `/health` reports the version.
   - A `backup` service is added.
   - Migrations follow an expand/contract policy.
+- **Shared provider limits, a daily token budget, and edge limits (ADR-0106).**
+  - The per-person provider rate limit holds across API replicas.
+  - `PROVIDER_DAILY_TOKEN_BUDGET` pauses new AI work until 00:00 UTC once spent
+    (`provider_budget_exhausted`, 429). Queued jobs wait.
+  - nginx limits each client address (`EDGE_RATE_PER_SECOND`, `EDGE_BURST`).
+  - A deployment behind a TLS proxy must set `TRUSTED_PROXY_CIDR`.
+- **Platform-kernel 1.2.0.**
+  - **Sign-in.** A person's token must be an access token issued to `OIDC_CLIENT_ID`. Other
+    clients are accepted only when listed in `OIDC_AUTHORIZED_PARTIES`.
+  - **Clock difference.** `OIDC_LEEWAY_SECONDS` (60) of clock difference is tolerated.
+  - **Issuer outages.** A brief issuer outage no longer fails sign-ins: the last good signing
+    keys keep being served (ADR-0018 amendment).
+  - **OpenAI.** Each reply is capped at `OPENAI_MAX_OUTPUT_TOKENS` (8192).
+  - **Migrations.** A migration waits at most 10 seconds for a table lock, and concurrent
+    `migrate` runs take turns.
+  - **Knowledge service.** Calls pause for 30 seconds after 5 failures in a row.
 
 Upgrade: none (first release). Contract-step migrations: none after `202610091200`.

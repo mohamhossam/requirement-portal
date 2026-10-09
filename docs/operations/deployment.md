@@ -242,6 +242,11 @@ Regenerate it in the bump commit: `python scripts/dump_openapi.py`.
    `migrate` runs to completion before the API and worker are recreated. Then check that
    `/api/health` names the new version and `/api/ready` answers 200.
 
+   A second `migrate` started meanwhile waits for the first, then finds nothing left to do.
+   A migration waits at most 10 seconds for a table lock held by live traffic, then fails.
+   The run is one transaction, so the database is left as it was. Run `up -d` again at a
+   quieter moment.
+
 Run `maintenance` only when a release's notes require it, and follow
 `production-readiness-maintenance.md`: stop the API and every worker first, and never run it
 against live traffic.
@@ -535,6 +540,10 @@ them against the issuer's signing keys and holds no secret at all.
 
 Tokens are renewed before they expire. If the issuer cannot be reached, calls to the knowledge
 service report it as unavailable, and `/internal` answers 503 to a granted token it cannot check.
+
+After 5 calls in a row to the knowledge service fail as unavailable, including failed token
+grants, calls stop for 30 seconds and fail at once. Then one call tests the service, and success
+resumes them. An analysis meanwhile is kept and marked "references not checked".
 ## Image updates
 
 - **Pinning.** Base and service images are pinned by digest. Dependabot opens

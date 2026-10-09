@@ -51,9 +51,11 @@ from smb_requirement_agent.infrastructure.config.options import (
     DEFAULT_LOCAL_LLM_TIMEOUT_SECONDS,
     DEFAULT_NOTIFICATION_RETENTION_DAYS,
     DEFAULT_OIDC_JWKS_TTL_SECONDS,
+    DEFAULT_OIDC_LEEWAY_SECONDS,
     DEFAULT_OIDC_UNKNOWN_KEY_CACHE_SIZE,
     DEFAULT_OIDC_UNKNOWN_KEY_TTL_SECONDS,
     DEFAULT_OPENAI_EMBEDDING_MODEL,
+    DEFAULT_OPENAI_MAX_OUTPUT_TOKENS,
     DEFAULT_OPENAI_MODEL,
     DEFAULT_OPENAI_TIMEOUT_SECONDS,
     DEFAULT_OPENROUTER_BASE_URL,
@@ -172,6 +174,7 @@ class Settings:
     openai_api_key: str | None = None
     openai_model: str = DEFAULT_OPENAI_MODEL
     openai_timeout_seconds: float = DEFAULT_OPENAI_TIMEOUT_SECONDS
+    openai_max_output_tokens: int = DEFAULT_OPENAI_MAX_OUTPUT_TOKENS
     openai_embedding_model: str = DEFAULT_OPENAI_EMBEDDING_MODEL
     openrouter_api_key: str | None = field(default=None, repr=False)
     openrouter_model: str = DEFAULT_OPENROUTER_MODEL
@@ -220,6 +223,9 @@ class Settings:
     oidc_unknown_key_ttl_seconds: float = DEFAULT_OIDC_UNKNOWN_KEY_TTL_SECONDS
     oidc_unknown_key_cache_size: int = DEFAULT_OIDC_UNKNOWN_KEY_CACHE_SIZE
     oidc_roles_claim: str = "roles"
+    oidc_leeway_seconds: float = DEFAULT_OIDC_LEEWAY_SECONDS
+    # Clients besides OIDC_CLIENT_ID whose user tokens are accepted (their `azp`).
+    oidc_authorized_parties: tuple[str, ...] = ()
     ai_job_worker_concurrency: int = DEFAULT_AI_JOB_WORKER_CONCURRENCY
     ai_job_poll_interval_seconds: float = DEFAULT_AI_JOB_POLL_INTERVAL_SECONDS
     ai_job_lease_seconds: float = DEFAULT_AI_JOB_LEASE_SECONDS
@@ -334,6 +340,7 @@ class Settings:
         )
         raw_openrouter_timeout = os.getenv("OPENROUTER_TIMEOUT_SECONDS", "").strip()
         raw_openrouter_max_output = os.getenv("OPENROUTER_MAX_OUTPUT_TOKENS", "").strip()
+        raw_openai_max_output = os.getenv("OPENAI_MAX_OUTPUT_TOKENS", "").strip()
         openrouter_data_collection = (
             os.getenv("OPENROUTER_DATA_COLLECTION", "").strip().lower()
             or DEFAULT_OPENROUTER_DATA_COLLECTION
@@ -374,6 +381,7 @@ class Settings:
         raw_oidc_jwks_ttl = os.getenv("OIDC_JWKS_TTL_SECONDS", "").strip()
         raw_oidc_unknown_ttl = os.getenv("OIDC_UNKNOWN_KEY_TTL_SECONDS", "").strip()
         raw_oidc_unknown_cache = os.getenv("OIDC_UNKNOWN_KEY_CACHE_SIZE", "").strip()
+        raw_oidc_leeway = os.getenv("OIDC_LEEWAY_SECONDS", "").strip()
         raw_debug_trace = os.getenv("DEBUG_TRACE_ENABLED", "false").strip().lower()
         raw_api_workers = os.getenv("API_BACKGROUND_WORKERS", "true").strip().lower()
         raw_pool_min = os.getenv("DATABASE_POOL_MIN_SIZE", "").strip()
@@ -395,6 +403,11 @@ class Settings:
         allowed_algorithms = tuple(
             item.strip()
             for item in os.getenv("OIDC_ALLOWED_ALGORITHMS", "RS256,ES256").split(",")
+            if item.strip()
+        )
+        authorized_parties = tuple(
+            item.strip()
+            for item in os.getenv("OIDC_AUTHORIZED_PARTIES", "").split(",")
             if item.strip()
         )
         try:
@@ -474,6 +487,12 @@ class Settings:
                 raise ConfigurationError(
                     "OPENROUTER_MAX_OUTPUT_TOKENS must be an integer."
                 ) from exc
+        openai_max_output = DEFAULT_OPENAI_MAX_OUTPUT_TOKENS
+        if provider is LLMProvider.OPENAI and raw_openai_max_output:
+            try:
+                openai_max_output = int(raw_openai_max_output)
+            except ValueError as exc:
+                raise ConfigurationError("OPENAI_MAX_OUTPUT_TOKENS must be an integer.") from exc
         try:
             job_concurrency = (
                 int(raw_job_concurrency)
@@ -529,6 +548,10 @@ class Settings:
             )
         except ValueError as exc:
             raise ConfigurationError("OIDC key cache settings must be numeric.") from exc
+        try:
+            oidc_leeway = float(raw_oidc_leeway) if raw_oidc_leeway else DEFAULT_OIDC_LEEWAY_SECONDS
+        except ValueError as exc:
+            raise ConfigurationError("OIDC_LEEWAY_SECONDS must be a number.") from exc
 
         return cls(
             llm_provider=provider,
@@ -537,6 +560,7 @@ class Settings:
             openai_api_key=api_key,
             openai_model=model,
             openai_timeout_seconds=openai_timeout,
+            openai_max_output_tokens=openai_max_output,
             openai_embedding_model=embedding_model,
             openrouter_api_key=openrouter_api_key,
             openrouter_model=openrouter_model,
@@ -596,6 +620,8 @@ class Settings:
             oidc_unknown_key_ttl_seconds=oidc_unknown_ttl,
             oidc_unknown_key_cache_size=oidc_unknown_cache,
             oidc_roles_claim=os.getenv("OIDC_ROLES_CLAIM", "roles").strip(),
+            oidc_leeway_seconds=oidc_leeway,
+            oidc_authorized_parties=authorized_parties,
             ai_job_worker_concurrency=job_concurrency,
             ai_job_poll_interval_seconds=job_poll,
             ai_job_lease_seconds=job_lease,

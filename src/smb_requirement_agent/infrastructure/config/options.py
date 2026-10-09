@@ -15,6 +15,10 @@ DEFAULT_OPENAI_MODEL = "gpt-4o"
 DEFAULT_OPENAI_TIMEOUT_SECONDS = 60.0
 
 
+# Cap on each OpenAI reply, sent as max_completion_tokens; matches OpenRouter's.
+DEFAULT_OPENAI_MAX_OUTPUT_TOKENS = 8192
+
+
 DEFAULT_OPENAI_EMBEDDING_MODEL = "text-embedding-3-small"
 
 
@@ -123,6 +127,10 @@ DEFAULT_OIDC_UNKNOWN_KEY_TTL_SECONDS = 30.0
 
 
 DEFAULT_OIDC_UNKNOWN_KEY_CACHE_SIZE = 256
+
+
+# Clock difference allowed with the issuer on a token's exp, nbf and iat.
+DEFAULT_OIDC_LEEWAY_SECONDS = 60.0
 
 
 DEFAULT_DEBUG_TRACE_PATH = "logs/debug.log"

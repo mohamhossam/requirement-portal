@@ -123,7 +123,7 @@ def test_success_maps_every_item(
     mock_openai.return_value = _client_returning(_parsed(_item(), _item(name="Fulfilment")))
 
     candidates = OpenAIFeatureGenerator(
-        mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0
+        mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
     ).generate(requirement, analysis, epic)
 
     assert [c["name"] for c in candidates] == ["Ordering", "Fulfilment"]
@@ -144,7 +144,7 @@ def test_items_with_blank_fields_are_dropped(
     )
 
     candidates = OpenAIFeatureGenerator(
-        mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0
+        mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
     ).generate(requirement, analysis, epic)
 
     assert [c["name"] for c in candidates] == ["Good"]
@@ -162,7 +162,7 @@ def test_zero_features_is_a_generation_error(
 
     with pytest.raises(FeatureGenerationError, match="no usable Features"):
         OpenAIFeatureGenerator(
-            mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0
+            mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
         ).generate(requirement, analysis, epic)
 
 
@@ -177,7 +177,7 @@ def test_all_items_blank_is_a_generation_error(
 
     with pytest.raises(FeatureGenerationError):
         OpenAIFeatureGenerator(
-            mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0
+            mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
         ).generate(requirement, analysis, epic)
 
 
@@ -192,7 +192,7 @@ def test_empty_choices_is_a_generation_error(
 
     with pytest.raises(FeatureGenerationError):
         OpenAIFeatureGenerator(
-            mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0
+            mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
         ).generate(requirement, analysis, epic)
 
 
@@ -211,7 +211,7 @@ def test_provider_error_is_mapped(
 
     with pytest.raises(FeatureGenerationError, match="Feature generation failed"):
         OpenAIFeatureGenerator(
-            mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0
+            mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
         ).generate(requirement, analysis, epic)
 
 
@@ -225,9 +225,9 @@ def test_prompt_carries_the_epic_and_labels_unconfirmed_analysis(
     client = _client_returning(_parsed(_item()))
     mock_openai.return_value = client
 
-    OpenAIFeatureGenerator(mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0).generate(
-        requirement, analysis, epic
-    )
+    OpenAIFeatureGenerator(
+        mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
+    ).generate(requirement, analysis, epic)
 
     prompt = client.chat.completions.parse.call_args.kwargs["messages"][1]["content"]
     assert "SMB Bundle Offer" in prompt

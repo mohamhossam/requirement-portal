@@ -20,20 +20,36 @@ from smb_requirement_agent.infrastructure.llm.openai_transport import OPENAI, op
 
 
 class OpenAIEpicGenerator(StructuredEpicGeneratorAdapter):
-    def __init__(self, client: OpenAI, *, model: str, timeout_seconds: float) -> None:
-        super().__init__(openai_transport(client, model, timeout_seconds), OPENAI)
+    def __init__(
+        self, client: OpenAI, *, model: str, timeout_seconds: float, max_output_tokens: int
+    ) -> None:
+        super().__init__(
+            openai_transport(client, model, timeout_seconds, max_output_tokens), OPENAI
+        )
 
 
 class OpenAIFeatureGenerator(StructuredFeatureGeneratorAdapter):
-    def __init__(self, client: OpenAI, *, model: str, timeout_seconds: float) -> None:
-        super().__init__(openai_transport(client, model, timeout_seconds), OPENAI)
+    def __init__(
+        self, client: OpenAI, *, model: str, timeout_seconds: float, max_output_tokens: int
+    ) -> None:
+        super().__init__(
+            openai_transport(client, model, timeout_seconds, max_output_tokens), OPENAI
+        )
 
 
 class OpenAIStoryGenerator(StructuredStoryGeneratorAdapter):
-    def __init__(self, client: OpenAI, *, model: str, timeout_seconds: float) -> None:
-        super().__init__(openai_transport(client, model, timeout_seconds), OPENAI)
+    def __init__(
+        self, client: OpenAI, *, model: str, timeout_seconds: float, max_output_tokens: int
+    ) -> None:
+        super().__init__(
+            openai_transport(client, model, timeout_seconds, max_output_tokens), OPENAI
+        )
 
 
 class OpenAIStoryQualityEvaluator(StructuredStoryQualityEvaluatorAdapter):
-    def __init__(self, client: OpenAI, *, model: str, timeout_seconds: float) -> None:
-        super().__init__(openai_transport(client, model, timeout_seconds), OPENAI)
+    def __init__(
+        self, client: OpenAI, *, model: str, timeout_seconds: float, max_output_tokens: int
+    ) -> None:
+        super().__init__(
+            openai_transport(client, model, timeout_seconds, max_output_tokens), OPENAI
+        )

@@ -382,41 +382,45 @@ def _build_llm_adapters(
             ),
         )
     )
-    openai_model = settings.openai_model
-    openai_timeout = settings.openai_timeout_seconds
+    model = settings.openai_model
+    timeout = settings.openai_timeout_seconds
+    cap = settings.openai_max_output_tokens
     openai_embedding = OpenAIKnowledgeEmbedding(client, settings.openai_embedding_model)
+
+    def structured() -> OpenAIStructuredOutputClient:
+        return OpenAIStructuredOutputClient(
+            client, model=model, timeout_seconds=timeout, max_output_tokens=cap
+        )
+
     return LLMAdapters(
         analyzer=OpenAIRequirementAnalyzer(
-            client, model=openai_model, timeout_seconds=openai_timeout, debug_trace=debug_trace
+            client,
+            model=model,
+            timeout_seconds=timeout,
+            max_output_tokens=cap,
+            debug_trace=debug_trace,
         ),
         epic_generator=OpenAIEpicGenerator(
-            client, model=openai_model, timeout_seconds=openai_timeout
+            client, model=model, timeout_seconds=timeout, max_output_tokens=cap
         ),
         feature_generator=OpenAIFeatureGenerator(
-            client, model=openai_model, timeout_seconds=openai_timeout
+            client, model=model, timeout_seconds=timeout, max_output_tokens=cap
         ),
         story_generator=OpenAIStoryGenerator(
-            client, model=openai_model, timeout_seconds=openai_timeout
+            client, model=model, timeout_seconds=timeout, max_output_tokens=cap
         ),
         story_quality_evaluator=OpenAIStoryQualityEvaluator(
-            client, model=openai_model, timeout_seconds=openai_timeout
+            client, model=model, timeout_seconds=timeout, max_output_tokens=cap
         ),
         knowledge_embedding=openai_embedding,
         relationship_classifier=OpenAIRequirementRelationshipClassifier(
-            client, model=openai_model, timeout_seconds=openai_timeout
+            client, model=model, timeout_seconds=timeout, max_output_tokens=cap
         ),
-        prior_art_judge=StructuredPriorArtJudge(
-            OpenAIStructuredOutputClient(
-                client, model=openai_model, timeout_seconds=openai_timeout
-            ),
-            "OpenAI",
-        ),
+        prior_art_judge=StructuredPriorArtJudge(structured(), "OpenAI"),
         answer_suggester=OpenAIClarificationAnswerSuggester(
-            client, model=openai_model, timeout_seconds=openai_timeout
+            client, model=model, timeout_seconds=timeout, max_output_tokens=cap
         ),
-        reference_proposer=StructuredReferenceProposer(
-            OpenAIStructuredOutputClient(client, model=openai_model, timeout_seconds=openai_timeout)
-        ),
+        reference_proposer=StructuredReferenceProposer(structured()),
         debug_trace=debug_trace,
         resources=resources,
     )

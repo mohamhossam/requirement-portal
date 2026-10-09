@@ -63,3 +63,26 @@ multi-issuer federation require later explicit decisions.
   delivery mechanisms could bypass business authorization.
 - Require OIDC in every environment: rejected because deterministic account-free
   local development and tests are a permanent project constraint.
+
+## Amendment — Access tokens only, from this app's client, with clock leeway (2026-10-09)
+
+Accepted with production hardening Phase 0 (`docs/slices/production-hardening.md`) and
+platform-kernel v1.2.0. The default for authorized clients was chosen by the repository owner on
+2026-10-09.
+
+- **Access tokens only.** A token whose `typ` claim names another kind, such as Keycloak's ID or
+  refresh tokens, is refused. A token with no `typ` claim is judged by the other checks.
+- **Issued to this app's client.** A person's token must name `OIDC_CLIENT_ID` as its authorized
+  party (`azp`), or a client the deployment lists in `OIDC_AUTHORIZED_PARTIES`.
+  - The audience alone admitted any client in the realm that a mapper gives the API's audience.
+    That includes a service's client-credentials token, which names no person.
+  - A token for a command-line tool needs its client listed.
+- **Clock leeway.** Expiry and issue times allow `OIDC_LEEWAY_SECONDS` (60) of clock difference
+  with the issuer. This also applies to the knowledge service's granted tokens on `/internal`.
+- **Keys keep being served.**
+  - The signing keys are reloaded by one request at a time, outside the cache's lock. Other
+    requests are checked against the keys already held.
+  - A reload that fails keeps the last good keys and is tried again after 30 seconds, so a
+    brief issuer outage no longer fails sign-ins.
+  - A token signed with a key the cache lacks, while the issuer is unreachable, is still
+    answered as "identity unavailable" (503), not as an invalid token.

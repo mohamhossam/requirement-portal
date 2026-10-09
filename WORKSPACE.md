@@ -181,7 +181,8 @@ analysis request. The same fail-fast rule applies to `LLM_PROVIDER=openrouter`
 and `OPENROUTER_API_KEY`. Set `LLM_PROVIDER=fake` to run the whole application without
 provider credentials.
 
-Optional: `OPENAI_MODEL` (defaults to `gpt-4o`) and
+Optional: `OPENAI_MODEL` (defaults to `gpt-4o`),
+`OPENAI_MAX_OUTPUT_TOKENS` (each reply's cap, defaults to `8192`) and
 `OPENAI_EMBEDDING_MODEL` (defaults to `text-embedding-3-small`). Knowledge
 embeddings are normalized to the application's 768-dimensional contract;
 dimension mismatches fail the provider operation explicitly.
@@ -297,6 +298,9 @@ to the owner, and accepts `X-Fake-Actor-Id` only in fake mode. For production,
 set `IDENTITY_PROVIDER=oidc` plus `OIDC_ISSUER_URL`, `OIDC_AUDIENCE`, and
 `OIDC_CLIENT_ID`. `OIDC_SCOPES` defaults to `openid profile email`, and
 `OIDC_ALLOWED_ALGORITHMS` defaults to the asymmetric allowlist `RS256,ES256`.
+Only access tokens are accepted, issued to `OIDC_CLIENT_ID` or a client listed in
+`OIDC_AUTHORIZED_PARTIES`, with `OIDC_LEEWAY_SECONDS` (60) of clock difference
+allowed (ADR-0018, amendment 2026-10-09).
 OIDC settings are validated when the application starts; raw tokens and claims
 are never persisted.
 

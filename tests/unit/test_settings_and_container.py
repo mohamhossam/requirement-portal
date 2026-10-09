@@ -158,6 +158,8 @@ class TestSettings:
         monkeypatch.setenv("OIDC_COMPANY_SSO_ENABLED", "true")
         monkeypatch.setenv("OIDC_COMPANY_SSO_ALIAS", "entra-company")
         monkeypatch.setenv("OIDC_PASSWORD_LOGIN_ENABLED", "false")
+        monkeypatch.setenv("OIDC_LEEWAY_SECONDS", "15")
+        monkeypatch.setenv("OIDC_AUTHORIZED_PARTIES", "release-cli, ops-cli")
 
         settings = Settings.from_env()
 
@@ -173,6 +175,55 @@ class TestSettings:
         assert settings.oidc_company_sso_enabled is True
         assert settings.oidc_company_sso_alias == "entra-company"
         assert settings.oidc_password_login_enabled is False
+        assert settings.oidc_leeway_seconds == 15
+        assert settings.oidc_authorized_parties == ("release-cli", "ops-cli")
+
+    def test_oidc_leeway_and_added_clients_default_to_a_minute_and_none(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("LLM_PROVIDER", "fake")
+
+        settings = Settings.from_env()
+
+        assert settings.oidc_leeway_seconds == 60
+        assert settings.oidc_authorized_parties == ()
+
+    def test_oidc_leeway_must_be_a_number_and_not_negative(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("LLM_PROVIDER", "fake")
+        monkeypatch.setenv("OIDC_LEEWAY_SECONDS", "a minute")
+        with pytest.raises(ConfigurationError, match="OIDC_LEEWAY_SECONDS"):
+            Settings.from_env()
+        with pytest.raises(ConfigurationError, match="OIDC_LEEWAY_SECONDS"):
+            Settings(
+                llm_provider=LLMProvider.FAKE,
+                identity_provider=IdentityProvider.OIDC,
+                oidc_issuer_url="https://identity.example.test",
+                oidc_audience="smb-api",
+                oidc_client_id="smb-spa",
+                oidc_leeway_seconds=-1,
+            )
+
+    def test_openai_output_cap_defaults_to_8192_and_is_read_for_openai(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("LLM_PROVIDER", "openai")
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+        assert Settings.from_env().openai_max_output_tokens == 8192
+
+        monkeypatch.setenv("OPENAI_MAX_OUTPUT_TOKENS", "2048")
+        assert Settings.from_env().openai_max_output_tokens == 2048
+
+        monkeypatch.setenv("OPENAI_MAX_OUTPUT_TOKENS", "lots")
+        with pytest.raises(ConfigurationError, match="OPENAI_MAX_OUTPUT_TOKENS"):
+            Settings.from_env()
+        with pytest.raises(ConfigurationError, match="OPENAI_MAX_OUTPUT_TOKENS"):
+            Settings(
+                llm_provider=LLMProvider.OPENAI,
+                openai_api_key="sk-test",
+                openai_max_output_tokens=0,
+            )
 
     def test_oidc_provider_requires_a_login_choice_and_company_alias(self) -> None:
         with pytest.raises(ConfigurationError, match="At least one OIDC login choice"):

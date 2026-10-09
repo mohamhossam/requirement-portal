@@ -12,10 +12,18 @@ from smb_requirement_agent.knowledge.infrastructure.llm.requirement_knowledge_ad
 
 
 class OpenAIRequirementRelationshipClassifier(StructuredRequirementRelationshipClassifierAdapter):
-    def __init__(self, client: OpenAI, *, model: str, timeout_seconds: float) -> None:
-        super().__init__(openai_transport(client, model, timeout_seconds), OPENAI)
+    def __init__(
+        self, client: OpenAI, *, model: str, timeout_seconds: float, max_output_tokens: int
+    ) -> None:
+        super().__init__(
+            openai_transport(client, model, timeout_seconds, max_output_tokens), OPENAI
+        )
 
 
 class OpenAIClarificationAnswerSuggester(StructuredClarificationAnswerSuggesterAdapter):
-    def __init__(self, client: OpenAI, *, model: str, timeout_seconds: float) -> None:
-        super().__init__(openai_transport(client, model, timeout_seconds), OPENAI)
+    def __init__(
+        self, client: OpenAI, *, model: str, timeout_seconds: float, max_output_tokens: int
+    ) -> None:
+        super().__init__(
+            openai_transport(client, model, timeout_seconds, max_output_tokens), OPENAI
+        )
