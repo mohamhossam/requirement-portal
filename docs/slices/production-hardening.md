@@ -2,7 +2,7 @@
 
 ## Status
 
-**Specified 2026-10-08; not scheduled.** Nothing below is implemented yet. This record keeps the
+**Specified 2026-10-08; in progress since 2026-10-09.** PR 1 is delivered (see its entry and Validation Evidence); everything else is not implemented yet. This record keeps the
 plan for closing every finding of the second production-readiness review (security, deployment and
 CI, reliability and observability, frontend) so it can be scheduled later. When work starts, each
 PR converts its part into the `WORKSPACE.md` §10 sections and fills in Validation Evidence here.
@@ -84,25 +84,13 @@ Then bump `pyproject.toml:12` and `uv.lock`, and wire the new settings. Phase 1 
 
 ## Phase 1: P0, the pilot gate
 
-**PR 1 · Production config fails closed**
-- **Pin production values.** In `compose.production.yaml`, the `x-backend.environment` block (:31-38) gets `APP_ENV: production` and `IDENTITY_PROVIDER: oidc`. There's no knowledge block any more.
-- **Demo and CI override.** New `deploy/compose.demo.yaml`:
-  - restores `development` and `fake`;
-  - replaces the `web` ports with `ports: !override ["127.0.0.1:${WEB_PORT:-8080}:8080"]`. Today it's `:165-166`, published on all interfaces.
-  - CI `COMPOSE` (`ci.yml:203`) becomes production + peer + demo.
-  - Update the demo commands in `README.md:130,688` and `START_GUIDE.md:84-90,165`. Note that `demo.env.example` is also used by the knowledge-portal demo (`START_GUIDE.md:56,170`).
-- **Stricter production validation** in `settings_validation.py` (production branches :161-167, :216-220; debug-trace check :256-259). Reject:
-  - `LLM_PROVIDER=fake`, including fake profiles (`settings.py:288-298`);
-  - `DEBUG_TRACE_ENABLED=true`;
-  - any `LOG_FORMAT` other than `json`.
-  - `deployment_preflight.py:9-14` gets the same checks.
-- **Close the API docs at the edge.** nginx returns 404 for `/api/docs` (including `/api/docs/oauth2-redirect`), `/api/redoc` and `/api/openapi.json`, following the `^~ /api/internal` pattern at `default.conf.template:48-51`. Extend the CI edge loop at `ci.yml:277-281`.
-- **Production really boots in CI**, in a separate job, because the existing deployment job depends on fake identity for its cross-portal and Playwright checks:
-  - requirement work only, with no knowledge portal (allowed since ADR-0104);
-  - `deploy/keycloak/compose.yaml` as the issuer, with CI-generated certs, dummy `ENTRA_*`/`SMTP_*` values, and `KC_HOSTNAME` overridden to a name the `api` container can reach;
-  - a small OpenAI-compatible stub container as the LLM;
-  - asserts `/ready`, a 401 without a token, and `deployment_preflight` exit 0, and that a fake-identity variant refuses to boot.
-- **`start.sh:286-289`** asks for confirmation (or `--migrate`) before migrating a `DATABASE_URL` that isn't localhost.
+**PR 1 · Production config fails closed** — *delivered on `claude/production-hardening-pr1`, 2026-10-09*
+- **Manifest pins production.** `deploy/compose.production.yaml` sets `APP_ENV: production` and `IDENTITY_PROVIDER: oidc` in the `x-backend` environment, which overrides `production.env`; ADR-0074 amendment "The manifest fails closed".
+- **Demo overlay.** New `deploy/compose.demo.yaml` restores `development`/`fake` for `migrate`, `maintenance`, `retention`, `api` and `worker`, and publishes `web` with `ports: !override` on `127.0.0.1` only. CI's `COMPOSE` and every demo command in `README.md` and `START_GUIDE.md` §2 add it; `demo.env.example` keeps its two lines because the knowledge-portal demo reuses the file.
+- **Production refusals.** `settings_validation.py` refuses `LLM_PROVIDER=fake`, `DEBUG_TRACE_ENABLED=true` and any `LOG_FORMAT` other than `json` under `APP_ENV=production`; `deployment_preflight.py` refuses the fake model and the debug trace under any `APP_ENV`. Model profiles always name a real endpoint, so there is no fake profile to refuse.
+- **API documentation closed at the edge.** `deploy/web/default.conf.template` answers 404 for `/api/docs` (with `oauth2-redirect`), `/api/redoc` and `/api/openapi.json`; the CI edge loop checks all four.
+- **Production boots in CI, without Keycloak.** OIDC discovery is lazy, so the CI `deployment` job starts the manifest alone (no demo overlay) with a placeholder HTTPS issuer and `LLM_PROVIDER=openai` with a placeholder key. It checks the preflight exits 0, `/ready` answers, `/identity/me` answers 401 with and without `X-Fake-Actor-Id`, fake identity stops the boot and the fake model makes the preflight exit 2. A real sign-in against an issuer stays with the knowledge-portal and Keycloak guides.
+- **Launchers.** `start.sh --migrate`, `start.ps1 -Migrate` and `start.bat -Migrate`: an external PostgreSQL named by `DATABASE_URL` is never migrated without it; local PostgreSQL still is.
 
 **PR 8 · Analysis survives a knowledge outage** (lands before PR 2)
 - **Three grounding states**, recorded as a `reference_applicability` `stage_provenance` entry (`analysis/domain/entities.py:280-298`, exposed in `schemas/analysis.py`):
@@ -305,3 +293,30 @@ PR 13 → PR 14 → PR 15 → PR 16
 | PR 9 | `promtool` and `amtool` pass, and a forced readiness failure fires its alert. |
 
 **Final:** CI is all green, and every finding is closed in the spec with a link to its PR.
+
+## Validation Evidence
+
+### PR 1 (2026-10-09, branch `claude/production-hardening-pr1`)
+
+Run locally on Python 3.13 with platform-kernel v1.1.0; no Docker daemon was available, so the
+PostgreSQL suites skipped locally (CI runs them) and the manifest, nginx template and production
+boot are proven by CI's `deployment` job.
+
+```text
+pytest                      1832 passed, 78 skipped in 136.62s
+ruff check .                All checks passed!
+ruff format --check .       1238 files already formatted
+mypy src tests              Success: no issues found in 677 source files
+lint-imports                Contracts: 43 kept, 0 broken.
+cd frontend && npm run build   ✓ built in 919ms
+docker compose -f deploy/compose.production.yaml -f deploy/compose.demo.yaml config
+                            backend services APP_ENV=development, IDENTITY_PROVIDER=fake;
+                            web published on 127.0.0.1:8080 only
+docker compose -f deploy/compose.production.yaml config
+                            backend services APP_ENV=production, IDENTITY_PROVIDER=oidc
+python -m smb_requirement_agent.interfaces.deployment_preflight
+                            exit 0 with OIDC and LLM_PROVIDER=openai; exit 2 with LLM_PROVIDER=fake
+Settings.from_env() under APP_ENV=production
+                            refuses LOG_FORMAT=text and IDENTITY_PROVIDER=fake, naming the setting
+bash -n start.sh            syntax OK
+```

@@ -7,7 +7,11 @@ param(
 
     [switch]$CheckOnly,
 
-    [switch]$DebugTrace
+    [switch]$DebugTrace,
+
+    # Apply pending migrations to an external PostgreSQL named by DATABASE_URL.
+    # Local PostgreSQL is always migrated; an external database never is without it.
+    [switch]$Migrate
 )
 
 Set-StrictMode -Version Latest
@@ -394,6 +398,9 @@ try {
         Write-Step "Checking external PostgreSQL readiness..."
         & $pythonPath -m smb_requirement_agent.infrastructure.persistence.startup_check
         Assert-NativeSuccess -Action "Persistence readiness check"
+        if (-not $Migrate) {
+            throw "DATABASE_URL names an external PostgreSQL. Rerun with -Migrate to apply pending migrations to it."
+        }
     }
 
     if ($persistenceTarget -ne "memory") {

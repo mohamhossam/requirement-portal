@@ -50,6 +50,23 @@ server {
         return 404;
     }
 
+    # The API's generated documentation describes every route to anyone; it is
+    # for developers on their own machine, not for the public edge.
+    location ^~ /api/docs {
+        include /etc/nginx/snippets/security-headers.conf;
+        return 404;
+    }
+
+    location = /api/redoc {
+        include /etc/nginx/snippets/security-headers.conf;
+        return 404;
+    }
+
+    location = /api/openapi.json {
+        include /etc/nginx/snippets/security-headers.conf;
+        return 404;
+    }
+
     # The knowledge portal has its own address (ADR-0104). Its API is not served
     # here, and old /knowledge/ bookmarks go to KNOWLEDGE_PORTAL_URL for one
     # release; with that unset they are not found.

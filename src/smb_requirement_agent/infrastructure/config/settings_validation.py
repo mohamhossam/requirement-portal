@@ -18,6 +18,7 @@ from smb_requirement_agent.infrastructure.config.options import (
     ConfigurationError,
     IdentityProvider,
     LLMProvider,
+    LogFormat,
     PersistenceProvider,
 )
 
@@ -218,6 +219,8 @@ def validate_settings(settings: Settings) -> None:
         and settings.identity_provider is IdentityProvider.FAKE
     ):
         raise ConfigurationError("APP_ENV=production requires IDENTITY_PROVIDER=oidc.")
+    if settings.app_environment == "production":
+        _validate_production_operation(settings)
     if not 0 <= settings.database_pool_min_size <= settings.database_pool_max_size:
         raise ConfigurationError(
             "DATABASE_POOL_MIN_SIZE must be between 0 and DATABASE_POOL_MAX_SIZE."
@@ -257,3 +260,19 @@ def validate_settings(settings: Settings) -> None:
         raise ConfigurationError(
             "DEBUG_TRACE_PATH must not be blank when DEBUG_TRACE_ENABLED=true."
         )
+
+
+def _validate_production_operation(settings: Settings) -> None:
+    """Refuse the development conveniences a public deployment must never run with."""
+    if settings.llm_provider is LLMProvider.FAKE:
+        raise ConfigurationError(
+            "APP_ENV=production refuses LLM_PROVIDER=fake: it returns sample output, not "
+            "analysis. Configure a real provider or LLM_CONFIG_PATH."
+        )
+    if settings.debug_trace_enabled:
+        raise ConfigurationError(
+            "APP_ENV=production refuses DEBUG_TRACE_ENABLED=true: the trace records prompts, "
+            "model output and request paths (ADR-0031)."
+        )
+    if settings.log_format is not LogFormat.JSON:
+        raise ConfigurationError("APP_ENV=production requires LOG_FORMAT=json.")
