@@ -34,7 +34,7 @@ export function ArchitectureEvidencePage() {
         eyebrow="Architecture catalogue"
         title="Mapping evidence"
         description="The catalogue passage an architecture mapping cited."
-        actions={admin
+        actions={admin && KNOWLEDGE_PORTAL_URL !== null
           ? <ButtonLink variant="ghost" to={KNOWLEDGE_PORTAL_URL} reloadDocument
               icon={<ExternalLink size={16} aria-hidden="true" />}>Knowledge portal</ButtonLink>
           : undefined}

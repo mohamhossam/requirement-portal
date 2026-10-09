@@ -13,8 +13,12 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./
 ARG VITE_API_BASE=/api
+# Where the knowledge portal is (ADR-0104): the platform path by default, an
+# absolute URL when it has its own host, or empty to hide every link to it.
+ARG VITE_KNOWLEDGE_PORTAL_URL=/knowledge/
 ARG CSP_IDENTITY_ORIGINS=
 ENV VITE_API_BASE=$VITE_API_BASE \
+    VITE_KNOWLEDGE_PORTAL_URL=$VITE_KNOWLEDGE_PORTAL_URL \
     CSP_IDENTITY_ORIGINS=$CSP_IDENTITY_ORIGINS
 RUN npm run build
 

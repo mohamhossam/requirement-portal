@@ -855,7 +855,7 @@ class TestKnowledgeService:
         finally:
             container.close_resources()
 
-    def test_production_needs_the_knowledge_service(self) -> None:
+    def test_production_runs_with_or_without_the_knowledge_portal(self) -> None:
         production = {
             "llm_provider": LLMProvider.FAKE,
             "app_environment": "production",
@@ -866,8 +866,9 @@ class TestKnowledgeService:
             "oidc_audience": "api://smb",
             "oidc_client_id": "browser",
         }
-        with pytest.raises(ConfigurationError, match="KNOWLEDGE_API_BASE_URL"):
-            Settings(**production)  # type: ignore[arg-type]
+        # ADR-0104: the knowledge portal is an optional link, in production too.
+        alone = Settings(**production)  # type: ignore[arg-type]
+        assert alone.knowledge_service_url is None
         connected = Settings(
             **production,  # type: ignore[arg-type]
             knowledge_api_base_url="http://knowledge-api:8000",
