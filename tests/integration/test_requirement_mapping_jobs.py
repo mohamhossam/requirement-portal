@@ -19,6 +19,9 @@ import psycopg
 import pytest
 
 from smb_requirement_agent.infrastructure.persistence import migration_runner
+from smb_requirement_agent.infrastructure.persistence.moved_knowledge_tables import (
+    DROP_EMPTY_MIGRATION,
+)
 
 DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 pytestmark = pytest.mark.skipif(not DATABASE_URL, reason="TEST_DATABASE_URL is not configured")
@@ -43,7 +46,7 @@ def test_mapping_jobs_leave_the_catalogue_queue_with_their_state(
 ) -> None:
     real = Path(migration_runner.MIGRATIONS)
     for path in real.glob("*.sql"):
-        if path.name != MOVING:
+        if path.name not in {MOVING, DROP_EMPTY_MIGRATION}:
             shutil.copy(path, tmp_path / path.name)
     monkeypatch.setattr(migration_runner, "MIGRATIONS", tmp_path)
     migration_runner.run_migrations(isolated_url)

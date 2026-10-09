@@ -22,6 +22,9 @@ from psycopg.types.json import Jsonb
 from pydantic import TypeAdapter
 
 from smb_requirement_agent.infrastructure.persistence import migration_runner
+from smb_requirement_agent.infrastructure.persistence.moved_knowledge_tables import (
+    DROP_EMPTY_MIGRATION,
+)
 from smb_requirement_agent.requirements.domain.document.attachment import (
     AttachmentFile,
     AttachmentUpload,
@@ -107,7 +110,7 @@ def test_attachment_rows_move_out_of_the_library_with_their_state(
 ) -> None:
     real = Path(migration_runner.MIGRATIONS)
     for path in real.glob("*.sql"):
-        if path.name != MOVING:
+        if path.name not in {MOVING, DROP_EMPTY_MIGRATION}:
             shutil.copy(path, tmp_path / path.name)
     monkeypatch.setattr(migration_runner, "MIGRATIONS", tmp_path)
     migration_runner.run_migrations(isolated_url)

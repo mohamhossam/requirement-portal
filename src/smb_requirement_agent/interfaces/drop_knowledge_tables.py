@@ -1,7 +1,8 @@
 """Offline command: drop the knowledge tables this database still holds (ADR-0099).
 
-Run it once, after `knowledge-import` when moving an earlier system's data, or
-on any database to remove the empty tables that earlier migrations create. It
+Run it once, after `knowledge-import` when moving an earlier system's data. A
+fresh database needs nothing: its migrations drop the tables while all are
+empty, and this then reports nothing to drop. It
 drops every moved table or none: a table holding rows is dropped only when the
 knowledge database (`--knowledge-database-url`) holds an identical copy.
 `--dry-run` reports what would happen and changes nothing.
