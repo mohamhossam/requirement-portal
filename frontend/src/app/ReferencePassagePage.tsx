@@ -36,7 +36,7 @@ export function ReferencePassagePage() {
         eyebrow="Shared library"
         title={passage.data?.title ?? "Cited passage"}
         description="The approved passage a requirement cites, exactly as it was published."
-        actions={admin
+        actions={admin && KNOWLEDGE_PORTAL_URL !== null
           ? <ButtonLink variant="ghost" to={KNOWLEDGE_PORTAL_URL} reloadDocument
               icon={<ExternalLink size={16} aria-hidden="true" />}>Knowledge portal</ButtonLink>
           : undefined}

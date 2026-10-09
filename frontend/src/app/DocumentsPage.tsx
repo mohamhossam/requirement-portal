@@ -184,7 +184,7 @@ export function DocumentsPage() {
       <PageHeader
         title="Documents"
         description="Every file attached to a requirement or a draft. Open one to see what was read from it and whether analysis uses it."
-        actions={knowledgeAdmin
+        actions={knowledgeAdmin && KNOWLEDGE_PORTAL_URL !== null
           ? (
             // The shared library and the catalogues are curated in the knowledge portal (ADR-0099).
             <ButtonLink variant="secondary" to={KNOWLEDGE_PORTAL_URL} reloadDocument

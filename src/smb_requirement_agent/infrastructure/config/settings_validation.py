@@ -37,7 +37,7 @@ def validate_settings(settings: Settings) -> None:
     if (settings.knowledge_api_base_url is None) != (settings.requirement_service_token is None):
         raise ConfigurationError(
             "KNOWLEDGE_API_BASE_URL and REQUIREMENT_SERVICE_TOKEN are set together: both to "
-            "use the knowledge service, or neither to keep the knowledge code in this process."
+            "connect the knowledge portal, or neither to run without it."
         )
     if (
         settings.knowledge_api_base_url is not None
@@ -198,12 +198,6 @@ def validate_settings(settings: Settings) -> None:
         and settings.identity_provider is IdentityProvider.FAKE
     ):
         raise ConfigurationError("APP_ENV=production requires IDENTITY_PROVIDER=oidc.")
-    if settings.app_environment == "production" and settings.knowledge_api_base_url is None:
-        # The library, the catalogue and architecture matching live in the knowledge
-        # service (ADR-0099); offline fakes are for development only.
-        raise ConfigurationError(
-            "APP_ENV=production requires KNOWLEDGE_API_BASE_URL and REQUIREMENT_SERVICE_TOKEN."
-        )
     if not 0 <= settings.database_pool_min_size <= settings.database_pool_max_size:
         raise ConfigurationError(
             "DATABASE_POOL_MIN_SIZE must be between 0 and DATABASE_POOL_MAX_SIZE."

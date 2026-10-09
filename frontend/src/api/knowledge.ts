@@ -23,8 +23,18 @@ export interface PassageCitation {
   block_id: string;
 }
 
-/** Where knowledge administrators curate the library and the catalogues. */
-export const KNOWLEDGE_PORTAL_URL = "/knowledge/";
+/**
+ * Where knowledge administrators curate the library and the catalogues, or null when this
+ * deployment has no knowledge portal (ADR-0104). `VITE_KNOWLEDGE_PORTAL_URL` names it; unset,
+ * it is the platform path `/knowledge/`, and set empty, every link to it is hidden.
+ */
+export function knowledgePortalUrl(configured: string | undefined): string | null {
+  if (configured === undefined) return "/knowledge/";
+  const url = configured.trim();
+  return url === "" ? null : url;
+}
+
+export const KNOWLEDGE_PORTAL_URL = knowledgePortalUrl(import.meta.env.VITE_KNOWLEDGE_PORTAL_URL);
 /** The role that opens the knowledge portal. */
 export const KNOWLEDGE_ADMIN_ROLE = "knowledge_admin";
 

@@ -1,9 +1,10 @@
-"""Where requirement work's knowledge comes from: the knowledge service, or offline fakes.
+"""Where requirement work's knowledge comes from: the knowledge portal, or nothing.
 
 With KNOWLEDGE_API_BASE_URL set, library search, architecture matching, the
-event feed and the read-only views all come from the knowledge service over
-its internal API (ADR-0099). Unset, deterministic fakes stand in: no library,
-one empty catalogue version, and nothing for the viewers to show.
+event feed and the read-only views all come from the knowledge portal over
+its internal API (ADR-0099). Unset, in development and in production alike
+(ADR-0104), deterministic stand-ins answer as an unconnected portal would: no
+library, one empty catalogue version, and nothing for the viewers to show.
 """
 
 from __future__ import annotations

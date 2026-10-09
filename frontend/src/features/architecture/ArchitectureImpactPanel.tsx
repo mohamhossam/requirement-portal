@@ -451,7 +451,7 @@ function SuggestedDomains({ impact }: { impact: ArchitectureImpact }) {
  */
 function CatalogueName() {
   const admin = useIsKnowledgeAdmin();
-  return admin
+  return admin && KNOWLEDGE_PORTAL_URL !== null
     ? <a className={LINK} href={KNOWLEDGE_PORTAL_URL}>architecture catalogue</a>
     : <>architecture catalogue</>;
 }
