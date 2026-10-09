@@ -15,6 +15,7 @@ from smb_kernel.llm.structured_output import StructuredOutputError
 
 from smb_requirement_agent.infrastructure.config.options import ConfigurationError, LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
+from smb_requirement_agent.infrastructure.llm.openai_transport import openai_transport
 from smb_requirement_agent.workflows.application.public_errors import describe_public_error
 
 REQUEST = httpx2.Request("POST", "https://api.openai.test/v1/chat/completions")
@@ -54,6 +55,18 @@ def test_parse_sends_the_configured_model_timeout_and_schema() -> None:
         {"role": "system", "content": "sys"},
         {"role": "user", "content": "user"},
     ]
+
+
+def test_the_shared_transport_caps_each_reply_at_the_configured_output_tokens() -> None:
+    parse = _reply(Answer(text="ok"))
+    sdk = MagicMock()
+    sdk.chat.completions.parse = parse
+
+    openai_transport(sdk, "gpt-test", 12.5, 4096).parse(
+        system_prompt="sys", user_prompt="user", schema_type=Answer
+    )
+
+    assert parse.call_args.kwargs["max_completion_tokens"] == 4096
 
 
 def test_images_are_sent_as_separate_data_url_parts() -> None:

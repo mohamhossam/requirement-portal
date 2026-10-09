@@ -2,7 +2,7 @@
 
 ## Status
 
-**Specified 2026-10-08; in progress since 2026-10-09.** PR 1, PR 8, PR 2, PR 4a, PR 4b, PR 5 and PR 6 are delivered, which completes the pilot gate (Phase 1), and so is PR 7 of Phase 2 (see their entries and Validation Evidence); Phase 0, the rest of Phase 2, and Phase 3 are not implemented yet. This record keeps the
+**Specified 2026-10-08; in progress since 2026-10-09.** Phase 0 (platform-kernel v1.2.0, and this repository's move to it) is delivered. PR 1, PR 8, PR 2, PR 4a, PR 4b, PR 5 and PR 6 are delivered, which completes the pilot gate (Phase 1), and so is PR 7 of Phase 2 (see their entries and Validation Evidence). The rest of Phase 2 and Phase 3 are not implemented yet. This record keeps the
 plan for closing every finding of the second production-readiness review (security, deployment and
 CI, reliability and observability, frontend) so it can be scheduled later. When work starts, each
 PR converts its part into the `WORKSPACE.md` §10 sections and fills in Validation Evidence here.
@@ -70,6 +70,27 @@ Everything else was rechecked and is still valid; line references below are agai
   | `ci.yml:275` | CI greps for the CSP `<meta>` tag |
 
 ## Phase 0: platform-kernel v1.2.0
+
+*Delivered 2026-10-09:* kernel [mohamhossam/platform-kernel#7](https://github.com/mohamhossam/platform-kernel/pull/7), tagged `v1.2.0`, then the pin bump on `claude/production-hardening-kernel-1.2.0`.
+
+**Kernel changes from this table**
+- **One transaction per migration run.** A run stays one transaction. The `lock_timeout` (10s) is set before each file. Per-file transactions were tried and dropped, because this repository's migration test requires a failed run to apply nothing.
+- **Exact pool count.** The pool counts lent connections itself.
+
+**Wired here**
+- **`OIDC_LEEWAY_SECONDS`** (60), for user tokens and `/internal`'s granted tokens.
+- **Authorized parties.** A person's token must name `OIDC_CLIENT_ID` as `azp`, the owner's choice on 2026-10-09; `OIDC_AUTHORIZED_PARTIES` adds clients. The `typ` check is the kernel default.
+- **`OPENAI_MAX_OUTPUT_TOKENS`** (8192, the owner's choice), through `openai_transport` and the seven OpenAI adapters.
+- **One circuit breaker** shared by both knowledge clients.
+- **ADR-0018 amendment.**
+
+**Left to the PRs that use them**
+- The pool `configure` hook, `stats()` and `smb_db_pool_*`: PR 3.
+- The build, readiness, queue and spend-blocked metrics: PR 9.
+- `smb_ingestion_failures_total`: PR 10.
+- `smb_client_errors_total`: PR 12.
+
+**Plan as specified**
 | Change | Note |
 |---|---|
 | Migration runner: session advisory lock, plus per-file `lock_timeout` | Not in 1.1.0 |
@@ -565,4 +586,34 @@ ruff format --check .       1255 files already formatted
 mypy src tests              Success: no issues found in 688 source files
 lint-imports                Contracts: 43 kept, 0 broken.
 actionlint                  ci.yml, release.yml clean
+```
+
+### Phase 0 (2026-10-09, platform-kernel#7, then branch `claude/production-hardening-kernel-1.2.0`)
+
+**Kernel**
+- Gates on Python 3.12 against PostgreSQL 16: 420 passed, 85% coverage. `ruff check`, `ruff format --check`, `mypy --strict` and `lint-imports` were clean, and CI's `gates` passed.
+- New tests cover:
+  - two migration runners started together;
+  - a migration refused by `lock_timeout` leaving nothing applied;
+  - the pool's `configure` hook and lent count;
+  - stale signing keys kept through a failed reload;
+  - callers sharing one cold-cache fetch;
+  - the breaker's open, half-open and closed states.
+- A test for the key-rotation race failed 3 times out of 3 on the first design and passed 5 times out of 5 on the fix.
+- This repository's suite, run against the kernel checkout before the tag: 1972 passed, and mypy was clean.
+
+**This repository**
+- New tests check that:
+  - `build_identity` refuses a token issued to `requirement-service`, a token with no `azp`, and ID or refresh tokens;
+  - a client added in `OIDC_AUTHORIZED_PARTIES` is accepted, and a token expired 30s ago passes only with the default leeway;
+  - the OpenAI transport sends `max_completion_tokens`;
+  - five failures through the everyday knowledge client pause the historic-content client without a request. This test fails when the breaker is not shared.
+
+```text
+pytest --cov (PostgreSQL)   1985 passed; total coverage 94.60% (floor 92.5%)
+ruff check .                All checks passed!
+ruff format --check .       1257 files already formatted
+mypy src tests              Success: no issues found in 690 source files
+lint-imports                Contracts: 43 kept, 0 broken.
+npm run api:check           no drift
 ```

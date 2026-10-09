@@ -90,7 +90,7 @@ def test_success_maps_to_a_candidate_with_provenance(
     mock_openai.return_value = _client_returning(_parsed())
 
     candidate = OpenAIEpicGenerator(
-        mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0
+        mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
     ).generate(requirement, analysis)
 
     assert candidate["name"] == "SMB Bundle Offer"
@@ -105,7 +105,7 @@ def test_surrounding_whitespace_is_stripped(
     mock_openai.return_value = _client_returning(_parsed(name="  Padded  "))
 
     candidate = OpenAIEpicGenerator(
-        mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0
+        mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
     ).generate(requirement, analysis)
 
     assert candidate["name"] == "Padded"
@@ -126,7 +126,7 @@ def test_a_blank_field_is_a_generation_error_not_a_domain_error(
 
     with pytest.raises(EpicGenerationError, match=blank_field):
         OpenAIEpicGenerator(
-            mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0
+            mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
         ).generate(requirement, analysis)
 
 
@@ -138,7 +138,7 @@ def test_empty_choices_is_a_generation_error(
 
     with pytest.raises(EpicGenerationError):
         OpenAIEpicGenerator(
-            mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0
+            mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
         ).generate(requirement, analysis)
 
 
@@ -150,7 +150,7 @@ def test_unparseable_response_is_a_generation_error(
 
     with pytest.raises(EpicGenerationError):
         OpenAIEpicGenerator(
-            mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0
+            mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
         ).generate(requirement, analysis)
 
 
@@ -166,7 +166,7 @@ def test_provider_error_is_mapped(
 
     with pytest.raises(EpicGenerationError, match="Epic generation failed"):
         OpenAIEpicGenerator(
-            mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0
+            mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
         ).generate(requirement, analysis)
 
 
@@ -178,9 +178,9 @@ def test_unconfirmed_analysis_is_labelled_in_the_prompt(
     client = _client_returning(_parsed())
     mock_openai.return_value = client
 
-    OpenAIEpicGenerator(mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0).generate(
-        requirement, analysis
-    )
+    OpenAIEpicGenerator(
+        mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
+    ).generate(requirement, analysis)
 
     user_prompt = client.chat.completions.parse.call_args.kwargs["messages"][1]["content"]
     assumption_pos = user_prompt.index("Billing already supports bundles")
@@ -215,7 +215,9 @@ def test_prompt_includes_only_owner_confirmed_intent_proposals(
         "Constraint candidate.",
     ).decide(IntentProposalStatus.REJECTED, actor, at, 1)
 
-    OpenAIEpicGenerator(mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0).generate(
+    OpenAIEpicGenerator(
+        mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
+    ).generate(
         requirement,
         replace(
             analysis,

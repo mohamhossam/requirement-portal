@@ -56,6 +56,11 @@ migration notes before changing that version.
    OIDC_PASSWORD_LOGIN_ENABLED=true
    ```
 
+   The API accepts a person's access token only when it was issued to
+   `OIDC_CLIENT_ID` (`requirement-spa`). To accept tokens from another client
+   of the realm, such as a command-line tool, list it in
+   `OIDC_AUTHORIZED_PARTIES`.
+
 5. The knowledge portal signs in through the same realm with its own client,
    audience, roles and groups, which it defines in its own repository and adds
    with its `deploy/keycloak/apply.py` (ADR-0104). This realm file holds only

@@ -14,7 +14,7 @@ from contextlib import ExitStack, closing
 from dataclasses import dataclass
 
 import httpx
-from smb_kernel.http.client import InternalHttpClient
+from smb_kernel.http.client import CircuitBreaker, InternalHttpClient
 from smb_kernel.http.client_credentials import ClientCredentialsTokenSource
 from smb_kernel.observability.metrics import MeteredTransport, Metrics
 from smb_kernel.time.clock import ClockPort
@@ -91,15 +91,17 @@ def build_knowledge_service(
         httpx.Client(transport=MeteredTransport(metrics, "knowledge", httpx.HTTPTransport()))
     )
     token = _service_token(settings, resources, settings.requirement_service_token or "")
-    client = InternalHttpClient(
+    # One breaker for the one peer: either client's failures pause both.
+    breaker = CircuitBreaker()
+    client = InternalHttpClient(url, token, service="knowledge", http=http, breaker=breaker)
+    # A page of historic content can be large; it gets its own, more patient client.
+    patient = InternalHttpClient(
         url,
         token,
         service="knowledge",
         http=http,
-    )
-    # A page of historic content can be large; it gets its own, more patient client.
-    patient = InternalHttpClient(
-        url, token, service="knowledge", http=http, timeout_seconds=HISTORIC_PAGE_TIMEOUT
+        timeout_seconds=HISTORIC_PAGE_TIMEOUT,
+        breaker=breaker,
     )
     return KnowledgeService(
         HttpReferenceKnowledge(client),

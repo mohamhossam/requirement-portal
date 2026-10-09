@@ -166,7 +166,7 @@ def test_openai_story_provider_exception_is_mapped(mock_openai: MagicMock) -> No
 
     with pytest.raises(StoryGenerationError, match="Story generation failed"):
         OpenAIStoryGenerator(
-            mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0
+            mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
         ).generate(*_context())
 
 
@@ -178,7 +178,7 @@ def test_openai_story_empty_choices_is_a_provider_failure(mock_openai: MagicMock
 
     with pytest.raises(StoryGenerationError, match="no choices"):
         OpenAIStoryGenerator(
-            mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0
+            mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
         ).generate(*_context())
 
 
@@ -193,7 +193,7 @@ def test_openai_story_split_rejects_one_candidate(mock_openai: MagicMock) -> Non
 
     with pytest.raises(StoryGenerationError, match="fewer than two split candidates"):
         OpenAIStoryGenerator(
-            mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0
+            mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
         ).propose_split(*_context(), _source_story())
 
 

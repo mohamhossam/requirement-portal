@@ -52,6 +52,10 @@ def build_identity(
         unknown_key_ttl_seconds=settings.oidc_unknown_key_ttl_seconds,
         unknown_key_cache_size=settings.oidc_unknown_key_cache_size,
         roles_claim=settings.oidc_roles_claim,
+        leeway_seconds=settings.oidc_leeway_seconds,
+        # A person's token must come from this app's sign-in client, or one the
+        # deployment adds; a service's token for the same audience is refused.
+        authorized_parties=(settings.oidc_client_id, *settings.oidc_authorized_parties),
     )
 
 
@@ -83,6 +87,7 @@ def build_internal_verifier(
                 INTERNAL_AUDIENCE,
                 {settings.knowledge_service_client_id: "knowledge"},
                 allowed_algorithms=settings.oidc_allowed_algorithms,
+                leeway_seconds=settings.oidc_leeway_seconds,
             )
         )
     if not verifiers:

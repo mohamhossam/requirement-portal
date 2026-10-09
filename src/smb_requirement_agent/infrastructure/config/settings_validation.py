@@ -218,6 +218,8 @@ def validate_settings(settings: Settings) -> None:
             )
         if not settings.oidc_roles_claim.strip():
             raise ConfigurationError("OIDC_ROLES_CLAIM must not be blank.")
+        if settings.oidc_leeway_seconds < 0:
+            raise ConfigurationError("OIDC_LEEWAY_SECONDS must not be negative.")
     if (
         settings.app_environment == "production"
         and settings.identity_provider is IdentityProvider.FAKE
@@ -244,6 +246,8 @@ def validate_settings(settings: Settings) -> None:
         )
     if settings.openai_timeout_seconds <= 0:
         raise ConfigurationError("OPENAI_TIMEOUT_SECONDS must be greater than zero.")
+    if settings.openai_max_output_tokens < 1:
+        raise ConfigurationError("OPENAI_MAX_OUTPUT_TOKENS must be positive.")
     if settings.ai_job_worker_concurrency < 1:
         raise ConfigurationError("AI_JOB_WORKER_CONCURRENCY must be at least 1.")
     if settings.ai_job_poll_interval_seconds <= 0:

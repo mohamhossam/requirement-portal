@@ -15,6 +15,8 @@ OPENAI = "OpenAI"
 
 
 def openai_transport(
-    client: OpenAI, model: str, timeout_seconds: float
+    client: OpenAI, model: str, timeout_seconds: float, max_output_tokens: int
 ) -> OpenAIStructuredOutputClient:
-    return OpenAIStructuredOutputClient(client, model=model, timeout_seconds=timeout_seconds)
+    return OpenAIStructuredOutputClient(
+        client, model=model, timeout_seconds=timeout_seconds, max_output_tokens=max_output_tokens
+    )

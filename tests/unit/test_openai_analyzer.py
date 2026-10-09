@@ -148,7 +148,7 @@ def test_sdk_analysis_preserves_decisions_without_reciting_section_evidence(
     }
     evidence["image_assets"] = []
     candidate = OpenAIRequirementAnalyzer(
-        mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0
+        mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
     ).analyze(dummy_requirement, (), (evidence,), (decided,), ())
     assert candidate["known_facts"] == [fact]
     assert candidate["intent_proposals"] == []
@@ -197,7 +197,7 @@ def test_openai_analyzer_success(
 
     # Execute
     analyzer = OpenAIRequirementAnalyzer(
-        mock_openai_class.return_value, model="gpt-4o", timeout_seconds=60.0
+        mock_openai_class.return_value, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
     )
     candidate = analyzer.analyze(
         requirement_with_outcome,
@@ -247,7 +247,7 @@ def test_openai_analyzer_failure(
     mock_client.chat.completions.parse.side_effect = OpenAIError("API Error")
 
     analyzer = OpenAIRequirementAnalyzer(
-        mock_openai_class.return_value, model="gpt-4o", timeout_seconds=60.0
+        mock_openai_class.return_value, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
     )
 
     with pytest.raises(RequirementAnalysisGenerationError, match="OpenAI analysis failed"):
@@ -270,7 +270,7 @@ def test_openai_structured_analysis_sends_images_separately_and_validates_citati
     )
     mock_openai_class.return_value = _client_returning(parsed)
     analyzer = OpenAIRequirementAnalyzer(
-        mock_openai_class.return_value, model="gpt-4o", timeout_seconds=60.0
+        mock_openai_class.return_value, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
     )
 
     candidate = analyzer.analyze_evidence(
@@ -338,7 +338,7 @@ def test_blank_entries_are_dropped_instead_of_reaching_the_domain(
     mock_openai_class.return_value = _client_returning(parsed)
 
     result = OpenAIRequirementAnalyzer(
-        mock_openai_class.return_value, model="gpt-4o", timeout_seconds=60.0
+        mock_openai_class.return_value, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
     ).analyze(requirement_with_outcome, ())
 
     assert result["known_facts"] == ["Real fact"]
@@ -359,7 +359,10 @@ def test_response_with_only_blank_entries_is_a_generation_error(
 
     with pytest.raises(RequirementAnalysisGenerationError):
         OpenAIRequirementAnalyzer(
-            mock_openai_class.return_value, model="gpt-4o", timeout_seconds=60.0
+            mock_openai_class.return_value,
+            model="gpt-4o",
+            timeout_seconds=60.0,
+            max_output_tokens=8192,
         ).analyze(dummy_requirement, ())
 
 
@@ -372,7 +375,10 @@ def test_empty_choices_is_a_generation_error(
 
     with pytest.raises(RequirementAnalysisGenerationError):
         OpenAIRequirementAnalyzer(
-            mock_openai_class.return_value, model="gpt-4o", timeout_seconds=60.0
+            mock_openai_class.return_value,
+            model="gpt-4o",
+            timeout_seconds=60.0,
+            max_output_tokens=8192,
         ).analyze(dummy_requirement, ())
 
 
@@ -400,7 +406,7 @@ def test_intent_proposals_are_cleaned_deduplicated_and_labelled(
     mock_openai_class.return_value = _client_returning(parsed)
 
     result = OpenAIRequirementAnalyzer(
-        mock_openai_class.return_value, model="gpt-4o", timeout_seconds=60.0
+        mock_openai_class.return_value, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
     ).analyze(dummy_requirement, ())
 
     assert [item["kind"] for item in result["intent_proposals"]] == [
@@ -426,9 +432,9 @@ def test_invented_numeric_target_in_intent_proposal_is_rejected(
 
     # The shared analyzer asks once more for a complete analysis, then refuses.
     with pytest.raises(RequirementAnalysisGenerationError) as raised:
-        OpenAIRequirementAnalyzer(client, model="gpt-4o", timeout_seconds=60.0).analyze(
-            dummy_requirement, ()
-        )
+        OpenAIRequirementAnalyzer(
+            client, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
+        ).analyze(dummy_requirement, ())
 
     assert client.chat.completions.parse.call_count == 2
     assert "numeric target" in str(raised.value.__cause__)
@@ -489,9 +495,9 @@ def test_openai_now_runs_the_shared_outcome_review_when_the_source_has_none(
     client.chat.completions.parse.side_effect = reply
     mock_openai_class.return_value = client
 
-    result = OpenAIRequirementAnalyzer(client, model="gpt-4o", timeout_seconds=60.0).analyze(
-        requirement, ()
-    )
+    result = OpenAIRequirementAnalyzer(
+        client, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
+    ).analyze(requirement, ())
 
     formats = [call.kwargs["response_format"] for call in client.chat.completions.parse.mock_calls]
     assert formats == [RequirementAnalysisSchema, DesiredOutcomeReviewSchema]

@@ -18,11 +18,12 @@ class OpenAIRequirementAnalyzer(StructuredRequirementAnalyzerAdapter):
         *,
         model: str,
         timeout_seconds: float,
+        max_output_tokens: int,
         debug_trace: DebugTrace | None = None,
     ) -> None:
         resolved_trace = debug_trace if debug_trace is not None else NullDebugTrace()
         super().__init__(
-            client=openai_transport(client, model, timeout_seconds),
+            client=openai_transport(client, model, timeout_seconds, max_output_tokens),
             provider_name=OPENAI,
             vision_enabled=True,
             vision_error="The configured OpenAI model does not accept image evidence.",
