@@ -909,3 +909,59 @@ def test_prior_art_is_off_by_default_and_its_caps_are_read_from_the_environment(
         assert container.execute_ai_job._screen_prior_art is not None  # noqa: SLF001
     finally:
         container.close_resources()
+
+
+class TestRenamedAttachmentScanSettings:
+    """LIBRARY_* attachment scanning settings became ATTACHMENT_* (ADR-0104)."""
+
+    NAMES = (
+        ("ATTACHMENT_SCAN_MODE", "LIBRARY_SCAN_MODE"),
+        ("ATTACHMENT_SCANNER_HOST", "LIBRARY_SCANNER_HOST"),
+        ("ATTACHMENT_SCANNER_PORT", "LIBRARY_SCANNER_PORT"),
+        ("ATTACHMENT_OCR_ARTIFACTS_PATH", "LIBRARY_OCR_ARTIFACTS_PATH"),
+    )
+
+    @pytest.fixture(autouse=True)
+    def _clean(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("LLM_PROVIDER", "fake")
+        for current, former in self.NAMES:
+            monkeypatch.delenv(current, raising=False)
+            monkeypatch.delenv(former, raising=False)
+
+    def test_the_new_names_are_read(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("ATTACHMENT_SCANNER_HOST", "scanner")
+        monkeypatch.setenv("ATTACHMENT_SCANNER_PORT", "3311")
+        monkeypatch.setenv("ATTACHMENT_OCR_ARTIFACTS_PATH", "/var/ocr")
+
+        settings = Settings.from_env()
+
+        assert (settings.library_scanner_host, settings.library_scanner_port) == ("scanner", 3311)
+        assert settings.library_ocr_artifacts_path == "/var/ocr"
+        assert settings.library_scan_mode == "clamav"
+
+    def test_the_former_names_still_work_for_one_release(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("LIBRARY_SCANNER_HOST", "old-scanner")
+        monkeypatch.setenv("LIBRARY_SCANNER_PORT", "3312")
+
+        settings = Settings.from_env()
+
+        assert (settings.library_scanner_host, settings.library_scanner_port) == (
+            "old-scanner",
+            3312,
+        )
+
+    def test_both_names_must_agree(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("ATTACHMENT_SCANNER_HOST", "scanner")
+        monkeypatch.setenv("LIBRARY_SCANNER_HOST", "scanner")
+        assert Settings.from_env().library_scanner_host == "scanner"
+
+        monkeypatch.setenv("LIBRARY_SCANNER_HOST", "elsewhere")
+        with pytest.raises(ConfigurationError, match="remove LIBRARY_SCANNER_HOST"):
+            Settings.from_env()
+
+    def test_errors_name_the_new_settings(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("LIBRARY_SCANNER_PORT", "not-a-port")
+        with pytest.raises(ConfigurationError, match="ATTACHMENT_SCANNER_PORT must be an integer"):
+            Settings.from_env()

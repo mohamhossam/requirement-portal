@@ -36,7 +36,7 @@ export default defineConfig({
       cwd: path.resolve(import.meta.dirname, ".."),
       url: `${apiUrl}/health`,
       reuseExistingServer: !process.env.CI,
-      env: { ...process.env, PROVIDER_RATE_LIMIT_PER_MINUTE: "0", LLM_PROVIDER: "fake", PERSISTENCE_PROVIDER: "memory", IDENTITY_PROVIDER: "fake", LIBRARY_SCAN_MODE: "offline" },
+      env: { ...process.env, PROVIDER_RATE_LIMIT_PER_MINUTE: "0", LLM_PROVIDER: "fake", PERSISTENCE_PROVIDER: "memory", IDENTITY_PROVIDER: "fake", ATTACHMENT_SCAN_MODE: "offline" },
       timeout: 120_000,
     },
     {

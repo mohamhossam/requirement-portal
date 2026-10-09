@@ -309,7 +309,7 @@ cp .env.example .env
 | `PERSISTENCE_PROVIDER` | No | `memory` (default; data is lost on API restart) or `postgres`. |
 | `DATABASE_URL` | PostgreSQL only | Connection URL. A `localhost`/`127.0.0.1` URL lets the launchers start and migrate the Compose database. |
 | `IDENTITY_PROVIDER` | No | `fake` (default; switchable development personas) or `oidc` with the `OIDC_*` variables. See `docs/operations/keycloak-login.md`. |
-| `LIBRARY_SCAN_MODE` | No | `clamav` (default) scans shared-library uploads at `LIBRARY_SCANNER_HOST`:`LIBRARY_SCANNER_PORT`. `offline` is a development-only adapter allowed only with memory persistence and fake identity. |
+| `ATTACHMENT_SCAN_MODE` | No | `clamav` (default) scans shared-library uploads at `ATTACHMENT_SCANNER_HOST`:`ATTACHMENT_SCANNER_PORT`. `offline` is a development-only adapter allowed only with memory persistence and fake identity. |
 | `API_BACKGROUND_WORKERS` | No | `true` (default) runs background AI jobs inside the API. `false` requires PostgreSQL and a separate `python -m smb_requirement_agent.interfaces.worker`. |
 | `APP_ENV` | No | `development` (default), `test`, or `production`. Production requires PostgreSQL and refuses fake identity and fake knowledge. |
 | `VITE_API_BASE` | No | Browser API prefix. Defaults to `/api`; change it only for a different deployment topology. An absolute URL's origin is added to the built app's Content-Security-Policy `connect-src`. |
@@ -604,11 +604,11 @@ or migrates a database. Start Docker, correct `DATABASE_URL`, or set
 ### Library uploads fail with "Malware scanner unavailable"
 
 Shared knowledge library uploads are scanned by ClamAV at
-`LIBRARY_SCANNER_HOST`:`LIBRARY_SCANNER_PORT` (default `127.0.0.1:3310`) and fail
+`ATTACHMENT_SCANNER_HOST`:`ATTACHMENT_SCANNER_PORT` (default `127.0.0.1:3310`) and fail
 closed when it is unreachable. Run ClamAV, for example
 `docker run -d -p 127.0.0.1:3310:3310 clamav/clamav:1.5`, or, for an offline
 trial with memory persistence and fake identity only, set
-`LIBRARY_SCAN_MODE=offline`. Requirement attachments are not affected. See
+`ATTACHMENT_SCAN_MODE=offline`. Requirement attachments are not affected. See
 `docs/operations/document-knowledge.md`.
 
 ### View application and Ollama logs

@@ -88,3 +88,34 @@ portal runs from its own repository (`v0.2.0` or later), with its database resto
   edges (decided 2026-10-09 by the repository owner).
 - **Not in this change.** Retiring the old knowledge volume, which waits on a quiet period
   and a backup, and Phase 6.
+
+## Phase 7 here
+
+Chosen 2026-10-09 by the repository owner to come before Phase 6, which waits on confirming
+the production knowledge import.
+
+- **Import boundary.** `.importlinter` forbids `knowledge_portal` anywhere in requirement work;
+  the two meet only over HTTP.
+- **Setting names.** Attachment scanning is configured as `ATTACHMENT_SCAN_MODE`,
+  `ATTACHMENT_SCANNER_HOST`, `ATTACHMENT_SCANNER_PORT` and `ATTACHMENT_OCR_ARTIFACTS_PATH`.
+  The former `LIBRARY_*` names are still read for one release; set both and they must agree.
+- **Contracts.** knowledge-portal attaches its internal contract to each release. The CI
+  deployment job checks that `contracts/knowledge-internal.openapi.json` is the one the pinned
+  release (`KNOWLEDGE_IMAGE_TAG`) ships, so moving the pin means copying its contract too.
+- **CI.** The deployment job runs the knowledge portal from its own repository (see
+  "Cutover here"), so the planned contract stub is not needed.
+
+## Phase 6 here
+
+Started 2026-10-09, once the repository owner confirmed that all 18 knowledge tables in
+production are empty (`drop-knowledge-tables --dry-run`).
+
+- **Tables.** The existing last migration drops them on the next upgrade, since all are
+  empty. A new final migration, `202610091200_require_knowledge_tables_gone.sql`, stops the
+  upgrade while any is left, so no database keeps rows the removed commands can no longer
+  move. `docs/operations/deployment.md`, "Knowledge tables left behind", gives the way out.
+- **Commands.** `drop-knowledge-tables` (its module, `moved_knowledge_tables.py`, the compose
+  service and the CI steps) is gone, and so is knowledge-portal's `import` command. Their last
+  versions are requirement-portal `d3ee708` and knowledge-portal `v0.2.0`.
+- **Tests.** The table list and the two migration names live in `tests/knowledge_tables.py`;
+  the architecture test now forbids naming a knowledge table anywhere in requirement work.

@@ -71,12 +71,34 @@ from smb_requirement_agent.infrastructure.config.options import (
 )
 from smb_requirement_agent.infrastructure.config.settings_validation import validate_settings
 
+# Attachment scanning settings were named LIBRARY_* while the shared library lived here. The
+# old names are read for one more release (ADR-0104); the new name wins when both are set.
+RENAMED_SETTINGS = {
+    "ATTACHMENT_SCAN_MODE": "LIBRARY_SCAN_MODE",
+    "ATTACHMENT_SCANNER_HOST": "LIBRARY_SCANNER_HOST",
+    "ATTACHMENT_SCANNER_PORT": "LIBRARY_SCANNER_PORT",
+    "ATTACHMENT_OCR_ARTIFACTS_PATH": "LIBRARY_OCR_ARTIFACTS_PATH",
+}
 
-def _library_scanner_port() -> int:
+
+def _renamed_env(name: str, default: str) -> str:
+    """The setting under its current name, else its former one, else the default."""
+    value = os.getenv(name)
+    if value is not None:
+        former = os.getenv(RENAMED_SETTINGS[name])
+        if former is not None and former.strip() != value.strip():
+            raise ConfigurationError(
+                f"{name} and {RENAMED_SETTINGS[name]} disagree; remove {RENAMED_SETTINGS[name]}."
+            )
+        return value
+    return os.getenv(RENAMED_SETTINGS[name], default)
+
+
+def _attachment_scanner_port() -> int:
     try:
-        return int(os.getenv("LIBRARY_SCANNER_PORT", "3310"))
+        return int(_renamed_env("ATTACHMENT_SCANNER_PORT", "3310"))
     except ValueError as exc:
-        raise ConfigurationError("LIBRARY_SCANNER_PORT must be an integer.") from exc
+        raise ConfigurationError("ATTACHMENT_SCANNER_PORT must be an integer.") from exc
 
 
 @dataclass(frozen=True)
@@ -522,13 +544,13 @@ class Settings:
             database_pool_timeout_seconds=pool_timeout,
             api_background_workers=raw_api_workers == "true",
             document_max_file_bytes=document_max,
-            library_scan_mode=os.getenv("LIBRARY_SCAN_MODE", "clamav").strip(),
-            library_ocr_artifacts_path=os.getenv("LIBRARY_OCR_ARTIFACTS_PATH", "").strip(),
+            library_scan_mode=_renamed_env("ATTACHMENT_SCAN_MODE", "clamav").strip(),
+            library_ocr_artifacts_path=_renamed_env("ATTACHMENT_OCR_ARTIFACTS_PATH", "").strip(),
             document_office_preview_executable=os.getenv(
                 "DOCUMENT_OFFICE_PREVIEW_EXECUTABLE", ""
             ).strip(),
-            library_scanner_host=os.getenv("LIBRARY_SCANNER_HOST", "127.0.0.1").strip(),
-            library_scanner_port=_library_scanner_port(),
+            library_scanner_host=_renamed_env("ATTACHMENT_SCANNER_HOST", "127.0.0.1").strip(),
+            library_scanner_port=_attachment_scanner_port(),
             document_context_max_characters=document_context_max,
             document_extraction_concurrency=document_extraction_concurrency,
             document_extraction_queue=document_extraction_queue,

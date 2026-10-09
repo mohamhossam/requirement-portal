@@ -17,9 +17,6 @@ from smb_kernel.persistence.connector import DirectPostgresConnector
 from smb_kernel.time.system import SystemClock
 
 from smb_requirement_agent.infrastructure.persistence import migration_runner
-from smb_requirement_agent.infrastructure.persistence.moved_knowledge_tables import (
-    DROP_EMPTY_MIGRATION,
-)
 from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
 from smb_requirement_agent.references.application.errors import CitationNotCurrentError
 from smb_requirement_agent.references.application.ports.architecture_knowledge import ActiveRelease
@@ -43,6 +40,7 @@ from smb_requirement_agent.references.infrastructure.reference_publications impo
     PostgresReferencePublications,
 )
 from tests.knowledge_doubles import PublishedLibrary
+from tests.knowledge_tables import KNOWLEDGE_TABLE_DROPS
 
 DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 pytestmark = pytest.mark.skipif(not DATABASE_URL, reason="TEST_DATABASE_URL is not configured")
@@ -129,7 +127,7 @@ def test_the_seed_builds_exactly_the_state_the_library_published(
 ) -> None:
     real = Path(migration_runner.MIGRATIONS)
     for path in real.glob("*.sql"):
-        if path.name not in {SEEDING, DROP_EMPTY_MIGRATION}:
+        if path.name not in {SEEDING, *KNOWLEDGE_TABLE_DROPS}:
             shutil.copy(path, tmp_path / path.name)
     monkeypatch.setattr(migration_runner, "MIGRATIONS", tmp_path)
     migration_runner.run_migrations(isolated_url)
@@ -227,7 +225,7 @@ def test_the_migration_seeds_the_release_active_now(
     real = Path(migration_runner.MIGRATIONS)
     seeding = "202610021300_active_architecture_release.sql"
     for path in real.glob("*.sql"):
-        if path.name not in {seeding, DROP_EMPTY_MIGRATION}:
+        if path.name not in {seeding, *KNOWLEDGE_TABLE_DROPS}:
             shutil.copy(path, tmp_path / path.name)
     monkeypatch.setattr(migration_runner, "MIGRATIONS", tmp_path)
     migration_runner.run_migrations(isolated_url)

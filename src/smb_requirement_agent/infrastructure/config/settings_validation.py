@@ -79,16 +79,16 @@ def validate_settings(settings: Settings) -> None:
     if not settings.metrics_host.strip():
         raise ConfigurationError("METRICS_HOST must not be blank.")
     if settings.library_scan_mode not in {"clamav", "offline"}:
-        raise ConfigurationError("LIBRARY_SCAN_MODE must be clamav or offline.")
+        raise ConfigurationError("ATTACHMENT_SCAN_MODE must be clamav or offline.")
     if settings.library_scan_mode == "offline" and (
         settings.persistence_provider is not PersistenceProvider.MEMORY
         or settings.identity_provider is not IdentityProvider.FAKE
     ):
         raise ConfigurationError(
-            "LIBRARY_SCAN_MODE=offline requires memory persistence and fake identity."
+            "ATTACHMENT_SCAN_MODE=offline requires memory persistence and fake identity."
         )
     if not settings.library_scanner_host.strip() or not 1 <= settings.library_scanner_port <= 65535:
-        raise ConfigurationError("Library scanner host and port are invalid.")
+        raise ConfigurationError("ATTACHMENT_SCANNER_HOST and ATTACHMENT_SCANNER_PORT are invalid.")
     if settings.llm_provider is LLMProvider.PROFILES and settings.llm_profiles is None:
         raise ConfigurationError("LLM_PROVIDER=profiles requires LLM_CONFIG_PATH.")
     if settings.llm_provider is LLMProvider.OPENAI and not settings.openai_api_key:

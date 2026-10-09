@@ -20,7 +20,6 @@ BACKEND_SERVICES = (
     "migrate",
     "maintenance",
     "retention",
-    "drop-knowledge-tables",
 )
 TARGETS = {"/app/config"}
 

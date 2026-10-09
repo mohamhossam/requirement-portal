@@ -31,8 +31,8 @@ x-backend: &backend
   environment: &backend-environment
     PERSISTENCE_PROVIDER: postgres
     DATABASE_URL: postgresql://smb:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/smb_requirements
-    LIBRARY_SCANNER_HOST: clamav
-    LIBRARY_SCANNER_PORT: "3310"
+    ATTACHMENT_SCANNER_HOST: clamav
+    ATTACHMENT_SCANNER_PORT: "3310"
     LOG_FORMAT: json
     METRICS_HOST: 0.0.0.0
     METRICS_PORT: "9464"
@@ -107,23 +107,6 @@ services:
     command: ["python", "-m", "smb_requirement_agent.interfaces.retention"]
     restart: "no"
     profiles: ["retention"]
-    depends_on:
-      migrate:
-        condition: service_completed_successfully
-
-  # Once, offline: drops the library, catalogue and event tables the knowledge
-  # portal owns (docs/operations/deployment.md). `migrate` already drops them
-  # while all are empty, so only a moved system needs this. A table holding rows
-  # is dropped only if the knowledge database holds an identical copy, named by
-  # --knowledge-database-url; otherwise nothing is dropped. Arguments after the
-  # service name are appended:
-  #   docker compose -f deploy/compose.production.yaml run --rm drop-knowledge-tables \
-  #     --knowledge-database-url=postgresql://... --dry-run
-  drop-knowledge-tables:
-    <<: *backend
-    entrypoint: ["python", "-m", "smb_requirement_agent.interfaces.drop_knowledge_tables"]
-    restart: "no"
-    profiles: ["drop-knowledge-tables"]
     depends_on:
       migrate:
         condition: service_completed_successfully

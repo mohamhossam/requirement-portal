@@ -656,11 +656,11 @@ Files attached to a Requirement are scanned for malware before they are read,
 and stay at "Malware scanner unavailable" until a scanner is reachable. The
 Docker stack includes one. With a launcher, choose one:
 
-- **Offline trial only:** set `LIBRARY_SCAN_MODE=offline` in `.env`. This is a
+- **Offline trial only:** set `ATTACHMENT_SCAN_MODE=offline` in `.env`. This is a
   deterministic development adapter, not malware protection, and startup
   rejects it with PostgreSQL or OIDC identity.
 - **Real scanning:** run ClamAV on `127.0.0.1:3310` (the defaults for
-  `LIBRARY_SCANNER_HOST` and `LIBRARY_SCANNER_PORT`), for example:
+  `ATTACHMENT_SCANNER_HOST` and `ATTACHMENT_SCANNER_PORT`), for example:
 
   ```bash
   docker run -d --name smb-clamav -p 127.0.0.1:3310:3310 clamav/clamav:1.5
