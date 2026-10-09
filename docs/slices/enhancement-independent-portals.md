@@ -53,5 +53,12 @@ work's own roles in place of the knowledge portal's, with no transition.
   the portal decides who gets in.
 - **Realm.** The knowledge portal's client, audience, roles and groups stay in this realm file
   until the cutover; knowledge-portal now defines them itself (`deploy/keycloak/`).
-- **Not yet.** KP's writes recorded against the service, and per-direction service credentials
-  in place of the two shared tokens; both need platform-kernel.
+- **Service credentials.** Each service can hold only its own client secret (platform-kernel
+  1.1.0): this service's `requirement-service` client gets its tokens to the knowledge service,
+  and `/internal` admits tokens granted to the knowledge service's client for the audience
+  `requirement-internal`. Shared tokens keep working beside them. `docs/operations/deployment.md`,
+  "Service credentials".
+- **Writes by the knowledge portal.** Nudges, retirements, reinstatements and reindexing it asks
+  for are recorded against the calling service (`service:knowledge`), keeping the admin's name as
+  display text only (`interfaces/api/routes/internal.py`). The `actor_id` those requests carry is
+  still accepted, so the internal contract is unchanged, but it is not recorded.

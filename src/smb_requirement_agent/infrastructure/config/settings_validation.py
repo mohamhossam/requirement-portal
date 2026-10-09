@@ -34,11 +34,31 @@ def validate_settings(settings: Settings) -> None:
     ):
         if token is not None and len(token) < 32:
             raise ConfigurationError(f"{name} must be at least 32 characters.")
-    if (settings.knowledge_api_base_url is None) != (settings.requirement_service_token is None):
+    if (settings.requirement_service_client_id is None) != (
+        settings.requirement_service_client_secret is None
+    ):
         raise ConfigurationError(
-            "KNOWLEDGE_API_BASE_URL and REQUIREMENT_SERVICE_TOKEN are set together: both to "
-            "connect the knowledge portal, or neither to run without it."
+            "REQUIREMENT_SERVICE_CLIENT_ID and REQUIREMENT_SERVICE_CLIENT_SECRET are set together."
         )
+    proves_itself = (
+        settings.requirement_service_token is not None
+        or settings.requirement_service_client_id is not None
+    )
+    if (settings.knowledge_api_base_url is None) == proves_itself:
+        raise ConfigurationError(
+            "KNOWLEDGE_API_BASE_URL and REQUIREMENT_SERVICE_TOKEN (or "
+            "REQUIREMENT_SERVICE_CLIENT_ID and its secret) are set together: both to connect "
+            "the knowledge portal, or neither to run without it."
+        )
+    for name, value in (
+        ("REQUIREMENT_SERVICE_CLIENT_ID", settings.requirement_service_client_id),
+        ("KNOWLEDGE_SERVICE_CLIENT_ID", settings.knowledge_service_client_id),
+    ):
+        issuer = urlsplit(settings.oidc_issuer_url)
+        if value is not None and (issuer.scheme != "https" or not issuer.netloc):
+            raise ConfigurationError(
+                f"{name} needs OIDC_ISSUER_URL, the HTTPS issuer that grants service tokens."
+            )
     if (
         settings.knowledge_api_base_url is not None
         and not settings.knowledge_api_base_url.startswith(("http://", "https://"))

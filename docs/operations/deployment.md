@@ -360,7 +360,8 @@ The knowledge service reads a few things from this service over `/internal`
 - actor details for ownership transfers.
 
 - **Off by default.** Every `/internal` path answers 404 until
-  `KNOWLEDGE_SERVICE_TOKEN` is set. The reference deployment sets it, from `deploy/.env`.
+  `KNOWLEDGE_SERVICE_TOKEN` or `KNOWLEDGE_SERVICE_CLIENT_ID` is set (see "Service
+  credentials"). The reference deployment sets the token, from `deploy/.env`.
 - **Turning it on.** Set it to a random secret of 32 characters or more, and give the same
   value to the knowledge service. The manifest passes both tokens to both services. Requests must then carry `Authorization: Bearer <token>`;
   no user sign-in is involved.
@@ -377,9 +378,10 @@ passages and evidence.
   `http://knowledge-api:8000`) and `REQUIREMENT_SERVICE_TOKEN`, the secret this service
   presents. It is 32+ characters, and the knowledge service holds the same value. Startup
   refuses one without the other.
-- **Neither set (development only):** deterministic fakes stand in, with no library, one
-  empty catalogue version (`offline-catalogue`), and nothing for the viewers to show.
-  `APP_ENV=production` refuses to start this way.
+- **Or a client of its own** in place of the token: see "Service credentials".
+- **Neither set:** deterministic fakes stand in, with no library, one empty catalogue version
+  (`offline-catalogue`), and nothing for the viewers to show. Production may run this way too
+  (ADR-0104).
 - **Gone from this service:** the library, the architecture and squad catalogues, their
   routes (`/library/*`, `/architecture-knowledge/*`, `/organisation/*`, `/jobs/*`,
   `/knowledge/search`) and their worker. They live in the knowledge portal. A Requirement's
@@ -394,6 +396,31 @@ passages and evidence.
   its name too (`202610021500_active_release_name.sql`). The read-only views read
   `GET /architecture/active-release`.
 
+
+## Service credentials
+
+With the shared tokens, each service holds the other's secret too. Per-direction credentials
+(ADR-0104) give each service only its own: a confidential client at the OIDC issuer, which
+grants it short-lived tokens through the client-credentials grant. The receiving service checks
+them against the issuer's signing keys and holds no secret at all.
+
+| Direction | Keycloak client | This service's settings |
+|---|---|---|
+| Requirement work calls the knowledge service | `requirement-service`, audience `knowledge-internal` (`deploy/keycloak/realm-requirement-ai.json`) | `REQUIREMENT_SERVICE_CLIENT_ID=requirement-service` and `REQUIREMENT_SERVICE_CLIENT_SECRET` |
+| The knowledge service calls requirement work | `knowledge-service`, audience `requirement-internal` (knowledge-portal's `deploy/keycloak/`) | `KNOWLEDGE_SERVICE_CLIENT_ID=knowledge-service` |
+
+1. Import the realm, or add the client to an existing realm, and copy the secret Keycloak
+   generated for `requirement-service` (Clients, `requirement-service`, Credentials). The realm
+   file stores no secret.
+2. Set the settings above in `production.env`, with `OIDC_ISSUER_URL` set to the realm. The
+   knowledge service sets its own client's ID and secret, and `REQUIREMENT_SERVICE_CLIENT_ID`.
+3. With client credentials, they are used in place of `REQUIREMENT_SERVICE_TOKEN`. `/internal`
+   admits either `KNOWLEDGE_SERVICE_TOKEN` or a granted token while both are set, so the two
+   services can move over one at a time. Remove the shared tokens once both use their clients;
+   until the cutover, the reference manifest still sets them for the bundled knowledge service.
+
+Tokens are renewed before they expire. If the issuer cannot be reached, calls to the knowledge
+service report it as unavailable, and `/internal` answers 503 to a granted token it cannot check.
 ## Image updates
 
 - **Pinning.** Base and service images are pinned by digest. Dependabot opens

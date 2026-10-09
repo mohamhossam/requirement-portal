@@ -240,6 +240,7 @@ def _build_llm_adapters(settings: Settings, resources: ExitStack, metrics: Metri
                 settings.database_url,
                 settings.knowledge_service_token,
                 settings.requirement_service_token,
+                settings.requirement_service_client_secret,
                 *(settings.llm_profiles.secrets if settings.llm_profiles else ()),
             )
             if value

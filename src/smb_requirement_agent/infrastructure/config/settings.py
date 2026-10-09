@@ -215,13 +215,19 @@ class Settings:
     metrics_port: int | None = None
     metrics_host: str = "127.0.0.1"
     request_max_body_bytes: int = DEFAULT_REQUEST_MAX_BODY_BYTES
-    # The token the knowledge service presents on /internal routes (ADR-0099).
-    # Unset, the internal API is not served at all.
+    # How the knowledge service proves itself on /internal routes (ADR-0099,
+    # ADR-0104): the shared token it presents, and/or its client at the OIDC
+    # issuer, whose granted tokens for the audience requirement-internal are
+    # admitted. With neither, the internal API is not served at all.
     knowledge_service_token: str | None = field(default=None, repr=False)
-    # Where the knowledge service's internal API is, and the token this service
-    # presents there (ADR-0099). Unset, offline stand-ins answer for it.
+    knowledge_service_client_id: str | None = None
+    # Where the knowledge service's internal API is, and how this service proves
+    # itself there: a shared token, or this service's own client at the OIDC
+    # issuer, which then grants it tokens. Unset, offline stand-ins answer for it.
     knowledge_api_base_url: str | None = None
     requirement_service_token: str | None = field(default=None, repr=False)
+    requirement_service_client_id: str | None = None
+    requirement_service_client_secret: str | None = field(default=None, repr=False)
     # Prior art from historic requirements (Knowledge Center E2, ADR-0102). Off until an
     # operator turns it on, after running the judge's evaluation set against the provider.
     prior_art_enabled: bool = False
@@ -237,11 +243,20 @@ class Settings:
     def knowledge_service_url(self) -> str | None:
         """The knowledge service this process calls, or None when offline stand-ins answer.
 
-        It is called only with both its address and the token to present there.
+        It is called only with both its address and a way to prove this service
+        there: a shared token or this service's client credentials.
         """
-        if self.requirement_service_token is None:
+        if self.requirement_service_token is None and not self.uses_service_client:
             return None
         return self.knowledge_api_base_url
+
+    @property
+    def uses_service_client(self) -> bool:
+        """Whether this service asks the OIDC issuer for its tokens to the knowledge service."""
+        return (
+            self.requirement_service_client_id is not None
+            and self.requirement_service_client_secret is not None
+        )
 
     @classmethod
     def from_env(cls, *, config_path: str | None = None) -> Settings:
@@ -609,4 +624,13 @@ def _operability_from_env() -> dict[str, Any]:
         "knowledge_service_token": os.getenv("KNOWLEDGE_SERVICE_TOKEN", "").strip() or None,
         "knowledge_api_base_url": os.getenv("KNOWLEDGE_API_BASE_URL", "").strip() or None,
         "requirement_service_token": os.getenv("REQUIREMENT_SERVICE_TOKEN", "").strip() or None,
+        "knowledge_service_client_id": (
+            os.getenv("KNOWLEDGE_SERVICE_CLIENT_ID", "").strip() or None
+        ),
+        "requirement_service_client_id": (
+            os.getenv("REQUIREMENT_SERVICE_CLIENT_ID", "").strip() or None
+        ),
+        "requirement_service_client_secret": (
+            os.getenv("REQUIREMENT_SERVICE_CLIENT_SECRET", "").strip() or None
+        ),
     }
