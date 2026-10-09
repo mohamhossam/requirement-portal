@@ -31,6 +31,9 @@ from smb_requirement_agent.infrastructure.persistence import migration_runner
 from smb_requirement_agent.infrastructure.persistence.architecture_release_state import (
     PostgresArchitectureReleaseState,
 )
+from smb_requirement_agent.infrastructure.persistence.moved_knowledge_tables import (
+    DROP_EMPTY_MIGRATION,
+)
 from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
 from smb_requirement_agent.infrastructure.persistence.reference_publications import (
     PostgresReferencePublications,
@@ -122,7 +125,7 @@ def test_the_seed_builds_exactly_the_state_the_library_published(
 ) -> None:
     real = Path(migration_runner.MIGRATIONS)
     for path in real.glob("*.sql"):
-        if path.name != SEEDING:
+        if path.name not in {SEEDING, DROP_EMPTY_MIGRATION}:
             shutil.copy(path, tmp_path / path.name)
     monkeypatch.setattr(migration_runner, "MIGRATIONS", tmp_path)
     migration_runner.run_migrations(isolated_url)
@@ -213,7 +216,7 @@ def test_the_migration_seeds_the_release_active_now(
     real = Path(migration_runner.MIGRATIONS)
     seeding = "202610021300_active_architecture_release.sql"
     for path in real.glob("*.sql"):
-        if path.name != seeding:
+        if path.name not in {seeding, DROP_EMPTY_MIGRATION}:
             shutil.copy(path, tmp_path / path.name)
     monkeypatch.setattr(migration_runner, "MIGRATIONS", tmp_path)
     migration_runner.run_migrations(isolated_url)

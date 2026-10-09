@@ -121,10 +121,14 @@ APIs and workers start.
 
 ## Dropping the moved knowledge tables
 
-Requirement work's earlier migrations still create the library, catalogue and
-event tables the knowledge service now owns; nothing here reads or writes them.
-Once the knowledge service runs (and, when moving an earlier system, once
-`knowledge-import` has finished), drop them, with the platform stopped:
+A fresh install never keeps the library, catalogue and event tables the
+knowledge service now owns: requirement work's earlier migrations still create
+them, and its last migration drops them again while every one is empty. Nothing
+here reads or writes them.
+
+A database moved from an earlier system keeps them all while any holds rows, so
+`knowledge-import` can copy them. Once it has finished, drop them, with the
+platform stopped:
 
 ```bash
 docker compose -f deploy/compose.production.yaml run --rm drop-knowledge-tables

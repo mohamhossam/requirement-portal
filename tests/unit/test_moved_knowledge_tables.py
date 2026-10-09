@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import re
+
 import pytest
 
+from smb_requirement_agent.infrastructure.persistence.migration_runner import MIGRATIONS
 from smb_requirement_agent.infrastructure.persistence.moved_knowledge_tables import (
+    DROP_EMPTY_MIGRATION,
     MOVED_TABLES,
     DropResult,
     Fingerprint,
@@ -42,6 +46,12 @@ def test_the_tables_are_the_ones_the_knowledge_import_copies() -> None:
     assert MOVED_TABLES.index("architecture_knowledge_releases") < MOVED_TABLES.index(
         "architecture_knowledge_chunks"
     )
+
+
+def test_the_migration_drops_the_same_tables_children_first() -> None:
+    text = (MIGRATIONS / DROP_EMPTY_MIGRATION).read_text(encoding="utf-8")
+    listed = text.split("ARRAY[", 1)[1].split("]", 1)[0]
+    assert tuple(re.findall(r"'([a-z_]+)'", listed)) == tuple(reversed(MOVED_TABLES))
 
 
 def test_one_table_that_would_lose_rows_refuses_the_whole_drop() -> None:
