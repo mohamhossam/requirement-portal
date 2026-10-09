@@ -5,6 +5,12 @@
 #   cp deploy/production.env.example deploy/production.env   # then fill it in
 #   docker compose -f deploy/compose.production.yaml up -d --build
 #
+# Or run a release's published images instead of building (ADR-0108): set
+# REQUIREMENT_API_IMAGE, REQUIREMENT_WEB_IMAGE and IMAGE_TAG, then
+#   docker compose -f deploy/compose.production.yaml pull
+#   docker compose -f deploy/compose.production.yaml up -d --no-build
+# docs/operations/deployment.md has the upgrade and rollback steps.
+#
 # It always runs in production mode with OIDC sign-in: APP_ENV and
 # IDENTITY_PROVIDER are set below, not in production.env, so a missing line there
 # cannot open the stack to development personas. A local demo layers
@@ -23,7 +29,8 @@
 name: requirement-platform
 
 x-backend: &backend
-  image: requirement-platform/api:${IMAGE_TAG:-local}
+  # A release's image (ghcr.io/<owner>/requirement-api with IMAGE_TAG=vX.Y.Z), or a local build.
+  image: ${REQUIREMENT_API_IMAGE:-requirement-platform/api}:${IMAGE_TAG:-local}
   build:
     context: ..
     dockerfile: deploy/api/Dockerfile
@@ -159,7 +166,8 @@ services:
         condition: service_completed_successfully
 
   web:
-    image: requirement-platform/web:${IMAGE_TAG:-local}
+    # Built per deployment: its CSP and links name this deployment's issuer and portal.
+    image: ${REQUIREMENT_WEB_IMAGE:-requirement-platform/web}:${IMAGE_TAG:-local}
     build:
       context: ..
       dockerfile: deploy/web/Dockerfile
@@ -192,6 +200,33 @@ services:
       api:
         condition: service_healthy
 
+  # A logical backup of the database (docs/operations/backup-restore.md). Schedule it:
+  #   docker compose -f deploy/compose.production.yaml run --rm backup
+  # and copy the `backups` volume off the host. Dumps older than
+  # BACKUP_RETENTION_DAYS (default 14) are removed after each successful run.
+  backup:
+    image: pgvector/pgvector:pg17@sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f
+    entrypoint: ["sh", "-ec"]
+    command:
+      - |
+        target="/backups/smb_requirements-$$(date -u +%Y%m%dT%H%M%SZ).dump"
+        pg_dump --format=custom --host=postgres --username=smb --dbname=smb_requirements --file="$$target.partial"
+        mv "$$target.partial" "$$target"
+        find /backups -name 'smb_requirements-*.dump' -mtime +"$$BACKUP_RETENTION_DAYS" -delete
+        echo "$$target"
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+    volumes:
+      - backups:/backups
+    restart: "no"
+    profiles: ["backup"]
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 # A fine-grained, read-only token for mohamhossam/platform-kernel, used only while
 # building the backend image. Export KERNEL_READ_TOKEN before `docker compose build`.
 secrets:
@@ -201,3 +236,4 @@ secrets:
 volumes:
   postgres_data:
   clamav_data:
+  backups:

@@ -2,7 +2,7 @@
 
 ## Status
 
-**Specified 2026-10-08; in progress since 2026-10-09.** PR 1, PR 8, PR 2, PR 4a, PR 4b and PR 5 are delivered (see their entries and Validation Evidence); everything else is not implemented yet. This record keeps the
+**Specified 2026-10-08; in progress since 2026-10-09.** PR 1, PR 8, PR 2, PR 4a, PR 4b, PR 5 and PR 6 are delivered, which completes the pilot gate (Phase 1; see their entries and Validation Evidence); Phases 0, 2 and 3 are not implemented yet. This record keeps the
 plan for closing every finding of the second production-readiness review (security, deployment and
 CI, reliability and observability, frontend) so it can be scheduled later. When work starts, each
 PR converts its part into the `WORKSPACE.md` §10 sections and fills in Validation Evidence here.
@@ -193,21 +193,46 @@ Then bump `pyproject.toml:12` and `uv.lock`, and wire the new settings. Phase 1 
 - **ADR-0109** records the policy for frontend logic exceptions, with the exceptions so far. The
   AGENTS.md debt row for the deferred frontend items points to it.
 
-**PR 6 · Releases, backups, upgrade and rollback** (ADR-0108)
-- **Release workflow:** `release.yml` on `v*` tags:
-  - checks the tag matches `pyproject.toml:7` and `package.json:4`;
-  - builds once, then runs Trivy, generates an SBOM with syft, and signs with cosign;
-  - pushes `ghcr.io/mohamhossam/requirement-{api,web}`;
-  - creates the GitHub release from the CHANGELOG.
-- **Compose images:** `${REQUIREMENT_API_IMAGE:-requirement-platform/api}:${IMAGE_TAG:-local}` (:21, :153), and the same for web. Update `test_platform_deployment.py:42-45`, `test_image_pins.py:16,36` and the Trivy loop at `ci.yml:254`.
-- **Version reporting:** `FastAPI(version=importlib.metadata.version(...))` (`main.py:158-161`), and `/health` returns the version.
-- **Backups:**
-  - One `backup` service (profile `backup`) runs `pg_dump -Fc` for `smb_requirements` into a `backups` volume. Update the volume set at `test_platform_deployment.py:51`.
-  - New `docs/operations/backup-restore.md`: schedule, off-host copy, restore checked by `tests.release_recovery verify`, and RPO/RTO for the owner to confirm.
-- **Upgrade runbook:** rewrite `deployment.md` "Upgrades" (:168-181) as backup → pull by tag → migrate → up. Roll back by redeploying the previous tag, or by restoring the backup when a release has a contract step.
-- **Migration policy:** document expand/contract in WORKSPACE.md, with an architecture test that:
-  - rejects `DROP`/`RENAME`/`ALTER … TYPE`, including inside `EXECUTE`/`DO`, unless the file has a `-- contract-step:` marker;
-  - grandfathers migrations up to `202610091200`.
+**PR 6 · Releases, backups, upgrade and rollback** (ADR-0108) — *delivered on `claude/production-hardening-pr6`, 2026-10-09*
+- **Release workflow.** `.github/workflows/release.yml` runs on `v*.*.*` tags.
+  - It checks the tag against `pyproject.toml`, `frontend/package.json` and a `CHANGELOG.md`
+    section (new file, `v0.1.0` written).
+  - It runs all of `ci.yml` as a reusable workflow (a `workflow_call` trigger is added).
+  - It builds each image once, refuses fixable HIGH/CRITICAL findings with Trivy, and pushes
+    `ghcr.io/<owner>/requirement-api` and `requirement-web-production`.
+  - It signs both images keyless with cosign, and attests syft SPDX SBOMs.
+  - It creates the GitHub release from the changelog section, with both digests and SBOMs.
+- **The web image is built per deployment** (owner's decision, 2026-10-09). Its CSP and links
+  are baked in, so the release builds it from the `production` GitHub environment's variables.
+  `CSP_IDENTITY_ORIGINS` is required; `KNOWLEDGE_PORTAL_URL` and `KNOWLEDGE_PORTAL_ROLE` are
+  optional.
+- **Deploy by tag.** The manifest names its images
+  `${REQUIREMENT_API_IMAGE:-requirement-platform/api}:${IMAGE_TAG:-local}`, and the same for
+  web. `test_image_pins.py` treats both variables as this repository's own images, so CI's
+  Trivy loop is unchanged.
+- **Version reporting.** `FastAPI(version=…)` takes it from the installed package's metadata,
+  and `/health` returns `version`.
+- **Backups.**
+  - The `backup` service (profile `backup`, on the database image) writes a custom-format
+    `pg_dump` into the `backups` volume. Each dump is renamed into place only once complete,
+    and old dumps are pruned past `BACKUP_RETENTION_DAYS` (14).
+  - CI's `deployment` job runs it and restores the dump into a new database.
+  - `docs/operations/backup-restore.md` covers scheduling, the off-host copy, restore and
+    switch-over, how the procedure is checked, and the proposed RPO 24h / RTO 1h, marked for the
+    owner to confirm.
+- **Upgrade and rollback runbook.** `deployment.md` "Releases and upgrades" covers:
+  - upgrade: back up → pull by tag → `up -d --no-build` (`migrate` first) → check
+    `/health`'s version and `/ready`;
+  - rollback: redeploy the previous tag, or restore the pre-upgrade backup across a contract
+    step. `/ready` checks only that the release's own newest migration is applied, so a
+    rolled-back release passes on a database migrated further.
+- **Migration policy.** WORKSPACE.md now has "Migrations: expand, then contract", and
+  `tests/architecture/test_migration_expand_contract.py` enforces it.
+  - The test refuses `DROP` (except `DROP DEFAULT`/`NOT NULL`), `RENAME`, column retypes and
+    `TRUNCATE`, including in `EXECUTE` string literals. A file with a
+    `-- contract-step: <reason>` line is allowed.
+  - It grandfathers migrations through `202610091200`. Its scan does flag both of the knowledge
+    tables' dynamic drops, so it would have caught them.
 
 ## Phase 2: P1 (PRs 3, 9 and 10 need kernel v1.2.0)
 
@@ -471,4 +496,28 @@ npm run api:check           OpenAPI types match frontend/openapi.json (no API ch
 npm run build               ✓ built in 1.24s
 npm run test:smoke          45 passed, 2 failed (content-security-policy PDF viewer frame, local Chromium only)
 pytest tests/architecture   passed
+```
+
+### PR 6 (2026-10-09, branch `claude/production-hardening-pr6`)
+
+Run locally on Python 3.13 against a local PostgreSQL 16 with pgvector. There is no Docker
+daemon here, so:
+- `docker compose config` rendered the manifest, with and without the release image variables
+  and the `backup` profile;
+- the backup service's script ran as written against a migrated local database. It wrote a
+  complete dump and pruned a 20-day-old one, and the dump restored into a new database with
+  `pg_restore --exit-on-error` at migration `202610091400`.
+
+CI's `deployment` job runs the same backup and restore inside Compose. The release workflow
+itself runs only on a tag. actionlint passes on it and on `ci.yml`, and its version check and
+release-notes extraction were exercised locally on `v0.1.0`, which was accepted, and `v0.1.1`,
+which was refused.
+
+```text
+pytest --cov (PostgreSQL)   1957 passed; total coverage 94.61% (floor 92.5%)
+ruff check .                All checks passed!
+ruff format --check .       1247 files already formatted
+mypy src tests              Success: no issues found in 681 source files
+lint-imports                Contracts: 43 kept, 0 broken.
+actionlint                  release.yml, ci.yml clean
 ```

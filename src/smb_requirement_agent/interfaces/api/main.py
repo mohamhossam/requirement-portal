@@ -6,6 +6,7 @@ import uuid
 from collections.abc import AsyncIterator, Callable
 from contextlib import ExitStack, asynccontextmanager
 from dataclasses import asdict
+from importlib.metadata import version
 from time import perf_counter
 
 import anyio
@@ -66,6 +67,8 @@ from smb_requirement_agent.interfaces.runtime import (
 _REQUESTS = logging.getLogger("smb_requirement_agent.http")
 # A readiness probe answers within this, or reports the database unavailable.
 READINESS_TIMEOUT_SECONDS = 2.5
+# The installed package's version, which a release tag must match (ADR-0108).
+APPLICATION_VERSION = version("smb-requirement-agent")
 
 
 def _route_template(request: Request) -> str:
@@ -164,6 +167,7 @@ def create_app(container_factory: Callable[[], Container] = build_container) -> 
 
     application = FastAPI(
         title="SMB AI Requirement Breakdown Agent",
+        version=APPLICATION_VERSION,
         lifespan=lifespan,
     )
     register_error_handlers(application)
@@ -241,7 +245,8 @@ def create_app(container_factory: Callable[[], Container] = build_container) -> 
     # Both probes run on the event loop, never in the request thread pool.
     @application.get("/health")
     async def health() -> dict[str, str]:
-        return {"status": "ok"}
+        # The release a deployment runs, for checking an upgrade or rollback landed.
+        return {"status": "ok", "version": APPLICATION_VERSION}
 
     @application.get("/ready")
     async def ready(request: Request, response: Response) -> dict[str, object]:

@@ -1,7 +1,8 @@
 # Deployment
 
 The reference deployment is `deploy/compose.production.yaml`. It runs requirement work on one
-host, every process in its own container, built from this repository. Use it as it stands for a
+host, every process in its own container: a release's published images, pulled by tag, or a
+build from this repository (ADR-0108, "Releases and upgrades"). Use it as it stands for a
 single-host install, or as the specification to translate for Kubernetes or another
 orchestrator.
 
@@ -24,6 +25,9 @@ volumes never collide with the earlier single-repository deployment
 port other than 8080 while both run.
 
 ## Images and processes
+
+A release publishes them as `ghcr.io/mohamhossam/requirement-api` and
+`ghcr.io/mohamhossam/requirement-web-production`; a local build names them as below.
 
 | Image | Built from | Runs |
 |---|---|---|
@@ -82,6 +86,10 @@ docker compose -f deploy/compose.production.yaml build
 docker compose -f deploy/compose.production.yaml run --rm maintenance
 docker compose -f deploy/compose.production.yaml up -d
 ```
+
+To install a release instead of building, name its images in `deploy/.env` (see "Releases and
+upgrades") and replace `build` with `pull`, adding `--no-build` to `run` and `up`. No
+`KERNEL_READ_TOKEN` is needed then.
 
 `run --rm maintenance` applies migrations first (it depends on `migrate`), then
 rebuilds the derived projections and records the maintenance marker. `/ready`
@@ -183,20 +191,80 @@ again: mapping refuses an index built with another model (ADR-0082).
 export LLM_CONFIG_DIR=/etc/requirement-ai               # optional; holds llm.yaml
 ```
 
-## Upgrades
+## Releases and upgrades
+
+A release is a tag `vX.Y.Z` with a section in `CHANGELOG.md` (ADR-0108). Its workflow,
+`.github/workflows/release.yml`, first runs every CI gate on the tagged commit. It refuses a
+tag that differs from `pyproject.toml` or `frontend/package.json`. Then it builds each image
+once and publishes it:
+
+| Image | For |
+|---|---|
+| `ghcr.io/mohamhossam/requirement-api:vX.Y.Z` | Every deployment: the API, worker and one-shot commands |
+| `ghcr.io/mohamhossam/requirement-web-production:vX.Y.Z` | The production deployment. Its Content-Security-Policy and links are built in from the `production` GitHub environment's variables: `CSP_IDENTITY_ORIGINS`, which is required, and the optional `KNOWLEDGE_PORTAL_URL` and `KNOWLEDGE_PORTAL_ROLE`. |
+
+Each image is:
+- scanned by Trivy, which refuses fixable HIGH or CRITICAL findings;
+- signed with cosign (keyless, through GitHub's OIDC identity);
+- published with an SPDX SBOM, attested to the image and attached to the GitHub release.
+
+The release notes name both digests. `GET /api/health` reports the version a deployment runs.
+
+Run a release by naming it in `deploy/.env`:
 
 ```bash
-docker compose -f deploy/compose.production.yaml build
-docker compose -f deploy/compose.production.yaml up -d
+# deploy/.env
+REQUIREMENT_API_IMAGE=ghcr.io/mohamhossam/requirement-api
+REQUIREMENT_WEB_IMAGE=ghcr.io/mohamhossam/requirement-web-production
+IMAGE_TAG=v0.1.0
 ```
 
-`up` re-runs `migrate` before recreating the API and worker. Run
-`maintenance` again only when a release's notes require it, and follow
-`production-readiness-maintenance.md`: stop the API and every worker first, and
-never run it against live traffic.
+Optionally verify the signature first:
 
-New migrations are named `YYYYMMDDHHMM_description.sql` (UTC); see
-`WORKSPACE.md`.
+```bash
+cosign verify ghcr.io/mohamhossam/requirement-api:$IMAGE_TAG \
+  --certificate-identity-regexp 'https://github.com/mohamhossam/requirement-portal/' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
+A version bump changes `frontend/openapi.json`, whose `info.version` comes from the package.
+Regenerate it in the bump commit: `python scripts/dump_openapi.py`.
+
+### Upgrade
+
+1. **Read the notes.** Check the new release's `CHANGELOG.md` section for upgrade steps, a
+   required `maintenance` run, and contract-step migrations.
+2. **Back up.** Run `docker compose -f deploy/compose.production.yaml run --rm backup`, then
+   copy the new dump off the host (`backup-restore.md`).
+3. **Pull.** Set `IMAGE_TAG` to the new release and run
+   `docker compose -f deploy/compose.production.yaml pull`.
+4. **Start.** Run `docker compose -f deploy/compose.production.yaml up -d --no-build`.
+   `migrate` runs to completion before the API and worker are recreated. Then check that
+   `/api/health` names the new version and `/api/ready` answers 200.
+
+Run `maintenance` only when a release's notes require it, and follow
+`production-readiness-maintenance.md`: stop the API and every worker first, and never run it
+against live traffic.
+
+A deployment that builds from source runs `build` and then `up -d` at the release's tag instead
+of `pull`.
+
+### Rollback
+
+- **No contract step since the previous release** (the usual case). Set `IMAGE_TAG` back to the
+  previous release, then `pull` and `up -d --no-build`.
+  - The newer release's migrations stay applied. They only added to the schema, so the previous
+    release runs on it.
+  - `/ready` checks only that the previous release's own newest migration is applied.
+- **A contract step in between.** The previous release may read what that step removed, so
+  redeploying it is not enough.
+  - Stop the stack and restore the backup taken in step 2 of the upgrade
+    (`backup-restore.md`). Then start the previous release.
+  - Anything written since that backup is lost. Rolling forward with a fix is often the better
+    choice.
+
+New migrations are named `YYYYMMDDHHMM_description.sql` (UTC). They expand the schema unless
+marked as a contract step; see `WORKSPACE.md`, "Migrations".
 
 ### Moving to a separate knowledge portal
 
@@ -222,6 +290,13 @@ containers behind this edge. This release removes them. Before upgrading:
 Keycloak keeps the knowledge portal's client, roles and groups it already holds: removing them
 from this realm file changes only new realms.
 
+## Backups
+
+`docker compose -f deploy/compose.production.yaml run --rm backup` dumps the database into the
+`backups` volume. It runs online. Dumps older than `BACKUP_RETENTION_DAYS` (a Compose variable,
+default 14) are removed after each successful run. Schedule it, copy each dump off the host, and
+restore by the steps in `backup-restore.md`, which also states the proposed RPO and RTO.
+
 ## Retention
 
 Read notifications are deleted after `NOTIFICATION_RETENTION_DAYS` (default 90)
@@ -240,7 +315,7 @@ newest 100, so their cost does not grow with a workspace's age.
 
 | Probe | Meaning |
 |---|---|
-| `GET /api/health` | The process is serving HTTP. |
+| `GET /api/health` | The process is serving HTTP. It also reports the running release's `version`. |
 | `GET /api/ready` | The API accepts requests, the schema is at the newest packaged migration, the maintenance marker exists, and (when the API runs them) its background workers are healthy. The compose healthcheck uses it. |
 
 ## Logs
@@ -441,7 +516,8 @@ service report it as unavailable, and `/internal` answers 503 to a granted token
 - **Patches.** The web image applies Alpine security updates at build time.
 
 Rebuild and redeploy when those pull requests merge, even if no application
-code changed (ADR-0077).
+code changed (ADR-0077). With released images, that means cutting a patch
+release (ADR-0108).
 
 ## Not included
 
@@ -452,8 +528,10 @@ code changed (ADR-0077).
 - **OCR and office previews.** The image omits the optional `document-ocr` extra
   (docling) and LibreOffice. Extend the image if you need
   `ATTACHMENT_OCR_ARTIFACTS_PATH` or `DOCUMENT_OFFICE_PREVIEW_EXECUTABLE`.
-- **Backups.** Back up the `postgres_data` volume, or use a managed PostgreSQL
-  server and point `DATABASE_URL` at it.
+- **Off-host backup storage.** The `backup` service writes dumps to the
+  `backups` volume on this host. Copying them elsewhere, and scheduling the
+  service, is the operator's part (`backup-restore.md`). A managed PostgreSQL
+  server's own backups can replace both.
 
 - **Identity.** `deploy/keycloak/` is a development identity provider, not a
   production one.

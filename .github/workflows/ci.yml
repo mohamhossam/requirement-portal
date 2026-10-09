@@ -7,6 +7,8 @@ on:
   push:
     branches: [main]
   pull_request:
+  # The release workflow runs every gate on the tagged commit first (ADR-0108).
+  workflow_call:
 
 # A new push supersedes an in-flight run for the same ref.
 concurrency:
@@ -268,6 +270,17 @@ jobs:
           $KNOWLEDGE up -d clamav
           $COMPOSE up -d --wait web worker
           $KNOWLEDGE up -d --wait edge worker
+
+      - name: A backup from the backup service restores into a new database
+        # The procedure in docs/operations/backup-restore.md, on the installed schema.
+        run: |
+          $COMPOSE run --rm backup
+          $COMPOSE run --rm --entrypoint sh backup -ec '
+            dump=$(ls -1t /backups/smb_requirements-*.dump | head -n 1)
+            createdb --host=postgres --username=smb restore_check
+            pg_restore --exit-on-error --no-owner --host=postgres --username=smb --dbname=restore_check "$dump"
+            psql --host=postgres --username=smb --dbname=restore_check -tAc "SELECT max(version) FROM schema_migrations"
+            dropdb --host=postgres --username=smb restore_check'
 
       - name: Ready through each edge, with security headers
         run: |

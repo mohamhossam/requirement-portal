@@ -1,0 +1,133 @@
+name: Release
+
+# A release publishes images only after every CI gate passes on the tagged commit,
+# and only when the tag matches the versions the project declares (ADR-0108).
+# Deployments pull them by this tag (docs/operations/deployment.md, "Releases and upgrades").
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: The tag matches the declared versions and has release notes
+        run: |
+          backend="v$(grep -m1 '^version = ' pyproject.toml | cut -d'"' -f2)"
+          frontend="v$(node -p 'require("./frontend/package.json").version')"
+          test "$backend" = "$GITHUB_REF_NAME" || {
+            echo "Tag $GITHUB_REF_NAME does not match pyproject.toml $backend"; exit 1; }
+          test "$frontend" = "$GITHUB_REF_NAME" || {
+            echo "Tag $GITHUB_REF_NAME does not match frontend/package.json $frontend"; exit 1; }
+          grep -q "^## $GITHUB_REF_NAME\b" CHANGELOG.md || {
+            echo "CHANGELOG.md has no '## $GITHUB_REF_NAME' section"; exit 1; }
+
+  gates:
+    needs: version
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+
+  publish:
+    needs: gates
+    runs-on: ubuntu-latest
+    # The deployment the web image is built for. Its Content-Security-Policy and
+    # links are baked in at build time, so they come from this GitHub environment's
+    # variables: CSP_IDENTITY_ORIGINS (required), KNOWLEDGE_PORTAL_URL and
+    # KNOWLEDGE_PORTAL_ROLE (optional). A second deployment is a second web build.
+    environment: production
+    permissions:
+      contents: write # the GitHub release
+      packages: write # ghcr.io
+      id-token: write # keyless signatures (Sigstore)
+    env:
+      KERNEL_READ_TOKEN: ${{ secrets.KERNEL_READ_TOKEN }}
+      API_IMAGE: ghcr.io/${{ github.repository_owner }}/requirement-api:${{ github.ref_name }}
+      WEB_IMAGE: ghcr.io/${{ github.repository_owner }}/requirement-web-production:${{ github.ref_name }}
+      CSP_IDENTITY_ORIGINS: ${{ vars.CSP_IDENTITY_ORIGINS }}
+      KNOWLEDGE_PORTAL_URL: ${{ vars.KNOWLEDGE_PORTAL_URL }}
+      KNOWLEDGE_PORTAL_ROLE: ${{ vars.KNOWLEDGE_PORTAL_ROLE || 'knowledge_admin' }}
+      TRIVY: aquasec/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Production sign-in is configured for the web image
+        run: |
+          test -n "$CSP_IDENTITY_ORIGINS" || {
+            echo "Set CSP_IDENTITY_ORIGINS on the 'production' environment: the OIDC issuer origin."; exit 1; }
+
+      - name: Build both images once
+        run: |
+          DOCKER_BUILDKIT=1 docker build --secret id=kernel_read_token,env=KERNEL_READ_TOKEN \
+            -f deploy/api/Dockerfile -t "$API_IMAGE" .
+          DOCKER_BUILDKIT=1 docker build -f deploy/web/Dockerfile \
+            --build-arg CSP_IDENTITY_ORIGINS="$CSP_IDENTITY_ORIGINS" \
+            --build-arg VITE_KNOWLEDGE_PORTAL_URL="$KNOWLEDGE_PORTAL_URL" \
+            --build-arg VITE_KNOWLEDGE_PORTAL_ROLE="$KNOWLEDGE_PORTAL_ROLE" \
+            -t "$WEB_IMAGE" .
+
+      - name: Refuse fixable HIGH and CRITICAL vulnerabilities
+        run: |
+          for image in "$API_IMAGE" "$WEB_IMAGE"; do
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY" \
+              image --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 "$image"
+          done
+
+      - name: Push, and name each image by digest
+        env:
+          REGISTRY_TOKEN: ${{ github.token }}
+        run: |
+          echo "$REGISTRY_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker push "$API_IMAGE"
+          docker push "$WEB_IMAGE"
+          echo "API_DIGEST=$(docker inspect --format '{{index .RepoDigests 0}}' "$API_IMAGE")" >> "$GITHUB_ENV"
+          echo "WEB_DIGEST=$(docker inspect --format '{{index .RepoDigests 0}}' "$WEB_IMAGE")" >> "$GITHUB_ENV"
+
+      - name: SBOM of the backend image
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          image: ${{ env.API_DIGEST }}
+          format: spdx-json
+          output-file: requirement-api.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+
+      - name: SBOM of the web image
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          image: ${{ env.WEB_DIGEST }}
+          format: spdx-json
+          output-file: requirement-web-production.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Sign each image and attest its SBOM
+        run: |
+          cosign sign --yes "$API_DIGEST"
+          cosign sign --yes "$WEB_DIGEST"
+          cosign attest --yes --type spdxjson --predicate requirement-api.spdx.json "$API_DIGEST"
+          cosign attest --yes --type spdxjson --predicate requirement-web-production.spdx.json "$WEB_DIGEST"
+
+      - name: Publish the GitHub release from CHANGELOG.md
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          awk -v heading="## $GITHUB_REF_NAME" '
+            $0 == heading || index($0, heading " ") == 1 { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+          {
+            echo
+            echo "Images (verify with cosign verify --certificate-identity-regexp \"https://github.com/${GITHUB_REPOSITORY}/\" --certificate-oidc-issuer https://token.actions.githubusercontent.com):"
+            echo "- \`$API_DIGEST\`"
+            echo "- \`$WEB_DIGEST\` (built for the production deployment)"
+          } >> release-notes.md
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file release-notes.md \
+            requirement-api.spdx.json requirement-web-production.spdx.json
