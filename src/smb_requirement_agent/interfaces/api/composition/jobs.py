@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 
 from smb_kernel.observability.metrics import Metrics
 from smb_kernel.time.clock import ClockPort
@@ -19,7 +20,10 @@ from smb_requirement_agent.knowledge.infrastructure.prior_art_gate import PriorA
 from smb_requirement_agent.knowledge.infrastructure.requirement_index_worker import (
     IndexReadyJobQueue,
 )
-from smb_requirement_agent.workflows.application.use_cases.ai_job_execution import ExecuteAiJob
+from smb_requirement_agent.workflows.application.use_cases.ai_job_execution import (
+    ExecuteAiJob,
+    RetryBackoff,
+)
 from smb_requirement_agent.workflows.application.use_cases.ai_jobs import AiJobs, Notifications
 from smb_requirement_agent.workflows.application.use_cases.identity_access import (
     RequirementAccessService,
@@ -71,6 +75,10 @@ def build_ai_jobs(
         access,
         analysis.generation_context_tokens,
         max_attempts=settings.ai_job_max_attempts,
+        retry_backoff=RetryBackoff(
+            timedelta(seconds=settings.ai_job_retry_first_seconds),
+            timedelta(seconds=settings.ai_job_retry_max_seconds),
+        ),
         screen_prior_art=knowledge.screen_prior_art,
     )
     # Index-dependent operations wait behind the gate instead of failing.

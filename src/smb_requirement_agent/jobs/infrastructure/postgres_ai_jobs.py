@@ -57,7 +57,7 @@ class PostgresAiJobStore:
                     completed_at=%s, cancel_requested_at=%s, retry_of_job_id=%s,
                     failure=%s, result_resources=%s, updated_at=%s,
                     phase=%s, completed_units=%s, total_units=%s,
-                    current_section_label=%s, version=%s,
+                    current_section_label=%s, version=%s, next_attempt_at=%s,
                     worker_id=CASE WHEN %s THEN NULL ELSE worker_id END,
                     leased_until=CASE WHEN %s THEN NULL ELSE leased_until END,
                     attempt_token=CASE WHEN %s THEN NULL ELSE attempt_token END
@@ -78,6 +78,7 @@ class PostgresAiJobStore:
                     job.total_units,
                     job.current_section_label,
                     job.version,
+                    job.next_attempt_at,
                     job.status.terminal,
                     job.status.terminal,
                     job.status.terminal,
@@ -106,7 +107,7 @@ class PostgresAiJobStore:
                     completed_at=%s, cancel_requested_at=%s, retry_of_job_id=%s,
                     failure=%s, result_resources=%s, updated_at=%s,
                     phase=%s, completed_units=%s, total_units=%s,
-                    current_section_label=%s, version=%s,
+                    current_section_label=%s, version=%s, next_attempt_at=%s,
                     worker_id=CASE WHEN %s THEN NULL ELSE worker_id END,
                     leased_until=CASE WHEN %s THEN NULL ELSE leased_until END,
                     attempt_token=CASE WHEN %s THEN NULL ELSE attempt_token END
@@ -128,6 +129,7 @@ class PostgresAiJobStore:
                     job.total_units,
                     job.current_section_label,
                     job.version,
+                    job.next_attempt_at,
                     ends_attempt,
                     ends_attempt,
                     ends_attempt,
@@ -368,12 +370,23 @@ class PostgresAiJobStore:
                     JOIN requirement_ai_job_leases lease
                       ON lease.requirement_id=j.requirement_id
                     WHERE (j.operation <> ALL(%s) OR j.status='cancellation_requested') AND (
-                        j.status='queued'
+                        (
+                            j.status='queued'
+                            AND (j.next_attempt_at IS NULL OR j.next_attempt_at <= %s)
+                        )
                         OR (
                             j.status IN ('running','cancellation_requested')
                             AND j.leased_until <= %s
                         )
                     ) AND (lease.leased_until IS NULL OR lease.leased_until <= %s)
+                    -- A job waiting out a transient outage keeps its Requirement's order:
+                    -- nothing else of that Requirement starts before it runs again.
+                    AND NOT EXISTS (
+                        SELECT 1 FROM ai_jobs waiting
+                        WHERE waiting.requirement_id=j.requirement_id
+                          AND waiting.job_id<>j.job_id AND waiting.status='queued'
+                          AND waiting.next_attempt_at > %s
+                    )
                     ORDER BY
                       CASE WHEN j.status IN ('running','cancellation_requested') THEN 0 ELSE 1 END,
                       CASE WHEN j.origin='user' THEN 0 ELSE 1 END,
@@ -409,12 +422,15 @@ class PostgresAiJobStore:
                         THEN j.current_section_label ELSE NULL END,
                     failure=CASE WHEN j.status='cancellation_requested'
                         THEN j.failure ELSE NULL END,
+                    next_attempt_at=NULL,
                     updated_at=%s, version=j.version+1
                 FROM claimed_lease WHERE j.job_id=claimed_lease.job_id
                 RETURNING j.*
                 """,
                 (
                     [op.value for op in blocked_operations],
+                    now,
+                    now,
                     now,
                     now,
                     worker_id,
@@ -707,6 +723,7 @@ def record_from_row(row: tuple[object, ...]) -> AiJobRecord:
         total_units=(int(cast(int, row[22])) if len(row) > 22 and row[22] is not None else None),
         current_section_label=(str(row[23]) if len(row) > 23 and row[23] is not None else None),
         version=int(cast(int, row[25])) if len(row) > 25 else 1,
+        next_attempt_at=cast(datetime | None, row[26]) if len(row) > 26 else None,
     )
     return AiJobRecord(
         job,

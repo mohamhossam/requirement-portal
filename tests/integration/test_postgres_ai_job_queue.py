@@ -193,6 +193,39 @@ def test_a_claim_and_a_reclaim_start_the_attempt_with_no_progress(
     assert second.job.failure is None
 
 
+def test_a_job_waiting_out_an_outage_is_stored_and_not_claimed_before_its_time() -> None:
+    """The SQL claim honours next_attempt_at, and the waiting job holds its Requirement."""
+    store = _store()
+    jobs, job = _queued_job(store)
+    now = datetime.now(UTC)
+    first = jobs.claim_next("worker-a", now, now + timedelta(minutes=5), BLOCKED)
+    assert first is not None and first.attempt_token is not None
+    later = now + timedelta(seconds=30)
+    assert jobs.save_fenced(first.job.requeue(now, later), "worker-a", first.attempt_token, now)
+    stored = jobs.get(job.id)
+    assert stored is not None and stored.job.next_attempt_at == later
+    assert stored.job.status is AiJobStatus.QUEUED and stored.job.attempt_count == 1
+    # A younger job of the same Requirement waits behind it.
+    sibling = AiJob(
+        AiJobId(f"fence-{uuid.uuid4()}"),
+        job.requirement_id,
+        OPERATION,
+        AiJobStatus.QUEUED,
+        job.created_by,
+        CREATED + timedelta(seconds=1),
+        CREATED + timedelta(seconds=1),
+        f"fence-{uuid.uuid4()}",
+        f"fence-{uuid.uuid4()}",
+    )
+    jobs.add(AiJobRecord(sibling, AiJobCommand({"question_id": "q-2", "expected_version": 1})))
+
+    early = later - timedelta(seconds=1)
+    assert jobs.claim_next("worker-b", early, early + timedelta(minutes=5), BLOCKED) is None
+    again = jobs.claim_next("worker-b", later, later + timedelta(minutes=5), BLOCKED)
+    assert again is not None and again.job.id == job.id
+    assert again.job.attempt_count == 2 and again.job.next_attempt_at is None
+
+
 def test_notifications_round_trip_and_preferences_default_to_off() -> None:
     store = _store()
     jobs, job = _queued_job(store)

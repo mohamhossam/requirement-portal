@@ -110,6 +110,10 @@ DEFAULT_AI_JOB_SHUTDOWN_GRACE_SECONDS = 150.0
 
 # Attempts a job may start before it fails as attempts_exhausted (ADR-0020 amendment).
 DEFAULT_AI_JOB_MAX_ATTEMPTS = 3
+# Backoff before a job that met a transient provider or platform outage runs again: the
+# first wait, doubled per attempt up to the longest (ADR-0020 amendment, retry with backoff).
+DEFAULT_AI_JOB_RETRY_FIRST_SECONDS = 30.0
+DEFAULT_AI_JOB_RETRY_MAX_SECONDS = 300.0
 
 
 DEFAULT_OIDC_JWKS_TTL_SECONDS = 900.0

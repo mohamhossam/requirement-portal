@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import logging
 import uuid
+from dataclasses import dataclass
+from datetime import timedelta
 
 from smb_kernel.time.clock import ClockPort
 
@@ -132,6 +134,7 @@ class ExecuteAiJob:
         generation_context: GenerationContextTokens,
         *,
         max_attempts: int,
+        retry_backoff: RetryBackoff,
         screen_prior_art: ScreenPriorArt | None = None,
     ) -> None:
         self._jobs = jobs
@@ -157,6 +160,7 @@ class ExecuteAiJob:
         self._generation_context = generation_context
         self._screen_prior_art = screen_prior_art
         self._max_attempts = max_attempts
+        self._retry_backoff = retry_backoff
 
     def execute(self, record: AiJobRecord) -> AiJob:
         with (
@@ -230,6 +234,10 @@ class ExecuteAiJob:
             # Not a failure: this hour's judge calls are spent, so the check waits its turn.
             return self._defer(record)
         except Exception as exc:
+            if describe_public_error(exc).code in TRANSIENT_FAILURE_CODES and (
+                record.job.attempt_count < self._max_attempts
+            ):
+                return self._retry_later(record, exc)
             return self._fail(record, exc)
 
     def _fail(self, record: AiJobRecord, exc: Exception) -> AiJob:
@@ -481,6 +489,33 @@ class ExecuteAiJob:
             )
             return deferred
 
+    def _retry_later(self, record: AiJobRecord, exc: Exception) -> AiJob:
+        """A transient outage: run the job again after a backoff, within the attempt cap."""
+        with self._transactions.transaction():
+            self._transactions.lock_requirement(record.job.requirement_id)
+            current = self._require(record.job.id)
+            if current.status is AiJobStatus.CANCELLATION_REQUESTED:
+                return self._finish_cancel(record, current)
+            now = self._clock.now()
+            delay = self._retry_backoff.delay(current.attempt_count)
+            requeued = current.requeue(now, now + delay)
+            if not self._jobs.save_fenced(
+                requeued,
+                record.worker_id or "",
+                record.attempt_token or "",
+                now,
+            ):
+                raise _LeaseLost("AI job lease was lost before it could be retried.")
+            logger.warning(
+                "AI job %s (%s) attempt %d met %s; retrying in %.0fs",
+                record.job.id.value,
+                record.job.operation.value,
+                current.attempt_count,
+                describe_public_error(exc).code,
+                delay.total_seconds(),
+            )
+            return requeued
+
     def _finish_failure(self, record: AiJobRecord, failure: AiJobFailure) -> AiJob:
         with self._transactions.transaction():
             self._transactions.lock_requirement(record.job.requirement_id)
@@ -540,6 +575,29 @@ class ExecuteAiJob:
         if actor is None:
             raise ActorNotFoundError(f"Actor {actor_id.value!r} is not known to this workspace.")
         return actor
+
+
+# Outages that pass on their own: a provider rate limit or outage, or a platform service
+# (ADR-0099) that could not be reached. A timeout or unusable output is not retried
+# automatically: the call may have been billed, and a second one may fail the same way.
+TRANSIENT_FAILURE_CODES = frozenset(
+    {"model_rate_limit", "model_unavailable", "platform_service_unavailable"}
+)
+
+
+@dataclass(frozen=True)
+class RetryBackoff:
+    """Wait `first` before the second attempt, doubling per attempt up to `longest`."""
+
+    first: timedelta
+    longest: timedelta
+
+    def __post_init__(self) -> None:
+        if not timedelta(0) < self.first <= self.longest:
+            raise ValueError("Retry backoff needs 0 < first <= longest.")
+
+    def delay(self, attempts_made: int) -> timedelta:
+        return min(self.first * (1 << max(0, attempts_made - 1)), self.longest)
 
 
 def _failure(exc: Exception) -> AiJobFailure:

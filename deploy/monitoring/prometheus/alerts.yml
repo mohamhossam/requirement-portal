@@ -37,7 +37,7 @@ groups:
           description: "Usually quota, authentication or a provider outage."
 
       - alert: AiJobsFailing
-        expr: sum by (operation) (increase(smb_ai_jobs_total{status=~"failed|error"}[15m])) > 0
+        expr: sum by (operation) (increase(smb_ai_jobs_total{status=~"failed|error|attempts_exhausted"}[15m])) > 0
         labels:
           severity: warning
         annotations:

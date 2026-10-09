@@ -94,6 +94,25 @@ describe("AiJobStatusPanel", () => {
     expect(screen.getByText(/User-requested work is processed before automatic/)).toBeVisible();
   });
 
+  it("says when a job that met an outage will try again", async () => {
+    vi.spyOn(api, "listAiJobs").mockResolvedValue([
+      {
+        ...activeJob,
+        status: "queued",
+        phase: "waiting_to_retry",
+        completed_units: 0,
+        total_units: null,
+        current_section_label: null,
+        next_attempt_at: "2026-09-03T12:05:00Z",
+      },
+    ]);
+
+    renderWithJobs(<AiJobStatusPanel requirementId="req-1" />);
+
+    expect(await screen.findByText("Analysing requirement will try again")).toBeVisible();
+    expect(screen.getByText(/was unavailable\. It tries again at/)).toBeVisible();
+  });
+
   it("shows the durable batch size for clarification resolution", async () => {
     vi.spyOn(api, "listAiJobs").mockResolvedValue([
       {

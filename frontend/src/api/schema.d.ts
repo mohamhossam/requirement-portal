@@ -1997,6 +1997,8 @@ export interface components {
             id: string;
             /** Item Count */
             item_count?: number | null;
+            /** Next Attempt At */
+            next_attempt_at?: string | null;
             operation: components["schemas"]["AiJobOperation"];
             /** @default user */
             origin: components["schemas"]["AiJobOrigin"];

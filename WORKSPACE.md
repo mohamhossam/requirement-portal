@@ -291,7 +291,11 @@ AI operations run through bounded background workers. Defaults are
 less than half the lease duration. `AI_JOB_MAX_ATTEMPTS=3` (minimum 1) caps how many
 attempts one job may start: a job whose worker keeps dying, so its lease keeps
 expiring and it keeps being reclaimed, fails as `attempts_exhausted` (retryable)
-instead of looping forever, and its creator is notified. With PostgreSQL, jobs and notifications
+instead of looping forever, and its creator is notified. A job whose model provider was
+rate limited or unavailable, or whose platform service could not be reached, is not failed
+at once: it waits `AI_JOB_RETRY_FIRST_SECONDS=30`, doubling per attempt up to
+`AI_JOB_RETRY_MAX_SECONDS=300`, and runs again within the same cap. Its Requirement's other
+jobs wait behind it, so their order holds. With PostgreSQL, jobs and notifications
 survive API restarts; memory mode retains the same behavior for offline work but
 loses process-local state on restart. The synchronous generation endpoints
 remain available during migration, while the browser uses `/ai-jobs` and polls

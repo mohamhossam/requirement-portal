@@ -91,6 +91,7 @@ def job_response(job: AiJob, command: AiJobCommand | None = None) -> AiJobRespon
         completed_units=job.completed_units,
         total_units=job.total_units,
         current_section_label=job.current_section_label,
+        next_attempt_at=job.next_attempt_at,
     )
 
 

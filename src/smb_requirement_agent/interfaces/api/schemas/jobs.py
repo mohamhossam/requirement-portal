@@ -184,6 +184,8 @@ class AiJobResponse(BaseModel):
     completed_units: int = 0
     total_units: int | None = None
     current_section_label: str | None = None
+    # Set while a queued job waits out a transient outage before running again.
+    next_attempt_at: datetime | None = None
 
 
 class NotificationResponse(BaseModel):

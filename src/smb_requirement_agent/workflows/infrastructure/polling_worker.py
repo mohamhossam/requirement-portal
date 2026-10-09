@@ -13,6 +13,7 @@ from smb_kernel.observability.metrics import Metrics
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobQueuePort, AiJobRecord
+from smb_requirement_agent.jobs.domain.entities import AiJob, AiJobStatus
 from smb_requirement_agent.workflows.application.use_cases.ai_job_execution import ExecuteAiJob
 
 logger = logging.getLogger("smb_requirement_agent.ai_jobs.worker")
@@ -153,7 +154,7 @@ class PollingAiJobWorker:
         status = "error"
         try:
             with correlation_scope(f"job:{record.job.id.value}"):
-                status = self._executor.execute(record).status.value
+                status = metric_status(self._executor.execute(record))
         finally:
             elapsed = perf_counter() - started
             self._metrics.record_job(operation, status, elapsed)
@@ -206,3 +207,16 @@ class AiJobWorkerGroup:
     def wait_until_stopped(self) -> None:
         for worker in self._workers:
             worker.wait_until_stopped()
+
+
+def metric_status(job: AiJob) -> str:
+    """The attempt's outcome as `smb_ai_jobs_total` labels it.
+
+    A requeued attempt is `retrying`, and a job failed at the attempt cap is
+    `attempts_exhausted`, so alerts can tell them from an ordinary failure.
+    """
+    if job.status is AiJobStatus.QUEUED and job.next_attempt_at is not None:
+        return "retrying"
+    if job.failure is not None and job.failure.code == "attempts_exhausted":
+        return "attempts_exhausted"
+    return job.status.value

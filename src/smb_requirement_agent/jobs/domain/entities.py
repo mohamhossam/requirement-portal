@@ -141,6 +141,8 @@ class AiJob:
     total_units: int | None = None
     current_section_label: str | None = None
     version: int = 1
+    # A queued job waiting out a transient outage is not claimed before this instant.
+    next_attempt_at: datetime | None = None
 
     def __post_init__(self) -> None:
         require_aware(self.created_at, "AI job created_at")
@@ -149,6 +151,7 @@ class AiJob:
             (self.started_at, "started_at"),
             (self.completed_at, "completed_at"),
             (self.cancel_requested_at, "cancel_requested_at"),
+            (self.next_attempt_at, "next_attempt_at"),
         ):
             if value is not None:
                 require_aware(value, f"AI job {field}")
@@ -187,6 +190,30 @@ class AiJob:
             completed_units=0,
             total_units=None,
             current_section_label=None,
+            next_attempt_at=None,
+            version=self.version + 1,
+        )
+
+    def requeue(self, now: datetime, next_attempt_at: datetime) -> AiJob:
+        """Return an attempt that met a transient outage to the queue, to run again later.
+
+        Unlike `defer`, the attempt stays spent: retries count toward the attempt cap.
+        """
+        if self.status is not AiJobStatus.RUNNING:
+            raise AiJobConflictError("Only a running AI job can be requeued.")
+        require_aware(now, "AI job requeue time")
+        require_aware(next_attempt_at, "AI job next attempt time")
+        if next_attempt_at <= now:
+            raise InvalidAiJobError("An AI job's next attempt must be later than now.")
+        return replace(
+            self,
+            status=AiJobStatus.QUEUED,
+            updated_at=now,
+            phase="waiting_to_retry",
+            completed_units=0,
+            total_units=None,
+            current_section_label=None,
+            next_attempt_at=next_attempt_at,
             version=self.version + 1,
         )
 
@@ -239,6 +266,7 @@ class AiJob:
                 cancel_requested_at=now,
                 completed_at=now,
                 updated_at=now,
+                next_attempt_at=None,
                 version=self.version + 1,
             )
         if self.status is AiJobStatus.RUNNING:
