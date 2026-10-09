@@ -1,5 +1,5 @@
 import type { components } from "./schema";
-import { ApiError, normalizeErrorDetail } from "./errors";
+import { ABORTED_REQUEST, ApiError, normalizeErrorDetail } from "./errors";
 
 export type Requirement = components["schemas"]["RequirementResponse"];
 export type RequirementDraft = components["schemas"]["RequirementDraftResponse"];
@@ -160,20 +160,60 @@ let authorizationHeaders: () => Record<string, string> = () => ({});
 let authenticationFailure: (() => void) | null = null;
 let credentialSession = new AbortController();
 
+/**
+ * A new identity: every request still in flight belongs to the old one, so it is
+ * aborted and its answer discarded, even when the answer has already arrived.
+ */
 export function configureAuthenticationHeaders(headers: () => Record<string, string>) {
   credentialSession.abort();
   credentialSession = new AbortController();
   authorizationHeaders = headers;
 }
 
+/**
+ * The same identity with a renewed token. Requests in flight carry the old token,
+ * which was valid when they left, so they are left to finish.
+ */
+export function replaceAuthenticationHeaders(headers: () => Record<string, string>) {
+  authorizationHeaders = headers;
+}
+
+/**
+ * A request the client gave up on: the network failed, or the identity changed
+ * while it was in flight. Both are status 0, because either may have reached the
+ * server; only the second carries `ABORTED_REQUEST`, which nobody needs to be told about.
+ */
+function transportError(error: unknown, session: AbortSignal): ApiError {
+  if (session.aborted) {
+    return new ApiError(0, "The request was cancelled because the signed-in identity changed.", ABORTED_REQUEST);
+  }
+  return new ApiError(0, error instanceof Error ? error.message : "The API is unavailable.");
+}
+
+/** Read a response body, refusing it if the identity changed while it arrived. */
+async function sessionBody<T>(session: AbortSignal, read: () => Promise<T>): Promise<T> {
+  let body: T;
+  try {
+    body = await read();
+  } catch (error) {
+    throw transportError(error, session);
+  }
+  if (session.aborted) throw transportError(null, session);
+  return body;
+}
+
 async function sessionFetch(url: string, init?: RequestInit): Promise<Response> {
-  const session = credentialSession;
+  const session = credentialSession.signal;
   const signal = init?.signal
-    ? AbortSignal.any([session.signal, init.signal])
-    : session.signal;
-  const response = await fetch(url, { ...init, signal });
-  session.signal.throwIfAborted();
-  return response;
+    ? AbortSignal.any([session, init.signal])
+    : session;
+  try {
+    const response = await fetch(url, { ...init, signal });
+    if (session.aborted) throw transportError(null, session);
+    return response;
+  } catch (error) {
+    throw error instanceof ApiError ? error : transportError(error, session);
+  }
 }
 
 export function configureUnauthorizedHandler(onUnauthorized: (() => void) | null) {
@@ -189,29 +229,22 @@ export function configureAuthentication(
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const session = credentialSession;
-  let response: Response;
-  try {
-    const isFormData = init?.body instanceof FormData;
-    response = await sessionFetch(`${baseUrl}${path}`, {
-      ...init,
-      headers: {
-        ...(isFormData ? {} : { "Content-Type": "application/json" }),
-        ...authorizationHeaders(),
-        ...init?.headers,
-      },
-    });
-  } catch (error) {
-    throw new ApiError(0, error instanceof Error ? error.message : "The API is unavailable.");
-  }
+  const session = credentialSession.signal;
+  const isFormData = init?.body instanceof FormData;
+  const response = await sessionFetch(`${baseUrl}${path}`, {
+    ...init,
+    headers: {
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
+      ...authorizationHeaders(),
+      ...init?.headers,
+    },
+  });
   if (!response.ok) {
     if (response.status === 401) authenticationFailure?.();
     const payload: unknown = await response.json().catch(() => null);
     throw responseError(response.status, payload);
   }
-  const result = (await response.json()) as T;
-  session.signal.throwIfAborted();
-  return result;
+  return sessionBody(session, () => response.json() as Promise<T>);
 }
 
 export const apiRequest = request;
@@ -228,19 +261,14 @@ async function optional<T>(path: string): Promise<T | null> {
 }
 
 async function requestNoContent(path: string, init?: RequestInit): Promise<void> {
-  let response: Response;
-  try {
-    response = await sessionFetch(`${baseUrl}${path}`, {
-      ...init,
-      headers: {
-        "Content-Type": "application/json",
-        ...authorizationHeaders(),
-        ...init?.headers,
-      },
-    });
-  } catch (error) {
-    throw new ApiError(0, error instanceof Error ? error.message : "The API is unavailable.");
-  }
+  const response = await sessionFetch(`${baseUrl}${path}`, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...authorizationHeaders(),
+      ...init?.headers,
+    },
+  });
   if (!response.ok) {
     if (response.status === 401) authenticationFailure?.();
     const payload: unknown = await response.json().catch(() => null);
@@ -289,14 +317,9 @@ function requirementListPath(params: RequirementListParams = {}) {
 
 async function download(path: string, fallbackFilename: string): Promise<void> {
   const session = credentialSession.signal;
-  let response: Response;
-  try {
-    response = await sessionFetch(`${baseUrl}${path}`, {
-      headers: authorizationHeaders(),
-    });
-  } catch (error) {
-    throw new ApiError(0, error instanceof Error ? error.message : "The API is unavailable.");
-  }
+  const response = await sessionFetch(`${baseUrl}${path}`, {
+    headers: authorizationHeaders(),
+  });
   if (!response.ok) {
     if (response.status === 401) authenticationFailure?.();
     const payload: unknown = await response.json().catch(() => null);
@@ -304,8 +327,7 @@ async function download(path: string, fallbackFilename: string): Promise<void> {
   }
   const disposition = response.headers.get("Content-Disposition") ?? "";
   const filename = disposition.match(/filename="([^"]+)"/i)?.[1] ?? fallbackFilename;
-  const body = await response.blob();
-  session.throwIfAborted();
+  const body = await sessionBody(session, () => response.blob());
   const objectUrl = URL.createObjectURL(body);
   const anchor = document.createElement("a");
   anchor.href = objectUrl;
@@ -333,20 +355,13 @@ function activityListPath(params: ActivityListParams = {}) {
 
 async function requestBlob(path: string): Promise<Blob> {
   const session = credentialSession.signal;
-  let response: Response;
-  try {
-    response = await sessionFetch(`${baseUrl}${path}`, { headers: authorizationHeaders() });
-  } catch (error) {
-    throw new ApiError(0, error instanceof Error ? error.message : "The API is unavailable.");
-  }
+  const response = await sessionFetch(`${baseUrl}${path}`, { headers: authorizationHeaders() });
   if (!response.ok) {
     if (response.status === 401) authenticationFailure?.();
     const payload: unknown = await response.json().catch(() => null);
     throw responseError(response.status, payload);
   }
-  const body = await response.blob();
-  session.throwIfAborted();
-  return body;
+  return sessionBody(session, () => response.blob());
 }
 
 export const api = {

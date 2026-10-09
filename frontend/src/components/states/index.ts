@@ -8,6 +8,8 @@
  */
 export { AsyncState } from "./AsyncState";
 export { asyncStatus, type AsyncStatus } from "./asyncStatus";
+export { isChunkLoadError } from "./chunkLoadError";
+export { ErrorBoundary } from "./ErrorBoundary";
 export { ErrorState } from "./ErrorState";
 export { LoadingState } from "./LoadingState";
 export { EmptyState } from "../EmptyState";

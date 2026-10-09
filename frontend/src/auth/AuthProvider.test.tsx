@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
@@ -272,4 +272,48 @@ it("ignores a stale remembered fake persona and loads the configured default", a
   expect(await screen.findByText("Workspace")).toBeInTheDocument();
   expect(currentActor).toHaveBeenCalledOnce();
   expect(sessionStorage.getItem("requirement-ai.fake-actor")).toBe("fake-owner");
+});
+
+it("keeps the workspace and its requests when the same person's token is renewed", async () => {
+  vi.spyOn(api, "getIdentityConfig").mockResolvedValue(oidcConfig);
+  const currentActor = vi.spyOn(api, "getCurrentActor").mockResolvedValue(owner);
+  oidc.manager.getUser.mockResolvedValue({ access_token: "first", expired: false, profile: { sub: "owner-subject" } });
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const invalidate = vi.spyOn(client, "invalidateQueries");
+  render(
+    <QueryClientProvider client={client}>
+      <AuthProvider><MemoryRouter initialEntries={["/"]}><AuthGate><p>Protected workspace</p></AuthGate></MemoryRouter></AuthProvider>
+    </QueryClientProvider>,
+  );
+  expect(await screen.findByText("Protected workspace")).toBeVisible();
+  client.setQueryData(["private", "fake-owner"], { confidential: true });
+  const onUserLoaded = oidc.manager.events.addUserLoaded.mock.calls[0]![0] as (user: unknown) => void;
+
+  act(() => onUserLoaded({ access_token: "renewed", expired: false, profile: { sub: "owner-subject" } }));
+
+  expect(currentActor).toHaveBeenCalledOnce();
+  expect(invalidate).toHaveBeenCalledOnce();
+  expect(screen.queryByText("Resolving identity…")).not.toBeInTheDocument();
+  expect(screen.getByText("Protected workspace")).toBeVisible();
+  expect(client.getQueryData(["private", "fake-owner"])).toEqual({ confidential: true });
+});
+
+it("reloads the identity when a renewal signs in someone else", async () => {
+  vi.spyOn(api, "getIdentityConfig").mockResolvedValue(oidcConfig);
+  const currentActor = vi.spyOn(api, "getCurrentActor").mockResolvedValueOnce(owner).mockResolvedValueOnce(reviewer);
+  oidc.manager.getUser.mockResolvedValue({ access_token: "first", expired: false, profile: { sub: "owner-subject" } });
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(
+    <QueryClientProvider client={client}>
+      <AuthProvider><MemoryRouter initialEntries={["/"]}><AuthGate><p>Protected workspace</p></AuthGate></MemoryRouter></AuthProvider>
+    </QueryClientProvider>,
+  );
+  expect(await screen.findByText("Protected workspace")).toBeVisible();
+  client.setQueryData(["private", "fake-owner"], { confidential: true });
+  const onUserLoaded = oidc.manager.events.addUserLoaded.mock.calls[0]![0] as (user: unknown) => void;
+
+  act(() => onUserLoaded({ access_token: "other", expired: false, profile: { sub: "reviewer-subject" } }));
+
+  await waitFor(() => expect(currentActor).toHaveBeenCalledTimes(2));
+  await waitFor(() => expect(client.getQueryData(["private", "fake-owner"])).toBeUndefined());
 });

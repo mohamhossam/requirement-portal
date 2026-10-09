@@ -129,3 +129,4 @@ Bounded contexts: [context map](context-map.md) and [ubiquitous language](ubiqui
 - [ADR-0103: Bounded-context packages and in-process domain events](adr-0103-bounded-context-packages-and-domain-events.md) — Accepted; implemented 2026-10-08 (PRs 1–16)
 - [ADR-0104: Independent portals with optional links](adr-0104-independent-portals-with-optional-links.md)
 - [ADR-0105: Model-backed work runs only as a durable job](adr-0105-durable-only-provider-work.md) — Accepted; implemented 2026-10-09 (production hardening PR 4a and PR 4b)
+- [ADR-0109: Frontend logic changes during the UI redesign are recorded exceptions](adr-0109-frontend-logic-exceptions.md) — Accepted; recorded 2026-10-09 (production hardening PR 5)

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ApiError } from "../api/errors";
+import { ABORTED_REQUEST, ApiError } from "../api/errors";
 import { mutationErrorToast } from "./mutationErrors";
 
 describe("mutation error notices", () => {
@@ -38,6 +38,11 @@ describe("mutation error notices", () => {
   it("reports a network failure, which carries no status", () => {
     expect(mutationErrorToast(new ApiError(0, "The API is unavailable."), { action: "Saving" }))
       .toMatchObject({ tone: "error", message: "The API is unavailable." });
+  });
+
+  it("stays silent on a request abandoned because the person changed identity", () => {
+    expect(mutationErrorToast(new ApiError(0, "Cancelled.", ABORTED_REQUEST), { action: "Saving" }))
+      .toBeNull();
   });
 
   it("copes with something thrown that is not an ApiError", () => {
