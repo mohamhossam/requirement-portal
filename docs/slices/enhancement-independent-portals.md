@@ -48,6 +48,9 @@ work's own roles in place of the knowledge portal's, with no transition.
   `architecture-maintainers` in `deploy/keycloak/realm-requirement-ai.json`. `knowledge_reader`
   and `knowledge_maintainer` grant nothing here any more. People who map architecture must be
   in the new groups before this ships.
+  *Amended 2026-10-09 (`docs/slices/production-hardening.md`, PR 4a): mapping needs Requirement
+  membership only; `architecture_reader` and its group are retired, `architecture_maintainer`
+  remains for cancelling and retrying other people's jobs.*
 - **Links.** Who sees the links to the knowledge portal comes from `VITE_KNOWLEDGE_PORTAL_ROLE`.
   Unset, it is the portal's `knowledge_admin`, as before. Empty, everyone signed in sees them and
   the portal decides who gets in.

@@ -8,6 +8,8 @@ from contextlib import ExitStack, asynccontextmanager
 from dataclasses import asdict
 from time import perf_counter
 
+import anyio
+import anyio.to_thread
 from fastapi import FastAPI, Request, Response
 from smb_kernel.http.body_limit import BodyLimits, RequestBodyLimit
 from smb_kernel.http.service_auth import INTERNAL_PREFIX, InternalRouteGuard
@@ -62,6 +64,8 @@ from smb_requirement_agent.interfaces.runtime import (
 )
 
 _REQUESTS = logging.getLogger("smb_requirement_agent.http")
+# A readiness probe answers within this, or reports the database unavailable.
+READINESS_TIMEOUT_SECONDS = 2.5
 
 
 def _route_template(request: Request) -> str:
@@ -140,6 +144,9 @@ def create_app(container_factory: Callable[[], Container] = build_container) -> 
         workers = container.background_workers if container.settings.api_background_workers else {}
         application.state.container = container
         application.state.workers = workers
+        # Probes get their own two threads, so a pool saturated by requests never
+        # makes a healthy process look dead to its orchestrator.
+        application.state.probe_threads = anyio.CapacityLimiter(2)
         application.state.accepting_requests = False
         stop_metrics = start_metrics(container)
         try:
@@ -231,17 +238,27 @@ def create_app(container_factory: Callable[[], Container] = build_container) -> 
         response.headers["X-Request-ID"] = correlation_id
         return response
 
+    # Both probes run on the event loop, never in the request thread pool.
     @application.get("/health")
-    def health() -> dict[str, str]:
+    async def health() -> dict[str, str]:
         return {"status": "ok"}
 
     @application.get("/ready")
-    def ready(request: Request, response: Response) -> dict[str, object]:
+    async def ready(request: Request, response: Response) -> dict[str, object]:
         container = getattr(request.app.state, "container", None)
         workers = getattr(request.app.state, "workers", {})
+        persistence = False
+        if container is not None:
+            # The check bounds its own database wait; this bounds the whole probe.
+            with anyio.move_on_after(READINESS_TIMEOUT_SECONDS):
+                persistence = await anyio.to_thread.run_sync(
+                    container.readiness_check,
+                    abandon_on_cancel=True,
+                    limiter=getattr(request.app.state, "probe_threads", None),
+                )
         checks = {
             "accepting_requests": bool(getattr(request.app.state, "accepting_requests", False)),
-            "persistence": container is not None and container.readiness_check(),
+            "persistence": persistence,
             **{name: worker.healthy for name, worker in workers.items()},
         }
         available = all(checks.values())

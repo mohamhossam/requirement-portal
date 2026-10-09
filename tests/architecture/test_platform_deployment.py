@@ -18,6 +18,7 @@ import pytest
 import yaml
 
 from smb_requirement_agent.identity.application.ports import identity
+from smb_requirement_agent.interfaces.api import serve
 
 ROOT = Path(__file__).resolve().parents[2]
 DEPLOY = ROOT / "deploy"
@@ -94,6 +95,12 @@ def test_the_peer_overlay_names_requirement_work_on_an_external_network() -> Non
 
 def test_the_edge_waits_only_for_requirement_work() -> None:
     assert SERVICES["web"]["depends_on"] == {"api": {"condition": "service_healthy"}}
+
+
+def test_the_api_drains_in_flight_requests_and_the_edge_reports_its_health() -> None:
+    assert SERVICES["api"]["stop_grace_period"] == "30s"
+    assert serve.GRACEFUL_SHUTDOWN_SECONDS < 30
+    assert SERVICES["web"]["healthcheck"]["test"][:2] == ["CMD", "wget"]
 
 
 def test_no_internal_route_passes_the_edge() -> None:
@@ -192,12 +199,9 @@ def test_the_web_image_refuses_a_redirect_address_without_a_trailing_slash(
 
 def test_the_realm_holds_only_requirement_work_s_entities() -> None:
     roles = [role["name"] for role in REALM["roles"]["realm"]]
-    assert roles == ["architecture_reader", "architecture_maintainer"]
+    assert roles == ["architecture_maintainer"]
     groups = {item["name"]: item["realmRoles"] for item in REALM["groups"]}
-    assert groups == {
-        "architecture-readers": ["architecture_reader"],
-        "architecture-maintainers": ["architecture_reader", "architecture_maintainer"],
-    }
+    assert groups == {"architecture-maintainers": ["architecture_maintainer"]}
     clients = {client["clientId"]: client for client in REALM["clients"]}
     assert set(clients) == {"requirement-spa", "requirement-service"}
 
@@ -215,11 +219,11 @@ def test_the_realm_holds_only_requirement_work_s_entities() -> None:
 
 
 def test_the_realm_defines_every_role_requirement_work_checks() -> None:
-    """The roles mapping jobs check (require_reader, require_maintainer) exist."""
+    """The role mapping jobs check (require_maintainer) exists."""
     source = inspect.getsource(identity)
     checked = set(re.findall(r'"(architecture_\w+)"', source))
 
-    assert checked == {"architecture_reader", "architecture_maintainer"}
+    assert checked == {"architecture_maintainer"}
     assert checked <= {role["name"] for role in REALM["roles"]["realm"]}
     # The knowledge portal's roles are its own (ADR-0104).
     assert "knowledge_" not in source

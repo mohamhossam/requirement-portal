@@ -18,6 +18,10 @@ from smb_kernel.observability.logging import configure_logging
 from smb_requirement_agent.infrastructure.config.options import ConfigurationError
 from smb_requirement_agent.infrastructure.config.settings import Settings
 
+# On SIGTERM, in-flight requests get this long to finish before the server stops. The
+# reference manifest's stop_grace_period (30s) leaves room for it.
+GRACEFUL_SHUTDOWN_SECONDS = 25
+
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Serve the requirement API.")
@@ -43,6 +47,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         access_log=False,
         proxy_headers=True,
         forwarded_allow_ips=arguments.forwarded_allow_ips,
+        timeout_graceful_shutdown=GRACEFUL_SHUTDOWN_SECONDS,
     )
     return 0
 

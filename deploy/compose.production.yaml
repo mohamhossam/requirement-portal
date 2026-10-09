@@ -132,6 +132,8 @@ services:
       <<: *backend-environment
       # HTTP only; background work runs in `worker`, which scales separately.
       API_BACKGROUND_WORKERS: "false"
+    # In-flight requests get 25s to finish on a stop or redeploy (serve.py), within this.
+    stop_grace_period: 30s
     healthcheck:
       test:
         - CMD
@@ -179,6 +181,13 @@ services:
       - /etc/nginx/conf.d:uid=101,gid=101
     security_opt:
       - no-new-privileges:true
+    # Busybox wget, in the nginx-unprivileged image: nginx answers and serves the app.
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     depends_on:
       api:
         condition: service_healthy
