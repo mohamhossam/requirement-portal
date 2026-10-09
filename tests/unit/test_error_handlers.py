@@ -118,6 +118,7 @@ from smb_requirement_agent.interfaces.api.main import create_app
 from smb_requirement_agent.jobs.application.errors import (
     AiJobNotFoundError,
     NotificationNotFoundError,
+    ProviderBudgetExhaustedError,
     ProviderRateLimitExceededError,
 )
 from smb_requirement_agent.jobs.domain.errors import AiJobConflictError, InvalidAiJobError
@@ -344,6 +345,7 @@ EXPECTED_STATUS_CODES: dict[type[Exception], int] = {
     StoryGenerationError: 502,
     PersistenceError: 500,
     ProviderRateLimitExceededError: 429,
+    ProviderBudgetExhaustedError: 429,
     RequirementIntakeTooLargeError: 422,
 }
 
@@ -354,8 +356,13 @@ EXPECTED_STATUS_CODES: dict[type[Exception], int] = {
     ids=lambda value: value.__name__ if isinstance(value, type) else str(value),
 )
 def test_known_errors_are_mapped(error_type: type[Exception], expected: int) -> None:
-    # A refusal carries the other service's status and detail.
-    error = error_type(422, "boom") if error_type is ServiceResponseError else error_type("boom")
+    # A refusal carries the other service's status and detail; a spent budget, its reset.
+    if error_type is ServiceResponseError:
+        error: Exception = error_type(422, "boom")
+    elif error_type is ProviderBudgetExhaustedError:
+        error = ProviderBudgetExhaustedError("boom", retry_after_seconds=60)
+    else:
+        error = error_type("boom")
     assert status_code_for(error) == expected
 
 

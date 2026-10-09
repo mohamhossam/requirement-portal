@@ -102,6 +102,7 @@ from smb_requirement_agent.identity.domain.errors import (
 from smb_requirement_agent.jobs.application.errors import (
     AiJobNotFoundError,
     NotificationNotFoundError,
+    ProviderBudgetExhaustedError,
     ProviderRateLimitExceededError,
 )
 from smb_requirement_agent.jobs.domain.errors import AiJobConflictError, InvalidAiJobError
@@ -192,6 +193,7 @@ ERROR_CATALOGUE: tuple[tuple[type[Exception], str, FailureCategory], ...] = (
     (AuthorizationDeniedError, "authorization_denied", FailureCategory.AUTHORIZATION),
     (ActorNotFoundError, "actor_not_found", FailureCategory.NOT_FOUND),
     (ProviderRateLimitExceededError, "provider_rate_limited", FailureCategory.RATE_LIMITED),
+    (ProviderBudgetExhaustedError, "provider_budget_exhausted", FailureCategory.RATE_LIMITED),
     (AiJobNotFoundError, "ai_job_not_found", FailureCategory.NOT_FOUND),
     (NotificationNotFoundError, "notification_not_found", FailureCategory.NOT_FOUND),
     (SavedViewNotFoundError, "saved_view_not_found", FailureCategory.NOT_FOUND),

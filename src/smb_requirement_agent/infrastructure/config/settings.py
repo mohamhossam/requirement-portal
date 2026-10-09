@@ -236,6 +236,8 @@ class Settings:
     library_ocr_artifacts_path: str = ""
     document_office_preview_executable: str = ""
     provider_rate_limit_per_minute: int = DEFAULT_PROVIDER_RATE_LIMIT_PER_MINUTE
+    # Tokens the providers may spend per UTC day across every process; 0 is unlimited.
+    provider_daily_token_budget: int = 0
     log_level: str = "INFO"
     log_format: LogFormat = LogFormat.TEXT
     metrics_port: int | None = None
@@ -636,17 +638,19 @@ def _prior_art_from_env() -> dict[str, Any]:
 def _operability_from_env() -> dict[str, Any]:
     """Rate limiting, logging and metrics: the knobs an operator tunes per deployment."""
     raw_limit = os.getenv("PROVIDER_RATE_LIMIT_PER_MINUTE", "").strip()
+    raw_budget = os.getenv("PROVIDER_DAILY_TOKEN_BUDGET", "").strip()
     raw_format = os.getenv("LOG_FORMAT", LogFormat.TEXT.value).strip().lower()
     raw_port = os.getenv("METRICS_PORT", "").strip()
     raw_body = os.getenv("REQUEST_MAX_BODY_BYTES", "").strip()
     try:
         limit = int(raw_limit) if raw_limit else DEFAULT_PROVIDER_RATE_LIMIT_PER_MINUTE
+        budget = int(raw_budget) if raw_budget else 0
         port = int(raw_port) if raw_port else None
         body = int(raw_body) if raw_body else DEFAULT_REQUEST_MAX_BODY_BYTES
     except ValueError as exc:
         raise ConfigurationError(
-            "PROVIDER_RATE_LIMIT_PER_MINUTE, METRICS_PORT and REQUEST_MAX_BODY_BYTES "
-            "must be whole numbers."
+            "PROVIDER_RATE_LIMIT_PER_MINUTE, PROVIDER_DAILY_TOKEN_BUDGET, METRICS_PORT and "
+            "REQUEST_MAX_BODY_BYTES must be whole numbers."
         ) from exc
     try:
         log_format = LogFormat(raw_format)
@@ -654,6 +658,7 @@ def _operability_from_env() -> dict[str, Any]:
         raise ConfigurationError("LOG_FORMAT must be text or json.") from exc
     return {
         "provider_rate_limit_per_minute": limit,
+        "provider_daily_token_budget": budget,
         "log_level": os.getenv("LOG_LEVEL", "INFO").strip().upper() or "INFO",
         "log_format": log_format,
         "metrics_port": port,

@@ -73,6 +73,10 @@ def validate_settings(settings: Settings) -> None:
         raise ConfigurationError(
             "PROVIDER_RATE_LIMIT_PER_MINUTE must be 0 (unlimited) or a positive number."
         )
+    if settings.provider_daily_token_budget < 0:
+        raise ConfigurationError(
+            "PROVIDER_DAILY_TOKEN_BUDGET must be 0 (unlimited) or a positive number."
+        )
     if settings.log_level not in LOG_LEVELS:
         raise ConfigurationError(f"LOG_LEVEL must be one of {', '.join(LOG_LEVELS)}.")
     if settings.metrics_port is not None and not 1 <= settings.metrics_port <= 65535:

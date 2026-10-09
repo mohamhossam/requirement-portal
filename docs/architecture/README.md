@@ -129,5 +129,6 @@ Bounded contexts: [context map](context-map.md) and [ubiquitous language](ubiqui
 - [ADR-0103: Bounded-context packages and in-process domain events](adr-0103-bounded-context-packages-and-domain-events.md) — Accepted; implemented 2026-10-08 (PRs 1–16)
 - [ADR-0104: Independent portals with optional links](adr-0104-independent-portals-with-optional-links.md)
 - [ADR-0105: Model-backed work runs only as a durable job](adr-0105-durable-only-provider-work.md) — Accepted; implemented 2026-10-09 (production hardening PR 4a and PR 4b)
+- [ADR-0106: Provider limits shared by every process, a daily token budget, and edge limits](adr-0106-shared-provider-limits.md) — Accepted; implemented 2026-10-09 (production hardening PR 7)
 - [ADR-0108: Signed releases deployed by tag, backups, and expand/contract migrations](adr-0108-releases-backups-and-migrations.md) — Accepted; implemented 2026-10-09 (production hardening PR 6)
 - [ADR-0109: Frontend logic changes during the UI redesign are recorded exceptions](adr-0109-frontend-logic-exceptions.md) — Accepted; recorded 2026-10-09 (production hardening PR 5)

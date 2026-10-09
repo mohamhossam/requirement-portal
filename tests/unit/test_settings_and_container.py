@@ -75,6 +75,10 @@ from smb_requirement_agent.knowledge.infrastructure.llm.requirement_knowledge_ad
 )
 
 
+def _no_spend(tokens: int) -> None:
+    """These tests make no model calls, so nothing is spent."""
+
+
 class TestSettings:
     def test_openai_provider_without_a_key_fails_loudly(self) -> None:
         """A missing key must fail at construction, not on the first request."""
@@ -545,7 +549,7 @@ class TestSettings:
 
 class TestContainer:
     def test_fake_provider_selects_the_fake_analyzer(self) -> None:
-        adapters = build_llm_adapters(Settings(llm_provider=LLMProvider.FAKE), Metrics())
+        adapters = build_llm_adapters(Settings(llm_provider=LLMProvider.FAKE), Metrics(), _no_spend)
 
         assert isinstance(adapters.analyzer, FakeRequirementAnalyzer)
         assert isinstance(adapters.knowledge_embedding, FakeKnowledgeEmbedding)
@@ -554,7 +558,7 @@ class TestContainer:
         settings = Settings(llm_provider=LLMProvider.OPENAI, openai_api_key="sk-test")
 
         assert isinstance(
-            build_llm_adapters(settings, Metrics()).analyzer, OpenAIRequirementAnalyzer
+            build_llm_adapters(settings, Metrics(), _no_spend).analyzer, OpenAIRequirementAnalyzer
         )
 
     def test_local_provider_selects_all_local_adapters(self) -> None:
@@ -564,7 +568,7 @@ class TestContainer:
             local_embedding_model="embedding-768",
         )
 
-        adapters = build_llm_adapters(settings, Metrics())
+        adapters = build_llm_adapters(settings, Metrics(), _no_spend)
         assert isinstance(adapters.analyzer, LocalRequirementAnalyzer)
         assert isinstance(adapters.epic_generator, LocalEpicGenerator)
         assert isinstance(adapters.feature_generator, LocalFeatureGenerator)
@@ -578,7 +582,7 @@ class TestContainer:
             openrouter_api_key="sk-or-test",
         )
 
-        adapters = build_llm_adapters(settings, Metrics())
+        adapters = build_llm_adapters(settings, Metrics(), _no_spend)
 
         assert isinstance(adapters.analyzer, OpenRouterRequirementAnalyzer)
         assert isinstance(adapters.epic_generator, OpenRouterEpicGenerator)
@@ -596,11 +600,12 @@ class TestContainer:
         settings = Settings(llm_provider=LLMProvider.OPENAI, openai_api_key="sk-test")
 
         assert isinstance(
-            build_llm_adapters(settings, Metrics()).story_quality_evaluator,
+            build_llm_adapters(settings, Metrics(), _no_spend).story_quality_evaluator,
             OpenAIStoryQualityEvaluator,
         )
         assert isinstance(
-            build_llm_adapters(settings, Metrics()).knowledge_embedding, OpenAIKnowledgeEmbedding
+            build_llm_adapters(settings, Metrics(), _no_spend).knowledge_embedding,
+            OpenAIKnowledgeEmbedding,
         )
 
     def test_each_container_owns_its_own_state(self) -> None:
@@ -647,6 +652,7 @@ def test_provider_construction_failure_closes_the_owned_client(
                 local_embedding_model="test-embedding-model",
             ),
             Metrics(),
+            _no_spend,
         )
     client.close.assert_called_once()
 
@@ -668,6 +674,7 @@ def test_provider_cleanup_closes_one_shared_client_once(monkeypatch: pytest.Monk
             local_embedding_model="test-embedding-model",
         ),
         Metrics(),
+        _no_spend,
     )
     adapters.close()
     adapters.close()
@@ -761,12 +768,19 @@ class TestOperabilitySettings:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setenv("LLM_PROVIDER", "fake")
-        for name in ("PROVIDER_RATE_LIMIT_PER_MINUTE", "LOG_LEVEL", "LOG_FORMAT", "METRICS_PORT"):
+        for name in (
+            "PROVIDER_RATE_LIMIT_PER_MINUTE",
+            "PROVIDER_DAILY_TOKEN_BUDGET",
+            "LOG_LEVEL",
+            "LOG_FORMAT",
+            "METRICS_PORT",
+        ):
             monkeypatch.delenv(name, raising=False)
 
         settings = Settings.from_env()
 
         assert settings.provider_rate_limit_per_minute == 30
+        assert settings.provider_daily_token_budget == 0
         assert settings.log_level == "INFO"
         assert settings.log_format is LogFormat.TEXT
         assert settings.metrics_port is None
@@ -774,6 +788,7 @@ class TestOperabilitySettings:
     def test_reads_the_operator_choices(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("LLM_PROVIDER", "fake")
         monkeypatch.setenv("PROVIDER_RATE_LIMIT_PER_MINUTE", "0")
+        monkeypatch.setenv("PROVIDER_DAILY_TOKEN_BUDGET", "2000000")
         monkeypatch.setenv("LOG_LEVEL", "warning")
         monkeypatch.setenv("LOG_FORMAT", "JSON")
         monkeypatch.setenv("METRICS_PORT", "9464")
@@ -782,6 +797,7 @@ class TestOperabilitySettings:
         settings = Settings.from_env()
 
         assert settings.provider_rate_limit_per_minute == 0
+        assert settings.provider_daily_token_budget == 2_000_000
         assert settings.log_level == "WARNING"
         assert settings.log_format is LogFormat.JSON
         assert (settings.metrics_host, settings.metrics_port) == ("0.0.0.0", 9464)
@@ -791,6 +807,8 @@ class TestOperabilitySettings:
         [
             ("PROVIDER_RATE_LIMIT_PER_MINUTE", "-1", "PROVIDER_RATE_LIMIT_PER_MINUTE"),
             ("PROVIDER_RATE_LIMIT_PER_MINUTE", "many", "whole numbers"),
+            ("PROVIDER_DAILY_TOKEN_BUDGET", "-1", "PROVIDER_DAILY_TOKEN_BUDGET"),
+            ("PROVIDER_DAILY_TOKEN_BUDGET", "lots", "whole numbers"),
             ("LOG_LEVEL", "LOUD", "LOG_LEVEL"),
             ("LOG_FORMAT", "xml", "LOG_FORMAT"),
             ("METRICS_PORT", "70000", "METRICS_PORT"),

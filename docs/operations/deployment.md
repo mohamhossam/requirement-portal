@@ -405,22 +405,50 @@ Before relying on it in production:
 
 ## Rate limiting
 
-`PROVIDER_RATE_LIMIT_PER_MINUTE` caps how many provider-calling operations one
-actor may start per minute. They include:
-- generation, analysis and clarification resolution;
-- AI jobs, knowledge search, Story quality checks, architecture mapping and
-  index builds;
-- the actions that queue automatic provider work: creating, promoting or
-  editing a Requirement, asking a clarification question, and deciding
-  knowledge findings or intent proposals.
+Three limits protect the deployment (ADR-0106).
 
-`tests/architecture/test_provider_rate_limit.py` lists the routes. Refusals
-return 429 with `Retry-After` and code `provider_rate_limited`. Size the limit
-for the busiest author: bulk-creating Requirements counts one call per
-Requirement.
+**Per actor, per minute.** `PROVIDER_RATE_LIMIT_PER_MINUTE` caps how many provider-calling
+operations one actor may start per minute. They include:
+- AI jobs, which cover generation, analysis and clarification resolution, Story quality checks
+  and reviews;
+- knowledge search, architecture mapping and index builds;
+- the actions that queue automatic provider work: creating, promoting or editing a Requirement,
+  asking a clarification question, and deciding knowledge findings or intent proposals.
 
-The count is kept per API process. With `N` API replicas an actor can reach `N`
-times the limit. Enforce an exact global ceiling at a gateway if you need one.
+`tests/architecture/test_provider_rate_limit.py` lists the routes. Refusals return 429 with
+`Retry-After` and code `provider_rate_limited`. Size the limit for the busiest author:
+bulk-creating Requirements counts one call per Requirement.
+
+With PostgreSQL the count is shared by every API process: one row per counted call in
+`provider_calls`, checked under a per-actor lock. The ceiling holds however many API replicas run.
+The in-memory store used offline counts per process.
+
+**Per day, in tokens.** `PROVIDER_DAILY_TOKEN_BUDGET` caps the tokens the model providers may
+spend per UTC day, across every process. Spend is what the providers report in each response,
+recorded in `provider_token_spend`; `smb_provider_tokens_total` shows the same counts as a metric.
+Once the day's budget is spent:
+- new AI jobs, and retries of old ones, are refused with 429, code `provider_budget_exhausted`,
+  and `Retry-After` until 00:00 UTC;
+- workers stop claiming queued AI jobs, so they wait and run after the reset;
+- editing Requirements keeps working. Indexing and the knowledge service's own work are counted
+  but not paused.
+
+Calls already in flight finish, so a day can overshoot by them. 0, the default, records spend
+without limiting it.
+
+**Per client address, at the edge.** nginx limits each client address on `/api/` to
+`EDGE_RATE_PER_SECOND` requests a second (default 50), with bursts of `EDGE_BURST` (default 100).
+Impact preview is held to 2 a second (bursts of 5). Refusals are 429, code `edge_rate_limited`, in
+the API's error shape, with `Retry-After`. The API's own 429s pass through unchanged. These are
+Compose variables, set in `deploy/.env`.
+
+The edge sees the TLS proxy in front of it, not the browser, unless it trusts that proxy to name
+the client. Set `TRUSTED_PROXY_CIDR` to the proxy's address or range, and have the proxy send
+`X-Forwarded-For`. Otherwise every request counts as the proxy's address and the limit applies
+to everyone together.
+
+The default, `127.0.0.1/32`, trusts no one. People behind one corporate NAT share an address:
+raise the limit if a whole office reaches it.
 
 ## Internal API
 

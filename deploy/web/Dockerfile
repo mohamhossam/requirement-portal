@@ -40,6 +40,12 @@ COPY --chmod=755 deploy/web/check-knowledge-portal-url.sh /docker-entrypoint.d/1
 COPY --from=build /app/dist /usr/share/nginx/html
 # KNOWLEDGE_PORTAL_URL: where old /knowledge/ bookmarks redirect, ending in /;
 # empty answers them 404. Set when the container starts.
+# TRUSTED_PROXY_CIDR: the TLS proxy in front, allowed to name the client address
+# (the default trusts no one). EDGE_RATE_PER_SECOND and EDGE_BURST: each client
+# address's API budget at this edge (ADR-0106).
 ENV API_UPSTREAM=http://api:8000 \
-    KNOWLEDGE_PORTAL_URL=
+    KNOWLEDGE_PORTAL_URL= \
+    TRUSTED_PROXY_CIDR=127.0.0.1/32 \
+    EDGE_RATE_PER_SECOND=50 \
+    EDGE_BURST=100
 EXPOSE 8080
