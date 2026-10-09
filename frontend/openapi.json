@@ -6876,6 +6876,23 @@
             "title": "Questions",
             "type": "array"
           },
+          "reference_grounding": {
+            "anyOf": [
+              {
+                "enum": [
+                  "grounded",
+                  "no_evidence",
+                  "not_connected",
+                  "unavailable"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Grounding"
+          },
           "requirement_id": {
             "title": "Requirement Id",
             "type": "string"
@@ -10559,7 +10576,7 @@
     },
     "/knowledge/search/unified": {
       "post": {
-        "description": "Requirement knowledge the member may see, and published library passages (ADR-0075).",
+        "description": "Requirement knowledge the member may see, and published library passages (ADR-0075).\n\nWith a connected knowledge portal that cannot be reached, the hits are Requirements only\nand `X-Reference-Library: unavailable` says so; the body keeps its shape.",
         "operationId": "unified_search_knowledge_search_unified_post",
         "parameters": [
           {

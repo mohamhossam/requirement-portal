@@ -406,6 +406,18 @@ function AnalysisPanelContent({
         </section>
       )}
 
+      {/* Only a connected knowledge portal that could not be reached earns a
+          notice: with none connected there was nothing to check (ADR-0104). */}
+      {analysis.reference_grounding === "unavailable" && (
+        <Card tone="warning" role="status" aria-label="References not checked">
+          <h3 className="text-label text-ink m-0">References were not checked</h3>
+          <p className="text-body text-ink m-0 mt-1">
+            The knowledge portal could not be reached when this analysis ran, so it has no
+            proposals from the published library. Run the analysis again to check them.
+          </p>
+        </Card>
+      )}
+
       {/* Confirm mode: the Requirement Owner's one job, first. It sat at the
           foot of "What is still open", 1400px down, on the route whose whole
           purpose it is. */}

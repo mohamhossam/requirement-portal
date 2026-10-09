@@ -87,6 +87,23 @@ it("flags a cited document past its review date beside the citation, without blo
   expect(screen.getByLabelText("Applicability rationale")).toBeEnabled();
 });
 
+it.each([
+  ["unavailable", true],
+  ["not_connected", false],
+  ["no_evidence", false],
+  ["grounded", false],
+  [null, false],
+] as const)("says references were not checked only when the portal was unreachable (%s)", (grounding, shown) => {
+  render(<AnalysisPanel analysis={{ ...analysisFixture, reference_grounding: grounding }} busy={false} error={null} onClarify={vi.fn()} onConfirm={vi.fn()} />);
+  const notice = screen.queryByRole("status", { name: "References not checked" });
+  if (shown) {
+    expect(notice).toBeVisible();
+    expect(notice).toHaveTextContent("Run the analysis again to check them.");
+  } else {
+    expect(notice).toBeNull();
+  }
+});
+
 it("shows human support with answer attribution and no invented document link", () => {
   const statement = "DEL serves single-user lines; PABX serves multi-user plans.";
   const { container } = render(<AnalysisPanel analysis={{

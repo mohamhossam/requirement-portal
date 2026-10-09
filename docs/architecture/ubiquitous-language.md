@@ -20,6 +20,7 @@ different things in different places.
 | Confirmation | analysis | The owner's explicit acceptance of the current analysis. Breakdown generation requires it (ADR-0010). |
 | Clarification question | analysis | A stable, assignable question raised by AI or a human, with its own lifecycle: open → in progress → resolved, or superseded (ADR-0019). |
 | Intent proposal | analysis | An AI-suggested change to the Requirement's desired outcome, business rules or constraints. It changes nothing until the owner accepts, edits or rejects it (ADR-0025). |
+| Reference grounding | analysis | What checking a new analysis against the published reference library found: *grounded* (passages reached the reference proposer), *no evidence*, *not connected* (no knowledge portal is configured, ADR-0104) or *unavailable* (a connected portal could not be reached). An unavailable library never discards the analysis; the reviewer is told references were not checked. |
 | Round (analysis round) | analysis | One immutable record of an analysis generation and the question changes it caused. A round is not a revision. |
 | Epic | breakdown | A portfolio-level business outcome with a business case. Exactly one per Requirement. |
 | Feature | breakdown | One customer-recognisable capability with one measurable outcome. It traces to exactly one Epic. |

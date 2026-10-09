@@ -188,6 +188,20 @@ class IntentProposalKind(StrEnum):
     CONSTRAINT = "constraint"
 
 
+class ReferenceGroundingStatus(StrEnum):
+    """What checking an analysis against the published reference library found.
+
+    The library lives in the optional knowledge portal (ADR-0104). An analysis records which
+    of these held when it was generated, so a reviewer can tell "nothing applies" from "it
+    could not be checked".
+    """
+
+    GROUNDED = "grounded"
+    NO_EVIDENCE = "no_evidence"
+    NOT_CONNECTED = "not_connected"
+    UNAVAILABLE = "unavailable"
+
+
 class IntentProposalStatus(StrEnum):
     PENDING = "pending"
     ACCEPTED = "accepted"

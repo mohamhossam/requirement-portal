@@ -38,6 +38,7 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     PotentialDependency,
     QuestionChangeAction,
     QuestionId,
+    ReferenceGroundingStatus,
 )
 from smb_requirement_agent.infrastructure.persistence.payload_fields import (
     JsonObject,
@@ -68,6 +69,14 @@ from smb_requirement_agent.shared_kernel.lineage import SourceLineage
 
 
 def analysis_to_payload(value: RequirementAnalysis) -> JsonObject:
+    payload = _analysis_payload(value)
+    # Written only when recorded, so analyses from before it was recorded keep their payload.
+    if value.reference_grounding is not None:
+        payload["reference_grounding"] = value.reference_grounding.value
+    return payload
+
+
+def _analysis_payload(value: RequirementAnalysis) -> JsonObject:
     return {
         "source_lineage": TypeAdapter(tuple[SourceLineage, ...]).dump_python(
             value.source_lineage, mode="json"
@@ -389,6 +398,11 @@ def analysis_from_payload(data: JsonObject) -> RequirementAnalysis:
             for item in optional_json_array(data, "stage_provenance")
         ),
         version=optional_integer(data, "version", 1),
+        reference_grounding=(
+            ReferenceGroundingStatus(item_text(data["reference_grounding"]))
+            if data.get("reference_grounding") is not None
+            else None
+        ),
     )
 
 

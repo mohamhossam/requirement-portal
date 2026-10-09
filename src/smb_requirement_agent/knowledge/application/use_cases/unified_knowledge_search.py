@@ -5,11 +5,13 @@ owns it. Drafts are never indexed, so they cannot appear. A hit is still
 dropped when its Requirement no longer exists or its evidence is stale.
 """
 
+import logging
 from dataclasses import dataclass
 from typing import Literal
 
 from smb_requirement_agent.application.errors import (
     KnowledgeGenerationError,
+    ServiceUnavailableError,
     UnsupportedDocumentError,
 )
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
@@ -32,6 +34,8 @@ from smb_requirement_agent.shared_kernel.citation import (
     normalize_search,
 )
 
+_log = logging.getLogger(__name__)
+
 
 @dataclass(frozen=True)
 class UnifiedSearchHit:
@@ -42,6 +46,15 @@ class UnifiedSearchHit:
     evidence_path: str
     requirement_evidence: RelationshipEvidence | None = None
     reference_evidence: PublishedReference | None = None
+
+
+@dataclass(frozen=True)
+class UnifiedSearchResult:
+    """The balanced hits, and whether the library's half of them could be searched."""
+
+    hits: tuple[UnifiedSearchHit, ...]
+    # A connected knowledge portal that could not be reached: the hits are Requirements only.
+    references_unavailable: bool = False
 
 
 class UnifiedKnowledgeSearch:
@@ -56,7 +69,7 @@ class UnifiedKnowledgeSearch:
         self._corpus, self._index, self._embeddings = corpus, index, embeddings
         self._references, self._access = references, access
 
-    def execute(self, query: str) -> tuple[UnifiedSearchHit, ...]:
+    def execute(self, query: str) -> UnifiedSearchResult:
         query = normalize_search(query)
         if not query or len(query) > 2000:
             raise UnsupportedDocumentError("Search requires 1 to 2,000 characters.")
@@ -96,7 +109,12 @@ class UnifiedKnowledgeSearch:
                     evidence,
                 )
             )
-        references = self._references.retrieve(query)
+        try:
+            references = self._references.retrieve(query)
+        except ServiceUnavailableError as exc:
+            # Requirement knowledge is local; losing the library loses only its half (ADR-0104).
+            _log.warning("Unified search without the reference library: %s", exc)
+            return UnifiedSearchResult(self._balanced(requirements, []), True)
         self._references.require_current(tuple(item.citation for item in references))
         documents = [
             UnifiedSearchHit(
@@ -109,6 +127,11 @@ class UnifiedKnowledgeSearch:
             )
             for item in references
         ]
+        return UnifiedSearchResult(self._balanced(requirements, documents))
+
+    def _balanced(
+        self, requirements: list[UnifiedSearchHit], documents: list[UnifiedSearchHit]
+    ) -> tuple[UnifiedSearchHit, ...]:
         # A Requirement copy is searchable but cannot count as another source.
         # Prefer the original published passage when that origin is retrieved.
         original_ids = {hit.source_id for hit in documents}

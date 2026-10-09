@@ -183,7 +183,7 @@ def test_a_retired_requirement_is_out_of_screening_search_and_suggestions(
     assert retired.current and retired.ready
     with pytest.raises(RequirementRetiredError):
         timed.ensure_knowledge_screen.execute(canonical, RAVI)
-    found = timed.unified_knowledge_search.execute("XGPON bundles")
+    found = timed.unified_knowledge_search.execute("XGPON bundles").hits
     assert all(item.source_id != canonical.value for item in found)
 
 

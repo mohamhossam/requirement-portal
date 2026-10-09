@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import logging
 from collections.abc import Sequence
 from dataclasses import asdict
 
@@ -15,7 +16,11 @@ from smb_requirement_agent.analysis.application.ports.requirement_analyzer impor
     IntentProposalCandidate,
     RequirementAnalysisCandidate,
 )
-from smb_requirement_agent.analysis.domain.value_objects import IntentProposal
+from smb_requirement_agent.analysis.domain.value_objects import (
+    IntentProposal,
+    ReferenceGroundingStatus,
+)
+from smb_requirement_agent.application.errors import ServiceUnavailableError
 from smb_requirement_agent.references.application.ports.embedding import TokenCounterPort
 from smb_requirement_agent.references.application.ports.reference_grounding import (
     ReferenceEvidence,
@@ -23,6 +28,8 @@ from smb_requirement_agent.references.application.ports.reference_grounding impo
 )
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.shared_kernel.generation import Provenance
+
+_log = logging.getLogger(__name__)
 
 
 class ReferenceGrounding:
@@ -46,8 +53,28 @@ class ReferenceGrounding:
         primary: RequirementAnalysisCandidate,
         decisions: Sequence[IntentProposal],
     ) -> RequirementAnalysisCandidate:
+        """Add reference proposals to `primary`, recording what checking the library found.
+
+        A connected knowledge portal that cannot be reached leaves the primary analysis
+        standing, marked `unavailable`: the model call it took is not thrown away, and the
+        reviewer sees that references were not checked (ADR-0104).
+        """
+        if not self._knowledge.is_connected():
+            return _graded(primary, ReferenceGroundingStatus.NOT_CONNECTED)
+        try:
+            evidence = self._evidence(requirement, primary)
+        except ServiceUnavailableError as exc:
+            _log.warning("Reference grounding skipped: %s", exc)
+            return _graded(primary, ReferenceGroundingStatus.UNAVAILABLE)
+        if not evidence:
+            return _graded(primary, ReferenceGroundingStatus.NO_EVIDENCE)
+        return self._proposed(requirement, primary, evidence, decisions)
+
+    def _evidence(
+        self, requirement: Requirement, primary: RequirementAnalysisCandidate
+    ) -> tuple[ReferenceEvidence, ...]:
         if not self._knowledge.has_published():
-            return primary
+            return ()
         topics = [
             requirement.description.value,
             *primary["business_rules"][:2],
@@ -73,9 +100,16 @@ class ReferenceGrounding:
                 seen.add(citation.lineage_hash)
                 counts[citation.document_id] = counts.get(citation.document_id, 0) + 1
                 budget += cost
-        if not evidence:
-            return primary
-        result = self._proposer.propose(requirement, primary, tuple(evidence), decisions)
+        return tuple(evidence)
+
+    def _proposed(
+        self,
+        requirement: Requirement,
+        primary: RequirementAnalysisCandidate,
+        evidence: tuple[ReferenceEvidence, ...],
+        decisions: Sequence[IntentProposal],
+    ) -> RequirementAnalysisCandidate:
+        result = self._proposer.propose(requirement, primary, evidence, decisions)
         allowed = {item.citation for item in evidence}
         proposals: list[IntentProposalCandidate] = list(primary["intent_proposals"])
         for proposal in result.proposals:
@@ -99,6 +133,7 @@ class ReferenceGrounding:
         # The persistence boundary rechecks these exact citations while holding publication locks.
         return {
             **primary,
+            "reference_grounding": ReferenceGroundingStatus.GROUNDED,
             "intent_proposals": proposals,
             "stage_provenance": [
                 *primary.get("stage_provenance", []),
@@ -113,3 +148,9 @@ class ReferenceGrounding:
                 },
             ],
         }
+
+
+def _graded(
+    primary: RequirementAnalysisCandidate, status: ReferenceGroundingStatus
+) -> RequirementAnalysisCandidate:
+    return {**primary, "reference_grounding": status}

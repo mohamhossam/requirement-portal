@@ -1,7 +1,7 @@
 """Analysis API schemas."""
 
 from datetime import date, datetime
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StringConstraints
 
@@ -213,6 +213,11 @@ class RequirementAnalysisResponse(BaseModel):
     question_changes: list["AnalysisQuestionChangeResponse"]
     business_intent: BusinessIntentResponse
     stage_provenance: list["AnalysisStageProvenanceResponse"] = []
+    # What checking the published reference library found when this analysis was generated;
+    # null for analyses from before it was recorded and for re-analysis rounds.
+    reference_grounding: (
+        Literal["grounded", "no_evidence", "not_connected", "unavailable"] | None
+    ) = None
     analysis_context_token: str | None = None
     epic_context_token: str | None = None
 

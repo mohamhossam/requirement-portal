@@ -33,6 +33,7 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     PotentialDependency,
     QuestionChangeAction,
     QuestionId,
+    ReferenceGroundingStatus,
 )
 from smb_requirement_agent.requirements.domain.requirement.value_objects import RequirementVersion
 from smb_requirement_agent.shared_kernel.actions import ActionAvailability
@@ -337,6 +338,9 @@ class RequirementAnalysis:
     version: int = 1
     source_lineage: tuple[SourceLineage, ...] = ()
     clarification_evidence: tuple[AnalysisClarificationEvidence, ...] = ()
+    # None for analyses generated before grounding was recorded, and for re-analysis rounds
+    # that do not consult the reference library.
+    reference_grounding: ReferenceGroundingStatus | None = None
 
     def __post_init__(self) -> None:
         if self.version < 1:
