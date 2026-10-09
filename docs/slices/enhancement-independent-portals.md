@@ -37,3 +37,21 @@ are present and configured, they keep working together through the ADR-0099 port
   to `CLAUDE.md`'s redesign rule.
 - **Not in this phase.** A link-health endpoint apart from `/ready`, and the knowledge portal's
   side, which ships in knowledge-portal.
+
+## Phase 4 here
+
+Decided 2026-10-09 by the repository owner: one realm shared by both portals, and requirement
+work's own roles in place of the knowledge portal's, with no transition.
+
+- **Roles.** Architecture mapping checks `architecture_reader` and `architecture_maintainer`
+  (`identity/application/ports/identity.py`), granted by the groups `architecture-readers` and
+  `architecture-maintainers` in `deploy/keycloak/realm-requirement-ai.json`. `knowledge_reader`
+  and `knowledge_maintainer` grant nothing here any more. People who map architecture must be
+  in the new groups before this ships.
+- **Links.** Who sees the links to the knowledge portal comes from `VITE_KNOWLEDGE_PORTAL_ROLE`.
+  Unset, it is the portal's `knowledge_admin`, as before. Empty, everyone signed in sees them and
+  the portal decides who gets in.
+- **Realm.** The knowledge portal's client, audience, roles and groups stay in this realm file
+  until the cutover; knowledge-portal now defines them itself (`deploy/keycloak/`).
+- **Not yet.** KP's writes recorded against the service, and per-direction service credentials
+  in place of the two shared tokens; both need platform-kernel.

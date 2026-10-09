@@ -405,7 +405,7 @@ def test_mapping_job_pins_release_and_review_rejects_outdated_architecture(
     requirement_id, _, _ = _tree(client)
     job = container.architecture_mapping_jobs.enqueue(
         RequirementId(requirement_id),
-        Actor("fake-owner", frozenset({"knowledge_reader", "knowledge_maintainer"})),
+        Actor("fake-owner", frozenset({"architecture_reader", "architecture_maintainer"})),
     )
     _activate(container, catalogue, library, "release-2")
     catalogue.queries.clear()
@@ -453,7 +453,7 @@ def test_a_mapping_queued_under_other_models_records_a_knowledge_conflict(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     requirement_id, _, _ = _tree(client)
-    actor = Actor("fake-owner", frozenset({"knowledge_reader", "knowledge_maintainer"}))
+    actor = Actor("fake-owner", frozenset({"architecture_reader", "architecture_maintainer"}))
     queued = container.architecture_mapping_jobs.enqueue(RequirementId(requirement_id), actor)
     # The configured reasoning model changes between asking and running.
     monkeypatch.setattr(

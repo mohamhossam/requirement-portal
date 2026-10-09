@@ -78,12 +78,14 @@ is what `OIDC_ROLES_CLAIM` reads.
 | Group | Realm roles | Grants |
 |---|---|---|
 | `knowledge-admins` | `knowledge_admin` | Opening the knowledge portal, and seeing the link to it in requirement work |
-| `knowledge-readers` | `knowledge_reader` | Starting and reading architecture mapping jobs |
-| `knowledge-maintainers` | `knowledge_reader`, `knowledge_maintainer` | Also cancelling and retrying other people's mapping jobs |
+| `knowledge-readers` | `knowledge_reader` | Reading the architecture and squad catalogues in the knowledge portal |
+| `knowledge-maintainers` | `knowledge_reader`, `knowledge_maintainer` | Also editing them in the knowledge portal |
+| `architecture-readers` | `architecture_reader` | Starting and reading architecture mapping jobs |
+| `architecture-maintainers` | `architecture_reader`, `architecture_maintainer` | Also cancelling and retrying other people's mapping jobs |
 
 A realm imported before these roles, groups and client existed does not gain
 them on restart. Add them in the admin console, matching
-`deploy/keycloak/realm-requirement-ai.json`: the three realm roles, the three
+`deploy/keycloak/realm-requirement-ai.json`: the five realm roles, the five
 groups, the `knowledge-spa` client with its `knowledge-api` audience mapper, and
 a `realm-roles` mapper (claim `roles`, access token only) on both clients.
 

@@ -162,16 +162,21 @@ passage and evidence views.
 - **Offline (fake identity):** Amina Owner and Ravi Reviewer are knowledge
   admins in both portals; Omar Observer is not.
 
-Architecture mapping in requirement work checks two more roles, also granted by
-group in the Keycloak realm:
+`VITE_KNOWLEDGE_PORTAL_ROLE` (a web image build argument) names another role
+for the link, or, empty, shows it to everyone signed in and leaves the decision
+to the portal.
+
+Architecture mapping in requirement work checks two roles of its own
+(ADR-0104), also granted by group in the Keycloak realm:
 
 | Group | Roles | Allows |
 |---|---|---|
-| `knowledge-readers` | `knowledge_reader` | Starting and reading architecture mapping jobs on Requirements the person works on |
-| `knowledge-maintainers` | `knowledge_reader`, `knowledge_maintainer` | Also cancelling and retrying other people's mapping jobs |
+| `architecture-readers` | `architecture_reader` | Starting and reading architecture mapping jobs on Requirements the person works on |
+| `architecture-maintainers` | `architecture_reader`, `architecture_maintainer` | Also cancelling and retrying other people's mapping jobs |
 
-Without `knowledge_reader`, a signed-in member cannot map a Requirement's
-architecture. Offline, Amina Owner has both roles, Ravi Reviewer is a reader,
+Without `architecture_reader`, a signed-in member cannot map a Requirement's
+architecture. The knowledge portal's `knowledge_reader` and
+`knowledge_maintainer` grant nothing here. Offline, Amina Owner has both roles, Ravi Reviewer is a reader,
 and Omar Observer has neither.
 
 ## Model files

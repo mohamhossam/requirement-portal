@@ -154,12 +154,20 @@ def test_the_edge_proxies_each_api_and_the_knowledge_portal() -> None:
 
 def test_the_realm_grants_each_role_through_a_group_and_a_roles_claim() -> None:
     roles = [role["name"] for role in REALM["roles"]["realm"]]
-    assert roles == ["knowledge_admin", "knowledge_reader", "knowledge_maintainer"]
+    assert roles == [
+        "knowledge_admin",
+        "knowledge_reader",
+        "knowledge_maintainer",
+        "architecture_reader",
+        "architecture_maintainer",
+    ]
     groups = {item["name"]: item["realmRoles"] for item in REALM["groups"]}
     assert groups == {
         "knowledge-admins": ["knowledge_admin"],
         "knowledge-readers": ["knowledge_reader"],
         "knowledge-maintainers": ["knowledge_reader", "knowledge_maintainer"],
+        "architecture-readers": ["architecture_reader"],
+        "architecture-maintainers": ["architecture_reader", "architecture_maintainer"],
     }
 
     clients = {client["clientId"]: client for client in REALM["clients"]}
@@ -194,7 +202,10 @@ def test_the_knowledge_client_signs_in_only_under_its_own_path() -> None:
 
 def test_the_realm_defines_every_role_requirement_work_checks() -> None:
     """The roles mapping jobs check (require_reader, require_maintainer) exist."""
-    checked = set(re.findall(r'"(knowledge_\w+)"', inspect.getsource(identity)))
+    source = inspect.getsource(identity)
+    checked = set(re.findall(r'"(architecture_\w+)"', source))
 
-    assert checked == {"knowledge_reader", "knowledge_maintainer"}
+    assert checked == {"architecture_reader", "architecture_maintainer"}
     assert checked <= {role["name"] for role in REALM["roles"]["realm"]}
+    # The knowledge portal's roles are its own (ADR-0104).
+    assert "knowledge_" not in source

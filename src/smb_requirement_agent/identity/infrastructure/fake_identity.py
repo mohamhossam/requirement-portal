@@ -1,8 +1,8 @@
 """Deterministic offline identity provider.
 
-The personas match knowledge-portal's, id for id and role for role, so both
-portals agree on who is who, and who is a knowledge admin, when run together
-without an identity provider.
+The ids and the knowledge_admin role match knowledge-portal's personas, so the
+two agree on who is who, and who is a knowledge admin, when run together
+without an identity provider. Nothing depends on that (ADR-0104).
 """
 
 from smb_kernel.identity.fake import FakeIdentityProvider as KernelFakeIdentityProvider
@@ -17,13 +17,13 @@ FAKE_ACTORS = (
         ActorId("fake-owner"),
         "Amina Owner",
         "amina.owner@example.test",
-        frozenset({"knowledge_admin", "knowledge_reader", "knowledge_maintainer"}),
+        frozenset({"knowledge_admin", "architecture_reader", "architecture_maintainer"}),
     ),
     ActorProfile(
         ActorId("fake-reviewer"),
         "Ravi Reviewer",
         "ravi.reviewer@example.test",
-        frozenset({"knowledge_admin", "knowledge_reader"}),
+        frozenset({"knowledge_admin", "architecture_reader"}),
     ),
     # Not a knowledge admin: no link to the knowledge portal.
     ActorProfile(ActorId("fake-observer"), "Omar Observer", "omar.observer@example.test"),
