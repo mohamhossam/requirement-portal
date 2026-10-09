@@ -14,6 +14,9 @@ from datetime import UTC, datetime
 import pytest
 from fastapi.testclient import TestClient
 
+from smb_requirement_agent.breakdown.application.ports.architecture_jobs import (
+    ArchitectureJobStatus,
+)
 from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping import (
     MapBreakdownArchitecture,
     MapFeatureArchitecture,
@@ -27,6 +30,7 @@ from smb_requirement_agent.breakdown.infrastructure.backlog_payloads import (
     story_to_payload,
 )
 from smb_requirement_agent.identity.application.ports.identity import Actor
+from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedError
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.references.application.ports.architecture_knowledge import (
@@ -405,7 +409,7 @@ def test_mapping_job_pins_release_and_review_rejects_outdated_architecture(
     requirement_id, _, _ = _tree(client)
     job = container.architecture_mapping_jobs.enqueue(
         RequirementId(requirement_id),
-        Actor("fake-owner", frozenset({"architecture_reader", "architecture_maintainer"})),
+        Actor("fake-owner", frozenset({"architecture_maintainer"})),
     )
     _activate(container, catalogue, library, "release-2")
     catalogue.queries.clear()
@@ -447,13 +451,29 @@ def test_mapping_jobs_run_in_the_requirement_queue_under_the_requirement_url(
     assert all(item["architecture"] is not None for item in features)
 
 
+def test_mapping_jobs_need_membership_not_a_role(client: TestClient, container: Container) -> None:
+    """ADR-0104 amendment (2026-10-09): any member may map; a role never stands in for it."""
+    requirement_id, _, _ = _tree(client)
+    jobs = container.architecture_mapping_jobs
+
+    member = jobs.start(RequirementId(requirement_id), Actor("fake-owner", frozenset()))
+    assert member.status is ArchitectureJobStatus.SUCCEEDED
+    # Reading follows workspace-wide read access (ADR-0075).
+    assert jobs.get_for_actor(member.id, Actor("fake-observer", frozenset())).id == member.id
+    with pytest.raises(AuthorizationDeniedError):
+        jobs.start(
+            RequirementId(requirement_id),
+            Actor("fake-observer", frozenset({"architecture_maintainer"})),
+        )
+
+
 def test_a_mapping_queued_under_other_models_records_a_knowledge_conflict(
     client: TestClient,
     container: Container,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     requirement_id, _, _ = _tree(client)
-    actor = Actor("fake-owner", frozenset({"architecture_reader", "architecture_maintainer"}))
+    actor = Actor("fake-owner", frozenset({"architecture_maintainer"}))
     queued = container.architecture_mapping_jobs.enqueue(RequirementId(requirement_id), actor)
     # The configured reasoning model changes between asking and running.
     monkeypatch.setattr(

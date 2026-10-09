@@ -30,7 +30,7 @@ from smb_requirement_agent.breakdown.application.use_cases.leased_jobs import (
     CommitFence,
     LeasedJobs,
 )
-from smb_requirement_agent.identity.application.ports.identity import Actor, require_reader
+from smb_requirement_agent.identity.application.ports.identity import Actor
 from smb_requirement_agent.references.application.ports.architecture_knowledge import (
     ActiveArchitectureReleasePort,
 )
@@ -60,15 +60,14 @@ class ArchitectureMappingJobs(LeasedJobs):
         self._reasoning_profile = reasoning_profile
 
     def get_for_actor(self, job_id: str, actor: Actor) -> ArchitectureJob:
-        job = self.get(job_id)
-        require_reader(actor)
-        return job
+        # Anyone signed in may read a Requirement's work (ADR-0075), its mapping jobs included.
+        return self.get(job_id)
 
     def start(self, requirement_id: RequirementId, actor: Actor) -> ArchitectureJob:
         return self._dispatch(self.enqueue(requirement_id, actor))
 
     def enqueue(self, requirement_id: RequirementId, actor: Actor) -> ArchitectureJob:
-        require_reader(actor)
+        # Membership is the rule, no role (ADR-0104 amendment, 2026-10-09).
         # The worker re-checks membership when it runs; checking here too keeps
         # non-members from queueing work or probing which Requirements exist.
         self._mapper.authorize(_job_actor(actor.id), requirement_id)

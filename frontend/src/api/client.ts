@@ -39,6 +39,7 @@ export type FeatureStoryQualitySnapshot =
 export type ArchitectureImpact = components["schemas"]["ArchitectureImpactResponse"];
 export type BreakdownArchitectureMapping =
   components["schemas"]["BreakdownArchitectureMappingResponse"];
+export type ArchitectureMappingJob = components["schemas"]["ArchitectureJobResponse"];
 export type BreakdownReview = components["schemas"]["BreakdownReviewResponse"];
 export type ReviewFlag = components["schemas"]["ReviewFlagResponse"];
 export type ApprovalWorkflow = components["schemas"]["ApprovalWorkflowResponse"];
@@ -737,6 +738,14 @@ export const api = {
     request<BreakdownArchitectureMapping>(`${requirementPath(id)}/architecture-mapping`, {
       method: "POST",
     }),
+  startArchitectureMappingJob: (id: string) =>
+    request<ArchitectureMappingJob>(`${requirementPath(id)}/architecture-mapping/jobs`, {
+      method: "POST",
+    }),
+  getArchitectureMappingJob: (id: string, jobId: string) =>
+    request<ArchitectureMappingJob>(
+      `${requirementPath(id)}/architecture-mapping/jobs/${encodeURIComponent(jobId)}`,
+    ),
   getBreakdownReview: (id: string) =>
     optional<BreakdownReview>(`${requirementPath(id)}/breakdown-review`),
   getApprovalWorkflow: (id: string) =>

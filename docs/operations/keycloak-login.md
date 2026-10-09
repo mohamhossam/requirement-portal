@@ -69,8 +69,10 @@ is what `OIDC_ROLES_CLAIM` reads.
 
 | Group | Realm roles | Grants |
 |---|---|---|
-| `architecture-readers` | `architecture_reader` | Starting and reading architecture mapping jobs |
-| `architecture-maintainers` | `architecture_reader`, `architecture_maintainer` | Also cancelling and retrying other people's mapping jobs |
+| `architecture-maintainers` | `architecture_maintainer` | Cancelling and retrying other people's mapping jobs |
+
+Starting and reading architecture mapping needs no role: membership of the
+Requirement is enough (ADR-0104 amendment, 2026-10-09).
 
 The link to the knowledge portal follows the portal's `knowledge_admin` role
 (`knowledge-admins` group), which exists once the portal's entities are added;

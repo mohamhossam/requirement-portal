@@ -17,13 +17,13 @@ FAKE_ACTORS = (
         ActorId("fake-owner"),
         "Amina Owner",
         "amina.owner@example.test",
-        frozenset({"knowledge_admin", "architecture_reader", "architecture_maintainer"}),
+        frozenset({"knowledge_admin", "architecture_maintainer"}),
     ),
     ActorProfile(
         ActorId("fake-reviewer"),
         "Ravi Reviewer",
         "ravi.reviewer@example.test",
-        frozenset({"knowledge_admin", "architecture_reader"}),
+        frozenset({"knowledge_admin"}),
     ),
     # Not a knowledge admin: no link to the knowledge portal.
     ActorProfile(ActorId("fake-observer"), "Omar Observer", "omar.observer@example.test"),

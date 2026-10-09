@@ -114,28 +114,16 @@
   "roles": {
     "realm": [
       {
-        "name": "architecture_reader",
-        "description": "Starts and reads architecture mapping for the Requirements they work on."
-      },
-      {
         "name": "architecture_maintainer",
-        "description": "Also cancels and retries other people's architecture mapping jobs."
+        "description": "Cancels and retries other people's architecture mapping jobs."
       }
     ]
   },
   "groups": [
     {
-      "name": "architecture-readers",
-      "path": "/architecture-readers",
-      "realmRoles": [
-        "architecture_reader"
-      ]
-    },
-    {
       "name": "architecture-maintainers",
       "path": "/architecture-maintainers",
       "realmRoles": [
-        "architecture_reader",
         "architecture_maintainer"
       ]
     }

@@ -142,18 +142,18 @@ passage and evidence views.
 for the link, or, empty, shows it to everyone signed in and leaves the decision
 to the portal.
 
-Architecture mapping in requirement work checks two roles of its own
-(ADR-0104), also granted by group in the Keycloak realm:
+Any member of a Requirement may map its architecture; anyone signed in may read
+the mapping jobs (ADR-0104 amendment, 2026-10-09). One role of requirement work's
+own is granted by group in the Keycloak realm:
 
-| Group | Roles | Allows |
+| Group | Role | Allows |
 |---|---|---|
-| `architecture-readers` | `architecture_reader` | Starting and reading architecture mapping jobs on Requirements the person works on |
-| `architecture-maintainers` | `architecture_reader`, `architecture_maintainer` | Also cancelling and retrying other people's mapping jobs |
+| `architecture-maintainers` | `architecture_maintainer` | Cancelling and retrying other people's mapping jobs |
 
-Without `architecture_reader`, a signed-in member cannot map a Requirement's
-architecture. The knowledge portal's `knowledge_reader` and
-`knowledge_maintainer` grant nothing here. Offline, Amina Owner has both roles, Ravi Reviewer is a reader,
-and Omar Observer has neither.
+The knowledge portal's `knowledge_reader` and `knowledge_maintainer` grant
+nothing here. The earlier `architecture_reader` role and `architecture-readers`
+group are no longer checked; a realm imported before this can keep or delete
+them. Offline, Amina Owner is a maintainer.
 
 ## Model files
 

@@ -17,7 +17,6 @@ from smb_requirement_agent.identity.application.ports.identity import (
     Actor,
     AuthorizationError,
     require_maintainer,
-    require_reader,
 )
 from smb_requirement_agent.identity.application.ports.requirement_access import (
     RequirementPermission,
@@ -430,20 +429,19 @@ def test_offline_personas_match_the_knowledge_portal_admins(client: TestClient) 
 
 
 @pytest.mark.parametrize(
-    ("roles", "reads", "maintains"),
+    ("roles", "maintains"),
     [
-        ({"architecture_reader"}, True, False),
-        ({"architecture_maintainer"}, True, True),
+        ({"architecture_maintainer"}, True),
+        # Retired 2026-10-09: mapping needs membership, not a reader role.
+        ({"architecture_reader"}, False),
         # The knowledge portal's roles are its own and grant nothing here (ADR-0104).
-        ({"knowledge_reader"}, False, False),
-        ({"knowledge_maintainer"}, False, False),
-        ({"knowledge_admin"}, False, False),
-        (set(), False, False),
+        ({"knowledge_reader"}, False),
+        ({"knowledge_maintainer"}, False),
+        ({"knowledge_admin"}, False),
+        (set(), False),
     ],
 )
-def test_architecture_mapping_checks_its_own_roles(
-    roles: set[str], reads: bool, maintains: bool
-) -> None:
+def test_architecture_mapping_checks_its_own_role(roles: set[str], maintains: bool) -> None:
     actor = Actor("someone", frozenset(roles))
 
     def allowed(check: Callable[[Actor], None]) -> bool:
@@ -453,5 +451,4 @@ def test_architecture_mapping_checks_its_own_roles(
             return False
         return True
 
-    assert allowed(require_reader) is reads
     assert allowed(require_maintainer) is maintains

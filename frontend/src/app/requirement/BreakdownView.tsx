@@ -7,6 +7,7 @@ import { errorMessage } from "../../api/errors";
 import { BreakdownWorkspace } from "../../features/breakdown/BreakdownWorkspace";
 import { Card } from "../../components/ui";
 import { ArchitectureRemapBanner } from "../../features/architecture/ArchitectureRemapBanner";
+import { runArchitectureMapping } from "../../features/architecture/runMappingJob";
 import { useRequirementJobs } from "../../features/jobs/useRequirementJobs";
 import { queryKeys } from "../queryKeys";
 import { invalidateWorkspaceKeys } from "../workspaceInvalidation";
@@ -87,7 +88,7 @@ export function BreakdownView({ id, workspace }: { id: string; workspace: Requir
   });
   const mapArchitecture = useMutation({
     meta: { action: "Mapping the architecture" },
-    mutationFn: () => api.mapArchitecture(id),
+    mutationFn: () => runArchitectureMapping(id),
     onSuccess: async () => refresh("architecture"),
   });
 

@@ -2,7 +2,7 @@
 
 ## Status
 
-**Specified 2026-10-08; in progress since 2026-10-09.** PR 1, PR 8 and PR 2 are delivered (see their entries and Validation Evidence); everything else is not implemented yet. This record keeps the
+**Specified 2026-10-08; in progress since 2026-10-09.** PR 1, PR 8, PR 2 and PR 4a are delivered (see their entries and Validation Evidence); everything else is not implemented yet. This record keeps the
 plan for closing every finding of the second production-readiness review (security, deployment and
 CI, reliability and observability, frontend) so it can be scheduled later. When work starts, each
 PR converts its part into the `WORKSPACE.md` §10 sections and fills in Validation Evidence here.
@@ -106,13 +106,12 @@ Then bump `pyproject.toml:12` and `uv.lock`, and wire the new settings. Phase 1 
 - **Claims** (`postgres_ai_jobs.py`, `in_memory_ai_jobs.py`) skip a job before its `next_attempt_at` and hold its Requirement's other jobs behind it; migration `202610091400_ai_job_retry_backoff.sql` adds the column and a partial index.
 - **Visible.** The job API returns `next_attempt_at`; the job panel says "will try again" and when. `smb_ai_jobs_total` labels requeued attempts `retrying` and capped jobs `attempts_exhausted` (closing the gap G1 left), and `AiJobsFailing` counts `attempts_exhausted`.
 
-**PR 4a · Mapping becomes a job; probes and shutdown** (ADR-0105, part 1)
-- **Frontend (exception):**
-  - `BreakdownView.tsx:88-90` calls the job routes `routes/architecture.py:40-90`, which are typed in `schema.d.ts:843-894`.
-  - New client functions and a polling hook.
-  - Handle the "no architecture catalogue connected" state and the `architecture_reader`/`architecture_maintainer` role requirement.
-- **Probes:** `/health` and `/ready` (`main.py:234-249`) become `async`. `/ready` runs its check through `anyio.to_thread.run_sync` with its own limiter and a 2s timeout, and still doesn't check the knowledge portal.
-- **Shutdown:** `serve.py:38-46` sets `timeout_graceful_shutdown`. Compose sets `api.stop_grace_period: 30s` and adds a `web` healthcheck.
+**PR 4a · Mapping becomes a job; probes and shutdown** (ADR-0105, part 1) — *delivered on `claude/production-hardening-pr4a`, 2026-10-09*
+- **The browser maps through the job routes.** `BreakdownView` starts `POST /architecture-mapping/jobs` and waits for the job (`features/architecture/runMappingJob.ts`, under the recorded frontend exception); the busy state, error toast and refresh work as before. Offline the job finishes inside the request, so nothing is polled. The synchronous route stays until PR 4b.
+- **Mapping needs membership, not a role** (owner's decision, ADR-0104 amendment 2026-10-09): the job routes no longer require `architecture_reader`, matching the synchronous route they replace; reading jobs follows ADR-0075; cancelling or retrying another person's job still needs `architecture_maintainer`. `architecture_reader` and the `architecture-readers` group are retired from code, realm, personas and docs.
+- **Probes off the request pool.** `/health` and `/ready` are coroutines; `/ready` runs its database check on its own two-thread limiter and answers 503 within 2.5s if the check hangs.
+- **Shutdown.** `serve.py` gives in-flight requests 25s (`timeout_graceful_shutdown`), within the manifest's new `api.stop_grace_period: 30s`; `web` has a healthcheck.
+- The "no architecture catalogue connected" state needs no new UI: offline mapping still succeeds with the declared systems and the catalogue's uncertainty, as before.
 
 **PR 4b · Retire the synchronous provider routes** (ADR-0105, part 2)
 - **Delete:**
@@ -353,4 +352,23 @@ npm run test                523 passed, 1 failed (client.test.ts export, Node 22
 npm run typecheck / lint    clean
 npm run api:check           OpenAPI types match frontend/openapi.json
 npm run build               ✓ built in 1.24s
+```
+
+### PR 4a (2026-10-09, branch `claude/production-hardening-pr4a`)
+
+Run locally on Python 3.13 with platform-kernel v1.1.0; no Docker daemon, so the PostgreSQL suites
+skipped locally and CI runs them, and CI's deployment job proves the new healthcheck and stop grace.
+The one local vitest failure is the known Node 22 export test.
+
+```text
+pytest                      1864 passed, 79 skipped in 164.71s
+ruff check .                All checks passed!
+ruff format --check .       1240 files already formatted
+mypy src tests              Success: no issues found in 679 source files
+lint-imports                Contracts: 43 kept, 0 broken.
+npm run test                529 passed, 1 failed (client.test.ts export, Node 22 only)
+npm run typecheck / lint    clean
+npm run api:check           OpenAPI types match frontend/openapi.json (no API change)
+npm run build               ✓ built in 1.16s
+docker compose -f deploy/compose.production.yaml config   valid
 ```

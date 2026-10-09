@@ -86,3 +86,19 @@ search outright.
 - **Recorded only when known.** Analyses from before this amendment, and re-analysis rounds that do
   not consult the library, carry no grounding; their stored payloads and generation-context tokens
   are unchanged.
+
+## Amendment — Mapping needs membership, not a reader role (2026-10-09)
+
+Slice `production-hardening` (PR 4a, decided by the repository owner). The text above and the
+earlier amendment stay as accepted; where they differ, this amendment governs.
+
+The browser moved from the synchronous `POST /architecture-mapping` route to the durable mapping
+jobs. The synchronous route checked only membership of the Requirement; the job routes also
+required `architecture_reader`. The owner chose membership as the one rule:
+
+- **Starting a mapping** needs membership of the Requirement, checked when it is queued and again
+  when it runs. No role is required.
+- **Reading mapping jobs** follows workspace-wide read access (ADR-0075).
+- **Cancelling or retrying another person's job** still needs `architecture_maintainer`.
+- **`architecture_reader` is retired.** Nothing checks it, so it and the `architecture-readers`
+  group leave the realm and the offline personas.
