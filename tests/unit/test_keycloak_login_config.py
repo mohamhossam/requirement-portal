@@ -81,3 +81,24 @@ def test_keycloak_theme_covers_login_recovery_and_error_copy() -> None:
     assert "updatePasswordTitle=Choose a new password" in messages
     assert "errorTitle=" in messages
     assert "#kc-login" in css
+
+
+def test_the_service_client_is_granted_tokens_for_the_knowledge_internal_api_only() -> None:
+    """Requirement work's own credential (ADR-0104): no browser flows, no stored secret."""
+    realm = json.loads(
+        (ROOT / "deploy/keycloak/realm-requirement-ai.json").read_text(encoding="utf-8")
+    )
+    client = next(item for item in realm["clients"] if item["clientId"] == "requirement-service")
+    assert client["publicClient"] is False
+    assert client["serviceAccountsEnabled"] is True
+    assert client["standardFlowEnabled"] is False
+    assert client["directAccessGrantsEnabled"] is False
+    assert client["implicitFlowEnabled"] is False
+    assert client["fullScopeAllowed"] is False
+    assert "secret" not in client
+    audiences = [
+        mapper["config"]["included.custom.audience"]
+        for mapper in client["protocolMappers"]
+        if mapper["protocolMapper"] == "oidc-audience-mapper"
+    ]
+    assert audiences == ["knowledge-internal"]

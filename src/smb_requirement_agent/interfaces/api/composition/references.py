@@ -9,11 +9,13 @@ library, one empty catalogue version, and nothing for the viewers to show.
 
 from __future__ import annotations
 
-from contextlib import ExitStack
+from collections.abc import Callable
+from contextlib import ExitStack, closing
 from dataclasses import dataclass
 
 import httpx
 from smb_kernel.http.client import InternalHttpClient
+from smb_kernel.http.client_credentials import ClientCredentialsTokenSource
 from smb_kernel.observability.metrics import MeteredTransport, Metrics
 from smb_kernel.time.clock import ClockPort
 
@@ -76,8 +78,8 @@ class KnowledgeService:
 def build_knowledge_service(
     settings: Settings, resources: ExitStack, metrics: Metrics
 ) -> KnowledgeService:
-    url, token = settings.knowledge_service_url, settings.requirement_service_token
-    if url is None or token is None:
+    url = settings.knowledge_service_url
+    if url is None:
         return KnowledgeService(
             FakeReferenceKnowledge(),
             FakeArchitectureKnowledge(),
@@ -88,6 +90,7 @@ def build_knowledge_service(
     http = resources.enter_context(
         httpx.Client(transport=MeteredTransport(metrics, "knowledge", httpx.HTTPTransport()))
     )
+    token = _service_token(settings, resources, settings.requirement_service_token or "")
     client = InternalHttpClient(
         url,
         token,
@@ -107,6 +110,31 @@ def build_knowledge_service(
         change_requests=HttpChangeRequestInbox(client),
         historic_content=HttpHistoricContent(patient),
     )
+
+
+def _service_token(
+    settings: Settings, resources: ExitStack, shared: str
+) -> str | Callable[[], str]:
+    """How this service proves itself to the knowledge service (ADR-0099, ADR-0104).
+
+    With its own client at the OIDC issuer, the issuer grants it short-lived
+    tokens and this service holds no secret of the knowledge service's;
+    otherwise it presents the shared token, `shared`.
+    """
+    client_id = settings.requirement_service_client_id
+    secret = settings.requirement_service_client_secret
+    if client_id is not None and secret is not None:
+        return resources.enter_context(
+            closing(
+                ClientCredentialsTokenSource(
+                    settings.oidc_issuer_url,
+                    client_id,
+                    secret,
+                    client=httpx.Client(timeout=10),
+                )
+            )
+        )
+    return shared
 
 
 def build_backlog_handoff_worker(

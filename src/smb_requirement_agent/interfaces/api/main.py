@@ -4,17 +4,19 @@ import logging
 import re
 import uuid
 from collections.abc import AsyncIterator, Callable
-from contextlib import asynccontextmanager
+from contextlib import ExitStack, asynccontextmanager
 from dataclasses import asdict
 from time import perf_counter
 
 from fastapi import FastAPI, Request, Response
 from smb_kernel.http.body_limit import BodyLimits, RequestBodyLimit
-from smb_kernel.http.service_auth import INTERNAL_PREFIX, InternalRouteGuard, ServiceTokenVerifier
+from smb_kernel.http.service_auth import INTERNAL_PREFIX, InternalRouteGuard
 from smb_kernel.observability.correlation import correlation_scope
 from starlette.middleware.base import RequestResponseEndpoint
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from smb_requirement_agent.infrastructure.config.settings import Settings
+from smb_requirement_agent.interfaces.api.composition.identity import build_internal_verifier
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.interfaces.api.error_handlers import register_error_handlers
 from smb_requirement_agent.interfaces.api.routes.activity import (
@@ -69,16 +71,19 @@ def _route_template(request: Request) -> str:
 
 
 class InternalAccess:
-    """Service-token access to /internal (ADR-0099), configured per deployment.
+    """Service access to /internal (ADR-0099, ADR-0104), configured per deployment.
 
-    With no KNOWLEDGE_SERVICE_TOKEN the internal API is not served: every
-    /internal path answers 404. With one, the kernel's guard admits only that
-    token, naming the caller "knowledge".
+    With neither KNOWLEDGE_SERVICE_TOKEN nor KNOWLEDGE_SERVICE_CLIENT_ID the
+    internal API is not served: every /internal path answers 404. With either,
+    the kernel's guard admits only the knowledge service, naming the caller
+    "knowledge".
     """
 
     def __init__(self, app: ASGIApp) -> None:
         self._app = app
-        self._guards: dict[str, InternalRouteGuard] = {}
+        self._key: tuple[object, ...] | None = None
+        self._guard: InternalRouteGuard | None = None
+        self._resources = ExitStack()
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         path: str = scope.get("path", "")
@@ -86,8 +91,8 @@ class InternalAccess:
         if scope["type"] != "http" or not internal:
             await self._app(scope, receive, send)
             return
-        token = scope["app"].state.container.settings.knowledge_service_token
-        if token is None:
+        guard = self._guard_for(scope["app"].state.container.settings)
+        if guard is None:
             await send(
                 {
                     "type": "http.response.start",
@@ -97,11 +102,22 @@ class InternalAccess:
             )
             await send({"type": "http.response.body", "body": b'{"detail":"Not Found"}'})
             return
-        guard = self._guards.get(token)
-        if guard is None:
-            guard = InternalRouteGuard(self._app, ServiceTokenVerifier({"knowledge": token}))
-            self._guards = {token: guard}
         await guard(scope, receive, send)
+
+    def _guard_for(self, settings: Settings) -> InternalRouteGuard | None:
+        key = (
+            settings.knowledge_service_token,
+            settings.knowledge_service_client_id,
+            settings.oidc_issuer_url,
+            settings.oidc_allowed_algorithms,
+        )
+        if key != self._key:
+            self._resources.close()
+            self._resources = ExitStack()
+            verifier = build_internal_verifier(settings, self._resources)
+            self._guard = None if verifier is None else InternalRouteGuard(self._app, verifier)
+            self._key = key
+        return self._guard
 
 
 def _body_limits(scope: Scope) -> BodyLimits:
