@@ -413,3 +413,25 @@ npm run api:check           OpenAPI types match frontend/openapi.json (no API ch
 npm run build               ✓ built in 1.16s
 docker compose -f deploy/compose.production.yaml config   valid
 ```
+
+### PR 4b (2026-10-09, branch `claude/production-hardening-pr4b`)
+
+Run locally on Python 3.13 with platform-kernel v1.1.0, against a local PostgreSQL 16 with
+pgvector (`TEST_DATABASE_URL`), so the PostgreSQL suites ran here too. The Playwright smoke ran
+against the API with the fake model, in-memory store and in-process workers, on a preinstalled
+Chromium. Its two failures are that browser's missing built-in PDF viewer frame, which this
+change does not touch; CI installs Playwright's own browser. The one vitest failure is the known
+Node 22 export test.
+
+```text
+pytest --cov (PostgreSQL)   1938 passed in 339.05s; total coverage 94.61% (floor 92.5%)
+ruff check .                All checks passed!
+ruff format --check .       1242 files already formatted
+mypy src tests              Success: no issues found in 680 source files
+lint-imports                Contracts: 43 kept, 0 broken.
+npm run test                511 passed, 1 failed (client.test.ts export, Node 22 only)
+npm run typecheck / lint    clean
+npm run api:check           OpenAPI types match the regenerated frontend/openapi.json
+npm run build               ✓ built
+npm run test:smoke          45 passed, 2 failed (content-security-policy PDF viewer frame, local Chromium only)
+```
