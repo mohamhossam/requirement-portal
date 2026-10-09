@@ -12,6 +12,7 @@ from smb_requirement_agent.analysis.application.errors import RequirementAnalysi
 from smb_requirement_agent.analysis.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
+from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
 from smb_requirement_agent.analysis.domain.lineage import generation_lineage
 from smb_requirement_agent.application.errors import ArtifactVersionConflictError
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
@@ -58,6 +59,7 @@ from smb_requirement_agent.requirements.application.errors import RequirementNot
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.enums import supported_values, value_of
 from smb_requirement_agent.shared_kernel.generation import Provenance
@@ -125,9 +127,14 @@ class GenerateFeatures:
         ):
             return self._execute(requirement_id=requirement_id, force=force)
 
-    def _execute(
-        self, requirement_id: RequirementId, *, force: bool = False
-    ) -> GenerateFeaturesResult:
+    def require_can_generate(
+        self, requirement_id: RequirementId, *, force: bool
+    ) -> tuple[Requirement, RequirementAnalysis, Epic, list[Feature]]:
+        """Raise unless Features could be generated now; return what they would replace.
+
+        The job service calls this before queueing, so a request that can only fail is
+        refused at once instead of costing a queued job and a failure notification.
+        """
         requirement = self._requirements.get(requirement_id)
         if requirement is None:
             raise RequirementNotFoundError(f"Requirement {requirement_id.value!r} not found.")
@@ -145,8 +152,6 @@ class GenerateFeatures:
         self._ensure_decomposable(epic)
 
         existing = self._features.get_by_epic_id(epic.id)
-        expected_set_version = self._features.set_version(epic.id)
-        expected_descendants = self._descendants(existing)
         human_owned_descendants = any(
             story.is_human_owned
             for feature in existing
@@ -164,7 +169,16 @@ class GenerateFeatures:
                 f"Features for Epic {epic.id.value!r} or their descendants contain human "
                 "work. Regenerate with force to authorize replacing the full set."
             )
+        return requirement, analysis, epic, existing
 
+    def _execute(
+        self, requirement_id: RequirementId, *, force: bool = False
+    ) -> GenerateFeaturesResult:
+        requirement, analysis, epic, existing = self.require_can_generate(
+            requirement_id, force=force
+        )
+        expected_set_version = self._features.set_version(epic.id)
+        expected_descendants = self._descendants(existing)
         with self._transactions.external_call():
             features = self._checks.features(
                 requirement,

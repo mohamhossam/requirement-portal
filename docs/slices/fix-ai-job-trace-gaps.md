@@ -161,7 +161,8 @@ parametrised cases) and passes with G7.
   `analyse_requirement` only, as planned. `generate_epic`, `generate_features` and the Story
   operations can still queue a job that fails on a conflict the start could have seen (for
   example an existing Epic without `force`). The same `require_can_generate` shape would serve
-  them; carry it if those failures show up in use.
+  them; carry it if those failures show up in use. *(2026-10-09: carried for Epic, Features
+  and first Stories by production hardening PR 4b, ADR-0105.)*
 - **Back-off between reclaims.** A dying job is now bounded, but its attempts run back to back.
 - **Frontend pre-existing failure on Node 22.** `src/api/client.test.ts` ("downloads an
   authenticated export…") fails on Node 22 with or without this change; it passes on Node 24,

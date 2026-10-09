@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
+from tests.job_driver import run_job
 from tests.unit.workflow_helpers import (
     confirm_fake_analysis,
     post_analysis,
@@ -25,37 +26,39 @@ EDIT_BODY = {
 def _approved_epic(client: TestClient) -> str:
     created = client.post("/requirements", json={"title": "T", "description": "D"})
     requirement_id: str = created.json()["id"]
-    assert post_analysis(client, requirement_id).status_code == 200
+    assert post_analysis(client, requirement_id).succeeded
     confirm_fake_analysis(client, requirement_id)
-    assert post_epic(client, requirement_id).status_code == 201
+    assert post_epic(client, requirement_id).succeeded
     assert post_epic_approval(client, requirement_id).status_code == 200
     return requirement_id
 
 
 def _decomposed(client: TestClient) -> tuple[str, list[dict[str, object]]]:
     requirement_id = _approved_epic(client)
-    response = post_features(client, requirement_id)
-    assert response.status_code == 201
-    features: list[dict[str, object]] = response.json()["features"]
+    run = post_features(client, requirement_id)
+    assert run.succeeded, run.job
+    features: list[dict[str, object]] = client.get(
+        f"/requirements/{requirement_id}/features"
+    ).json()["features"]
     return requirement_id, features
 
 
 class TestGenerate:
-    def test_first_decomposition_returns_201(self, client: TestClient) -> None:
+    def test_first_decomposition_creates_generated_features(self, client: TestClient) -> None:
         requirement_id = _approved_epic(client)
 
-        response = post_features(client, requirement_id)
+        run = post_features(client, requirement_id)
 
-        assert response.status_code == 201
-        body = response.json()
+        assert run.succeeded, run.job
+        body = client.get(f"/requirements/{requirement_id}/features").json()
         assert len(body["features"]) == 2
         assert body["features"][0]["splitting_pattern"] == "journey_stage"
         assert body["features"][0]["stale"] is None
 
-    def test_regeneration_returns_200(self, client: TestClient) -> None:
+    def test_regeneration_succeeds(self, client: TestClient) -> None:
         requirement_id, _ = _decomposed(client)
 
-        assert post_features(client, requirement_id).status_code == 200
+        assert post_features(client, requirement_id).succeeded
 
     def test_unapproved_epic_returns_409(self, client: TestClient) -> None:
         created = client.post("/requirements", json={"title": "T", "description": "D"})
@@ -64,35 +67,33 @@ class TestGenerate:
         confirm_fake_analysis(client, requirement_id)
         post_epic(client, requirement_id)
 
-        assert post_features(client, requirement_id).status_code == 409
+        assert post_features(client, requirement_id).start.status_code == 409
 
     def test_missing_epic_returns_404(self, client: TestClient) -> None:
         created = client.post("/requirements", json={"title": "T", "description": "D"})
         requirement_id = created.json()["id"]
         post_analysis(client, requirement_id)
 
-        assert (
-            client.post(
-                f"/requirements/{requirement_id}/features", json={"context_token": "unknown"}
-            ).status_code
-            == 409
-        )
+        run = run_job(client, requirement_id, "generate_features", context_token="unknown")
+
+        assert run.start.status_code == 409
 
     def test_regenerating_over_approved_features_returns_409(self, client: TestClient) -> None:
         requirement_id, features = _decomposed(client)
         feature_id = str(features[0]["id"])
         post_feature_approval(client, requirement_id, feature_id)
 
-        assert post_features(client, requirement_id).status_code == 409
+        assert post_features(client, requirement_id).start.status_code == 409
 
     def test_force_replaces_the_set(self, client: TestClient) -> None:
         requirement_id, features = _decomposed(client)
         post_feature_approval(client, requirement_id, str(features[0]["id"]))
 
-        response = post_features(client, requirement_id, force=True)
+        run = post_features(client, requirement_id, force=True)
 
-        assert response.status_code == 200
-        assert all(f["status"] == "generated" for f in response.json()["features"])
+        assert run.succeeded, run.job
+        body = client.get(f"/requirements/{requirement_id}/features").json()
+        assert all(f["status"] == "generated" for f in body["features"])
 
 
 class TestReadEditApprove:

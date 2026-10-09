@@ -246,7 +246,7 @@ def test_ineligible_missing_and_invalid_format_errors_are_explicit(client: TestC
     requirement_id = client.post(
         "/requirements", json={"title": "Draft", "description": "Not approved."}
     ).json()["id"]
-    assert post_analysis(client, requirement_id).status_code == 200
+    assert post_analysis(client, requirement_id).succeeded
     history = client.get(f"/requirements/{requirement_id}/revisions").json()
     revision = history["breakdown_revisions"][-1]["number"]
 

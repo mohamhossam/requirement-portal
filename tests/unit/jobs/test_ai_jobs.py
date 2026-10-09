@@ -24,7 +24,16 @@ from smb_requirement_agent.shared_kernel.actors import (
     ActorSnapshot,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
-from tests.unit.workflow_helpers import post_analysis
+from tests.job_driver import JobRun
+from tests.unit.workflow_helpers import (
+    confirm_fake_analysis,
+    post_analysis,
+    post_epic,
+    post_epic_approval,
+    post_feature_approval,
+    post_features,
+    post_stories,
+)
 
 OWNER = {"X-Fake-Actor-Id": "fake-owner"}
 NOW = datetime(2026, 9, 3, 12, tzinfo=UTC)
@@ -466,7 +475,9 @@ def test_re_analysis_is_refused_before_enqueue_unless_forced(client: TestClient)
         headers=OWNER,
     )
     assert cancelled.status_code == 200
-    assert post_analysis(client, requirement_id).status_code == 200
+    analysed = post_analysis(client, requirement_id, headers=OWNER)
+    assert analysed.succeeded
+    queued = sorted([first.json()["id"], analysed.start.json()["id"]])
 
     # The worker could only fail this: an analysis exists and force was not asked for.
     again = client.post(
@@ -476,7 +487,7 @@ def test_re_analysis_is_refused_before_enqueue_unless_forced(client: TestClient)
     )
     assert again.status_code == 409
     assert again.json()["code"] == "requirement_analysis_conflict"
-    assert _analysis_jobs(client, requirement_id) == [first.json()["id"]]
+    assert sorted(_analysis_jobs(client, requirement_id)) == queued
 
     # A replayed key still answers with the job it started, before any new check runs.
     replayed = client.post(path, json=before, headers={**OWNER, "Idempotency-Key": "first"})
@@ -521,3 +532,46 @@ def test_analysis_of_an_ineligible_requirement_is_refused_before_enqueue(
 
     assert response.status_code == 422
     assert _analysis_jobs(client, promoted["id"]) == []
+
+
+def _jobs_of(client: TestClient, requirement_id: str, operation: str) -> int:
+    jobs = client.get(f"/requirements/{requirement_id}/ai-jobs", headers=OWNER).json()
+    return sum(1 for item in jobs if item["operation"] == operation)
+
+
+def _refused(run: JobRun, code: str) -> None:
+    assert run.job is None, run.job
+    assert run.start.status_code == 409, run.start.text
+    assert run.start.json()["code"] == code
+
+
+def test_breakdown_generation_that_can_only_fail_is_refused_before_enqueue(
+    client: TestClient,
+) -> None:
+    """Epic, Features and first Stories refuse at start what the worker could only fail."""
+    requirement_id = _requirement(client)
+    assert post_analysis(client, requirement_id, headers=OWNER).succeeded
+
+    _refused(post_epic(client, requirement_id, headers=OWNER), "analysis_confirmation_required")
+    assert _jobs_of(client, requirement_id, "generate_epic") == 0
+
+    confirm_fake_analysis(client, requirement_id)
+    assert post_epic(client, requirement_id, headers=OWNER).succeeded
+    _refused(post_features(client, requirement_id, headers=OWNER), "epic_not_approved")
+    assert _jobs_of(client, requirement_id, "generate_features") == 0
+
+    assert post_epic_approval(client, requirement_id, headers=OWNER).status_code == 200
+    _refused(post_epic(client, requirement_id, headers=OWNER), "epic_regeneration_conflict")
+    assert _jobs_of(client, requirement_id, "generate_epic") == 1
+
+    assert post_features(client, requirement_id, headers=OWNER).succeeded
+    features = client.get(f"/requirements/{requirement_id}/features", headers=OWNER).json()
+    feature_id = features["features"][0]["id"]
+    assert (
+        post_feature_approval(client, requirement_id, feature_id, headers=OWNER).status_code == 200
+    )
+    assert post_stories(client, requirement_id, feature_id, headers=OWNER).succeeded
+    _refused(
+        post_stories(client, requirement_id, feature_id, headers=OWNER), "stories_already_exist"
+    )
+    assert _jobs_of(client, requirement_id, "generate_stories") == 1

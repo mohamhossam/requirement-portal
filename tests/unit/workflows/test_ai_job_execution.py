@@ -140,7 +140,7 @@ def _requirement(client: TestClient) -> str:
 
 def _analysed(client: TestClient) -> str:
     requirement_id = _requirement(client)
-    assert post_analysis(client, requirement_id).status_code == 200
+    assert post_analysis(client, requirement_id).succeeded
     return requirement_id
 
 

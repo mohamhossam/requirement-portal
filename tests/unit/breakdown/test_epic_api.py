@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
+from tests.job_driver import run_job
 from tests.unit.workflow_helpers import (
     confirm_fake_analysis,
     post_analysis,
@@ -21,70 +22,67 @@ EDIT_BODY = {
 def _analysed_requirement(client: TestClient) -> str:
     created = client.post("/requirements", json={"title": "T", "description": "D"})
     requirement_id: str = created.json()["id"]
-    assert post_analysis(client, requirement_id).status_code == 200
+    assert post_analysis(client, requirement_id).succeeded
     confirm_fake_analysis(client, requirement_id)
     return requirement_id
 
 
 class TestGenerate:
-    def test_first_generation_returns_201(self, client: TestClient) -> None:
+    def test_first_generation_creates_a_generated_epic(self, client: TestClient) -> None:
         requirement_id = _analysed_requirement(client)
 
-        response = post_epic(client, requirement_id)
+        run = post_epic(client, requirement_id)
 
-        assert response.status_code == 201
-        body = response.json()
+        assert run.succeeded, run.job
+        body = client.get(f"/requirements/{requirement_id}/epic").json()
         assert body["status"] == "generated"
         assert body["stale"] is None
         assert body["provenance"]["prompt_version"]
 
-    def test_regeneration_returns_200(self, client: TestClient) -> None:
+    def test_regeneration_succeeds(self, client: TestClient) -> None:
         requirement_id = _analysed_requirement(client)
         post_epic(client, requirement_id)
 
-        assert post_epic(client, requirement_id).status_code == 200
+        assert post_epic(client, requirement_id).succeeded
 
     def test_unknown_requirement_returns_404(self, client: TestClient) -> None:
-        assert (
-            client.post("/requirements/missing/epic", json={"context_token": "unknown"}).status_code
-            == 404
-        )
+        run = run_job(client, "missing", "generate_epic", context_token="unknown")
+
+        assert run.start.status_code == 404
 
     def test_unanalysed_requirement_returns_404(self, client: TestClient) -> None:
         created = client.post("/requirements", json={"title": "T", "description": "D"})
 
-        response = client.post(
-            f"/requirements/{created.json()['id']}/epic", json={"context_token": "unknown"}
-        )
+        run = run_job(client, created.json()["id"], "generate_epic", context_token="unknown")
 
-        assert response.status_code == 409
+        assert run.start.status_code == 409
 
     def test_unconfirmed_analysis_returns_409(self, client: TestClient) -> None:
         created = client.post("/requirements", json={"title": "T", "description": "D"})
         requirement_id = created.json()["id"]
         post_analysis(client, requirement_id)
 
-        response = post_epic(client, requirement_id)
+        run = post_epic(client, requirement_id)
 
-        assert response.status_code == 409
-        assert "must be human-confirmed" in response.json()["message"]
+        assert run.start.status_code == 409
+        assert "must be human-confirmed" in run.start.json()["message"]
 
     def test_regenerating_approved_content_returns_409(self, client: TestClient) -> None:
         requirement_id = _analysed_requirement(client)
         post_epic(client, requirement_id)
         post_epic_approval(client, requirement_id)
 
-        assert post_epic(client, requirement_id).status_code == 409
+        assert post_epic(client, requirement_id).start.status_code == 409
 
     def test_force_regenerates_over_approved_content(self, client: TestClient) -> None:
         requirement_id = _analysed_requirement(client)
         post_epic(client, requirement_id)
         post_epic_approval(client, requirement_id)
 
-        response = post_epic(client, requirement_id, force=True)
+        run = post_epic(client, requirement_id, force=True)
 
-        assert response.status_code == 200
-        assert response.json()["status"] == "generated"
+        assert run.succeeded, run.job
+        assert client.get(f"/requirements/{requirement_id}/epic").json()["status"] == "generated"
 
 
 class TestReadEditApprove:

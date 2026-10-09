@@ -6,27 +6,18 @@ from fastapi import APIRouter, Depends
 
 from smb_requirement_agent.breakdown.application.errors import ArchitectureJobNotFoundError
 from smb_requirement_agent.breakdown.application.ports.architecture_jobs import ArchitectureJob
-from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping import (
-    MapBreakdownArchitecture,
-)
 from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping_jobs import (
     ArchitectureMappingJobs,
 )
 from smb_requirement_agent.identity.application.ports.identity import Actor
 from smb_requirement_agent.interfaces.api.dependencies import (
-    CurrentActorDep,
     KnowledgeActorDep,
     get_architecture_mapping_jobs,
-    get_map_breakdown_architecture,
     limit_provider_calls,
     require_authenticated_actor,
 )
 from smb_requirement_agent.interfaces.api.schemas.architecture import (
-    ArchitectureImpactResponse,
     ArchitectureJobResponse,
-    BreakdownArchitectureMappingResponse,
-    FeatureArchitectureMappingResponse,
-    StoryArchitectureMappingResponse,
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
@@ -98,33 +89,3 @@ def _requirement_job(
     if job.subject_id != requirement_id:
         raise ArchitectureJobNotFoundError("Architecture mapping job was not found.")
     return job
-
-
-@router.post(
-    "/{requirement_id}/architecture-mapping",
-    response_model=BreakdownArchitectureMappingResponse,
-    dependencies=[Depends(limit_provider_calls)],
-)
-def map_architecture(
-    requirement_id: str,
-    actor: CurrentActorDep,
-    use_case: Annotated[MapBreakdownArchitecture, Depends(get_map_breakdown_architecture)],
-) -> BreakdownArchitectureMappingResponse:
-    result = use_case.execute(actor, RequirementId(requirement_id))
-    return BreakdownArchitectureMappingResponse(
-        requirement_id=result.requirement_id.value,
-        features=[
-            FeatureArchitectureMappingResponse(
-                feature_id=item.feature.id.value,
-                architecture=ArchitectureImpactResponse.from_domain(item.impact),
-                stories=[
-                    StoryArchitectureMappingResponse(
-                        story_id=story.story.id.value,
-                        architecture=ArchitectureImpactResponse.from_domain(story.impact),
-                    )
-                    for story in item.stories
-                ],
-            )
-            for item in result.features
-        ],
-    )

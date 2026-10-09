@@ -168,12 +168,6 @@ class ClarificationAnswerRequest(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
-class ClarifyAnalysisRequest(BaseModel):
-    answers: Annotated[list[ClarificationAnswerRequest], Field(min_length=1, max_length=MAX_ITEMS)]
-    expected_analysis_version: Annotated[int, Field(ge=1)]
-    model_config = ConfigDict(frozen=True)
-
-
 class ConfirmAnalysisRequest(BaseModel):
     expected_version: Annotated[int, Field(ge=1)]
     model_config = ConfigDict(frozen=True)
@@ -316,13 +310,6 @@ class SaveClarificationDraftRequest(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
-class ResolveClarificationQuestionRequest(BaseModel):
-    answer: NonBlankText | None = None
-    expected_version: Annotated[int, Field(ge=1)]
-    source_suggestion_id: NonBlankIdentifier | None = None
-    model_config = ConfigDict(frozen=True)
-
-
 class ClarificationResolutionRequest(BaseModel):
     question_id: NonBlankIdentifier
     answer: NonBlankText
@@ -345,11 +332,6 @@ ClarificationResolutionBatch = Annotated[
     Field(min_length=1, max_length=MAX_ITEMS),
     AfterValidator(_unique_question_resolutions),
 ]
-
-
-class ResolveClarificationQuestionsRequest(BaseModel):
-    answers: ClarificationResolutionBatch
-    model_config = ConfigDict(frozen=True)
 
 
 RequirementAnalysisResponse.model_rebuild()

@@ -52,9 +52,7 @@ from smb_requirement_agent.breakdown.application.use_cases.story_quality import 
     AssessStoryCandidate,
     EvaluateFeatureStories,
     GetFeatureQualitySnapshot,
-    SuggestStorySplit,
     ValidateFeatureStories,
-    ValidateStory,
 )
 from smb_requirement_agent.breakdown.application.use_cases.story_workflow import (
     EditStory,
@@ -127,11 +125,8 @@ class BreakdownWiring:
     story_change_proposals: StoryChangeProposals
     approve_story: ApproveStory
     reject_story: RejectStory
-    validate_story: ValidateStory
-    validate_feature_stories: ValidateFeatureStories
     evaluate_feature_stories: EvaluateFeatureStories
     get_feature_quality_snapshot: GetFeatureQualitySnapshot
-    suggest_story_split: SuggestStorySplit
     map_feature_architecture: MapFeatureArchitecture
     map_story_architecture: MapStoryArchitecture
     map_breakdown_architecture: MapBreakdownArchitecture
@@ -160,15 +155,15 @@ def build_breakdown(
     story_set = (requirements, analyses, epics, features, stories, transactions)
 
     get_stories = GetStories(*story_set, events, authorization=access)
-    validate_story = ValidateStory(get_stories, models.story_quality_evaluator, clock)
-    validate_feature_stories = ValidateFeatureStories(get_stories, validate_story)
+    assess_story = AssessStoryCandidate(models.story_quality_evaluator, clock)
+    validate_feature_stories = ValidateFeatureStories(get_stories, assess_story)
     map_feature = MapFeatureArchitecture(architecture)
     map_story = MapStoryArchitecture(architecture)
     checks = GenerationChecks(
         architecture,
         map_feature,
         map_story,
-        AssessStoryCandidate(models.story_quality_evaluator, clock),
+        assess_story,
         persistence.story_quality_repository,
         GovernanceCandidateReview(
             BreakdownReviewPolicy(),
@@ -268,8 +263,6 @@ def build_breakdown(
             review.approval_recorder,
             transactions,
         ),
-        validate_story=validate_story,
-        validate_feature_stories=validate_feature_stories,
         evaluate_feature_stories=EvaluateFeatureStories(
             get_stories,
             validate_feature_stories,
@@ -281,7 +274,6 @@ def build_breakdown(
         get_feature_quality_snapshot=GetFeatureQualitySnapshot(
             get_stories, persistence.story_quality_repository
         ),
-        suggest_story_split=SuggestStorySplit(validate_story),
         map_feature_architecture=map_feature,
         map_story_architecture=map_story,
         map_breakdown_architecture=MapBreakdownArchitecture(
@@ -295,7 +287,7 @@ def build_breakdown(
         generate_breakdown_review=GenerateBreakdownReview(
             review.review_evidence,
             persistence.breakdown_review_repository,
-            validate_story,
+            assess_story,
             BreakdownReviewPolicy(),
             clock,
             transactions,

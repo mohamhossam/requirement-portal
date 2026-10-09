@@ -103,6 +103,15 @@ def test_the_api_drains_in_flight_requests_and_the_edge_reports_its_health() -> 
     assert SERVICES["web"]["healthcheck"]["test"][:2] == ["CMD", "wget"]
 
 
+def test_no_api_request_waits_on_a_model_at_the_edge() -> None:
+    """Model work runs as jobs (ADR-0105), so the edge holds a request a minute at most."""
+    block = re.search(r"location /api/ \{(.*?)\n    \}", EDGE, re.S)
+
+    assert block is not None
+    assert "proxy_read_timeout 60s;" in block.group(1)
+    assert "proxy_send_timeout 60s;" in block.group(1)
+
+
 def test_no_internal_route_passes_the_edge() -> None:
     block = re.search(r"location \^~ /api/internal \{(.*?)\}", EDGE, re.S)
 

@@ -1,4 +1,7 @@
-"""Reusable HTTP steps for tests that need a confirmed analysis."""
+"""Reusable HTTP steps for tests that need a confirmed analysis.
+
+Model-backed steps run as durable jobs through `tests.job_driver` (ADR-0105).
+"""
 
 from typing import cast
 
@@ -8,6 +11,7 @@ from httpx2 import Response
 
 from smb_requirement_agent.interfaces.api.container import Container
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from tests.job_driver import JobRun, run_job
 
 
 def post_analysis(
@@ -16,12 +20,15 @@ def post_analysis(
     *,
     force: bool = False,
     headers: dict[str, str] | None = None,
-) -> Response:
+) -> JobRun:
     requirement = client.get(f"/requirements/{requirement_id}", headers=headers).json()
-    return client.post(
-        f"/requirements/{requirement_id}/analysis",
-        json={"context_token": requirement["analysis_context_token"], "force": force},
+    return run_job(
+        client,
+        requirement_id,
+        "analyse_requirement",
         headers=headers,
+        context_token=requirement["analysis_context_token"],
+        force=force,
     )
 
 
@@ -31,12 +38,15 @@ def post_epic(
     *,
     force: bool = False,
     headers: dict[str, str] | None = None,
-) -> Response:
+) -> JobRun:
     analysis = client.get(f"/requirements/{requirement_id}/analysis", headers=headers).json()
-    return client.post(
-        f"/requirements/{requirement_id}/epic",
-        json={"context_token": analysis["epic_context_token"], "force": force},
+    return run_job(
+        client,
+        requirement_id,
+        "generate_epic",
         headers=headers,
+        context_token=analysis["epic_context_token"],
+        force=force,
     )
 
 
@@ -63,12 +73,15 @@ def post_features(
     *,
     force: bool = False,
     headers: dict[str, str] | None = None,
-) -> Response:
+) -> JobRun:
     epic = client.get(f"/requirements/{requirement_id}/epic", headers=headers).json()
-    return client.post(
-        f"/requirements/{requirement_id}/features",
-        json={"context_token": epic["feature_context_token"], "force": force},
+    return run_job(
+        client,
+        requirement_id,
+        "generate_features",
         headers=headers,
+        context_token=epic["feature_context_token"],
+        force=force,
     )
 
 
@@ -97,13 +110,16 @@ def post_stories(
     feature_id: str,
     *,
     headers: dict[str, str] | None = None,
-) -> Response:
+) -> JobRun:
     features = client.get(f"/requirements/{requirement_id}/features", headers=headers).json()
     feature = next(item for item in features["features"] if item["id"] == feature_id)
-    return client.post(
-        f"/requirements/{requirement_id}/features/{feature_id}/stories",
-        json={"context_token": feature["story_context_token"]},
+    return run_job(
+        client,
+        requirement_id,
+        "generate_stories",
         headers=headers,
+        context_token=feature["story_context_token"],
+        feature_id=feature_id,
     )
 
 
@@ -123,28 +139,29 @@ def screen_current_knowledge(client: TestClient, requirement_id: str) -> None:
 def confirm_fake_analysis(client: TestClient, requirement_id: str) -> None:
     """Resolve the deterministic fake findings and record human confirmation."""
     current = client.get(f"/requirements/{requirement_id}/analysis").json()
-    response = client.post(
-        f"/requirements/{requirement_id}/analysis/clarifications",
-        json={
-            "answers": [
-                {"kind": "assumption", "subject": "This is an assumption.", "answer": "Confirmed."},
-                {"kind": "open_question", "subject": "Is this a question?", "answer": "Yes."},
-                {
-                    "kind": "ambiguity",
-                    "subject": "This is ambiguous.",
-                    "answer": "Use the first interpretation.",
-                },
-                {
-                    "kind": "potential_dependency",
-                    "subject": "This is a dependency.",
-                    "answer": "Available.",
-                },
-            ],
-            "expected_analysis_version": current["version"],
-        },
+    clarified = run_job(
+        client,
+        requirement_id,
+        "clarify_requirement_analysis",
+        answers=[
+            {"kind": "assumption", "subject": "This is an assumption.", "answer": "Confirmed."},
+            {"kind": "open_question", "subject": "Is this a question?", "answer": "Yes."},
+            {
+                "kind": "ambiguity",
+                "subject": "This is ambiguous.",
+                "answer": "Use the first interpretation.",
+            },
+            {
+                "kind": "potential_dependency",
+                "subject": "This is a dependency.",
+                "answer": "Available.",
+            },
+        ],
+        expected_analysis_version=current["version"],
     )
-    assert response.status_code == 200
-    for proposal in response.json()["business_intent"]["proposals"]:
+    assert clarified.succeeded, clarified.job
+    clarified_analysis = client.get(f"/requirements/{requirement_id}/analysis").json()
+    for proposal in clarified_analysis["business_intent"]["proposals"]:
         if proposal["status"] == "pending":
             decided = client.patch(
                 f"/requirements/{requirement_id}/analysis/proposals/{proposal['id']}",
@@ -168,51 +185,17 @@ def generate_story_tree(client: TestClient) -> tuple[str, str, list[dict[str, ob
         "/requirements",
         json={"title": "Stories", "description": "Generate reviewable Stories"},
     ).json()["id"]
-    requirement = client.get(f"/requirements/{requirement_id}").json()
-    analysis = client.post(
-        f"/requirements/{requirement_id}/analysis",
-        json={"context_token": requirement["analysis_context_token"]},
-    )
-    assert analysis.status_code == 200
+    assert post_analysis(client, requirement_id).succeeded
     confirm_fake_analysis(client, requirement_id)
-    analysis = client.get(f"/requirements/{requirement_id}/analysis").json()
-    epic_response = client.post(
-        f"/requirements/{requirement_id}/epic",
-        json={"context_token": analysis["epic_context_token"]},
-    )
-    assert epic_response.status_code == 201
-    epic = epic_response.json()
-    approved_epic = client.post(
-        f"/requirements/{requirement_id}/epic/approval",
-        json={
-            "expected_version": epic["version"],
-            "expected_content_fingerprint": epic["content_fingerprint"],
-        },
-    )
-    assert approved_epic.status_code == 200
-    current_epic = client.get(f"/requirements/{requirement_id}/epic").json()
-    features_response = client.post(
-        f"/requirements/{requirement_id}/features",
-        json={"context_token": current_epic["feature_context_token"]},
-    )
-    assert features_response.status_code == 201, features_response.text
-    features = features_response.json()["features"]
-    feature_id = features[0]["id"]
-    approved_feature = client.post(
-        f"/requirements/{requirement_id}/features/{feature_id}/approval",
-        json={
-            "expected_version": features[0]["version"],
-            "expected_content_fingerprint": features[0]["content_fingerprint"],
-        },
-    )
-    assert approved_feature.status_code == 200
-    current_features = client.get(f"/requirements/{requirement_id}/features").json()["features"]
-    current_feature = next(item for item in current_features if item["id"] == feature_id)
-    stories = client.post(
-        f"/requirements/{requirement_id}/features/{feature_id}/stories",
-        json={"context_token": current_feature["story_context_token"]},
-    ).json()["stories"]
-    return str(requirement_id), str(feature_id), stories
+    assert post_epic(client, requirement_id).succeeded
+    assert post_epic_approval(client, requirement_id).status_code == 200
+    features = post_features(client, requirement_id)
+    assert features.succeeded, features.job
+    feature_id = client.get(f"/requirements/{requirement_id}/features").json()["features"][0]["id"]
+    assert post_feature_approval(client, requirement_id, feature_id).status_code == 200
+    assert post_stories(client, requirement_id, feature_id).succeeded
+    stories = client.get(f"/requirements/{requirement_id}/features/{feature_id}/stories").json()
+    return str(requirement_id), str(feature_id), stories["stories"]
 
 
 def approve_fake_breakdown(
@@ -223,57 +206,23 @@ def approve_fake_breakdown(
         "/requirements",
         json={"title": "Portable backlog", "description": "Export an approved backlog."},
     ).json()["id"]
-    requirement = client.get(f"/requirements/{requirement_id}").json()
-    analysis_response = client.post(
-        f"/requirements/{requirement_id}/analysis",
-        json={"context_token": requirement["analysis_context_token"]},
-    )
-    assert analysis_response.status_code == 200
+    assert post_analysis(client, requirement_id).succeeded
     confirm_fake_analysis(client, requirement_id)
-    analysis = client.get(f"/requirements/{requirement_id}/analysis").json()
-    epic_response = client.post(
-        f"/requirements/{requirement_id}/epic",
-        json={"context_token": analysis["epic_context_token"]},
-    )
-    assert epic_response.status_code == 201
-    epic = epic_response.json()
-    approved_epic = client.post(
-        f"/requirements/{requirement_id}/epic/approval",
-        json={
-            "expected_version": epic["version"],
-            "expected_content_fingerprint": epic["content_fingerprint"],
-        },
-    )
-    assert approved_epic.status_code == 200
-    current_epic = client.get(f"/requirements/{requirement_id}/epic").json()
-    features_response = client.post(
-        f"/requirements/{requirement_id}/features",
-        json={"context_token": current_epic["feature_context_token"]},
-    )
-    assert features_response.status_code == 201, features_response.text
-    features = features_response.json()["features"]
+    assert post_epic(client, requirement_id).succeeded
+    assert post_epic_approval(client, requirement_id).status_code == 200
+    generated_features = post_features(client, requirement_id)
+    assert generated_features.succeeded, generated_features.job
+    features = client.get(f"/requirements/{requirement_id}/features").json()["features"]
     stories: list[dict[str, object]] = []
     for feature in features:
         feature_id = feature["id"]
-        approved_feature = client.post(
-            f"/requirements/{requirement_id}/features/{feature_id}/approval",
-            json={
-                "expected_version": feature["version"],
-                "expected_content_fingerprint": feature["content_fingerprint"],
-            },
-        )
-        assert approved_feature.status_code == 200
-        current_features = client.get(f"/requirements/{requirement_id}/features").json()["features"]
-        current_feature = next(item for item in current_features if item["id"] == feature_id)
-        generated = client.post(
-            f"/requirements/{requirement_id}/features/{feature_id}/stories",
-            json={"context_token": current_feature["story_context_token"]},
-        ).json()["stories"]
-        for story in generated:
+        assert post_feature_approval(client, requirement_id, feature_id).status_code == 200
+        assert post_stories(client, requirement_id, feature_id).succeeded
+        path = f"/requirements/{requirement_id}/features/{feature_id}/stories"
+        for story in client.get(path).json()["stories"]:
             assert (
                 client.post(
-                    f"/requirements/{requirement_id}/features/{feature_id}/stories/"
-                    f"{story['id']}/approval",
+                    f"{path}/{story['id']}/approval",
                     json={
                         "expected_version": story["version"],
                         "expected_content_fingerprint": story["content_fingerprint"],
@@ -282,7 +231,7 @@ def approve_fake_breakdown(
                 == 200
             )
             stories.append({**story, "feature_id": feature_id})
-    assert client.post(f"/requirements/{requirement_id}/breakdown-review").status_code == 200
+    assert run_job(client, requirement_id, "generate_breakdown_review").succeeded
     workflow = client.get(f"/requirements/{requirement_id}/approval-workflow").json()
     submitted = client.post(
         f"/requirements/{requirement_id}/review-submission",

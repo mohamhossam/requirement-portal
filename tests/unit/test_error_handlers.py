@@ -4,6 +4,7 @@ import logging
 from collections.abc import Generator, Sequence
 
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from smb_requirement_agent.analysis.application.errors import (
@@ -110,6 +111,7 @@ from smb_requirement_agent.identity.domain.errors import (
 from smb_requirement_agent.interfaces.api.container import build_container
 from smb_requirement_agent.interfaces.api.error_handlers import (
     ERROR_STATUS_CODES,
+    register_error_handlers,
     status_code_for,
 )
 from smb_requirement_agent.interfaces.api.main import create_app
@@ -184,6 +186,7 @@ from smb_requirement_agent.workflows.application.public_errors import (
     describe_public_error,
 )
 from tests.conftest import FAKE_PROVIDER_SETTINGS
+from tests.job_driver import run_job
 
 
 class BlankOutputAnalyzer(RequirementAnalyzerPort):
@@ -408,39 +411,45 @@ def test_a_withdrawn_citation_keeps_the_analysis_conflict_contract() -> None:
     assert status_code_for(CitationNotCurrentError(message)) == 409
 
 
-def test_invalid_analysis_content_surfaces_as_502_not_500(client: TestClient) -> None:
-    headers = {"X-Fake-Actor-Id": "fake-owner"}
-    created = client.post("/requirements", json={"title": "T", "description": "D"}, headers=headers)
-    requirement_id = created.json()["id"]
-    requirement = client.get(f"/requirements/{requirement_id}", headers=headers).json()
-
-    response = client.post(
-        f"/requirements/{requirement_id}/analysis",
-        json={"context_token": requirement["analysis_context_token"]},
-        headers=headers,
-    )
-
-    assert response.status_code == 502
-    assert set(response.json()) == {"code", "message", "correlation_id"}
-    assert response.json()["message"] == "The service could not complete the request."
-
-
-def test_mapped_server_error_is_logged(
-    client: TestClient, caplog: pytest.LogCaptureFixture
+def test_invalid_analysis_content_fails_the_job_with_its_public_error_not_internal(
+    client: TestClient,
 ) -> None:
     headers = {"X-Fake-Actor-Id": "fake-owner"}
     created = client.post("/requirements", json={"title": "T", "description": "D"}, headers=headers)
     requirement_id = created.json()["id"]
     requirement = client.get(f"/requirements/{requirement_id}", headers=headers).json()
 
-    with caplog.at_level(logging.ERROR, logger="smb_requirement_agent.api.errors"):
-        response = client.post(
-            f"/requirements/{requirement_id}/analysis",
-            json={"context_token": requirement["analysis_context_token"]},
-            headers=headers,
-        )
+    run = run_job(
+        client,
+        requirement_id,
+        "analyse_requirement",
+        headers=headers,
+        context_token=requirement["analysis_context_token"],
+    )
+
+    assert run.failure is not None
+    assert set(run.failure) == {"code", "message", "retryable", "correlation_id"}
+    assert run.failure["code"] == "invalid_analysis_content"
+    assert run.failure["message"] == "The service could not complete the request."
+
+
+def test_mapped_server_error_is_logged(caplog: pytest.LogCaptureFixture) -> None:
+    app = FastAPI()
+    register_error_handlers(app)
+
+    @app.post("/requirements/{requirement_id}/analysis-check")
+    def fail(requirement_id: str) -> None:
+        raise InvalidAnalysisContentError(f"Blank known fact for {requirement_id}.")
+
+    with (
+        TestClient(app, raise_server_exceptions=False) as client,
+        caplog.at_level(logging.ERROR, logger="smb_requirement_agent.api.errors"),
+    ):
+        response = client.post("/requirements/req-1/analysis-check")
 
     assert response.status_code == 502
+    assert set(response.json()) == {"code", "message", "correlation_id"}
+    assert response.json()["message"] == "The service could not complete the request."
     assert "POST" in caplog.text
-    assert f"/requirements/{requirement_id}/analysis" in caplog.text
+    assert "/requirements/req-1/analysis-check" in caplog.text
     assert "InvalidAnalysisContentError" in caplog.text

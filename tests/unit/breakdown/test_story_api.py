@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi.testclient import TestClient
 
+from tests.job_driver import JobRun, run_job
 from tests.unit.workflow_helpers import (
     confirm_fake_analysis,
     post_analysis,
@@ -24,25 +27,50 @@ STORY_INPUT = {
 }
 
 
+def _features(client: TestClient, requirement_id: str) -> list[dict[str, Any]]:
+    features: list[dict[str, Any]] = client.get(f"/requirements/{requirement_id}/features").json()[
+        "features"
+    ]
+    return features
+
+
+def _propose_split(
+    client: TestClient, requirement_id: str, feature_id: str, story_id: str
+) -> JobRun:
+    base = f"/requirements/{requirement_id}/features/{feature_id}/stories"
+    return run_job(
+        client,
+        requirement_id,
+        "propose_story_change",
+        context_token=client.get(base).json()["generation_context_token"],
+        feature_id=feature_id,
+        change_operation="split",
+        source_story_ids=[story_id],
+    )
+
+
 def _approved_feature(client: TestClient) -> tuple[str, str]:
     requirement_id = client.post(
         "/requirements", json={"title": "Stories", "description": "Generate reviewable Stories"}
     ).json()["id"]
-    assert post_analysis(client, requirement_id).status_code == 200
+    assert post_analysis(client, requirement_id).succeeded
     confirm_fake_analysis(client, requirement_id)
-    assert post_epic(client, requirement_id).status_code == 201
+    assert post_epic(client, requirement_id).succeeded
     assert post_epic_approval(client, requirement_id).status_code == 200
-    features = post_features(client, requirement_id).json()["features"]
-    feature_id = features[0]["id"]
+    assert post_features(client, requirement_id).succeeded
+    feature_id = _features(client, requirement_id)[0]["id"]
     assert post_feature_approval(client, requirement_id, feature_id).status_code == 200
     return requirement_id, feature_id
 
 
 def _generated(client: TestClient) -> tuple[str, str, list[dict[str, object]]]:
     requirement_id, feature_id = _approved_feature(client)
-    response = post_stories(client, requirement_id, feature_id)
-    assert response.status_code == 201
-    return requirement_id, feature_id, response.json()["stories"]
+    run = post_stories(client, requirement_id, feature_id)
+    assert run.succeeded, run.job
+    stories: list[dict[str, object]] = client.get(
+        f"/requirements/{requirement_id}/features/{feature_id}/stories"
+    ).json()["stories"]
+    return requirement_id, feature_id, stories
 
 
 def test_empty_collection_is_200_and_generation_is_structured(client: TestClient) -> None:
@@ -54,13 +82,13 @@ def test_empty_collection_is_200_and_generation_is_structured(client: TestClient
     assert empty["set_version"] == 1
     assert empty["generation_context_token"].startswith("generation-context-v2:")
 
-    response = post_stories(client, requirement_id, feature_id)
-    assert response.status_code == 201
-    first = response.json()["stories"][0]
+    run = post_stories(client, requirement_id, feature_id)
+    assert run.succeeded, run.job
+    first = client.get(path).json()["stories"][0]
     assert first["voice"].startswith("As a ")
     assert first["acceptance_criteria"][0].keys() == {"given", "when", "then"}
     assert first["status"] == "generated"
-    assert post_stories(client, requirement_id, feature_id).status_code == 409
+    assert post_stories(client, requirement_id, feature_id).start.status_code == 409
 
 
 def test_sibling_feature_approval_does_not_stale_story_generation_context(
@@ -70,25 +98,24 @@ def test_sibling_feature_approval_does_not_stale_story_generation_context(
         "/requirements",
         json={"title": "Parallel review", "description": "Approve Features during generation"},
     ).json()["id"]
-    assert post_analysis(client, requirement_id).status_code == 200
+    assert post_analysis(client, requirement_id).succeeded
     confirm_fake_analysis(client, requirement_id)
-    assert post_epic(client, requirement_id).status_code == 201
+    assert post_epic(client, requirement_id).succeeded
     assert post_epic_approval(client, requirement_id).status_code == 200
-    features = post_features(client, requirement_id).json()["features"]
+    assert post_features(client, requirement_id).succeeded
+    features = _features(client, requirement_id)
     assert len(features) >= 2
     target_id = features[0]["id"]
     sibling_id = features[1]["id"]
 
     token_before_target_approval = features[0]["story_context_token"]
     assert post_feature_approval(client, requirement_id, target_id).status_code == 200
-    current = client.get(f"/requirements/{requirement_id}/features").json()["features"]
+    current = _features(client, requirement_id)
     target_token = next(item["story_context_token"] for item in current if item["id"] == target_id)
     assert target_token != token_before_target_approval
 
     assert post_feature_approval(client, requirement_id, sibling_id).status_code == 200
-    after_sibling_approval = client.get(f"/requirements/{requirement_id}/features").json()[
-        "features"
-    ]
+    after_sibling_approval = _features(client, requirement_id)
     assert (
         next(
             item["story_context_token"]
@@ -97,11 +124,14 @@ def test_sibling_feature_approval_does_not_stale_story_generation_context(
         )
         == target_token
     )
-    generated = client.post(
-        f"/requirements/{requirement_id}/features/{target_id}/stories",
-        json={"context_token": target_token},
+    generated = run_job(
+        client,
+        requirement_id,
+        "generate_stories",
+        context_token=target_token,
+        feature_id=target_id,
     )
-    assert generated.status_code == 201
+    assert generated.succeeded, generated.job
 
 
 def test_edit_and_guarded_individual_regeneration_preserve_identity_and_siblings(
@@ -120,10 +150,29 @@ def test_edit_and_guarded_individual_regeneration_preserve_identity_and_siblings
     token = next(item for item in current["stories"] if item["id"] == first_id)[
         "story_context_token"
     ]
-    assert client.post(f"{path}/regeneration", json={"context_token": token}).status_code == 409
+    guarded = run_job(
+        client,
+        requirement_id,
+        "regenerate_story",
+        context_token=token,
+        feature_id=feature_id,
+        story_id=first_id,
+    )
+    assert guarded.failure is not None
+    assert guarded.failure["code"] == "story_regeneration_conflict"
 
-    regenerated = client.post(
-        f"{path}/regeneration", json={"context_token": token, "force": True}
+    forced = run_job(
+        client,
+        requirement_id,
+        "regenerate_story",
+        context_token=token,
+        feature_id=feature_id,
+        story_id=first_id,
+        force=True,
+    )
+    assert forced.succeeded, forced.job
+    regenerated = client.get(
+        f"/requirements/{requirement_id}/features/{feature_id}/stories"
     ).json()["stories"]
     assert regenerated[0]["id"] == first_id
     assert regenerated[0]["status"] == "generated"
@@ -137,11 +186,23 @@ def test_whole_set_regeneration_requires_force_and_mints_new_ids(client: TestCli
         f"/requirements/{requirement_id}/features/{feature_id}/stories/{first_id}",
         json={**STORY_INPUT, "expected_version": stories[0]["version"]},
     )
-    path = f"/requirements/{requirement_id}/features/{feature_id}/stories/regeneration"
-    current = client.get(f"/requirements/{requirement_id}/features/{feature_id}/stories").json()
-    token = current["generation_context_token"]
-    assert client.post(path, json={"context_token": token}).status_code == 409
-    replacement = client.post(path, json={"context_token": token, "force": True}).json()["stories"]
+    path = f"/requirements/{requirement_id}/features/{feature_id}/stories"
+    token = client.get(path).json()["generation_context_token"]
+    guarded = run_job(
+        client, requirement_id, "regenerate_story_set", context_token=token, feature_id=feature_id
+    )
+    assert guarded.failure is not None
+    assert guarded.failure["code"] == "story_regeneration_conflict"
+    forced = run_job(
+        client,
+        requirement_id,
+        "regenerate_story_set",
+        context_token=token,
+        feature_id=feature_id,
+        force=True,
+    )
+    assert forced.succeeded, forced.job
+    replacement = client.get(path).json()["stories"]
     assert {item["id"] for item in replacement}.isdisjoint({item["id"] for item in stories})
 
 
@@ -178,19 +239,13 @@ def test_ai_proposal_is_previewed_and_conflicts_after_source_edit(client: TestCl
     requirement_id, feature_id, stories = _generated(client)
     story_id = stories[0]["id"]
     base = f"/requirements/{requirement_id}/features/{feature_id}/stories"
-    proposal = client.post(
-        f"{base}/change-proposals",
-        json={
-            "operation": "split",
-            "source_story_ids": [story_id],
-            "context_token": client.get(base).json()["generation_context_token"],
-        },
-    )
-    assert proposal.status_code == 201
-    proposal_body = proposal.json()
+    proposed = _propose_split(client, requirement_id, feature_id, str(story_id))
+    assert proposed.succeeded, proposed.job
+    proposals = client.get(f"{base}/change-proposals").json()
+    assert len(proposals) == 1
+    proposal_body = proposals[0]
     proposal_id = proposal_body["id"]
-    assert len(proposal.json()["candidates"]) >= 2
-    assert len(client.get(f"{base}/change-proposals").json()) == 1
+    assert len(proposal_body["candidates"]) >= 2
 
     client.put(
         f"{base}/{story_id}",
@@ -211,14 +266,8 @@ def test_ai_proposal_is_previewed_and_conflicts_after_source_edit(client: TestCl
 def test_applied_proposal_replaces_sources_and_is_removed(client: TestClient) -> None:
     requirement_id, feature_id, stories = _generated(client)
     base = f"/requirements/{requirement_id}/features/{feature_id}/stories"
-    proposal = client.post(
-        f"{base}/change-proposals",
-        json={
-            "operation": "split",
-            "source_story_ids": [stories[0]["id"]],
-            "context_token": client.get(base).json()["generation_context_token"],
-        },
-    ).json()
+    assert _propose_split(client, requirement_id, feature_id, str(stories[0]["id"])).succeeded
+    proposal = client.get(f"{base}/change-proposals").json()[0]
     current_set_version = client.get(base).json()["set_version"]
     applied = client.post(
         f"{base}/change-proposals/{proposal['id']}/application",
@@ -279,14 +328,8 @@ def test_requirement_change_keeps_stale_stories_readable_without_current_analysi
             "expected_content_fingerprint": edited["content_fingerprint"],
         },
     ).json()
-    proposal = client.post(
-        f"{base}/change-proposals",
-        json={
-            "operation": "split",
-            "source_story_ids": [stories[1]["id"]],
-            "context_token": client.get(base).json()["generation_context_token"],
-        },
-    ).json()
+    assert _propose_split(client, requirement_id, feature_id, str(stories[1]["id"])).succeeded
+    proposal = client.get(f"{base}/change-proposals").json()[0]
     client.put(
         f"/requirements/{requirement_id}",
         json={

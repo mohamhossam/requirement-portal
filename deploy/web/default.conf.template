@@ -98,9 +98,10 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         # One correlation ID from the edge to the API's logs and error bodies.
         proxy_set_header X-Request-ID $request_id;
-        # Synchronous generation can run for minutes on a slow model.
-        proxy_read_timeout 600s;
-        proxy_send_timeout 600s;
+        # Model work runs as durable jobs (ADR-0105), so no request waits on a
+        # model; a minute bounds a stuck upstream without cutting off uploads.
+        proxy_read_timeout 60s;
+        proxy_send_timeout 60s;
     }
 
     # Client-side routes: every other path is the app shell, never cached, so a

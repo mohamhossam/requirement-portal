@@ -8,13 +8,9 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends
 
 from smb_requirement_agent.breakdown.application.use_cases.edit_epic import EditEpic, EditEpicInput
-from smb_requirement_agent.breakdown.application.use_cases.generate_epic import (
-    GenerateEpic,
-    GenerateEpicResult,
-)
 from smb_requirement_agent.breakdown.application.use_cases.get_epic import GetEpic
 from smb_requirement_agent.breakdown.domain.epic.entities import Epic
 from smb_requirement_agent.governance.application.use_cases.approve_epic import ApproveEpic
@@ -24,10 +20,8 @@ from smb_requirement_agent.interfaces.api.dependencies import (
     RequirementCommandsDep,
     get_approve_epic,
     get_edit_epic,
-    get_generate_epic,
     get_generation_context_tokens,
     get_get_epic,
-    limit_provider_calls,
     require_authenticated_actor,
 )
 from smb_requirement_agent.interfaces.api.schemas.epic import (
@@ -39,7 +33,6 @@ from smb_requirement_agent.interfaces.api.schemas.epic import (
 )
 from smb_requirement_agent.interfaces.api.schemas.generation import (
     ActionAvailabilityResponse,
-    GenerationRequest,
 )
 from smb_requirement_agent.interfaces.api.schemas.governance import (
     ApprovalRequest,
@@ -48,9 +41,6 @@ from smb_requirement_agent.interfaces.api.schemas.governance import (
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from smb_requirement_agent.workflows.application.use_cases.generation_context import (
     GenerationContextTokens,
-)
-from smb_requirement_agent.workflows.application.use_cases.requirement_commands import (
-    ExpectedContext,
 )
 
 router = APIRouter(
@@ -90,36 +80,6 @@ def _to_response(epic: Epic, feature_context_token: str | None = None) -> EpicRe
             ),
         ),
         feature_context_token=feature_context_token,
-    )
-
-
-@router.post(
-    "/{requirement_id}/epic",
-    response_model=EpicResponse,
-    dependencies=[Depends(limit_provider_calls)],
-)
-def generate_epic(
-    requirement_id: str,
-    body: GenerationRequest,
-    actor: CurrentActorDep,
-    response: Response,
-    commands: RequirementCommandsDep,
-    generation_context: Annotated[GenerationContextTokens, Depends(get_generation_context_tokens)],
-    use_case: Annotated[GenerateEpic, Depends(get_generate_epic)],
-) -> EpicResponse:
-    """Generate an Epic. 201 on first generation, 200 when one is replaced."""
-    resolved = RequirementId(requirement_id)
-
-    def present(result: GenerateEpicResult) -> EpicResponse:
-        response.status_code = 200 if result.replaced_existing else 201
-        return _to_response(result.epic, generation_context.features(resolved))
-
-    return commands.run_and_present(
-        resolved,
-        actor,
-        lambda: use_case.execute(actor, resolved, force=body.force),
-        present,
-        expected=ExpectedContext(body.context_token, lambda: generation_context.epic(resolved)),
     )
 
 

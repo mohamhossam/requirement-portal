@@ -14,6 +14,7 @@ from smb_requirement_agent.analysis.application.errors import (
 from smb_requirement_agent.analysis.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
+from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
 from smb_requirement_agent.analysis.domain.lineage import generation_lineage
 from smb_requirement_agent.application.errors import ArtifactVersionConflictError
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
@@ -40,6 +41,7 @@ from smb_requirement_agent.requirements.application.errors import RequirementNot
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
@@ -95,7 +97,14 @@ class GenerateEpic:
         ):
             return self._execute(requirement_id=requirement_id, force=force)
 
-    def _execute(self, requirement_id: RequirementId, *, force: bool = False) -> GenerateEpicResult:
+    def require_can_generate(
+        self, requirement_id: RequirementId, *, force: bool
+    ) -> tuple[Requirement, RequirementAnalysis, Epic | None]:
+        """Raise unless an Epic could be generated now; return what it would start from.
+
+        The job service calls this before queueing, so a request that can only fail is
+        refused at once instead of costing a queued job and a failure notification.
+        """
         requirement = self._requirements.get(requirement_id)
         if requirement is None:
             raise RequirementNotFoundError(f"Requirement {requirement_id.value!r} not found.")
@@ -117,7 +126,10 @@ class GenerateEpic:
                 f"Epic for requirement {requirement_id.value!r} has been "
                 f"{existing.status.value} by a human. Regenerate with force to replace it."
             )
+        return requirement, analysis, existing
 
+    def _execute(self, requirement_id: RequirementId, *, force: bool = False) -> GenerateEpicResult:
+        requirement, analysis, existing = self.require_can_generate(requirement_id, force=force)
         with self._transactions.external_call():
             candidate = self._generator.generate(requirement, analysis)
 

@@ -23,7 +23,7 @@ ALLOWED = {"allowed": True, "reason": None, "confirmation": None}
 def _requirement(client: TestClient) -> str:
     created = client.post("/requirements", json={"title": "T", "description": "D"})
     requirement_id: str = created.json()["id"]
-    assert post_analysis(client, requirement_id).status_code == 200
+    assert post_analysis(client, requirement_id).succeeded
     return requirement_id
 
 
@@ -45,8 +45,8 @@ def test_analysis_reports_whether_an_epic_can_be_generated(client: TestClient) -
     blocked = unconfirmed["actions"]["generate_epic"]
     assert blocked["allowed"] is False
     refusal = post_epic(client, requirement_id)
-    assert refusal.status_code == 409
-    assert refusal.json()["message"] == blocked["reason"]
+    assert refusal.start.status_code == 409
+    assert refusal.start.json()["message"] == blocked["reason"]
 
     confirm_fake_analysis(client, requirement_id)
     confirmed = client.get(f"/requirements/{requirement_id}/analysis").json()
@@ -63,8 +63,8 @@ def test_epic_actions_follow_its_review_state(client: TestClient) -> None:
     assert generated["regenerate"] == ALLOWED
     assert generated["generate_features"]["allowed"] is False
     refusal = post_features(client, requirement_id)
-    assert refusal.status_code == 409
-    assert refusal.json()["message"] == generated["generate_features"]["reason"]
+    assert refusal.start.status_code == 409
+    assert refusal.start.json()["message"] == generated["generate_features"]["reason"]
 
     assert post_epic_approval(client, requirement_id).status_code == 200
     approved = _epic(client, requirement_id)["actions"]
@@ -86,8 +86,8 @@ def test_feature_actions_gate_story_generation(client: TestClient) -> None:
     assert feature["actions"]["approve"] == ALLOWED
     assert blocked["allowed"] is False
     refusal = post_stories(client, requirement_id, feature["id"])
-    assert refusal.status_code == 409
-    assert refusal.json()["message"] == blocked["reason"]
+    assert refusal.start.status_code == 409
+    assert refusal.start.json()["message"] == blocked["reason"]
 
     assert post_feature_approval(client, requirement_id, feature["id"]).status_code == 200
     assert _feature(client, requirement_id)["actions"]["generate_stories"] == ALLOWED

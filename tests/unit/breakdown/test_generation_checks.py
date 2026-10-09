@@ -58,6 +58,7 @@ from smb_requirement_agent.references.domain.architecture.catalogue import (
 from smb_requirement_agent.references.infrastructure.knowledge_client import OFFLINE_RELEASE_ID
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from tests.job_driver import JobRun, run_job
 from tests.unit.workflow_helpers import generate_story_tree
 
 
@@ -148,9 +149,35 @@ class ContentEvaluator:
         )
 
 
-def regenerate(client: TestClient, path: str) -> Any:
-    context = client.get(path).json()["generation_context_token"]
-    return client.post(f"{path}/regeneration", json={"context_token": context, "force": True})
+def regenerate(client: TestClient, requirement_id: str, feature_id: str) -> JobRun:
+    path = f"/requirements/{requirement_id}/features/{feature_id}/stories"
+    return run_job(
+        client,
+        requirement_id,
+        "regenerate_story_set",
+        context_token=client.get(path).json()["generation_context_token"],
+        feature_id=feature_id,
+        force=True,
+    )
+
+
+def propose(
+    client: TestClient,
+    requirement_id: str,
+    feature_id: str,
+    change_operation: str,
+    source_story_ids: list[Any],
+) -> JobRun:
+    path = f"/requirements/{requirement_id}/features/{feature_id}/stories"
+    return run_job(
+        client,
+        requirement_id,
+        "propose_story_change",
+        context_token=client.get(path).json()["generation_context_token"],
+        feature_id=feature_id,
+        change_operation=change_operation,
+        source_story_ids=source_story_ids,
+    )
 
 
 def test_refines_before_save_and_reads_reuse_exact_final_assessment() -> None:
@@ -186,7 +213,7 @@ def test_refines_before_save_and_reads_reuse_exact_final_assessment() -> None:
         )
         review_path = f"/requirements/{requirement_id}/breakdown-review"
         assert client.get(review_path).json()["fresh"]
-        assert client.post(review_path).status_code == 200
+        assert run_job(client, requirement_id, "generate_breakdown_review").succeeded
         assert evaluator.calls == calls
 
 
@@ -215,8 +242,7 @@ def test_quality_cache_changes_with_business_evidence_without_provider_calls_on_
         assert not current["fresh"]
         assert current["stories"] == snapshot["stories"]
         assert evaluator.calls == calls
-        review = client.post(f"/requirements/{requirement_id}/breakdown-review")
-        assert review.status_code == 200
+        assert run_job(client, requirement_id, "generate_breakdown_review").succeeded
         refreshed = client.get(path + "/quality-assessment").json()
         assert refreshed["fresh"]
         assert refreshed["source_fingerprint"] != snapshot["source_fingerprint"]
@@ -247,10 +273,18 @@ def test_unresolved_quality_is_saved_after_only_one_correction() -> None:
 
 
 @pytest.mark.parametrize(
-    "failure", ["generator", "refinement", "ignored_split", "evaluator", "save"]
+    ("failure", "code"),
+    [
+        ("generator", "story_generation"),
+        ("refinement", "story_generation"),
+        ("ignored_split", "story_generation"),
+        ("evaluator", "story_quality_evaluation"),
+        ("save", "internal"),
+    ],
 )
 def test_failed_generation_preserves_content_quality_and_review(
     failure: str,
+    code: str,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     generator, evaluator = RefiningGenerator(), ContentEvaluator()
@@ -282,11 +316,9 @@ def test_failed_generation_preserves_content_quality_and_review(
                 raise RuntimeError("Injected commit failure")
 
             monkeypatch.setattr(container.story_quality_repository, "save", fail_save)
-        if failure == "save":
-            with pytest.raises(RuntimeError, match="Injected commit failure"):
-                regenerate(client, path)
-        else:
-            assert regenerate(client, path).status_code == 502
+        failed = regenerate(client, requirement_id, feature_id)
+        assert failed.failure is not None
+        assert failed.failure["code"] == code
         assert client.get(path).json() == before
         assert client.get(review_path).json() == review
         assert container.story_quality_repository.get(FeatureId(feature_id)) == snapshot
@@ -300,17 +332,10 @@ def test_checked_preview_survives_serialization_and_apply_without_new_evaluation
     with TestClient(create_app(lambda: container)) as client:
         requirement_id, feature_id, stories = generate_story_tree(client)
         path = f"/requirements/{requirement_id}/features/{feature_id}/stories"
-        context = client.get(path).json()["generation_context_token"]
-        created = client.post(
-            f"{path}/change-proposals",
-            json={
-                "operation": "split",
-                "source_story_ids": [stories[0]["id"]],
-                "context_token": context,
-            },
-        )
-        assert created.status_code == 201, created.text
-        assert all(item["quality"] is not None for item in created.json()["candidates"])
+        created = propose(client, requirement_id, feature_id, "split", [stories[0]["id"]])
+        assert created.succeeded, created.job
+        [proposal] = client.get(f"{path}/change-proposals").json()
+        assert all(item["quality"] is not None for item in proposal["candidates"])
         stored = container.story_proposal_repository.list_for_feature(FeatureId(feature_id))[0]
         restored = story_proposal_from_payload(story_proposal_to_payload(stored))
         assert restored == stored
@@ -411,8 +436,9 @@ def test_generation_rejects_concurrent_story_edit_without_overwriting_it() -> No
 
         evaluator.hook = concurrent_edit
         snapshot = container.story_quality_repository.get(feature)
-        path = f"/requirements/{requirement_id}/features/{feature_id}/stories"
-        assert regenerate(client, path).status_code == 409
+        failed = regenerate(client, requirement_id, feature_id)
+        assert failed.failure is not None
+        assert failed.failure["code"] == "artifact_version_conflict"
         assert container.story_repository.get(feature, original.id) == edited
         assert container.story_quality_repository.get(feature) == snapshot
 
@@ -422,16 +448,12 @@ def test_preview_rejects_changed_parent_evidence_and_legacy_payload_remains_read
     with TestClient(create_app(lambda: container)) as client:
         requirement_id, feature_id, stories = generate_story_tree(client)
         path = f"/requirements/{requirement_id}/features/{feature_id}/stories"
-        response = client.post(
-            f"{path}/change-proposals",
-            json={
-                "operation": "merge",
-                "source_story_ids": [item["id"] for item in stories],
-                "context_token": client.get(path).json()["generation_context_token"],
-            },
+        created = propose(
+            client, requirement_id, feature_id, "merge", [item["id"] for item in stories]
         )
-        assert response.status_code == 201, response.text
-        assert len(response.json()["candidates"]) == 1
+        assert created.succeeded, created.job
+        [proposal] = client.get(f"{path}/change-proposals").json()
+        assert len(proposal["candidates"]) == 1
         stored = container.story_proposal_repository.list_for_feature(FeatureId(feature_id))[0]
         payload = story_proposal_to_payload(stored)
         for key in (

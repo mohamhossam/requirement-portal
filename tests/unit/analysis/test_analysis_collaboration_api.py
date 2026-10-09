@@ -31,6 +31,7 @@ from smb_requirement_agent.interfaces.api.main import create_app
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.conftest import FAKE_PROVIDER_SETTINGS, TEST_NOW
+from tests.job_driver import JobRun, run_job
 from tests.unit.workflow_helpers import post_analysis, screen_current_knowledge
 
 OWNER = {"X-Fake-Actor-Id": "fake-owner"}
@@ -195,24 +196,23 @@ def test_batch_resolution_retains_human_evidence_in_current_analysis_and_saved_r
     with TestClient(create_app(lambda: container)) as isolated:
         requirement_id, first = _analysed(isolated)
         question = first["questions"][0]
-        response = isolated.post(
-            f"/requirements/{requirement_id}/analysis/question-resolutions",
-            headers=OWNER,
-            json={
-                "answers": [
-                    {
-                        "question_id": question["id"],
-                        "answer": fact,
-                        "expected_version": question["version"],
-                    }
-                ]
-            },
+        resolved = _resolve_batch(
+            isolated,
+            requirement_id,
+            [
+                {
+                    "question_id": question["id"],
+                    "answer": fact,
+                    "expected_version": question["version"],
+                }
+            ],
         )
-        assert response.status_code == 200
-        assert response.json()["clarification_evidence"] == expected
-        assert response.json()["clarifications"][0]["question_id"] == question["id"]
-        assert response.json()["clarifications"][0]["answered_by"]["id"] == "fake-owner"
-        assert response.json()["known_facts"][-1]["evidence_references"] == []
+        assert resolved.succeeded, resolved.job
+        current = _current(isolated, requirement_id)
+        assert current["clarification_evidence"] == expected
+        assert current["clarifications"][0]["question_id"] == question["id"]
+        assert current["clarifications"][0]["answered_by"]["id"] == "fake-owner"
+        assert current["known_facts"][-1]["evidence_references"] == []
         rounds = isolated.get(
             f"/requirements/{requirement_id}/analysis/rounds", headers=OWNER
         ).json()
@@ -249,9 +249,44 @@ def _analysed(client: TestClient) -> tuple[str, dict[str, Any]]:
         headers=OWNER,
     )
     requirement_id = created.json()["id"]
-    response = post_analysis(client, requirement_id, headers=OWNER)
+    analysed = post_analysis(client, requirement_id, headers=OWNER)
+    assert analysed.succeeded, analysed.job
+    return requirement_id, _current(client, requirement_id)
+
+
+def _current(client: TestClient, requirement_id: str) -> dict[str, Any]:
+    response = client.get(f"/requirements/{requirement_id}/analysis", headers=OWNER)
     assert response.status_code == 200
-    return requirement_id, response.json()
+    return dict(response.json())
+
+
+def _resolve_batch(
+    client: TestClient,
+    requirement_id: str,
+    answers: list[dict[str, Any]],
+    headers: dict[str, str] = OWNER,
+) -> JobRun:
+    return run_job(
+        client, requirement_id, "resolve_clarification_questions", headers=headers, answers=answers
+    )
+
+
+def _resolve(
+    client: TestClient,
+    requirement_id: str,
+    question_id: str,
+    expected_version: int,
+    headers: dict[str, str] = OWNER,
+) -> JobRun:
+    return run_job(
+        client,
+        requirement_id,
+        "resolve_clarification_question",
+        headers=headers,
+        question_id=question_id,
+        answer=None,
+        expected_version=expected_version,
+    )
 
 
 def test_generated_analysis_has_identity_provenance_and_stable_forced_questions(
@@ -280,12 +315,13 @@ def test_generated_analysis_has_identity_provenance_and_stable_forced_questions(
     assert draft.json()["status"] == "in_progress"
 
     blocked = post_analysis(client, requirement_id, headers=OWNER)
-    assert blocked.status_code == 409
+    assert blocked.start.status_code == 409
     forced = post_analysis(client, requirement_id, force=True, headers=OWNER)
-    assert forced.status_code == 200
-    assert forced.json()["round_number"] == 2
-    assert {item["action"] for item in forced.json()["question_changes"]} == {"retained"}
-    retained = {item["id"]: item for item in forced.json()["questions"]}
+    assert forced.succeeded, forced.job
+    reanalysed = _current(client, requirement_id)
+    assert reanalysed["round_number"] == 2
+    assert {item["action"] for item in reanalysed["question_changes"]} == {"retained"}
+    retained = {item["id"]: item for item in reanalysed["questions"]}
     assert retained[question["id"]]["draft_answer"] == "A partial answer"
 
     rounds = client.get(f"/requirements/{requirement_id}/analysis/rounds", headers=OWNER)
@@ -325,14 +361,13 @@ def test_reviewer_can_save_and_resolve_assigned_answer_into_a_new_round(
     assert draft.status_code == 200
     assert draft.json()["draft_updated_by"]["id"] == "fake-reviewer"
 
-    resolved = client.post(
-        f"/requirements/{requirement_id}/analysis/questions/{question['id']}/resolution",
-        json={"answer": None, "expected_version": draft.json()["version"]},
-        headers=REVIEWER,
+    resolved = _resolve(
+        client, requirement_id, question["id"], draft.json()["version"], headers=REVIEWER
     )
-    assert resolved.status_code == 200
-    assert resolved.json()["round_number"] == 2
-    clarification = resolved.json()["clarifications"][0]
+    assert resolved.succeeded, resolved.job
+    current = _current(client, requirement_id)
+    assert current["round_number"] == 2
+    clarification = current["clarifications"][0]
     assert clarification["question_id"] == question["id"]
     assert clarification["answered_by"]["id"] == "fake-reviewer"
 
@@ -355,28 +390,27 @@ def test_owner_resolves_an_answered_subset_in_one_analysis_round() -> None:
         requirement_id, analysis = _analysed(isolated)
         selected = analysis["questions"][:2]
 
-        resolved = isolated.post(
-            f"/requirements/{requirement_id}/analysis/question-resolutions",
-            json={
-                "answers": [
-                    {
-                        "question_id": item["id"],
-                        "answer": f"Confirmed answer {index}",
-                        "expected_version": item["version"],
-                    }
-                    for index, item in enumerate(selected, start=1)
-                ]
-            },
-            headers=OWNER,
+        resolved = _resolve_batch(
+            isolated,
+            requirement_id,
+            [
+                {
+                    "question_id": item["id"],
+                    "answer": f"Confirmed answer {index}",
+                    "expected_version": item["version"],
+                }
+                for index, item in enumerate(selected, start=1)
+            ],
         )
 
-        assert resolved.status_code == 200
+        assert resolved.succeeded, resolved.job
         assert analyzer.calls == 2
-        assert resolved.json()["round_number"] == 2
-        assert {item["question_id"] for item in resolved.json()["clarifications"]} == {
+        current = _current(isolated, requirement_id)
+        assert current["round_number"] == 2
+        assert {item["question_id"] for item in current["clarifications"]} == {
             item["id"] for item in selected
         }
-        assert {item["id"] for item in resolved.json()["questions"]} == {
+        assert {item["id"] for item in current["questions"]} == {
             item["id"] for item in analysis["questions"][2:]
         }
         rounds = isolated.get(f"/requirements/{requirement_id}/analysis/rounds", headers=OWNER)
@@ -423,23 +457,21 @@ def test_reanalysis_reconciles_ai_questions_and_protects_human_questions() -> No
             headers=OWNER,
         ).json()
 
-        response = isolated.post(
-            f"/requirements/{requirement_id}/analysis/question-resolutions",
-            json={
-                "answers": [
-                    {
-                        "question_id": selected["id"],
-                        "answer": "This answer resolves several related gaps.",
-                        "expected_version": selected["version"],
-                    }
-                ]
-            },
-            headers=OWNER,
+        resolved = _resolve_batch(
+            isolated,
+            requirement_id,
+            [
+                {
+                    "question_id": selected["id"],
+                    "answer": "This answer resolves several related gaps.",
+                    "expected_version": selected["version"],
+                }
+            ],
         )
 
-        assert response.status_code == 200
+        assert resolved.succeeded, resolved.job
         assert analyzer.calls == 2
-        current = response.json()
+        current = _current(isolated, requirement_id)
         assert current["round_number"] == 2
         assert {item["action"] for item in current["question_changes"]} == {
             "retained",
@@ -486,21 +518,20 @@ def test_incomplete_reconciliation_rolls_back_every_submitted_answer() -> None:
         requirement_id, first = _analysed(isolated)
         selected = first["questions"][0]
 
-        failed = isolated.post(
-            f"/requirements/{requirement_id}/analysis/question-resolutions",
-            json={
-                "answers": [
-                    {
-                        "question_id": selected["id"],
-                        "answer": "Confirmed answer",
-                        "expected_version": selected["version"],
-                    }
-                ]
-            },
-            headers=OWNER,
+        failed = _resolve_batch(
+            isolated,
+            requirement_id,
+            [
+                {
+                    "question_id": selected["id"],
+                    "answer": "Confirmed answer",
+                    "expected_version": selected["version"],
+                }
+            ],
         )
 
-        assert failed.status_code == 502
+        assert failed.failure is not None
+        assert failed.failure["code"] == "requirement_analysis_generation"
         current = isolated.get(f"/requirements/{requirement_id}/analysis", headers=OWNER).json()
         assert current["analysis_id"] == first["analysis_id"]
         assert current["clarifications"] == []
@@ -520,42 +551,29 @@ def test_batch_resolution_rejects_duplicates_stale_and_missing_questions(
 ) -> None:
     requirement_id, analysis = _analysed(client)
     question = analysis["questions"][0]
-    path = f"/requirements/{requirement_id}/analysis/question-resolutions"
     answer = {
         "question_id": question["id"],
         "answer": "Confirmed answer",
         "expected_version": question["version"],
     }
 
-    duplicate = client.post(path, json={"answers": [answer, answer]}, headers=OWNER)
-    stale = client.post(
-        path,
-        json={"answers": [{**answer, "expected_version": question["version"] + 1}]},
-        headers=OWNER,
+    duplicate = _resolve_batch(client, requirement_id, [answer, answer])
+    stale = _resolve_batch(
+        client, requirement_id, [{**answer, "expected_version": question["version"] + 1}]
     )
-    missing = client.post(
-        path,
-        json={
-            "answers": [
-                {
-                    "question_id": "missing-question",
-                    "answer": "Confirmed answer",
-                    "expected_version": 1,
-                }
-            ]
-        },
-        headers=OWNER,
+    missing = _resolve_batch(
+        client,
+        requirement_id,
+        [{"question_id": "missing-question", "answer": "Confirmed answer", "expected_version": 1}],
     )
-    blank = client.post(
-        path,
-        json={"answers": [{**answer, "answer": "   "}]},
-        headers=OWNER,
-    )
+    blank = _resolve_batch(client, requirement_id, [{**answer, "answer": "   "}])
 
-    assert duplicate.status_code == 422
-    assert stale.status_code == 409
-    assert missing.status_code == 404
-    assert blank.status_code == 422
+    assert duplicate.start.status_code == 422
+    assert stale.failure is not None
+    assert stale.failure["code"] == "clarification_version_conflict"
+    assert missing.failure is not None
+    assert missing.failure["code"] == "clarification_question_not_found"
+    assert blank.start.status_code == 422
     current = client.get(f"/requirements/{requirement_id}/analysis", headers=OWNER).json()
     assert current["analysis_id"] == analysis["analysis_id"]
     assert current["clarifications"] == []
@@ -581,26 +599,26 @@ def test_reviewer_batch_is_atomic_when_one_question_is_not_assigned(
     ).json()
     unassigned = analysis["questions"][1]
 
-    denied = client.post(
-        f"/requirements/{requirement_id}/analysis/question-resolutions",
-        json={
-            "answers": [
-                {
-                    "question_id": assigned["id"],
-                    "answer": "Reviewer answer",
-                    "expected_version": assigned["version"],
-                },
-                {
-                    "question_id": unassigned["id"],
-                    "answer": "Unauthorized answer",
-                    "expected_version": unassigned["version"],
-                },
-            ]
-        },
+    denied = _resolve_batch(
+        client,
+        requirement_id,
+        [
+            {
+                "question_id": assigned["id"],
+                "answer": "Reviewer answer",
+                "expected_version": assigned["version"],
+            },
+            {
+                "question_id": unassigned["id"],
+                "answer": "Unauthorized answer",
+                "expected_version": unassigned["version"],
+            },
+        ],
         headers=REVIEWER,
     )
 
-    assert denied.status_code == 403
+    assert denied.failure is not None
+    assert denied.failure["code"] == "authorization_denied"
     current = client.get(f"/requirements/{requirement_id}/analysis", headers=OWNER).json()
     assert current["analysis_id"] == analysis["analysis_id"]
     assert current["clarifications"] == []
@@ -625,22 +643,21 @@ def test_batch_rechecks_every_question_after_analysis_generation() -> None:
             )
         )
 
-        conflict = isolated.post(
-            f"/requirements/{requirement_id}/analysis/question-resolutions",
-            json={
-                "answers": [
-                    {
-                        "question_id": item["id"],
-                        "answer": f"Batch answer {index}",
-                        "expected_version": item["version"],
-                    }
-                    for index, item in enumerate(selected, start=1)
-                ]
-            },
-            headers=OWNER,
+        conflict = _resolve_batch(
+            isolated,
+            requirement_id,
+            [
+                {
+                    "question_id": item["id"],
+                    "answer": f"Batch answer {index}",
+                    "expected_version": item["version"],
+                }
+                for index, item in enumerate(selected, start=1)
+            ],
         )
 
-        assert conflict.status_code == 409
+        assert conflict.failure is not None
+        assert conflict.failure["code"] == "artifact_version_conflict"
         current = isolated.get(f"/requirements/{requirement_id}/analysis", headers=OWNER).json()
         assert current["analysis_id"] == analysis["analysis_id"]
         assert current["clarifications"] == []
@@ -798,9 +815,10 @@ def test_source_edit_supersedes_questions_without_erasing_audit_history(
     assert {item["status"] for item in history.json()[0]["questions"]} == {"superseded"}
 
     regenerated = post_analysis(client, requirement_id, headers=OWNER)
-    assert regenerated.status_code == 200
-    assert regenerated.json()["round_number"] == 2
-    assert original_ids.isdisjoint({item["id"] for item in regenerated.json()["questions"]})
+    assert regenerated.succeeded, regenerated.job
+    current = _current(client, requirement_id)
+    assert current["round_number"] == 2
+    assert original_ids.isdisjoint({item["id"] for item in current["questions"]})
 
 
 def test_removing_reviewer_clears_assignment_but_preserves_draft_and_history(
@@ -854,12 +872,9 @@ def test_provider_failure_leaves_draft_current_analysis_and_rounds_unchanged() -
             headers=OWNER,
         ).json()
 
-        failed = isolated.post(
-            f"/requirements/{requirement_id}/analysis/questions/{question['id']}/resolution",
-            json={"answer": None, "expected_version": draft["version"]},
-            headers=OWNER,
-        )
-        assert failed.status_code == 502
+        failed = _resolve(isolated, requirement_id, question["id"], draft["version"])
+        assert failed.failure is not None
+        assert failed.failure["code"] == "requirement_analysis_generation"
         current = isolated.get(f"/requirements/{requirement_id}/analysis", headers=OWNER).json()
         retained = next(item for item in current["questions"] if item["id"] == question["id"])
         assert current["analysis_id"] == analysis["analysis_id"]
@@ -881,22 +896,21 @@ def test_provider_failure_leaves_every_batch_question_unresolved() -> None:
         requirement_id, analysis = _analysed(isolated)
         selected = analysis["questions"][:2]
 
-        failed = isolated.post(
-            f"/requirements/{requirement_id}/analysis/question-resolutions",
-            json={
-                "answers": [
-                    {
-                        "question_id": item["id"],
-                        "answer": f"Retain answer {index}",
-                        "expected_version": item["version"],
-                    }
-                    for index, item in enumerate(selected, start=1)
-                ]
-            },
-            headers=OWNER,
+        failed = _resolve_batch(
+            isolated,
+            requirement_id,
+            [
+                {
+                    "question_id": item["id"],
+                    "answer": f"Retain answer {index}",
+                    "expected_version": item["version"],
+                }
+                for index, item in enumerate(selected, start=1)
+            ],
         )
 
-        assert failed.status_code == 502
+        assert failed.failure is not None
+        assert failed.failure["code"] == "requirement_analysis_generation"
         current = isolated.get(f"/requirements/{requirement_id}/analysis", headers=OWNER).json()
         assert current["analysis_id"] == analysis["analysis_id"]
         assert current["clarifications"] == []

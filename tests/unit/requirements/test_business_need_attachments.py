@@ -103,8 +103,9 @@ def test_attachment_only_draft_resumes_promotes_and_analyzes(
     assert client.get(f"/requirements/drafts/{source['id']}").status_code == 404
     attached = client.get(f"/requirements/{requirement['id']}/attachments").json()[0]
     assert attached["included_version_id"] == document["included_version_id"]
-    response = post_analysis(client, requirement["id"])
-    assert response.status_code == 200, response.text
+    analysed = post_analysis(client, requirement["id"])
+    assert analysed.succeeded, analysed.job
+    response = client.get(f"/requirements/{requirement['id']}/analysis")
     assert (
         response.json()["document_references"][0]["checksum_sha256"]
         == hashlib.sha256(content).hexdigest()
@@ -131,7 +132,7 @@ def test_files_and_text_preserve_separate_sources_and_removal_invalidates_analys
         f"/requirements/drafts/{source['id']}/promote", json={"expected_version": source["version"]}
     ).json()
     assert promoted["description"] == "Enable online ordering."
-    assert post_analysis(client, promoted["id"]).status_code == 200
+    assert post_analysis(client, promoted["id"]).succeeded
     current = client.get(f"/documents/{document['id']}").json()
     assert (
         client.delete(
@@ -164,7 +165,7 @@ def test_last_attachment_exclusion_blocks_analysis_without_placeholder(client: T
     resumed = client.get(f"/requirements/{promoted['id']}").json()
     assert resumed["description"] == ""
     assert resumed["analysis_eligibility"] == {"eligible": False, "missing_fields": ["description"]}
-    assert post_analysis(client, promoted["id"]).status_code == 422
+    assert post_analysis(client, promoted["id"]).start.status_code == 422
 
 
 def test_failed_intended_attachment_requires_explicit_exclusion_and_round_trips(

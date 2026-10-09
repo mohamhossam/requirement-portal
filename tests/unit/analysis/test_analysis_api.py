@@ -4,9 +4,32 @@ Uses the shared `client` fixture, whose container is backed by the
 deterministic FakeRequirementAnalyzer.
 """
 
+from typing import Any
+
 from fastapi.testclient import TestClient
 
+from tests.job_driver import JobRun, run_job, start_job
 from tests.unit.workflow_helpers import post_analysis, screen_current_knowledge
+
+
+def _analyse(client: TestClient, requirement_id: str, *, force: bool = False) -> dict[str, Any]:
+    run = post_analysis(client, requirement_id, force=force)
+    assert run.succeeded, run.job
+    response = client.get(f"/requirements/{requirement_id}/analysis")
+    assert response.status_code == 200
+    return dict(response.json())
+
+
+def _clarify(
+    client: TestClient, requirement_id: str, answers: list[dict[str, str]], version: int
+) -> JobRun:
+    return run_job(
+        client,
+        requirement_id,
+        "clarify_requirement_analysis",
+        answers=answers,
+        expected_analysis_version=version,
+    )
 
 
 def test_analyze_requirement_api(client: TestClient) -> None:
@@ -16,9 +39,7 @@ def test_analyze_requirement_api(client: TestClient) -> None:
     req_id = resp.json()["id"]
 
     # Analyze
-    analyze_resp = post_analysis(client, req_id)
-    assert analyze_resp.status_code == 200
-    data = analyze_resp.json()
+    data = _analyse(client, req_id)
     assert data["requirement_id"] == req_id
     assert len(data["known_facts"]) == 1
     assert data["known_facts"][0]["statement"] == "This is a known fact."
@@ -26,33 +47,27 @@ def test_analyze_requirement_api(client: TestClient) -> None:
     assert data["human_confirmed"] is False
     assert data["confirmed_at"] is None
 
-    # Get Analysis
-    get_resp = client.get(f"/requirements/{req_id}/analysis")
-    assert get_resp.status_code == 200
-    assert get_resp.json() == data
-
 
 def test_answer_analysis_item_and_reanalyze_same_requirement(client: TestClient) -> None:
     created = client.post("/requirements", json={"title": "T", "description": "D"})
     req_id = created.json()["id"]
-    analysis = post_analysis(client, req_id).json()
+    analysis = _analyse(client, req_id)
 
-    response = client.post(
-        f"/requirements/{req_id}/analysis/clarifications",
-        json={
-            "answers": [
-                {
-                    "kind": "open_question",
-                    "subject": "Is this a question?",
-                    "answer": "The Product team owns it.",
-                }
-            ],
-            "expected_analysis_version": analysis["version"],
-        },
+    clarified = _clarify(
+        client,
+        req_id,
+        [
+            {
+                "kind": "open_question",
+                "subject": "Is this a question?",
+                "answer": "The Product team owns it.",
+            }
+        ],
+        analysis["version"],
     )
 
-    assert response.status_code == 200
-    data = response.json()
+    assert clarified.succeeded, clarified.job
+    data = client.get(f"/requirements/{req_id}/analysis").json()
     assert data["open_questions"] == []
     clarification = data["clarifications"][0]
     assert clarification["kind"] == "open_question"
@@ -66,37 +81,36 @@ def test_answer_analysis_item_and_reanalyze_same_requirement(client: TestClient)
 def test_answer_rejects_stale_analysis_item(client: TestClient) -> None:
     created = client.post("/requirements", json={"title": "T", "description": "D"})
     req_id = created.json()["id"]
-    analysis = post_analysis(client, req_id).json()
+    analysis = _analyse(client, req_id)
 
-    response = client.post(
-        f"/requirements/{req_id}/analysis/clarifications",
-        json={
-            "answers": [{"kind": "ambiguity", "subject": "Old item", "answer": "Answer"}],
-            "expected_analysis_version": analysis["version"],
-        },
+    stale = _clarify(
+        client,
+        req_id,
+        [{"kind": "ambiguity", "subject": "Old item", "answer": "Answer"}],
+        analysis["version"],
     )
 
-    assert response.status_code == 409
+    assert stale.failure is not None
+    assert stale.failure["code"] == "analysis_clarification_conflict"
 
 
 def test_confirmation_rejects_a_stale_analysis_version(client: TestClient) -> None:
     created = client.post("/requirements", json={"title": "T", "description": "D"})
     requirement_id = created.json()["id"]
-    original = post_analysis(client, requirement_id).json()
-    changed = client.post(
-        f"/requirements/{requirement_id}/analysis/clarifications",
-        json={
-            "answers": [
-                {
-                    "kind": "open_question",
-                    "subject": "Is this a question?",
-                    "answer": "The owner answered after the page loaded.",
-                }
-            ],
-            "expected_analysis_version": original["version"],
-        },
+    original = _analyse(client, requirement_id)
+    changed = _clarify(
+        client,
+        requirement_id,
+        [
+            {
+                "kind": "open_question",
+                "subject": "Is this a question?",
+                "answer": "The owner answered after the page loaded.",
+            }
+        ],
+        original["version"],
     )
-    assert changed.status_code == 200
+    assert changed.succeeded, changed.job
 
     stale = client.post(
         f"/requirements/{requirement_id}/analysis/confirmation",
@@ -111,7 +125,7 @@ def test_answer_loop_can_be_explicitly_confirmed_only_when_resolved(
 ) -> None:
     created = client.post("/requirements", json={"title": "T", "description": "D"})
     req_id = created.json()["id"]
-    analysis = post_analysis(client, req_id).json()
+    analysis = _analyse(client, req_id)
 
     blocked = client.post(
         f"/requirements/{req_id}/analysis/confirmation",
@@ -119,38 +133,38 @@ def test_answer_loop_can_be_explicitly_confirmed_only_when_resolved(
     )
     assert blocked.status_code == 409
 
-    clarified = client.post(
-        f"/requirements/{req_id}/analysis/clarifications",
-        json={
-            "answers": [
-                {
-                    "kind": "assumption",
-                    "subject": "This is an assumption.",
-                    "answer": "Confirmed by the Requirement Owner.",
-                },
-                {
-                    "kind": "open_question",
-                    "subject": "Is this a question?",
-                    "answer": "Yes.",
-                },
-                {
-                    "kind": "ambiguity",
-                    "subject": "This is ambiguous.",
-                    "answer": "Use the first interpretation.",
-                },
-                {
-                    "kind": "potential_dependency",
-                    "subject": "This is a dependency.",
-                    "answer": "The dependency is available.",
-                },
-            ],
-            "expected_analysis_version": analysis["version"],
-        },
+    clarified = _clarify(
+        client,
+        req_id,
+        [
+            {
+                "kind": "assumption",
+                "subject": "This is an assumption.",
+                "answer": "Confirmed by the Requirement Owner.",
+            },
+            {
+                "kind": "open_question",
+                "subject": "Is this a question?",
+                "answer": "Yes.",
+            },
+            {
+                "kind": "ambiguity",
+                "subject": "This is ambiguous.",
+                "answer": "Use the first interpretation.",
+            },
+            {
+                "kind": "potential_dependency",
+                "subject": "This is a dependency.",
+                "answer": "The dependency is available.",
+            },
+        ],
+        analysis["version"],
     )
-    assert clarified.status_code == 200
-    assert clarified.json()["human_confirmed"] is False
+    assert clarified.succeeded, clarified.job
+    clarified_analysis = client.get(f"/requirements/{req_id}/analysis").json()
+    assert clarified_analysis["human_confirmed"] is False
 
-    proposal = clarified.json()["business_intent"]["proposals"][0]
+    proposal = clarified_analysis["business_intent"]["proposals"][0]
     decided = client.patch(
         f"/requirements/{req_id}/analysis/proposals/{proposal['id']}",
         json={"decision": "accepted", "expected_version": proposal["version"]},
@@ -167,9 +181,8 @@ def test_answer_loop_can_be_explicitly_confirmed_only_when_resolved(
     assert confirmed.json()["human_confirmed"] is True
     assert confirmed.json()["confirmed_at"] is not None
 
-    reanalyzed = post_analysis(client, req_id, force=True)
-    assert reanalyzed.status_code == 200
-    assert reanalyzed.json()["human_confirmed"] is False
+    reanalyzed = _analyse(client, req_id, force=True)
+    assert reanalyzed["human_confirmed"] is False
 
 
 def test_owner_reviews_intent_proposal_with_audited_optimistic_decisions(
@@ -178,7 +191,7 @@ def test_owner_reviews_intent_proposal_with_audited_optimistic_decisions(
     requirement_id = client.post(
         "/requirements", json={"title": "Need", "description": "Customers need self-service"}
     ).json()["id"]
-    analysis = post_analysis(client, requirement_id).json()
+    analysis = _analyse(client, requirement_id)
     proposal = analysis["business_intent"]["proposals"][0]
     assert proposal["kind"] == "desired_outcome"
     assert proposal["status"] == "pending"
@@ -219,16 +232,15 @@ def test_intent_decisions_carry_across_same_source_reanalysis_and_source_edit_in
         "/requirements", json={"title": "Need", "description": "Customers need self-service"}
     ).json()
     requirement_id = created["id"]
-    first = post_analysis(client, requirement_id).json()
+    first = _analyse(client, requirement_id)
     proposal = first["business_intent"]["proposals"][0]
     client.patch(
         f"/requirements/{requirement_id}/analysis/proposals/{proposal['id']}",
         json={"decision": "accepted", "expected_version": 1},
     )
 
-    second = post_analysis(client, requirement_id, force=True)
-    assert second.status_code == 200
-    carried = second.json()["business_intent"]["proposals"][0]
+    second = _analyse(client, requirement_id, force=True)
+    carried = second["business_intent"]["proposals"][0]
     assert carried["id"] == proposal["id"]
     assert carried["status"] == "accepted"
 
@@ -243,14 +255,14 @@ def test_intent_decisions_carry_across_same_source_reanalysis_and_source_edit_in
     )
     assert updated.status_code == 200
     assert client.get(f"/requirements/{requirement_id}/analysis").status_code == 404
-    replacement = post_analysis(client, requirement_id).json()
+    replacement = _analyse(client, requirement_id)
     new_proposal = replacement["business_intent"]["proposals"][0]
     assert new_proposal["id"] != proposal["id"]
     assert new_proposal["status"] == "pending"
 
 
 def test_analyze_unknown_requirement(client: TestClient) -> None:
-    resp = client.post("/requirements/unknown/analysis", json={"context_token": "unknown-context"})
+    resp = start_job(client, "unknown", "analyse_requirement", context_token="unknown-context")
     assert resp.status_code == 404
 
 
@@ -268,7 +280,7 @@ def test_update_requirement_invalidates_analysis(client: TestClient) -> None:
     req_id = resp.json()["id"]
 
     # 2. Analyze
-    post_analysis(client, req_id)
+    assert post_analysis(client, req_id).succeeded
     assert client.get(f"/requirements/{req_id}/analysis").status_code == 200
 
     # 3. Update

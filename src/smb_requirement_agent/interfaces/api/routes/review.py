@@ -2,30 +2,23 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends
 
 from smb_requirement_agent.breakdown.application.use_cases.story_quality import SuggestStorySplit
 from smb_requirement_agent.governance.application.use_cases.breakdown_review import (
     BreakdownReviewView,
-    GenerateBreakdownReview,
     GetBreakdownReview,
     RecordDecision,
     ResolveFlag,
-    ResolveOpenQuestion,
 )
 from smb_requirement_agent.governance.domain.review.entities import FlagId, ReviewSource
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
-    RequirementCommandsDep,
-    get_generate_breakdown_review,
     get_get_breakdown_review,
     get_record_decision,
     get_resolve_flag,
-    get_resolve_open_question,
-    limit_provider_calls,
     require_authenticated_actor,
 )
-from smb_requirement_agent.interfaces.api.routes.analysis import analysis_response
 from smb_requirement_agent.interfaces.api.routes.identity import actor_response
 from smb_requirement_agent.interfaces.api.schemas.epic import ProvenanceResponse
 from smb_requirement_agent.interfaces.api.schemas.governance import (
@@ -35,9 +28,7 @@ from smb_requirement_agent.interfaces.api.schemas.governance import (
 from smb_requirement_agent.interfaces.api.schemas.review import (
     BreakdownReviewResponse,
     DecisionRequest,
-    OpenQuestionResolutionResponse,
     ResolveFlagRequest,
-    ResolveOpenQuestionRequest,
     ReviewDecisionResponse,
     ReviewDependencyResponse,
     ReviewFlagResponse,
@@ -161,23 +152,6 @@ def review_response(view: BreakdownReviewView) -> BreakdownReviewResponse:
     )
 
 
-@router.post(
-    "/{requirement_id}/breakdown-review",
-    response_model=BreakdownReviewResponse,
-    responses={201: {"model": BreakdownReviewResponse, "description": "Review created"}},
-    dependencies=[Depends(limit_provider_calls)],
-)
-def generate_breakdown_review(
-    requirement_id: str,
-    response: Response,
-    actor: CurrentActorDep,
-    use_case: Annotated[GenerateBreakdownReview, Depends(get_generate_breakdown_review)],
-) -> BreakdownReviewResponse:
-    result = use_case.execute(actor, RequirementId(requirement_id))
-    response.status_code = 201 if result.created else 200
-    return review_response(result.view)
-
-
 @router.get("/{requirement_id}/breakdown-review", response_model=BreakdownReviewResponse)
 def get_breakdown_review(
     requirement_id: str,
@@ -230,36 +204,4 @@ def resolve_flag(
             body.expected_version,
             actor,
         )
-    )
-
-
-@router.post(
-    "/{requirement_id}/breakdown-review/open-questions/{flag_id}/resolution",
-    response_model=OpenQuestionResolutionResponse,
-    dependencies=[Depends(limit_provider_calls)],
-)
-def resolve_open_question(
-    requirement_id: str,
-    flag_id: str,
-    body: ResolveOpenQuestionRequest,
-    actor: CurrentActorDep,
-    commands: RequirementCommandsDep,
-    use_case: Annotated[ResolveOpenQuestion, Depends(get_resolve_open_question)],
-) -> OpenQuestionResolutionResponse:
-    resolved = RequirementId(requirement_id)
-    result = commands.run(
-        resolved,
-        actor,
-        lambda: use_case.execute(
-            resolved,
-            FlagId(flag_id),
-            body.answer,
-            body.expected_fingerprint,
-            body.expected_version,
-            actor,
-        ),
-    )
-    return OpenQuestionResolutionResponse(
-        analysis=analysis_response(result.analysis),
-        review=review_response(result.review),
     )

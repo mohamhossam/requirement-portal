@@ -597,25 +597,7 @@ export interface paths {
         /** Get Requirement Analysis */
         get: operations["get_requirement_analysis_requirements__requirement_id__analysis_get"];
         put?: never;
-        /** Analyze Requirement */
-        post: operations["analyze_requirement_requirements__requirement_id__analysis_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/requirements/{requirement_id}/analysis/clarifications": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Clarify Requirement Analysis */
-        post: operations["clarify_requirement_analysis_requirements__requirement_id__analysis_clarifications_post"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -654,23 +636,6 @@ export interface paths {
         head?: never;
         /** Decide Intent Proposal */
         patch: operations["decide_intent_proposal_requirements__requirement_id__analysis_proposals__proposal_id__patch"];
-        trace?: never;
-    };
-    "/requirements/{requirement_id}/analysis/question-resolutions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Resolve Clarification Questions */
-        post: operations["resolve_clarification_questions_requirements__requirement_id__analysis_question_resolutions_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/requirements/{requirement_id}/analysis/questions": {
@@ -758,23 +723,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/requirements/{requirement_id}/analysis/questions/{question_id}/resolution": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Resolve Clarification Question */
-        post: operations["resolve_clarification_question_requirements__requirement_id__analysis_questions__question_id__resolution_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/requirements/{requirement_id}/analysis/rounds": {
         parameters: {
             query?: never;
@@ -820,23 +768,6 @@ export interface paths {
         get: operations["get_workflow_requirements__requirement_id__approval_workflow_get"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/requirements/{requirement_id}/architecture-mapping": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Map Architecture */
-        post: operations["map_architecture_requirements__requirement_id__architecture_mapping_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1041,8 +972,7 @@ export interface paths {
         /** Get Breakdown Review */
         get: operations["get_breakdown_review_requirements__requirement_id__breakdown_review_get"];
         put?: never;
-        /** Generate Breakdown Review */
-        post: operations["generate_breakdown_review_requirements__requirement_id__breakdown_review_post"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1100,23 +1030,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/requirements/{requirement_id}/breakdown-review/open-questions/{flag_id}/resolution": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Resolve Open Question */
-        post: operations["resolve_open_question_requirements__requirement_id__breakdown_review_open_questions__flag_id__resolution_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/requirements/{requirement_id}/epic": {
         parameters: {
             query?: never;
@@ -1128,11 +1041,7 @@ export interface paths {
         get: operations["get_epic_requirements__requirement_id__epic_get"];
         /** Edit Epic */
         put: operations["edit_epic_requirements__requirement_id__epic_put"];
-        /**
-         * Generate Epic
-         * @description Generate an Epic. 201 on first generation, 200 when one is replaced.
-         */
-        post: operations["generate_epic_requirements__requirement_id__epic_post"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1169,11 +1078,7 @@ export interface paths {
         /** Get Features */
         get: operations["get_features_requirements__requirement_id__features_get"];
         put?: never;
-        /**
-         * Generate Features
-         * @description Decompose the approved Epic. 201 on first generation, 200 when replaced.
-         */
-        post: operations["generate_features_requirements__requirement_id__features_post"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1224,8 +1129,7 @@ export interface paths {
         /** Get Stories */
         get: operations["get_stories_requirements__requirement_id__features__feature_id__stories_get"];
         put?: never;
-        /** Generate Stories */
-        post: operations["generate_stories_requirements__requirement_id__features__feature_id__stories_post"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1242,8 +1146,7 @@ export interface paths {
         /** List Story Proposals */
         get: operations["list_story_proposals_requirements__requirement_id__features__feature_id__stories_change_proposals_get"];
         put?: never;
-        /** Create Story Proposal */
-        post: operations["create_story_proposal_requirements__requirement_id__features__feature_id__stories_change_proposals_post"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1301,23 +1204,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/requirements/{requirement_id}/features/{feature_id}/stories/quality": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Validate Feature Story Quality */
-        get: operations["validate_feature_story_quality_requirements__requirement_id__features__feature_id__stories_quality_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/requirements/{requirement_id}/features/{feature_id}/stories/quality-assessment": {
         parameters: {
             query?: never;
@@ -1329,23 +1215,6 @@ export interface paths {
         get: operations["get_feature_story_quality_assessment_requirements__requirement_id__features__feature_id__stories_quality_assessment_get"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/requirements/{requirement_id}/features/{feature_id}/stories/regeneration": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Regenerate Stories */
-        post: operations["regenerate_stories_requirements__requirement_id__features__feature_id__stories_regeneration_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1380,57 +1249,6 @@ export interface paths {
         put?: never;
         /** Approve Story */
         post: operations["approve_story_requirements__requirement_id__features__feature_id__stories__story_id__approval_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/requirements/{requirement_id}/features/{feature_id}/stories/{story_id}/quality": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Validate Story Quality */
-        get: operations["validate_story_quality_requirements__requirement_id__features__feature_id__stories__story_id__quality_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/requirements/{requirement_id}/features/{feature_id}/stories/{story_id}/quality/split-recommendations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Suggest Story Split */
-        get: operations["suggest_story_split_requirements__requirement_id__features__feature_id__stories__story_id__quality_split_recommendations_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/requirements/{requirement_id}/features/{feature_id}/stories/{story_id}/regeneration": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Regenerate Story */
-        post: operations["regenerate_story_requirements__requirement_id__features__feature_id__stories__story_id__regeneration_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2584,13 +2402,6 @@ export interface components {
              */
             include_in_analysis: boolean;
         };
-        /** BreakdownArchitectureMappingResponse */
-        BreakdownArchitectureMappingResponse: {
-            /** Features */
-            features: components["schemas"]["FeatureArchitectureMappingResponse"][];
-            /** Requirement Id */
-            requirement_id: string;
-        };
         /** BreakdownComparisonResponse */
         BreakdownComparisonResponse: {
             /** Changes */
@@ -2851,13 +2662,6 @@ export interface components {
              * @enum {string}
              */
             operation: "clarify_requirement_analysis";
-        };
-        /** ClarifyAnalysisRequest */
-        ClarifyAnalysisRequest: {
-            /** Answers */
-            answers: components["schemas"]["ClarificationAnswerRequest"][];
-            /** Expected Analysis Version */
-            expected_analysis_version: number;
         };
         /** ClassifyClarificationQuestionRequest */
         ClassifyClarificationQuestionRequest: {
@@ -3279,14 +3083,6 @@ export interface components {
             approve: components["schemas"]["ActionAvailabilityResponse"];
             generate_stories: components["schemas"]["ActionAvailabilityResponse"];
         };
-        /** FeatureArchitectureMappingResponse */
-        FeatureArchitectureMappingResponse: {
-            architecture: components["schemas"]["ArchitectureImpactResponse"];
-            /** Feature Id */
-            feature_id: string;
-            /** Stories */
-            stories: components["schemas"]["StoryArchitectureMappingResponse"][];
-        };
         /**
          * FeatureResponse
          * @description One Feature and everything a reviewer needs to judge it.
@@ -3332,13 +3128,6 @@ export interface components {
             generation_context_token: string;
             /** Set Version */
             set_version: number;
-        };
-        /** FeatureStoryQualityResponse */
-        FeatureStoryQualityResponse: {
-            /** Feature Id */
-            feature_id: string;
-            /** Stories */
-            stories: components["schemas"]["StoryQualityResponse"][];
         };
         /** FeatureStoryQualitySnapshotResponse */
         FeatureStoryQualitySnapshotResponse: {
@@ -3434,16 +3223,6 @@ export interface components {
              * @enum {string}
              */
             operation: "generate_stories";
-        };
-        /** GenerationRequest */
-        GenerationRequest: {
-            /** Context Token */
-            context_token: string;
-            /**
-             * Force
-             * @default false
-             */
-            force: boolean;
         };
         /**
          * GenerationStatus
@@ -3862,11 +3641,6 @@ export interface components {
             system_id: string;
             /** System Name */
             system_name: string;
-        };
-        /** OpenQuestionResolutionResponse */
-        OpenQuestionResolutionResponse: {
-            analysis: components["schemas"]["RequirementAnalysisResponse"];
-            review: components["schemas"]["BreakdownReviewResponse"];
         };
         /** OpenQuestionResponse */
         OpenQuestionResponse: {
@@ -4503,20 +4277,6 @@ export interface components {
          * @enum {string}
          */
         ResolutionPolicy: "decision" | "clarification" | "source_action";
-        /** ResolveClarificationQuestionRequest */
-        ResolveClarificationQuestionRequest: {
-            /** Answer */
-            answer?: string | null;
-            /** Expected Version */
-            expected_version: number;
-            /** Source Suggestion Id */
-            source_suggestion_id?: string | null;
-        };
-        /** ResolveClarificationQuestionsRequest */
-        ResolveClarificationQuestionsRequest: {
-            /** Answers */
-            answers: components["schemas"]["ClarificationResolutionRequest"][];
-        };
         /** ResolveFlagRequest */
         ResolveFlagRequest: {
             /** Decision */
@@ -4527,15 +4287,6 @@ export interface components {
             expected_version: number;
             /** Rationale */
             rationale: string;
-        };
-        /** ResolveOpenQuestionRequest */
-        ResolveOpenQuestionRequest: {
-            /** Answer */
-            answer: string;
-            /** Expected Fingerprint */
-            expected_fingerprint: string;
-            /** Expected Version */
-            expected_version: number;
         };
         /** ResolveQuestionJobRequest */
         ResolveQuestionJobRequest: {
@@ -4890,25 +4641,11 @@ export interface components {
             approve: components["schemas"]["ActionAvailabilityResponse"];
             regenerate: components["schemas"]["ActionAvailabilityResponse"];
         };
-        /** StoryArchitectureMappingResponse */
-        StoryArchitectureMappingResponse: {
-            architecture: components["schemas"]["ArchitectureImpactResponse"];
-            /** Story Id */
-            story_id: string;
-        };
         /**
          * StoryChangeOperation
          * @enum {string}
          */
         StoryChangeOperation: "split" | "merge";
-        /** StoryChangeProposalRequest */
-        StoryChangeProposalRequest: {
-            /** Context Token */
-            context_token: string;
-            operation: components["schemas"]["StoryChangeOperation"];
-            /** Source Story Ids */
-            source_story_ids: string[];
-        };
         /** StoryChangeProposalResponse */
         StoryChangeProposalResponse: {
             /** Candidates */
@@ -6626,80 +6363,6 @@ export interface operations {
             };
         };
     };
-    analyze_requirement_requirements__requirement_id__analysis_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Fake-Actor-Id"?: string | null;
-            };
-            path: {
-                requirement_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GenerationRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RequirementAnalysisResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    clarify_requirement_analysis_requirements__requirement_id__analysis_clarifications_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Fake-Actor-Id"?: string | null;
-            };
-            path: {
-                requirement_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ClarifyAnalysisRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RequirementAnalysisResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     confirm_requirement_analysis_requirements__requirement_id__analysis_confirmation_post: {
         parameters: {
             query?: never;
@@ -6752,43 +6415,6 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["DecideIntentProposalRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RequirementAnalysisResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    resolve_clarification_questions_requirements__requirement_id__analysis_question_resolutions_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Fake-Actor-Id"?: string | null;
-            };
-            path: {
-                requirement_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ResolveClarificationQuestionsRequest"];
             };
         };
         responses: {
@@ -6997,44 +6623,6 @@ export interface operations {
             };
         };
     };
-    resolve_clarification_question_requirements__requirement_id__analysis_questions__question_id__resolution_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Fake-Actor-Id"?: string | null;
-            };
-            path: {
-                requirement_id: string;
-                question_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ResolveClarificationQuestionRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RequirementAnalysisResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     list_analysis_rounds_requirements__requirement_id__analysis_rounds_get: {
         parameters: {
             query?: never;
@@ -7122,39 +6710,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApprovalWorkflowResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    map_architecture_requirements__requirement_id__architecture_mapping_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Fake-Actor-Id"?: string | null;
-            };
-            path: {
-                requirement_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BreakdownArchitectureMappingResponse"];
                 };
             };
             /** @description Validation Error */
@@ -7624,48 +7179,6 @@ export interface operations {
             };
         };
     };
-    generate_breakdown_review_requirements__requirement_id__breakdown_review_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Fake-Actor-Id"?: string | null;
-            };
-            path: {
-                requirement_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BreakdownReviewResponse"];
-                };
-            };
-            /** @description Review created */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BreakdownReviewResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     add_comment_requirements__requirement_id__breakdown_review_comments_post: {
         parameters: {
             query?: never;
@@ -7778,44 +7291,6 @@ export interface operations {
             };
         };
     };
-    resolve_open_question_requirements__requirement_id__breakdown_review_open_questions__flag_id__resolution_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Fake-Actor-Id"?: string | null;
-            };
-            path: {
-                requirement_id: string;
-                flag_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ResolveOpenQuestionRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OpenQuestionResolutionResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     get_epic_requirements__requirement_id__epic_get: {
         parameters: {
             query?: never;
@@ -7863,43 +7338,6 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["EditEpicRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EpicResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    generate_epic_requirements__requirement_id__epic_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Fake-Actor-Id"?: string | null;
-            };
-            path: {
-                requirement_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GenerationRequest"];
             };
         };
         responses: {
@@ -7972,43 +7410,6 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FeatureSetResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    generate_features_requirements__requirement_id__features_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Fake-Actor-Id"?: string | null;
-            };
-            path: {
-                requirement_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GenerationRequest"];
-            };
-        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -8140,44 +7541,6 @@ export interface operations {
             };
         };
     };
-    generate_stories_requirements__requirement_id__features__feature_id__stories_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Fake-Actor-Id"?: string | null;
-            };
-            path: {
-                requirement_id: string;
-                feature_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GenerationRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StorySetResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     list_story_proposals_requirements__requirement_id__features__feature_id__stories_change_proposals_get: {
         parameters: {
             query?: never;
@@ -8199,44 +7562,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StoryChangeProposalResponse"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_story_proposal_requirements__requirement_id__features__feature_id__stories_change_proposals_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Fake-Actor-Id"?: string | null;
-            };
-            path: {
-                requirement_id: string;
-                feature_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StoryChangeProposalRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StoryChangeProposalResponse"];
                 };
             };
             /** @description Validation Error */
@@ -8364,40 +7689,6 @@ export interface operations {
             };
         };
     };
-    validate_feature_story_quality_requirements__requirement_id__features__feature_id__stories_quality_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Fake-Actor-Id"?: string | null;
-            };
-            path: {
-                requirement_id: string;
-                feature_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FeatureStoryQualityResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     get_feature_story_quality_assessment_requirements__requirement_id__features__feature_id__stories_quality_assessment_get: {
         parameters: {
             query?: never;
@@ -8419,44 +7710,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FeatureStoryQualitySnapshotResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    regenerate_stories_requirements__requirement_id__features__feature_id__stories_regeneration_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Fake-Actor-Id"?: string | null;
-            };
-            path: {
-                requirement_id: string;
-                feature_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GenerationRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StorySetResponse"];
                 };
             };
             /** @description Validation Error */
@@ -8535,115 +7788,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StoryResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    validate_story_quality_requirements__requirement_id__features__feature_id__stories__story_id__quality_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Fake-Actor-Id"?: string | null;
-            };
-            path: {
-                requirement_id: string;
-                feature_id: string;
-                story_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StoryQualityResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    suggest_story_split_requirements__requirement_id__features__feature_id__stories__story_id__quality_split_recommendations_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Fake-Actor-Id"?: string | null;
-            };
-            path: {
-                requirement_id: string;
-                feature_id: string;
-                story_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SpidrRecommendationResponse"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    regenerate_story_requirements__requirement_id__features__feature_id__stories__story_id__regeneration_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Fake-Actor-Id"?: string | null;
-            };
-            path: {
-                requirement_id: string;
-                feature_id: string;
-                story_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GenerationRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StorySetResponse"];
                 };
             };
             /** @description Validation Error */

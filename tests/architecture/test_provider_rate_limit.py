@@ -40,7 +40,6 @@ from smb_requirement_agent.breakdown.application.ports.story_quality_evaluator i
 from smb_requirement_agent.interfaces.api.container import Container
 from smb_requirement_agent.interfaces.api.dependencies import limit_provider_calls
 from smb_requirement_agent.interfaces.api.main import create_app
-from smb_requirement_agent.interfaces.api.schemas.generation import GenerationRequest
 from smb_requirement_agent.knowledge.application.ports.prior_art import (
     PriorArtJudgePort,
     PriorArtSchedulerPort,
@@ -60,28 +59,11 @@ from smb_requirement_agent.references.application.ports.reference_grounding impo
     ReferenceSearchPort,
 )
 
+# Model-backed work runs only as a durable job (ADR-0105): no route calls a model
+# provider while the request waits. Starting or retrying a job is the spend.
 PROVIDER_OPERATIONS = {
     ("POST", "/requirements/{requirement_id}/ai-jobs"),
     ("POST", "/requirements/{requirement_id}/ai-jobs/{job_id}/retry"),
-    ("POST", "/requirements/{requirement_id}/analysis"),
-    ("POST", "/requirements/{requirement_id}/analysis/clarifications"),
-    ("POST", "/requirements/{requirement_id}/epic"),
-    ("POST", "/requirements/{requirement_id}/features"),
-    ("POST", "/requirements/{requirement_id}/features/{feature_id}/stories"),
-    ("POST", "/requirements/{requirement_id}/features/{feature_id}/stories/regeneration"),
-    (
-        "POST",
-        "/requirements/{requirement_id}/features/{feature_id}/stories/{story_id}/regeneration",
-    ),
-    ("POST", "/requirements/{requirement_id}/features/{feature_id}/stories/change-proposals"),
-    ("GET", "/requirements/{requirement_id}/features/{feature_id}/stories/quality"),
-    ("GET", "/requirements/{requirement_id}/features/{feature_id}/stories/{story_id}/quality"),
-    (
-        "GET",
-        "/requirements/{requirement_id}/features/{feature_id}/stories/{story_id}/quality/split-recommendations",
-    ),
-    ("POST", "/requirements/{requirement_id}/breakdown-review"),
-    ("POST", "/requirements/{requirement_id}/architecture-mapping"),
     ("POST", "/requirements/{requirement_id}/architecture-mapping/jobs"),
     ("POST", "/requirements/{requirement_id}/architecture-mapping/jobs/{job_id}/retry"),
     ("POST", "/requirements/{requirement_id}/knowledge-index/retry"),
@@ -90,7 +72,7 @@ PROVIDER_OPERATIONS = {
 
 # Routes that call no provider themselves but queue automatic work that does:
 # a knowledge screen (embedding and relationship classification) or answer
-# suggestions. Clarification resolution also re-analyses synchronously.
+# suggestions.
 AUTOMATIC_TRIGGERS = {
     ("POST", "/requirements"),
     ("POST", "/requirements/drafts/{draft_id}/promote"),
@@ -99,9 +81,6 @@ AUTOMATIC_TRIGGERS = {
     ("POST", "/requirements/{requirement_id}/knowledge-findings/{finding_id}/decisions"),
     ("PATCH", "/requirements/{requirement_id}/analysis/proposals/{proposal_id}"),
     ("POST", "/requirements/{requirement_id}/analysis/questions"),
-    ("POST", "/requirements/{requirement_id}/analysis/question-resolutions"),
-    ("POST", "/requirements/{requirement_id}/analysis/questions/{question_id}/resolution"),
-    ("POST", "/requirements/{requirement_id}/breakdown-review/open-questions/{flag_id}/resolution"),
 }
 
 # Ports whose calls reach an AI provider, and ports that queue work that will.
@@ -143,7 +122,8 @@ NOT_PROVIDER_CALLING = {
         "/requirements/{requirement_id}/architecture-mapping/jobs/{job_id}/cancel",
     ): "cancels a queued mapping job",
     ("GET", "/requirements/{requirement_id}/knowledge-index"): "reads index progress",
-    # AiJobs holds AnalysisCollaboration only to refuse an analysis start that can only fail.
+    # AiJobs holds AnalysisCollaboration and the breakdown generators only to refuse a
+    # start that can only fail (ADR-0105).
     ("GET", "/requirements/{requirement_id}/ai-jobs"): "lists AI jobs",
     ("GET", "/requirements/{requirement_id}/ai-jobs/{job_id}"): "reads one AI job",
     (
@@ -192,40 +172,25 @@ def _uses(dependant: Dependant, call: object) -> bool:
     return dependant.call is call or any(_uses(child, call) for child in dependant.dependencies)
 
 
-def _takes_generation_request(dependant: Dependant) -> bool:
-    return any(param.field_info.annotation is GenerationRequest for param in dependant.body_params)
-
-
-def _operations() -> list[tuple[str, str, bool, bool]]:
+def _operations() -> list[tuple[str, str, bool]]:
     operations = []
     for context in iter_route_contexts(create_app().routes):
         if not isinstance(context.original_route, APIRoute):
             continue
         limited = _uses(context.dependant, limit_provider_calls)
-        generation = _takes_generation_request(context.dependant)
         for method in sorted(context.methods or ()):
-            operations.append((method, str(context.path), limited, generation))
+            operations.append((method, str(context.path), limited))
     return operations
 
 
 def test_exactly_the_provider_calling_operations_are_rate_limited() -> None:
-    limited = {(method, path) for method, path, is_limited, _ in _operations() if is_limited}
+    limited = {(method, path) for method, path, is_limited in _operations() if is_limited}
     expected = PROVIDER_OPERATIONS | AUTOMATIC_TRIGGERS
 
     assert limited == expected, (
         f"Rate-limited but not listed: {sorted(limited - expected)}; "
         f"listed but not rate-limited: {sorted(expected - limited)}"
     )
-
-
-def test_every_model_backed_mutation_is_rate_limited() -> None:
-    unlimited = [
-        (method, path)
-        for method, path, is_limited, generation in _operations()
-        if generation and not is_limited
-    ]
-
-    assert unlimited == []
 
 
 def _application_namespace() -> dict[str, object]:

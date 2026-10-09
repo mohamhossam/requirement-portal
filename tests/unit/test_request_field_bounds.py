@@ -22,7 +22,7 @@ from smb_requirement_agent.interfaces.api.schemas.bounds import (
 )
 from tests.conftest import FAKE_PROVIDER_SETTINGS
 
-OWNER = {"X-Fake-Actor-Id": "fake-owner"}
+OWNER = {"X-Fake-Actor-Id": "fake-owner", "Idempotency-Key": "field-bounds"}
 MISSING = "/requirements/no-such-requirement"
 
 
@@ -72,8 +72,11 @@ def _answers(count: int) -> list[dict[str, Any]]:
         ),
         pytest.param(
             "post",
-            f"{MISSING}/analysis/question-resolutions",
-            {"answers": _answers(MAX_ITEMS + 1)},
+            f"{MISSING}/ai-jobs",
+            {
+                "operation": "resolve_clarification_questions",
+                "answers": _answers(MAX_ITEMS + 1),
+            },
             id="answer batch",
         ),
     ],

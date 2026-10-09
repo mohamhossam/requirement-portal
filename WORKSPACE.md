@@ -297,9 +297,11 @@ at once: it waits `AI_JOB_RETRY_FIRST_SECONDS=30`, doubling per attempt up to
 `AI_JOB_RETRY_MAX_SECONDS=300`, and runs again within the same cap. Its Requirement's other
 jobs wait behind it, so their order holds. With PostgreSQL, jobs and notifications
 survive API restarts; memory mode retains the same behavior for offline work but
-loses process-local state on restart. The synchronous generation endpoints
-remain available during migration, while the browser uses `/ai-jobs` and polls
-durable status.
+loses process-local state on restart. Model-backed work runs only as a job: the
+synchronous generation endpoints are retired (ADR-0105), the browser starts `/ai-jobs`
+and polls durable status, and a start that can only fail (re-analysis or an Epic over
+human work without `force`, Features before the Epic is approved, Stories that exist)
+is refused at once with 409 or 422.
 
 API restart starts only the durable worker: it never scans the Requirement portfolio or creates
 knowledge-screening jobs. Genuine Requirement/evidence changes still schedule automatically.
@@ -379,8 +381,8 @@ Slice 8B makes clarification collaborative and auditable. Every new analysis
 has an identity, provider-reported provenance, source Requirement version, and
 an immutable round. Active questions have stable IDs, optimistic versions,
 severity/blocker classification, team assignment, attributed drafts, and
-attributed final answers. Resolving an answer synchronously creates the next
-round; explicit re-analysis requires `force=true`. The Clarify view exposes
+attributed final answers. Resolving an answer (a `resolve_clarification_question`
+job, ADR-0105) creates the next round; explicit re-analysis requires `force=true`. The Clarify view exposes
 question cards, Ask someone, draft and resolve actions, conflict-safe local
 text, and a complete round-history drill-down. PostgreSQL migration `007`
 backfills pre-8B analyses without inventing unavailable actors or provenance.
@@ -744,24 +746,18 @@ POST   /requirements
 GET    /requirements/{id}
 PUT    /requirements/{id}
 
-POST   /requirements/{id}/analysis
-GET    /requirements/{id}/analysis
-POST   /requirements/{id}/analysis/clarifications
+POST   /requirements/{id}/ai-jobs          (analysis, clarification, generation, review: ADR-0105)
+GET    /requirements/{id}/ai-jobs/{job_id}
 
-POST   /requirements/{id}/epic
+GET    /requirements/{id}/analysis
+
 GET    /requirements/{id}/epic
 PUT    /requirements/{id}/epic
 POST   /requirements/{id}/epic/approval
 
-POST   /requirements/{id}/features
 GET    /requirements/{id}/features
 PUT    /requirements/{id}/features/{feature_id}
 POST   /requirements/{id}/features/{feature_id}/approval
-
-POST   /features/{id}/stories/generate
-...
-
-POST   /stories/{id}/validate
 ...
 
 POST   /breakdowns/{id}/submit-review

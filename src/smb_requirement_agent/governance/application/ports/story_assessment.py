@@ -1,6 +1,6 @@
 """How governance has a Story assessed against INVEST while it reviews a breakdown.
 
-Governance owns this port; the composition root fills it with breakdown's `ValidateStory`
+Governance owns this port; the composition root fills it with breakdown's `AssessStoryCandidate`
 (ADR-0103 Amendment 3), so governance never imports another context's use case.
 """
 
