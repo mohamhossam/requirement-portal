@@ -762,6 +762,39 @@ def test_database_pool_settings_are_read_and_bounded(monkeypatch: pytest.MonkeyP
         Settings.from_env()
 
 
+def test_database_session_limits_are_read_and_must_be_positive(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("LLM_PROVIDER", "fake")
+    defaults = Settings.from_env()
+    assert (
+        defaults.database_statement_timeout_seconds,
+        defaults.database_lock_timeout_seconds,
+        defaults.database_idle_transaction_timeout_seconds,
+    ) == (30, 5, 60)
+
+    monkeypatch.setenv("DATABASE_STATEMENT_TIMEOUT_SECONDS", "45")
+    monkeypatch.setenv("DATABASE_LOCK_TIMEOUT_SECONDS", "2.5")
+    monkeypatch.setenv("DATABASE_IDLE_TRANSACTION_TIMEOUT_SECONDS", "120")
+    settings = Settings.from_env()
+    assert (
+        settings.database_statement_timeout_seconds,
+        settings.database_lock_timeout_seconds,
+        settings.database_idle_transaction_timeout_seconds,
+    ) == (45, 2.5, 120)
+
+    for name in (
+        "database_statement_timeout_seconds",
+        "database_lock_timeout_seconds",
+        "database_idle_transaction_timeout_seconds",
+    ):
+        with pytest.raises(ConfigurationError, match=name.upper()):
+            Settings(llm_provider=LLMProvider.FAKE, **{name: 0})  # type: ignore[arg-type]
+    monkeypatch.setenv("DATABASE_LOCK_TIMEOUT_SECONDS", "soon")
+    with pytest.raises(ConfigurationError, match="TIMEOUT_SECONDS"):
+        Settings.from_env()
+
+
 def test_http_only_api_requires_a_queue_a_separate_worker_can_see(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

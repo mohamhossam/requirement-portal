@@ -55,5 +55,12 @@ The first published release: the pilot candidate, closing the pilot gate of
   - **Migrations.** A migration waits at most 10 seconds for a table lock, and concurrent
     `migrate` runs take turns.
   - **Knowledge service.** Calls pause for 30 seconds after 5 failures in a row.
+- **Database sessions are bounded (ADR-0074 amendment).**
+  - Pooled connections run with a 30s statement timeout, a 5s lock timeout and a 60s
+    idle-transaction timeout (`DATABASE_*_TIMEOUT_SECONDS`).
+  - A busy database answers 503 `database_busy`, and AI jobs retry it.
+  - PostgreSQL starts with `max_connections=${POSTGRES_MAX_CONNECTIONS:-200}`; size it with
+    `deployment.md`.
+  - Pool use is exported as `smb_db_pool_connections`.
 
 Upgrade: none (first release). Contract-step migrations: none after `202610091200`.

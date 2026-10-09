@@ -8,7 +8,7 @@ from datetime import datetime
 import psycopg
 from smb_kernel.persistence.connector import PostgresConnector
 
-from smb_requirement_agent.application.errors import PersistenceError
+from smb_requirement_agent.infrastructure.persistence.database_errors import database_error
 from smb_requirement_agent.knowledge.application.ports.corpus_membership import CorpusMembershipPort
 from smb_requirement_agent.knowledge.application.ports.corpus_summary import CorpusCounts
 from smb_requirement_agent.knowledge.domain.entities import KnowledgeFinding
@@ -49,7 +49,7 @@ class PostgresCorpusCounts:
                 requirements = connection.execute(_REQUIREMENTS).fetchone()
                 raised = connection.execute(_OPEN_FINDINGS).fetchall()
         except psycopg.Error as exc:
-            raise PersistenceError("Requirement corpus counts failed.") from exc
+            raise database_error(exc, "Requirement corpus counts failed.") from exc
         total, duplicates, retired = requirements if requirements is not None else (0, 0, 0)
         return CorpusCounts(
             int(str(total or 0)),

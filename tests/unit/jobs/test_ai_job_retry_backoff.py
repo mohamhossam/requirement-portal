@@ -98,6 +98,7 @@ def test_only_outages_that_pass_on_their_own_are_retried() -> None:
         "model_rate_limit",
         "model_unavailable",
         "platform_service_unavailable",
+        "database_busy",
     }
 
 

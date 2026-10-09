@@ -29,6 +29,7 @@ from smb_requirement_agent.analysis.domain.errors import (
 from smb_requirement_agent.application.errors import (
     ArtifactVersionConflictError,
     AuthenticationRequiredError,
+    DatabaseBusyError,
     DocumentExtractionBusyError,
     DocumentExtractionError,
     DocumentExtractionTimeoutError,
@@ -388,6 +389,7 @@ ERROR_CATALOGUE: tuple[tuple[type[Exception], str, FailureCategory], ...] = (
     (StoryGenerationError, "story_generation", FailureCategory.PROVIDER),
     (StoryQualityEvaluationError, "story_quality_evaluation", FailureCategory.PROVIDER),
     (InvalidGeneratedContentError, "invalid_generated_content", FailureCategory.INTERNAL),
+    (DatabaseBusyError, "database_busy", FailureCategory.UNAVAILABLE),
     (PersistenceError, "persistence", FailureCategory.INTERNAL),
 )
 

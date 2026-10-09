@@ -13,6 +13,7 @@ from smb_requirement_agent.breakdown.application.ports.architecture_jobs import 
     ArchitectureJobKind,
     ArchitectureJobStatus,
 )
+from smb_requirement_agent.infrastructure.persistence.database_errors import database_error
 from smb_requirement_agent.references.domain.architecture.knowledge import KnowledgeConflictError
 
 
@@ -69,7 +70,7 @@ class PostgresArchitectureJobs:
                 raise PersistenceError("Architecture job upsert returned no row.")
             return self._job(row)
         except psycopg.Error as exc:
-            raise PersistenceError("Architecture job could not be queued.") from exc
+            raise database_error(exc, "Architecture job could not be queued.") from exc
 
     def for_subject(
         self, kind: ArchitectureJobKind, subject_id: str
@@ -84,7 +85,7 @@ class PostgresArchitectureJobs:
                 ).fetchall()
             return tuple(self._job(row) for row in rows)
         except psycopg.Error as exc:
-            raise PersistenceError("Architecture jobs could not be listed.") from exc
+            raise database_error(exc, "Architecture jobs could not be listed.") from exc
 
     def get(self, job_id: str) -> ArchitectureJob | None:
         try:
@@ -96,7 +97,7 @@ class PostgresArchitectureJobs:
                 ).fetchone()
             return self._job(row) if row else None
         except psycopg.Error as exc:
-            raise PersistenceError("Architecture job read failed.") from exc
+            raise database_error(exc, "Architecture job read failed.") from exc
 
     def claim(self, now: datetime) -> ArchitectureJob | None:
         try:
@@ -128,7 +129,7 @@ class PostgresArchitectureJobs:
                     )
             return self._job(row) if row else None
         except psycopg.Error as exc:
-            raise PersistenceError("Architecture job claim failed.") from exc
+            raise database_error(exc, "Architecture job claim failed.") from exc
 
     def heartbeat(self, job_id: str, attempt: int, now: datetime) -> bool:
         try:
@@ -141,7 +142,7 @@ class PostgresArchitectureJobs:
                 ).fetchone()
             return row is not None
         except psycopg.Error as exc:
-            raise PersistenceError("Architecture job heartbeat failed.") from exc
+            raise database_error(exc, "Architecture job heartbeat failed.") from exc
 
     def finish(
         self,
@@ -159,7 +160,7 @@ class PostgresArchitectureJobs:
                     (status.value, error_category, job_id, attempt),
                 )
         except psycopg.Error as exc:
-            raise PersistenceError("Architecture job completion failed.") from exc
+            raise database_error(exc, "Architecture job completion failed.") from exc
 
     def cancel(self, job_id: str) -> ArchitectureJob:
         return self._transition(
@@ -189,4 +190,4 @@ class PostgresArchitectureJobs:
                 raise KnowledgeConflictError(f"Only a {from_status} job can be changed.")
             return self._job(row)
         except psycopg.Error as exc:
-            raise PersistenceError("Architecture job state update failed.") from exc
+            raise database_error(exc, "Architecture job state update failed.") from exc

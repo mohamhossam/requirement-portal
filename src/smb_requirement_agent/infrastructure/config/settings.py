@@ -28,9 +28,12 @@ from smb_requirement_agent.infrastructure.config.options import (
     DEFAULT_AI_JOB_RETRY_MAX_SECONDS,
     DEFAULT_AI_JOB_SHUTDOWN_GRACE_SECONDS,
     DEFAULT_AI_JOB_WORKER_CONCURRENCY,
+    DEFAULT_DATABASE_IDLE_TRANSACTION_TIMEOUT_SECONDS,
+    DEFAULT_DATABASE_LOCK_TIMEOUT_SECONDS,
     DEFAULT_DATABASE_POOL_MAX_SIZE,
     DEFAULT_DATABASE_POOL_MIN_SIZE,
     DEFAULT_DATABASE_POOL_TIMEOUT_SECONDS,
+    DEFAULT_DATABASE_STATEMENT_TIMEOUT_SECONDS,
     DEFAULT_DEBUG_TRACE_PATH,
     DEFAULT_DOCUMENT_CONTEXT_MAX_CHARACTERS,
     DEFAULT_DOCUMENT_EXTRACTION_CONCURRENCY,
@@ -196,6 +199,11 @@ class Settings:
     database_pool_min_size: int = DEFAULT_DATABASE_POOL_MIN_SIZE
     database_pool_max_size: int = DEFAULT_DATABASE_POOL_MAX_SIZE
     database_pool_timeout_seconds: float = DEFAULT_DATABASE_POOL_TIMEOUT_SECONDS
+    database_statement_timeout_seconds: float = DEFAULT_DATABASE_STATEMENT_TIMEOUT_SECONDS
+    database_lock_timeout_seconds: float = DEFAULT_DATABASE_LOCK_TIMEOUT_SECONDS
+    database_idle_transaction_timeout_seconds: float = (
+        DEFAULT_DATABASE_IDLE_TRANSACTION_TIMEOUT_SECONDS
+    )
     api_background_workers: bool = True
     document_max_file_bytes: int = DEFAULT_DOCUMENT_MAX_FILE_BYTES
     document_context_max_characters: int = DEFAULT_DOCUMENT_CONTEXT_MAX_CHARACTERS
@@ -387,6 +395,11 @@ class Settings:
         raw_pool_min = os.getenv("DATABASE_POOL_MIN_SIZE", "").strip()
         raw_pool_max = os.getenv("DATABASE_POOL_MAX_SIZE", "").strip()
         raw_pool_timeout = os.getenv("DATABASE_POOL_TIMEOUT_SECONDS", "").strip()
+        raw_statement_timeout = os.getenv("DATABASE_STATEMENT_TIMEOUT_SECONDS", "").strip()
+        raw_lock_timeout = os.getenv("DATABASE_LOCK_TIMEOUT_SECONDS", "").strip()
+        raw_idle_transaction_timeout = os.getenv(
+            "DATABASE_IDLE_TRANSACTION_TIMEOUT_SECONDS", ""
+        ).strip()
         for name, value in (
             ("DEBUG_TRACE_ENABLED", raw_debug_trace),
             ("API_BACKGROUND_WORKERS", raw_api_workers),
@@ -533,6 +546,26 @@ class Settings:
         except ValueError as exc:
             raise ConfigurationError("DATABASE_POOL_* settings must be numeric.") from exc
         try:
+            statement_timeout = (
+                float(raw_statement_timeout)
+                if raw_statement_timeout
+                else DEFAULT_DATABASE_STATEMENT_TIMEOUT_SECONDS
+            )
+            lock_timeout = (
+                float(raw_lock_timeout)
+                if raw_lock_timeout
+                else DEFAULT_DATABASE_LOCK_TIMEOUT_SECONDS
+            )
+            idle_transaction_timeout = (
+                float(raw_idle_transaction_timeout)
+                if raw_idle_transaction_timeout
+                else DEFAULT_DATABASE_IDLE_TRANSACTION_TIMEOUT_SECONDS
+            )
+        except ValueError as exc:
+            raise ConfigurationError(
+                "DATABASE_*_TIMEOUT_SECONDS settings must be numeric."
+            ) from exc
+        try:
             oidc_jwks_ttl = (
                 float(raw_oidc_jwks_ttl) if raw_oidc_jwks_ttl else DEFAULT_OIDC_JWKS_TTL_SECONDS
             )
@@ -582,6 +615,9 @@ class Settings:
             database_pool_min_size=pool_min,
             database_pool_max_size=pool_max,
             database_pool_timeout_seconds=pool_timeout,
+            database_statement_timeout_seconds=statement_timeout,
+            database_lock_timeout_seconds=lock_timeout,
+            database_idle_transaction_timeout_seconds=idle_transaction_timeout,
             api_background_workers=raw_api_workers == "true",
             document_max_file_bytes=document_max,
             library_scan_mode=_renamed_env("ATTACHMENT_SCAN_MODE", "clamav").strip(),

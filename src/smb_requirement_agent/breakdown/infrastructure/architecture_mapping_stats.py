@@ -7,7 +7,6 @@ from collections import defaultdict
 import psycopg
 from smb_kernel.persistence.connector import PostgresConnector
 
-from smb_requirement_agent.application.errors import PersistenceError
 from smb_requirement_agent.breakdown.application.ports.architecture_mapping_stats import (
     MappingCount,
 )
@@ -16,6 +15,7 @@ from smb_requirement_agent.breakdown.application.ports.feature_repository import
     FeatureRepositoryPort,
 )
 from smb_requirement_agent.breakdown.application.ports.story_repository import StoryRepositoryPort
+from smb_requirement_agent.infrastructure.persistence.database_errors import database_error
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
 )
@@ -54,7 +54,7 @@ class PostgresArchitectureMappingStats:
             with self._connector.connection() as connection:
                 rows = connection.execute(_COUNTS).fetchall()
         except psycopg.Error as exc:
-            raise PersistenceError("Architecture mapping counts failed.") from exc
+            raise database_error(exc, "Architecture mapping counts failed.") from exc
         return tuple(
             MappingCount(str(release), _count(requirements), _count(features), _count(stories))
             for release, requirements, features, stories in rows

@@ -81,6 +81,17 @@ def test_a_release_deploys_by_tag_and_a_backup_is_one_command_away() -> None:
     assert backup["environment"]["BACKUP_RETENTION_DAYS"] == "${BACKUP_RETENTION_DAYS:-14}"
 
 
+def test_the_database_connection_ceiling_is_set_and_documented() -> None:
+    """Pools and one-shot commands are sized against it (production hardening PR 3)."""
+    assert SERVICES["postgres"]["command"] == [
+        "postgres",
+        "-c",
+        "max_connections=${POSTGRES_MAX_CONNECTIONS:-200}",
+    ]
+    guide = (ROOT / "docs" / "operations" / "deployment.md").read_text(encoding="utf-8")
+    assert "POSTGRES_MAX_CONNECTIONS" in guide
+
+
 def test_nothing_of_the_knowledge_portal_runs_here() -> None:
     assert not [name for name in SERVICES if name.startswith("knowledge")]
     assert "x-knowledge" not in MANIFEST

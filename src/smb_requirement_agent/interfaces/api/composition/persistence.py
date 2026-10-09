@@ -15,8 +15,10 @@ from threading import RLock
 
 import httpx as httpx
 from smb_kernel.documents.ports import DocumentStoragePort
+from smb_kernel.observability.metrics import Metrics
 from smb_kernel.persistence.connector import (
     POOL_MAX_IDLE_SECONDS,
+    DbConnection,
     PooledPostgresConnector,
 )
 from smb_kernel.time.clock import ClockPort
@@ -401,11 +403,40 @@ class PersistenceAdapters:
     worklist: Callable[[GetKnowledgeReview], RequirementWorklistWiring]
 
 
+def session_limits(settings: Settings) -> Callable[[DbConnection], None]:
+    """Bound every pooled session: a slow statement, a lock wait, and an idle transaction.
+
+    A statement or lock wait past its limit fails as `DatabaseBusyError` (503
+    `database_busy`); an idle transaction past its limit ends the session, so a
+    forgotten transaction cannot hold its locks indefinitely. One-shot commands use
+    direct connections without these limits.
+    """
+    values = (
+        _milliseconds(settings.database_statement_timeout_seconds),
+        _milliseconds(settings.database_lock_timeout_seconds),
+        _milliseconds(settings.database_idle_transaction_timeout_seconds),
+    )
+
+    def configure(connection: DbConnection) -> None:
+        connection.execute(
+            "SELECT set_config('statement_timeout', %s, false), "
+            "set_config('lock_timeout', %s, false), "
+            "set_config('idle_in_transaction_session_timeout', %s, false)",
+            values,
+        )
+
+    return configure
+
+
+def _milliseconds(seconds: float) -> str:
+    return f"{max(1, round(seconds * 1000))}ms"
+
+
 def build_persistence(
-    settings: Settings, resources: ExitStack, resolved_clock: ClockPort
+    settings: Settings, resources: ExitStack, resolved_clock: ClockPort, metrics: Metrics
 ) -> PersistenceAdapters:
     if settings.persistence_provider is PersistenceProvider.POSTGRES:
-        return _postgres(settings, resources, resolved_clock)
+        return _postgres(settings, resources, resolved_clock, metrics)
     return _memory(settings, resources, resolved_clock)
 
 
@@ -413,6 +444,7 @@ def _postgres(
     settings: Settings,
     resources: ExitStack,
     resolved_clock: ClockPort,
+    metrics: Metrics,
 ) -> PersistenceAdapters:
     # Imported here, not at module load, so memory/fake runs never need the
     # PostgreSQL driver (psycopg) installed. Only this branch requires it.
@@ -426,7 +458,9 @@ def _postgres(
         acquire_timeout_seconds=settings.database_pool_timeout_seconds,
         max_idle_seconds=POOL_MAX_IDLE_SECONDS,
         name="requirement-portal",
+        configure=session_limits(settings),
     )
+    metrics.watch_db_pool(connector.stats)
     connector.open()
     # Registered first so it closes last, after every adapter and worker.
     resources.callback(connector.close)
