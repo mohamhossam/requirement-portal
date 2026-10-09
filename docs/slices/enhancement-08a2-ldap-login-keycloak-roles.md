@@ -322,7 +322,7 @@ Against the real AD, using the production hostname and certificate:
 - `src/smb_requirement_agent/application/use_cases/identity_access.py`
 - `src/smb_requirement_agent/infrastructure/config/settings.py`
 - `src/smb_requirement_agent/infrastructure/config/settings_validation.py`
-- `src/smb_requirement_agent/infrastructure/identity/fake_identity.py`
+- `src/smb_requirement_agent/identity/infrastructure/fake_identity.py` (moved by ADR-0103 PR 7)
 - `src/smb_requirement_agent/interfaces/api/container.py`
 - `src/smb_requirement_agent/interfaces/api/routes/identity.py`
 - `tests/unit/test_keycloak_login_config.py`, `tests/unit/test_identity_access.py`,

@@ -91,7 +91,52 @@ Dependency direction is inward:
 
 `Interfaces / Infrastructure -> Application -> Domain`
 
+### 4.0 Bounded contexts (ADR-0103)
+
+**Status:** accepted 2026-10-07 and implemented 2026-10-08 (`docs/slices/refactor-bounded-contexts.md`,
+PRs 1–16; ADR-0103 Amendment 2 records where the implementation differs). There is no layer-first
+`domain/` or `application/use_cases/` package any more. New code goes in the context that
+`docs/architecture/context-map.md` assigns it.
+
+The layering above applies **inside each bounded context**. The contexts, their modules and their
+relationships are in `docs/architecture/context-map.md`.
+
+- **Package per context.** Each context is a package under `smb_requirement_agent`, with its own
+  `domain/`, `application/` and `infrastructure/`:
+  - `identity`, `jobs`, `requirements`, `references`, `analysis`, `knowledge`, `breakdown` and
+    `governance`;
+  - `reporting` (no domain);
+  - `workflows` (application only).
+
+  `shared_kernel/` is pure domain and imports nothing else from the package.
+- **Dependency order between contexts:**
+  `workflows → reporting → governance → breakdown → knowledge → analysis → references → requirements → {jobs | identity} → shared_kernel`
+  (ADR-0103 Amendment 1).
+  A context never imports one to its left.
+- **Published surface.** From another context, import only its `domain`, `application/ports`,
+  `application/errors` and `application/published`. Never import its use cases or its
+  infrastructure: `<ctx>_published_surface` rejects both. The one exception is `workflows`,
+  the orchestration context, which may call other contexts' use cases (ADR-0103 Amendment 3).
+- **No downstream calls from upstream.** When an upstream context needs a downstream effect, it
+  publishes a domain event, or calls a port it owns itself that the composition root implements.
+- **How domain events run.** In process and synchronously, inside the caller's unit of work and
+  lock. They are never published inside `external_call()`. They carry identities, never
+  aggregates.
+- **What stays shared.** These are not contexts:
+  - `interfaces/`: routes, schemas, dependency providers, the error map and the composition root;
+  - the shared `application/`: the platform-kernel error re-exports, the event dispatcher and the
+    technical ports. `shared_application_uses_no_context` keeps context code out of it;
+  - the shared `infrastructure/`: settings, the persistence machinery (`PostgresStore`,
+    migrations) and the LLM transports. `shared_infrastructure_uses_no_context` keeps context
+    code out of it, so a context's adapters live in that context.
+- **Errors.** A context's application errors are in `<ctx>/application/errors.py`. The public
+  error catalogue, `workflows/application/public_errors.py`, maps every error to its public code
+  and category. `interfaces/api/error_handlers.py` builds the HTTP map from it.
+
 ### 4.1 Domain
+
+Everything in this section applies to `shared_kernel/` too (ADR-0103). It is domain code
+shared by every context, and `.importlinter` checks it with the domain contracts.
 
 The domain contains:
 - business entities,
@@ -188,11 +233,16 @@ refresh, operational entry points — ADR-0071).
   and never name a concrete adapter.
 - A new adapter is reached by extending `build_container`, never by importing
   it into the layer that uses it.
+- Domain-event handlers are subscribed only in
+  `interfaces/api/composition/events.py` (ADR-0103). A use case publishes an
+  event; it never registers or looks up a handler.
 
 ### 4.4.2 Error translation
 
 Domain and application errors are mapped to HTTP status codes in exactly one
-place: `interfaces/api/error_handlers.py`.
+place: `interfaces/api/error_handlers.py`. It derives the map from the public
+error catalogue, `workflows/application/public_errors.py`, which durable jobs
+also use for their failure codes. A new error is added to that catalogue.
 
 - Route handlers must not contain `try`/`except` for domain errors and must
   not raise `HTTPException` for them. A route calls a use case and returns a
@@ -253,6 +303,10 @@ The product evolves around these concepts, introduced only when the active slice
 - ExternalPublicationMapping
 
 Do not create all future entities upfront. Introduce a concept only when its slice needs real behavior.
+
+Each concept's owning bounded context and its precise meaning are in
+`docs/architecture/ubiquitous-language.md`. Use those names in code, API and UI, and update the
+glossary in the same change when a term is introduced or its meaning changes.
 
 ---
 
@@ -566,6 +620,14 @@ For a typical slice, consider:
 
 Do not create framework plumbing with no user-visible or business capability unless it is Slice 0 foundation work.
 
+A behaviour-preserving architecture refactor is the one other exception. It may be scheduled only
+with:
+- an accepted ADR;
+- a roadmap entry and a slice spec that record the API and UI omission under §15.1;
+- characterisation tests that prove behaviour is unchanged.
+
+The first is `docs/slices/refactor-bounded-contexts.md` (ADR-0103).
+
 ### 15.1 Dropping part of a slice is a decision, not a default
 
 Every field of a `ROADMAP.md` slice entry is scope. **The UI line has exactly
@@ -678,6 +740,12 @@ Retired by Slice 4A: the missing human-review UI. Requirement intake, analysis,
 Epic review and Feature review are now usable in a browser, with ownership,
 provenance and staleness made explicit and guarded regeneration covered by a
 full-flow browser test.
+
+Retired by the bounded-context restructure (ADR-0103, `docs/slices/refactor-bounded-contexts.md`):
+the layer-first package layout, the context errors in `application/errors.py`, the public error
+catalogue's placement, every contract exemption (PR 16), and the four follow-ups: use-case imports
+between contexts outside `workflows`, shared infrastructure importing contexts, reporting's
+inline wiring, and domain parsing of knowledge-portal content (Amendment 3).
 
 Retired by the analysis clarification enhancement: duplicated analysis value-object
 validation and the inconsistent `entities.py` placement. Analysis values now share one

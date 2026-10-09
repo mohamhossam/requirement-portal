@@ -7,7 +7,7 @@ from pathlib import Path
 
 from pydantic import TypeAdapter
 
-from smb_requirement_agent.application.grounding_evaluation import (
+from smb_requirement_agent.references.application.grounding_evaluation import (
     GroundingJudgment,
     evaluate_grounding,
 )

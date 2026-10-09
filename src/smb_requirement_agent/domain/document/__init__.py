@@ -1,1 +1,0 @@
-"""Supporting source-document domain."""

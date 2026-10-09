@@ -21,266 +21,97 @@ from smb_kernel.persistence.connector import (
 )
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
-from smb_requirement_agent.application.ports.activity import ActivityReadPort, ReportingReadPort
-from smb_requirement_agent.application.ports.actor_directory import ActorDirectoryPort
-from smb_requirement_agent.application.ports.ai_jobs import (
-    AiJobQueuePort,
-    AiJobRepositoryPort,
-)
-from smb_requirement_agent.application.ports.analysis_audit_repository import (
+from smb_requirement_agent.analysis.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
-from smb_requirement_agent.application.ports.architecture_jobs import (
-    ArchitectureJobRepositoryPort,
-)
-from smb_requirement_agent.application.ports.architecture_knowledge import (
-    ArchitectureReleaseStatePort,
-)
-from smb_requirement_agent.application.ports.architecture_mapping_stats import (
-    ArchitectureMappingStatsPort,
-)
-from smb_requirement_agent.application.ports.attachment_ingestions import (
-    AttachmentIngestionRepositoryPort,
-)
-from smb_requirement_agent.application.ports.breakdown_repository import BreakdownRepositoryPort
-from smb_requirement_agent.application.ports.breakdown_review_repository import (
-    BreakdownReviewRepositoryPort,
-)
-from smb_requirement_agent.application.ports.corpus_membership import (
-    CorpusActionsPort,
-    CorpusMembershipPort,
-    SourceChangesPort,
-)
-from smb_requirement_agent.application.ports.corpus_summary import CorpusCountsPort
-from smb_requirement_agent.application.ports.document_repository import DocumentRepositoryPort
-from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
-from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
-from smb_requirement_agent.application.ports.historic_corpus import HistoricCorpusPort
-from smb_requirement_agent.application.ports.knowledge_handoff import ApprovedBacklogOutboxPort
-from smb_requirement_agent.application.ports.knowledge_index_generations import (
-    KnowledgeIndexGenerationsPort,
-)
-from smb_requirement_agent.application.ports.knowledge_portfolio import (
-    FindingNudgesPort,
-    KnowledgePortfolioPort,
-)
-from smb_requirement_agent.application.ports.notifications import NotificationRepositoryPort
-from smb_requirement_agent.application.ports.prior_art import PriorArtStorePort
-from smb_requirement_agent.application.ports.reference_publications import (
-    ReferencePublicationStatePort,
-)
-from smb_requirement_agent.application.ports.requirement_analysis_repository import (
+from smb_requirement_agent.analysis.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
-from smb_requirement_agent.application.ports.requirement_draft_repository import (
-    RequirementDraftRepositoryPort,
-)
-from smb_requirement_agent.application.ports.requirement_evidence_analyzer import (
+from smb_requirement_agent.analysis.application.ports.requirement_evidence_analyzer import (
     EvidenceFragmentCachePort,
 )
-from smb_requirement_agent.application.ports.requirement_indexing import (
-    RequirementIndexProgressPort,
+from smb_requirement_agent.analysis.infrastructure import postgres_evidence_fragment_cache
+from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_audit_repository import (
+    InMemoryAnalysisAuditRepository,
 )
-from smb_requirement_agent.application.ports.requirement_knowledge import (
-    RequirementKnowledgeIndexPort,
-    RequirementKnowledgeRepositoryPort,
+from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_repository import (
+    InMemoryRequirementAnalysisRepository,
 )
-from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
-from smb_requirement_agent.application.ports.requirement_worklist import (
-    CurrentWorklistProjectionPort,
-    RequirementWorklistSnapshotPort,
+from smb_requirement_agent.analysis.infrastructure.in_memory_evidence_fragment_cache import (
+    InMemoryEvidenceFragmentCache,
 )
-from smb_requirement_agent.application.ports.saved_views import SavedViewRepositoryPort
-from smb_requirement_agent.application.ports.source_dependencies import SourceDependencyPort
-from smb_requirement_agent.application.ports.story_quality_repository import (
+from smb_requirement_agent.analysis.infrastructure.postgres_analysis import (
+    PostgresAnalysisAuditRepository,
+    PostgresAnalysisRepository,
+)
+from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
+from smb_requirement_agent.breakdown.application.ports.architecture_jobs import (
+    ArchitectureJobRepositoryPort,
+)
+from smb_requirement_agent.breakdown.application.ports.architecture_mapping_stats import (
+    ArchitectureMappingStatsPort,
+)
+from smb_requirement_agent.breakdown.application.ports.epic_repository import EpicRepositoryPort
+from smb_requirement_agent.breakdown.application.ports.feature_repository import (
+    FeatureRepositoryPort,
+)
+from smb_requirement_agent.breakdown.application.ports.story_quality_repository import (
     StoryQualityRepositoryPort,
 )
-from smb_requirement_agent.application.ports.story_repository import (
+from smb_requirement_agent.breakdown.application.ports.story_repository import (
     StoryChangeProposalRepositoryPort,
     StoryRepositoryPort,
 )
-from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.dependency_projection import DependencyProjection
-from smb_requirement_agent.application.use_cases.requirement_knowledge import (
-    GetKnowledgeReview,
-)
-from smb_requirement_agent.application.use_cases.requirement_worklist import (
-    ListRequirementWorklist,
-    RequirementWorklistReader,
-)
-from smb_requirement_agent.infrastructure.config.options import (
-    ConfigurationError,
-    PersistenceProvider,
-)
-from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.persistence import (
-    knowledge_index_generations,
-    postgres_evidence_fragment_cache,
-    postgres_knowledge_generations,
-    postgres_requirement_knowledge,
-)
-from smb_requirement_agent.infrastructure.persistence.activity_projection import (
-    InMemoryActivityReadAdapter,
-)
-from smb_requirement_agent.infrastructure.persistence.architecture_mapping_stats import (
+from smb_requirement_agent.breakdown.infrastructure.architecture_mapping_stats import (
     PostgresArchitectureMappingStats,
     RepositoryArchitectureMappingStats,
 )
-from smb_requirement_agent.infrastructure.persistence.architecture_release_state import (
-    InMemoryArchitectureReleaseState,
-    PostgresArchitectureReleaseState,
-)
-from smb_requirement_agent.infrastructure.persistence.attachment_ingestions import (
-    InMemoryAttachmentIngestions,
-    PostgresAttachmentIngestions,
-)
-from smb_requirement_agent.infrastructure.persistence.backlog_handoffs import (
-    InMemoryBacklogHandoffs,
-    PostgresBacklogHandoffs,
-)
-from smb_requirement_agent.infrastructure.persistence.corpus_counts import (
-    PostgresCorpusCounts,
-    RepositoryCorpusCounts,
-)
-from smb_requirement_agent.infrastructure.persistence.corpus_membership import (
-    InMemoryCorpusActions,
-    InMemoryCorpusMembership,
-    InMemorySourceChanges,
-    PostgresCorpusActions,
-    PostgresCorpusMembership,
-    PostgresSourceChanges,
-)
-from smb_requirement_agent.infrastructure.persistence.historic_corpus import (
-    InMemoryHistoricCorpus,
-    PostgresHistoricCorpus,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_ai_jobs import (
-    InMemoryAiJobStore,
-    InMemoryNotificationRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_audit_repository import (
-    InMemoryAnalysisAuditRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_repository import (
-    InMemoryRequirementAnalysisRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_architecture_jobs import (
+from smb_requirement_agent.breakdown.infrastructure.in_memory_architecture_jobs import (
     InMemoryArchitectureJobs,
 )
-from smb_requirement_agent.infrastructure.persistence.in_memory_breakdown_review_repository import (
-    InMemoryBreakdownReviewRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_document_repository import (
-    InMemoryDocumentRepository,
-    InMemoryDocumentStorage,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_epic_repository import (
+from smb_requirement_agent.breakdown.infrastructure.in_memory_epic_repository import (
     InMemoryEpicRepository,
 )
-from smb_requirement_agent.infrastructure.persistence.in_memory_evidence_fragment_cache import (
-    InMemoryEvidenceFragmentCache,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_feature_repository import (
+from smb_requirement_agent.breakdown.infrastructure.in_memory_feature_repository import (
     InMemoryFeatureRepository,
 )
-from smb_requirement_agent.infrastructure.persistence.in_memory_identity import (
-    InMemoryAccessRepository,
-    InMemoryActorDirectory,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_requirement_draft_repository import (  # noqa: E501
-    InMemoryRequirementDraftRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_requirement_repository import (
-    InMemoryRequirementRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_revision_repository import (
-    InMemoryRevisionRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_saved_views import (
-    InMemorySavedViewRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_story_repository import (
+from smb_requirement_agent.breakdown.infrastructure.in_memory_story_repository import (
     InMemoryStoryChangeProposalRepository,
     InMemoryStoryRepository,
 )
-from smb_requirement_agent.infrastructure.persistence.in_memory_transaction import (
-    InMemoryTransactionManager,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_worklist import (
-    InMemoryCurrentWorklistProjection,
-    InMemoryRequirementWorklistSnapshotAdapter,
-)
-from smb_requirement_agent.infrastructure.persistence.knowledge_portfolio import (
-    InMemoryFindingNudges,
-    PostgresFindingNudges,
-    PostgresKnowledgePortfolio,
-    RepositoryKnowledgePortfolio,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_activity import (
-    PostgresProjectedActivity,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader import (
-    PostgresActivityReadAdapter,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_activity_sources import (
-    PostgresActivitySources,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_ai_jobs import (
-    PostgresAiJobStore,
-    PostgresNotificationRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_architecture_jobs import (
+from smb_requirement_agent.breakdown.infrastructure.postgres_architecture_jobs import (
     PostgresArchitectureJobs,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_document_repository import (
-    PostgresDocumentRepository,
-    PostgresDocumentStorage,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_repositories import (
-    PostgresAccessRepository,
-    PostgresActorDirectory,
-    PostgresAnalysisAuditRepository,
-    PostgresAnalysisRepository,
-    PostgresBreakdownReviewRepository,
+from smb_requirement_agent.breakdown.infrastructure.postgres_backlog import (
     PostgresEpicRepository,
     PostgresFeatureRepository,
-    PostgresRequirementDraftRepository,
-    PostgresRequirementRepository,
     PostgresStoryChangeProposalRepository,
     PostgresStoryRepository,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_revisions import (
+from smb_requirement_agent.breakdown.infrastructure.story_quality_repository import (
+    InMemoryStoryQualityRepository,
+    PostgresStoryQualityRepository,
+)
+from smb_requirement_agent.governance.application.ports.breakdown_repository import (
+    BreakdownRepositoryPort,
+)
+from smb_requirement_agent.governance.application.ports.breakdown_review_repository import (
+    BreakdownReviewRepositoryPort,
+)
+from smb_requirement_agent.governance.infrastructure.in_memory_breakdown_review_repository import (
+    InMemoryBreakdownReviewRepository,
+)
+from smb_requirement_agent.governance.infrastructure.in_memory_revision_repository import (
+    InMemoryRevisionRepository,
+)
+from smb_requirement_agent.governance.infrastructure.postgres_breakdown_review import (
+    PostgresBreakdownReviewRepository,
+)
+from smb_requirement_agent.governance.infrastructure.postgres_revisions import (
     PostgresRevisionRepository,
     PostgresRevisionWriter,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_saved_views import (
-    PostgresSavedViewRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_snapshots import (
-    PostgresSnapshotReader,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
-from smb_requirement_agent.infrastructure.persistence.postgres_worklist import (
-    PostgresRequirementWorklistReader,
-    PostgresWorklistProjectionMaintainer,
-)
-from smb_requirement_agent.infrastructure.persistence.prior_art import (
-    InMemoryPriorArt,
-    PostgresPriorArt,
-)
-from smb_requirement_agent.infrastructure.persistence.reference_publications import (
-    InMemoryReferencePublications,
-    PostgresReferencePublications,
-)
-from smb_requirement_agent.infrastructure.persistence.requirement_indexing import (
-    MemoryRequirementIndexProgress,
-    PostgresRequirementIndexProgress,
-)
-from smb_requirement_agent.infrastructure.persistence.requirement_knowledge_repository import (  # noqa: E501
-    InMemoryRequirementKnowledgeStore,
-)
-from smb_requirement_agent.infrastructure.persistence.revision_tracking import (
+from smb_requirement_agent.governance.infrastructure.revision_tracking import (
     TrackingAccessRepository,
     TrackingAnalysisRepository,
     TrackingBreakdownReviewRepository,
@@ -289,16 +120,210 @@ from smb_requirement_agent.infrastructure.persistence.revision_tracking import (
     TrackingRequirementRepository,
     TrackingStoryRepository,
 )
-from smb_requirement_agent.infrastructure.persistence.source_dependencies import (
+from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
+from smb_requirement_agent.identity.application.ports.actor_directory import ActorDirectoryPort
+from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
+    InMemoryAccessRepository,
+    InMemoryActorDirectory,
+)
+from smb_requirement_agent.identity.infrastructure.postgres_identity import (
+    PostgresAccessRepository,
+    PostgresActorDirectory,
+)
+from smb_requirement_agent.infrastructure.config.options import (
+    ConfigurationError,
+    PersistenceProvider,
+)
+from smb_requirement_agent.infrastructure.config.settings import Settings
+from smb_requirement_agent.infrastructure.persistence.in_memory_transaction import (
+    InMemoryTransactionManager,
+)
+from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
+from smb_requirement_agent.interfaces.api.composition.projections import (
+    refresh_postgres_projections,
+)
+from smb_requirement_agent.jobs.application.ports.ai_jobs import (
+    AiJobQueuePort,
+    AiJobRepositoryPort,
+)
+from smb_requirement_agent.jobs.application.ports.notifications import NotificationRepositoryPort
+from smb_requirement_agent.jobs.infrastructure.in_memory_ai_jobs import (
+    InMemoryAiJobStore,
+    InMemoryNotificationRepository,
+)
+from smb_requirement_agent.jobs.infrastructure.postgres_ai_jobs import (
+    PostgresAiJobStore,
+    PostgresNotificationRepository,
+)
+from smb_requirement_agent.knowledge.application.ports.corpus_membership import (
+    CorpusActionsPort,
+    CorpusMembershipPort,
+    SourceChangesPort,
+)
+from smb_requirement_agent.knowledge.application.ports.corpus_summary import CorpusCountsPort
+from smb_requirement_agent.knowledge.application.ports.knowledge_index_generations import (
+    KnowledgeIndexGenerationsPort,
+)
+from smb_requirement_agent.knowledge.application.ports.knowledge_portfolio import (
+    FindingNudgesPort,
+    KnowledgePortfolioPort,
+)
+from smb_requirement_agent.knowledge.application.ports.prior_art import PriorArtStorePort
+from smb_requirement_agent.knowledge.application.ports.requirement_indexing import (
+    RequirementIndexProgressPort,
+)
+from smb_requirement_agent.knowledge.application.ports.requirement_knowledge import (
+    RequirementKnowledgeIndexPort,
+    RequirementKnowledgeRepositoryPort,
+)
+from smb_requirement_agent.knowledge.application.ports.source_dependencies import (
+    SourceDependencyPort,
+)
+from smb_requirement_agent.knowledge.application.use_cases.requirement_knowledge import (
+    GetKnowledgeReview,
+)
+from smb_requirement_agent.knowledge.infrastructure import (
+    knowledge_index_generations,
+    postgres_knowledge_generations,
+    postgres_requirement_knowledge,
+)
+from smb_requirement_agent.knowledge.infrastructure.corpus_counts import (
+    PostgresCorpusCounts,
+    RepositoryCorpusCounts,
+)
+from smb_requirement_agent.knowledge.infrastructure.corpus_membership import (
+    InMemoryCorpusActions,
+    InMemoryCorpusMembership,
+    InMemorySourceChanges,
+    PostgresCorpusActions,
+    PostgresCorpusMembership,
+    PostgresSourceChanges,
+)
+from smb_requirement_agent.knowledge.infrastructure.knowledge_portfolio import (
+    InMemoryFindingNudges,
+    PostgresFindingNudges,
+    PostgresKnowledgePortfolio,
+    RepositoryKnowledgePortfolio,
+)
+from smb_requirement_agent.knowledge.infrastructure.prior_art import (
+    InMemoryPriorArt,
+    PostgresPriorArt,
+)
+from smb_requirement_agent.knowledge.infrastructure.requirement_indexing import (
+    MemoryRequirementIndexProgress,
+    PostgresRequirementIndexProgress,
+)
+from smb_requirement_agent.knowledge.infrastructure.requirement_knowledge_repository import (  # noqa: E501
+    InMemoryRequirementKnowledgeStore,
+)
+from smb_requirement_agent.knowledge.infrastructure.source_dependencies import (
     InMemorySourceDependencies,
     PostgresSourceDependencies,
 )
-from smb_requirement_agent.infrastructure.persistence.story_quality_repository import (
-    InMemoryStoryQualityRepository,
-    PostgresStoryQualityRepository,
+from smb_requirement_agent.references.application.ports.architecture_knowledge import (
+    ArchitectureReleaseStatePort,
 )
-from smb_requirement_agent.interfaces.api.composition.projections import (
-    refresh_postgres_projections,
+from smb_requirement_agent.references.application.ports.historic_corpus import HistoricCorpusPort
+from smb_requirement_agent.references.application.ports.knowledge_handoff import (
+    ApprovedBacklogOutboxPort,
+)
+from smb_requirement_agent.references.application.ports.reference_publications import (
+    ReferencePublicationStatePort,
+)
+from smb_requirement_agent.references.infrastructure.architecture_release_state import (
+    InMemoryArchitectureReleaseState,
+    PostgresArchitectureReleaseState,
+)
+from smb_requirement_agent.references.infrastructure.backlog_handoffs import (
+    InMemoryBacklogHandoffs,
+    PostgresBacklogHandoffs,
+)
+from smb_requirement_agent.references.infrastructure.historic_corpus import (
+    InMemoryHistoricCorpus,
+    PostgresHistoricCorpus,
+)
+from smb_requirement_agent.references.infrastructure.reference_publications import (
+    InMemoryReferencePublications,
+    PostgresReferencePublications,
+)
+from smb_requirement_agent.reporting.application.ports.activity import (
+    ActivityReadPort,
+    ReportingReadPort,
+)
+from smb_requirement_agent.reporting.application.ports.requirement_worklist import (
+    CurrentWorklistProjectionPort,
+    RequirementWorklistSnapshotPort,
+)
+from smb_requirement_agent.reporting.application.ports.saved_views import SavedViewRepositoryPort
+from smb_requirement_agent.reporting.application.use_cases.dependency_projection import (
+    DependencyProjection,
+)
+from smb_requirement_agent.reporting.application.use_cases.requirement_worklist import (
+    ListRequirementWorklist,
+    RequirementWorklistReader,
+)
+from smb_requirement_agent.reporting.infrastructure.activity_projection import (
+    InMemoryActivityReadAdapter,
+)
+from smb_requirement_agent.reporting.infrastructure.in_memory_saved_views import (
+    InMemorySavedViewRepository,
+)
+from smb_requirement_agent.reporting.infrastructure.in_memory_worklist import (
+    InMemoryCurrentWorklistProjection,
+    InMemoryRequirementWorklistSnapshotAdapter,
+)
+from smb_requirement_agent.reporting.infrastructure.postgres_activity import (
+    PostgresProjectedActivity,
+)
+from smb_requirement_agent.reporting.infrastructure.postgres_activity_reader import (
+    PostgresActivityReadAdapter,
+)
+from smb_requirement_agent.reporting.infrastructure.postgres_activity_sources import (
+    PostgresActivitySources,
+)
+from smb_requirement_agent.reporting.infrastructure.postgres_saved_views import (
+    PostgresSavedViewRepository,
+)
+from smb_requirement_agent.reporting.infrastructure.postgres_snapshots import (
+    PostgresSnapshotReader,
+)
+from smb_requirement_agent.reporting.infrastructure.postgres_worklist import (
+    PostgresRequirementWorklistReader,
+    PostgresWorklistProjectionMaintainer,
+)
+from smb_requirement_agent.requirements.application.ports.attachment_ingestions import (
+    AttachmentIngestionRepositoryPort,
+)
+from smb_requirement_agent.requirements.application.ports.document_repository import (
+    DocumentRepositoryPort,
+)
+from smb_requirement_agent.requirements.application.ports.requirement_draft_repository import (
+    RequirementDraftRepositoryPort,
+)
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
+    RequirementRepositoryPort,
+)
+from smb_requirement_agent.requirements.infrastructure.attachment_ingestions import (
+    InMemoryAttachmentIngestions,
+    PostgresAttachmentIngestions,
+)
+from smb_requirement_agent.requirements.infrastructure.in_memory_document_repository import (
+    InMemoryDocumentRepository,
+    InMemoryDocumentStorage,
+)
+from smb_requirement_agent.requirements.infrastructure.in_memory_requirement_draft_repository import (  # noqa: E501
+    InMemoryRequirementDraftRepository,
+)
+from smb_requirement_agent.requirements.infrastructure.in_memory_requirement_repository import (
+    InMemoryRequirementRepository,
+)
+from smb_requirement_agent.requirements.infrastructure.postgres_document_repository import (
+    PostgresDocumentRepository,
+    PostgresDocumentStorage,
+)
+from smb_requirement_agent.requirements.infrastructure.postgres_requirements import (
+    PostgresRequirementDraftRepository,
+    PostgresRequirementRepository,
 )
 
 

@@ -1,0 +1,174 @@
+{
+  "approvals": [
+    {
+      "decision": "approved",
+      "id": "approval-flag-golden-2",
+      "rationale": "Matches the confirmed analysis.",
+      "recorded_at": "2026-03-02T11:30:00+00:00",
+      "recorded_by": {
+        "display_name": "Olivia Owner",
+        "email": "olivia@example.test",
+        "id": "actor-owner"
+      },
+      "subject_fingerprint": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "target": {
+        "item_id": "flag-golden-2",
+        "kind": "flag"
+      }
+    }
+  ],
+  "comments": [
+    {
+      "body": "Ready once sizes are known.",
+      "id": "comment-golden-1",
+      "recorded_at": "2026-03-03T14:15:00+00:00",
+      "recorded_by": {
+        "display_name": "Ravi Reviewer",
+        "email": null,
+        "id": "actor-reviewer"
+      },
+      "target": {
+        "item_id": "req-golden-1",
+        "kind": "breakdown"
+      }
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Accept the prepaid assumption for the MVP.",
+      "id": "decision-golden-1",
+      "rationale": "Postpaid follows in Drop 2.",
+      "recorded_at": "2026-03-02T11:30:00+00:00",
+      "recorded_by": {
+        "display_name": "Olivia Owner",
+        "email": "olivia@example.test",
+        "id": "actor-owner"
+      },
+      "target_flag_id": "flag-golden-2"
+    }
+  ],
+  "dependencies": [
+    {
+      "description": "BCRM order API availability.",
+      "evidence_kind": "potential",
+      "id": "dependency-golden-1",
+      "source": {
+        "item_id": "analysis-golden-1",
+        "kind": "analysis",
+        "label": "Analysis"
+      }
+    }
+  ],
+  "evidence_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "flags": [
+    {
+      "category": "open_question",
+      "detail": "Which bundle sizes apply?",
+      "id": "flag-golden-1",
+      "resolution_decision_id": null,
+      "resolution_policy": "clarification",
+      "severity": "blocking",
+      "source": {
+        "item_id": "question-golden-1",
+        "kind": "analysis",
+        "label": "Bundle sizes"
+      },
+      "status": "open",
+      "title": "Open question"
+    },
+    {
+      "category": "assumption",
+      "detail": "Bundles are prepaid.",
+      "id": "flag-golden-2",
+      "resolution_decision_id": "decision-golden-1",
+      "resolution_policy": "decision",
+      "severity": "warning",
+      "source": {
+        "item_id": "analysis-golden-1",
+        "kind": "analysis",
+        "label": "Analysis"
+      },
+      "status": "resolved",
+      "title": "Assumption"
+    }
+  ],
+  "generated_at": "2026-03-02T11:30:00+00:00",
+  "knowledge_version": "catalogue-7",
+  "quality_assessments": [
+    {
+      "findings": [
+        {
+          "criterion": "independent",
+          "message": "independent checked",
+          "passed": true,
+          "source": "deterministic"
+        },
+        {
+          "criterion": "negotiable",
+          "message": "negotiable checked",
+          "passed": true,
+          "source": "deterministic"
+        },
+        {
+          "criterion": "valuable",
+          "message": "valuable checked",
+          "passed": true,
+          "source": "deterministic"
+        },
+        {
+          "criterion": "estimable",
+          "message": "estimable checked",
+          "passed": true,
+          "source": "deterministic"
+        },
+        {
+          "criterion": "small",
+          "message": "small checked",
+          "passed": false,
+          "source": "deterministic"
+        },
+        {
+          "criterion": "testable",
+          "message": "testable checked",
+          "passed": true,
+          "source": "deterministic"
+        }
+      ],
+      "provenance": {
+        "generated_at": "2026-03-01T09:00:00+00:00",
+        "model": "golden-model",
+        "prompt_version": "golden-prompt-v1"
+      },
+      "story_id": "story-golden-1"
+    }
+  ],
+  "recommendations": [
+    {
+      "action": "Split the ordering Story.",
+      "id": "recommendation-golden-1",
+      "rationale": "It fails the Small criterion.",
+      "source": {
+        "item_id": "story-golden-1",
+        "kind": "story",
+        "label": "Order a bundle"
+      }
+    }
+  ],
+  "requirement_id": "req-golden-1",
+  "risks": [
+    {
+      "description": "Two systems change together.",
+      "id": "risk-golden-1",
+      "severity": "warning",
+      "source": {
+        "item_id": "feature-golden-1",
+        "kind": "feature",
+        "label": "Portal bundle ordering"
+      }
+    }
+  ],
+  "ruleset_version": "breakdown-review-v3",
+  "status": "under_review",
+  "submitted_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "version": 5
+}

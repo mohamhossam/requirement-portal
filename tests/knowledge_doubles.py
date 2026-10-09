@@ -16,33 +16,38 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
 from datetime import UTC, date, datetime
 
-from smb_requirement_agent.application.ports.historic_corpus import (
+from smb_requirement_agent.infrastructure.config.settings import Settings
+from smb_requirement_agent.interfaces.api.composition.references import KnowledgeService
+from smb_requirement_agent.interfaces.api.container import Container, build_container
+from smb_requirement_agent.references.application.ports.historic_corpus import (
     ContentPart,
     HistoricContentGoneError,
     HistoricContentPage,
 )
-from smb_requirement_agent.application.ports.knowledge_events import (
+from smb_requirement_agent.references.application.ports.knowledge_events import (
     ARCHITECTURE_RELEASE_ACTIVATED,
     HISTORIC_REQUIREMENT_CHANGED,
     REFERENCE_DOCUMENT_CHANGED,
     KnowledgeEvent,
 )
-from smb_requirement_agent.application.ports.reference_grounding import ReferenceEvidence
-from smb_requirement_agent.domain.document.reference import (
+from smb_requirement_agent.references.application.ports.reference_grounding import ReferenceEvidence
+from smb_requirement_agent.references.domain.reference import (
     CurrentPublication,
-    PublishedReference,
     ReferenceDocumentState,
-    normalize_search,
 )
-from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.knowledge_client import (
+from smb_requirement_agent.references.infrastructure.knowledge_client import (
     OFFLINE_RELEASE_ID,
     OFFLINE_RELEASE_NAME,
     FakeArchitectureKnowledge,
     FakeKnowledgeViews,
 )
-from smb_requirement_agent.interfaces.api.composition.knowledge_service import KnowledgeService
-from smb_requirement_agent.interfaces.api.container import Container, build_container
+from smb_requirement_agent.references.infrastructure.knowledge_payloads import (
+    reference_document_state_to_payload,
+)
+from smb_requirement_agent.shared_kernel.citation import (
+    PublishedReference,
+    normalize_search,
+)
 
 _WORDS = re.compile(r"\w+")
 
@@ -242,7 +247,11 @@ class PublishedLibrary:
 
     def _changed(self, state: ReferenceDocumentState) -> None:
         self._states[state.document_id] = state
-        self._append(REFERENCE_DOCUMENT_CHANGED, state.document_id, state.to_payload())
+        self._append(
+            REFERENCE_DOCUMENT_CHANGED,
+            state.document_id,
+            reference_document_state_to_payload(state),
+        )
 
     def _append(self, kind: str, subject_id: str, payload: object) -> None:
         self._events.append(

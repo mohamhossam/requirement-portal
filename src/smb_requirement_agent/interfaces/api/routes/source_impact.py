@@ -11,17 +11,17 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Response
 
-from smb_requirement_agent.application.use_cases.source_impact import (
-    DependencyImpact,
-    DependencyImpactPage,
-    SourceImpactReview,
-)
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     get_source_impact,
     require_authenticated_actor,
 )
 from smb_requirement_agent.interfaces.api.schemas.source_impact import ImpactDecisionRequest
+from smb_requirement_agent.knowledge.application.use_cases.source_impact import (
+    DependencyImpact,
+    DependencyImpactPage,
+    SourceImpactReview,
+)
 
 router = APIRouter(
     prefix="/requirements",

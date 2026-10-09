@@ -2,14 +2,17 @@
 
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
-from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
-from smb_requirement_agent.application.use_cases.create_requirement import (
+from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
+from smb_requirement_agent.identity.domain.entities import RequirementAccess
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
+    RequirementRepositoryPort,
+)
+from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
     CreateRequirement,
     CreateRequirementInput,
 )
-from smb_requirement_agent.domain.identity.entities import ActorProfile, RequirementAccess
-from smb_requirement_agent.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.shared_kernel.actors import ActorProfile
 
 
 class OwnedRequirementCreator:

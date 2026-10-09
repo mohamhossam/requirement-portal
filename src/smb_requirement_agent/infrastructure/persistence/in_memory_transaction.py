@@ -7,9 +7,14 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from typing import Protocol
 
-from smb_requirement_agent.application.ports.breakdown_repository import BreakdownRepositoryPort
 from smb_requirement_agent.application.ports.external_work import check_external_result
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+
+
+class _RevisionWriter(Protocol):
+    """The part of governance's breakdown repository a checkpoint needs."""
+
+    def create_current_revisions(self, requirement_id: RequirementId) -> None: ...
 
 
 class MemoryTransactionParticipant(Protocol):
@@ -84,6 +89,10 @@ class InMemoryTransactionManager:
                         del self._local.revision_checkpoints
                         del self._local.depth
 
+    def in_unit_of_work(self) -> bool:
+        # external_call() sets the depth to 0 while the provider runs.
+        return int(getattr(self._local, "depth", 0)) > 0
+
     def mark_rollback_only(self) -> None:
         if int(getattr(self._local, "depth", 0)) == 0:
             raise RuntimeError("No in-memory transaction is active.")
@@ -101,7 +110,7 @@ class InMemoryTransactionManager:
     def checkpoint(
         self,
         requirement_id: RequirementId,
-        revisions: BreakdownRepositoryPort,
+        revisions: _RevisionWriter,
     ) -> None:
         """Capture only the final workspace state for one logical mutation."""
         self._source_changed(requirement_id)

@@ -11,44 +11,6 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 
-from smb_requirement_agent.application.ports.requirement_worklist import (
-    WorkflowStatus,
-    WorklistSort,
-)
-from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirementInput
-from smb_requirement_agent.application.use_cases.documents import ListDocuments
-from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
-from smb_requirement_agent.application.use_cases.get_requirement import GetRequirement
-from smb_requirement_agent.application.use_cases.owned_requirements import (
-    CreateOwnedRequirement,
-    CreateOwnedRequirementDraft,
-    GetOwnedRequirementDraft,
-    ListOwnedRequirementDrafts,
-    PromoteOwnedRequirementDraft,
-    SaveOwnedRequirementDraft,
-)
-from smb_requirement_agent.application.use_cases.requirement_drafts import (
-    RequirementDraftInput,
-)
-from smb_requirement_agent.application.use_cases.requirement_impact import (
-    PreviewRequirementImpact,
-    RequirementImpactPreview,
-    UpdateRequirementWithImpact,
-)
-from smb_requirement_agent.application.use_cases.requirement_worklist import (
-    RequirementWorklistItem,
-    RequirementWorklistQuery,
-    RequirementWorklistReader,
-)
-from smb_requirement_agent.application.use_cases.update_requirement import (
-    UpdateRequirementInput,
-)
-from smb_requirement_agent.domain.identity.entities import ActorId
-from smb_requirement_agent.domain.requirement.entities import Requirement, RequirementDraft
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementContext,
-    RequirementId,
-)
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     RequirementCommandsDep,
@@ -84,6 +46,49 @@ from smb_requirement_agent.interfaces.api.schemas.requirements import (
     SaveRequirementDraftRequest,
     UpdateRequirementRequest,
     WorkflowStatusCountsResponse,
+)
+from smb_requirement_agent.reporting.application.ports.requirement_worklist import (
+    WorkflowStatus,
+    WorklistSort,
+)
+from smb_requirement_agent.reporting.application.use_cases.requirement_worklist import (
+    RequirementWorklistItem,
+    RequirementWorklistQuery,
+    RequirementWorklistReader,
+)
+from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
+    CreateRequirementInput,
+)
+from smb_requirement_agent.requirements.application.use_cases.documents import ListDocuments
+from smb_requirement_agent.requirements.application.use_cases.get_requirement import GetRequirement
+from smb_requirement_agent.requirements.application.use_cases.owned_requirements import (
+    CreateOwnedRequirement,
+    CreateOwnedRequirementDraft,
+    GetOwnedRequirementDraft,
+    ListOwnedRequirementDrafts,
+    PromoteOwnedRequirementDraft,
+    SaveOwnedRequirementDraft,
+)
+from smb_requirement_agent.requirements.application.use_cases.requirement_drafts import (
+    RequirementDraftInput,
+)
+from smb_requirement_agent.requirements.application.use_cases.update_requirement import (
+    UpdateRequirementInput,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import (
+    Requirement,
+    RequirementDraft,
+)
+from smb_requirement_agent.requirements.domain.requirement.value_objects import RequirementContext
+from smb_requirement_agent.shared_kernel.actors import ActorId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.workflows.application.use_cases.generation_context import (
+    GenerationContextTokens,
+)
+from smb_requirement_agent.workflows.application.use_cases.requirement_impact import (
+    PreviewRequirementImpact,
+    RequirementImpactPreview,
+    UpdateRequirementWithImpact,
 )
 
 router = APIRouter(

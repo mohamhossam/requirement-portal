@@ -3,7 +3,7 @@
 A worker that lost its lease must not report progress, heartbeat or finish a
 job another worker now owns. Idempotency keys bind one command to one job.
 Notification preferences default to off. The in-memory queue has the same
-tests in `tests/unit/test_ai_jobs.py`; these prove the SQL does the same.
+tests in `tests/unit/jobs/test_ai_jobs.py`; these prove the SQL does the same.
 """
 
 from __future__ import annotations
@@ -15,9 +15,9 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from smb_requirement_agent.application.ports.ai_jobs import AiJobCommand, AiJobRecord
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorSnapshot
-from smb_requirement_agent.domain.jobs.entities import (
+from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
+from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobCommand, AiJobRecord
+from smb_requirement_agent.jobs.domain.entities import (
     ActorNotification,
     AiJob,
     AiJobId,
@@ -27,19 +27,22 @@ from smb_requirement_agent.domain.jobs.entities import (
     NotificationKind,
     NotificationPreference,
 )
-from smb_requirement_agent.domain.jobs.errors import AiJobConflictError
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementDescription,
-    RequirementId,
-    RequirementStatus,
-    RequirementTitle,
-)
-from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
-from smb_requirement_agent.infrastructure.persistence.postgres_ai_jobs import (
+from smb_requirement_agent.jobs.domain.errors import AiJobConflictError
+from smb_requirement_agent.jobs.infrastructure.postgres_ai_jobs import (
     PostgresAiJobStore,
     PostgresNotificationRepository,
 )
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.value_objects import (
+    RequirementDescription,
+    RequirementStatus,
+    RequirementTitle,
+)
+from smb_requirement_agent.shared_kernel.actors import (
+    ActorId,
+    ActorSnapshot,
+)
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.integration.postgres_fixture_store import FixturePostgresStore
 
 DATABASE_URL = os.getenv("TEST_DATABASE_URL")
@@ -79,7 +82,9 @@ def _only_this_tests_jobs() -> Iterator[None]:
     clear()
 
 
-def _queued_job(store: FixturePostgresStore) -> tuple[PostgresAiJobStore, AiJob]:
+def _queued_job(
+    store: FixturePostgresStore, operation: AiJobOperation = OPERATION
+) -> tuple[PostgresAiJobStore, AiJob]:
     requirement_id = RequirementId(str(uuid.uuid4()))
     store.add(
         Requirement(
@@ -93,7 +98,7 @@ def _queued_job(store: FixturePostgresStore) -> tuple[PostgresAiJobStore, AiJob]
     job = AiJob(
         AiJobId(f"fence-{uuid.uuid4()}"),
         requirement_id,
-        OPERATION,
+        operation,
         AiJobStatus.QUEUED,
         ActorSnapshot(ActorId("fake-owner"), "Owner"),
         CREATED,
@@ -154,6 +159,38 @@ def test_only_the_current_attempt_can_write_and_a_fenced_one_cannot() -> None:
     finished = jobs.get(job.id)
     assert finished is not None and finished.job.status is AiJobStatus.SUCCEEDED
     assert finished.worker_id is None and finished.attempt_token is None
+
+
+@pytest.mark.parametrize(
+    ("operation", "phase"),
+    [
+        (AiJobOperation.SUGGEST_CLARIFICATION_ANSWERS, "running"),
+        (AiJobOperation.ANALYSE_REQUIREMENT, "preparing_analysis"),
+    ],
+)
+def test_a_claim_and_a_reclaim_start_the_attempt_with_no_progress(
+    operation: AiJobOperation, phase: str
+) -> None:
+    jobs, job = _queued_job(_store(), operation)
+    blocked = tuple(item for item in AiJobOperation if item is not operation)
+    now = datetime.now(UTC)
+
+    first = jobs.claim_next("worker-a", now, now + timedelta(seconds=1), blocked)
+    assert first is not None and first.job.id == job.id and first.attempt_token is not None
+    assert (first.job.phase, first.job.completed_units, first.job.total_units) == (phase, 0, None)
+    progressed = first.job.report_progress("screening", 2, 3, "Section 2", now)
+    assert jobs.report_progress_fenced(progressed, "worker-a", first.attempt_token, now)
+
+    # The first worker dies; once its lease runs out another worker reclaims the job.
+    later = now + timedelta(seconds=5)
+    second = jobs.claim_next("worker-b", later, later + timedelta(minutes=5), blocked)
+    assert second is not None and second.job.id == job.id
+    assert second.job.attempt_count == first.job.attempt_count + 1
+    assert second.job.phase == phase
+    assert second.job.completed_units == 0
+    assert second.job.total_units is None
+    assert second.job.current_section_label is None
+    assert second.job.failure is None
 
 
 def test_notifications_round_trip_and_preferences_default_to_off() -> None:

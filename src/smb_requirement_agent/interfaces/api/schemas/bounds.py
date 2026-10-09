@@ -16,7 +16,7 @@ from typing import Annotated
 
 from pydantic import Field
 
-from smb_requirement_agent.domain.requirement.intake_limits import (
+from smb_requirement_agent.requirements.domain.requirement.intake_limits import (
     MAX_CONTEXT_CHARACTERS,
     MAX_LIST_ITEM_CHARACTERS,
     MAX_LIST_ITEMS,

@@ -1,0 +1,54 @@
+# Commits that only move files or rewrite imports, ignored by `git blame`.
+#
+# The bounded-context migration (ADR-0103, docs/slices/refactor-bounded-contexts.md) moves most
+# modules. Each move PR has a move-only commit and an import-rewrite commit. Add the
+# import-rewrite commit's full SHA here in the same PR, with a comment naming the PR.
+#
+# Use locally with:
+#     git config blame.ignoreRevsFile .git-blame-ignore-revs
+# GitHub reads this file automatically.
+
+# PR 2: imports of shared-kernel types point at domain/shared (ADR-0103).
+227f72f65ce92830c5ba78b0ab1a9167fd203985
+
+# PR 3: domain/shared moved to shared_kernel, imports rewritten (ADR-0103).
+f664844f1490a8ca07c5d09be2441359f0b0de03
+
+# PR 6: governance rules imported from domain/review (ADR-0103).
+61e4d25142fe1848e0326a04b802e4ed2048cb07
+
+# PR 7: the identity context moved into smb_requirement_agent/identity, imports rewritten (ADR-0103).
+f54cd67a7045c2e37deb290067f0b0470a6bf673
+
+# PR 8: the jobs context moved into smb_requirement_agent/jobs, imports rewritten (ADR-0103).
+11765af728e169e2921c10d908607498dfb4022f
+
+# PR 9: the requirements context moved into smb_requirement_agent/requirements, imports rewritten (ADR-0103).
+0088dd878ea2cf41a59c50bbf522ae83f5428d73
+
+# PR 10: the analysis context moved into smb_requirement_agent/analysis, imports rewritten (ADR-0103).
+dc3fe018980c18a2f6a42677c1b0ad45c2c75ee3
+
+# PR 11: the breakdown context moved into smb_requirement_agent/breakdown, imports rewritten (ADR-0103).
+e0016f00422925397279e63de089e8718b66b957
+
+# PR 11b: each context's LLM adapters moved into its package, imports rewritten (ADR-0103).
+79b06203ffba1177208077180290abdc9ffcd40c
+
+# PR 12: the governance context moved into smb_requirement_agent/governance, imports rewritten (ADR-0103).
+d9e68bf7c48780385c7a9404adcf3064f8e5539d
+
+# PR 13: the reporting context moved into smb_requirement_agent/reporting, imports rewritten (ADR-0103).
+eb30eda8c906a69f101c6c93d74017e2e65fb8d9
+
+# PR 14: the workflows context moved into smb_requirement_agent/workflows, imports rewritten (ADR-0103).
+3293b75ef9cf20d6d7efe8bd9dc5887be63240ce
+
+# PR 15a: the references context moved into smb_requirement_agent/references, imports rewritten (ADR-0103).
+148fd91f28cb7652c3ddb71e0921f6cf83b39571
+
+# PR 15b: the knowledge context moved into smb_requirement_agent/knowledge, imports rewritten (ADR-0103).
+8cbe670637ea2959d31e278f4a8100bf3fe291af
+
+# PR 16: the public error catalogue moved into smb_requirement_agent/workflows, imports rewritten (ADR-0103).
+6f2e57787fe6901ffa17d5f91cb1645e7a0e662a

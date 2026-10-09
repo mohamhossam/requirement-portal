@@ -16,50 +16,53 @@ from fastapi.testclient import TestClient
 from smb_kernel.documents.text_extractor import SafeDocumentTextExtractor
 from smb_kernel.time.fixed import FixedClock
 
-from smb_requirement_agent.application.ports.requirement_analysis_repository import (
+from smb_requirement_agent.analysis.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
-from smb_requirement_agent.application.ports.requirement_knowledge import (
+from smb_requirement_agent.analysis.application.use_cases.analysis_documents import (
+    AssembleAnalysisDocuments,
+)
+from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_audit_repository import (
+    InMemoryAnalysisAuditRepository,
+)
+from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_repository import (
+    InMemoryRequirementAnalysisRepository,
+)
+from smb_requirement_agent.application.events import InProcessEventDispatcher
+from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
+from smb_requirement_agent.breakdown.infrastructure.in_memory_epic_repository import (
+    InMemoryEpicRepository,
+)
+from smb_requirement_agent.breakdown.infrastructure.in_memory_feature_repository import (
+    InMemoryFeatureRepository,
+)
+from smb_requirement_agent.breakdown.infrastructure.in_memory_story_repository import (
+    InMemoryStoryRepository,
+)
+from smb_requirement_agent.governance.application.ports.breakdown_review_repository import (
+    BreakdownReviewRepositoryPort,
+)
+from smb_requirement_agent.governance.infrastructure.in_memory_breakdown_review_repository import (
+    InMemoryBreakdownReviewRepository,
+)
+from smb_requirement_agent.infrastructure.config.options import LLMProvider
+from smb_requirement_agent.infrastructure.config.settings import Settings
+from smb_requirement_agent.interfaces.api.composition.events import subscribe_domain_event_handlers
+from smb_requirement_agent.interfaces.api.container import Container, build_container
+from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.knowledge.application.ports.requirement_knowledge import (
     KnowledgeReview,
     KnowledgeScreenEnsureOutcome,
     KnowledgeScreenEnsureResult,
 )
-from smb_requirement_agent.application.use_cases.documents import AssembleAnalysisDocuments
-from smb_requirement_agent.application.use_cases.invalidate_approval_workflow import (
-    InvalidateApprovalWorkflow,
-)
-from smb_requirement_agent.application.use_cases.invalidate_derived_artifacts import (
-    InvalidateDerivedArtifacts,
-)
-from smb_requirement_agent.domain.knowledge.entities import KnowledgeScreen, KnowledgeScreenId
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
-from smb_requirement_agent.domain.shared.generation import Provenance
-from smb_requirement_agent.infrastructure.config.options import LLMProvider
-from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_audit_repository import (
-    InMemoryAnalysisAuditRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_analysis_repository import (
-    InMemoryRequirementAnalysisRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_breakdown_review_repository import (
-    InMemoryBreakdownReviewRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_document_repository import (
+from smb_requirement_agent.knowledge.domain.entities import KnowledgeScreen, KnowledgeScreenId
+from smb_requirement_agent.requirements.infrastructure.in_memory_document_repository import (
     InMemoryDocumentRepository,
     InMemoryDocumentStorage,
 )
-from smb_requirement_agent.infrastructure.persistence.in_memory_epic_repository import (
-    InMemoryEpicRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_feature_repository import (
-    InMemoryFeatureRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.in_memory_story_repository import (
-    InMemoryStoryRepository,
-)
-from smb_requirement_agent.interfaces.api.container import Container, build_container
-from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.shared_kernel.generation import Provenance
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from tests.unit.transaction_stub import NoOpTransactionManager
 
 # The application resolves settings during startup, which TestClient triggers.
 # Default the suite to the fake provider so no test needs provider credentials.
@@ -107,7 +110,7 @@ class NoOpAnswerSuggestionScheduler:
 class AcceptAllSuggestionValidator:
     """Explicit old-slice test double for suggestion provenance validation."""
 
-    def require_suggestion(
+    def suggestion_provenance(
         self, requirement_id: object, question_id: object, suggestion_id: str
     ) -> Never:
         raise AssertionError("This fixture does not supply suggestions.")
@@ -144,21 +147,30 @@ def make_analysis_documents(
     )
 
 
-def make_invalidation(
+def make_event_publisher(
     analysis_repository: RequirementAnalysisRepositoryPort | None = None,
     epic_repository: InMemoryEpicRepository | None = None,
     feature_repository: InMemoryFeatureRepository | None = None,
     story_repository: InMemoryStoryRepository | None = None,
     clock: FixedClock | None = None,
     audits: InMemoryAnalysisAuditRepository | None = None,
-) -> InvalidateDerivedArtifacts:
-    """Build the collaborator UpdateRequirement requires, with fresh defaults."""
-    return InvalidateDerivedArtifacts(
-        analysis_repository or InMemoryRequirementAnalysisRepository(),
-        epic_repository or InMemoryEpicRepository(),
-        feature_repository or InMemoryFeatureRepository(),
-        story_repository or InMemoryStoryRepository(),
-        clock or FixedClock(TEST_NOW),
-        audits or InMemoryAnalysisAuditRepository(lambda requirement_id: None),
-        InvalidateApprovalWorkflow(InMemoryBreakdownReviewRepository()),
+    *,
+    reviews: BreakdownReviewRepositoryPort | None = None,
+    transactions: TransactionManagerPort | None = None,
+) -> InProcessEventDispatcher:
+    """The domain-event publisher use cases require, with fresh defaults.
+
+    Its handlers are subscribed exactly as the composition root subscribes them (ADR-0103).
+    """
+    events = InProcessEventDispatcher(transactions or NoOpTransactionManager())
+    subscribe_domain_event_handlers(
+        events,
+        analyses=analysis_repository or InMemoryRequirementAnalysisRepository(),
+        audits=audits or InMemoryAnalysisAuditRepository(lambda requirement_id: None),
+        epics=epic_repository or InMemoryEpicRepository(),
+        features=feature_repository or InMemoryFeatureRepository(),
+        stories=story_repository or InMemoryStoryRepository(),
+        reviews=reviews or InMemoryBreakdownReviewRepository(),
+        clock=clock or FixedClock(TEST_NOW),
     )
+    return events

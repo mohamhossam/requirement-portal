@@ -15,18 +15,14 @@ from smb_kernel.llm.local_structured_output import (
 )
 from smb_kernel.llm.structured_output import truncated
 
-from smb_requirement_agent.application.errors import (
-    EpicGenerationError,
-    FeatureGenerationError,
-    RequirementAnalysisGenerationError,
-)
-from smb_requirement_agent.application.ports.requirement_analyzer import (
+from smb_requirement_agent.analysis.application.errors import RequirementAnalysisGenerationError
+from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     ActiveQuestionContext,
     AnalysisDocumentContext,
     AnalysisEvidenceBlock,
 )
-from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
-from smb_requirement_agent.domain.analysis.value_objects import (
+from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
+from smb_requirement_agent.analysis.domain.value_objects import (
     Assumption,
     ClarificationKind,
     ClarificationSource,
@@ -34,30 +30,11 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     KnownFact,
     OpenQuestion,
 )
-from smb_requirement_agent.domain.epic.entities import Epic
-from smb_requirement_agent.domain.epic.value_objects import (
-    BusinessCase,
-    BusinessOutcome,
-    EpicId,
-    EpicName,
-    EpicStatus,
-)
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementContext,
-    RequirementDescription,
-    RequirementId,
-    RequirementStatus,
-    RequirementTitle,
-)
-from smb_requirement_agent.domain.shared.generation import Provenance
-from smb_requirement_agent.infrastructure.llm.candidate_mappers import to_analysis_candidate
-from smb_requirement_agent.infrastructure.llm.local_epic_generator import LocalEpicGenerator
-from smb_requirement_agent.infrastructure.llm.local_feature_generator import LocalFeatureGenerator
-from smb_requirement_agent.infrastructure.llm.local_requirement_analyzer import (
+from smb_requirement_agent.analysis.infrastructure.llm.analysis_mappers import to_analysis_candidate
+from smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer import (
     LocalRequirementAnalyzer,
 )
-from smb_requirement_agent.infrastructure.llm.schemas.analysis_schema import (
+from smb_requirement_agent.analysis.infrastructure.llm.schemas.analysis_schema import (
     ActiveQuestionReviewSchema,
     AnalysisEvidenceCitationSchema,
     ClarificationReviewSchema,
@@ -72,11 +49,38 @@ from smb_requirement_agent.infrastructure.llm.schemas.analysis_schema import (
     RequirementAnalysisSchema,
     UncertaintySchema,
 )
-from smb_requirement_agent.infrastructure.llm.schemas.epic_schema import EpicSchema
-from smb_requirement_agent.infrastructure.llm.schemas.feature_schema import (
+from smb_requirement_agent.breakdown.application.errors import (
+    EpicGenerationError,
+    FeatureGenerationError,
+)
+from smb_requirement_agent.breakdown.domain.epic.entities import Epic
+from smb_requirement_agent.breakdown.domain.epic.value_objects import (
+    BusinessCase,
+    BusinessOutcome,
+    EpicId,
+    EpicName,
+    EpicStatus,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.local_epic_generator import (
+    LocalEpicGenerator,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.local_feature_generator import (
+    LocalFeatureGenerator,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.schemas.epic_schema import EpicSchema
+from smb_requirement_agent.breakdown.infrastructure.llm.schemas.feature_schema import (
     FeatureItemSchema,
     FeatureSetSchema,
 )
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.value_objects import (
+    RequirementContext,
+    RequirementDescription,
+    RequirementStatus,
+    RequirementTitle,
+)
+from smb_requirement_agent.shared_kernel.generation import Provenance
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 @pytest.fixture
@@ -548,7 +552,7 @@ def test_local_client_rejects_non_json_http_response() -> None:
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
+    "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
 )
 def test_local_analysis_cleans_schema_valid_blanks(
     client_type: MagicMock, requirement: Requirement
@@ -581,7 +585,7 @@ def test_local_analysis_cleans_schema_valid_blanks(
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
+    "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
 )
 def test_local_analysis_collapses_duplicate_uncertainty_without_retry(
     client_type: MagicMock, requirement: Requirement
@@ -644,7 +648,7 @@ def test_analysis_mapper_rejects_duplicate_uncertainty_with_conflicting_kinds() 
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
+    "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
 )
 def test_local_analysis_discards_citations_when_no_evidence_was_supplied(
     client_type: MagicMock, requirement: Requirement
@@ -676,7 +680,7 @@ def test_local_analysis_discards_citations_when_no_evidence_was_supplied(
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
+    "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
 )
 def test_local_analysis_keeps_valid_human_citations_and_drops_stale_ones(
     client_type: MagicMock, requirement: Requirement
@@ -730,7 +734,7 @@ def test_local_analysis_keeps_valid_human_citations_and_drops_stale_ones(
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
+    "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
 )
 def test_local_structured_analysis_requires_vision_and_passes_safe_images(
     client_type: MagicMock, requirement: Requirement
@@ -798,7 +802,7 @@ def test_local_structured_analysis_requires_vision_and_passes_safe_images(
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
+    "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
 )
 def test_local_structured_analysis_repairs_missing_citations_without_rewriting_content(
     client_type: MagicMock, requirement: Requirement
@@ -911,7 +915,7 @@ def test_local_structured_analysis_repairs_missing_citations_without_rewriting_c
     ],
 )
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
+    "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
 )
 def test_local_structured_analysis_rejects_unusable_citation_repair(
     client_type: MagicMock,
@@ -950,7 +954,7 @@ def test_local_structured_analysis_rejects_unusable_citation_repair(
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
+    "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
 )
 def test_local_structured_analysis_discards_invented_reviews_when_no_ai_questions_exist(
     client_type: MagicMock, requirement: Requirement
@@ -996,7 +1000,7 @@ def test_local_structured_analysis_discards_invented_reviews_when_no_ai_question
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
+    "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
 )
 def test_local_structured_analysis_repairs_questions_before_citations(
     client_type: MagicMock, requirement: Requirement
@@ -1078,7 +1082,7 @@ def test_local_structured_analysis_repairs_questions_before_citations(
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
+    "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
 )
 def test_local_structured_analysis_repairs_blank_uncertainty_rationales(
     client_type: MagicMock, requirement: Requirement
@@ -1148,7 +1152,7 @@ def test_local_structured_analysis_repairs_blank_uncertainty_rationales(
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
+    "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
 )
 def test_local_structured_analysis_rejects_incomplete_rationale_repair(
     client_type: MagicMock, requirement: Requirement
@@ -1197,7 +1201,7 @@ def test_local_structured_analysis_rejects_incomplete_rationale_repair(
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
+    "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
 )
 def test_local_citation_repair_resends_image_evidence(
     client_type: MagicMock, requirement: Requirement
@@ -1239,7 +1243,7 @@ def test_local_citation_repair_resends_image_evidence(
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
+    "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
 )
 def test_local_analysis_runs_focused_review_for_undefined_terms(
     client_type: MagicMock,
@@ -1292,7 +1296,7 @@ def test_local_analysis_runs_focused_review_for_undefined_terms(
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
+    "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
 )
 def test_local_analysis_skips_focused_review_without_vague_terms(
     client_type: MagicMock, requirement: Requirement
@@ -1318,7 +1322,7 @@ def test_local_analysis_skips_focused_review_without_vague_terms(
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
+    "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
 )
 def test_local_analysis_runs_focused_outcome_review_when_source_has_no_outcome(
     client_type: MagicMock, requirement: Requirement
@@ -1360,7 +1364,7 @@ def test_local_analysis_runs_focused_outcome_review_when_source_has_no_outcome(
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
+    "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
 )
 def test_local_outcome_review_returns_a_blocker_when_inference_is_unsafe(
     client_type: MagicMock, requirement: Requirement
@@ -1398,7 +1402,7 @@ def test_local_outcome_review_returns_a_blocker_when_inference_is_unsafe(
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
+    "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
 )
 def test_local_clarification_retries_empty_delta_as_complete_analysis(
     client_type: MagicMock, requirement: Requirement
@@ -1438,7 +1442,7 @@ def test_local_clarification_retries_empty_delta_as_complete_analysis(
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
+    "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
 )
 def test_local_clarification_reports_empty_completeness_retry(
     client_type: MagicMock, requirement: Requirement
@@ -1475,7 +1479,7 @@ def test_local_clarification_reports_empty_completeness_retry(
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
+    "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
 )
 def test_local_reanalysis_recovers_question_reconciliation_with_focused_request(
     client_type: MagicMock, requirement: Requirement
@@ -1528,7 +1532,7 @@ def test_local_reanalysis_recovers_question_reconciliation_with_focused_request(
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
+    "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
 )
 def test_local_reanalysis_rejects_malformed_focused_reconciliation(
     client_type: MagicMock, requirement: Requirement
@@ -1574,7 +1578,7 @@ def test_local_reanalysis_rejects_malformed_focused_reconciliation(
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
+    "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
 )
 def test_local_reanalysis_with_only_human_questions_uses_complete_analysis_retry(
     client_type: MagicMock, requirement: Requirement
@@ -1609,7 +1613,7 @@ def test_local_reanalysis_with_only_human_questions_uses_complete_analysis_retry
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
+    "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
 )
 def test_local_initial_analysis_retries_empty_content_once(
     client_type: MagicMock, requirement: Requirement
@@ -1637,7 +1641,7 @@ def test_local_initial_analysis_retries_empty_content_once(
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
+    "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
 )
 def test_local_analysis_rejects_no_usable_content(
     client_type: MagicMock, requirement: Requirement
@@ -1661,7 +1665,7 @@ def test_local_analysis_rejects_no_usable_content(
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
+    "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
 )
 def test_local_analysis_maps_transport_failure(
     client_type: MagicMock, requirement: Requirement
@@ -1680,7 +1684,9 @@ def test_local_analysis_maps_transport_failure(
         analyzer.analyze(requirement, ())
 
 
-@patch("smb_requirement_agent.infrastructure.llm.local_epic_generator.LocalStructuredOutputClient")
+@patch(
+    "smb_requirement_agent.breakdown.infrastructure.llm.local_epic_generator.LocalStructuredOutputClient"
+)
 def test_local_epic_maps_content_and_provenance(
     client_type: MagicMock,
     requirement: Requirement,
@@ -1708,7 +1714,9 @@ def test_local_epic_maps_content_and_provenance(
     assert prompt.index("NOT CONFIRMED") < prompt.index("Billing supports bundles")
 
 
-@patch("smb_requirement_agent.infrastructure.llm.local_epic_generator.LocalStructuredOutputClient")
+@patch(
+    "smb_requirement_agent.breakdown.infrastructure.llm.local_epic_generator.LocalStructuredOutputClient"
+)
 def test_local_epic_rejects_blank_field(
     client_type: MagicMock,
     requirement: Requirement,
@@ -1729,7 +1737,9 @@ def test_local_epic_rejects_blank_field(
         generator.generate(requirement, analysis)
 
 
-@patch("smb_requirement_agent.infrastructure.llm.local_epic_generator.LocalStructuredOutputClient")
+@patch(
+    "smb_requirement_agent.breakdown.infrastructure.llm.local_epic_generator.LocalStructuredOutputClient"
+)
 def test_local_epic_maps_transport_failure(
     client_type: MagicMock,
     requirement: Requirement,
@@ -1749,7 +1759,7 @@ def test_local_epic_maps_transport_failure(
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_feature_generator.LocalStructuredOutputClient"
+    "smb_requirement_agent.breakdown.infrastructure.llm.local_feature_generator.LocalStructuredOutputClient"
 )
 def test_local_features_drop_blank_items_and_preserve_provenance(
     client_type: MagicMock,
@@ -1791,7 +1801,7 @@ def test_local_features_drop_blank_items_and_preserve_provenance(
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_feature_generator.LocalStructuredOutputClient"
+    "smb_requirement_agent.breakdown.infrastructure.llm.local_feature_generator.LocalStructuredOutputClient"
 )
 def test_local_features_reject_empty_result(
     client_type: MagicMock,
@@ -1813,7 +1823,7 @@ def test_local_features_reject_empty_result(
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_feature_generator.LocalStructuredOutputClient"
+    "smb_requirement_agent.breakdown.infrastructure.llm.local_feature_generator.LocalStructuredOutputClient"
 )
 def test_local_features_map_transport_failure(
     client_type: MagicMock,
@@ -1835,7 +1845,7 @@ def test_local_features_map_transport_failure(
 
 
 @patch(
-    "smb_requirement_agent.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
+    "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
 )
 def test_citation_repair_preserves_more_than_eight_required_source_blocks(
     client_type: MagicMock, requirement: Requirement

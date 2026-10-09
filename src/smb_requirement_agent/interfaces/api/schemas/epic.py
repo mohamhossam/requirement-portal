@@ -6,14 +6,14 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from smb_requirement_agent.domain.shared.generation import GenerationStatus
-from smb_requirement_agent.domain.shared.staleness import StaleReason
 from smb_requirement_agent.interfaces.api.schemas.bounds import (
     Name,
     Text,
 )
 from smb_requirement_agent.interfaces.api.schemas.generation import ActionAvailabilityResponse
 from smb_requirement_agent.interfaces.api.schemas.governance import ApprovalResponse
+from smb_requirement_agent.shared_kernel.generation import GenerationStatus
+from smb_requirement_agent.shared_kernel.staleness import StaleReason
 
 
 class EditEpicRequest(BaseModel):

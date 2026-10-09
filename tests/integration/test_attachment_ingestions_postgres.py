@@ -13,19 +13,22 @@ import pytest
 from smb_kernel.documents.model import DocumentEvidenceBlock, EvidenceBlockKind
 from smb_kernel.persistence.connector import DirectPostgresConnector
 
-from smb_requirement_agent.application.errors import DocumentVersionConflictError
-from smb_requirement_agent.domain.document.attachment import (
+from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
+from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
+from smb_requirement_agent.requirements.application.errors import DocumentVersionConflictError
+from smb_requirement_agent.requirements.domain.document.attachment import (
     AttachmentFile,
     AttachmentTarget,
     AttachmentUpload,
 )
-from smb_requirement_agent.domain.document.ingestion import IngestionStage
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorSnapshot
-from smb_requirement_agent.infrastructure.persistence.attachment_ingestions import (
+from smb_requirement_agent.requirements.domain.document.ingestion import IngestionStage
+from smb_requirement_agent.requirements.infrastructure.attachment_ingestions import (
     PostgresAttachmentIngestions,
 )
-from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
-from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
+from smb_requirement_agent.shared_kernel.actors import (
+    ActorId,
+    ActorSnapshot,
+)
 
 DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 pytestmark = pytest.mark.skipif(not DATABASE_URL, reason="TEST_DATABASE_URL is not configured")

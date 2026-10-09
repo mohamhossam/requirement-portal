@@ -1,0 +1,91 @@
+{
+  "approvals": [],
+  "architecture": {
+    "citation_ids": [
+      "chunk-1"
+    ],
+    "citations": [
+      {
+        "chunk_id": "chunk-1",
+        "quote": "BCRM captures SMB orders.",
+        "system_id": "sys-bcrm"
+      }
+    ],
+    "dependencies": [
+      {
+        "description": "Activation request",
+        "kind": "calls_api",
+        "source_system_id": "sys-bcrm",
+        "target_system_id": "sys-cbcm"
+      }
+    ],
+    "embedding_model": "golden-embedding",
+    "evidence_classification": "ai_inference",
+    "index_revision": 5,
+    "knowledge_version": "catalogue-7",
+    "mapped_at": "2026-03-01T10:00:00+00:00",
+    "model": "golden-model",
+    "prompt_version": "golden-mapping-v1",
+    "systems": [
+      {
+        "capabilities": [
+          {
+            "id": "cap-order",
+            "name": "Order capture"
+          }
+        ],
+        "catalogued": true,
+        "constraints": [
+          "Batch window 01:00-03:00"
+        ],
+        "id": "sys-bcrm",
+        "name": "BCRM",
+        "products": [
+          {
+            "id": "prod-bundle",
+            "name": "SIM bundle"
+          }
+        ],
+        "squads": [
+          {
+            "id": "squad-orders",
+            "name": "Orders squad"
+          }
+        ],
+        "value_streams": [
+          {
+            "id": "vs-smb",
+            "name": "SMB"
+          }
+        ]
+      },
+      {
+        "capabilities": [],
+        "catalogued": true,
+        "constraints": [],
+        "id": "sys-cbcm",
+        "name": "CBCM",
+        "products": [],
+        "squads": [],
+        "value_streams": []
+      }
+    ],
+    "uncertainty": null
+  },
+  "delivery_drop": "mvp",
+  "epic_id": "epic-golden-1",
+  "id": "feature-golden-1",
+  "name": "Portal bundle ordering",
+  "outcome": "Customers order a bundle in the portal.",
+  "provenance": {
+    "generated_at": "2026-03-01T09:00:00+00:00",
+    "model": "golden-model",
+    "prompt_version": "golden-prompt-v1"
+  },
+  "source_lineage": [],
+  "splitting_pattern": "channel",
+  "splitting_rationale": "The portal is the first channel.",
+  "staleness": null,
+  "status": "edited",
+  "version": 3
+}

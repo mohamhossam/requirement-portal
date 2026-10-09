@@ -1,0 +1,101 @@
+{
+  "acceptance_criteria": [
+    {
+      "given": "an account with a passed credit check",
+      "then": "the bundle is active within one hour",
+      "when": "the administrator orders a 10-line bundle"
+    },
+    {
+      "given": "an account with a failed credit check",
+      "then": "the order is refused with the reason",
+      "when": "the administrator orders a bundle"
+    }
+  ],
+  "action": "to add a SIM bundle in the portal",
+  "approvals": [],
+  "architecture": {
+    "citation_ids": [
+      "chunk-1"
+    ],
+    "citations": [
+      {
+        "chunk_id": "chunk-1",
+        "quote": "BCRM captures SMB orders.",
+        "system_id": "sys-bcrm"
+      }
+    ],
+    "dependencies": [
+      {
+        "description": "Activation request",
+        "kind": "calls_api",
+        "source_system_id": "sys-bcrm",
+        "target_system_id": "sys-cbcm"
+      }
+    ],
+    "embedding_model": "golden-embedding",
+    "evidence_classification": "ai_inference",
+    "index_revision": 5,
+    "knowledge_version": "catalogue-7",
+    "mapped_at": "2026-03-01T10:00:00+00:00",
+    "model": "golden-model",
+    "prompt_version": "golden-mapping-v1",
+    "systems": [
+      {
+        "capabilities": [
+          {
+            "id": "cap-order",
+            "name": "Order capture"
+          }
+        ],
+        "catalogued": true,
+        "constraints": [
+          "Batch window 01:00-03:00"
+        ],
+        "id": "sys-bcrm",
+        "name": "BCRM",
+        "products": [
+          {
+            "id": "prod-bundle",
+            "name": "SIM bundle"
+          }
+        ],
+        "squads": [
+          {
+            "id": "squad-orders",
+            "name": "Orders squad"
+          }
+        ],
+        "value_streams": [
+          {
+            "id": "vs-smb",
+            "name": "SMB"
+          }
+        ]
+      },
+      {
+        "capabilities": [],
+        "catalogued": true,
+        "constraints": [],
+        "id": "sys-cbcm",
+        "name": "CBCM",
+        "products": [],
+        "squads": [],
+        "value_streams": []
+      }
+    ],
+    "uncertainty": null
+  },
+  "feature_id": "feature-golden-1",
+  "id": "story-golden-1",
+  "provenance": {
+    "generated_at": "2026-03-01T09:00:00+00:00",
+    "model": "golden-model",
+    "prompt_version": "golden-prompt-v1"
+  },
+  "role": "SMB account administrator",
+  "source_lineage": [],
+  "staleness": null,
+  "status": "generated",
+  "value": "new lines work the same day",
+  "version": 1
+}

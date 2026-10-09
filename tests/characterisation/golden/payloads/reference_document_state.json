@@ -1,0 +1,30 @@
+{
+  "document_id": "library-doc-golden-1",
+  "owner_id": "actor-librarian",
+  "published": {
+    "block_labels": [
+      [
+        "block-1",
+        "Activation"
+      ],
+      [
+        "block-2",
+        "Credit"
+      ]
+    ],
+    "fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "passages": [
+      [
+        "block-1",
+        "Activation completes within one hour."
+      ]
+    ],
+    "publication_id": "publication-golden-1",
+    "revision_id": "library-revision-golden-3",
+    "version_id": "library-version-golden-2",
+    "version_number": 2
+  },
+  "review_due_on": "2026-09-01",
+  "title": "SMB activation policy",
+  "version": 4
+}

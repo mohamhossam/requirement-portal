@@ -22,6 +22,7 @@ from smb_kernel.llm.profiles import (
 from smb_requirement_agent.infrastructure.config.options import (
     DEFAULT_AI_JOB_HEARTBEAT_SECONDS,
     DEFAULT_AI_JOB_LEASE_SECONDS,
+    DEFAULT_AI_JOB_MAX_ATTEMPTS,
     DEFAULT_AI_JOB_POLL_INTERVAL_SECONDS,
     DEFAULT_AI_JOB_SHUTDOWN_GRACE_SECONDS,
     DEFAULT_AI_JOB_WORKER_CONCURRENCY,
@@ -200,6 +201,7 @@ class Settings:
     ai_job_lease_seconds: float = DEFAULT_AI_JOB_LEASE_SECONDS
     ai_job_heartbeat_seconds: float = DEFAULT_AI_JOB_HEARTBEAT_SECONDS
     ai_job_shutdown_grace_seconds: float = DEFAULT_AI_JOB_SHUTDOWN_GRACE_SECONDS
+    ai_job_max_attempts: int = DEFAULT_AI_JOB_MAX_ATTEMPTS
     debug_trace_enabled: bool = False
     debug_trace_path: str = DEFAULT_DEBUG_TRACE_PATH
     library_scan_mode: str = "clamav"
@@ -323,6 +325,7 @@ class Settings:
         raw_job_lease = os.getenv("AI_JOB_LEASE_SECONDS", "").strip()
         raw_job_heartbeat = os.getenv("AI_JOB_HEARTBEAT_SECONDS", "").strip()
         raw_job_shutdown_grace = os.getenv("AI_JOB_SHUTDOWN_GRACE_SECONDS", "").strip()
+        raw_job_max_attempts = os.getenv("AI_JOB_MAX_ATTEMPTS", "").strip()
         raw_oidc_jwks_ttl = os.getenv("OIDC_JWKS_TTL_SECONDS", "").strip()
         raw_oidc_unknown_ttl = os.getenv("OIDC_UNKNOWN_KEY_TTL_SECONDS", "").strip()
         raw_oidc_unknown_cache = os.getenv("OIDC_UNKNOWN_KEY_CACHE_SIZE", "").strip()
@@ -442,6 +445,9 @@ class Settings:
                 if raw_job_shutdown_grace
                 else DEFAULT_AI_JOB_SHUTDOWN_GRACE_SECONDS
             )
+            job_max_attempts = (
+                int(raw_job_max_attempts) if raw_job_max_attempts else DEFAULT_AI_JOB_MAX_ATTEMPTS
+            )
         except ValueError as exc:
             raise ConfigurationError("AI job worker settings must be numeric.") from exc
         try:
@@ -542,6 +548,7 @@ class Settings:
             ai_job_lease_seconds=job_lease,
             ai_job_heartbeat_seconds=job_heartbeat,
             ai_job_shutdown_grace_seconds=job_shutdown_grace,
+            ai_job_max_attempts=job_max_attempts,
             debug_trace_enabled=raw_debug_trace == "true",
             debug_trace_path=(
                 os.getenv("DEBUG_TRACE_PATH", "").strip() or DEFAULT_DEBUG_TRACE_PATH

@@ -5,7 +5,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from smb_requirement_agent.domain.review.entities import (
+from smb_requirement_agent.governance.domain.review.entities import (
     BreakdownStatus,
     DependencyEvidenceKind,
     FlagCategory,

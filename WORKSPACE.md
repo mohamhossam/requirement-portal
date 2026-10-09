@@ -58,11 +58,14 @@ Initial structure:
 │   └── slices/
 ├── src/
 │   └── smb_requirement_agent/
-│       ├── domain/
-│       ├── application/
-│       │   ├── ports/
-│       │   └── use_cases/
-│       ├── infrastructure/
+│       ├── shared_kernel/        # pure domain shared by every context (ADR-0103)
+│       ├── identity/ jobs/ requirements/ references/ analysis/
+│       ├── knowledge/ breakdown/ governance/
+│       │   └── {domain, application/{ports, use_cases, errors.py}, infrastructure}/
+│       ├── reporting/            # application and infrastructure only
+│       ├── workflows/            # cross-context orchestration; the public error catalogue
+│       ├── application/          # shared technical: base errors, events, technical ports
+│       ├── infrastructure/       # shared technical: config, persistence, LLM transport, text
 │       │   ├── config/
 │       │   ├── llm/
 │       │   └── persistence/
@@ -285,7 +288,10 @@ are never persisted.
 AI operations run through bounded background workers. Defaults are
 `AI_JOB_WORKER_CONCURRENCY=1`, `AI_JOB_POLL_INTERVAL_SECONDS=1`,
 `AI_JOB_LEASE_SECONDS=90`, and `AI_JOB_HEARTBEAT_SECONDS=20`. Heartbeats must be
-less than half the lease duration. With PostgreSQL, jobs and notifications
+less than half the lease duration. `AI_JOB_MAX_ATTEMPTS=3` (minimum 1) caps how many
+attempts one job may start: a job whose worker keeps dying, so its lease keeps
+expiring and it keeps being reclaimed, fails as `attempts_exhausted` (retryable)
+instead of looping forever, and its creator is notified. With PostgreSQL, jobs and notifications
 survive API restarts; memory mode retains the same behavior for offline work but
 loses process-local state on restart. The synchronous generation endpoints
 remain available during migration, while the browser uses `/ai-jobs` and polls
@@ -686,6 +692,18 @@ Template:
 Infrastructure adapters depend inward on
 Application/Domain ports and models.
 ```
+
+This layering holds inside each bounded context (ADR-0103). Between contexts, a context imports
+only the contexts upstream of it:
+
+```text
+workflows → reporting → governance → breakdown → knowledge → analysis
+  → references → requirements → {jobs | identity} → shared_kernel
+```
+
+`lint-imports` enforces the order (`contexts_layered` and one "depends only upstream" contract per
+context). An upstream context that needs a downstream effect publishes a domain event or calls a
+port it owns. `docs/architecture/context-map.md` places every module.
 
 The object graph is wired in exactly one place,
 `interfaces/api/container.py`, from `Settings`. Nothing is constructed at

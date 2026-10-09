@@ -20,41 +20,45 @@ from collections.abc import Iterator
 from fastapi.dependencies.models import Dependant
 from fastapi.routing import APIRoute, iter_route_contexts
 
-import smb_requirement_agent.application as application_package
-from smb_requirement_agent.application.ports.architecture_knowledge import (
-    ArchitectureKnowledgePort,
-)
-from smb_requirement_agent.application.ports.epic_generator import EpicGeneratorPort
-from smb_requirement_agent.application.ports.feature_generator import FeatureGeneratorPort
-from smb_requirement_agent.application.ports.prior_art import (
-    PriorArtJudgePort,
-    PriorArtSchedulerPort,
-)
-from smb_requirement_agent.application.ports.reference_grounding import (
+import smb_requirement_agent as root_package
+from smb_requirement_agent.analysis.application.ports.reference_analysis import (
     ReferenceAnalysisPort,
-    ReferenceKnowledgePort,
     ReferenceProposerPort,
-    ReferenceSearchPort,
 )
-from smb_requirement_agent.application.ports.requirement_analyzer import RequirementAnalyzerPort
-from smb_requirement_agent.application.ports.requirement_evidence_analyzer import (
+from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
+    RequirementAnalyzerPort,
+)
+from smb_requirement_agent.analysis.application.ports.requirement_evidence_analyzer import (
     RequirementEvidenceAnalyzerPort,
 )
-from smb_requirement_agent.application.ports.requirement_knowledge import (
-    AnswerSuggestionSchedulerPort,
-    ClarificationAnswerSuggesterPort,
-    KnowledgeEmbeddingPort,
-    KnowledgeScreenSchedulerPort,
-    RequirementRelationshipClassifierPort,
-)
-from smb_requirement_agent.application.ports.story_generator import StoryGeneratorPort
-from smb_requirement_agent.application.ports.story_quality_evaluator import (
+from smb_requirement_agent.breakdown.application.ports.epic_generator import EpicGeneratorPort
+from smb_requirement_agent.breakdown.application.ports.feature_generator import FeatureGeneratorPort
+from smb_requirement_agent.breakdown.application.ports.story_generator import StoryGeneratorPort
+from smb_requirement_agent.breakdown.application.ports.story_quality_evaluator import (
     StoryQualityEvaluatorPort,
 )
 from smb_requirement_agent.interfaces.api.container import Container
 from smb_requirement_agent.interfaces.api.dependencies import limit_provider_calls
 from smb_requirement_agent.interfaces.api.main import create_app
 from smb_requirement_agent.interfaces.api.schemas.generation import GenerationRequest
+from smb_requirement_agent.knowledge.application.ports.prior_art import (
+    PriorArtJudgePort,
+    PriorArtSchedulerPort,
+)
+from smb_requirement_agent.knowledge.application.ports.requirement_knowledge import (
+    AnswerSuggestionSchedulerPort,
+    ClarificationAnswerSuggesterPort,
+    KnowledgeEmbeddingPort,
+    KnowledgeScreenSchedulerPort,
+    RequirementRelationshipClassifierPort,
+)
+from smb_requirement_agent.references.application.ports.architecture_knowledge import (
+    ArchitectureKnowledgePort,
+)
+from smb_requirement_agent.references.application.ports.reference_grounding import (
+    ReferenceKnowledgePort,
+    ReferenceSearchPort,
+)
 
 PROVIDER_OPERATIONS = {
     ("POST", "/requirements/{requirement_id}/ai-jobs"),
@@ -139,6 +143,13 @@ NOT_PROVIDER_CALLING = {
         "/requirements/{requirement_id}/architecture-mapping/jobs/{job_id}/cancel",
     ): "cancels a queued mapping job",
     ("GET", "/requirements/{requirement_id}/knowledge-index"): "reads index progress",
+    # AiJobs holds AnalysisCollaboration only to refuse an analysis start that can only fail.
+    ("GET", "/requirements/{requirement_id}/ai-jobs"): "lists AI jobs",
+    ("GET", "/requirements/{requirement_id}/ai-jobs/{job_id}"): "reads one AI job",
+    (
+        "POST",
+        "/requirements/{requirement_id}/ai-jobs/{job_id}/cancellation",
+    ): "cancels an AI job",
     (
         "GET",
         "/requirements/{requirement_id}/analysis/questions/{question_id}/answer-suggestions",
@@ -218,11 +229,15 @@ def test_every_model_backed_mutation_is_rate_limited() -> None:
 
 
 def _application_namespace() -> dict[str, object]:
-    """Every application class by name, to resolve TYPE_CHECKING-only annotations."""
+    """Every application class by name, to resolve TYPE_CHECKING-only annotations.
+
+    Application code lives in `application/` and in each context's `application/` layer
+    (ADR-0103), so every module under an `application` package is walked.
+    """
     namespace: dict[str, object] = {}
-    for module_info in pkgutil.walk_packages(
-        application_package.__path__, f"{application_package.__name__}."
-    ):
+    for module_info in pkgutil.walk_packages(root_package.__path__, f"{root_package.__name__}."):
+        if "application" not in module_info.name.split("."):
+            continue
         module = importlib.import_module(module_info.name)
         for name, value in vars(module).items():
             if inspect.isclass(value):

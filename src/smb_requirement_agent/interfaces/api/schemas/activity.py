@@ -4,20 +4,20 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from smb_requirement_agent.application.ports.activity import (
-    ActivityAction,
-    ActivityCategory,
-    AuditSourceKind,
-)
-from smb_requirement_agent.application.ports.requirement_worklist import (
-    WorkflowStatus,
-    WorklistSort,
-)
 from smb_requirement_agent.interfaces.api.schemas.bounds import (
     MAX_ITEMS,
     Identifier,
 )
 from smb_requirement_agent.interfaces.api.schemas.identity import ActorResponse
+from smb_requirement_agent.reporting.application.ports.activity import (
+    ActivityAction,
+    ActivityCategory,
+    AuditSourceKind,
+)
+from smb_requirement_agent.reporting.application.ports.requirement_worklist import (
+    WorkflowStatus,
+    WorklistSort,
+)
 
 
 class AuditSourceResponse(BaseModel):

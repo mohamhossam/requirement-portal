@@ -5,22 +5,14 @@ from dataclasses import replace
 import pytest
 from fastapi.testclient import TestClient
 
-from smb_requirement_agent.application.errors import (
-    ArtifactVersionConflictError,
-    RequirementAnalysisConflictError,
-)
-from smb_requirement_agent.application.use_cases.create_requirement import CreateRequirementInput
-from smb_requirement_agent.application.use_cases.requirement_knowledge import (
-    RequirementKnowledgeCorpus,
-)
-from smb_requirement_agent.domain.analysis.value_objects import IntentProposalStatus
-from smb_requirement_agent.domain.document.lineage import ImpactDecisionKind
-from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
-from smb_requirement_agent.infrastructure.persistence.analysis_payloads import (
+from smb_requirement_agent.analysis.application.errors import RequirementAnalysisConflictError
+from smb_requirement_agent.analysis.domain.value_objects import IntentProposalStatus
+from smb_requirement_agent.analysis.infrastructure.analysis_payloads import (
     analysis_from_payload,
     analysis_to_payload,
 )
-from smb_requirement_agent.infrastructure.persistence.backlog_payloads import (
+from smb_requirement_agent.application.errors import ArtifactVersionConflictError
+from smb_requirement_agent.breakdown.infrastructure.backlog_payloads import (
     epic_from_payload,
     epic_to_payload,
     feature_from_payload,
@@ -28,9 +20,17 @@ from smb_requirement_agent.infrastructure.persistence.backlog_payloads import (
     story_from_payload,
     story_to_payload,
 )
+from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.interfaces.api.main import create_app
-from tests.unit import test_reference_grounding
-from tests.unit.test_reference_grounding import Grounded
+from smb_requirement_agent.knowledge.application.use_cases.requirement_knowledge import (
+    RequirementKnowledgeCorpus,
+)
+from smb_requirement_agent.knowledge.domain.lineage import ImpactDecisionKind
+from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
+    CreateRequirementInput,
+)
+from tests.unit.analysis import test_reference_grounding
+from tests.unit.analysis.test_reference_grounding import Grounded
 from tests.unit.workflow_helpers import drain_requirement_index
 
 grounded = test_reference_grounding.grounded

@@ -4,6 +4,10 @@
 
 Accepted. Supersedes the optional-collaborator arrangement introduced in Slice 02.
 
+Mechanism superseded by ADR-0103 (2026-10-07). `InvalidateDerivedArtifacts` is replaced by
+domain-event handlers, which run in the same order inside the same unit of work. The
+delete-versus-stale rule recorded here is unchanged.
+
 ## Context
 
 `UpdateRequirement` invalidated the analysis through an optional constructor

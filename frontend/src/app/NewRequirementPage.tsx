@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { registerStartedJob } from "../features/jobs/jobObservation";
+import { createStartKeys } from "../features/jobs/startKeys";
 import { CircleAlert, CircleCheck, Clock, RotateCcw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
@@ -77,6 +78,8 @@ export function NewRequirementPage() {
   const [attachmentState, setAttachmentState] = useState<AttachmentState>({ hasIncludedAttachment: false, busy: false, blocked: false });
   const latestDraft = useRef<RequirementDraft | null>(null);
   const saveQueue = useRef<Promise<unknown>>(Promise.resolve());
+  // Retrying after a lost response reuses its key, so the server replays the first start.
+  const startKeys = useRef(createStartKeys()).current;
 
   const draftQuery = useQuery({
     queryKey: queryKeys.requirementDraft(requestedDraftId ?? "new"),
@@ -149,6 +152,18 @@ export function NewRequirementPage() {
     queryClient.removeQueries({ queryKey: queryKeys.requirementDraft(promotedDraftId) });
   };
 
+  const startAnalysis = async (requirementId: string, contextToken: string) => {
+    const input = { operation: "analyse_requirement", context_token: contextToken, force: false } as const;
+    try {
+      const job = await api.startAiJob(requirementId, input, startKeys.keyFor(input));
+      startKeys.settle(input);
+      return job;
+    } catch (error) {
+      startKeys.settle(input, error);
+      throw error;
+    }
+  };
+
   const submit = useMutation({
     mutationFn: async ({ value, intent }: { value: RequirementDraftInput; intent: CreateIntent }) => {
       const saved = await persistDraft(value);
@@ -163,11 +178,7 @@ export function NewRequirementPage() {
         if (!requirement.analysis_context_token) {
           throw new Error("The analysis context is unavailable. Reload the Requirement and retry.");
         }
-        const job = await api.startAiJob(requirement.id, {
-          operation: "analyse_requirement",
-          context_token: requirement.analysis_context_token,
-          force: false,
-        });
+        const job = await startAnalysis(requirement.id, requirement.analysis_context_token);
         registerStartedJob(queryClient, requirement.id, job);
         return {
           requirement,
@@ -192,18 +203,13 @@ export function NewRequirementPage() {
   const retryAnalysis = useMutation({
     mutationFn: async () => {
       if (!savedRequirement) return;
-      const requirement = savedRequirement.analysis_context_token
-        ? savedRequirement
-        : await api.getRequirement(savedRequirement.id);
+      // Always re-read: the token held since creation may be stale by now.
+      const requirement = await api.getRequirement(savedRequirement.id);
       setSavedRequirement(requirement);
       if (!requirement.analysis_context_token) {
         throw new Error("The analysis context is unavailable. Reload the Requirement and retry.");
       }
-      const job = await api.startAiJob(requirement.id, {
-        operation: "analyse_requirement",
-        context_token: requirement.analysis_context_token,
-        force: false,
-      });
+      const job = await startAnalysis(requirement.id, requirement.analysis_context_token);
       registerStartedJob(queryClient, requirement.id, job);
     },
     onSuccess: () => savedRequirement && navigate(`/requirements/${savedRequirement.id}/clarify`),

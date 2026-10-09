@@ -23,15 +23,16 @@ from smb_kernel.llm.openrouter_structured_output import (
 from smb_kernel.llm.profiles import ModelProfile
 from smb_kernel.llm.structured_output import StructuredOutputClient
 
-from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
-from smb_requirement_agent.application.ports.requirement_analyzer import (
+from smb_requirement_agent.analysis.application.errors import RequirementAnalysisGenerationError
+from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     AnalysisDocumentContext,
     RequirementAnalysisCandidate,
 )
-from smb_requirement_agent.application.public_errors import describe_public_error
-from smb_requirement_agent.application.use_cases.analysis_mapping import build_analysis
-from smb_requirement_agent.application.use_cases.evidence_analysis import ValidateAnalysisCitations
-from smb_requirement_agent.domain.analysis.value_objects import (
+from smb_requirement_agent.analysis.application.use_cases.analysis_mapping import build_analysis
+from smb_requirement_agent.analysis.application.use_cases.evidence_analysis import (
+    ValidateAnalysisCitations,
+)
+from smb_requirement_agent.analysis.domain.value_objects import (
     ClarificationKind,
     HumanClarification,
     IntentProposal,
@@ -40,21 +41,25 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     IntentProposalStatus,
     QuestionId,
 )
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorSnapshot
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import (
+from smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer import (
+    StructuredRequirementAnalyzerAdapter,
+)
+from smb_requirement_agent.analysis.infrastructure.llm.schemas.analysis_schema import (
+    citation_recovery_schema,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.value_objects import (
     RequirementContext,
     RequirementDescription,
-    RequirementId,
     RequirementStatus,
     RequirementTitle,
 )
-from smb_requirement_agent.infrastructure.llm.local_requirement_analyzer import (
-    StructuredRequirementAnalyzerAdapter,
+from smb_requirement_agent.shared_kernel.actors import (
+    ActorId,
+    ActorSnapshot,
 )
-from smb_requirement_agent.infrastructure.llm.schemas.analysis_schema import (
-    citation_recovery_schema,
-)
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.workflows.application.public_errors import describe_public_error
 from tests.conftest import TEST_NOW
 
 PROVIDERS = ["legacy-local", "legacy-openrouter", "Gemini", "OpenAI", "OpenRouter", "Ollama"]

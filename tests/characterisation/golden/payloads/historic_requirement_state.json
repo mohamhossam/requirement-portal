@@ -1,0 +1,17 @@
+{
+  "historic_requirement_id": "historic-golden-1",
+  "published": {
+    "fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "publication": 1,
+    "published_at": "2026-03-01T09:00:00+00:00",
+    "published_by": {
+      "name": "actor-librarian"
+    },
+    "root_ids": [
+      101,
+      102
+    ],
+    "title": "2024 bundle activation BRD"
+  },
+  "version": 2
+}

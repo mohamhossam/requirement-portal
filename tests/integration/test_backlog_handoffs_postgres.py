@@ -11,15 +11,15 @@ import pytest
 from smb_kernel.persistence.connector import DirectPostgresConnector
 
 from smb_requirement_agent.application.errors import PersistenceError
-from smb_requirement_agent.application.ports.knowledge_handoff import (
+from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
+from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
+from smb_requirement_agent.references.application.ports.knowledge_handoff import (
     BacklogHandoff,
     HandoffStatus,
 )
-from smb_requirement_agent.infrastructure.persistence.backlog_handoffs import (
+from smb_requirement_agent.references.infrastructure.backlog_handoffs import (
     PostgresBacklogHandoffs,
 )
-from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
-from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
 
 DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 pytestmark = pytest.mark.skipif(not DATABASE_URL, reason="TEST_DATABASE_URL is not configured")

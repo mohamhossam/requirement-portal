@@ -10,7 +10,7 @@ differently; `RequirementCommands` owns that order instead.
 import ast
 from pathlib import Path
 
-import smb_requirement_agent.application.use_cases as use_cases_package
+import smb_requirement_agent as root_package
 import smb_requirement_agent.interfaces.api.routes as routes_package
 
 ROLE_CHECKS = {"require_maintainer", "require_reader"}
@@ -105,10 +105,13 @@ OTHER_AUTHORIZATION_RULES = {
 
 
 def _use_case_sources() -> list[tuple[str, ast.AST]]:
-    return [
+    # Every context's use cases (ADR-0103): each context package has its own.
+    sources: list[tuple[str, ast.AST]] = [
         (path.name, ast.parse(path.read_text(encoding="utf-8")))
-        for path in sorted(Path(use_cases_package.__file__).parent.glob("*.py"))
+        for path in sorted(Path(root_package.__file__).parent.glob("*/application/use_cases/*.py"))
     ]
+    assert ACCESS_SERVICE in {name for name, _ in sources}, "the access service has moved"
+    return sources
 
 
 def test_only_the_access_service_checks_requirement_membership() -> None:

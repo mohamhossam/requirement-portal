@@ -6,72 +6,85 @@ from smb_kernel.persistence.connector import (
     DirectPostgresConnector,
 )
 
-from smb_requirement_agent.application.ports.requirement_repository import (
-    RequirementRepositoryPort,
-)
-from smb_requirement_agent.application.ports.requirement_worklist import (
-    CurrentWorklistProjectionPort,
-    RequirementWorklistSnapshot,
-)
-from smb_requirement_agent.domain.analysis.entities import (
+from smb_requirement_agent.analysis.domain.entities import (
     AnalysisRound,
     ClarificationQuestion,
     RequirementAnalysis,
 )
-from smb_requirement_agent.domain.analysis.value_objects import AnalysisId, QuestionId
-from smb_requirement_agent.domain.document.entities import SourceDocument
-from smb_requirement_agent.domain.document.value_objects import DocumentId
-from smb_requirement_agent.domain.epic.entities import Epic
-from smb_requirement_agent.domain.epic.value_objects import EpicId
-from smb_requirement_agent.domain.feature.entities import Feature
-from smb_requirement_agent.domain.feature.value_objects import FeatureId
-from smb_requirement_agent.domain.identity.entities import (
-    ActorId,
-    ActorProfile,
-    DraftOwnership,
-    RequirementAccess,
+from smb_requirement_agent.analysis.domain.value_objects import AnalysisId, QuestionId
+from smb_requirement_agent.analysis.infrastructure.postgres_analysis import (
+    PostgresAnalysisAuditRepository,
+    PostgresAnalysisRepository,
 )
-from smb_requirement_agent.domain.requirement.entities import Requirement, RequirementDraft
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
-from smb_requirement_agent.domain.review.entities import BreakdownReview
-from smb_requirement_agent.domain.revision.entities import (
+from smb_requirement_agent.breakdown.domain.epic.entities import Epic
+from smb_requirement_agent.breakdown.domain.epic.value_objects import EpicId
+from smb_requirement_agent.breakdown.domain.feature.entities import Feature
+from smb_requirement_agent.breakdown.domain.feature.value_objects import FeatureId
+from smb_requirement_agent.breakdown.domain.story.entities import StoryChangeProposal, UserStory
+from smb_requirement_agent.breakdown.domain.story.value_objects import StoryId, StoryProposalId
+from smb_requirement_agent.breakdown.infrastructure.postgres_backlog import (
+    PostgresEpicRepository,
+    PostgresFeatureRepository,
+    PostgresStoryChangeProposalRepository,
+    PostgresStoryRepository,
+)
+from smb_requirement_agent.governance.domain.review.entities import BreakdownReview
+from smb_requirement_agent.governance.domain.revision.entities import (
     BreakdownRevision,
     RequirementRevision,
     RevisionNumber,
 )
-from smb_requirement_agent.domain.story.entities import StoryChangeProposal, UserStory
-from smb_requirement_agent.domain.story.value_objects import StoryId, StoryProposalId
-from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader import (
-    ActivityInputDelta,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_activity_sources import (
-    PostgresActivitySources,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_document_metadata import (
-    PostgresDocumentRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_repositories import (
-    PostgresAccessRepository,
-    PostgresActorDirectory,
-    PostgresAnalysisAuditRepository,
-    PostgresAnalysisRepository,
+from smb_requirement_agent.governance.infrastructure.postgres_breakdown_review import (
     PostgresBreakdownReviewRepository,
-    PostgresEpicRepository,
-    PostgresFeatureRepository,
-    PostgresRequirementDraftRepository,
-    PostgresRequirementRepository,
-    PostgresStoryChangeProposalRepository,
-    PostgresStoryRepository,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_revisions import (
+from smb_requirement_agent.governance.infrastructure.postgres_revisions import (
     PostgresRevisionRepository,
     PostgresRevisionWriter,
 )
-from smb_requirement_agent.infrastructure.persistence.postgres_snapshots import (
-    PostgresSnapshotReader,
+from smb_requirement_agent.identity.domain.entities import (
+    DraftOwnership,
+    RequirementAccess,
+)
+from smb_requirement_agent.identity.infrastructure.postgres_identity import (
+    PostgresAccessRepository,
+    PostgresActorDirectory,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
 from smb_requirement_agent.infrastructure.persistence.postgres_values import DbConnection
+from smb_requirement_agent.reporting.application.ports.requirement_worklist import (
+    CurrentWorklistProjectionPort,
+    RequirementWorklistSnapshot,
+)
+from smb_requirement_agent.reporting.infrastructure.postgres_activity_reader import (
+    ActivityInputDelta,
+)
+from smb_requirement_agent.reporting.infrastructure.postgres_activity_sources import (
+    PostgresActivitySources,
+)
+from smb_requirement_agent.reporting.infrastructure.postgres_snapshots import (
+    PostgresSnapshotReader,
+)
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
+    RequirementRepositoryPort,
+)
+from smb_requirement_agent.requirements.domain.document.entities import SourceDocument
+from smb_requirement_agent.requirements.domain.document.value_objects import DocumentId
+from smb_requirement_agent.requirements.domain.requirement.entities import (
+    Requirement,
+    RequirementDraft,
+)
+from smb_requirement_agent.requirements.infrastructure.postgres_document_metadata import (
+    PostgresDocumentRepository,
+)
+from smb_requirement_agent.requirements.infrastructure.postgres_requirements import (
+    PostgresRequirementDraftRepository,
+    PostgresRequirementRepository,
+)
+from smb_requirement_agent.shared_kernel.actors import (
+    ActorId,
+    ActorProfile,
+)
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 class FixturePostgresStore(PostgresStore, RequirementRepositoryPort):

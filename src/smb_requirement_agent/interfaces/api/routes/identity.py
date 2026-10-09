@@ -4,13 +4,6 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 
-from smb_requirement_agent.application.use_cases.identity_access import (
-    RequirementAccessService,
-    RequirementAccessView,
-    SearchKnownActors,
-)
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorProfile, ActorSnapshot
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.interfaces.api.dependencies import (
     ContainerDep,
     CurrentActorDep,
@@ -27,6 +20,17 @@ from smb_requirement_agent.interfaces.api.schemas.identity import (
     LoginChoiceResponse,
     RequirementAccessResponse,
     TransferOwnershipRequest,
+)
+from smb_requirement_agent.shared_kernel.actors import (
+    ActorId,
+    ActorProfile,
+    ActorSnapshot,
+)
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.workflows.application.use_cases.identity_access import (
+    RequirementAccessService,
+    RequirementAccessView,
+    SearchKnownActors,
 )
 
 public_router = APIRouter(prefix="/identity", tags=["identity"])

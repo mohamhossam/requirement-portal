@@ -1,0 +1,22 @@
+{
+  "action": "requirement_updated",
+  "actor": {
+    "display_name": "Olivia Owner",
+    "email": "olivia@example.test",
+    "id": "actor-owner"
+  },
+  "category": "requirement",
+  "id": "activity-golden-1",
+  "occurred_at": "2026-03-01T10:00:00+00:00",
+  "requirement_id": "req-golden-1",
+  "requirement_title": "Business SIM bundle self-service",
+  "resource_path": "/requirements/req-golden-1",
+  "sources": [
+    {
+      "kind": "requirement_revision",
+      "source_id": "revision-golden-3"
+    }
+  ],
+  "summary": "Requirement updated to version 3.",
+  "target_id": "req-golden-1"
+}

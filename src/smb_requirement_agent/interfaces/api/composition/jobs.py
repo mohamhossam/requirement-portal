@@ -7,23 +7,27 @@ from dataclasses import dataclass
 from smb_kernel.observability.metrics import Metrics
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.ports.ai_jobs import AiJobWorkerPort
-from smb_requirement_agent.application.use_cases.ai_job_execution import ExecuteAiJob
-from smb_requirement_agent.application.use_cases.ai_jobs import AiJobs, Notifications
-from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.infrastructure.jobs.polling_worker import (
-    AiJobWorkerGroup,
-    PollingAiJobWorker,
-)
-from smb_requirement_agent.infrastructure.jobs.prior_art_gate import PriorArtGatedQueue
-from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import IndexReadyJobQueue
-from smb_requirement_agent.interfaces.api.composition.analysis_workflow import (
+from smb_requirement_agent.interfaces.api.composition.analysis import (
     AnalysisWorkflowWiring,
 )
 from smb_requirement_agent.interfaces.api.composition.breakdown import BreakdownWiring
 from smb_requirement_agent.interfaces.api.composition.knowledge import RequirementKnowledgeWiring
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
+from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobWorkerPort
+from smb_requirement_agent.knowledge.infrastructure.prior_art_gate import PriorArtGatedQueue
+from smb_requirement_agent.knowledge.infrastructure.requirement_index_worker import (
+    IndexReadyJobQueue,
+)
+from smb_requirement_agent.workflows.application.use_cases.ai_job_execution import ExecuteAiJob
+from smb_requirement_agent.workflows.application.use_cases.ai_jobs import AiJobs, Notifications
+from smb_requirement_agent.workflows.application.use_cases.identity_access import (
+    RequirementAccessService,
+)
+from smb_requirement_agent.workflows.infrastructure.polling_worker import (
+    AiJobWorkerGroup,
+    PollingAiJobWorker,
+)
 
 
 @dataclass(frozen=True)
@@ -66,6 +70,7 @@ def build_ai_jobs(
         persistence.access_repository,
         access,
         analysis.generation_context_tokens,
+        max_attempts=settings.ai_job_max_attempts,
         screen_prior_art=knowledge.screen_prior_art,
     )
     # Index-dependent operations wait behind the gate instead of failing.
@@ -101,6 +106,7 @@ def build_ai_jobs(
             clock,
             analysis.generation_context_tokens,
             persistence.transaction_manager,
+            analysis.analysis_collaboration,
         ),
         notifications=Notifications(persistence.notification_repository, clock),
         execute_ai_job=execute,

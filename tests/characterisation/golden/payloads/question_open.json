@@ -1,0 +1,48 @@
+{
+  "answer": null,
+  "answered_at": null,
+  "answered_by": null,
+  "asked_at": null,
+  "asked_by": null,
+  "assignee": {
+    "display_name": "Ravi Reviewer",
+    "email": null,
+    "id": "actor-reviewer"
+  },
+  "assignment_history": [
+    {
+      "assignee": {
+        "display_name": "Ravi Reviewer",
+        "email": null,
+        "id": "actor-reviewer"
+      },
+      "changed_at": "2026-03-01T10:00:00+00:00",
+      "changed_by": {
+        "display_name": "Olivia Owner",
+        "email": "olivia@example.test",
+        "id": "actor-owner"
+      }
+    }
+  ],
+  "classification_changed_at": null,
+  "classification_changed_by": null,
+  "draft_answer": "Probably 5, 10 and 20 lines.",
+  "draft_updated_at": "2026-03-02T11:30:00+00:00",
+  "draft_updated_by": {
+    "display_name": "Ravi Reviewer",
+    "email": null,
+    "id": "actor-reviewer"
+  },
+  "first_analysis_id": "analysis-golden-1",
+  "id": "question-golden-1",
+  "is_blocker": true,
+  "kind": "open_question",
+  "rationale": "Pricing is unstated.",
+  "replaces_question_id": null,
+  "requirement_id": "req-golden-1",
+  "severity": "high",
+  "source": "ai",
+  "status": "in_progress",
+  "subject": "Which bundle sizes apply?",
+  "version": 3
+}

@@ -10,18 +10,15 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Response
 
-from smb_requirement_agent.application.use_cases.approval_policy import artifact_fingerprint
-from smb_requirement_agent.application.use_cases.approve_epic import ApproveEpic
-from smb_requirement_agent.application.use_cases.edit_epic import EditEpic, EditEpicInput
-from smb_requirement_agent.application.use_cases.generate_epic import (
+from smb_requirement_agent.breakdown.application.use_cases.edit_epic import EditEpic, EditEpicInput
+from smb_requirement_agent.breakdown.application.use_cases.generate_epic import (
     GenerateEpic,
     GenerateEpicResult,
 )
-from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
-from smb_requirement_agent.application.use_cases.get_epic import GetEpic
-from smb_requirement_agent.application.use_cases.requirement_commands import ExpectedContext
-from smb_requirement_agent.domain.epic.entities import Epic
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.breakdown.application.use_cases.get_epic import GetEpic
+from smb_requirement_agent.breakdown.domain.epic.entities import Epic
+from smb_requirement_agent.governance.application.use_cases.approve_epic import ApproveEpic
+from smb_requirement_agent.governance.domain.review.fingerprints import artifact_fingerprint
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     RequirementCommandsDep,
@@ -47,6 +44,13 @@ from smb_requirement_agent.interfaces.api.schemas.generation import (
 from smb_requirement_agent.interfaces.api.schemas.governance import (
     ApprovalRequest,
     ApprovalResponse,
+)
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.workflows.application.use_cases.generation_context import (
+    GenerationContextTokens,
+)
+from smb_requirement_agent.workflows.application.use_cases.requirement_commands import (
+    ExpectedContext,
 )
 
 router = APIRouter(

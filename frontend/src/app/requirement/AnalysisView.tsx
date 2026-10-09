@@ -18,6 +18,7 @@ import { EmptyState } from "../../components/EmptyState";
 import { ErrorNotice } from "../../components/ErrorNotice";
 import { Skeleton } from "../../components/Skeleton";
 import { Button } from "../../components/ui";
+import { missingLabel } from "../../features/documents/labels";
 import { SourceImpactPanel } from "../../features/documents/SourceImpactPanel";
 import { AnalysisPanel } from "../../features/analysis/AnalysisPanel";
 import { useRequirementJobs } from "../../features/jobs/useRequirementJobs";
@@ -161,6 +162,11 @@ export function AnalysisView({
     (data?.questions ?? []).map((question, index) => [question.id, suggestions[index]?.data ?? null]),
   );
   const requestAnalysis = () => (data ? setConfirmReanalysis(true) : analyse.mutate(false));
+  // The server refuses to analyse an incomplete Requirement; say what it needs before a click.
+  const eligibility = workspace.requirement.data?.analysis_eligibility;
+  const ineligibleReason = eligibility && !eligibility.eligible
+    ? `Still needed: ${missingLabel(eligibility.missing_fields)}.`
+    : undefined;
 
   return (
     <>
@@ -190,6 +196,7 @@ export function AnalysisView({
         {data && (
           <div className="flex justify-end">
             <Button
+              blockedReason={ineligibleReason}
               disabled={!canManageContent || analysing}
               icon={<RefreshCw size={16} aria-hidden="true" />}
               loading={analysing}
@@ -246,6 +253,7 @@ export function AnalysisView({
             message="Analyse the current source to separate evidence from uncertainty."
             action={
               <Button
+                blockedReason={ineligibleReason}
                 disabled={!canManageContent || analysing}
                 loading={analysing}
                 loadingLabel="Analysing…"
