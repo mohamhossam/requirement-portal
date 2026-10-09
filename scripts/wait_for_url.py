@@ -11,7 +11,8 @@ import urllib.request
 def url_ready(url: str, timeout: float) -> bool:
     try:
         with urllib.request.urlopen(url, timeout=timeout) as response:
-            return 200 <= response.status < 400
+            status: int = response.status
+            return 200 <= status < 400
     except Exception:
         return False
 

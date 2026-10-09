@@ -16,26 +16,30 @@ from psycopg.types.json import Jsonb
 from smb_kernel.persistence.connector import DirectPostgresConnector
 from smb_kernel.time.system import SystemClock
 
-from smb_requirement_agent.application.errors import RequirementAnalysisConflictError
-from smb_requirement_agent.application.ports.architecture_knowledge import ActiveRelease
-from smb_requirement_agent.application.use_cases.reference_currency import (
-    CurrentArchitectureRelease,
-    ProjectKnowledgeEvents,
-    ReferenceCurrency,
-)
-from smb_requirement_agent.domain.document.reference import (
-    CurrentPublication,
-    ReferenceDocumentState,
-)
 from smb_requirement_agent.infrastructure.persistence import migration_runner
-from smb_requirement_agent.infrastructure.persistence.architecture_release_state import (
-    PostgresArchitectureReleaseState,
-)
 from smb_requirement_agent.infrastructure.persistence.moved_knowledge_tables import (
     DROP_EMPTY_MIGRATION,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_store import PostgresStore
-from smb_requirement_agent.infrastructure.persistence.reference_publications import (
+from smb_requirement_agent.references.application.errors import CitationNotCurrentError
+from smb_requirement_agent.references.application.ports.architecture_knowledge import ActiveRelease
+from smb_requirement_agent.references.application.use_cases.reference_currency import (
+    CurrentArchitectureRelease,
+    ProjectKnowledgeEvents,
+    ReferenceCurrency,
+)
+from smb_requirement_agent.references.domain.reference import (
+    CurrentPublication,
+    ReferenceDocumentState,
+)
+from smb_requirement_agent.references.infrastructure.architecture_release_state import (
+    PostgresArchitectureReleaseState,
+)
+from smb_requirement_agent.references.infrastructure.knowledge_payloads import (
+    PayloadKnowledgeStateDecoder,
+    reference_document_state_from_payload,
+)
+from smb_requirement_agent.references.infrastructure.reference_publications import (
     PostgresReferencePublications,
 )
 from tests.knowledge_doubles import PublishedLibrary
@@ -151,9 +155,9 @@ def test_the_seed_builds_exactly_the_state_the_library_published(
                 "SELECT document_id, payload FROM reference_publication_state"
             ).fetchall()
         )
-    assert ReferenceDocumentState.from_payload(rows["live"]) == _expected("live", 3, live=True)
-    assert ReferenceDocumentState.from_payload(rows["gone"]) == _expected("gone", 4, live=False)
-    assert ReferenceDocumentState.from_payload(rows["draft"]) == _expected("draft", 1, live=False)
+    assert reference_document_state_from_payload(rows["live"]) == _expected("live", 3, live=True)
+    assert reference_document_state_from_payload(rows["gone"]) == _expected("gone", 4, live=False)
+    assert reference_document_state_from_payload(rows["draft"]) == _expected("draft", 1, live=False)
 
 
 def test_the_postgres_copy_keeps_the_newest_state_and_its_cursor(isolated_url: str) -> None:
@@ -186,7 +190,9 @@ def test_the_knowledge_service_feed_brings_the_postgres_copy_along(isolated_url:
     states = PostgresReferencePublications(store)
     releases = PostgresArchitectureReleaseState(store)
     library = PublishedLibrary()
-    projector = ProjectKnowledgeEvents(library, states, releases, store, SystemClock())
+    projector = ProjectKnowledgeEvents(
+        library, states, releases, store, SystemClock(), decoder=PayloadKnowledgeStateDecoder()
+    )
     currency = ReferenceCurrency(states, store)
     (citation,) = library.publish("Eligibility", ("XGPON coverage is required.",))
     library.activate_release("release-2", "Q4 catalogue")
@@ -199,14 +205,19 @@ def test_the_knowledge_service_feed_brings_the_postgres_copy_along(isolated_url:
     )
     library.withdraw(citation.document_id)
     projector.drain()
-    with pytest.raises(RequirementAnalysisConflictError, match="withdrawn or replaced"):
+    with pytest.raises(CitationNotCurrentError, match="withdrawn or replaced"):
         currency.require_current((citation,))
     state = states.get(citation.document_id)
     assert state is not None and state.published is None
     assert states.cursor() == len(library.after(0, 1000))
     # Caught up: a restarted copy resumes where it stopped, with nothing left to apply.
     assert not ProjectKnowledgeEvents(
-        library, PostgresReferencePublications(store), releases, store, SystemClock()
+        library,
+        PostgresReferencePublications(store),
+        releases,
+        store,
+        SystemClock(),
+        decoder=PayloadKnowledgeStateDecoder(),
     ).project_next()
 
 

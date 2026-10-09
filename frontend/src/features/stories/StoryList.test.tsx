@@ -59,7 +59,7 @@ describe("StoryList", () => {
       operation: "generate_stories",
       feature_id: "feature-1",
       context_token: "story-set-context-1",
-    });
+    }, expect.any(String));
   });
 
   it("renders generated Stories with their voice lines", async () => {
@@ -120,7 +120,7 @@ describe("StoryList", () => {
       change_operation: "merge",
       source_story_ids: ["story-1", "story-2"],
       context_token: "story-set-context-1",
-    });
+    }, expect.any(String));
   });
 
   it("regenerates an untouched set without force", async () => {
@@ -134,7 +134,7 @@ describe("StoryList", () => {
       feature_id: "feature-1",
       force: false,
       context_token: "story-set-context-1",
-    });
+    }, expect.any(String));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
@@ -155,7 +155,7 @@ describe("StoryList", () => {
       feature_id: "feature-1",
       force: true,
       context_token: "story-set-context-1",
-    });
+    }, expect.any(String));
   });
 
   it("manually splits a Story only after the replacement drafts are submitted", async () => {

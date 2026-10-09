@@ -22,7 +22,9 @@ from time import perf_counter
 import httpx
 from pydantic import TypeAdapter, ValidationError
 
-from smb_requirement_agent.application.use_cases.unified_knowledge_search import UnifiedSearchHit
+from smb_requirement_agent.knowledge.application.use_cases.unified_knowledge_search import (
+    UnifiedSearchHit,
+)
 
 
 @dataclass(frozen=True)

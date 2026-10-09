@@ -7,12 +7,6 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from smb_requirement_agent.domain.jobs.entities import (
-    AiJobOperation,
-    AiJobOrigin,
-    AiJobStatus,
-    NotificationKind,
-)
 from smb_requirement_agent.interfaces.api.schemas.analysis import (
     ClarificationAnswerRequest,
     ClarificationResolutionBatch,
@@ -25,6 +19,12 @@ from smb_requirement_agent.interfaces.api.schemas.bounds import (
     Text,
 )
 from smb_requirement_agent.interfaces.api.schemas.identity import ActorResponse
+from smb_requirement_agent.jobs.domain.entities import (
+    AiJobOperation,
+    AiJobOrigin,
+    AiJobStatus,
+    NotificationKind,
+)
 
 
 class _JobRequest(BaseModel):

@@ -7,7 +7,41 @@ from unittest.mock import MagicMock
 import pytest
 from smb_kernel.observability.metrics import Metrics
 
+from smb_requirement_agent.analysis.infrastructure.llm.fake_requirement_analyzer import (
+    FakeRequirementAnalyzer,
+)
+from smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer import (
+    LocalRequirementAnalyzer,
+)
+from smb_requirement_agent.analysis.infrastructure.llm.openai_adapters import (
+    OpenAIRequirementAnalyzer,
+)
+from smb_requirement_agent.analysis.infrastructure.llm.openrouter_adapters import (
+    OpenRouterRequirementAnalyzer,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.local_epic_generator import (
+    LocalEpicGenerator,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.local_feature_generator import (
+    LocalFeatureGenerator,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.local_story_generator import (
+    LocalStoryGenerator,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.local_story_quality_evaluator import (
+    LocalStoryQualityEvaluator,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters import (
+    OpenAIStoryQualityEvaluator,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.openrouter_adapters import (
+    OpenRouterEpicGenerator,
+    OpenRouterFeatureGenerator,
+    OpenRouterStoryGenerator,
+    OpenRouterStoryQualityEvaluator,
+)
 from smb_requirement_agent.infrastructure.config.options import (
+    DEFAULT_AI_JOB_MAX_ATTEMPTS,
     DEFAULT_LOCAL_LLM_BASE_URL,
     DEFAULT_LOCAL_LLM_TIMEOUT_SECONDS,
     DEFAULT_OPENAI_EMBEDDING_MODEL,
@@ -24,42 +58,21 @@ from smb_requirement_agent.infrastructure.config.options import (
     PersistenceProvider,
 )
 from smb_requirement_agent.infrastructure.config.settings import PersistenceSettings, Settings
-from smb_requirement_agent.infrastructure.llm.fake_requirement_analyzer import (
-    FakeRequirementAnalyzer,
-)
-from smb_requirement_agent.infrastructure.llm.fake_requirement_knowledge import (
+from smb_requirement_agent.interfaces.api.composition import llm as composition
+from smb_requirement_agent.interfaces.api.composition.llm import build_llm_adapters
+from smb_requirement_agent.interfaces.api.container import build_container
+from smb_requirement_agent.knowledge.infrastructure.llm.fake_requirement_knowledge import (
     FakeKnowledgeEmbedding,
 )
-from smb_requirement_agent.infrastructure.llm.local_epic_generator import LocalEpicGenerator
-from smb_requirement_agent.infrastructure.llm.local_feature_generator import LocalFeatureGenerator
-from smb_requirement_agent.infrastructure.llm.local_requirement_analyzer import (
-    LocalRequirementAnalyzer,
-)
-from smb_requirement_agent.infrastructure.llm.local_story_generator import LocalStoryGenerator
-from smb_requirement_agent.infrastructure.llm.local_story_quality_evaluator import (
-    LocalStoryQualityEvaluator,
-)
-from smb_requirement_agent.infrastructure.llm.openai_adapters import (
-    OpenAIRequirementAnalyzer,
-    OpenAIStoryQualityEvaluator,
-)
-from smb_requirement_agent.infrastructure.llm.openrouter_adapters import (
+from smb_requirement_agent.knowledge.infrastructure.llm.openrouter_adapters import (
     OpenRouterClarificationAnswerSuggester,
-    OpenRouterEpicGenerator,
-    OpenRouterFeatureGenerator,
-    OpenRouterRequirementAnalyzer,
     OpenRouterRequirementRelationshipClassifier,
-    OpenRouterStoryGenerator,
-    OpenRouterStoryQualityEvaluator,
 )
-from smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters import (
+from smb_requirement_agent.knowledge.infrastructure.llm.requirement_knowledge_adapters import (
     LocalKnowledgeEmbedding,
     OpenAIKnowledgeEmbedding,
     OpenRouterKnowledgeEmbedding,
 )
-from smb_requirement_agent.interfaces.api.composition import llm as composition
-from smb_requirement_agent.interfaces.api.composition.llm import build_llm_adapters
-from smb_requirement_agent.interfaces.api.container import build_container
 
 
 class TestSettings:
@@ -256,6 +269,26 @@ class TestSettings:
 
         assert Settings.from_env().openai_model == DEFAULT_OPENAI_MODEL
         assert Settings.from_env().openai_embedding_model == DEFAULT_OPENAI_EMBEDDING_MODEL
+
+    def test_ai_job_max_attempts_defaults_to_three_and_is_read(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("LLM_PROVIDER", "fake")
+        monkeypatch.delenv("AI_JOB_MAX_ATTEMPTS", raising=False)
+        assert Settings.from_env().ai_job_max_attempts == DEFAULT_AI_JOB_MAX_ATTEMPTS == 3
+
+        monkeypatch.setenv("AI_JOB_MAX_ATTEMPTS", "5")
+        assert Settings.from_env().ai_job_max_attempts == 5
+
+    @pytest.mark.parametrize(("value", "message"), [("0", "at least 1"), ("many", "numeric")])
+    def test_ai_job_max_attempts_must_be_a_positive_integer(
+        self, monkeypatch: pytest.MonkeyPatch, value: str, message: str
+    ) -> None:
+        monkeypatch.setenv("LLM_PROVIDER", "fake")
+        monkeypatch.setenv("AI_JOB_MAX_ATTEMPTS", value)
+
+        with pytest.raises(ConfigurationError, match=message):
+            Settings.from_env()
 
     def test_from_env_reads_local_provider_settings(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("LLM_PROVIDER", "local")
@@ -785,7 +818,7 @@ class TestKnowledgeService:
         assert self.TOKEN not in repr(settings)
 
     def test_configured_it_answers_over_http(self) -> None:
-        from smb_requirement_agent.infrastructure.knowledge_client import (
+        from smb_requirement_agent.references.infrastructure.knowledge_client import (
             HttpArchitectureKnowledge,
             HttpKnowledgeViews,
             HttpReferenceKnowledge,
@@ -806,7 +839,7 @@ class TestKnowledgeService:
             container.close_resources()
 
     def test_unconfigured_offline_fakes_answer(self) -> None:
-        from smb_requirement_agent.infrastructure.knowledge_client import (
+        from smb_requirement_agent.references.infrastructure.knowledge_client import (
             FakeArchitectureKnowledge,
             FakeKnowledgeViews,
             FakeReferenceKnowledge,

@@ -16,6 +16,7 @@ this ledger.
 | Generation quality and configured model integration | Implemented; merged into `main` | Live semantic quality and provider-capacity acceptance |
 | Reviewed document library, ingestion, indexing, unified search, governance and source lineage | Functional implementation merged into `main` | Human-labelled evaluation, representative formats and production operations/capacity qualification |
 | Production-readiness remediation | Implemented; merged into `main` | Target-environment release qualification |
+| Production hardening — second production-readiness review (`docs/slices/production-hardening.md`) | Specified 2026-10-08; not scheduled | Sequencing, the platform-kernel v1.1.0 release, ADRs 0104–0108 and implementation (16 PRs in four phases; Phase 1 is the pilot gate) |
 | Four whole-workspace review remediations (`docs/slices/enhancement-review-remediation*.md`) | Implemented; merged into `main` ([#18](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/18), [#35](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/35), [#37](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/37), [#38](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/38)) | A human review of the merged changes |
 | Repeatable recovery and search-load qualification tools | Implemented; merged into `main` ([#39](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/39), rebuilt from [#15](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/15)). CI runs the nonempty backup/restore rehearsal on every push | Synthetic results do not qualify production |
 | Architecture knowledge administration (14) | Implemented; merged into `main` | Deployment-specific local-model qualification |
@@ -34,7 +35,8 @@ this ledger.
 | System components (`docs/slices/enhancement-system-components.md`, ADR-0092) | Implemented; merged in `smb-ai-requirement-agent` as [#84](https://github.com/mohamhossam/smb-ai-requirement-agent/pull/84) before the `d5cfb57` snapshot. Now lives in [knowledge-portal](https://github.com/mohamhossam/knowledge-portal) | Live-model extraction check, in knowledge-portal |
 | Three-repository platform split (ADR-0098, ADR-0099, ADR-0100; plan `docs/slices/enhancement-platform-split.md`) | **Done 2026-10-05.** Stages 0–5: `platform-kernel` v1.0.2, the untangling and seams here, knowledge-portal v0.1.0, the cutover, and the guarded drop of the moved tables ([#31](https://github.com/mohamhossam/requirement-portal/pull/31)) with the run guides ([#32](https://github.com/mohamhossam/requirement-portal/pull/32)). No data is moved while the platform is in development. The acceptance criteria are checked in the plan, with their evidence: CI proves a withdrawal reaching requirement work, and runs the platform in a browser, on the combined stack | Branch protection on `main` (an owner setting) |
 | The Product Architecture Explorer on the knowledge catalogue (ADR-0101, with Amendments 1 and 2) | **Done 2026-10-05.** Built in [knowledge-portal](https://github.com/mohamhossam/knowledge-portal) (its #22–#36). Here: the ADR, and step 7's handoff of approved backlogs to the catalogue's change-request inbox ([#35](https://github.com/mohamhossam/requirement-portal/pull/35), `docs/slices/enhancement-change-requests-from-requirement-ai.md`) | A handoff status on the approval screen (deferred by decision) |
-| Knowledge Center (`docs/slices/enhancement-knowledge-center.md`, ADR-0099 Amendment 1, ADR-0102) | **Re-planned 2026-10-06 for the three repositories.** A is mostly delivered by the split, and F early. B1, A′, B2, B3, C and D are delivered (each built where its data lives). **E is scheduled 2026-10-06** (ADR-0102): E1, knowledge-portal's read-only ADO import and lineage, is delivered; E2, the historic corpus and prior art here, is in progress | E2; the ADO edition, for the REST adapter |
+| Knowledge Center (`docs/slices/enhancement-knowledge-center.md`, ADR-0099 Amendment 1, ADR-0102) | **Re-planned 2026-10-06 for the three repositories.** A is mostly delivered by the split, and F early. B1, A′, B2, B3, C and D are delivered (each built where its data lives). **E is scheduled 2026-10-06** (ADR-0102): E1, knowledge-portal's read-only ADO import and lineage, is delivered; E2, the historic corpus and prior art here, is delivered (merged as #47) | The ADO edition, for the REST adapter |
+| Bounded-context restructure toward Domain-Driven Design (ADR-0103; `docs/slices/refactor-bounded-contexts.md`) | **Delivered 2026-10-08** (ADR-0103 accepted and scheduled 2026-10-07; Amendment 2 records the implementation). PRs 1–16 and 11b: characterisation tests, the shared kernel, in-process domain events, governance rules in the domain, and the `identity`, `jobs`, `requirements`, `analysis`, `breakdown`, `governance`, `reporting`, `workflows`, `references` and `knowledge` packages. Each context owns its errors, and `lint-imports` enforces the dependency order with no exemptions (0 pairs against it). The context map and ubiquitous language are in `docs/architecture/` | Merge. The four follow-ups were delivered on the same branch (ADR-0103 Amendment 3) |
 | ADO publication and safe republish (12–13) | Planned; not implemented | Implementation |
 | Advanced workflow optimization (15) | Planned; evidence-gated | Demonstrate a need and measurable benefit before implementation |
 
@@ -1762,6 +1764,66 @@ rehearsal and deployment remain separate operational release prerequisites.
 ### Specification
 - `docs/slices/production-readiness-remediation.md`
 
+# Refactor — Bounded-Context Packages and Domain Events
+
+**Status:** Delivered 2026-10-08: PRs 1–16 and 11b. Decision: ADR-0103 (accepted 2026-10-07;
+Amendments 2 and 3 record the implementation and its follow-ups).
+**Specification:** `docs/slices/refactor-bounded-contexts.md`. **Context map:**
+`docs/architecture/context-map.md`. **Glossary:** `docs/architecture/ubiquitous-language.md`.
+
+### User Outcome
+No user-visible change; it is a behaviour-preserving refactor (§15.1 decision recorded in the
+specification). Maintainers find each bounded context's model, use cases and adapters in one
+package. `lint-imports` rejects a dependency between contexts that runs the wrong way, and
+cross-context effects are domain events with handlers registered in one place.
+
+### Domain
+- `shared_kernel/` holds the review lifecycle, approval, staleness, provenance and action
+  availability, plus `RequirementId`, `ActorSnapshot`, `SourceLineage` and `DomainEvent`.
+- Per-context `domain/` packages, following the context map.
+- Domain events: `RequirementRevised`, `EpicChanged`, `FeatureChanged`, `FeaturesReplaced`,
+  `StoriesChanged` and `ArchitectureImpactChanged`.
+- The governance rules move into the domain: fingerprints, readiness, the blocker and review
+  policies, and `BreakdownReview` refresh and carry-forward.
+
+### Application
+- The 72 use-case modules move to their contexts. Cross-context orchestration goes to
+  `workflows/`.
+- `InvalidateDerivedArtifacts` and `InvalidateApprovalWorkflow` become event handlers, running in
+  the order ADR-0103 fixes.
+
+### Ports
+- `DomainEventPublisher`, `TransactionManagerPort.in_unit_of_work()`, `ScreeningRequestPort` and
+  `CandidateReviewPort`.
+- Every other port keeps its signature and moves with its owning context.
+
+### Adapters
+- The pure-Python `InProcessEventDispatcher`, which dispatches synchronously inside the existing
+  unit of work and lock (ADR-0070).
+- Repositories and payload codecs move per context. Persisted payloads stay byte-identical.
+
+### API
+None. The routes, schemas, error map and OpenAPI snapshot are unchanged.
+
+### UI
+None. It is a backend-only refactor, agreed with the owner on 2026-10-07 and recorded under
+"Dropped from this slice" in the specification.
+
+### Tests
+- Golden fingerprints, payloads and context tokens before any move.
+- A handler-order test.
+- Domain-only tests for the moved governance rules.
+- `tests/architecture/test_context_boundaries.py`.
+- Per-context import-linter contracts.
+- `tests/unit/<context>/` layout.
+
+### Dependencies and order
+- PRs 1–6 (characterisation tests, domain cycles, shared kernel, events, governance into the
+  domain) do not depend on Knowledge Center E2.
+- The context moves (PRs 7–15) go one context at a time, with `knowledge` last, after E2 merges.
+
+---
+
 # UI/UX Redesign — Phases 0–10 delivered; follow-ups open
 
 **Status:** Phases 0–10 implemented and merged into `main`. Governed by `docs/ux-plan.md`,
@@ -1857,6 +1919,9 @@ approved future-slice sequence:
 0b. **Knowledge Center E — historic Requirements and ADO lineage**, scheduled 2026-10-06
    (ADR-0102): E1 in knowledge-portal, then E2 here. Its ADO access is read-only; publication
    stays Slices 12–13 below.
+0c. **Bounded-context restructure** (ADR-0103, `docs/slices/refactor-bounded-contexts.md`),
+   delivered 2026-10-08 (PRs 1–16 and 11b, each behaviour-preserving). The remaining step is the
+   merge. Its follow-ups are scheduled when a slice next touches their area.
 1. Merge the pending human-answer citation salvage (`0d42039`) from
    `claude/fix-analysis-citations-and-proxy`.
 2. Close production release qualification: complete the environment, quality and capacity
@@ -2395,3 +2460,5 @@ Each record keeps its own dated validation history; the ledger at the top govern
 | `docs/slices/fix-workspace-request-loading.md` | Scoped workspace requests and shared AI jobs | Merged into `main` |
 | `docs/slices/fix-human-answer-analysis-citations.md` | Human-answer citations during question resolution | Merged into `main`; #65 added the no-evidence case, and #67 merged the salvage commit `0d42039` (all in `smb-ai-requirement-agent`, before the snapshot) |
 | `docs/slices/enhancement-review-remediation*.md` | Four whole-workspace review remediations | Merged into `main`; human review open (ledger above) |
+| `docs/slices/fix-ai-job-trace-gaps.md` | Seven gaps found tracing an AI job from click to completion (attempt cap, claim reset, refusal before enqueue, stale context, key reuse) | In review (PR #48) |
+| `docs/slices/production-hardening.md` | Second production-readiness review: fail-closed config, AI-job retry backoff, durable-only provider work, release images and backups, shared rate limit, alerting, DB timeouts, frontend session safety | Specified 2026-10-08; not scheduled |

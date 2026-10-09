@@ -4,8 +4,8 @@ from collections.abc import Iterator
 from contextlib import AbstractContextManager, contextmanager
 from typing import Protocol
 
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.infrastructure.persistence.postgres_values import DbConnection
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 class PostgresSession(Protocol):

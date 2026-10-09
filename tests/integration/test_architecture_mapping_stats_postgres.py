@@ -11,7 +11,7 @@ import os
 import pytest
 from smb_kernel.persistence.connector import DirectPostgresConnector
 
-from smb_requirement_agent.infrastructure.persistence.architecture_mapping_stats import (
+from smb_requirement_agent.breakdown.infrastructure.architecture_mapping_stats import (
     PostgresArchitectureMappingStats,
 )
 from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations

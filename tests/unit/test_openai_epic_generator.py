@@ -8,9 +8,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from smb_requirement_agent.application.errors import EpicGenerationError
-from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
-from smb_requirement_agent.domain.analysis.value_objects import (
+from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
+from smb_requirement_agent.analysis.domain.value_objects import (
     Ambiguity,
     Assumption,
     BusinessRule,
@@ -23,16 +22,17 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     OpenQuestion,
     PotentialDependency,
 )
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import (
+from smb_requirement_agent.breakdown.application.errors import EpicGenerationError
+from smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters import OpenAIEpicGenerator
+from smb_requirement_agent.breakdown.infrastructure.llm.prompts.epic_prompt import PROMPT_VERSION
+from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.value_objects import (
     RequirementDescription,
-    RequirementId,
     RequirementStatus,
     RequirementTitle,
 )
-from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
-from smb_requirement_agent.infrastructure.llm.openai_adapters import OpenAIEpicGenerator
-from smb_requirement_agent.infrastructure.llm.prompts.epic_prompt import PROMPT_VERSION
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 @pytest.fixture
@@ -83,7 +83,7 @@ def _parsed(
     return parsed
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters.OpenAI")
 def test_success_maps_to_a_candidate_with_provenance(
     mock_openai: MagicMock, requirement: Requirement, analysis: RequirementAnalysis
 ) -> None:
@@ -98,7 +98,7 @@ def test_success_maps_to_a_candidate_with_provenance(
     assert candidate["prompt_version"] == PROMPT_VERSION
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters.OpenAI")
 def test_surrounding_whitespace_is_stripped(
     mock_openai: MagicMock, requirement: Requirement, analysis: RequirementAnalysis
 ) -> None:
@@ -112,7 +112,7 @@ def test_surrounding_whitespace_is_stripped(
 
 
 @pytest.mark.parametrize("blank_field", ["name", "outcome", "business_case"])
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters.OpenAI")
 def test_a_blank_field_is_a_generation_error_not_a_domain_error(
     mock_openai: MagicMock,
     blank_field: str,
@@ -130,7 +130,7 @@ def test_a_blank_field_is_a_generation_error_not_a_domain_error(
         ).generate(requirement, analysis)
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters.OpenAI")
 def test_empty_choices_is_a_generation_error(
     mock_openai: MagicMock, requirement: Requirement, analysis: RequirementAnalysis
 ) -> None:
@@ -142,7 +142,7 @@ def test_empty_choices_is_a_generation_error(
         ).generate(requirement, analysis)
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters.OpenAI")
 def test_unparseable_response_is_a_generation_error(
     mock_openai: MagicMock, requirement: Requirement, analysis: RequirementAnalysis
 ) -> None:
@@ -154,7 +154,7 @@ def test_unparseable_response_is_a_generation_error(
         ).generate(requirement, analysis)
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters.OpenAI")
 def test_provider_error_is_mapped(
     mock_openai: MagicMock, requirement: Requirement, analysis: RequirementAnalysis
 ) -> None:
@@ -170,7 +170,7 @@ def test_provider_error_is_mapped(
         ).generate(requirement, analysis)
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters.OpenAI")
 def test_unconfirmed_analysis_is_labelled_in_the_prompt(
     mock_openai: MagicMock, requirement: Requirement, analysis: RequirementAnalysis
 ) -> None:
@@ -188,7 +188,7 @@ def test_unconfirmed_analysis_is_labelled_in_the_prompt(
     assert warning_pos < assumption_pos
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters.OpenAI")
 def test_prompt_includes_only_owner_confirmed_intent_proposals(
     mock_openai: MagicMock, requirement: Requirement, analysis: RequirementAnalysis
 ) -> None:

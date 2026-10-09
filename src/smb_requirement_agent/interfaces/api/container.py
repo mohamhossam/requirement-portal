@@ -20,218 +20,78 @@ from smb_kernel.observability.metrics import Metrics
 from smb_kernel.time.clock import ClockPort
 from smb_kernel.time.system import SystemClock
 
-from smb_requirement_agent.application.exports import ExportFormat
-from smb_requirement_agent.application.ports.access_repository import AccessRepositoryPort
-from smb_requirement_agent.application.ports.activity import ActivityReadPort, ReportingReadPort
-from smb_requirement_agent.application.ports.actor_directory import ActorDirectoryPort
-from smb_requirement_agent.application.ports.ai_jobs import (
-    AiJobQueuePort,
-    AiJobRepositoryPort,
-    AiJobWorkerPort,
-)
-from smb_requirement_agent.application.ports.analysis_audit_repository import (
+from smb_requirement_agent.analysis.application.ports.analysis_audit_repository import (
     AnalysisAuditRepositoryPort,
 )
-from smb_requirement_agent.application.ports.architecture_knowledge import ArchitectureKnowledgePort
-from smb_requirement_agent.application.ports.backlog_export import BacklogExportPort
-from smb_requirement_agent.application.ports.breakdown_repository import BreakdownRepositoryPort
-from smb_requirement_agent.application.ports.breakdown_review_repository import (
-    BreakdownReviewRepositoryPort,
-)
-from smb_requirement_agent.application.ports.document_repository import DocumentRepositoryPort
-from smb_requirement_agent.application.ports.epic_generator import EpicGeneratorPort
-from smb_requirement_agent.application.ports.epic_repository import EpicRepositoryPort
-from smb_requirement_agent.application.ports.feature_generator import FeatureGeneratorPort
-from smb_requirement_agent.application.ports.feature_repository import FeatureRepositoryPort
-from smb_requirement_agent.application.ports.historic_corpus import HistoricCorpusPort
-from smb_requirement_agent.application.ports.knowledge_handoff import ApprovedBacklogOutboxPort
-from smb_requirement_agent.application.ports.knowledge_index_generations import (
-    KnowledgeIndexGenerationsPort,
-)
-from smb_requirement_agent.application.ports.notifications import NotificationRepositoryPort
-from smb_requirement_agent.application.ports.prior_art import PriorArtStorePort
-from smb_requirement_agent.application.ports.requirement_analysis_repository import (
+from smb_requirement_agent.analysis.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
-from smb_requirement_agent.application.ports.requirement_analyzer import RequirementAnalyzerPort
-from smb_requirement_agent.application.ports.requirement_draft_repository import (
-    RequirementDraftRepositoryPort,
+from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
+    RequirementAnalyzerPort,
 )
-from smb_requirement_agent.application.ports.requirement_evidence_analyzer import (
+from smb_requirement_agent.analysis.application.ports.requirement_evidence_analyzer import (
     EvidenceFragmentCachePort,
 )
-from smb_requirement_agent.application.ports.requirement_knowledge import (
-    RequirementKnowledgeIndexPort,
-    RequirementKnowledgeRepositoryPort,
+from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration import (
+    AnalysisCollaboration,
 )
-from smb_requirement_agent.application.ports.requirement_repository import RequirementRepositoryPort
-from smb_requirement_agent.application.ports.requirement_worklist import (
-    CurrentWorklistProjectionPort,
+from smb_requirement_agent.analysis.application.use_cases.analyze_requirement import (
+    AnalyzeRequirement,
 )
-from smb_requirement_agent.application.ports.saved_views import SavedViewRepositoryPort
-from smb_requirement_agent.application.ports.story_generator import StoryGeneratorPort
-from smb_requirement_agent.application.ports.story_quality_evaluator import (
+from smb_requirement_agent.analysis.application.use_cases.clarify_requirement_analysis import (
+    ClarifyRequirementAnalysis,
+)
+from smb_requirement_agent.analysis.application.use_cases.confirm_requirement_analysis import (
+    ConfirmRequirementAnalysis,
+)
+from smb_requirement_agent.analysis.application.use_cases.get_requirement_analysis import (
+    GetRequirementAnalysis,
+)
+from smb_requirement_agent.application.events import InProcessEventDispatcher
+from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
+from smb_requirement_agent.breakdown.application.ports.epic_generator import EpicGeneratorPort
+from smb_requirement_agent.breakdown.application.ports.epic_repository import EpicRepositoryPort
+from smb_requirement_agent.breakdown.application.ports.feature_generator import FeatureGeneratorPort
+from smb_requirement_agent.breakdown.application.ports.feature_repository import (
+    FeatureRepositoryPort,
+)
+from smb_requirement_agent.breakdown.application.ports.story_generator import StoryGeneratorPort
+from smb_requirement_agent.breakdown.application.ports.story_quality_evaluator import (
     StoryQualityEvaluatorPort,
 )
-from smb_requirement_agent.application.ports.story_quality_repository import (
+from smb_requirement_agent.breakdown.application.ports.story_quality_repository import (
     StoryQualityRepositoryPort,
 )
-from smb_requirement_agent.application.ports.story_repository import (
+from smb_requirement_agent.breakdown.application.ports.story_repository import (
     StoryChangeProposalRepositoryPort,
     StoryRepositoryPort,
 )
-from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
-from smb_requirement_agent.application.use_cases.activity_reporting import (
-    GetOperationalReport,
-    ListActivity,
-)
-from smb_requirement_agent.application.use_cases.ai_job_execution import ExecuteAiJob
-from smb_requirement_agent.application.use_cases.ai_job_scheduling import (
-    AnswerSuggestionScheduler,
-    KnowledgeScreenScheduler,
-)
-from smb_requirement_agent.application.use_cases.ai_jobs import (
-    AiJobs,
-    Notifications,
-)
-from smb_requirement_agent.application.use_cases.analysis_collaboration import (
-    AnalysisCollaboration,
-)
-from smb_requirement_agent.application.use_cases.analyze_requirement import AnalyzeRequirement
-from smb_requirement_agent.application.use_cases.answer_suggestions import (
-    SuggestClarificationAnswers,
-)
-from smb_requirement_agent.application.use_cases.approval_workflow import (
-    AddReviewComment,
-    ApproveBreakdown,
-    ApproveStory,
-    GetApprovalWorkflow,
-    RejectStory,
-    SubmitForReview,
-)
-from smb_requirement_agent.application.use_cases.approve_epic import ApproveEpic
-from smb_requirement_agent.application.use_cases.architecture_mapping import (
+from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping import (
     MapBreakdownArchitecture,
     MapFeatureArchitecture,
     MapStoryArchitecture,
 )
-from smb_requirement_agent.application.use_cases.architecture_mapping_jobs import (
+from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping_jobs import (
     ArchitectureMappingJobs,
 )
-from smb_requirement_agent.application.use_cases.attachment_ingestion import AttachmentIngestion
-from smb_requirement_agent.application.use_cases.breakdown_review import (
-    GenerateBreakdownReview,
-    GetBreakdownReview,
-    RecordDecision,
-    ResolveFlag,
-    ResolveOpenQuestion,
-)
-from smb_requirement_agent.application.use_cases.clarify_requirement_analysis import (
-    ClarifyRequirementAnalysis,
-)
-from smb_requirement_agent.application.use_cases.confirm_requirement_analysis import (
-    ConfirmRequirementAnalysis,
-)
-from smb_requirement_agent.application.use_cases.corpus_actions import (
-    BulkReindexRequirements,
-    ReinstateToCorpus,
-    RetireFromCorpus,
-)
-from smb_requirement_agent.application.use_cases.documents import (
-    GetDocument,
-    ListDocuments,
-    RemoveDocument,
-    SetDocumentInclusion,
-    SetHiddenWorksheetInclusion,
-    UploadDocument,
-)
-from smb_requirement_agent.application.use_cases.edit_epic import EditEpic
-from smb_requirement_agent.application.use_cases.export_breakdown import ExportBreakdown
-from smb_requirement_agent.application.use_cases.feature_review import (
-    ApproveFeature,
+from smb_requirement_agent.breakdown.application.use_cases.edit_epic import EditEpic
+from smb_requirement_agent.breakdown.application.use_cases.feature_review import (
     EditFeature,
     GetFeatures,
 )
-from smb_requirement_agent.application.use_cases.generate_epic import GenerateEpic
-from smb_requirement_agent.application.use_cases.generate_features import GenerateFeatures
-from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
-from smb_requirement_agent.application.use_cases.get_epic import GetEpic
-from smb_requirement_agent.application.use_cases.get_requirement import GetRequirement
-from smb_requirement_agent.application.use_cases.get_requirement_analysis import (
-    GetRequirementAnalysis,
+from smb_requirement_agent.breakdown.application.use_cases.generate_epic import GenerateEpic
+from smb_requirement_agent.breakdown.application.use_cases.generate_features import GenerateFeatures
+from smb_requirement_agent.breakdown.application.use_cases.get_epic import GetEpic
+from smb_requirement_agent.breakdown.application.use_cases.story_change_proposals import (
+    StoryChangeProposals,
 )
-from smb_requirement_agent.application.use_cases.historic_corpus import (
-    IndexHistoricCorpus,
-    ProjectHistoricRequirements,
-)
-from smb_requirement_agent.application.use_cases.identity_access import (
-    RequirementAccessService,
-    ResolveCurrentActor,
-    SearchKnownActors,
-)
-from smb_requirement_agent.application.use_cases.internal_reads import InternalReads
-from smb_requirement_agent.application.use_cases.invalidate_approval_workflow import (
-    InvalidateApprovalWorkflow,
-)
-from smb_requirement_agent.application.use_cases.invalidate_derived_artifacts import (
-    InvalidateDerivedArtifacts,
-)
-from smb_requirement_agent.application.use_cases.knowledge_portfolio import (
-    KnowledgePortfolio,
-    NudgeFindingOwners,
-)
-from smb_requirement_agent.application.use_cases.knowledge_views import KnowledgeViews
-from smb_requirement_agent.application.use_cases.owned_requirements import (
-    CreateOwnedRequirement,
-    CreateOwnedRequirementDraft,
-    GetOwnedRequirementDraft,
-    ListOwnedRequirementDrafts,
-    PromoteOwnedRequirementDraft,
-    SaveOwnedRequirementDraft,
-)
-from smb_requirement_agent.application.use_cases.prior_art import GetPriorArt, HistoricCitations
-from smb_requirement_agent.application.use_cases.provider_call_rate import ProviderCallRateLimit
-from smb_requirement_agent.application.use_cases.rebuild_knowledge_index import (
-    RebuildKnowledgeIndex,
-)
-from smb_requirement_agent.application.use_cases.reference_currency import (
-    CurrentArchitectureRelease,
-    CurrentReferences,
-    ProjectKnowledgeEvents,
-    ReferenceCurrency,
-)
-from smb_requirement_agent.application.use_cases.requirement_commands import RequirementCommands
-from smb_requirement_agent.application.use_cases.requirement_impact import (
-    PreviewRequirementImpact,
-    UpdateRequirementWithImpact,
-)
-from smb_requirement_agent.application.use_cases.requirement_indexing import (
-    IndexBacklogReader,
-    IndexRequirementKnowledge,
-)
-from smb_requirement_agent.application.use_cases.requirement_knowledge import (
-    DecideKnowledgeFinding,
-    EnsureKnowledgeScreen,
-    GetKnowledgeReview,
-    ScreenRequirementKnowledge,
-)
-from smb_requirement_agent.application.use_cases.requirement_worklist import (
-    RequirementWorklistReader,
-)
-from smb_requirement_agent.application.use_cases.revision_history import (
-    CompareBreakdownVersions,
-    GetRevisionHistory,
-)
-from smb_requirement_agent.application.use_cases.saved_views import SavedViews
-from smb_requirement_agent.application.use_cases.source_impact import SourceImpactReview
-from smb_requirement_agent.application.use_cases.story_change_proposals import StoryChangeProposals
-from smb_requirement_agent.application.use_cases.story_quality import (
+from smb_requirement_agent.breakdown.application.use_cases.story_quality import (
     GetFeatureQualitySnapshot,
     SuggestStorySplit,
     ValidateFeatureStories,
     ValidateStory,
 )
-from smb_requirement_agent.application.use_cases.story_workflow import (
+from smb_requirement_agent.breakdown.application.use_cases.story_workflow import (
     EditStory,
     GenerateStories,
     GetStories,
@@ -239,44 +99,219 @@ from smb_requirement_agent.application.use_cases.story_workflow import (
     RegenerateStory,
     SplitStory,
 )
-from smb_requirement_agent.application.use_cases.unified_knowledge_search import (
-    UnifiedKnowledgeSearch,
+from smb_requirement_agent.governance.application.exports import ExportFormat
+from smb_requirement_agent.governance.application.ports.backlog_export import BacklogExportPort
+from smb_requirement_agent.governance.application.ports.breakdown_repository import (
+    BreakdownRepositoryPort,
 )
+from smb_requirement_agent.governance.application.ports.breakdown_review_repository import (
+    BreakdownReviewRepositoryPort,
+)
+from smb_requirement_agent.governance.application.use_cases.approval_workflow import (
+    AddReviewComment,
+    ApproveBreakdown,
+    ApproveStory,
+    GetApprovalWorkflow,
+    RejectStory,
+    SubmitForReview,
+)
+from smb_requirement_agent.governance.application.use_cases.approve_epic import ApproveEpic
+from smb_requirement_agent.governance.application.use_cases.approve_feature import ApproveFeature
+from smb_requirement_agent.governance.application.use_cases.breakdown_review import (
+    GenerateBreakdownReview,
+    GetBreakdownReview,
+    RecordDecision,
+    ResolveFlag,
+    ResolveOpenQuestion,
+)
+from smb_requirement_agent.governance.application.use_cases.export_breakdown import ExportBreakdown
+from smb_requirement_agent.governance.application.use_cases.revision_history import (
+    CompareBreakdownVersions,
+    GetRevisionHistory,
+)
+from smb_requirement_agent.governance.infrastructure.exports.json_exporter import (
+    JsonBacklogExporter,
+)
+from smb_requirement_agent.governance.infrastructure.exports.xlsx_exporter import (
+    XlsxBacklogExporter,
+)
+from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
+from smb_requirement_agent.identity.application.ports.actor_directory import ActorDirectoryPort
 from smb_requirement_agent.infrastructure.config.settings import (
     Settings,
 )
-from smb_requirement_agent.infrastructure.documents.attachment_worker import (
-    AttachmentIngestionWorker,
-)
-from smb_requirement_agent.infrastructure.exports.json_exporter import JsonBacklogExporter
-from smb_requirement_agent.infrastructure.exports.xlsx_exporter import XlsxBacklogExporter
-from smb_requirement_agent.infrastructure.jobs.requirement_index_worker import (
-    RequirementIndexWorker,
-)
-from smb_requirement_agent.interfaces.api.composition.analysis import build_requirement_analyzer
-from smb_requirement_agent.interfaces.api.composition.analysis_workflow import (
+from smb_requirement_agent.interfaces.api.composition.analysis import (
     build_analysis_workflow,
-)
-from smb_requirement_agent.interfaces.api.composition.architecture import (
-    build_architecture_jobs,
+    build_requirement_analyzer,
 )
 from smb_requirement_agent.interfaces.api.composition.breakdown import (
     BreakdownModels,
+    build_architecture_jobs,
     build_breakdown,
 )
-from smb_requirement_agent.interfaces.api.composition.documents import build_documents
+from smb_requirement_agent.interfaces.api.composition.events import (
+    subscribe_domain_event_handlers,
+)
+from smb_requirement_agent.interfaces.api.composition.governance import build_review
 from smb_requirement_agent.interfaces.api.composition.identity import build_identity
 from smb_requirement_agent.interfaces.api.composition.jobs import build_ai_jobs
 from smb_requirement_agent.interfaces.api.composition.knowledge import build_requirement_knowledge
-from smb_requirement_agent.interfaces.api.composition.knowledge_service import (
+from smb_requirement_agent.interfaces.api.composition.llm import build_llm_adapters
+from smb_requirement_agent.interfaces.api.composition.persistence import build_persistence
+from smb_requirement_agent.interfaces.api.composition.references import (
     KnowledgeService,
     build_backlog_handoff_worker,
     build_knowledge_service,
 )
-from smb_requirement_agent.interfaces.api.composition.llm import build_llm_adapters
-from smb_requirement_agent.interfaces.api.composition.persistence import build_persistence
-from smb_requirement_agent.interfaces.api.composition.requirements import build_requirement_intake
-from smb_requirement_agent.interfaces.api.composition.review import build_review
+from smb_requirement_agent.interfaces.api.composition.reporting import build_reporting
+from smb_requirement_agent.interfaces.api.composition.requirements import (
+    build_documents,
+    build_requirement_intake,
+)
+from smb_requirement_agent.jobs.application.ports.ai_jobs import (
+    AiJobQueuePort,
+    AiJobRepositoryPort,
+    AiJobWorkerPort,
+)
+from smb_requirement_agent.jobs.application.ports.notifications import NotificationRepositoryPort
+from smb_requirement_agent.jobs.application.use_cases.provider_call_rate import (
+    ProviderCallRateLimit,
+)
+from smb_requirement_agent.knowledge.application.ports.knowledge_index_generations import (
+    KnowledgeIndexGenerationsPort,
+)
+from smb_requirement_agent.knowledge.application.ports.prior_art import PriorArtStorePort
+from smb_requirement_agent.knowledge.application.ports.requirement_knowledge import (
+    RequirementKnowledgeIndexPort,
+    RequirementKnowledgeRepositoryPort,
+)
+from smb_requirement_agent.knowledge.application.use_cases.answer_suggestions import (
+    SuggestClarificationAnswers,
+)
+from smb_requirement_agent.knowledge.application.use_cases.corpus_actions import (
+    BulkReindexRequirements,
+    ReinstateToCorpus,
+    RetireFromCorpus,
+)
+from smb_requirement_agent.knowledge.application.use_cases.knowledge_portfolio import (
+    KnowledgePortfolio,
+    NudgeFindingOwners,
+)
+from smb_requirement_agent.knowledge.application.use_cases.prior_art import (
+    GetPriorArt,
+    HistoricCitations,
+)
+from smb_requirement_agent.knowledge.application.use_cases.rebuild_knowledge_index import (
+    RebuildKnowledgeIndex,
+)
+from smb_requirement_agent.knowledge.application.use_cases.requirement_indexing import (
+    IndexBacklogReader,
+    IndexRequirementKnowledge,
+)
+from smb_requirement_agent.knowledge.application.use_cases.requirement_knowledge import (
+    DecideKnowledgeFinding,
+    EnsureKnowledgeScreen,
+    GetKnowledgeReview,
+    ScreenRequirementKnowledge,
+)
+from smb_requirement_agent.knowledge.application.use_cases.source_impact import SourceImpactReview
+from smb_requirement_agent.knowledge.application.use_cases.unified_knowledge_search import (
+    UnifiedKnowledgeSearch,
+)
+from smb_requirement_agent.knowledge.infrastructure.requirement_index_worker import (
+    RequirementIndexWorker,
+)
+from smb_requirement_agent.references.application.ports.architecture_knowledge import (
+    ArchitectureKnowledgePort,
+)
+from smb_requirement_agent.references.application.ports.historic_corpus import HistoricCorpusPort
+from smb_requirement_agent.references.application.ports.knowledge_handoff import (
+    ApprovedBacklogOutboxPort,
+)
+from smb_requirement_agent.references.application.use_cases.historic_corpus import (
+    IndexHistoricCorpus,
+    ProjectHistoricRequirements,
+)
+from smb_requirement_agent.references.application.use_cases.knowledge_views import KnowledgeViews
+from smb_requirement_agent.references.application.use_cases.reference_currency import (
+    CurrentArchitectureRelease,
+    CurrentReferences,
+    ProjectKnowledgeEvents,
+    ReferenceCurrency,
+)
+from smb_requirement_agent.reporting.application.ports.activity import (
+    ActivityReadPort,
+    ReportingReadPort,
+)
+from smb_requirement_agent.reporting.application.ports.requirement_worklist import (
+    CurrentWorklistProjectionPort,
+)
+from smb_requirement_agent.reporting.application.ports.saved_views import SavedViewRepositoryPort
+from smb_requirement_agent.reporting.application.use_cases.activity_reporting import (
+    GetOperationalReport,
+    ListActivity,
+)
+from smb_requirement_agent.reporting.application.use_cases.requirement_worklist import (
+    RequirementWorklistReader,
+)
+from smb_requirement_agent.reporting.application.use_cases.saved_views import SavedViews
+from smb_requirement_agent.requirements.application.ports.document_repository import (
+    DocumentRepositoryPort,
+)
+from smb_requirement_agent.requirements.application.ports.requirement_draft_repository import (
+    RequirementDraftRepositoryPort,
+)
+from smb_requirement_agent.requirements.application.ports.requirement_repository import (
+    RequirementRepositoryPort,
+)
+from smb_requirement_agent.requirements.application.use_cases.attachment_ingestion import (
+    AttachmentIngestion,
+)
+from smb_requirement_agent.requirements.application.use_cases.documents import (
+    GetDocument,
+    ListDocuments,
+    RemoveDocument,
+    SetDocumentInclusion,
+    SetHiddenWorksheetInclusion,
+    UploadDocument,
+)
+from smb_requirement_agent.requirements.application.use_cases.get_requirement import GetRequirement
+from smb_requirement_agent.requirements.application.use_cases.owned_requirements import (
+    CreateOwnedRequirement,
+    CreateOwnedRequirementDraft,
+    GetOwnedRequirementDraft,
+    ListOwnedRequirementDrafts,
+    PromoteOwnedRequirementDraft,
+    SaveOwnedRequirementDraft,
+)
+from smb_requirement_agent.requirements.infrastructure.attachment_worker import (
+    AttachmentIngestionWorker,
+)
+from smb_requirement_agent.workflows.application.use_cases.ai_job_execution import ExecuteAiJob
+from smb_requirement_agent.workflows.application.use_cases.ai_job_scheduling import (
+    AnswerSuggestionScheduler,
+    KnowledgeScreenScheduler,
+)
+from smb_requirement_agent.workflows.application.use_cases.ai_jobs import (
+    AiJobs,
+    Notifications,
+)
+from smb_requirement_agent.workflows.application.use_cases.generation_context import (
+    GenerationContextTokens,
+)
+from smb_requirement_agent.workflows.application.use_cases.identity_access import (
+    RequirementAccessService,
+    ResolveCurrentActor,
+    SearchKnownActors,
+)
+from smb_requirement_agent.workflows.application.use_cases.internal_reads import InternalReads
+from smb_requirement_agent.workflows.application.use_cases.requirement_commands import (
+    RequirementCommands,
+)
+from smb_requirement_agent.workflows.application.use_cases.requirement_impact import (
+    PreviewRequirementImpact,
+    UpdateRequirementWithImpact,
+)
 
 
 class BackgroundWorker(Protocol):
@@ -537,15 +572,16 @@ def _build_container(
         else knowledge_service.architecture
     )
 
-    approval_invalidation = InvalidateApprovalWorkflow(persistence.breakdown_review_repository)
-    invalidation = InvalidateDerivedArtifacts(
-        persistence.analysis_repository,
-        persistence.epic_repository,
-        persistence.feature_repository,
-        persistence.story_repository,
-        resolved_clock,
-        persistence.analysis_audit_repository,
-        approval_invalidation,
+    domain_events = InProcessEventDispatcher(persistence.transaction_manager)
+    subscribe_domain_event_handlers(
+        domain_events,
+        analyses=persistence.analysis_repository,
+        audits=persistence.analysis_audit_repository,
+        epics=persistence.epic_repository,
+        features=persistence.feature_repository,
+        stories=persistence.story_repository,
+        reviews=persistence.breakdown_review_repository,
+        clock=resolved_clock,
     )
     access_service = RequirementAccessService(
         persistence.requirement_repository,
@@ -563,12 +599,12 @@ def _build_container(
         settings,
         persistence,
         resolved_clock,
-        invalidation,
+        domain_events,
         access_service,
     )
-    worklist = persistence.worklist(knowledge.review)
+    reporting = build_reporting(persistence, knowledge.review, resolved_clock)
     intake = build_requirement_intake(
-        persistence, resolved_clock, access_service, invalidation, knowledge.screen_scheduler
+        persistence, resolved_clock, access_service, domain_events, knowledge.screen_scheduler
     )
     analysis = build_analysis_workflow(
         persistence,
@@ -601,8 +637,7 @@ def _build_container(
         review,
         analysis.analysis_collaboration,
         analysis.generation_context_tokens,
-        invalidation,
-        approval_invalidation,
+        domain_events,
         resolved_clock,
         access_service,
     )
@@ -746,11 +781,9 @@ def _build_container(
         ai_jobs=jobs.ai_jobs,
         execute_ai_job=jobs.execute_ai_job,
         notifications=jobs.notifications,
-        list_activity=ListActivity(persistence.activity_reader),
-        get_operational_report=GetOperationalReport(
-            persistence.activity_reader, persistence.reporting_reader, resolved_clock
-        ),
-        saved_views=SavedViews(persistence.saved_view_repository, resolved_clock),
+        list_activity=reporting.list_activity,
+        get_operational_report=reporting.get_operational_report,
+        saved_views=reporting.saved_views,
         ai_job_worker=jobs.worker,
         resolve_current_actor=ResolveCurrentActor(resolved_identity, persistence.actor_directory),
         search_known_actors=SearchKnownActors(persistence.actor_directory),
@@ -763,8 +796,8 @@ def _build_container(
         ),
         create_requirement=intake.create_requirement,
         get_requirement=intake.get_requirement,
-        list_requirement_worklist=worklist.reader,
-        worklist_projection=worklist.projection,
+        list_requirement_worklist=reporting.worklist.reader,
+        worklist_projection=reporting.worklist.projection,
         create_requirement_draft=intake.create_requirement_draft,
         get_requirement_draft=intake.get_requirement_draft,
         list_requirement_drafts=intake.list_requirement_drafts,

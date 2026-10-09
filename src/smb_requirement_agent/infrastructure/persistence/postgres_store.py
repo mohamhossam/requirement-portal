@@ -10,13 +10,13 @@ import psycopg
 from psycopg.errors import RaiseException
 from smb_kernel.persistence.connector import PostgresConnector
 
-from smb_requirement_agent.application.errors import DuplicateRequirementError, PersistenceError
+from smb_requirement_agent.application.errors import PersistenceError
 from smb_requirement_agent.application.ports.external_work import check_external_result
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.infrastructure.persistence.migration_runner import (
     latest_packaged_migration,
 )
 from smb_requirement_agent.infrastructure.persistence.postgres_values import DbConnection
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 # The maintenance backfill a ready database must have completed after migrating.
 REQUIRED_MAINTENANCE_MARKER = "activity-worklist-v2"
@@ -74,7 +74,7 @@ class PostgresStore:
                 self._rollback_var.reset(rollback_token)
                 self._dirty_var.reset(dirty_token)
                 self._connection_var.reset(connection_token)
-        except (DuplicateRequirementError, RaiseException):
+        except RaiseException:
             raise
         except psycopg.Error as exc:
             raise PersistenceError("PostgreSQL operation failed.") from exc
@@ -99,6 +99,10 @@ class PostgresStore:
 
     def mark_rollback_only(self) -> None:
         self._rollback_var.set(True)
+
+    def in_unit_of_work(self) -> bool:
+        # external_call() clears the connection while the provider runs.
+        return self._connection_var.get() is not None
 
     def readiness(self) -> bool:
         """Bounded database checks, without schema changes or paid provider calls."""

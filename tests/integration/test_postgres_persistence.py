@@ -21,45 +21,30 @@ from smb_kernel.persistence.connector import (
 )
 from smb_kernel.time.fixed import FixedClock
 
-from smb_requirement_agent.application.errors import DocumentStorageError
-from smb_requirement_agent.application.exports import ExportFormat
-from smb_requirement_agent.application.ports.ai_jobs import AiJobCommand, AiJobRecord
-from smb_requirement_agent.application.ports.requirement_analyzer import (
+from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     RequirementAnalysisCandidate,
 )
-from smb_requirement_agent.application.ports.requirement_evidence_analyzer import (
+from smb_requirement_agent.analysis.application.ports.requirement_evidence_analyzer import (
     EvidenceFragmentCacheEntry,
 )
-from smb_requirement_agent.application.ports.requirement_knowledge import (
-    KnowledgeScreenEnsureOutcome,
-    KnowledgeScreenEnsureResult,
-)
-from smb_requirement_agent.application.ports.requirement_worklist import (
-    WorkflowStatus,
-    WorklistSort,
-)
-from smb_requirement_agent.application.ports.saved_views import (
-    SavedRequirementView,
-    SavedViewCriteria,
-)
-from smb_requirement_agent.application.use_cases.analysis_collaboration import (
+from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration import (
     AnalysisCollaboration,
 )
-from smb_requirement_agent.application.use_cases.documents import AssembleAnalysisDocuments
-from smb_requirement_agent.application.use_cases.export_breakdown import ExportBreakdown
-from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
-from smb_requirement_agent.domain.analysis.entities import (
+from smb_requirement_agent.analysis.application.use_cases.analysis_documents import (
+    AssembleAnalysisDocuments,
+)
+from smb_requirement_agent.analysis.domain.entities import (
     AnalysisDocumentReference,
     AnalysisQuestionChange,
     AnalysisRound,
     ClarificationQuestion,
     RequirementAnalysis,
 )
-from smb_requirement_agent.domain.analysis.errors import (
+from smb_requirement_agent.analysis.domain.errors import (
     ClarificationVersionConflictError,
     InvalidClarificationTransitionError,
 )
-from smb_requirement_agent.domain.analysis.value_objects import (
+from smb_requirement_agent.analysis.domain.value_objects import (
     AnalysisId,
     ClarificationKind,
     ClarificationSeverity,
@@ -72,31 +57,27 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     QuestionChangeAction,
     QuestionId,
 )
-from smb_requirement_agent.domain.architecture.entities import (
-    ArchitectureDependency,
-    ArchitectureImpact,
-    SystemCapability,
-    SystemReference,
+from smb_requirement_agent.analysis.infrastructure.llm.fake_requirement_analyzer import (
+    FakeRequirementAnalyzer,
 )
-from smb_requirement_agent.domain.document.entities import (
-    SourceDocument,
-    SourceDocumentVersion,
+from smb_requirement_agent.analysis.infrastructure.postgres_analysis import (
+    PostgresAnalysisAuditRepository,
+    PostgresAnalysisRepository,
 )
-from smb_requirement_agent.domain.document.value_objects import (
-    DocumentId,
-    DocumentVersionId,
-    ExtractionStatus,
+from smb_requirement_agent.analysis.infrastructure.postgres_evidence_fragment_cache import (
+    PostgresEvidenceFragmentCache,
 )
-from smb_requirement_agent.domain.epic.entities import Epic
-from smb_requirement_agent.domain.epic.value_objects import (
+from smb_requirement_agent.breakdown.domain.architecture.entities import ArchitectureImpact
+from smb_requirement_agent.breakdown.domain.epic.entities import Epic
+from smb_requirement_agent.breakdown.domain.epic.value_objects import (
     BusinessCase,
     BusinessOutcome,
     EpicId,
     EpicName,
     EpicStatus,
 )
-from smb_requirement_agent.domain.feature.entities import Feature
-from smb_requirement_agent.domain.feature.value_objects import (
+from smb_requirement_agent.breakdown.domain.feature.entities import Feature
+from smb_requirement_agent.breakdown.domain.feature.value_objects import (
     DeliveryDrop,
     FeatureId,
     FeatureName,
@@ -105,22 +86,79 @@ from smb_requirement_agent.domain.feature.value_objects import (
     SplittingPattern,
     SplittingRationale,
 )
-from smb_requirement_agent.domain.identity.entities import (
-    ActorId,
-    ActorProfile,
-    ActorSnapshot,
+from smb_requirement_agent.breakdown.domain.story.entities import (
+    StoryChangeOperation,
+    StoryChangeProposal,
+    StoryDraft,
+    UserStory,
+)
+from smb_requirement_agent.breakdown.domain.story.value_objects import (
+    AcceptanceCriterion,
+    BusinessValue,
+    DesiredAction,
+    StoryId,
+    StoryProposalId,
+    UserRole,
+)
+from smb_requirement_agent.breakdown.infrastructure.postgres_backlog import (
+    PostgresEpicRepository,
+    PostgresFeatureRepository,
+    PostgresStoryChangeProposalRepository,
+    PostgresStoryRepository,
+)
+from smb_requirement_agent.governance.application.exports import ExportFormat
+from smb_requirement_agent.governance.application.use_cases.export_breakdown import ExportBreakdown
+from smb_requirement_agent.governance.domain.review.entities import (
+    BreakdownReview,
+    BreakdownStatus,
+    Decision,
+    DecisionId,
+    Flag,
+    FlagCategory,
+    FlagId,
+    FlagSeverity,
+    ResolutionPolicy,
+    ReviewSource,
+    ReviewSourceKind,
+)
+from smb_requirement_agent.governance.infrastructure.exports.json_exporter import (
+    JsonBacklogExporter,
+)
+from smb_requirement_agent.governance.infrastructure.exports.xlsx_exporter import (
+    XlsxBacklogExporter,
+)
+from smb_requirement_agent.identity.domain.entities import (
     DraftOwnership,
     RequirementAccess,
 )
-from smb_requirement_agent.domain.identity.errors import RequirementAccessConflictError
-from smb_requirement_agent.domain.jobs.entities import (
+from smb_requirement_agent.identity.domain.errors import RequirementAccessConflictError
+from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
+from smb_requirement_agent.identity.infrastructure.postgres_identity import PostgresActorDirectory
+from smb_requirement_agent.infrastructure.persistence.migration_runner import (
+    MIGRATIONS,
+    latest_packaged_migration,
+    run_migrations,
+)
+from smb_requirement_agent.infrastructure.persistence.postgres_store import (
+    REQUIRED_MAINTENANCE_MARKER,
+)
+from smb_requirement_agent.infrastructure.persistence.postgres_store import (
+    PostgresStore as UnitOfWorkStore,
+)
+from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobCommand, AiJobRecord
+from smb_requirement_agent.jobs.domain.entities import (
     AiJob,
     AiJobId,
     AiJobOperation,
     AiJobOrigin,
     AiJobStatus,
 )
-from smb_requirement_agent.domain.knowledge.entities import (
+from smb_requirement_agent.jobs.infrastructure.postgres_ai_jobs import PostgresAiJobStore
+from smb_requirement_agent.knowledge.application.ports.requirement_knowledge import (
+    KnowledgeScreenEnsureOutcome,
+    KnowledgeScreenEnsureResult,
+)
+from smb_requirement_agent.knowledge.domain.entities import (
     AnswerSuggestion,
     AnswerSuggestionId,
     AnswerSuggestionSet,
@@ -136,95 +174,72 @@ from smb_requirement_agent.domain.knowledge.entities import (
     KnowledgeSourceKind,
     RelationshipEvidence,
 )
-from smb_requirement_agent.domain.requirement.entities import Requirement, RequirementDraft
-from smb_requirement_agent.domain.requirement.value_objects import (
+from smb_requirement_agent.knowledge.infrastructure.postgres_requirement_knowledge import (
+    PostgresRequirementKnowledgeStore,
+)
+from smb_requirement_agent.references.domain.architecture.catalogue import (
+    ArchitectureDependency,
+    SystemCapability,
+    SystemReference,
+)
+from smb_requirement_agent.reporting.application.ports.requirement_worklist import (
+    WorkflowStatus,
+    WorklistSort,
+)
+from smb_requirement_agent.reporting.application.ports.saved_views import (
+    SavedRequirementView,
+    SavedViewCriteria,
+)
+from smb_requirement_agent.reporting.infrastructure.postgres_activity_reader import (
+    PostgresActivityReadAdapter,
+)
+from smb_requirement_agent.reporting.infrastructure.postgres_saved_views import (
+    PostgresSavedViewRepository,
+)
+from smb_requirement_agent.requirements.application.errors import DocumentStorageError
+from smb_requirement_agent.requirements.domain.document.entities import (
+    SourceDocument,
+    SourceDocumentVersion,
+)
+from smb_requirement_agent.requirements.domain.document.value_objects import (
+    DocumentId,
+    DocumentVersionId,
+    ExtractionStatus,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import (
+    Requirement,
+    RequirementDraft,
+)
+from smb_requirement_agent.requirements.domain.requirement.value_objects import (
     RequirementDescription,
-    RequirementId,
     RequirementStatus,
     RequirementTitle,
     RequirementVersion,
 )
-from smb_requirement_agent.domain.review.entities import (
-    BreakdownReview,
-    BreakdownStatus,
-    Decision,
-    DecisionId,
-    Flag,
-    FlagCategory,
-    FlagId,
-    FlagSeverity,
-    ResolutionPolicy,
-    ReviewSource,
-    ReviewSourceKind,
+from smb_requirement_agent.requirements.infrastructure.backfill_document_blobs import backfill
+from smb_requirement_agent.requirements.infrastructure.in_memory_document_repository import (
+    InMemoryDocumentRepository,
+    InMemoryDocumentStorage,
 )
-from smb_requirement_agent.domain.shared.approval import (
+from smb_requirement_agent.requirements.infrastructure.postgres_document_repository import (
+    PostgresDocumentStorage,
+)
+from smb_requirement_agent.shared_kernel.actors import (
+    ActorId,
+    ActorProfile,
+    ActorSnapshot,
+)
+from smb_requirement_agent.shared_kernel.approval import (
     Approval,
     ApprovalDecision,
     ApprovalId,
     ApprovalTarget,
     ApprovalTargetKind,
 )
-from smb_requirement_agent.domain.shared.generation import GenerationStatus, Provenance
-from smb_requirement_agent.domain.story.entities import (
-    StoryChangeOperation,
-    StoryChangeProposal,
-    StoryDraft,
-    UserStory,
-)
-from smb_requirement_agent.domain.story.value_objects import (
-    AcceptanceCriterion,
-    BusinessValue,
-    DesiredAction,
-    StoryId,
-    StoryProposalId,
-    UserRole,
-)
-from smb_requirement_agent.infrastructure.exports.json_exporter import JsonBacklogExporter
-from smb_requirement_agent.infrastructure.exports.xlsx_exporter import XlsxBacklogExporter
-from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
-from smb_requirement_agent.infrastructure.llm.fake_requirement_analyzer import (
-    FakeRequirementAnalyzer,
-)
-from smb_requirement_agent.infrastructure.persistence.backfill_document_blobs import backfill
-from smb_requirement_agent.infrastructure.persistence.in_memory_document_repository import (
-    InMemoryDocumentRepository,
-    InMemoryDocumentStorage,
-)
-from smb_requirement_agent.infrastructure.persistence.migration_runner import (
-    MIGRATIONS,
-    latest_packaged_migration,
-    run_migrations,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader import (
-    PostgresActivityReadAdapter,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_ai_jobs import PostgresAiJobStore
-from smb_requirement_agent.infrastructure.persistence.postgres_document_repository import (
-    PostgresDocumentStorage,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_evidence_fragment_cache import (
-    PostgresEvidenceFragmentCache,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_repositories import (
-    PostgresActorDirectory,
-    PostgresAnalysisAuditRepository,
-    PostgresAnalysisRepository,
-    PostgresEpicRepository,
-    PostgresFeatureRepository,
-    PostgresStoryChangeProposalRepository,
-    PostgresStoryRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_requirement_knowledge import (
-    PostgresRequirementKnowledgeStore,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_saved_views import (
-    PostgresSavedViewRepository,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_store import (
-    REQUIRED_MAINTENANCE_MARKER,
-)
-from smb_requirement_agent.infrastructure.persistence.postgres_store import (
-    PostgresStore as UnitOfWorkStore,
+from smb_requirement_agent.shared_kernel.generation import GenerationStatus, Provenance
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.workflows.application.use_cases.generation_context import (
+    GenerationContextTokens,
 )
 from tests.integration.postgres_fixture_store import (
     FixturePostgresStore as _PostgresStore,
@@ -397,7 +412,7 @@ def test_analysis_and_automatic_suggestion_scheduling_roll_back_together() -> No
             raise RuntimeError("suggestion queue unavailable")
 
     class NoOpSuggestionValidator:
-        def require_suggestion(
+        def suggestion_provenance(
             self,
             requirement_id: RequirementId,
             question_id: QuestionId,
@@ -1472,10 +1487,10 @@ def test_approved_revision_exports_after_postgres_restart() -> None:
 
 
 def test_real_composition_commits_a_requirement_and_its_projections() -> None:
-    from smb_requirement_agent.application.ports.activity import ActivityQuery
     from smb_requirement_agent.infrastructure.config.options import LLMProvider, PersistenceProvider
     from smb_requirement_agent.infrastructure.config.settings import Settings
     from smb_requirement_agent.interfaces.api.container import build_container
+    from smb_requirement_agent.reporting.application.ports.activity import ActivityQuery
 
     assert DATABASE_URL is not None
     run_migrations(DATABASE_URL)
@@ -1561,31 +1576,31 @@ def test_generated_quality_and_checked_preview_survive_real_container_restart() 
 
 
 def test_incremental_activity_matches_audit_sources_and_report_aggregation() -> None:
-    from smb_requirement_agent.application.use_cases.activity_reporting import (
-        aggregate_activity_events,
-    )
-    from smb_requirement_agent.application.use_cases.create_requirement import (
-        CreateRequirementInput,
-    )
-    from smb_requirement_agent.infrastructure.config.options import LLMProvider, PersistenceProvider
-    from smb_requirement_agent.infrastructure.config.settings import Settings
-    from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
-    from smb_requirement_agent.infrastructure.persistence.postgres_activity_reader import (
-        PostgresActivityReadAdapter,
-    )
-    from smb_requirement_agent.infrastructure.persistence.postgres_activity_sources import (
-        PostgresActivitySources,
-    )
-    from smb_requirement_agent.infrastructure.persistence.postgres_repositories import (
+    from smb_requirement_agent.analysis.infrastructure.postgres_analysis import (
         PostgresAnalysisAuditRepository,
     )
-    from smb_requirement_agent.infrastructure.persistence.postgres_revisions import (
+    from smb_requirement_agent.governance.infrastructure.postgres_revisions import (
         PostgresRevisionRepository,
     )
-    from smb_requirement_agent.infrastructure.persistence.postgres_snapshots import (
+    from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
+    from smb_requirement_agent.infrastructure.config.options import LLMProvider, PersistenceProvider
+    from smb_requirement_agent.infrastructure.config.settings import Settings
+    from smb_requirement_agent.interfaces.api.container import build_container
+    from smb_requirement_agent.reporting.application.use_cases.activity_reporting import (
+        aggregate_activity_events,
+    )
+    from smb_requirement_agent.reporting.infrastructure.postgres_activity_reader import (
+        PostgresActivityReadAdapter,
+    )
+    from smb_requirement_agent.reporting.infrastructure.postgres_activity_sources import (
+        PostgresActivitySources,
+    )
+    from smb_requirement_agent.reporting.infrastructure.postgres_snapshots import (
         PostgresSnapshotReader,
     )
-    from smb_requirement_agent.interfaces.api.container import build_container
+    from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
+        CreateRequirementInput,
+    )
 
     assert DATABASE_URL is not None
     run_migrations(DATABASE_URL)
@@ -1644,7 +1659,7 @@ def test_incremental_activity_matches_audit_sources_and_report_aggregation() -> 
 
 def test_isolated_embedding_generations_resume_switch_and_rollback() -> None:
     from smb_requirement_agent.application.errors import ModelTransportError
-    from smb_requirement_agent.infrastructure.persistence import postgres_knowledge_generations
+    from smb_requirement_agent.knowledge.infrastructure import postgres_knowledge_generations
 
     assert DATABASE_URL is not None
     store = PostgresStore(DATABASE_URL)
@@ -1718,19 +1733,19 @@ def test_isolated_embedding_generations_resume_switch_and_rollback() -> None:
 
 
 def test_requirement_index_batches_survive_restart_and_stale_leases_are_fenced() -> None:
-    from smb_requirement_agent.application.use_cases.create_requirement import (
-        CreateRequirementInput,
-    )
-    from smb_requirement_agent.application.use_cases.requirement_indexing import (
-        IndexRequirementKnowledge,
-    )
     from smb_requirement_agent.infrastructure.config.options import LLMProvider, PersistenceProvider
     from smb_requirement_agent.infrastructure.config.settings import Settings
-    from smb_requirement_agent.infrastructure.persistence.requirement_indexing import (
+    from smb_requirement_agent.interfaces.api.container import build_container
+    from smb_requirement_agent.knowledge.application.use_cases.requirement_indexing import (
+        IndexRequirementKnowledge,
+    )
+    from smb_requirement_agent.knowledge.infrastructure.requirement_indexing import (
         PostgresRequirementIndexProgress,
     )
-    from smb_requirement_agent.interfaces.api.container import build_container
-    from tests.unit.test_requirement_indexing import RecordingEmbedding, corpus
+    from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
+        CreateRequirementInput,
+    )
+    from tests.unit.knowledge.test_requirement_indexing import RecordingEmbedding, corpus
 
     assert DATABASE_URL is not None
     container = build_container(

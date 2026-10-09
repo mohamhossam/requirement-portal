@@ -7,20 +7,20 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from smb_requirement_agent.application.ports.requirement_knowledge import (
-    KnowledgeScreenEnsureOutcome,
-)
-from smb_requirement_agent.domain.document.reference import PublishedReference
-from smb_requirement_agent.domain.knowledge.entities import (
-    AnswerSuggestionSource,
-    KnowledgeFindingStatus,
-    KnowledgeRelationshipKind,
-)
 from smb_requirement_agent.interfaces.api.schemas.bounds import (
     Text,
 )
 from smb_requirement_agent.interfaces.api.schemas.epic import ProvenanceResponse
 from smb_requirement_agent.interfaces.api.schemas.identity import ActorResponse
+from smb_requirement_agent.knowledge.application.ports.requirement_knowledge import (
+    KnowledgeScreenEnsureOutcome,
+)
+from smb_requirement_agent.knowledge.domain.entities import (
+    AnswerSuggestionSource,
+    KnowledgeFindingStatus,
+    KnowledgeRelationshipKind,
+)
+from smb_requirement_agent.shared_kernel.citation import PublishedReference
 
 
 class KnowledgeEvidenceResponse(BaseModel):

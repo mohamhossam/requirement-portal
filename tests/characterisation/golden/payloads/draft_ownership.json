@@ -1,0 +1,17 @@
+{
+  "draft_id": "draft-golden-1",
+  "owner": {
+    "actor": {
+      "display_name": "Olivia Owner",
+      "email": "olivia@example.test",
+      "id": "actor-owner"
+    },
+    "assigned_at": "2026-03-01T09:00:00+00:00",
+    "assigned_by": {
+      "display_name": "Olivia Owner",
+      "email": "olivia@example.test",
+      "id": "actor-owner"
+    },
+    "role": "owner"
+  }
+}

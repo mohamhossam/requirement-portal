@@ -1,0 +1,24 @@
+{
+  "business_rules": [
+    "Credit check before activation."
+  ],
+  "channels": [
+    "B2B portal",
+    "Mobile app"
+  ],
+  "constraints": [
+    "No change to billing cycles."
+  ],
+  "customer_context": "SMB customers with 5 to 50 lines.",
+  "description": "Let SMB customers add a SIM bundle to an existing account through the portal.",
+  "desired_outcome": "Halve bundle activation time.",
+  "duplicate_of_requirement_id": null,
+  "id": "req-golden-1",
+  "status": "draft",
+  "systems": [
+    "BCRM"
+  ],
+  "title": "Business SIM bundle self-service",
+  "updated_at": "2026-03-01T10:00:00+00:00",
+  "version": 3
+}

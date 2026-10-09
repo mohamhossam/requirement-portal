@@ -1,0 +1,42 @@
+{
+  "candidates": [
+    {
+      "acceptance_criteria": [
+        {
+          "given": "an account",
+          "then": "it is recorded",
+          "when": "an order is placed"
+        }
+      ],
+      "action": "to order a bundle",
+      "provenance": null,
+      "role": "SMB account administrator",
+      "value": "lines are requested"
+    },
+    {
+      "acceptance_criteria": [
+        {
+          "given": "a recorded order",
+          "then": "lines are live",
+          "when": "activation runs"
+        }
+      ],
+      "action": "to activate a bundle",
+      "provenance": null,
+      "role": "SMB account administrator",
+      "value": "lines work"
+    }
+  ],
+  "feature_id": "feature-golden-1",
+  "generation_context": null,
+  "id": "proposal-story-golden-1",
+  "operation": "split",
+  "prepared_candidates": [],
+  "quality_assessments": [],
+  "source_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "source_set_fingerprint": null,
+  "source_story_ids": [
+    "story-golden-1"
+  ],
+  "version": 2
+}

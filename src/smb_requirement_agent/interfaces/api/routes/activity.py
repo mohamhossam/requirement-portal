@@ -5,25 +5,6 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Response
 from pydantic import AwareDatetime
 
-from smb_requirement_agent.application.ports.activity import (
-    ActivityAction,
-    ActivityCategory,
-    ActivityEvent,
-    AuditSourceReference,
-)
-from smb_requirement_agent.application.ports.saved_views import (
-    SavedRequirementView,
-    SavedViewCriteria,
-)
-from smb_requirement_agent.application.use_cases.activity_reporting import (
-    ActivityQuery,
-    GetOperationalReport,
-    ListActivity,
-    MetricCount,
-)
-from smb_requirement_agent.application.use_cases.saved_views import SavedViews
-from smb_requirement_agent.domain.identity.entities import ActorId
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     get_list_activity,
@@ -46,6 +27,25 @@ from smb_requirement_agent.interfaces.api.schemas.activity import (
     SavedViewUpdateRequest,
     WeeklyMetricsResponse,
 )
+from smb_requirement_agent.reporting.application.ports.activity import (
+    ActivityAction,
+    ActivityCategory,
+    ActivityEvent,
+    AuditSourceReference,
+)
+from smb_requirement_agent.reporting.application.ports.saved_views import (
+    SavedRequirementView,
+    SavedViewCriteria,
+)
+from smb_requirement_agent.reporting.application.use_cases.activity_reporting import (
+    ActivityQuery,
+    GetOperationalReport,
+    ListActivity,
+    MetricCount,
+)
+from smb_requirement_agent.reporting.application.use_cases.saved_views import SavedViews
+from smb_requirement_agent.shared_kernel.actors import ActorId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 activity_router = APIRouter(
     prefix="/activity",

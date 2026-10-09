@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted
+Accepted. Amended by ADR-0103 (2026-10-07): `RequirementCommands` moves to `workflows/`, and
+domain-event handlers run inside its unit of work. The step order is unchanged.
 
 ## Context
 

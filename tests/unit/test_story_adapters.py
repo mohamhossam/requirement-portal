@@ -13,18 +13,22 @@ from smb_kernel.llm.local_structured_output import (
     LocalStructuredOutputClient,
 )
 
-from smb_requirement_agent.application.errors import StoryGenerationError
-from smb_requirement_agent.application.ports.generation_guidance import GenerationGuidance
-from smb_requirement_agent.application.ports.story_quality_evaluator import StoryQualityEvidence
-from smb_requirement_agent.domain.story.quality import InvestCriterion
-from smb_requirement_agent.infrastructure.llm.candidate_mappers import to_story_candidates
-from smb_requirement_agent.infrastructure.llm.local_story_generator import LocalStoryGenerator
-from smb_requirement_agent.infrastructure.llm.openai_adapters import OpenAIStoryGenerator
-from smb_requirement_agent.infrastructure.llm.prompts.story_prompt import PROMPT_VERSION
-from smb_requirement_agent.infrastructure.llm.prompts.story_quality_prompt import (
+from smb_requirement_agent.breakdown.application.errors import StoryGenerationError
+from smb_requirement_agent.breakdown.application.ports.generation_guidance import GenerationGuidance
+from smb_requirement_agent.breakdown.domain.story.quality import (
+    InvestCriterion,
+    StoryQualityEvidence,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.backlog_mappers import to_story_candidates
+from smb_requirement_agent.breakdown.infrastructure.llm.local_story_generator import (
+    LocalStoryGenerator,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters import OpenAIStoryGenerator
+from smb_requirement_agent.breakdown.infrastructure.llm.prompts.story_prompt import PROMPT_VERSION
+from smb_requirement_agent.breakdown.infrastructure.llm.prompts.story_quality_prompt import (
     build_story_quality_prompt,
 )
-from smb_requirement_agent.infrastructure.llm.schemas.story_schema import (
+from smb_requirement_agent.breakdown.infrastructure.llm.schemas.story_schema import (
     AcceptanceCriterionSchema,
     StoryItemSchema,
     StorySetSchema,
@@ -154,7 +158,7 @@ def _source_story() -> MagicMock:
     return source
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters.OpenAI")
 def test_openai_story_provider_exception_is_mapped(mock_openai: MagicMock) -> None:
     client = MagicMock()
     client.chat.completions.parse.side_effect = OpenAIError("boom")
@@ -166,7 +170,7 @@ def test_openai_story_provider_exception_is_mapped(mock_openai: MagicMock) -> No
         ).generate(*_context())
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters.OpenAI")
 def test_openai_story_empty_choices_is_a_provider_failure(mock_openai: MagicMock) -> None:
     client = MagicMock()
     client.chat.completions.parse.return_value.choices = []
@@ -178,7 +182,7 @@ def test_openai_story_empty_choices_is_a_provider_failure(mock_openai: MagicMock
         ).generate(*_context())
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters.OpenAI")
 def test_openai_story_split_rejects_one_candidate(mock_openai: MagicMock) -> None:
     client = MagicMock()
     response = MagicMock()

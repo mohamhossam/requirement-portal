@@ -1,0 +1,42 @@
+{
+  "acceptance_criteria": [
+    {
+      "given": "a pending bundle order",
+      "then": "its status is shown",
+      "when": "the administrator opens it"
+    }
+  ],
+  "action": "to see bundle activation status",
+  "approvals": [
+    {
+      "decision": "approved",
+      "id": "approval-story-golden-2",
+      "rationale": "Matches the confirmed analysis.",
+      "recorded_at": "2026-03-02T11:30:00+00:00",
+      "recorded_by": {
+        "display_name": "Olivia Owner",
+        "email": "olivia@example.test",
+        "id": "actor-owner"
+      },
+      "subject_fingerprint": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "target": {
+        "item_id": "story-golden-2",
+        "kind": "story"
+      }
+    }
+  ],
+  "architecture": null,
+  "feature_id": "feature-golden-1",
+  "id": "story-golden-2",
+  "provenance": {
+    "generated_at": "2026-03-01T09:00:00+00:00",
+    "model": "golden-model",
+    "prompt_version": "golden-prompt-v1"
+  },
+  "role": "SMB account administrator",
+  "source_lineage": [],
+  "staleness": null,
+  "status": "approved",
+  "value": "I know when lines are usable",
+  "version": 2
+}

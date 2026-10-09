@@ -13,37 +13,37 @@ from datetime import UTC, datetime
 
 import pytest
 
-from smb_requirement_agent.application.ports.architecture_knowledge import (
-    ArchitectureKnowledgeMatch,
-    ArchitectureQuery,
-)
-from smb_requirement_agent.application.use_cases.approval_policy import artifact_fingerprint
-from smb_requirement_agent.application.use_cases.architecture_mapping import (
+from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping import (
     MapFeatureArchitecture,
 )
-from smb_requirement_agent.domain.architecture.entities import (
-    ArchitectureDependency,
-    ArchitectureImpact,
-    SystemReference,
-)
-from smb_requirement_agent.domain.architecture.errors import InvalidArchitectureContentError
-from smb_requirement_agent.domain.architecture.knowledge import (
-    InvalidKnowledgeError,
-    RelationshipKind,
-    relationship_kind,
-)
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementDescription,
-    RequirementId,
-    RequirementStatus,
-    RequirementTitle,
-)
-from smb_requirement_agent.infrastructure.persistence.shared_payloads import (
+from smb_requirement_agent.breakdown.domain.architecture.entities import ArchitectureImpact
+from smb_requirement_agent.breakdown.infrastructure.backlog_codecs import (
     architecture_from_payload,
     architecture_to_payload,
 )
-from tests.unit.test_feature_domain import make_feature
+from smb_requirement_agent.governance.domain.review.fingerprints import artifact_fingerprint
+from smb_requirement_agent.references.application.ports.architecture_knowledge import (
+    ArchitectureKnowledgeMatch,
+    ArchitectureQuery,
+)
+from smb_requirement_agent.references.domain.architecture.catalogue import (
+    ArchitectureDependency,
+    InvalidArchitectureContentError,
+    SystemReference,
+)
+from smb_requirement_agent.references.domain.architecture.knowledge import (
+    InvalidRelationshipKindError,
+    RelationshipKind,
+    relationship_kind,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.value_objects import (
+    RequirementDescription,
+    RequirementStatus,
+    RequirementTitle,
+)
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from tests.unit.breakdown.test_feature_domain import make_feature
 
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=UTC)
 
@@ -53,7 +53,7 @@ def test_a_dependency_is_unspecified_until_a_source_says_how() -> None:
     stored = ArchitectureDependency("a", "b", "uses", "calls_api")  # type: ignore[arg-type]
     assert stored.kind is RelationshipKind.CALLS_API
     assert relationship_kind("orchestrates") is RelationshipKind.ORCHESTRATES
-    with pytest.raises(InvalidKnowledgeError, match="Unknown relationship kind"):
+    with pytest.raises(InvalidRelationshipKindError, match="Unknown relationship kind"):
         relationship_kind("telepathy")
     with pytest.raises(InvalidArchitectureContentError, match="Unknown relationship kind"):
         ArchitectureDependency("a", "b", "uses", "telepathy")  # type: ignore[arg-type]

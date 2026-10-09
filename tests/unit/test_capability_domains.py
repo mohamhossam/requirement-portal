@@ -16,38 +16,44 @@ from datetime import UTC, datetime
 import pytest
 from openpyxl import load_workbook
 
-from smb_requirement_agent.application.ports.architecture_knowledge import (
-    ArchitectureKnowledgeMatch,
-    ArchitectureQuery,
-)
-from smb_requirement_agent.application.ports.generation_guidance import GenerationGuidance
-from smb_requirement_agent.application.use_cases.approval_policy import artifact_fingerprint
-from smb_requirement_agent.application.use_cases.architecture_mapping import (
+from smb_requirement_agent.breakdown.application.ports.generation_guidance import GenerationGuidance
+from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping import (
     MapFeatureArchitecture,
 )
-from smb_requirement_agent.domain.architecture.entities import (
-    ArchitectureImpact,
-    DomainSuggestion,
-    SystemCapability,
-    SystemReference,
-)
-from smb_requirement_agent.domain.architecture.errors import InvalidArchitectureContentError
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementDescription,
-    RequirementId,
-    RequirementStatus,
-    RequirementTitle,
-)
-from smb_requirement_agent.infrastructure.exports.json_exporter import JsonBacklogExporter
-from smb_requirement_agent.infrastructure.exports.xlsx_exporter import XlsxBacklogExporter
-from smb_requirement_agent.infrastructure.llm.prompts.generation_guidance import render_guidance
-from smb_requirement_agent.infrastructure.persistence.shared_payloads import (
+from smb_requirement_agent.breakdown.domain.architecture.entities import ArchitectureImpact
+from smb_requirement_agent.breakdown.infrastructure.backlog_codecs import (
     architecture_from_payload,
     architecture_to_payload,
 )
-from tests.unit.test_backlog_export import _document
-from tests.unit.test_feature_domain import make_feature
+from smb_requirement_agent.breakdown.infrastructure.llm.prompts.generation_guidance import (
+    render_guidance,
+)
+from smb_requirement_agent.governance.domain.review.fingerprints import artifact_fingerprint
+from smb_requirement_agent.governance.infrastructure.exports.json_exporter import (
+    JsonBacklogExporter,
+)
+from smb_requirement_agent.governance.infrastructure.exports.xlsx_exporter import (
+    XlsxBacklogExporter,
+)
+from smb_requirement_agent.references.application.ports.architecture_knowledge import (
+    ArchitectureKnowledgeMatch,
+    ArchitectureQuery,
+)
+from smb_requirement_agent.references.domain.architecture.catalogue import (
+    DomainSuggestion,
+    InvalidArchitectureContentError,
+    SystemCapability,
+    SystemReference,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.value_objects import (
+    RequirementDescription,
+    RequirementStatus,
+    RequirementTitle,
+)
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from tests.unit.breakdown.test_feature_domain import make_feature
+from tests.unit.governance.test_backlog_export import _document
 
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=UTC)
 

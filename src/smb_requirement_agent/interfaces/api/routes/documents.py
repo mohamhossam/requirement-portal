@@ -8,28 +8,6 @@ from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 
 from smb_requirement_agent.application.errors import UnsupportedDocumentError
-from smb_requirement_agent.application.use_cases.attachment_ingestion import (
-    AttachmentIngestion,
-    AttachmentIngestionView,
-)
-from smb_requirement_agent.application.use_cases.documents import (
-    GetDocument,
-    ListDocuments,
-    RemoveDocument,
-    SetDocumentInclusion,
-    SetHiddenWorksheetInclusion,
-    UploadDocument,
-    UploadDocumentInput,
-)
-from smb_requirement_agent.domain.document.attachment import AttachmentTarget
-from smb_requirement_agent.domain.document.entities import SourceDocument, SourceDocumentVersion
-from smb_requirement_agent.domain.document.value_objects import (
-    DocumentId,
-    DocumentVersionId,
-    EvidenceBlockKind,
-    ExtractionWarningSeverity,
-)
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     get_attachment_ingestion,
@@ -53,6 +31,31 @@ from smb_requirement_agent.interfaces.api.schemas.documents import (
     SetDocumentInclusionRequest,
     SetHiddenWorksheetInclusionRequest,
 )
+from smb_requirement_agent.requirements.application.use_cases.attachment_ingestion import (
+    AttachmentIngestion,
+    AttachmentIngestionView,
+)
+from smb_requirement_agent.requirements.application.use_cases.documents import (
+    GetDocument,
+    ListDocuments,
+    RemoveDocument,
+    SetDocumentInclusion,
+    SetHiddenWorksheetInclusion,
+    UploadDocument,
+    UploadDocumentInput,
+)
+from smb_requirement_agent.requirements.domain.document.attachment import AttachmentTarget
+from smb_requirement_agent.requirements.domain.document.entities import (
+    SourceDocument,
+    SourceDocumentVersion,
+)
+from smb_requirement_agent.requirements.domain.document.value_objects import (
+    DocumentId,
+    DocumentVersionId,
+    EvidenceBlockKind,
+    ExtractionWarningSeverity,
+)
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 router = APIRouter(tags=["documents"], dependencies=[Depends(require_authenticated_actor)])
 

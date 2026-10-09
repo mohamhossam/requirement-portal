@@ -9,26 +9,102 @@ include_external_packages = True
 name = Domain must not depend on outer layers
 type = forbidden
 source_modules =
-    smb_requirement_agent.domain
+    smb_requirement_agent.shared_kernel
+    smb_requirement_agent.identity.domain
+    smb_requirement_agent.jobs.domain
+    smb_requirement_agent.requirements.domain
+    smb_requirement_agent.references.domain
+    smb_requirement_agent.analysis.domain
+    smb_requirement_agent.knowledge.domain
+    smb_requirement_agent.breakdown.domain
+    smb_requirement_agent.governance.domain
 forbidden_modules =
     smb_requirement_agent.application
     smb_requirement_agent.infrastructure
     smb_requirement_agent.interfaces
+    smb_requirement_agent.identity.application
+    smb_requirement_agent.identity.infrastructure
+    smb_requirement_agent.jobs.application
+    smb_requirement_agent.jobs.infrastructure
+    smb_requirement_agent.requirements.application
+    smb_requirement_agent.requirements.infrastructure
+    smb_requirement_agent.references.application
+    smb_requirement_agent.references.infrastructure
+    smb_requirement_agent.analysis.application
+    smb_requirement_agent.analysis.infrastructure
+    smb_requirement_agent.knowledge.application
+    smb_requirement_agent.knowledge.infrastructure
+    smb_requirement_agent.breakdown.application
+    smb_requirement_agent.breakdown.infrastructure
+    smb_requirement_agent.governance.application
+    smb_requirement_agent.governance.infrastructure
+    smb_requirement_agent.reporting.application
+    smb_requirement_agent.reporting.infrastructure
+    smb_requirement_agent.workflows.application
+    smb_requirement_agent.workflows.infrastructure
+
+[importlinter:contract:shared_kernel_pure]
+name = The shared kernel imports nothing else from requirement-portal (ADR-0103)
+type = forbidden
+source_modules =
+    smb_requirement_agent.shared_kernel
+forbidden_modules =
+    smb_requirement_agent.application
+    smb_requirement_agent.infrastructure
+    smb_requirement_agent.interfaces
+    smb_requirement_agent.identity
+    smb_requirement_agent.jobs
+    smb_requirement_agent.requirements
+    smb_requirement_agent.references
+    smb_requirement_agent.analysis
+    smb_requirement_agent.knowledge
+    smb_requirement_agent.breakdown
+    smb_requirement_agent.governance
+    smb_requirement_agent.reporting
+    smb_requirement_agent.workflows
 
 [importlinter:contract:application_independence]
 name = Application must not depend on infrastructure or interfaces
 type = forbidden
 source_modules =
     smb_requirement_agent.application
+    smb_requirement_agent.identity.application
+    smb_requirement_agent.jobs.application
+    smb_requirement_agent.requirements.application
+    smb_requirement_agent.references.application
+    smb_requirement_agent.analysis.application
+    smb_requirement_agent.knowledge.application
+    smb_requirement_agent.breakdown.application
+    smb_requirement_agent.governance.application
+    smb_requirement_agent.reporting.application
+    smb_requirement_agent.workflows.application
 forbidden_modules =
     smb_requirement_agent.infrastructure
     smb_requirement_agent.interfaces
+    smb_requirement_agent.identity.infrastructure
+    smb_requirement_agent.jobs.infrastructure
+    smb_requirement_agent.requirements.infrastructure
+    smb_requirement_agent.references.infrastructure
+    smb_requirement_agent.analysis.infrastructure
+    smb_requirement_agent.knowledge.infrastructure
+    smb_requirement_agent.breakdown.infrastructure
+    smb_requirement_agent.governance.infrastructure
+    smb_requirement_agent.reporting.infrastructure
+    smb_requirement_agent.workflows.infrastructure
 
 [importlinter:contract:domain_framework_independence]
 name = Domain must not import frameworks or provider SDKs
 type = forbidden
 source_modules =
-    smb_requirement_agent.domain
+    smb_requirement_agent.shared_kernel
+    smb_requirement_agent.identity.domain
+    smb_requirement_agent.jobs.domain
+    smb_requirement_agent.requirements.domain
+    smb_requirement_agent.references.domain
+    smb_requirement_agent.analysis.domain
+    smb_requirement_agent.knowledge.domain
+    smb_requirement_agent.breakdown.domain
+    smb_requirement_agent.governance.domain
 forbidden_modules =
     fastapi
     pydantic
@@ -42,6 +118,16 @@ name = Application must not import delivery, persistence, or provider SDKs
 type = forbidden
 source_modules =
     smb_requirement_agent.application
+    smb_requirement_agent.identity.application
+    smb_requirement_agent.jobs.application
+    smb_requirement_agent.requirements.application
+    smb_requirement_agent.references.application
+    smb_requirement_agent.analysis.application
+    smb_requirement_agent.knowledge.application
+    smb_requirement_agent.breakdown.application
+    smb_requirement_agent.governance.application
+    smb_requirement_agent.reporting.application
+    smb_requirement_agent.workflows.application
 forbidden_modules =
     fastapi
     psycopg
@@ -56,6 +142,16 @@ source_modules =
     smb_requirement_agent.interfaces.api.routes
 forbidden_modules =
     smb_requirement_agent.infrastructure
+    smb_requirement_agent.identity.infrastructure
+    smb_requirement_agent.jobs.infrastructure
+    smb_requirement_agent.requirements.infrastructure
+    smb_requirement_agent.references.infrastructure
+    smb_requirement_agent.analysis.infrastructure
+    smb_requirement_agent.knowledge.infrastructure
+    smb_requirement_agent.breakdown.infrastructure
+    smb_requirement_agent.governance.infrastructure
+    smb_requirement_agent.reporting.infrastructure
+    smb_requirement_agent.workflows.infrastructure
 allow_indirect_imports = True
 
 [importlinter:contract:dependencies_no_adapter_selection]
@@ -66,9 +162,17 @@ source_modules =
 forbidden_modules =
     smb_requirement_agent.infrastructure.persistence
     smb_requirement_agent.infrastructure.llm
-    smb_requirement_agent.infrastructure.identity
+    smb_requirement_agent.identity.infrastructure
+    smb_requirement_agent.jobs.infrastructure
+    smb_requirement_agent.requirements.infrastructure
+    smb_requirement_agent.references.infrastructure
+    smb_requirement_agent.analysis.infrastructure
+    smb_requirement_agent.knowledge.infrastructure
+    smb_requirement_agent.breakdown.infrastructure
+    smb_requirement_agent.governance.infrastructure
+    smb_requirement_agent.reporting.infrastructure
+    smb_requirement_agent.workflows.infrastructure
     smb_requirement_agent.infrastructure.documents
-    smb_requirement_agent.infrastructure.jobs
 allow_indirect_imports = True
 
 [importlinter:contract:infrastructure_not_interfaces]
@@ -76,6 +180,16 @@ name = Infrastructure must not depend on delivery interfaces
 type = forbidden
 source_modules =
     smb_requirement_agent.infrastructure
+    smb_requirement_agent.identity.infrastructure
+    smb_requirement_agent.jobs.infrastructure
+    smb_requirement_agent.requirements.infrastructure
+    smb_requirement_agent.references.infrastructure
+    smb_requirement_agent.analysis.infrastructure
+    smb_requirement_agent.knowledge.infrastructure
+    smb_requirement_agent.breakdown.infrastructure
+    smb_requirement_agent.governance.infrastructure
+    smb_requirement_agent.reporting.infrastructure
+    smb_requirement_agent.workflows.infrastructure
 forbidden_modules =
     smb_requirement_agent.interfaces
 
@@ -83,8 +197,26 @@ forbidden_modules =
 name = Domain and application use only platform-kernel's pure contract modules (ADR-0100)
 type = forbidden
 source_modules =
-    smb_requirement_agent.domain
+    smb_requirement_agent.shared_kernel
     smb_requirement_agent.application
+    smb_requirement_agent.identity.domain
+    smb_requirement_agent.identity.application
+    smb_requirement_agent.jobs.domain
+    smb_requirement_agent.jobs.application
+    smb_requirement_agent.requirements.domain
+    smb_requirement_agent.requirements.application
+    smb_requirement_agent.references.domain
+    smb_requirement_agent.references.application
+    smb_requirement_agent.analysis.domain
+    smb_requirement_agent.analysis.application
+    smb_requirement_agent.knowledge.domain
+    smb_requirement_agent.knowledge.application
+    smb_requirement_agent.breakdown.domain
+    smb_requirement_agent.breakdown.application
+    smb_requirement_agent.governance.domain
+    smb_requirement_agent.governance.application
+    smb_requirement_agent.reporting.application
+    smb_requirement_agent.workflows.application
 forbidden_modules =
     smb_kernel.identity.oidc
     smb_kernel.identity.fake
@@ -121,3 +253,519 @@ forbidden_modules =
     smb_kernel.llm
     smb_kernel.persistence
 allow_indirect_imports = True
+
+# Bounded contexts (ADR-0103). Each context has its own package and these three contracts; the
+# context-level contracts below state the dependency order for the whole package.
+
+[importlinter:contract:contexts_layered]
+name = Contexts depend only on the contexts upstream of them (ADR-0103 §2)
+type = layers
+layers =
+    smb_requirement_agent.workflows
+    smb_requirement_agent.reporting
+    smb_requirement_agent.governance
+    smb_requirement_agent.breakdown
+    smb_requirement_agent.knowledge
+    smb_requirement_agent.analysis
+    smb_requirement_agent.references
+    smb_requirement_agent.requirements
+    smb_requirement_agent.jobs | smb_requirement_agent.identity
+    smb_requirement_agent.shared_kernel
+
+[importlinter:contract:shared_application_uses_no_context]
+name = Shared application code (errors, events, technical ports) imports no context (ADR-0103 §2)
+type = forbidden
+source_modules =
+    smb_requirement_agent.application
+forbidden_modules =
+    smb_requirement_agent.identity
+    smb_requirement_agent.jobs
+    smb_requirement_agent.requirements
+    smb_requirement_agent.references
+    smb_requirement_agent.analysis
+    smb_requirement_agent.knowledge
+    smb_requirement_agent.breakdown
+    smb_requirement_agent.governance
+    smb_requirement_agent.reporting
+    smb_requirement_agent.workflows
+
+[importlinter:contract:shared_infrastructure_uses_no_context]
+name = Shared infrastructure (config, persistence machinery, LLM transport, text) imports no context (ADR-0103 Amendment 3)
+type = forbidden
+source_modules =
+    smb_requirement_agent.infrastructure
+forbidden_modules =
+    smb_requirement_agent.identity
+    smb_requirement_agent.jobs
+    smb_requirement_agent.requirements
+    smb_requirement_agent.references
+    smb_requirement_agent.analysis
+    smb_requirement_agent.knowledge
+    smb_requirement_agent.breakdown
+    smb_requirement_agent.governance
+    smb_requirement_agent.reporting
+    smb_requirement_agent.workflows
+
+[importlinter:contract:identity_internal_layers]
+name = identity: infrastructure > application > domain
+type = layers
+containers =
+    smb_requirement_agent.identity
+layers =
+    infrastructure
+    application
+    domain
+
+[importlinter:contract:identity_depends_on_no_other_context]
+name = identity depends on no other context (ADR-0103 §2)
+type = forbidden
+source_modules =
+    smb_requirement_agent.identity
+forbidden_modules =
+    smb_requirement_agent.interfaces
+    smb_requirement_agent.knowledge
+    smb_requirement_agent.jobs
+    smb_requirement_agent.requirements
+    smb_requirement_agent.references
+    smb_requirement_agent.analysis
+    smb_requirement_agent.breakdown
+    smb_requirement_agent.governance
+    smb_requirement_agent.reporting
+
+[importlinter:contract:identity_published_surface]
+name = Other contexts use identity's domain and ports, never its adapters (ADR-0103 §5)
+type = forbidden
+# Context sources are their domain and application layers: infrastructure may reuse another
+# context's codecs (revision snapshots serialise the whole tree, PR 12). workflows is not a
+# source: it orchestrates, and may call other contexts' use cases (ADR-0103 Amendment 3).
+source_modules =
+    smb_requirement_agent.application
+    smb_requirement_agent.shared_kernel
+    smb_requirement_agent.knowledge.domain
+    smb_requirement_agent.knowledge.application
+    smb_requirement_agent.jobs.domain
+    smb_requirement_agent.jobs.application
+    smb_requirement_agent.requirements.domain
+    smb_requirement_agent.requirements.application
+    smb_requirement_agent.references.domain
+    smb_requirement_agent.references.application
+    smb_requirement_agent.analysis.domain
+    smb_requirement_agent.analysis.application
+    smb_requirement_agent.breakdown.domain
+    smb_requirement_agent.breakdown.application
+    smb_requirement_agent.governance.domain
+    smb_requirement_agent.governance.application
+    smb_requirement_agent.reporting.application
+forbidden_modules =
+    smb_requirement_agent.identity.infrastructure
+
+[importlinter:contract:jobs_internal_layers]
+name = jobs: infrastructure > application > domain
+type = layers
+containers =
+    smb_requirement_agent.jobs
+layers =
+    infrastructure
+    application
+    domain
+
+[importlinter:contract:jobs_depends_on_no_other_context]
+name = jobs depends on no other context (ADR-0103 §2)
+type = forbidden
+source_modules =
+    smb_requirement_agent.jobs
+forbidden_modules =
+    smb_requirement_agent.interfaces
+    smb_requirement_agent.knowledge
+    smb_requirement_agent.identity
+    smb_requirement_agent.requirements
+    smb_requirement_agent.references
+    smb_requirement_agent.analysis
+    smb_requirement_agent.breakdown
+    smb_requirement_agent.governance
+    smb_requirement_agent.reporting
+
+[importlinter:contract:jobs_published_surface]
+name = Other contexts use jobs' domain, ports, errors and published surface; only workflows calls its use cases (ADR-0103 Amendment 3)
+type = forbidden
+# Context sources are their domain and application layers: infrastructure may reuse another
+# context's codecs (revision snapshots serialise the whole tree, PR 12). workflows is not a
+# source: it orchestrates, and may call other contexts' use cases (ADR-0103 Amendment 3).
+source_modules =
+    smb_requirement_agent.application
+    smb_requirement_agent.shared_kernel
+    smb_requirement_agent.knowledge.domain
+    smb_requirement_agent.knowledge.application
+    smb_requirement_agent.identity.domain
+    smb_requirement_agent.identity.application
+    smb_requirement_agent.requirements.domain
+    smb_requirement_agent.requirements.application
+    smb_requirement_agent.references.domain
+    smb_requirement_agent.references.application
+    smb_requirement_agent.analysis.domain
+    smb_requirement_agent.analysis.application
+    smb_requirement_agent.breakdown.domain
+    smb_requirement_agent.breakdown.application
+    smb_requirement_agent.governance.domain
+    smb_requirement_agent.governance.application
+    smb_requirement_agent.reporting.application
+forbidden_modules =
+    smb_requirement_agent.jobs.application.use_cases
+    smb_requirement_agent.jobs.infrastructure
+
+[importlinter:contract:requirements_internal_layers]
+name = requirements: infrastructure > application > domain
+type = layers
+containers =
+    smb_requirement_agent.requirements
+layers =
+    infrastructure
+    application
+    domain
+
+[importlinter:contract:requirements_depends_only_upstream]
+name = requirements depends only on identity, jobs and the shared kernel (ADR-0103 §2)
+type = forbidden
+source_modules =
+    smb_requirement_agent.requirements
+forbidden_modules =
+    smb_requirement_agent.interfaces
+    smb_requirement_agent.knowledge
+    smb_requirement_agent.analysis
+    smb_requirement_agent.references
+    smb_requirement_agent.breakdown
+    smb_requirement_agent.governance
+    smb_requirement_agent.reporting
+
+[importlinter:contract:requirements_published_surface]
+name = Other contexts use requirements' domain, ports, errors and published surface; only workflows calls its use cases (ADR-0103 Amendment 3)
+type = forbidden
+# Context sources are their domain and application layers: infrastructure may reuse another
+# context's codecs (revision snapshots serialise the whole tree, PR 12). workflows is not a
+# source: it orchestrates, and may call other contexts' use cases (ADR-0103 Amendment 3).
+source_modules =
+    smb_requirement_agent.application
+    smb_requirement_agent.shared_kernel
+    smb_requirement_agent.knowledge.domain
+    smb_requirement_agent.knowledge.application
+    smb_requirement_agent.identity.domain
+    smb_requirement_agent.identity.application
+    smb_requirement_agent.jobs.domain
+    smb_requirement_agent.jobs.application
+    smb_requirement_agent.references.domain
+    smb_requirement_agent.references.application
+    smb_requirement_agent.analysis.domain
+    smb_requirement_agent.analysis.application
+    smb_requirement_agent.breakdown.domain
+    smb_requirement_agent.breakdown.application
+    smb_requirement_agent.governance.domain
+    smb_requirement_agent.governance.application
+    smb_requirement_agent.reporting.application
+forbidden_modules =
+    smb_requirement_agent.requirements.application.use_cases
+    smb_requirement_agent.requirements.infrastructure
+
+[importlinter:contract:analysis_internal_layers]
+name = analysis: infrastructure > application > domain
+type = layers
+containers =
+    smb_requirement_agent.analysis
+layers =
+    infrastructure
+    application
+    domain
+
+[importlinter:contract:analysis_depends_only_upstream]
+name = analysis depends only on references, requirements, identity, jobs and the shared kernel (ADR-0103 §2)
+type = forbidden
+source_modules =
+    smb_requirement_agent.analysis
+forbidden_modules =
+    smb_requirement_agent.interfaces
+    smb_requirement_agent.knowledge
+    smb_requirement_agent.breakdown
+    smb_requirement_agent.governance
+    smb_requirement_agent.reporting
+
+[importlinter:contract:analysis_published_surface]
+name = Other contexts use analysis's domain, ports, errors and published surface; only workflows calls its use cases (ADR-0103 Amendment 3)
+type = forbidden
+# Context sources are their domain and application layers: infrastructure may reuse another
+# context's codecs (revision snapshots serialise the whole tree, PR 12). workflows is not a
+# source: it orchestrates, and may call other contexts' use cases (ADR-0103 Amendment 3).
+source_modules =
+    smb_requirement_agent.application
+    smb_requirement_agent.shared_kernel
+    smb_requirement_agent.knowledge.domain
+    smb_requirement_agent.knowledge.application
+    smb_requirement_agent.identity.domain
+    smb_requirement_agent.identity.application
+    smb_requirement_agent.jobs.domain
+    smb_requirement_agent.jobs.application
+    smb_requirement_agent.requirements.domain
+    smb_requirement_agent.requirements.application
+    smb_requirement_agent.breakdown.domain
+    smb_requirement_agent.breakdown.application
+    smb_requirement_agent.governance.domain
+    smb_requirement_agent.governance.application
+    smb_requirement_agent.reporting.application
+forbidden_modules =
+    smb_requirement_agent.analysis.application.use_cases
+    smb_requirement_agent.analysis.infrastructure
+
+[importlinter:contract:breakdown_internal_layers]
+name = breakdown: infrastructure > application > domain
+type = layers
+containers =
+    smb_requirement_agent.breakdown
+layers =
+    infrastructure
+    application
+    domain
+
+[importlinter:contract:breakdown_depends_only_upstream]
+name = breakdown depends only on analysis and the contexts upstream of it (ADR-0103 §2)
+type = forbidden
+source_modules =
+    smb_requirement_agent.breakdown
+forbidden_modules =
+    smb_requirement_agent.interfaces
+    smb_requirement_agent.governance
+    smb_requirement_agent.reporting
+
+[importlinter:contract:breakdown_published_surface]
+name = Other contexts use breakdown's domain, ports, errors and published surface; only workflows calls its use cases (ADR-0103 Amendment 3)
+type = forbidden
+# Context sources are their domain and application layers: infrastructure may reuse another
+# context's codecs (revision snapshots serialise the whole tree, PR 12). workflows is not a
+# source: it orchestrates, and may call other contexts' use cases (ADR-0103 Amendment 3).
+source_modules =
+    smb_requirement_agent.application
+    smb_requirement_agent.shared_kernel
+    smb_requirement_agent.identity.domain
+    smb_requirement_agent.identity.application
+    smb_requirement_agent.jobs.domain
+    smb_requirement_agent.jobs.application
+    smb_requirement_agent.requirements.domain
+    smb_requirement_agent.requirements.application
+    smb_requirement_agent.analysis.domain
+    smb_requirement_agent.analysis.application
+    smb_requirement_agent.governance.domain
+    smb_requirement_agent.governance.application
+    smb_requirement_agent.reporting.application
+forbidden_modules =
+    smb_requirement_agent.breakdown.application.use_cases
+    smb_requirement_agent.breakdown.infrastructure
+
+[importlinter:contract:governance_internal_layers]
+name = governance: infrastructure > application > domain
+type = layers
+containers =
+    smb_requirement_agent.governance
+layers =
+    infrastructure
+    application
+    domain
+
+[importlinter:contract:governance_depends_only_upstream]
+name = governance depends only on breakdown and the contexts upstream of it (ADR-0103 §2)
+type = forbidden
+source_modules =
+    smb_requirement_agent.governance
+forbidden_modules =
+    smb_requirement_agent.interfaces
+    smb_requirement_agent.reporting
+
+[importlinter:contract:governance_published_surface]
+name = Other contexts use governance's domain, ports, errors and published surface; only workflows calls its use cases (ADR-0103 Amendment 3)
+type = forbidden
+# Context sources are their domain and application layers: infrastructure may reuse another
+# context's codecs (revision snapshots serialise the whole tree, PR 12). workflows is not a
+# source: it orchestrates, and may call other contexts' use cases (ADR-0103 Amendment 3).
+source_modules =
+    smb_requirement_agent.application
+    smb_requirement_agent.shared_kernel
+    smb_requirement_agent.identity.domain
+    smb_requirement_agent.identity.application
+    smb_requirement_agent.jobs.domain
+    smb_requirement_agent.jobs.application
+    smb_requirement_agent.requirements.domain
+    smb_requirement_agent.requirements.application
+    smb_requirement_agent.analysis.domain
+    smb_requirement_agent.analysis.application
+    smb_requirement_agent.breakdown.domain
+    smb_requirement_agent.breakdown.application
+    smb_requirement_agent.reporting.application
+forbidden_modules =
+    smb_requirement_agent.governance.application.use_cases
+    smb_requirement_agent.governance.infrastructure
+
+[importlinter:contract:reporting_internal_layers]
+name = reporting: infrastructure > application (no domain layer: it reads projections)
+type = layers
+containers =
+    smb_requirement_agent.reporting
+layers =
+    infrastructure
+    application
+
+[importlinter:contract:reporting_depends_only_upstream]
+name = reporting depends only on the contexts upstream of it (ADR-0103 §2)
+type = forbidden
+source_modules =
+    smb_requirement_agent.reporting
+forbidden_modules =
+    smb_requirement_agent.interfaces
+
+[importlinter:contract:reporting_published_surface]
+name = Other contexts use reporting's domain, ports, errors and published surface; only workflows calls its use cases (ADR-0103 Amendment 3)
+type = forbidden
+# Context sources are their domain and application layers: infrastructure may reuse another
+# context's codecs (revision snapshots serialise the whole tree, PR 12). workflows is not a
+# source: it orchestrates, and may call other contexts' use cases (ADR-0103 Amendment 3).
+source_modules =
+    smb_requirement_agent.application
+    smb_requirement_agent.shared_kernel
+    smb_requirement_agent.identity.domain
+    smb_requirement_agent.identity.application
+    smb_requirement_agent.jobs.domain
+    smb_requirement_agent.jobs.application
+    smb_requirement_agent.requirements.domain
+    smb_requirement_agent.requirements.application
+    smb_requirement_agent.analysis.domain
+    smb_requirement_agent.analysis.application
+    smb_requirement_agent.breakdown.domain
+    smb_requirement_agent.breakdown.application
+    smb_requirement_agent.governance.domain
+    smb_requirement_agent.governance.application
+forbidden_modules =
+    smb_requirement_agent.reporting.application.use_cases
+    smb_requirement_agent.reporting.infrastructure
+
+[importlinter:contract:workflows_internal_layers]
+name = workflows: infrastructure > application (no domain layer: it orchestrates)
+type = layers
+containers =
+    smb_requirement_agent.workflows
+layers =
+    infrastructure
+    application
+
+[importlinter:contract:nothing_imports_workflows]
+name = workflows is downstream of every context: only delivery and composition import it (ADR-0103 §2)
+type = forbidden
+source_modules =
+    smb_requirement_agent.application
+    smb_requirement_agent.infrastructure
+    smb_requirement_agent.shared_kernel
+    smb_requirement_agent.identity
+    smb_requirement_agent.jobs
+    smb_requirement_agent.requirements
+    smb_requirement_agent.references
+    smb_requirement_agent.analysis
+    smb_requirement_agent.knowledge
+    smb_requirement_agent.breakdown
+    smb_requirement_agent.governance
+    smb_requirement_agent.reporting
+forbidden_modules =
+    smb_requirement_agent.workflows
+
+[importlinter:contract:references_internal_layers]
+name = references: infrastructure > application > domain
+type = layers
+containers =
+    smb_requirement_agent.references
+layers =
+    infrastructure
+    application
+    domain
+
+[importlinter:contract:references_depends_only_upstream]
+name = references depends only on requirements, identity, jobs and the shared kernel (ADR-0103 §2)
+type = forbidden
+source_modules =
+    smb_requirement_agent.references
+forbidden_modules =
+    smb_requirement_agent.interfaces
+    smb_requirement_agent.knowledge
+    smb_requirement_agent.analysis
+    smb_requirement_agent.breakdown
+    smb_requirement_agent.governance
+    smb_requirement_agent.reporting
+
+[importlinter:contract:references_published_surface]
+name = Other contexts use references' domain, ports, errors and published surface; only workflows calls its use cases (ADR-0103 Amendment 3)
+type = forbidden
+# Context sources are their domain and application layers: infrastructure may reuse another
+# context's codecs (revision snapshots serialise the whole tree, PR 12). workflows is not a
+# source: it orchestrates, and may call other contexts' use cases (ADR-0103 Amendment 3).
+source_modules =
+    smb_requirement_agent.application
+    smb_requirement_agent.shared_kernel
+    smb_requirement_agent.knowledge.domain
+    smb_requirement_agent.knowledge.application
+    smb_requirement_agent.identity.domain
+    smb_requirement_agent.identity.application
+    smb_requirement_agent.jobs.domain
+    smb_requirement_agent.jobs.application
+    smb_requirement_agent.requirements.domain
+    smb_requirement_agent.requirements.application
+    smb_requirement_agent.analysis.domain
+    smb_requirement_agent.analysis.application
+    smb_requirement_agent.breakdown.domain
+    smb_requirement_agent.breakdown.application
+    smb_requirement_agent.governance.domain
+    smb_requirement_agent.governance.application
+    smb_requirement_agent.reporting.application
+forbidden_modules =
+    smb_requirement_agent.references.application.use_cases
+    smb_requirement_agent.references.infrastructure
+
+[importlinter:contract:knowledge_internal_layers]
+name = knowledge: infrastructure > application > domain
+type = layers
+containers =
+    smb_requirement_agent.knowledge
+layers =
+    infrastructure
+    application
+    domain
+
+[importlinter:contract:knowledge_depends_only_upstream]
+name = knowledge depends only on analysis and the contexts upstream of it (ADR-0103 §2)
+type = forbidden
+source_modules =
+    smb_requirement_agent.knowledge
+forbidden_modules =
+    smb_requirement_agent.interfaces
+    smb_requirement_agent.breakdown
+    smb_requirement_agent.governance
+    smb_requirement_agent.reporting
+
+[importlinter:contract:knowledge_published_surface]
+name = Other contexts use knowledge's domain, ports, errors and published surface; only workflows calls its use cases (ADR-0103 Amendment 3)
+type = forbidden
+# Context sources are their domain and application layers: infrastructure may reuse another
+# context's codecs (revision snapshots serialise the whole tree, PR 12). workflows is not a
+# source: it orchestrates, and may call other contexts' use cases (ADR-0103 Amendment 3).
+source_modules =
+    smb_requirement_agent.application
+    smb_requirement_agent.shared_kernel
+    smb_requirement_agent.identity.domain
+    smb_requirement_agent.identity.application
+    smb_requirement_agent.jobs.domain
+    smb_requirement_agent.jobs.application
+    smb_requirement_agent.requirements.domain
+    smb_requirement_agent.requirements.application
+    smb_requirement_agent.references.domain
+    smb_requirement_agent.references.application
+    smb_requirement_agent.analysis.domain
+    smb_requirement_agent.analysis.application
+    smb_requirement_agent.breakdown.domain
+    smb_requirement_agent.breakdown.application
+    smb_requirement_agent.governance.domain
+    smb_requirement_agent.governance.application
+    smb_requirement_agent.reporting.application
+forbidden_modules =
+    smb_requirement_agent.knowledge.application.use_cases
+    smb_requirement_agent.knowledge.infrastructure

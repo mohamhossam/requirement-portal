@@ -99,6 +99,48 @@ describe("Requirement workspace reads", () => {
     expect(api.getFeatures).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ["no analysis yet", "Analyse this requirement", null],
+    ["an analysis", "Start a new analysis", undefined],
+  ] as const)("says what an ineligible Requirement still needs, with %s", async (_, name, analysis) => {
+    vi.mocked(api.getRequirement).mockResolvedValue({
+      ...requirement, analysis_eligibility: { eligible: false, missing_fields: ["description"] },
+    });
+    if (analysis === null) vi.mocked(api.getAnalysis).mockResolvedValue(null);
+    const start = vi.spyOn(api, "startAiJob");
+    renderPage("clarify");
+    const button = await screen.findByRole("button", { name });
+    expect(button).toHaveAttribute("aria-disabled", "true");
+    expect(button).toHaveAccessibleDescription("Still needed: the business need, or a file included in analysis.");
+    await userEvent.click(button);
+    expect(start).not.toHaveBeenCalled();
+  });
+
+  it("refreshes a missing analysis token instead of starting the analysis", async () => {
+    vi.mocked(api.getRequirement).mockResolvedValue({ ...requirement, analysis_context_token: "" });
+    vi.mocked(api.getAnalysis).mockResolvedValue(null);
+    const start = vi.spyOn(api, "startAiJob");
+    renderPage("clarify");
+    await userEvent.click(await screen.findByRole("button", { name: "Analyse this requirement" }));
+    expect(await screen.findByText(/This page was out of date and has been refreshed/)).toBeVisible();
+    expect(start).not.toHaveBeenCalled();
+    await waitFor(() => expect(api.getRequirement).toHaveBeenCalledTimes(2));
+  });
+
+  it("reloads the Requirement when the analysis start is refused as changed", async () => {
+    vi.mocked(api.getAnalysis).mockResolvedValue(null);
+    const start = vi.spyOn(api, "startAiJob").mockRejectedValue(
+      new ApiError(409, "The Requirement changed. Reload it.", "stale_generation_context"),
+    );
+    renderPage("clarify");
+    await userEvent.click(await screen.findByRole("button", { name: "Analyse this requirement" }));
+    expect(await screen.findByText("The Requirement changed. Reload it.")).toBeVisible();
+    expect(start).toHaveBeenCalledWith("req-1", {
+      operation: "analyse_requirement", force: false, context_token: "analysis-context",
+    }, expect.any(String));
+    await waitFor(() => expect(api.getRequirement).toHaveBeenCalledTimes(2));
+  });
+
   it("refreshes Breakdown when returning with a fresh cache", async () => {
     const page = renderPage("breakdown");
     await screen.findByText("No Epic yet");

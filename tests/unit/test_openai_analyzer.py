@@ -6,9 +6,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
-from smb_requirement_agent.application.ports.requirement_analyzer import AnalysisDocumentContext
-from smb_requirement_agent.domain.analysis.value_objects import (
+from smb_requirement_agent.analysis.application.errors import RequirementAnalysisGenerationError
+from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
+    AnalysisDocumentContext,
+)
+from smb_requirement_agent.analysis.domain.value_objects import (
     ClarificationKind,
     HumanClarification,
     IntentProposal,
@@ -16,19 +18,10 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     IntentProposalKind,
     IntentProposalStatus,
 )
-from smb_requirement_agent.domain.identity.entities import ActorId, ActorSnapshot
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementContext,
-    RequirementDescription,
-    RequirementId,
-    RequirementStatus,
-    RequirementTitle,
-)
-from smb_requirement_agent.infrastructure.llm.openai_adapters import (
+from smb_requirement_agent.analysis.infrastructure.llm.openai_adapters import (
     OpenAIRequirementAnalyzer,
 )
-from smb_requirement_agent.infrastructure.llm.schemas.analysis_schema import (
+from smb_requirement_agent.analysis.infrastructure.llm.schemas.analysis_schema import (
     AnalysisEvidenceCitationSchema,
     DesiredOutcomeProposalSchema,
     DesiredOutcomeReviewSchema,
@@ -36,6 +29,18 @@ from smb_requirement_agent.infrastructure.llm.schemas.analysis_schema import (
     RequirementAnalysisSchema,
     UncertaintySchema,
 )
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.value_objects import (
+    RequirementContext,
+    RequirementDescription,
+    RequirementStatus,
+    RequirementTitle,
+)
+from smb_requirement_agent.shared_kernel.actors import (
+    ActorId,
+    ActorSnapshot,
+)
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.conftest import TEST_NOW
 
 
@@ -92,7 +97,7 @@ def requirement_with_outcome(dummy_requirement: Requirement) -> Requirement:
         IntentProposalStatus.REJECTED,
     ],
 )
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.analysis.infrastructure.llm.openai_adapters.OpenAI")
 def test_sdk_analysis_preserves_decisions_without_reciting_section_evidence(
     mock_openai: MagicMock,
     kind: IntentProposalKind,
@@ -153,7 +158,7 @@ def test_sdk_analysis_preserves_decisions_without_reciting_section_evidence(
     assert parsed.evidence_citations[-1].block_ids == ["outside-section"]
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.analysis.infrastructure.llm.openai_adapters.OpenAI")
 def test_openai_analyzer_success(
     mock_openai_class: MagicMock, requirement_with_outcome: Requirement
 ) -> None:
@@ -231,7 +236,7 @@ def test_openai_analyzer_success(
     assert "Before returning zero unresolved items" in system_msg
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.analysis.infrastructure.llm.openai_adapters.OpenAI")
 def test_openai_analyzer_failure(
     mock_openai_class: MagicMock, dummy_requirement: Requirement
 ) -> None:
@@ -249,7 +254,7 @@ def test_openai_analyzer_failure(
         analyzer.analyze(dummy_requirement, ())
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.analysis.infrastructure.llm.openai_adapters.OpenAI")
 def test_openai_structured_analysis_sends_images_separately_and_validates_citations(
     mock_openai_class: MagicMock, dummy_requirement: Requirement
 ) -> None:
@@ -306,7 +311,7 @@ def _client_returning(parsed: object | None, choices: list[MagicMock] | None = N
     return mock_client
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.analysis.infrastructure.llm.openai_adapters.OpenAI")
 def test_blank_entries_are_dropped_instead_of_reaching_the_domain(
     mock_openai_class: MagicMock, requirement_with_outcome: Requirement
 ) -> None:
@@ -345,7 +350,7 @@ def test_blank_entries_are_dropped_instead_of_reaching_the_domain(
     assert result["potential_dependencies"] == ["Dep"]
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.analysis.infrastructure.llm.openai_adapters.OpenAI")
 def test_response_with_only_blank_entries_is_a_generation_error(
     mock_openai_class: MagicMock, dummy_requirement: Requirement
 ) -> None:
@@ -358,7 +363,7 @@ def test_response_with_only_blank_entries_is_a_generation_error(
         ).analyze(dummy_requirement, ())
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.analysis.infrastructure.llm.openai_adapters.OpenAI")
 def test_empty_choices_is_a_generation_error(
     mock_openai_class: MagicMock, dummy_requirement: Requirement
 ) -> None:
@@ -371,7 +376,7 @@ def test_empty_choices_is_a_generation_error(
         ).analyze(dummy_requirement, ())
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.analysis.infrastructure.llm.openai_adapters.OpenAI")
 def test_intent_proposals_are_cleaned_deduplicated_and_labelled(
     mock_openai_class: MagicMock, dummy_requirement: Requirement
 ) -> None:
@@ -405,7 +410,7 @@ def test_intent_proposals_are_cleaned_deduplicated_and_labelled(
     assert result["intent_proposals"][0]["success_measures"] == ["Completion is observable."]
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.analysis.infrastructure.llm.openai_adapters.OpenAI")
 def test_invented_numeric_target_in_intent_proposal_is_rejected(
     mock_openai_class: MagicMock, dummy_requirement: Requirement
 ) -> None:
@@ -430,7 +435,7 @@ def test_invented_numeric_target_in_intent_proposal_is_rejected(
 
 
 def test_attachment_only_packet_prompt_preserves_source_and_application_association() -> None:
-    from smb_requirement_agent.infrastructure.llm.prompts.analysis_prompt import (
+    from smb_requirement_agent.analysis.infrastructure.llm.prompts.analysis_prompt import (
         REQUIREMENT_ANALYSIS_SYSTEM_PROMPT,
         build_user_prompt,
     )
@@ -452,7 +457,7 @@ def test_attachment_only_packet_prompt_preserves_source_and_application_associat
     assert "APPLICATION CONTEXT:" not in build_user_prompt("Title", "Typed need", [])
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.analysis.infrastructure.llm.openai_adapters.OpenAI")
 def test_openai_now_runs_the_shared_outcome_review_when_the_source_has_none(
     mock_openai_class: MagicMock,
 ) -> None:

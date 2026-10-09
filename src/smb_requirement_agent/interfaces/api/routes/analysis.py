@@ -8,31 +8,31 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from smb_requirement_agent.application.use_cases.analysis_collaboration import (
+from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration import (
     AnalysisCollaboration,
     AnalysisRoundView,
     AnalysisWorkspace,
     ClarificationResolutionInput,
 )
-from smb_requirement_agent.application.use_cases.analyze_requirement import AnalyzeRequirement
-from smb_requirement_agent.application.use_cases.clarify_requirement_analysis import (
+from smb_requirement_agent.analysis.application.use_cases.analyze_requirement import (
+    AnalyzeRequirement,
+)
+from smb_requirement_agent.analysis.application.use_cases.clarify_requirement_analysis import (
     ClarificationAnswerInput,
     ClarifyRequirementAnalysis,
 )
-from smb_requirement_agent.application.use_cases.confirm_requirement_analysis import (
+from smb_requirement_agent.analysis.application.use_cases.confirm_requirement_analysis import (
     ConfirmRequirementAnalysis,
 )
-from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
-from smb_requirement_agent.application.use_cases.get_requirement_analysis import (
+from smb_requirement_agent.analysis.application.use_cases.get_requirement_analysis import (
     GetRequirementAnalysis,
 )
-from smb_requirement_agent.application.use_cases.requirement_commands import ExpectedContext
-from smb_requirement_agent.domain.analysis.entities import (
+from smb_requirement_agent.analysis.domain.entities import (
     AnalysisQuestionChange,
     ClarificationQuestion,
     RequirementAnalysis,
 )
-from smb_requirement_agent.domain.analysis.value_objects import (
+from smb_requirement_agent.analysis.domain.value_objects import (
     AnalysisEvidenceReference,
     AnalysisId,
     IntentProposalId,
@@ -40,8 +40,6 @@ from smb_requirement_agent.domain.analysis.value_objects import (
     IntentProposalStatus,
     QuestionId,
 )
-from smb_requirement_agent.domain.identity.entities import ActorId
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     RequirementCommandsDep,
@@ -92,6 +90,14 @@ from smb_requirement_agent.interfaces.api.schemas.epic import ProvenanceResponse
 from smb_requirement_agent.interfaces.api.schemas.generation import (
     ActionAvailabilityResponse,
     GenerationRequest,
+)
+from smb_requirement_agent.shared_kernel.actors import ActorId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.workflows.application.use_cases.generation_context import (
+    GenerationContextTokens,
+)
+from smb_requirement_agent.workflows.application.use_cases.requirement_commands import (
+    ExpectedContext,
 )
 
 router = APIRouter(

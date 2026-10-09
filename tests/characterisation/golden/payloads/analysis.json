@@ -1,0 +1,134 @@
+{
+  "ambiguities": [
+    {
+      "evidence_references": [],
+      "reason": "No baseline is given.",
+      "statement": "Activation time"
+    }
+  ],
+  "analysis_id": "analysis-golden-1",
+  "assumptions": [
+    {
+      "evidence_references": [],
+      "statement": "Bundles are prepaid."
+    }
+  ],
+  "business_rules": [
+    {
+      "evidence_references": [],
+      "statement": "A credit check precedes activation."
+    }
+  ],
+  "clarification_evidence": [],
+  "clarifications": [
+    {
+      "answer": "Portal and app.",
+      "answered_at": "2026-03-01T10:00:00+00:00",
+      "answered_by": {
+        "display_name": "Olivia Owner",
+        "email": "olivia@example.test",
+        "id": "actor-owner"
+      },
+      "kind": "open_question",
+      "question_id": "question-golden-2",
+      "source_lineage": [],
+      "source_suggestion_id": null,
+      "subject": "Which channels?"
+    }
+  ],
+  "confirmed_at": "2026-03-02T11:30:00+00:00",
+  "confirmed_by": {
+    "display_name": "Olivia Owner",
+    "email": "olivia@example.test",
+    "id": "actor-owner"
+  },
+  "constraints": [
+    {
+      "evidence_references": [],
+      "statement": "Billing cycles stay unchanged."
+    }
+  ],
+  "document_references": [
+    {
+      "checksum_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "document_id": "doc-golden-1",
+      "filename": "scope.docx",
+      "version_id": "doc-version-golden-1"
+    }
+  ],
+  "intent_proposals": [
+    {
+      "decisions": [
+        {
+          "decided_at": "2026-03-01T10:00:00+00:00",
+          "decided_by": {
+            "display_name": "Olivia Owner",
+            "email": "olivia@example.test",
+            "id": "actor-owner"
+          },
+          "final_statement": "Credit check must complete before activation.",
+          "rationale": null,
+          "status": "accepted",
+          "success_measures": [],
+          "version": 2
+        }
+      ],
+      "evidence_references": [],
+      "id": "proposal-golden-1",
+      "kind": "business_rule",
+      "rationale": "The source names a credit check without ordering it.",
+      "reference_conflict": false,
+      "reference_evidence": [],
+      "reference_provenance": null,
+      "statement": "Credit check must complete before activation.",
+      "success_measures": []
+    }
+  ],
+  "known_facts": [
+    {
+      "evidence_references": [
+        {
+          "block_id": "block-1",
+          "checksum_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "document_id": "doc-golden-1",
+          "label": "Scope",
+          "version_id": "doc-version-golden-1"
+        }
+      ],
+      "statement": "Customers already hold SMB accounts."
+    }
+  ],
+  "open_questions": [
+    {
+      "evidence_references": [],
+      "question": "Which bundle sizes apply?",
+      "rationale": "Pricing is unstated."
+    }
+  ],
+  "potential_dependencies": [
+    {
+      "evidence_references": [],
+      "statement": "BCRM order API availability."
+    }
+  ],
+  "provenance": {
+    "generated_at": "2026-03-01T09:00:00+00:00",
+    "model": "golden-model",
+    "prompt_version": "golden-prompt-v1"
+  },
+  "requirement_id": "req-golden-1",
+  "round_number": 2,
+  "source_desired_outcome": "Halve bundle activation time.",
+  "source_lineage": [],
+  "source_requirement_version": 3,
+  "stage_provenance": [
+    {
+      "generated_at": "2026-03-01T09:00:00+00:00",
+      "input_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "model": "golden-model",
+      "prompt_version": "golden-prompt-v1",
+      "stage": "evidence"
+    }
+  ],
+  "version": 4
+}

@@ -14,7 +14,7 @@ from typing import Any
 
 import yaml
 
-from smb_requirement_agent.application.ports import identity
+from smb_requirement_agent.identity.application.ports import identity
 
 ROOT = Path(__file__).resolve().parents[2]
 DEPLOY = ROOT / "deploy"

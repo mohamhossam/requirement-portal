@@ -6,6 +6,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { api, type DocumentDetail, type Requirement, type RequirementDraft } from "../api/client";
+import { ApiError } from "../api/errors";
 import { NewRequirementPage } from "./NewRequirementPage";
 
 function renderPage(initialEntry = "/requirements/new") {
@@ -214,7 +215,7 @@ describe("NewRequirementPage", () => {
       operation: "analyse_requirement",
       context_token: "generation-context-v2:analysis",
       force: false,
-    });
+    }, expect.any(String));
   });
 
   it("keeps the saved requirement available when analysis fails", async () => {
@@ -229,6 +230,36 @@ describe("NewRequirementPage", () => {
     expect(await screen.findByRole("heading", { name: /Nothing was lost/ })).toBeVisible();
     expect(screen.getByRole("link", { name: "Open saved requirement" })).toHaveAttribute("href", "/requirements/req-safe-1234/capture");
     expect(screen.getByRole("button", { name: "Retry analysis" })).toBeVisible();
+  });
+
+  it("re-reads the Requirement before retrying, and replays a start whose outcome was lost", async () => {
+    const saved = requirement("req-retry-1234", "Retry draft", "A preserved source.");
+    vi.spyOn(api, "promoteRequirementDraft").mockResolvedValue(saved);
+    const read = vi.spyOn(api, "getRequirement").mockResolvedValue({
+      ...saved, analysis_context_token: "generation-context-v3:analysis",
+    });
+    const start = vi.spyOn(api, "startAiJob")
+      .mockRejectedValueOnce(new ApiError(0, "The API is unavailable."))
+      .mockRejectedValueOnce(new ApiError(502, "Bad gateway"))
+      .mockResolvedValueOnce({ ...jobFixture, requirement_id: saved.id });
+    renderPage();
+    await userEvent.type(await screen.findByLabelText(/Requirement title/), "Retry draft");
+    await userEvent.type(screen.getByLabelText(/Business need/), "A preserved source.");
+    await userEvent.click(screen.getByRole("button", { name: "Save and analyse" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Retry analysis" }));
+    await waitFor(() => expect(start).toHaveBeenCalledTimes(2));
+    await userEvent.click(await screen.findByRole("button", { name: "Retry analysis" }));
+
+    expect(await screen.findByText("Review workspace opened")).toBeVisible();
+    // The promoted Requirement carried a token, but each retry still reads a fresh one.
+    expect(read).toHaveBeenCalledTimes(2);
+    expect(start.mock.calls.map((call) => ("context_token" in call[1] ? call[1].context_token : null))).toEqual([
+      "generation-context-v2:analysis", "generation-context-v3:analysis", "generation-context-v3:analysis",
+    ]);
+    // A different token is a different request; the same one after a 5xx replays its key.
+    const keys = start.mock.calls.map((call) => call[2]);
+    expect(keys[1]).not.toBe(keys[0]);
+    expect(keys[2]).toBe(keys[1]);
   });
 
   it("saves a draft without starting analysis", async () => {

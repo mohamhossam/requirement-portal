@@ -7,17 +7,17 @@ from datetime import UTC, datetime
 
 import pytest
 
-from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
-from smb_requirement_agent.domain.analysis.value_objects import KnownFact
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
-from smb_requirement_agent.domain.shared.actions import ActionAvailability
-from smb_requirement_agent.domain.shared.errors import InvalidGeneratedContentError
-from smb_requirement_agent.domain.shared.generation import GenerationStatus, ReviewableGeneration
-from smb_requirement_agent.domain.shared.staleness import StaleReason
-from smb_requirement_agent.infrastructure.identity.fake_identity import FAKE_ACTORS
-from tests.unit.test_epic_domain import make_epic
-from tests.unit.test_feature_domain import make_feature
-from tests.unit.test_story_domain import make_story
+from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
+from smb_requirement_agent.analysis.domain.value_objects import KnownFact
+from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
+from smb_requirement_agent.shared_kernel.actions import ActionAvailability
+from smb_requirement_agent.shared_kernel.errors import InvalidGeneratedContentError
+from smb_requirement_agent.shared_kernel.generation import GenerationStatus, ReviewableGeneration
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.shared_kernel.staleness import StaleReason
+from tests.unit.breakdown.test_epic_domain import make_epic
+from tests.unit.breakdown.test_feature_domain import make_feature
+from tests.unit.breakdown.test_story_domain import make_story
 
 NOW = datetime(2026, 1, 2, tzinfo=UTC)
 

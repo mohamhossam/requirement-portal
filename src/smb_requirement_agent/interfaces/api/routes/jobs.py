@@ -4,21 +4,6 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, Query, Response
 
-from smb_requirement_agent.application.ports.ai_jobs import AiJobCommand, JsonValue
-from smb_requirement_agent.application.use_cases.ai_jobs import (
-    DEFAULT_LIST_LIMIT,
-    MAX_LIST_LIMIT,
-    AiJobs,
-    Notifications,
-)
-from smb_requirement_agent.domain.jobs.entities import (
-    ActorNotification,
-    AiJob,
-    AiJobId,
-    AiJobOperation,
-    NotificationId,
-)
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
 from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     get_ai_jobs,
@@ -37,6 +22,21 @@ from smb_requirement_agent.interfaces.api.schemas.jobs import (
     NotificationPreferenceResponse,
     NotificationResponse,
     RetryAiJobRequest,
+)
+from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobCommand, JsonValue
+from smb_requirement_agent.jobs.domain.entities import (
+    ActorNotification,
+    AiJob,
+    AiJobId,
+    AiJobOperation,
+    NotificationId,
+)
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.workflows.application.use_cases.ai_jobs import (
+    DEFAULT_LIST_LIMIT,
+    MAX_LIST_LIMIT,
+    AiJobs,
+    Notifications,
 )
 
 router = APIRouter(

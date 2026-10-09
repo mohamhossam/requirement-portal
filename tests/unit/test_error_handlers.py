@@ -6,82 +6,23 @@ from collections.abc import Generator, Sequence
 import pytest
 from fastapi.testclient import TestClient
 
-from smb_requirement_agent.application.errors import (
-    ActorNotFoundError,
-    AiJobNotFoundError,
+from smb_requirement_agent.analysis.application.errors import (
     AnalysisConfirmationRequiredError,
     AnalysisRoundNotFoundError,
-    AnswerSuggestionNotFoundError,
-    ApprovalPolicyBlockedError,
-    ApprovalWorkflowNotReadyError,
-    ArchitectureJobNotFoundError,
-    ArchitectureMappingConflictError,
-    ArchitectureMappingProfileChangedError,
-    ArtifactVersionConflictError,
-    AuthenticationRequiredError,
-    BacklogExportFormatError,
-    BreakdownReviewNotFoundError,
-    BreakdownReviewStaleError,
-    BreakdownRevisionNotExportableError,
     ClarificationQuestionNotFoundError,
     DocumentContextTooLargeError,
-    DocumentExtractionBusyError,
-    DocumentExtractionError,
-    DocumentExtractionTimeoutError,
-    DocumentNotFoundError,
-    DocumentStorageError,
-    DocumentVersionConflictError,
-    DuplicateRequirementError,
-    EpicGenerationError,
-    EpicNotFoundError,
-    FeatureGenerationError,
-    FeatureNotFoundError,
-    FeaturesNotFoundError,
-    IdentityProviderUnavailableError,
     IntentProposalNotFoundError,
-    InvalidReportingWindowError,
-    InvalidSavedViewError,
-    KnowledgeFindingNotFoundError,
-    KnowledgeGenerationError,
-    KnowledgeIndexPendingError,
-    KnowledgeScreenConflictError,
-    KnowledgeViewUnavailableError,
-    ModelTransportError,
-    NotificationNotFoundError,
-    PersistenceError,
-    ProviderRateLimitExceededError,
     RequirementAnalysisConflictError,
     RequirementAnalysisGenerationError,
-    RequirementAnalysisIneligibleError,
     RequirementAnalysisNotFoundError,
-    RequirementDraftNotFoundError,
-    RequirementImpactAcknowledgementRequiredError,
-    RequirementNotFoundError,
-    RequirementVersionConflictError,
-    ReviewFlagNotFoundError,
-    SavedViewConflictError,
-    SavedViewNotFoundError,
-    ServiceResponseError,
-    ServiceUnavailableError,
-    StoryGenerationError,
-    StoryNotFoundError,
-    StoryProposalNotFoundError,
-    StoryQualityEvaluationError,
-    StoryQualitySnapshotConflictError,
-    StoryQualitySnapshotNotFoundError,
-    UnsupportedDocumentError,
 )
-from smb_requirement_agent.application.ports.requirement_analyzer import (
+from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     ActiveQuestionContext,
     AnalysisDocumentContext,
     RequirementAnalysisCandidate,
     RequirementAnalyzerPort,
 )
-from smb_requirement_agent.application.public_errors import (
-    FailureCategory,
-    describe_public_error,
-)
-from smb_requirement_agent.domain.analysis.errors import (
+from smb_requirement_agent.analysis.domain.errors import (
     AnalysisClarificationConflictError,
     AnalysisConfirmationBlockedError,
     ClarificationVersionConflictError,
@@ -92,66 +33,79 @@ from smb_requirement_agent.domain.analysis.errors import (
     InvalidIntentProposalDecisionError,
     InvalidIntentProposalTransitionError,
 )
-from smb_requirement_agent.domain.analysis.value_objects import HumanClarification, IntentProposal
-from smb_requirement_agent.domain.architecture.errors import InvalidArchitectureContentError
-from smb_requirement_agent.domain.architecture.knowledge import (
-    InvalidKnowledgeError as InvalidArchitectureKnowledgeError,
+from smb_requirement_agent.analysis.domain.value_objects import HumanClarification, IntentProposal
+from smb_requirement_agent.application.errors import (
+    ArtifactVersionConflictError,
+    AuthenticationRequiredError,
+    DocumentExtractionBusyError,
+    DocumentExtractionError,
+    DocumentExtractionTimeoutError,
+    IdentityProviderUnavailableError,
+    KnowledgeGenerationError,
+    ModelTransportError,
+    PersistenceError,
+    ServiceResponseError,
+    ServiceUnavailableError,
+    UnsupportedDocumentError,
 )
-from smb_requirement_agent.domain.architecture.knowledge import KnowledgeConflictError
-from smb_requirement_agent.domain.document.errors import (
-    DocumentInclusionError,
-    InvalidDocumentError,
+from smb_requirement_agent.breakdown.application.errors import (
+    ArchitectureJobNotFoundError,
+    ArchitectureMappingConflictError,
+    ArchitectureMappingProfileChangedError,
+    EpicGenerationError,
+    EpicNotFoundError,
+    FeatureGenerationError,
+    FeatureNotFoundError,
+    FeaturesNotFoundError,
+    StoryGenerationError,
+    StoryNotFoundError,
+    StoryProposalNotFoundError,
+    StoryQualityEvaluationError,
+    StoryQualitySnapshotConflictError,
+    StoryQualitySnapshotNotFoundError,
 )
-from smb_requirement_agent.domain.epic.errors import (
+from smb_requirement_agent.breakdown.domain.epic.errors import (
     EpicNotApprovedError,
     EpicRegenerationConflictError,
     InvalidEpicContentError,
     StaleEpicApprovalError,
 )
-from smb_requirement_agent.domain.feature.errors import (
+from smb_requirement_agent.breakdown.domain.feature.errors import (
     FeatureRegenerationConflictError,
     InvalidFeatureContentError,
     StaleFeatureApprovalError,
 )
-from smb_requirement_agent.domain.identity.errors import (
-    AuthorizationDeniedError,
-    InvalidIdentityError,
-    RequirementAccessConflictError,
-)
-from smb_requirement_agent.domain.jobs.errors import AiJobConflictError, InvalidAiJobError
-from smb_requirement_agent.domain.knowledge.errors import (
-    CorpusMembershipConflictError,
-    InvalidKnowledgeError,
-    KnowledgeFindingConflictError,
-    KnowledgeReviewRequiredError,
-    RequirementRetiredError,
-)
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.errors import (
-    DuplicateRequirementStateError,
-    InvalidRequirementContextError,
-    InvalidRequirementDescriptionError,
-    InvalidRequirementTitleError,
-    InvalidRequirementVersionError,
-    RequirementIntakeTooLargeError,
-)
-from smb_requirement_agent.domain.review.errors import (
-    FlagResolutionConflictError,
-    FlagResolutionNotAllowedError,
-    InvalidReviewContentError,
-    InvalidReviewTransitionError,
-)
-from smb_requirement_agent.domain.revision.errors import InvalidRevisionError, RevisionNotFoundError
-from smb_requirement_agent.domain.shared.errors import (
-    InvalidApprovalContentError,
-    InvalidGeneratedContentError,
-)
-from smb_requirement_agent.domain.story.errors import (
+from smb_requirement_agent.breakdown.domain.story.errors import (
     FeatureNotReadyForStoriesError,
     InvalidStoryContentError,
     StoriesAlreadyExistError,
     StoryProposalConflictError,
     StoryRegenerationConflictError,
+)
+from smb_requirement_agent.governance.application.errors import (
+    ApprovalPolicyBlockedError,
+    ApprovalWorkflowNotReadyError,
+    BacklogExportFormatError,
+    BreakdownReviewNotFoundError,
+    BreakdownReviewStaleError,
+    BreakdownRevisionNotExportableError,
+    ReviewFlagNotFoundError,
+)
+from smb_requirement_agent.governance.domain.review.errors import (
+    FlagResolutionConflictError,
+    FlagResolutionNotAllowedError,
+    InvalidReviewContentError,
+    InvalidReviewTransitionError,
+)
+from smb_requirement_agent.governance.domain.revision.errors import (
+    InvalidRevisionError,
+    RevisionNotFoundError,
+)
+from smb_requirement_agent.identity.application.errors import ActorNotFoundError
+from smb_requirement_agent.identity.domain.errors import (
+    AuthorizationDeniedError,
+    InvalidIdentityError,
+    RequirementAccessConflictError,
 )
 from smb_requirement_agent.interfaces.api.container import build_container
 from smb_requirement_agent.interfaces.api.error_handlers import (
@@ -159,6 +113,76 @@ from smb_requirement_agent.interfaces.api.error_handlers import (
     status_code_for,
 )
 from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.jobs.application.errors import (
+    AiJobNotFoundError,
+    NotificationNotFoundError,
+    ProviderRateLimitExceededError,
+)
+from smb_requirement_agent.jobs.domain.errors import AiJobConflictError, InvalidAiJobError
+from smb_requirement_agent.knowledge.application.errors import (
+    AnswerSuggestionNotFoundError,
+    KnowledgeFindingNotFoundError,
+    KnowledgeIndexPendingError,
+    KnowledgeScreenConflictError,
+)
+from smb_requirement_agent.knowledge.domain.screening_errors import (
+    CorpusMembershipConflictError,
+    KnowledgeFindingConflictError,
+    KnowledgeReviewRequiredError,
+    RequirementRetiredError,
+)
+from smb_requirement_agent.references.application.errors import (
+    CitationNotCurrentError,
+    KnowledgeViewUnavailableError,
+)
+from smb_requirement_agent.references.domain.architecture.catalogue import (
+    InvalidArchitectureContentError,
+)
+from smb_requirement_agent.references.domain.architecture.knowledge import (
+    InvalidRelationshipKindError,
+    KnowledgeConflictError,
+)
+from smb_requirement_agent.references.domain.errors import InvalidKnowledgeError
+from smb_requirement_agent.reporting.application.errors import (
+    InvalidReportingWindowError,
+    InvalidSavedViewError,
+    SavedViewConflictError,
+    SavedViewNotFoundError,
+)
+from smb_requirement_agent.requirements.application.errors import (
+    DocumentNotFoundError,
+    DocumentStorageError,
+    DocumentVersionConflictError,
+    DuplicateRequirementError,
+    RequirementAnalysisIneligibleError,
+    RequirementDraftNotFoundError,
+    RequirementImpactAcknowledgementRequiredError,
+    RequirementNotFoundError,
+    RequirementVersionConflictError,
+)
+from smb_requirement_agent.requirements.domain.document.errors import (
+    DocumentInclusionError,
+    InvalidDocumentError,
+)
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.errors import (
+    DuplicateRequirementStateError,
+    InvalidRequirementContextError,
+    InvalidRequirementDescriptionError,
+    InvalidRequirementTitleError,
+    InvalidRequirementVersionError,
+    RequirementIntakeTooLargeError,
+)
+from smb_requirement_agent.shared_kernel.errors import (
+    InvalidApprovalContentError,
+    InvalidGeneratedContentError,
+    InvalidRequirementIdError,
+)
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from smb_requirement_agent.workflows.application.public_errors import (
+    FailureCategory,
+    describe_public_error,
+)
 from tests.conftest import FAKE_PROVIDER_SETTINGS
 
 
@@ -236,7 +260,7 @@ EXPECTED_STATUS_CODES: dict[type[Exception], int] = {
     ArchitectureJobNotFoundError: 404,
     KnowledgeViewUnavailableError: 404,
     KnowledgeConflictError: 409,
-    InvalidArchitectureKnowledgeError: 422,
+    InvalidRelationshipKindError: 422,
     ArchitectureMappingConflictError: 409,
     ArchitectureMappingProfileChangedError: 409,
     BreakdownReviewNotFoundError: 404,
@@ -267,6 +291,7 @@ EXPECTED_STATUS_CODES: dict[type[Exception], int] = {
     ClarificationQuestionNotFoundError: 404,
     IntentProposalNotFoundError: 404,
     RequirementAnalysisConflictError: 409,
+    CitationNotCurrentError: 409,
     AnalysisConfirmationRequiredError: 409,
     DuplicateRequirementError: 409,
     RequirementVersionConflictError: 409,
@@ -276,6 +301,7 @@ EXPECTED_STATUS_CODES: dict[type[Exception], int] = {
     InvalidRequirementTitleError: 422,
     InvalidRequirementDescriptionError: 422,
     InvalidRequirementContextError: 422,
+    InvalidRequirementIdError: 422,
     InvalidRequirementVersionError: 422,
     InvalidClarificationError: 422,
     InvalidClarificationTransitionError: 409,
@@ -341,6 +367,19 @@ def test_unmapped_errors_are_not_claimed() -> None:
     assert status_code_for(ValueError("unrelated")) is None
 
 
+def test_blank_requirement_id_keeps_its_public_error() -> None:
+    """RequirementId moved to the shared kernel (ADR-0103, PR 2); clients see no difference."""
+    with pytest.raises(InvalidRequirementIdError) as raised:
+        RequirementId("   ")
+
+    error = describe_public_error(raised.value)
+
+    assert error.code == "invalid_requirement_context"
+    assert error.category is FailureCategory.INVALID_INPUT
+    assert error.message == "Requirement id must not be blank."
+    assert status_code_for(raised.value) == 422
+
+
 def test_public_error_catalogue_preserves_caller_messages_and_hides_server_details() -> None:
     caller_error = describe_public_error(
         RequirementVersionConflictError("Requirement changed; reload it.")
@@ -353,6 +392,20 @@ def test_public_error_catalogue_preserves_caller_messages_and_hides_server_detai
     assert server_error.category is FailureCategory.INTERNAL
     assert server_error.message == "The service could not complete the request."
     assert "secret" not in server_error.message
+
+
+def test_a_withdrawn_citation_keeps_the_analysis_conflict_contract() -> None:
+    """References raise their own error (ADR-0103 F5); clients and job records see no change."""
+    message = "A cited reference was withdrawn or replaced."
+
+    citation = describe_public_error(CitationNotCurrentError(message))
+    analysis = describe_public_error(RequirementAnalysisConflictError(message))
+
+    assert citation == analysis
+    assert citation.code == "requirement_analysis_conflict"
+    assert citation.category is FailureCategory.CONFLICT
+    assert citation.message == message
+    assert status_code_for(CitationNotCurrentError(message)) == 409
 
 
 def test_invalid_analysis_content_surfaces_as_502_not_500(client: TestClient) -> None:

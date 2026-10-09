@@ -10,17 +10,17 @@ import pytest
 from smb_kernel.llm.structured_output import StructuredOutputError
 
 from smb_requirement_agent.application.errors import KnowledgeGenerationError
-from smb_requirement_agent.application.ports.prior_art import (
+from smb_requirement_agent.knowledge.application.ports.prior_art import (
     PriorArtCandidateInput,
     PriorArtEvidenceInput,
 )
-from smb_requirement_agent.infrastructure.llm.prompts.prior_art_prompt import (
+from smb_requirement_agent.knowledge.infrastructure.llm.prompts.prior_art_prompt import (
     PRIOR_ART_SYSTEM_PROMPT,
 )
-from smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters import (
+from smb_requirement_agent.knowledge.infrastructure.llm.requirement_knowledge_adapters import (
     StructuredPriorArtJudge,
 )
-from smb_requirement_agent.infrastructure.llm.schemas.prior_art_schema import (
+from smb_requirement_agent.knowledge.infrastructure.llm.schemas.prior_art_schema import (
     PriorArtJudgementSchema,
     PriorArtMatchSchema,
 )

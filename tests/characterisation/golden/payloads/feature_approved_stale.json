@@ -1,0 +1,40 @@
+{
+  "approvals": [
+    {
+      "decision": "approved",
+      "id": "approval-feature-golden-2",
+      "rationale": "Matches the confirmed analysis.",
+      "recorded_at": "2026-03-02T11:30:00+00:00",
+      "recorded_by": {
+        "display_name": "Olivia Owner",
+        "email": "olivia@example.test",
+        "id": "actor-owner"
+      },
+      "subject_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "target": {
+        "item_id": "feature-golden-2",
+        "kind": "feature"
+      }
+    }
+  ],
+  "architecture": null,
+  "delivery_drop": "later",
+  "epic_id": "epic-golden-1",
+  "id": "feature-golden-2",
+  "name": "App bundle ordering",
+  "outcome": "Customers order a bundle in the app.",
+  "provenance": {
+    "generated_at": "2026-03-01T09:00:00+00:00",
+    "model": "golden-model",
+    "prompt_version": "golden-prompt-v1"
+  },
+  "source_lineage": [],
+  "splitting_pattern": "channel",
+  "splitting_rationale": "The app follows the portal.",
+  "staleness": {
+    "reason": "epic_changed",
+    "since": "2026-03-03T14:15:00+00:00"
+  },
+  "status": "approved",
+  "version": 1
+}

@@ -1,0 +1,208 @@
+"""Lease-based in-process worker safe across PostgreSQL-backed API replicas."""
+
+from __future__ import annotations
+
+import logging
+import threading
+import uuid
+from datetime import timedelta
+from time import monotonic, perf_counter
+
+from smb_kernel.observability.correlation import correlation_scope
+from smb_kernel.observability.metrics import Metrics
+from smb_kernel.time.clock import ClockPort
+
+from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobQueuePort, AiJobRecord
+from smb_requirement_agent.workflows.application.use_cases.ai_job_execution import ExecuteAiJob
+
+logger = logging.getLogger("smb_requirement_agent.ai_jobs.worker")
+
+
+class PollingAiJobWorker:
+    def __init__(
+        self,
+        queue: AiJobQueuePort,
+        executor: ExecuteAiJob,
+        clock: ClockPort,
+        metrics: Metrics,
+        *,
+        poll_interval_seconds: float,
+        lease_seconds: float,
+        heartbeat_seconds: float,
+        shutdown_grace_seconds: float,
+    ) -> None:
+        self._queue = queue
+        self._executor = executor
+        self._clock = clock
+        self._metrics = metrics
+        self._poll_interval = poll_interval_seconds
+        self._lease_seconds = lease_seconds
+        self._heartbeat_seconds = heartbeat_seconds
+        self._shutdown_grace_seconds = shutdown_grace_seconds
+        self._worker_id = str(uuid.uuid4())
+        self._stop = threading.Event()
+        self._thread: threading.Thread | None = None
+        self._active_lock = threading.Lock()
+        self._active: AiJobRecord | None = None
+        self._last_healthy = monotonic()
+        self._heartbeat_failed = threading.Event()
+
+    @property
+    def healthy(self) -> bool:
+        return bool(
+            self._thread
+            and self._thread.is_alive()
+            and not self._stop.is_set()
+            and not self._heartbeat_failed.is_set()
+            and monotonic() - self._last_healthy < self._lease_seconds
+        )
+
+    def start(self) -> None:
+        if self._thread is not None and self._thread.is_alive():
+            return
+        self._stop.clear()
+        thread = threading.Thread(
+            target=self._run,
+            name=f"ai-job-worker-{self._worker_id[:8]}",
+            daemon=True,
+        )
+        thread.start()
+        self._thread = thread
+
+    @property
+    def shutdown_grace_seconds(self) -> float:
+        return self._shutdown_grace_seconds
+
+    def stop(self) -> bool:
+        self.request_stop()
+        drained = self.join(self._shutdown_grace_seconds)
+        if not drained:
+            self.fence_active()
+        return drained
+
+    def request_stop(self) -> None:
+        self._stop.set()
+
+    def join(self, timeout: float | None = None) -> bool:
+        if self._thread is None:
+            return True
+        self._thread.join(timeout=timeout)
+        return not self._thread.is_alive()
+
+    def fence_active(self) -> None:
+        with self._active_lock:
+            active = self._active
+        if active is not None and active.attempt_token is not None:
+            self._queue.fence_attempt(active.job.id, self._worker_id, active.attempt_token)
+
+    def wait_until_stopped(self) -> None:
+        self.join()
+
+    def _run(self) -> None:
+        while not self._stop.is_set():
+            try:
+                now = self._clock.now()
+                record = self._queue.claim_next(
+                    self._worker_id,
+                    now,
+                    now + timedelta(seconds=self._lease_seconds),
+                )
+                self._last_healthy = monotonic()
+                if record is None:
+                    self._stop.wait(self._poll_interval)
+                    continue
+                self._execute(record)
+            except Exception:
+                logger.exception("AI job worker polling failed")
+                self._stop.wait(self._poll_interval)
+
+    def _execute(self, record: AiJobRecord) -> None:
+        self._heartbeat_failed.clear()
+        with self._active_lock:
+            self._active = record
+        heartbeat_stop = threading.Event()
+
+        def heartbeat() -> None:
+            while not heartbeat_stop.wait(self._heartbeat_seconds):
+                now = self._clock.now()
+                try:
+                    renewed = self._queue.heartbeat(
+                        record.job.id,
+                        self._worker_id,
+                        record.attempt_token or "",
+                        now,
+                        now + timedelta(seconds=self._lease_seconds),
+                    )
+                except Exception:
+                    self._heartbeat_failed.set()
+                    logger.exception("AI job heartbeat failed [job_id=%s]", record.job.id.value)
+                    return
+                if not renewed:
+                    self._heartbeat_failed.set()
+                    return
+                self._last_healthy = monotonic()
+
+        heartbeat_thread = threading.Thread(
+            target=heartbeat,
+            name=f"ai-job-heartbeat-{record.job.id.value[:8]}",
+            daemon=True,
+        )
+        heartbeat_thread.start()
+        operation = record.job.operation.value
+        started = perf_counter()
+        status = "error"
+        try:
+            with correlation_scope(f"job:{record.job.id.value}"):
+                status = self._executor.execute(record).status.value
+        finally:
+            elapsed = perf_counter() - started
+            self._metrics.record_job(operation, status, elapsed)
+            logger.info(
+                "AI job attempt finished",
+                extra={
+                    "job_id": record.job.id.value,
+                    "operation": operation,
+                    "status": status,
+                    "duration_ms": round(elapsed * 1000, 1),
+                },
+            )
+            heartbeat_stop.set()
+            heartbeat_thread.join(timeout=max(1.0, self._heartbeat_seconds))
+            self._queue.release(
+                record.job.id,
+                self._worker_id,
+                record.attempt_token or "",
+            )
+            with self._active_lock:
+                self._active = None
+
+
+class AiJobWorkerGroup:
+    def __init__(self, workers: tuple[PollingAiJobWorker, ...]) -> None:
+        self._workers = workers
+
+    def start(self) -> None:
+        for worker in self._workers:
+            worker.start()
+
+    @property
+    def healthy(self) -> bool:
+        return all(worker.healthy for worker in self._workers)
+
+    def stop(self) -> bool:
+        for worker in self._workers:
+            worker.request_stop()
+        deadline = monotonic() + max(
+            (worker.shutdown_grace_seconds for worker in self._workers), default=0.0
+        )
+        unfinished: list[PollingAiJobWorker] = []
+        for worker in self._workers:
+            if not worker.join(max(0.0, deadline - monotonic())):
+                unfinished.append(worker)
+        for worker in unfinished:
+            worker.fence_active()
+        return not unfinished
+
+    def wait_until_stopped(self) -> None:
+        for worker in self._workers:
+            worker.wait_until_stopped()

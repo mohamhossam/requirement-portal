@@ -18,13 +18,13 @@ from smb_kernel.llm.local_structured_output import (
     LocalStructuredOutputClient,
 )
 
-from smb_requirement_agent.application.errors import RequirementAnalysisGenerationError
-from smb_requirement_agent.infrastructure.llm.candidate_mappers import to_analysis_candidate
-from smb_requirement_agent.infrastructure.llm.schemas.analysis_schema import (
+from smb_requirement_agent.analysis.application.errors import RequirementAnalysisGenerationError
+from smb_requirement_agent.analysis.infrastructure.llm.analysis_mappers import to_analysis_candidate
+from smb_requirement_agent.analysis.infrastructure.llm.schemas.analysis_schema import (
     AnalysisEvidenceCitationSchema,
     RequirementAnalysisSchema,
 )
-from smb_requirement_agent.infrastructure.llm.schemas.epic_schema import EpicSchema
+from smb_requirement_agent.breakdown.infrastructure.llm.schemas.epic_schema import EpicSchema
 
 
 def _events(path: Path) -> list[dict[str, Any]]:

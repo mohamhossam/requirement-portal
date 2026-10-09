@@ -2,6 +2,11 @@
 
 Generation, editing and approval of each level, Story quality, architecture
 mapping, and generating and answering the breakdown review.
+
+Mapping a backlog is queued requirement work: the catalogue and its matching live in
+the knowledge service (ADR-0099), and this process maps its own backlog against the
+release its local copy names, through `ArchitectureKnowledgePort`. ADR-0103 PR 11
+merged that builder, formerly `composition/architecture.py`, into this one.
 """
 
 from __future__ import annotations
@@ -10,55 +15,40 @@ from dataclasses import dataclass
 
 from smb_kernel.time.clock import ClockPort
 
-from smb_requirement_agent.application.ports.architecture_knowledge import ArchitectureKnowledgePort
-from smb_requirement_agent.application.ports.epic_generator import EpicGeneratorPort
-from smb_requirement_agent.application.ports.feature_generator import FeatureGeneratorPort
-from smb_requirement_agent.application.ports.story_generator import StoryGeneratorPort
-from smb_requirement_agent.application.ports.story_quality_evaluator import (
-    StoryQualityEvaluatorPort,
-)
-from smb_requirement_agent.application.use_cases.ai_jobs import AnalysisProgressReporter
-from smb_requirement_agent.application.use_cases.analysis_collaboration import (
+from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration import (
     AnalysisCollaboration,
 )
-from smb_requirement_agent.application.use_cases.approval_workflow import (
-    ApproveStory,
-    RejectStory,
+from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
+from smb_requirement_agent.breakdown.application.ports.epic_generator import EpicGeneratorPort
+from smb_requirement_agent.breakdown.application.ports.feature_generator import FeatureGeneratorPort
+from smb_requirement_agent.breakdown.application.ports.story_generator import StoryGeneratorPort
+from smb_requirement_agent.breakdown.application.ports.story_quality_evaluator import (
+    StoryQualityEvaluatorPort,
 )
-from smb_requirement_agent.application.use_cases.approve_epic import ApproveEpic
-from smb_requirement_agent.application.use_cases.architecture_mapping import (
+from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping import (
     MapBreakdownArchitecture,
     MapFeatureArchitecture,
     MapStoryArchitecture,
 )
-from smb_requirement_agent.application.use_cases.breakdown_review import (
-    GenerateBreakdownReview,
-    RefreshSavedBreakdownReview,
-    ResolveOpenQuestion,
+from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping_jobs import (
+    ArchitectureMappingJobs,
 )
-from smb_requirement_agent.application.use_cases.breakdown_review_policy import (
-    BreakdownReviewPolicy,
-)
-from smb_requirement_agent.application.use_cases.edit_epic import EditEpic
-from smb_requirement_agent.application.use_cases.feature_review import (
-    ApproveFeature,
+from smb_requirement_agent.breakdown.application.use_cases.edit_epic import EditEpic
+from smb_requirement_agent.breakdown.application.use_cases.feature_review import (
     EditFeature,
     GetFeatures,
 )
-from smb_requirement_agent.application.use_cases.generate_epic import GenerateEpic
-from smb_requirement_agent.application.use_cases.generate_features import GenerateFeatures
-from smb_requirement_agent.application.use_cases.generation_checks import GenerationChecks
-from smb_requirement_agent.application.use_cases.generation_context import GenerationContextTokens
-from smb_requirement_agent.application.use_cases.get_epic import GetEpic
-from smb_requirement_agent.application.use_cases.identity_access import RequirementAccessService
-from smb_requirement_agent.application.use_cases.invalidate_approval_workflow import (
-    InvalidateApprovalWorkflow,
+from smb_requirement_agent.breakdown.application.use_cases.generate_epic import GenerateEpic
+from smb_requirement_agent.breakdown.application.use_cases.generate_features import GenerateFeatures
+from smb_requirement_agent.breakdown.application.use_cases.generation_checks import GenerationChecks
+from smb_requirement_agent.breakdown.application.use_cases.get_epic import GetEpic
+from smb_requirement_agent.breakdown.application.use_cases.leased_jobs import (
+    ArchitectureJobExecution,
 )
-from smb_requirement_agent.application.use_cases.invalidate_derived_artifacts import (
-    InvalidateDerivedArtifacts,
+from smb_requirement_agent.breakdown.application.use_cases.story_change_proposals import (
+    StoryChangeProposals,
 )
-from smb_requirement_agent.application.use_cases.story_change_proposals import StoryChangeProposals
-from smb_requirement_agent.application.use_cases.story_quality import (
+from smb_requirement_agent.breakdown.application.use_cases.story_quality import (
     AssessStoryCandidate,
     EvaluateFeatureStories,
     GetFeatureQualitySnapshot,
@@ -66,7 +56,7 @@ from smb_requirement_agent.application.use_cases.story_quality import (
     ValidateFeatureStories,
     ValidateStory,
 )
-from smb_requirement_agent.application.use_cases.story_workflow import (
+from smb_requirement_agent.breakdown.application.use_cases.story_workflow import (
     EditStory,
     GenerateStories,
     GetStories,
@@ -74,8 +64,38 @@ from smb_requirement_agent.application.use_cases.story_workflow import (
     RegenerateStory,
     SplitStory,
 )
+from smb_requirement_agent.breakdown.infrastructure.architecture_job_worker import (
+    ArchitectureJobWorker,
+)
+from smb_requirement_agent.governance.application.use_cases.approval_workflow import (
+    ApproveStory,
+    RejectStory,
+)
+from smb_requirement_agent.governance.application.use_cases.approve_epic import ApproveEpic
+from smb_requirement_agent.governance.application.use_cases.approve_feature import ApproveFeature
+from smb_requirement_agent.governance.application.use_cases.breakdown_review import (
+    GenerateBreakdownReview,
+    GovernanceCandidateReview,
+    RefreshSavedBreakdownReview,
+    ResolveOpenQuestion,
+)
+from smb_requirement_agent.governance.domain.review.policy import BreakdownReviewPolicy
+from smb_requirement_agent.infrastructure.config.options import LLMProvider
+from smb_requirement_agent.infrastructure.config.settings import Settings
+from smb_requirement_agent.interfaces.api.composition.governance import ReviewWiring
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
-from smb_requirement_agent.interfaces.api.composition.review import ReviewWiring
+from smb_requirement_agent.references.application.ports.architecture_knowledge import (
+    ActiveArchitectureReleasePort,
+    ArchitectureKnowledgePort,
+)
+from smb_requirement_agent.workflows.application.public_errors import describe_public_error
+from smb_requirement_agent.workflows.application.use_cases.ai_jobs import AnalysisProgressReporter
+from smb_requirement_agent.workflows.application.use_cases.generation_context import (
+    GenerationContextTokens,
+)
+from smb_requirement_agent.workflows.application.use_cases.identity_access import (
+    RequirementAccessService,
+)
 
 
 @dataclass(frozen=True)
@@ -126,8 +146,7 @@ def build_breakdown(
     review: ReviewWiring,
     collaboration: AnalysisCollaboration,
     contexts: GenerationContextTokens,
-    invalidation: InvalidateDerivedArtifacts,
-    approval_invalidation: InvalidateApprovalWorkflow,
+    events: DomainEventPublisher,
     clock: ClockPort,
     access: RequirementAccessService,
 ) -> BreakdownWiring:
@@ -140,7 +159,7 @@ def build_breakdown(
     # Every Story-set change shares one argument list; only the model use differs.
     story_set = (requirements, analyses, epics, features, stories, transactions)
 
-    get_stories = GetStories(*story_set, approval_invalidation, authorization=access)
+    get_stories = GetStories(*story_set, events, authorization=access)
     validate_story = ValidateStory(get_stories, models.story_quality_evaluator, clock)
     validate_feature_stories = ValidateFeatureStories(get_stories, validate_story)
     map_feature = MapFeatureArchitecture(architecture)
@@ -151,15 +170,18 @@ def build_breakdown(
         map_story,
         AssessStoryCandidate(models.story_quality_evaluator, clock),
         persistence.story_quality_repository,
-        RefreshSavedBreakdownReview(
-            review.review_evidence,
-            persistence.breakdown_review_repository,
-            persistence.story_quality_repository,
+        GovernanceCandidateReview(
             BreakdownReviewPolicy(),
+            RefreshSavedBreakdownReview(
+                review.review_evidence,
+                persistence.breakdown_review_repository,
+                persistence.story_quality_repository,
+                BreakdownReviewPolicy(),
+                clock,
+                review.current_release,
+            ),
             clock,
-            review.current_release,
         ),
-        BreakdownReviewPolicy(),
         clock,
         AnalysisProgressReporter(persistence.ai_job_repository, clock),
     )
@@ -170,13 +192,13 @@ def build_breakdown(
             epics,
             models.epic_generator,
             clock,
-            invalidation,
+            events,
             transactions,
             authorization=access,
             contexts=contexts,
         ),
         get_epic=GetEpic(requirements, epics),
-        edit_epic=EditEpic(requirements, epics, invalidation, transactions, authorization=access),
+        edit_epic=EditEpic(requirements, epics, events, transactions, authorization=access),
         approve_epic=ApproveEpic(requirements, epics, review.approval_recorder, transactions),
         generate_features=GenerateFeatures(
             requirements,
@@ -187,7 +209,7 @@ def build_breakdown(
             persistence.story_proposal_repository,
             models.feature_generator,
             clock,
-            approval_invalidation,
+            events,
             transactions,
             authorization=access,
             contexts=contexts,
@@ -195,14 +217,14 @@ def build_breakdown(
         ),
         get_features=GetFeatures(requirements, epics, features),
         edit_feature=EditFeature(
-            requirements, epics, features, invalidation, transactions, authorization=access
+            requirements, epics, features, events, transactions, authorization=access
         ),
         approve_feature=ApproveFeature(
             requirements, epics, features, review.approval_recorder, transactions
         ),
         generate_stories=GenerateStories(
             *story_set,
-            approval_invalidation,
+            events,
             generator=models.story_generator,
             clock=clock,
             authorization=access,
@@ -210,12 +232,12 @@ def build_breakdown(
             checks=checks,
         ),
         get_stories=get_stories,
-        edit_story=EditStory(*story_set, approval_invalidation, authorization=access),
-        split_story=SplitStory(*story_set, approval_invalidation, authorization=access),
-        merge_stories=MergeStories(*story_set, approval_invalidation, authorization=access),
+        edit_story=EditStory(*story_set, events, authorization=access),
+        split_story=SplitStory(*story_set, events, authorization=access),
+        merge_stories=MergeStories(*story_set, events, authorization=access),
         regenerate_story=RegenerateStory(
             *story_set,
-            approval_invalidation,
+            events,
             proposals=persistence.story_proposal_repository,
             generator=models.story_generator,
             clock=clock,
@@ -225,7 +247,7 @@ def build_breakdown(
         ),
         story_change_proposals=StoryChangeProposals(
             *story_set,
-            approval_invalidation,
+            events,
             proposals=persistence.story_proposal_repository,
             generator=models.story_generator,
             clock=clock,
@@ -267,7 +289,7 @@ def build_breakdown(
             map_feature,
             map_story,
             clock,
-            approval_invalidation,
+            events,
             authorization=access,
         ),
         generate_breakdown_review=GenerateBreakdownReview(
@@ -288,4 +310,51 @@ def build_breakdown(
             clock,
             transactions,
         ),
+    )
+
+
+@dataclass(frozen=True)
+class ArchitectureJobWiring:
+    mapping_jobs: ArchitectureMappingJobs
+    # Present only when jobs are queued; inline jobs finish inside the request.
+    mapping_worker: ArchitectureJobWorker | None
+
+
+def build_architecture_jobs(
+    settings: Settings,
+    persistence: PersistenceAdapters,
+    map_breakdown_architecture: MapBreakdownArchitecture,
+    clock: ClockPort,
+    current_release: ActiveArchitectureReleasePort,
+) -> ArchitectureJobWiring:
+    # Offline fake models complete jobs inside the starting request; real models
+    # queue them for the background worker.
+    execution = (
+        ArchitectureJobExecution.INLINE
+        if settings.llm_provider is LLMProvider.FAKE
+        else ArchitectureJobExecution.QUEUED
+    )
+    # Matching runs in the knowledge service; a mapping is current for the release
+    # it pinned and the service it asked, which these name.
+    matcher = settings.knowledge_api_base_url or "in-process"
+    mapping_jobs = ArchitectureMappingJobs(
+        persistence.mapping_job_repository,
+        current_release,
+        map_breakdown_architecture,
+        execution,
+        f"knowledge-service:{matcher}",
+        "knowledge-service:architecture-impact-v1",
+        clock,
+        lambda exc: describe_public_error(exc).code,
+    )
+    return ArchitectureJobWiring(
+        mapping_jobs=mapping_jobs,
+        mapping_worker=ArchitectureJobWorker(
+            mapping_jobs,
+            poll_interval_seconds=settings.ai_job_poll_interval_seconds,
+            shutdown_grace_seconds=settings.ai_job_shutdown_grace_seconds,
+            name="architecture-mapping-jobs",
+        )
+        if execution is ArchitectureJobExecution.QUEUED
+        else None,
     )

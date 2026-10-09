@@ -7,35 +7,35 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from smb_requirement_agent.application.errors import FeatureGenerationError
-from smb_requirement_agent.domain.analysis.entities import RequirementAnalysis
-from smb_requirement_agent.domain.analysis.value_objects import (
+from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
+from smb_requirement_agent.analysis.domain.value_objects import (
     Assumption,
     BusinessRule,
     Constraint,
     KnownFact,
     OpenQuestion,
 )
-from smb_requirement_agent.domain.epic.entities import Epic
-from smb_requirement_agent.domain.epic.value_objects import (
+from smb_requirement_agent.breakdown.application.errors import FeatureGenerationError
+from smb_requirement_agent.breakdown.domain.epic.entities import Epic
+from smb_requirement_agent.breakdown.domain.epic.value_objects import (
     BusinessCase,
     BusinessOutcome,
     EpicId,
     EpicName,
     EpicStatus,
 )
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import (
+from smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters import (
+    OpenAIFeatureGenerator,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.prompts.feature_prompt import PROMPT_VERSION
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.value_objects import (
     RequirementDescription,
-    RequirementId,
     RequirementStatus,
     RequirementTitle,
 )
-from smb_requirement_agent.domain.shared.generation import Provenance
-from smb_requirement_agent.infrastructure.llm.openai_adapters import (
-    OpenAIFeatureGenerator,
-)
-from smb_requirement_agent.infrastructure.llm.prompts.feature_prompt import PROMPT_VERSION
+from smb_requirement_agent.shared_kernel.generation import Provenance
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 GENERATED_AT = datetime(2026, 1, 1, tzinfo=UTC)
 
@@ -113,7 +113,7 @@ def _parsed(*items: MagicMock) -> MagicMock:
     return parsed
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters.OpenAI")
 def test_success_maps_every_item(
     mock_openai: MagicMock,
     requirement: Requirement,
@@ -131,7 +131,7 @@ def test_success_maps_every_item(
     assert all(c["model"] == "gpt-4o" for c in candidates)
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters.OpenAI")
 def test_items_with_blank_fields_are_dropped(
     mock_openai: MagicMock,
     requirement: Requirement,
@@ -150,7 +150,7 @@ def test_items_with_blank_fields_are_dropped(
     assert [c["name"] for c in candidates] == ["Good"]
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters.OpenAI")
 def test_zero_features_is_a_generation_error(
     mock_openai: MagicMock,
     requirement: Requirement,
@@ -166,7 +166,7 @@ def test_zero_features_is_a_generation_error(
         ).generate(requirement, analysis, epic)
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters.OpenAI")
 def test_all_items_blank_is_a_generation_error(
     mock_openai: MagicMock,
     requirement: Requirement,
@@ -181,7 +181,7 @@ def test_all_items_blank_is_a_generation_error(
         ).generate(requirement, analysis, epic)
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters.OpenAI")
 def test_empty_choices_is_a_generation_error(
     mock_openai: MagicMock,
     requirement: Requirement,
@@ -196,7 +196,7 @@ def test_empty_choices_is_a_generation_error(
         ).generate(requirement, analysis, epic)
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters.OpenAI")
 def test_provider_error_is_mapped(
     mock_openai: MagicMock,
     requirement: Requirement,
@@ -215,7 +215,7 @@ def test_provider_error_is_mapped(
         ).generate(requirement, analysis, epic)
 
 
-@patch("smb_requirement_agent.infrastructure.llm.openai_adapters.OpenAI")
+@patch("smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters.OpenAI")
 def test_prompt_carries_the_epic_and_labels_unconfirmed_analysis(
     mock_openai: MagicMock,
     requirement: Requirement,

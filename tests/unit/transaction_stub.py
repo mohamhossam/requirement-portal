@@ -4,7 +4,7 @@ from collections.abc import Iterator
 from contextlib import AbstractContextManager, contextmanager
 
 from smb_requirement_agent.application.ports.external_work import check_external_result
-from smb_requirement_agent.domain.requirement.value_objects import RequirementId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 class NoOpTransactionManager:
@@ -24,6 +24,10 @@ class NoOpTransactionManager:
 
     def external_call(self) -> AbstractContextManager[None]:
         return _external()
+
+    def in_unit_of_work(self) -> bool:
+        """This stub stands in for an active transaction everywhere."""
+        return True
 
 
 @contextmanager

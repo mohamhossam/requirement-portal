@@ -20,41 +20,41 @@ from openai import OpenAI, OpenAIError
 from pydantic import BaseModel
 from smb_kernel.llm.structured_output import StructuredOutputError
 
-from smb_requirement_agent.application.errors import KnowledgeGenerationError
-from smb_requirement_agent.domain.analysis.entities import ClarificationQuestion
-from smb_requirement_agent.domain.analysis.value_objects import (
+from smb_requirement_agent.analysis.domain.entities import ClarificationQuestion
+from smb_requirement_agent.analysis.domain.value_objects import (
     AnalysisId,
     ClarificationKind,
     ClarificationSeverity,
     ClarificationSource,
     QuestionId,
 )
-from smb_requirement_agent.domain.knowledge.entities import (
+from smb_requirement_agent.application.errors import KnowledgeGenerationError
+from smb_requirement_agent.knowledge.domain.entities import (
     KnowledgeChunk,
     KnowledgeChunkId,
     KnowledgeRelationshipKind,
     KnowledgeSourceKind,
 )
-from smb_requirement_agent.domain.requirement.entities import Requirement
-from smb_requirement_agent.domain.requirement.value_objects import (
-    RequirementDescription,
-    RequirementId,
-    RequirementStatus,
-    RequirementTitle,
-)
-from smb_requirement_agent.infrastructure.llm.requirement_knowledge_adapters import (
+from smb_requirement_agent.knowledge.infrastructure.llm.requirement_knowledge_adapters import (
     EMBEDDING_DIMENSIONS,
     LocalKnowledgeEmbedding,
     OpenAIKnowledgeEmbedding,
     StructuredClarificationAnswerSuggesterAdapter,
     StructuredRequirementRelationshipClassifierAdapter,
 )
-from smb_requirement_agent.infrastructure.llm.schemas.knowledge_schema import (
+from smb_requirement_agent.knowledge.infrastructure.llm.schemas.knowledge_schema import (
     AnswerSuggestionListSchema,
     AnswerSuggestionSchema,
     RelationshipFindingSchema,
     RelationshipScreenSchema,
 )
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+from smb_requirement_agent.requirements.domain.requirement.value_objects import (
+    RequirementDescription,
+    RequirementStatus,
+    RequirementTitle,
+)
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 SchemaT = TypeVar("SchemaT", bound=BaseModel)
 VECTOR = [0.5] * EMBEDDING_DIMENSIONS

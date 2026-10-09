@@ -1,0 +1,20 @@
+{
+  "approvals": [],
+  "business_case": "Agent-assisted activation costs time and money.",
+  "id": "epic-golden-1",
+  "name": "SMB bundle self-service",
+  "outcome": "SMB customers activate bundles without an agent.",
+  "provenance": {
+    "generated_at": "2026-03-01T09:00:00+00:00",
+    "model": "golden-model",
+    "prompt_version": "golden-prompt-v1"
+  },
+  "requirement_id": "req-golden-1",
+  "source_lineage": [],
+  "staleness": {
+    "reason": "requirement_changed",
+    "since": "2026-03-03T14:15:00+00:00"
+  },
+  "status": "generated",
+  "version": 2
+}

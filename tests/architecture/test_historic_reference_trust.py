@@ -10,22 +10,23 @@ from __future__ import annotations
 import inspect
 import typing
 
-from smb_requirement_agent.application.ports import historic_corpus, prior_art
-from smb_requirement_agent.application.use_cases.answer_suggestions import (
+from smb_requirement_agent.knowledge.application.ports import prior_art
+from smb_requirement_agent.knowledge.application.use_cases.answer_suggestions import (
     SuggestClarificationAnswers,
 )
-from smb_requirement_agent.application.use_cases.requirement_knowledge import (
+from smb_requirement_agent.knowledge.application.use_cases.requirement_knowledge import (
     GetKnowledgeReview,
     RequirementKnowledgeCorpus,
     ScreenRequirementKnowledge,
 )
-from smb_requirement_agent.application.use_cases.unified_knowledge_search import (
+from smb_requirement_agent.knowledge.application.use_cases.unified_knowledge_search import (
     UnifiedKnowledgeSearch,
 )
-from smb_requirement_agent.domain.knowledge.entities import (
+from smb_requirement_agent.knowledge.domain.entities import (
     KnowledgeRelationshipKind,
     KnowledgeSourceKind,
 )
+from smb_requirement_agent.references.application.ports import historic_corpus
 
 HISTORIC_MODULES = (historic_corpus.__name__, prior_art.__name__)
 

@@ -13,9 +13,9 @@ from smb_kernel.llm.openai_structured_output import (
 )
 from smb_kernel.llm.structured_output import StructuredOutputError
 
-from smb_requirement_agent.application.public_errors import describe_public_error
 from smb_requirement_agent.infrastructure.config.options import ConfigurationError, LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
+from smb_requirement_agent.workflows.application.public_errors import describe_public_error
 
 REQUEST = httpx2.Request("POST", "https://api.openai.test/v1/chat/completions")
 
