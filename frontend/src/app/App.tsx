@@ -1,8 +1,8 @@
 import { lazy, Suspense } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 
 import { AppShell } from "../components/shell";
-import { LoadingState } from "../components/states";
+import { ErrorBoundary, LoadingState } from "../components/states";
 import { DashboardPage } from "./DashboardPage";
 import { LegacyEvidenceLink, LegacyLibraryLink } from "./legacyKnowledgeLinks";
 import { RequirementEntryRedirect } from "./RequirementEntryRedirect";
@@ -41,38 +41,42 @@ const ArchitectureEvidencePage = lazy(() => import("./ArchitectureEvidencePage")
  * instead of the whole window going blank.
  */
 export function App() {
+  // Navigating away from a page that crashed leaves the crash behind.
+  const { pathname } = useLocation();
   return (
     <AppShell>
-      <Suspense fallback={<LoadingState label="Opening the page" variant="page" />}>
-        <Routes>
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/activity" element={<ActivityPage />} />
-          <Route path="/reports" element={<ReportsPage />} />
-          <Route path="/requirements/new" element={<NewRequirementPage />} />
-          <Route path="/documents" element={<DocumentsPage />} />
-          {/* The library and the catalogues moved to the knowledge portal (ADR-0099). Old links
-              to a cited passage or to evidence still open, in this app's read-only views. */}
-          <Route path="/documents/library" element={<Navigate to="/documents" replace />} />
-          <Route path="/documents/library/:libraryId" element={<LegacyLibraryLink />} />
-          <Route path="/documents/:documentId" element={<DocumentDetailPage />} />
-          <Route path="/references/passage" element={<ReferencePassagePage />} />
-          <Route path="/architecture-evidence/:releaseId/:chunkId" element={<ArchitectureEvidencePage />} />
-          <Route path="/architecture-knowledge/releases/:releaseId/evidence/:chunkId" element={<LegacyEvidenceLink />} />
-          <Route path="/architecture-knowledge/*" element={<Navigate to="/documents" replace />} />
-          <Route path="/requirements/:id" element={<RequirementEntryRedirect />} />
-          <Route path="/requirements/:id/capture" element={<RequirementPage view="capture" />} />
-          <Route path="/requirements/:id/clarify" element={<RequirementPage view="clarify" />} />
-          <Route path="/requirements/:id/knowledge" element={<RequirementPage view="knowledge" />} />
-          <Route path="/requirements/:id/confirm" element={<RequirementPage view="confirm" />} />
-          <Route path="/requirements/:id/breakdown" element={<RequirementPage view="breakdown" />} />
-          <Route path="/requirements/:id/breakdown/epic" element={<RequirementPage view="breakdown" />} />
-          <Route path="/requirements/:id/breakdown/features/:featureId" element={<RequirementPage view="breakdown" />} />
-          <Route path="/requirements/:id/breakdown/features/:featureId/stories/:storyId" element={<RequirementPage view="breakdown" />} />
-          <Route path="/requirements/:id/revisions" element={<RequirementPage view="revisions" />} />
-          <Route path="/requirements/:id/review" element={<RequirementPage view="review" />} />
-          <Route path="*" element={<DashboardPage />} />
-        </Routes>
-      </Suspense>
+      <ErrorBoundary resetKey={pathname} scope="route">
+        <Suspense fallback={<LoadingState label="Opening the page" variant="page" />}>
+          <Routes>
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/activity" element={<ActivityPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/requirements/new" element={<NewRequirementPage />} />
+            <Route path="/documents" element={<DocumentsPage />} />
+            {/* The library and the catalogues moved to the knowledge portal (ADR-0099). Old links
+                to a cited passage or to evidence still open, in this app's read-only views. */}
+            <Route path="/documents/library" element={<Navigate to="/documents" replace />} />
+            <Route path="/documents/library/:libraryId" element={<LegacyLibraryLink />} />
+            <Route path="/documents/:documentId" element={<DocumentDetailPage />} />
+            <Route path="/references/passage" element={<ReferencePassagePage />} />
+            <Route path="/architecture-evidence/:releaseId/:chunkId" element={<ArchitectureEvidencePage />} />
+            <Route path="/architecture-knowledge/releases/:releaseId/evidence/:chunkId" element={<LegacyEvidenceLink />} />
+            <Route path="/architecture-knowledge/*" element={<Navigate to="/documents" replace />} />
+            <Route path="/requirements/:id" element={<RequirementEntryRedirect />} />
+            <Route path="/requirements/:id/capture" element={<RequirementPage view="capture" />} />
+            <Route path="/requirements/:id/clarify" element={<RequirementPage view="clarify" />} />
+            <Route path="/requirements/:id/knowledge" element={<RequirementPage view="knowledge" />} />
+            <Route path="/requirements/:id/confirm" element={<RequirementPage view="confirm" />} />
+            <Route path="/requirements/:id/breakdown" element={<RequirementPage view="breakdown" />} />
+            <Route path="/requirements/:id/breakdown/epic" element={<RequirementPage view="breakdown" />} />
+            <Route path="/requirements/:id/breakdown/features/:featureId" element={<RequirementPage view="breakdown" />} />
+            <Route path="/requirements/:id/breakdown/features/:featureId/stories/:storyId" element={<RequirementPage view="breakdown" />} />
+            <Route path="/requirements/:id/revisions" element={<RequirementPage view="revisions" />} />
+            <Route path="/requirements/:id/review" element={<RequirementPage view="review" />} />
+            <Route path="*" element={<DashboardPage />} />
+          </Routes>
+        </Suspense>
+      </ErrorBoundary>
     </AppShell>
   );
 }

@@ -31,7 +31,7 @@ export function ErrorState({
   retryLabel?: string;
   /** An alternative route out, when retrying is not the one. */
   action?: ReactNode;
-  headingLevel?: "h2" | "h3" | "h4";
+  headingLevel?: "h1" | "h2" | "h3" | "h4";
 }) {
   return (
     <div

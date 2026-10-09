@@ -2,7 +2,7 @@
 
 ## Status
 
-**Specified 2026-10-08; in progress since 2026-10-09.** PR 1, PR 8, PR 2, PR 4a and PR 4b are delivered (see their entries and Validation Evidence); everything else is not implemented yet. This record keeps the
+**Specified 2026-10-08; in progress since 2026-10-09.** PR 1, PR 8, PR 2, PR 4a, PR 4b and PR 5 are delivered (see their entries and Validation Evidence); everything else is not implemented yet. This record keeps the
 plan for closing every finding of the second production-readiness review (security, deployment and
 CI, reliability and observability, frontend) so it can be scheduled later. When work starts, each
 PR converts its part into the `WORKSPACE.md` §10 sections and fills in Validation Evidence here.
@@ -167,12 +167,31 @@ Then bump `pyproject.toml:12` and `uv.lock`, and wire the new settings. Phase 1 
   pinned by a deployment test.
 - ADR-0105 records the decision, with an ADR-0020 amendment.
 
-**PR 5 · Session safety and crash handling** (exception, ADR-0109)
-- **Renewal stops aborting requests:**
-  - `client.ts:163-169`: new `replaceAuthenticationHeaders()`, which doesn't abort.
-  - `AuthProvider.tsx:139-145`: on renewal with the same `profile.sub`, only replace the headers; then `queryClient.invalidateQueries()`.
-- **Aborts after the response arrives** (`client.ts:177,215,310,350`) become `ApiError(0)`, with no toast. Add a `startKeys.ts` test, because G6 keeps a start's key on a status-0 error.
-- **Error boundaries:** `components/states/ErrorBoundary.tsx` built on `ErrorState`, as a root boundary in `main.tsx` and around `<Suspense>` at `App.tsx:46`, with a reload prompt for chunk-load errors.
+**PR 5 · Session safety and crash handling** (exception, ADR-0109) — *delivered on `claude/production-hardening-pr5`, 2026-10-09*
+- **Renewal stops aborting requests.**
+  - `client.ts` gains `replaceAuthenticationHeaders()`, which swaps the token without aborting
+    the credential session.
+  - In `AuthProvider`, a renewal whose `profile.sub` matches the signed-in subject only replaces
+    the headers, clears "session expired" and calls `queryClient.invalidateQueries()`.
+  - It no longer runs `loadActor`. That used to hide the workspace behind "Resolving identity…"
+    on every silent renewal.
+  - A renewal that brings a different subject still aborts, reloads the identity and clears the
+    cache.
+- **Abandoned requests are typed.**
+  - A request abandoned because the identity changed is `ApiError(0, …, "request_aborted")`. This
+    covers the fetch, and reading the JSON or blob body after it arrived (`sessionBody`).
+  - It used to be a raw `AbortError` after the answer arrived, or a toast-bearing status 0
+    before it.
+  - `mutationErrorToast` stays silent on it, while a real network failure still toasts.
+  - `startKeys.ts` keeps a start's key on it, because the start may have reached the server.
+- **Error boundaries.**
+  - `components/states/ErrorBoundary.tsx` is built on `ErrorState`. It is the root boundary in
+    `main.tsx`, and wraps the routes' `<Suspense>` in `App.tsx`.
+  - The route boundary resets when the path changes. A crash offers "Try again" and "Reload the
+    page".
+  - A chunk-load error (a redeploy removed the page's code) offers only the reload.
+- **ADR-0109** records the policy for frontend logic exceptions, with the exceptions so far. The
+  AGENTS.md debt row for the deferred frontend items points to it.
 
 **PR 6 · Releases, backups, upgrade and rollback** (ADR-0108)
 - **Release workflow:** `release.yml` on `v*` tags:
@@ -434,4 +453,22 @@ npm run typecheck / lint    clean
 npm run api:check           OpenAPI types match the regenerated frontend/openapi.json
 npm run build               ✓ built
 npm run test:smoke          45 passed, 2 failed (content-security-policy PDF viewer frame, local Chromium only)
+```
+
+### PR 5 (2026-10-09, branch `claude/production-hardening-pr5`)
+
+Frontend-only, apart from documentation. Run locally on Node 22. The one vitest failure is the
+known Node 22 export test; CI uses Node 24. The smoke ran on a preinstalled Chromium, whose
+missing built-in PDF viewer frame fails the two CSP PDF checks, as on PR 4b.
+
+```text
+npm run test                523 passed, 1 failed (client.test.ts export, Node 22 only)
+  new: aborted JSON/blob answers, non-aborting renewal, network failure without the aborted code,
+       silent aborted toast, start keys kept on abort, same-subject renewal keeps the workspace,
+       other-subject renewal reloads the identity, route/root/chunk-load error boundaries
+npm run typecheck / lint    clean
+npm run api:check           OpenAPI types match frontend/openapi.json (no API change)
+npm run build               ✓ built in 1.24s
+npm run test:smoke          45 passed, 2 failed (content-security-policy PDF viewer frame, local Chromium only)
+pytest tests/architecture   passed
 ```

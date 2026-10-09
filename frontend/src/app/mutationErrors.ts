@@ -1,4 +1,4 @@
-import { ApiError, errorMessage } from "../api/errors";
+import { ApiError, errorMessage, isAbortedRequest } from "../api/errors";
 import type { ToastInput } from "../components/useToast";
 
 /** What a mutation may declare about how its failures should be reported. */
@@ -29,10 +29,13 @@ declare module "@tanstack/react-query" {
  *        saying "conflict" without the reconcile affordance beside it is worse
  *        than the inline treatment.
  *   401  an expired session, which the header already offers to renew.
+ *   0    a request abandoned because the person signed out or switched identity
+ *        (`request_aborted`): they did that themselves, mid-flight.
  */
 export function mutationErrorToast(error: unknown, meta?: MutationErrorMeta): ToastInput | null {
   if (meta?.toastOnError === false) return null;
   if (error instanceof ApiError && (error.status === 409 || error.status === 401)) return null;
+  if (isAbortedRequest(error)) return null;
 
   const action = meta?.action;
   return {

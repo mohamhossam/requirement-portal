@@ -1,3 +1,10 @@
+/** The code of a request abandoned because the signed-in identity changed (status 0). */
+export const ABORTED_REQUEST = "request_aborted";
+
+export function isAbortedRequest(error: unknown): boolean {
+  return error instanceof ApiError && error.code === ABORTED_REQUEST;
+}
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,

@@ -2,8 +2,13 @@ import { HttpResponse, http } from "msw";
 import { setupServer } from "msw/node";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
-import { api, configureAuthentication, configureAuthenticationHeaders } from "./client";
-import { ApiError } from "./errors";
+import {
+  api,
+  configureAuthentication,
+  configureAuthenticationHeaders,
+  replaceAuthenticationHeaders,
+} from "./client";
+import { ABORTED_REQUEST, ApiError } from "./errors";
 
 const server = setupServer();
 
@@ -30,7 +35,68 @@ it("rejects a document body completed after the credential session changes", asy
     await started;
     configureAuthenticationHeaders(() => ({ Authorization: "Bearer second" }));
     finishBody(new Blob(["private document"]));
-    await expect(request).rejects.toMatchObject({ name: "AbortError" });
+    await expect(request).rejects.toMatchObject({ status: 0, code: ABORTED_REQUEST });
+  } finally {
+    fetchMock.mockRestore();
+  }
+});
+
+it("discards a JSON answer that arrives after the identity changed, as an aborted request", async () => {
+  let finishBody!: (value: unknown) => void;
+  let bodyStarted!: () => void;
+  const started = new Promise<void>((resolve) => { bodyStarted = resolve; });
+  const response = new Response(null, { status: 200 });
+  vi.spyOn(response, "json").mockImplementation(() => {
+    bodyStarted();
+    return new Promise((resolve) => { finishBody = resolve; });
+  });
+  const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(response);
+  try {
+    configureAuthentication(() => ({ "X-Fake-Actor-Id": "fake-owner" }));
+    const request = api.getCurrentActor();
+    await started;
+    configureAuthenticationHeaders(() => ({ "X-Fake-Actor-Id": "fake-reviewer" }));
+    finishBody({ id: "fake-owner", display_name: "Owner", email: null });
+    await expect(request).rejects.toEqual(expect.objectContaining({ status: 0, code: ABORTED_REQUEST }));
+  } finally {
+    fetchMock.mockRestore();
+  }
+});
+
+it("lets a request in flight finish when only the token is renewed", async () => {
+  let finishBody!: (value: unknown) => void;
+  let bodyStarted!: () => void;
+  const started = new Promise<void>((resolve) => { bodyStarted = resolve; });
+  const response = new Response(null, { status: 200 });
+  vi.spyOn(response, "json").mockImplementation(() => {
+    bodyStarted();
+    return new Promise((resolve) => { finishBody = resolve; });
+  });
+  const sent: string[] = [];
+  const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((_url, init) => {
+    sent.push(new Headers(init?.headers).get("authorization") ?? "");
+    return Promise.resolve(response);
+  });
+  try {
+    configureAuthentication(() => ({ Authorization: "Bearer first" }));
+    const request = api.getCurrentActor();
+    await started;
+    replaceAuthenticationHeaders(() => ({ Authorization: "Bearer renewed" }));
+    finishBody({ id: "owner", display_name: "Owner", email: null });
+    await expect(request).resolves.toMatchObject({ id: "owner" });
+    void api.getCurrentActor().catch(() => undefined);
+    expect(sent).toEqual(["Bearer first", "Bearer renewed"]);
+  } finally {
+    fetchMock.mockRestore();
+  }
+});
+
+it("reports a network failure as status 0 without the aborted code", async () => {
+  const fetchMock = vi.spyOn(globalThis, "fetch").mockRejectedValue(new TypeError("Failed to fetch"));
+  try {
+    const failure = await api.getCurrentActor().catch((error: unknown) => error);
+    expect(failure).toBeInstanceOf(ApiError);
+    expect(failure).toMatchObject({ status: 0, detail: "Failed to fetch", code: undefined });
   } finally {
     fetchMock.mockRestore();
   }

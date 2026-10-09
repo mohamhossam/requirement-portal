@@ -14,6 +14,7 @@ import {
   api,
   configureAuthentication,
   configureAuthenticationHeaders,
+  replaceAuthenticationHeaders,
   type Actor,
   type IdentityConfig,
 } from "../api/client";
@@ -126,6 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         currentUser = await manager.getUser();
       }
       if (disposed) return;
+      let subject = currentUser?.profile?.sub ?? null;
       configureAuthentication(
         () => currentUser?.access_token ? { Authorization: `Bearer ${currentUser.access_token}` } : {} as Record<string, string>,
         () => {
@@ -138,7 +140,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       );
       const onUserLoaded = (renewed: User) => {
         if (disposed || signedOut.current) return;
-        configureAuthenticationHeaders(() => ({ Authorization: `Bearer ${renewed.access_token}` }));
+        const headers = () => ({ Authorization: `Bearer ${renewed.access_token}` });
+        if (subject !== null && renewed.profile?.sub === subject && actorIdRef.current !== null) {
+          // A renewed token for the same person: keep what is in flight and on
+          // screen, and refetch what failed while the old token had expired.
+          replaceAuthenticationHeaders(headers);
+          setSessionExpired(false);
+          void queryClient.invalidateQueries();
+          return;
+        }
+        subject = renewed.profile?.sub ?? null;
+        configureAuthenticationHeaders(headers);
         void loadActor().catch(() => setSessionExpired(true));
       };
       manager.events.addUserLoaded(onUserLoaded);
@@ -152,7 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       transition.current += 1;
       removeUserLoaded?.();
     };
-  }, [loadActor]);
+  }, [loadActor, queryClient]);
 
   const value = useMemo<AuthState>(() => ({
     actor,
