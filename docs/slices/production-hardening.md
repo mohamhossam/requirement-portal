@@ -2,7 +2,7 @@
 
 ## Status
 
-**Specified 2026-10-08; in progress since 2026-10-09.** PR 1, PR 8, PR 2, PR 4a, PR 4b, PR 5 and PR 6 are delivered, which completes the pilot gate (Phase 1; see their entries and Validation Evidence); Phases 0, 2 and 3 are not implemented yet. This record keeps the
+**Specified 2026-10-08; in progress since 2026-10-09.** PR 1, PR 8, PR 2, PR 4a, PR 4b, PR 5 and PR 6 are delivered, which completes the pilot gate (Phase 1), and so is PR 7 of Phase 2 (see their entries and Validation Evidence); Phase 0, the rest of Phase 2, and Phase 3 are not implemented yet. This record keeps the
 plan for closing every finding of the second production-readiness review (security, deployment and
 CI, reliability and observability, frontend) so it can be scheduled later. When work starts, each
 PR converts its part into the `WORKSPACE.md` §10 sections and fills in Validation Evidence here.
@@ -247,17 +247,38 @@ Then bump `pyproject.toml:12` and `uv.lock`, and wire the new settings. Phase 1 
   - `deployment.md` gets a sizing formula.
   - The pool reports `smb_db_pool_connections` from `stats()`.
 
-**PR 7 · Shared rate limit, spend cap and edge limits** (ADR-0106)
-- **Shared limit:** a port under `ProviderCallRateLimit` (`provider_call_rate.py:32-95`):
-  - The in-memory adapter keeps today's logic.
-  - The Postgres adapter uses a `provider_call_windows(actor_id, window_start, calls)` upsert, following `knowledge/infrastructure/prior_art.py:212-228`.
-  - Wired at `container.py:794-796`.
-- **Spend cap:** `PROVIDER_DAILY_TOKEN_BUDGET`, kept in a Postgres daily counter.
-- **Edge limits:**
-  - nginx `real_ip` from `TRUSTED_PROXY_CIDR`, defaulted with an `ENV` line as in `deploy/web/Dockerfile:43-44`.
-  - Per-IP `limit_req` on `location /api/` (:74-87) only, returning a JSON 429.
-  - A stricter limit on `impact-preview` (`requirements.py:431`).
-- **Docs:** remove the debt row at AGENTS.md:722; update `deployment.md` "Rate limiting" (:313-330).
+**PR 7 · Shared rate limit, spend cap and edge limits** (ADR-0106) — *delivered on `claude/production-hardening-pr7`, 2026-10-09*
+- **Shared limit.** `ProviderCallRateLimit` keeps its sliding window and refunds, over a new
+  `ProviderCallLogPort`.
+  - `PostgresProviderCallLog` keeps one row per counted call in `provider_calls`, checked under a
+    per-actor transaction advisory lock. It is exact across replicas, and old rows are pruned as
+    calls arrive.
+  - `InMemoryProviderCallLog` keeps the old behaviour offline.
+  - This replaces the plan's fixed-window upsert, which admits a double burst across a minute
+    boundary.
+- **Spend cap.** The owner chose "pause AI work until reset", 2026-10-09.
+  - `PROVIDER_DAILY_TOKEN_BUDGET` (0 is unlimited) and `ProviderSpendBudget` work over
+    `ProviderSpendPort`: `provider_token_spend`, one row per UTC day.
+  - `SpendCountingTransport` (and the `httpx2` one for the OpenAI SDK) sits inside every model
+    client's `MeteredTransport` and records each response's reported tokens. It never fails a
+    call.
+  - `AiJobs` refuses new starts and retries with 429 `provider_budget_exhausted` and
+    `Retry-After` until 00:00 UTC.
+  - `SpendGatedQueue` stops workers claiming until the reset.
+  - Editing, indexing and knowledge-service work are not paused.
+  - The container now builds persistence before the model adapters, which need the counter.
+- **Edge limits.**
+  - nginx takes the client address from `X-Forwarded-For` only from `TRUSTED_PROXY_CIDR`
+    (default `127.0.0.1/32`, trusting no one).
+  - `limit_req` on `location /api/` allows `EDGE_RATE_PER_SECOND` (50) per address with bursts
+    of `EDGE_BURST` (100). A nested `impact-preview` location adds 2/s, bursts of 5.
+  - Refusals are a JSON 429 (`edge_rate_limited`, `Retry-After`) from `@edge_rate_limited`. The
+    API's own 429s pass through.
+  - The defaults are `ENV` lines in `deploy/web/Dockerfile`, passed through the manifest.
+  - CI's `deployment` job floods `/api/health` last and requires both admitted requests and JSON
+    refusals.
+- **Docs.** ADR-0106. The AGENTS.md per-process debt row is removed. `deployment.md` "Rate
+  limiting" is rewritten, and `.env.example` updated.
 
 **PR 9 · Alerting, SLOs and runbooks**
 - **Monitoring stack** (`compose.monitoring.yaml`, currently Prometheus and Grafana only): add Alertmanager (config rendered by an entrypoint, secrets through `*_file`), one postgres-exporter and node-exporter, all digest-pinned. Scrape them in `prometheus.yml:13-30`.
@@ -520,4 +541,28 @@ ruff format --check .       1247 files already formatted
 mypy src tests              Success: no issues found in 681 source files
 lint-imports                Contracts: 43 kept, 0 broken.
 actionlint                  release.yml, ci.yml clean
+```
+
+### PR 7 (2026-10-09, branch `claude/production-hardening-pr7`)
+
+Run locally on Python 3.13 against a local PostgreSQL 16 with pgvector. The edge configuration
+was rendered as the image renders it and checked with a local nginx (`nginx -t`), then exercised
+against a stub upstream:
+- a burst past the per-address budget got `edge_rate_limited` JSON 429s, with `Retry-After` and
+  the security headers;
+- an upstream 429 passed through unchanged;
+- impact preview was cut at its own budget while other API paths were not;
+- CI's 400-request flood, with the production defaults, admitted 143 requests and refused 257,
+  in the API's error shape.
+
+Integration tests show two limiters over one database admit no more than one would. A
+knowledge-migration test is now robust to later migrations adding tables.
+
+```text
+pytest --cov (PostgreSQL)   1972 passed; total coverage 94.59% (floor 92.5%)
+ruff check .                All checks passed!
+ruff format --check .       1255 files already formatted
+mypy src tests              Success: no issues found in 688 source files
+lint-imports                Contracts: 43 kept, 0 broken.
+actionlint                  ci.yml, release.yml clean
 ```

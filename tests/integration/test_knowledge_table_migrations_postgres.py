@@ -111,7 +111,8 @@ def test_upgrading_drops_the_tables_while_every_one_is_empty(
 
     _migrate_to_latest(earlier_system, monkeypatch)
 
-    assert _tables(earlier_system) == before - set(KNOWLEDGE_TABLES)
+    # Exactly the knowledge tables go; later migrations may add tables of their own.
+    assert before - _tables(earlier_system) == set(KNOWLEDGE_TABLES)
 
 
 def test_upgrading_stops_while_a_table_holds_rows_and_changes_nothing(

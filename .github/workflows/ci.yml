@@ -431,6 +431,18 @@ jobs:
           curl --fail --silent -u admin:ci-only \
             'http://127.0.0.1:3000/api/datasources/uid/prometheus/health' | grep -q '"status":"OK"'
 
+      - name: The edge refuses one address's flood in the API's error shape
+        # Last, so no step after it shares the spent per-address budget (ADR-0106).
+        run: |
+          mkdir -p edge-flood
+          seq 400 | xargs -P 40 -I{} curl --silent --output edge-flood/{}.json \
+            --write-out '%{http_code}\n' http://127.0.0.1:8080/api/health > edge-codes.txt
+          sort edge-codes.txt | uniq -c
+          grep -qx 200 edge-codes.txt || { echo "The edge admitted nothing"; exit 1; }
+          grep -qx 429 edge-codes.txt || { echo "The edge refused nothing"; exit 1; }
+          grep -l '"code":"edge_rate_limited"' edge-flood/*.json | head -n 1 | grep -q . ||
+            { echo "An edge refusal was not the API's JSON error shape"; exit 1; }
+
       - name: Container logs
         if: failure()
         run: |

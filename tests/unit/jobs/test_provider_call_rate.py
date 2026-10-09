@@ -14,6 +14,9 @@ from smb_requirement_agent.jobs.application.errors import ProviderRateLimitExcee
 from smb_requirement_agent.jobs.application.use_cases.provider_call_rate import (
     ProviderCallRateLimit,
 )
+from smb_requirement_agent.jobs.infrastructure.in_memory_provider_calls import (
+    InMemoryProviderCallLog,
+)
 from smb_requirement_agent.shared_kernel.actors import (
     ActorId,
     ActorProfile,
@@ -36,7 +39,7 @@ class SteppingClock:
 
 def test_refuses_the_call_after_the_limit_with_a_retry_delay() -> None:
     clock = SteppingClock()
-    limit = ProviderCallRateLimit(2, clock)
+    limit = ProviderCallRateLimit(2, clock, InMemoryProviderCallLog())
     limit.acquire(ALICE)
     clock.current += timedelta(seconds=20)
     limit.acquire(ALICE)
@@ -51,7 +54,7 @@ def test_refuses_the_call_after_the_limit_with_a_retry_delay() -> None:
 
 def test_the_window_slides_so_old_calls_stop_counting() -> None:
     clock = SteppingClock()
-    limit = ProviderCallRateLimit(1, clock)
+    limit = ProviderCallRateLimit(1, clock, InMemoryProviderCallLog())
     limit.acquire(ALICE)
 
     clock.current += timedelta(seconds=60)
@@ -60,7 +63,7 @@ def test_the_window_slides_so_old_calls_stop_counting() -> None:
 
 
 def test_each_actor_has_their_own_budget() -> None:
-    limit = ProviderCallRateLimit(1, SteppingClock())
+    limit = ProviderCallRateLimit(1, SteppingClock(), InMemoryProviderCallLog())
     limit.acquire(ALICE)
 
     limit.acquire(BOB)
@@ -69,7 +72,7 @@ def test_each_actor_has_their_own_budget() -> None:
 
 
 def test_zero_disables_the_limit() -> None:
-    limit = ProviderCallRateLimit(0, SteppingClock())
+    limit = ProviderCallRateLimit(0, SteppingClock(), InMemoryProviderCallLog())
 
     for _ in range(1000):
         limit.acquire(ALICE)
@@ -77,7 +80,7 @@ def test_zero_disables_the_limit() -> None:
 
 def test_a_negative_limit_is_rejected() -> None:
     with pytest.raises(ValueError):
-        ProviderCallRateLimit(-1, SteppingClock())
+        ProviderCallRateLimit(-1, SteppingClock(), InMemoryProviderCallLog())
 
 
 def test_the_api_answers_429_with_retry_after_once_an_actor_is_over_budget() -> None:
@@ -121,7 +124,7 @@ def test_creating_a_requirement_is_charged_because_it_queues_automatic_screening
 
 
 def test_a_refunded_call_no_longer_counts() -> None:
-    limit = ProviderCallRateLimit(1, SteppingClock())
+    limit = ProviderCallRateLimit(1, SteppingClock(), InMemoryProviderCallLog())
     ticket = limit.acquire(ALICE)
     assert ticket is not None
 
@@ -132,7 +135,7 @@ def test_a_refunded_call_no_longer_counts() -> None:
 
 def test_refunding_twice_returns_only_one_call() -> None:
     clock = SteppingClock()
-    limit = ProviderCallRateLimit(2, clock)
+    limit = ProviderCallRateLimit(2, clock, InMemoryProviderCallLog())
     first = limit.acquire(ALICE)
     assert first is not None
     limit.acquire(ALICE)
@@ -164,7 +167,7 @@ def test_requests_refused_before_any_provider_call_are_refunded() -> None:
 
 
 def test_an_actor_emptied_by_a_refund_does_not_break_other_callers() -> None:
-    limit = ProviderCallRateLimit(1, SteppingClock())
+    limit = ProviderCallRateLimit(1, SteppingClock(), InMemoryProviderCallLog())
     ticket = limit.acquire(ALICE)
     assert ticket is not None
     limit.refund(ticket)

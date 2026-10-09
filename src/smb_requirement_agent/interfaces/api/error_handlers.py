@@ -15,7 +15,10 @@ from smb_requirement_agent.application.errors import (
     DocumentExtractionBusyError,
     DocumentExtractionTimeoutError,
 )
-from smb_requirement_agent.jobs.application.errors import ProviderRateLimitExceededError
+from smb_requirement_agent.jobs.application.errors import (
+    ProviderBudgetExhaustedError,
+    ProviderRateLimitExceededError,
+)
 from smb_requirement_agent.workflows.application.public_errors import (
     ERROR_CATALOGUE,
     FailureCategory,
@@ -83,7 +86,7 @@ def register_error_handlers(app: FastAPI) -> None:
         headers = {"WWW-Authenticate": "Bearer"} if status_code == 401 else None
         if isinstance(exc, (DocumentExtractionBusyError, DocumentExtractionTimeoutError)):
             headers = {"Retry-After": "30"}
-        if isinstance(exc, ProviderRateLimitExceededError):
+        if isinstance(exc, (ProviderRateLimitExceededError, ProviderBudgetExhaustedError)):
             headers = {"Retry-After": str(exc.retry_after_seconds)}
         return JSONResponse(
             status_code=status_code,

@@ -178,6 +178,11 @@ services:
     environment:
       # Old /knowledge/ bookmarks redirect here for one release; empty answers 404.
       KNOWLEDGE_PORTAL_URL: ${KNOWLEDGE_PORTAL_URL:-}
+      # The TLS proxy in front, which may name the client address, and each
+      # address's API budget at this edge (docs/operations/deployment.md, "Rate limiting").
+      TRUSTED_PROXY_CIDR: ${TRUSTED_PROXY_CIDR:-127.0.0.1/32}
+      EDGE_RATE_PER_SECOND: ${EDGE_RATE_PER_SECOND:-50}
+      EDGE_BURST: ${EDGE_BURST:-100}
     # WEB_PORT moves it off 8080, e.g. beside the earlier deployment.
     ports:
       - "${WEB_PORT:-8080}:8080"

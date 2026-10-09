@@ -29,6 +29,9 @@ from smb_requirement_agent.jobs.application.published import command_fingerprint
 from smb_requirement_agent.jobs.application.use_cases.job_execution_context import (
     current_attempt,
 )
+from smb_requirement_agent.jobs.application.use_cases.provider_call_rate import (
+    ProviderSpendBudget,
+)
 from smb_requirement_agent.jobs.domain.entities import (
     ActorNotification,
     AiJob,
@@ -123,6 +126,7 @@ class AiJobs:
         generate_epic: GenerateEpic,
         generate_features: GenerateFeatures,
         generate_stories: GenerateStories,
+        spend_budget: ProviderSpendBudget,
     ) -> None:
         self._jobs = jobs
         self._requirements = requirements
@@ -134,6 +138,7 @@ class AiJobs:
         self._generate_epic = generate_epic
         self._generate_features = generate_features
         self._generate_stories = generate_stories
+        self._spend_budget = spend_budget
 
     def start(
         self,
@@ -174,6 +179,8 @@ class AiJobs:
             return StartAiJobResult(existing.job, False)
         self._generation_context.require_operation(requirement_id, operation, command.arguments)
         self._require_can_generate(requirement_id, operation, command)
+        # A replayed key above still answers; new work waits for tomorrow's budget (ADR-0106).
+        self._spend_budget.require_available()
         equivalent = self._jobs.find_active_equivalent(requirement_id, fingerprint)
         if equivalent is not None:
             self._jobs.bind_idempotency(equivalent.job.id, actor.id, key, fingerprint)

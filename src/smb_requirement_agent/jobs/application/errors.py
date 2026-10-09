@@ -9,6 +9,14 @@ class ProviderRateLimitExceededError(Exception):
         self.retry_after_seconds = retry_after_seconds
 
 
+class ProviderBudgetExhaustedError(Exception):
+    """The day's provider token budget is spent; new AI work waits for the next UTC day."""
+
+    def __init__(self, message: str, retry_after_seconds: int) -> None:
+        super().__init__(message)
+        self.retry_after_seconds = retry_after_seconds
+
+
 class AiJobNotFoundError(Exception):
     """A requested durable AI job does not exist."""
 

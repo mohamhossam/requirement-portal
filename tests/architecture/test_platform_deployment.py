@@ -132,6 +132,36 @@ def test_no_api_request_waits_on_a_model_at_the_edge() -> None:
     assert "proxy_send_timeout 60s;" in block.group(1)
 
 
+def test_the_edge_limits_each_client_address_and_answers_in_the_api_error_shape() -> None:
+    """Per-address limits at the edge, behind a trusted TLS proxy only (ADR-0106)."""
+    api = re.search(r"location /api/ \{(.*?)\n    \}", EDGE, re.S)
+    preview = re.search(
+        r"location ~ \^/api/requirements/\[\^/\]\+/impact-preview\$ \{(.*?)\n        \}",
+        EDGE,
+        re.S,
+    )
+    refusal = re.search(r"location @edge_rate_limited \{(.*?)\n    \}", EDGE, re.S)
+
+    assert "set_real_ip_from ${TRUSTED_PROXY_CIDR};" in EDGE
+    assert "real_ip_header X-Forwarded-For;" in EDGE
+    assert "rate=${EDGE_RATE_PER_SECOND}r/s" in EDGE
+    assert api is not None and preview is not None and refusal is not None
+    assert "limit_req zone=api_per_address burst=${EDGE_BURST} nodelay;" in api.group(1)
+    assert "error_page 429 = @edge_rate_limited;" in api.group(1)
+    # A nested location replaces its parent's limits, so it names both.
+    assert "zone=api_per_address" in preview.group(1)
+    assert "zone=impact_preview_per_address" in preview.group(1)
+    assert '"code":"edge_rate_limited"' in refusal.group(1)
+    assert "Retry-After" in refusal.group(1)
+    for setting, default in (
+        ("TRUSTED_PROXY_CIDR", "127.0.0.1/32"),
+        ("EDGE_RATE_PER_SECOND", "50"),
+        ("EDGE_BURST", "100"),
+    ):
+        assert f"{setting}={default}" in WEB_IMAGE
+        assert SERVICES["web"]["environment"][setting] == f"${{{setting}:-{default}}}"
+
+
 def test_no_internal_route_passes_the_edge() -> None:
     block = re.search(r"location \^~ /api/internal \{(.*?)\}", EDGE, re.S)
 

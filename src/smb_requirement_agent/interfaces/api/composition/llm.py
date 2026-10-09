@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from contextlib import ExitStack
 from dataclasses import dataclass, replace
 from typing import TypedDict
@@ -99,6 +100,10 @@ from smb_requirement_agent.breakdown.infrastructure.llm.openrouter_adapters impo
 from smb_requirement_agent.infrastructure.config.options import ConfigurationError, LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.llm.openrouter_transport import OpenRouterAdapterSettings
+from smb_requirement_agent.infrastructure.llm.spend_transport import (
+    SpendCountingTransport,
+    SpendCountingTransport2,
+)
 from smb_requirement_agent.knowledge.application.ports.prior_art import (
     PriorArtJudgePort,
 )
@@ -169,14 +174,18 @@ class _LocalAdapterSettings(TypedDict):
 
 
 def _profile_adapters(
-    settings: Settings, resources: ExitStack, debug_trace: DebugTrace, metrics: Metrics
+    settings: Settings,
+    resources: ExitStack,
+    debug_trace: DebugTrace,
+    metrics: Metrics,
+    record_spend: Callable[[int], None],
 ) -> LLMAdapters:
 
     config = settings.llm_profiles
     if config is None:  # Enforced by Settings for LLM_PROVIDER=profiles.
         raise ConfigurationError("LLM_PROVIDER=profiles requires LLM_CONFIG_PATH.")
     http = resources.enter_context(
-        httpx.Client(transport=MeteredTransport(metrics, "profiles", httpx.HTTPTransport()))
+        httpx.Client(transport=_metered(metrics, "profiles", record_spend))
     )
     analysis = config.for_task("analysis")
     generation = config.for_task("generation")
@@ -221,13 +230,30 @@ def _profile_adapters(
     )
 
 
-def build_llm_adapters(settings: Settings, metrics: Metrics) -> LLMAdapters:
+def _metered(
+    metrics: Metrics, provider: str, record_spend: Callable[[int], None]
+) -> MeteredTransport:
+    """Every model request is metered and its reported tokens counted toward the budget."""
+    return MeteredTransport(
+        metrics, provider, SpendCountingTransport(record_spend, httpx.HTTPTransport())
+    )
+
+
+def build_llm_adapters(
+    settings: Settings, metrics: Metrics, record_spend: Callable[[int], None]
+) -> LLMAdapters:
+    """`record_spend` receives the tokens each model response reports (ADR-0106)."""
     with ExitStack() as resources:
-        result = _build_llm_adapters(settings, resources, metrics)
+        result = _build_llm_adapters(settings, resources, metrics, record_spend)
         return replace(result, resources=resources.pop_all())
 
 
-def _build_llm_adapters(settings: Settings, resources: ExitStack, metrics: Metrics) -> LLMAdapters:
+def _build_llm_adapters(
+    settings: Settings,
+    resources: ExitStack,
+    metrics: Metrics,
+    record_spend: Callable[[int], None],
+) -> LLMAdapters:
     """Select the configured provider once and construct its focused adapters."""
     debug_trace = build_debug_trace(
         enabled=settings.debug_trace_enabled,
@@ -248,7 +274,7 @@ def _build_llm_adapters(settings: Settings, resources: ExitStack, metrics: Metri
     )
     resources.callback(debug_trace.close)
     if settings.llm_provider is LLMProvider.PROFILES:
-        return _profile_adapters(settings, resources, debug_trace, metrics)
+        return _profile_adapters(settings, resources, debug_trace, metrics, record_spend)
     if settings.llm_provider is LLMProvider.FAKE:
         return LLMAdapters(
             analyzer=FakeRequirementAnalyzer(),
@@ -266,7 +292,7 @@ def _build_llm_adapters(settings: Settings, resources: ExitStack, metrics: Metri
         )
     if settings.llm_provider is LLMProvider.LOCAL:
         http_client = resources.enter_context(
-            httpx.Client(transport=MeteredTransport(metrics, "local", httpx.HTTPTransport()))
+            httpx.Client(transport=_metered(metrics, "local", record_spend))
         )
         shared: _LocalAdapterSettings = {
             "http_client": http_client,
@@ -304,7 +330,7 @@ def _build_llm_adapters(settings: Settings, resources: ExitStack, metrics: Metri
         if settings.openrouter_api_key is None:  # guarded by Settings, keeps mypy explicit
             raise AssertionError("OpenRouter settings require OPENROUTER_API_KEY.")
         http_client = resources.enter_context(
-            httpx.Client(transport=MeteredTransport(metrics, "openrouter", httpx.HTTPTransport()))
+            httpx.Client(transport=_metered(metrics, "openrouter", record_spend))
         )
         openrouter_shared: OpenRouterAdapterSettings = {
             "http_client": http_client,
@@ -350,7 +376,9 @@ def _build_llm_adapters(settings: Settings, resources: ExitStack, metrics: Metri
         OpenAI(
             api_key=settings.openai_api_key,
             http_client=DefaultHttpxClient(
-                transport=MeteredTransport2(metrics, "openai", httpx2.HTTPTransport())
+                transport=MeteredTransport2(
+                    metrics, "openai", SpendCountingTransport2(record_spend, httpx2.HTTPTransport())
+                )
             ),
         )
     )

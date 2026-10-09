@@ -16,6 +16,10 @@ from smb_requirement_agent.interfaces.api.composition.breakdown import Breakdown
 from smb_requirement_agent.interfaces.api.composition.knowledge import RequirementKnowledgeWiring
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
 from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobWorkerPort
+from smb_requirement_agent.jobs.application.use_cases.provider_call_rate import (
+    ProviderSpendBudget,
+)
+from smb_requirement_agent.jobs.infrastructure.spend_gate import SpendGatedQueue
 from smb_requirement_agent.knowledge.infrastructure.prior_art_gate import PriorArtGatedQueue
 from smb_requirement_agent.knowledge.infrastructure.requirement_index_worker import (
     IndexReadyJobQueue,
@@ -51,6 +55,7 @@ def build_ai_jobs(
     clock: ClockPort,
     access: RequirementAccessService,
     metrics: Metrics,
+    spend_budget: ProviderSpendBudget,
 ) -> AiJobWiring:
     execute = ExecuteAiJob(
         persistence.ai_job_repository,
@@ -85,15 +90,19 @@ def build_ai_jobs(
     worker = AiJobWorkerGroup(
         tuple(
             PollingAiJobWorker(
-                IndexReadyJobQueue(
-                    PriorArtGatedQueue(
-                        persistence.ai_job_queue,
-                        persistence.prior_art,
-                        clock,
-                        enabled=settings.prior_art_enabled,
-                        hourly=settings.prior_art_judge_calls_per_hour,
+                # Nothing is claimed while the day's token budget is spent (ADR-0106).
+                SpendGatedQueue(
+                    IndexReadyJobQueue(
+                        PriorArtGatedQueue(
+                            persistence.ai_job_queue,
+                            persistence.prior_art,
+                            clock,
+                            enabled=settings.prior_art_enabled,
+                            hourly=settings.prior_art_judge_calls_per_hour,
+                        ),
+                        knowledge.indexer,
                     ),
-                    knowledge.indexer,
+                    spend_budget,
                 ),
                 execute,
                 clock,
@@ -118,6 +127,7 @@ def build_ai_jobs(
             breakdown.generate_epic,
             breakdown.generate_features,
             breakdown.generate_stories,
+            spend_budget,
         ),
         notifications=Notifications(persistence.notification_repository, clock),
         execute_ai_job=execute,

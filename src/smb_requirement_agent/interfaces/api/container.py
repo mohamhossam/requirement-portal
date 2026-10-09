@@ -166,6 +166,7 @@ from smb_requirement_agent.jobs.application.ports.ai_jobs import (
 from smb_requirement_agent.jobs.application.ports.notifications import NotificationRepositoryPort
 from smb_requirement_agent.jobs.application.use_cases.provider_call_rate import (
     ProviderCallRateLimit,
+    ProviderSpendBudget,
 )
 from smb_requirement_agent.knowledge.application.ports.knowledge_index_generations import (
     KnowledgeIndexGenerationsPort,
@@ -397,6 +398,7 @@ class Container:
     generation_context_tokens: GenerationContextTokens
     requirement_commands: RequirementCommands
     provider_call_rate_limit: ProviderCallRateLimit
+    provider_spend_budget: ProviderSpendBudget
     metrics: Metrics
     create_requirement: CreateOwnedRequirement
     get_requirement: GetRequirement
@@ -521,10 +523,14 @@ def _build_container(
         XlsxBacklogExporter(),
     )
     metrics = Metrics()
-    defaults = build_llm_adapters(settings, metrics)
+    persistence = build_persistence(settings, resources, resolved_clock)
+    # Every model response's tokens count toward one budget for all processes (ADR-0106).
+    spend_budget = ProviderSpendBudget(
+        settings.provider_daily_token_budget, resolved_clock, persistence.provider_spend
+    )
+    defaults = build_llm_adapters(settings, metrics, spend_budget.record)
     resources.callback(defaults.close)
     resources.callback(defaults.debug_trace.close)
-    persistence = build_persistence(settings, resources, resolved_clock)
     # Tests may supply their own knowledge service; otherwise settings choose it.
     knowledge_service = knowledge_service or build_knowledge_service(settings, resources, metrics)
     resolved_identity = build_identity(
@@ -639,6 +645,7 @@ def _build_container(
         resolved_clock,
         access_service,
         metrics,
+        spend_budget,
     )
 
     background_workers: dict[str, BackgroundWorker] = {
@@ -774,8 +781,9 @@ def _build_container(
         requirement_commands=analysis.requirement_commands,
         metrics=metrics,
         provider_call_rate_limit=ProviderCallRateLimit(
-            settings.provider_rate_limit_per_minute, resolved_clock
+            settings.provider_rate_limit_per_minute, resolved_clock, persistence.provider_call_log
         ),
+        provider_spend_budget=spend_budget,
         create_requirement=intake.create_requirement,
         get_requirement=intake.get_requirement,
         list_requirement_worklist=reporting.worklist.reader,

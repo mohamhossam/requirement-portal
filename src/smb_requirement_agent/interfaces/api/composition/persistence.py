@@ -147,13 +147,25 @@ from smb_requirement_agent.jobs.application.ports.ai_jobs import (
     AiJobRepositoryPort,
 )
 from smb_requirement_agent.jobs.application.ports.notifications import NotificationRepositoryPort
+from smb_requirement_agent.jobs.application.ports.provider_calls import (
+    ProviderCallLogPort,
+    ProviderSpendPort,
+)
 from smb_requirement_agent.jobs.infrastructure.in_memory_ai_jobs import (
     InMemoryAiJobStore,
     InMemoryNotificationRepository,
 )
+from smb_requirement_agent.jobs.infrastructure.in_memory_provider_calls import (
+    InMemoryProviderCallLog,
+    InMemoryProviderSpend,
+)
 from smb_requirement_agent.jobs.infrastructure.postgres_ai_jobs import (
     PostgresAiJobStore,
     PostgresNotificationRepository,
+)
+from smb_requirement_agent.jobs.infrastructure.postgres_provider_calls import (
+    PostgresProviderCallLog,
+    PostgresProviderSpend,
 )
 from smb_requirement_agent.knowledge.application.ports.corpus_membership import (
     CorpusActionsPort,
@@ -374,6 +386,9 @@ class PersistenceAdapters:
     # Historic requirements and their corpus (Knowledge Center E2, ADR-0102).
     historic_corpus: HistoricCorpusPort
     prior_art: PriorArtStorePort
+    # Provider calls per actor and token spend per day, shared by every process (ADR-0106).
+    provider_call_log: ProviderCallLogPort
+    provider_spend: ProviderSpendPort
     attachment_ingestions: AttachmentIngestionRepositoryPort
     # Approved backlogs on their way to the knowledge service (ADR-0101 Amendment 2).
     backlog_handoffs: ApprovedBacklogOutboxPort
@@ -532,6 +547,8 @@ def _postgres(
         architecture_releases=architecture_releases,
         historic_corpus=historic_corpus,
         prior_art=prior_art,
+        provider_call_log=PostgresProviderCallLog(connector),
+        provider_spend=PostgresProviderSpend(connector),
         attachment_ingestions=attachment_ingestions,
         backlog_handoffs=backlog_handoffs,
         revision_repository=revision_repository,
@@ -763,6 +780,8 @@ def _memory(
         architecture_releases=architecture_releases,
         historic_corpus=memory_historic,
         prior_art=memory_prior_art,
+        provider_call_log=InMemoryProviderCallLog(),
+        provider_spend=InMemoryProviderSpend(),
         attachment_ingestions=attachment_ingestions,
         backlog_handoffs=memory_handoffs,
         revision_repository=revision_repository,
