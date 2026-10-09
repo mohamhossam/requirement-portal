@@ -153,10 +153,11 @@ services:
       migrate:
         condition: service_completed_successfully
 
-  # Once, offline: drops the library, catalogue and event tables the knowledge
-  # service now owns (docs/operations/deployment.md). A table holding rows is
-  # dropped only if the knowledge database holds an identical copy; otherwise
-  # nothing is dropped. Arguments after the service name are appended, so
+  # Once, offline, after knowledge-import: drops the library, catalogue and event
+  # tables the knowledge service now owns (docs/operations/deployment.md).
+  # `migrate` already drops them while all are empty, so only a moved system
+  # needs this. A table holding rows is dropped only if the knowledge database
+  # holds an identical copy; otherwise nothing is dropped. Arguments after the service name are appended, so
   # `... run --rm drop-knowledge-tables --dry-run` reports without dropping:
   #   docker compose -f deploy/compose.production.yaml run --rm drop-knowledge-tables
   drop-knowledge-tables:

@@ -1,9 +1,11 @@
 """Drop the knowledge tables this database still holds, once nothing would be lost (ADR-0099).
 
 The knowledge service owns the library, the architecture and squad catalogues
-and their blobs. This database keeps the tables because earlier migrations
-create them and `knowledge-import` reads them. Requirement work no longer reads
-or writes any of them.
+and their blobs. Earlier migrations create the tables, and the last migration
+(`DROP_EMPTY_MIGRATION`) removes them again while every one is empty, so a fresh
+database ends with none. A database whose tables hold rows keeps them all for
+`knowledge-import`, and this command drops them afterwards. Requirement work no
+longer reads or writes any of them.
 
 A table is dropped only when that loses nothing: it is empty, or the knowledge
 database holds an identical copy (same row count and content checksum). One
@@ -44,6 +46,11 @@ MOVED_TABLES: tuple[str, ...] = (
     "organisation_audit",
     "knowledge_events",
 )
+
+
+# The migration that drops the moved tables when every one is empty. It names the
+# same tables, children first.
+DROP_EMPTY_MIGRATION = "202610091000_drop_empty_knowledge_tables.sql"
 
 
 class TableState(StrEnum):

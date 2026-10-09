@@ -1,15 +1,19 @@
 """Dropping the moved knowledge tables on the real schema (ADR-0099).
 
 The real migrations run in a throwaway schema standing in for the requirements
-database. A second throwaway schema stands in for the knowledge database: it
-holds copies made with `LIKE`, so rows render the same text on both sides.
+database. Every migration but the one that drops the empty tables runs, so the
+schema is an earlier system's, still holding them. A second throwaway schema
+stands in for the knowledge database: it holds copies made with `LIKE`, so rows
+render the same text on both sides.
 """
 
 from __future__ import annotations
 
 import os
+import shutil
 import uuid
 from collections.abc import Iterator
+from pathlib import Path
 from urllib.parse import quote
 
 import psycopg
@@ -18,6 +22,7 @@ from psycopg.types.json import Jsonb
 
 from smb_requirement_agent.infrastructure.persistence import migration_runner
 from smb_requirement_agent.infrastructure.persistence.moved_knowledge_tables import (
+    DROP_EMPTY_MIGRATION,
     MOVED_TABLES,
     TableState,
     drop_moved_tables,
@@ -33,14 +38,21 @@ def _schema_url(schema: str) -> str:
     return f"{DATABASE_URL}{separator}options={quote(f'-csearch_path={schema},public')}"
 
 
+REAL_MIGRATIONS = Path(migration_runner.MIGRATIONS)
+
+
 @pytest.fixture
-def schemas() -> Iterator[tuple[str, str, str]]:
+def schemas(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[tuple[str, str, str]]:
     """The requirements and knowledge stand-ins: (requirements schema, its URL, knowledge URL)."""
     assert DATABASE_URL is not None
     requirements, knowledge = f"req_{uuid.uuid4().hex}", f"kn_{uuid.uuid4().hex}"
     with psycopg.connect(DATABASE_URL, autocommit=True) as connection:
         connection.execute(f'CREATE SCHEMA "{requirements}"')
         connection.execute(f'CREATE SCHEMA "{knowledge}"')
+    for path in REAL_MIGRATIONS.glob("*.sql"):
+        if path.name != DROP_EMPTY_MIGRATION:
+            shutil.copy(path, tmp_path / path.name)
+    monkeypatch.setattr(migration_runner, "MIGRATIONS", tmp_path)
     migration_runner.run_migrations(_schema_url(requirements))
     yield requirements, _schema_url(requirements), _schema_url(knowledge)
     with psycopg.connect(DATABASE_URL, autocommit=True) as connection:
@@ -83,7 +95,7 @@ def _copy_to_knowledge(requirements: str, knowledge_url: str, *, change: bool = 
             )
 
 
-def test_a_fresh_database_drops_every_moved_table_and_keeps_requirement_work(
+def test_empty_tables_are_all_dropped_and_requirement_work_is_kept(
     schemas: tuple[str, str, str],
 ) -> None:
     _, url, _ = schemas
@@ -165,3 +177,50 @@ def test_an_identical_copy_lets_the_drop_go_ahead_and_a_dry_run_changes_nothing(
     assert not _tables(url) & set(MOVED_TABLES)
     # The knowledge database is only read.
     assert "organisation_catalogue" in _tables(knowledge_url)
+
+
+def _migrate_to_latest(url: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(migration_runner, "MIGRATIONS", REAL_MIGRATIONS)
+    migration_runner.run_migrations(url)
+
+
+def test_a_fresh_database_has_no_moved_table(monkeypatch: pytest.MonkeyPatch) -> None:
+    assert DATABASE_URL is not None
+    schema = f"fresh_{uuid.uuid4().hex}"
+    with psycopg.connect(DATABASE_URL, autocommit=True) as connection:
+        connection.execute(f'CREATE SCHEMA "{schema}"')
+    try:
+        url = _schema_url(schema)
+        _migrate_to_latest(url, monkeypatch)
+
+        tables = _tables(url)
+        assert not tables & set(MOVED_TABLES)
+        assert {"requirements", "document_blobs", "requirement_mapping_jobs"} <= tables
+    finally:
+        with psycopg.connect(DATABASE_URL, autocommit=True) as connection:
+            connection.execute(f'DROP SCHEMA "{schema}" CASCADE')
+
+
+def test_upgrading_drops_the_tables_while_every_one_is_empty(
+    schemas: tuple[str, str, str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _, url, _ = schemas
+    before = _tables(url)
+
+    _migrate_to_latest(url, monkeypatch)
+
+    assert _tables(url) == before - set(MOVED_TABLES)
+
+
+def test_upgrading_keeps_every_table_while_one_holds_rows(
+    schemas: tuple[str, str, str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _, url, _ = schemas
+    _catalogue_row(url)
+    before = _tables(url)
+
+    _migrate_to_latest(url, monkeypatch)
+
+    # Left whole for knowledge-import and the guarded command.
+    assert _tables(url) == before
+    assert set(MOVED_TABLES) <= before
