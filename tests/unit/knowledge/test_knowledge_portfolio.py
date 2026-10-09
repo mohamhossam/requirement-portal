@@ -358,3 +358,22 @@ def test_the_routes_need_the_service_token_and_never_carry_an_email(timed: Conta
     for response in (corpus, findings, nudged):
         assert "@" not in response.text
         assert XGPON not in response.text
+
+
+def test_a_nudge_through_the_route_is_recorded_against_the_knowledge_service(
+    timed: Container,
+) -> None:
+    """ADR-0104: the portals sign people in separately, so the admin's ID names nobody here."""
+    _, _, finding_id = _duplicates(timed)
+    serving = replace(timed, settings=replace(timed.settings, knowledge_service_token=TOKEN))
+    body = {"actor_id": "knowledge-portal-admin-7", "actor_name": OMAR.display_name}
+
+    with TestClient(create_app(lambda: serving)) as client:
+        nudged = client.post(
+            f"/internal/knowledge/findings/{finding_id}/nudge", json=body, headers=SERVICE
+        )
+
+    assert nudged.status_code == 200
+    recorded = timed.nudge_finding_owners._nudges.latest(finding_id)
+    assert recorded is not None
+    assert (recorded.actor_id, recorded.actor_name) == ("service:knowledge", OMAR.display_name)

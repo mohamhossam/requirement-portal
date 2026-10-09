@@ -1,9 +1,13 @@
 """Requirement work's internal API, for the knowledge service only (ADR-0099).
 
 Every route needs a service token (`InternalAccess` in main.py); none needs a
-signed-in user. The person the knowledge service acts for is named by
-`actor_id`. These routes are not in the public OpenAPI, and the edge proxy
-never routes /internal.
+signed-in user. Reads name the person the knowledge service acts for by
+`actor_id`. Writes are recorded against the calling service, not that person
+(ADR-0104): the portals sign people in separately, so the knowledge service's
+actor IDs name nobody here. The `actor_id` a write carries is accepted for the
+contract's sake and not recorded; its `actor_name` is kept as display text.
+These routes are not in the public OpenAPI, and the edge proxy never routes
+/internal.
 """
 
 from __future__ import annotations
@@ -69,6 +73,14 @@ ActorQuery = Annotated[str, Query(min_length=1, max_length=200)]
 CITATION_COUNTS_MAX = 100
 PortfolioDep = Annotated[KnowledgePortfolio, Depends(get_knowledge_portfolio)]
 NudgeDep = Annotated[NudgeFindingOwners, Depends(get_nudge_finding_owners)]
+
+
+CallerDep = Annotated[str, Depends(require_service_caller)]
+
+
+def acting_service(caller: str) -> str:
+    """The actor ID a write by the calling service is recorded against (ADR-0104)."""
+    return f"service:{caller}"
 
 
 class CorpusActionRequest(BaseModel):
@@ -260,9 +272,11 @@ def knowledge_findings(
 
 
 @router.post("/knowledge/findings/{finding_id}/nudge")
-def nudge_finding_owners(finding_id: str, body: NudgeRequest, nudge: NudgeDep) -> NudgeResult:
+def nudge_finding_owners(
+    finding_id: str, body: NudgeRequest, nudge: NudgeDep, caller: CallerDep
+) -> NudgeResult:
     """Ask both Requirements' owners to decide a finding; at most once a week."""
-    return nudge.execute(finding_id, body.actor_id, body.actor_name)
+    return nudge.execute(finding_id, acting_service(caller), body.actor_name)
 
 
 @router.post("/knowledge/requirements/{requirement_id}/retirement")
@@ -270,9 +284,10 @@ def retire_from_corpus(
     requirement_id: str,
     body: CorpusActionRequest,
     retire: Annotated[RetireFromCorpus, Depends(get_retire_from_corpus)],
+    caller: CallerDep,
 ) -> MembershipResult:
     """Take a Requirement out of the corpus; every open finding citing it closes."""
-    return retire.execute(requirement_id, body.actor_id, body.actor_name, body.reason)
+    return retire.execute(requirement_id, acting_service(caller), body.actor_name, body.reason)
 
 
 @router.post("/knowledge/requirements/{requirement_id}/reinstatement")
@@ -280,20 +295,23 @@ def reinstate_to_corpus(
     requirement_id: str,
     body: CorpusActionRequest,
     reinstate: Annotated[ReinstateToCorpus, Depends(get_reinstate_to_corpus)],
+    caller: CallerDep,
 ) -> MembershipResult:
     """Return a retired Requirement to the corpus; it is indexed again and screened afresh."""
-    return reinstate.execute(requirement_id, body.actor_id, body.actor_name, body.reason)
+    return reinstate.execute(requirement_id, acting_service(caller), body.actor_name, body.reason)
 
 
 @router.post("/knowledge/reindex")
 def reindex_corpus(
     body: ReindexRequest,
     bulk: Annotated[BulkReindexRequirements, Depends(get_bulk_reindex)],
+    caller: CallerDep,
 ) -> BulkResult:
     """Retry what stopped indexing, or index chosen Requirements again; the worker does it."""
+    actor_id = acting_service(caller)
     if body.scope == "failed":
-        return bulk.retry_failed(body.actor_id, body.actor_name, body.reason)
-    return bulk.reindex(tuple(body.requirement_ids), body.actor_id, body.actor_name, body.reason)
+        return bulk.retry_failed(actor_id, body.actor_name, body.reason)
+    return bulk.reindex(tuple(body.requirement_ids), actor_id, body.actor_name, body.reason)
 
 
 def contract_openapi() -> dict[str, Any]:

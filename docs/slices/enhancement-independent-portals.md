@@ -58,4 +58,7 @@ work's own roles in place of the knowledge portal's, with no transition.
   and `/internal` admits tokens granted to the knowledge service's client for the audience
   `requirement-internal`. Shared tokens keep working beside them. `docs/operations/deployment.md`,
   "Service credentials".
-- **Not yet.** KP's writes recorded against the service.
+- **Writes by the knowledge portal.** Nudges, retirements, reinstatements and reindexing it asks
+  for are recorded against the calling service (`service:knowledge`), keeping the admin's name as
+  display text only (`interfaces/api/routes/internal.py`). The `actor_id` those requests carry is
+  still accepted, so the internal contract is unchanged, but it is not recorded.
