@@ -11,12 +11,12 @@ this runbook or an enabled endpoint as production qualification.
   submissions, approvals and extraction revisions. Derived chunk/cache tables are rebuildable.
 - Run ClamAV locally, maintain signature updates, restrict its unauthenticated socket to trusted
   loopback/private infrastructure, and configure `StreamMaxLength` and scan limits above the
-  application's upload limits. Set `LIBRARY_SCAN_MODE=clamav`, `LIBRARY_SCANNER_HOST` and
-  `LIBRARY_SCANNER_PORT`. An outage fails ingestion closed; it never supplies a clean verdict.
-- `LIBRARY_SCAN_MODE=offline` is ONLY a deterministic development adapter. Startup rejects it
+  application's upload limits. Set `ATTACHMENT_SCAN_MODE=clamav`, `ATTACHMENT_SCANNER_HOST` and
+  `ATTACHMENT_SCANNER_PORT`. An outage fails ingestion closed; it never supplies a clean verdict.
+- `ATTACHMENT_SCAN_MODE=offline` is ONLY a deterministic development adapter. Startup rejects it
   with durable persistence or OIDC identity. It is not malware protection.
 - Install the `document-ocr` optional extra, Tesseract, and its `eng` and `ara` trained data. Package
-  Docling model assets beforehand and set `LIBRARY_OCR_ARTIFACTS_PATH`. Do not rely on first-upload
+  Docling model assets beforehand and set `ATTACHMENT_OCR_ARTIFACTS_PATH`. Do not rely on first-upload
   downloads. Pin the qualified runtime/model bundle in the deployment image and record its hashes.
 - Document extraction uses independent single-worker capacity, a 4 GiB process cap and a 600-second
   deadline. Ingestion leases last 660 seconds. Validate those defaults with representative files.

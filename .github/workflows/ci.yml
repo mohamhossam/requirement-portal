@@ -215,13 +215,20 @@ jobs:
           path: knowledge-portal
           persist-credentials: false
 
+      - name: The vendored knowledge contract matches the pinned release
+        # Requirement work's adapters are built and tested against
+        # contracts/knowledge-internal.openapi.json; it must be the one the pinned
+        # knowledge-portal release serves (ADR-0099). Moving KNOWLEDGE_IMAGE_TAG
+        # means copying that release's contract here too.
+        run: diff -u knowledge-portal/contracts/knowledge-internal.openapi.json contracts/knowledge-internal.openapi.json
+
       - name: Offline deployment settings
         run: |
           cat > deploy/production.env <<SETTINGS
           APP_ENV=development
           IDENTITY_PROVIDER=fake
           LLM_PROVIDER=fake
-          LIBRARY_SCAN_MODE=clamav
+          ATTACHMENT_SCAN_MODE=clamav
           KNOWLEDGE_API_BASE_URL=http://knowledge-api:8000
           REQUIREMENT_SERVICE_TOKEN=$REQUIREMENT_SERVICE_TOKEN
           KNOWLEDGE_SERVICE_TOKEN=$KNOWLEDGE_SERVICE_TOKEN

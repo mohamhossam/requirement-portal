@@ -88,3 +88,19 @@ portal runs from its own repository (`v0.2.0` or later), with its database resto
   edges (decided 2026-10-09 by the repository owner).
 - **Not in this change.** Retiring the old knowledge volume, which waits on a quiet period
   and a backup, and Phase 6.
+
+## Phase 7 here
+
+Chosen 2026-10-09 by the repository owner to come before Phase 6, which waits on confirming
+the production knowledge import.
+
+- **Import boundary.** `.importlinter` forbids `knowledge_portal` anywhere in requirement work;
+  the two meet only over HTTP.
+- **Setting names.** Attachment scanning is configured as `ATTACHMENT_SCAN_MODE`,
+  `ATTACHMENT_SCANNER_HOST`, `ATTACHMENT_SCANNER_PORT` and `ATTACHMENT_OCR_ARTIFACTS_PATH`.
+  The former `LIBRARY_*` names are still read for one release; set both and they must agree.
+- **Contracts.** knowledge-portal attaches its internal contract to each release. The CI
+  deployment job checks that `contracts/knowledge-internal.openapi.json` is the one the pinned
+  release (`KNOWLEDGE_IMAGE_TAG`) ships, so moving the pin means copying its contract too.
+- **CI.** The deployment job runs the knowledge portal from its own repository (see
+  "Cutover here"), so the planned contract stub is not needed.

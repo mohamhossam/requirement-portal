@@ -769,3 +769,13 @@ source_modules =
 forbidden_modules =
     smb_requirement_agent.knowledge.application.use_cases
     smb_requirement_agent.knowledge.infrastructure
+
+[importlinter:contract:knowledge_portal_is_a_peer]
+# Each portal reaches the other only over HTTP, through its published internal
+# contract (ADR-0099, ADR-0104); neither imports the other's code.
+name = Requirement work never imports the knowledge portal
+type = forbidden
+source_modules =
+    smb_requirement_agent
+forbidden_modules =
+    knowledge_portal

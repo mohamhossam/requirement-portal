@@ -444,7 +444,7 @@ code changed (ADR-0077).
   model and embedding as the rest of the application.
 - **OCR and office previews.** The image omits the optional `document-ocr` extra
   (docling) and LibreOffice. Extend the image if you need
-  `LIBRARY_OCR_ARTIFACTS_PATH` or `DOCUMENT_OFFICE_PREVIEW_EXECUTABLE`.
+  `ATTACHMENT_OCR_ARTIFACTS_PATH` or `DOCUMENT_OFFICE_PREVIEW_EXECUTABLE`.
 - **Backups.** Back up the `postgres_data` volume, or use a managed PostgreSQL
   server and point `DATABASE_URL` at it.
 

@@ -31,8 +31,8 @@ x-backend: &backend
   environment: &backend-environment
     PERSISTENCE_PROVIDER: postgres
     DATABASE_URL: postgresql://smb:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/smb_requirements
-    LIBRARY_SCANNER_HOST: clamav
-    LIBRARY_SCANNER_PORT: "3310"
+    ATTACHMENT_SCANNER_HOST: clamav
+    ATTACHMENT_SCANNER_PORT: "3310"
     LOG_FORMAT: json
     METRICS_HOST: 0.0.0.0
     METRICS_PORT: "9464"

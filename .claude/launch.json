@@ -16,7 +16,7 @@
         "LLM_PROVIDER": "fake",
         "PERSISTENCE_PROVIDER": "memory",
         "IDENTITY_PROVIDER": "fake",
-        "LIBRARY_SCAN_MODE": "offline",
+        "ATTACHMENT_SCAN_MODE": "offline",
         "PROVIDER_RATE_LIMIT_PER_MINUTE": "0"
       }
     }
