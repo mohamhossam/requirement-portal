@@ -111,3 +111,10 @@ its own, but the attempt that met it failed the job at once and left the retry t
 - **Visible.** The job API returns `next_attempt_at`; the job panel says the job will try again and
   when. `smb_ai_jobs_total` labels a requeued attempt `retrying` and a job failed at the cap
   `attempts_exhausted`, and the `AiJobsFailing` alert counts both failures.
+
+## Amendment — The synchronous endpoints are retired (2026-10-09)
+
+Slice `production-hardening` (PR 4b), recorded as [ADR-0105](adr-0105-durable-only-provider-work.md).
+"Keep existing synchronous endpoints during migration" no longer holds: the migration is
+complete, and model-backed work runs only as a durable job. A start that can only fail is refused
+before it is queued for analysis, Epic, Features and first Stories (`require_can_generate`).

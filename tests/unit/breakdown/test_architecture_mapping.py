@@ -10,6 +10,7 @@ editing, publishing and the matcher itself are tested in knowledge-portal.
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import cast
 
 import pytest
 from fastapi.testclient import TestClient
@@ -46,6 +47,7 @@ from smb_requirement_agent.references.domain.architecture.catalogue import (
 from smb_requirement_agent.references.infrastructure.knowledge_client import OFFLINE_RELEASE_ID
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.conftest import FAKE_PROVIDER_SETTINGS, make_event_publisher
+from tests.job_driver import JobRun, run_job
 from tests.knowledge_doubles import PublishedLibrary, service_for, sync
 from tests.unit.workflow_helpers import (
     confirm_fake_analysis,
@@ -143,15 +145,30 @@ def _tree(client: TestClient) -> tuple[str, list[dict[str, object]], list[dict[s
             "systems": ["BCRM", "CPP"],
         },
     ).json()["id"]
-    assert post_analysis(client, requirement_id).status_code == 200
+    assert post_analysis(client, requirement_id).succeeded
     confirm_fake_analysis(client, requirement_id)
-    assert post_epic(client, requirement_id).status_code == 201
+    assert post_epic(client, requirement_id).succeeded
     assert post_epic_approval(client, requirement_id).status_code == 200
-    features = post_features(client, requirement_id).json()["features"]
+    assert post_features(client, requirement_id).succeeded
+    features = client.get(f"/requirements/{requirement_id}/features").json()["features"]
     feature_id = features[0]["id"]
     assert post_feature_approval(client, requirement_id, feature_id).status_code == 200
-    stories = post_stories(client, requirement_id, feature_id).json()["stories"]
+    assert post_stories(client, requirement_id, feature_id).succeeded
+    stories = client.get(f"/requirements/{requirement_id}/features/{feature_id}/stories").json()[
+        "stories"
+    ]
     return str(requirement_id), features, stories
+
+
+def _map(client: TestClient, requirement_id: str) -> dict[str, object]:
+    """Start a mapping job; fake models finish it inside the request."""
+    started = client.post(f"/requirements/{requirement_id}/architecture-mapping/jobs")
+    assert started.status_code == 202, started.text
+    return cast(dict[str, object], started.json())
+
+
+def _review(client: TestClient, requirement_id: str) -> JobRun:
+    return run_job(client, requirement_id, "generate_breakdown_review")
 
 
 def test_architecture_impact_distinguishes_empty_mapping_and_cross_system() -> None:
@@ -238,7 +255,7 @@ def test_snapshot_round_trip_preserves_architecture_and_accepts_legacy_payload(
     container: Container,
 ) -> None:
     requirement_id, features, stories = _tree(client)
-    assert client.post(f"/requirements/{requirement_id}/architecture-mapping").status_code == 200
+    assert _map(client, requirement_id)["status"] == "succeeded"
     epic = container.epic_repository.get_by_requirement_id(
         container.requirement_repository.list_all()[0].id
     )
@@ -263,14 +280,17 @@ def test_mapping_endpoint_persists_hierarchy_and_uncatalogued_systems(
 ) -> None:
     requirement_id, features, stories = _tree(client)
 
-    response = client.post(f"/requirements/{requirement_id}/architecture-mapping")
+    assert _map(client, requirement_id)["status"] == "succeeded"
 
-    assert response.status_code == 200
-    result = response.json()
-    assert len(result["features"]) == 2
-    first = result["features"][0]
-    assert first["feature_id"] == features[0]["id"]
-    assert len(first["stories"]) == len(stories)
+    feature_set = client.get(f"/requirements/{requirement_id}/features").json()
+    story_set = client.get(
+        f"/requirements/{requirement_id}/features/{features[0]['id']}/stories"
+    ).json()
+    assert len(feature_set["features"]) == 2
+    first = feature_set["features"][0]
+    assert first["id"] == features[0]["id"]
+    assert len(story_set["stories"]) == len(stories)
+    assert all(story["architecture"] is not None for story in story_set["stories"])
     assert first["architecture"]["cross_system"] is True
     assert {item["name"] for item in first["architecture"]["systems"]} >= {"BCRM", "CPP"}
     assert (
@@ -280,15 +300,7 @@ def test_mapping_endpoint_persists_hierarchy_and_uncatalogued_systems(
         is False
     )
 
-    feature_set = client.get(f"/requirements/{requirement_id}/features").json()
-    story_set = client.get(
-        f"/requirements/{requirement_id}/features/{features[0]['id']}/stories"
-    ).json()
-    assert feature_set["features"][0]["architecture"] is not None
-    assert story_set["stories"][0]["architecture"] is not None
-
-    repeated = client.post(f"/requirements/{requirement_id}/architecture-mapping")
-    assert repeated.status_code == 200
+    assert _map(client, requirement_id)["status"] == "succeeded"
 
     revisions = container.breakdown_repository.list_breakdown_revisions(
         container.requirement_repository.list_all()[0].id
@@ -300,19 +312,18 @@ def test_mapping_requires_confirmed_current_breakdown(client: TestClient) -> Non
     requirement_id = client.post(
         "/requirements", json={"title": "Not ready", "description": "No analysis"}
     ).json()["id"]
-    response = client.post(f"/requirements/{requirement_id}/architecture-mapping")
-    assert response.status_code == 409
-    assert "human-confirmed analysis" in response.json()["message"]
+    job = _map(client, requirement_id)
+    assert job["status"] == "failed"
+    assert job["error_category"] == "architecture_mapping_conflict"
 
-    missing = client.post("/requirements/missing/architecture-mapping")
+    missing = client.post("/requirements/missing/architecture-mapping/jobs")
     assert missing.status_code == 404
 
 
 def test_story_edit_clears_mapping_and_stale_story_blocks_refresh(client: TestClient) -> None:
     requirement_id, features, stories = _tree(client)
     feature_id = str(features[0]["id"])
-    story = stories[0]
-    assert client.post(f"/requirements/{requirement_id}/architecture-mapping").status_code == 200
+    assert _map(client, requirement_id)["status"] == "succeeded"
     story = client.get(f"/requirements/{requirement_id}/features/{feature_id}/stories").json()[
         "stories"
     ][0]
@@ -329,7 +340,7 @@ def test_story_edit_clears_mapping_and_stale_story_blocks_refresh(client: TestCl
     )
     assert edited.status_code == 200
     assert edited.json()["architecture"] is None
-    assert client.post(f"/requirements/{requirement_id}/architecture-mapping").status_code == 200
+    assert _map(client, requirement_id)["status"] == "succeeded"
 
     feature = client.get(f"/requirements/{requirement_id}/features").json()["features"][0]
     changed = client.put(
@@ -350,9 +361,9 @@ def test_story_edit_clears_mapping_and_stale_story_blocks_refresh(client: TestCl
     ).json()["stories"][0]
     assert preserved_story["architecture"] is not None
     assert preserved_story["stale"] is not None
-    blocked = client.post(f"/requirements/{requirement_id}/architecture-mapping")
-    assert blocked.status_code == 409
-    assert "stale" in blocked.json()["message"]
+    blocked = _map(client, requirement_id)
+    assert blocked["status"] == "failed"
+    assert blocked["error_category"] == "architecture_mapping_conflict"
 
 
 def test_mapping_pins_one_release_for_the_whole_breakdown(
@@ -361,16 +372,19 @@ def test_mapping_pins_one_release_for_the_whole_breakdown(
     requirement_id, _, _ = _tree(client)
     catalogue.queries.clear()
 
-    mapped = client.post(f"/requirements/{requirement_id}/architecture-mapping")
+    assert _map(client, requirement_id)["status"] == "succeeded"
 
-    assert mapped.status_code == 200
-    # The first query takes the service's active release; every later one pins it.
-    assert catalogue.queries[0].release_id is None
-    assert {query.release_id for query in catalogue.queries[1:]} == {OFFLINE_RELEASE_ID}
-    features = mapped.json()["features"]
-    versions = {item["architecture"]["knowledge_version"] for item in features} | {
-        story["architecture"]["knowledge_version"] for item in features for story in item["stories"]
-    }
+    # The job pins the release that was active when it was queued for every query.
+    assert {query.release_id for query in catalogue.queries} == {OFFLINE_RELEASE_ID}
+    features = client.get(f"/requirements/{requirement_id}/features").json()["features"]
+    stories = [
+        story
+        for item in features
+        for story in client.get(
+            f"/requirements/{requirement_id}/features/{item['id']}/stories"
+        ).json()["stories"]
+    ]
+    versions = {item["architecture"]["knowledge_version"] for item in features + stories}
     assert versions == {OFFLINE_RELEASE_ID}
 
 
@@ -382,22 +396,22 @@ def test_activating_a_release_makes_the_review_stale_until_the_breakdown_is_rema
 ) -> None:
     requirement_id, _, _ = _tree(client)
     review_url = f"/requirements/{requirement_id}/breakdown-review"
-    assert client.post(f"/requirements/{requirement_id}/architecture-mapping").status_code == 200
-    reviewed = client.post(review_url)
-    assert reviewed.status_code == 200 and reviewed.json()["fresh"] is True
+    assert _map(client, requirement_id)["status"] == "succeeded"
+    assert _review(client, requirement_id).succeeded
+    assert client.get(review_url).json()["fresh"] is True
 
     _activate(container, catalogue, library, "release-2")
 
     assert client.get(review_url).json()["fresh"] is False
-    refused = client.post(review_url)
-    assert refused.status_code == 409
-    assert "inactive knowledge release" in refused.json()["message"]
-    remapped = client.post(f"/requirements/{requirement_id}/architecture-mapping")
-    assert remapped.status_code == 200
-    assert remapped.json()["features"][0]["architecture"]["knowledge_version"] == "release-2"
-    review = client.post(review_url)
-    assert review.status_code == 200
-    assert review.json()["fresh"] is True
+    refused = _review(client, requirement_id)
+    assert refused.failure is not None
+    assert refused.failure["code"] == "breakdown_review_stale"
+    assert "inactive knowledge release" in refused.failure["message"]
+    assert _map(client, requirement_id)["status"] == "succeeded"
+    features = client.get(f"/requirements/{requirement_id}/features").json()["features"]
+    assert features[0]["architecture"]["knowledge_version"] == "release-2"
+    assert _review(client, requirement_id).succeeded
+    assert client.get(review_url).json()["fresh"] is True
 
 
 def test_mapping_job_pins_release_and_review_rejects_outdated_architecture(
@@ -420,14 +434,15 @@ def test_mapping_job_pins_release_and_review_rejects_outdated_architecture(
     assert {query.release_id for query in catalogue.queries} == {OFFLINE_RELEASE_ID}
     features = client.get(f"/requirements/{requirement_id}/features").json()["features"]
     assert features[0]["architecture"]["knowledge_version"] == OFFLINE_RELEASE_ID
-    stale_review = client.post(f"/requirements/{requirement_id}/breakdown-review")
-    assert stale_review.status_code == 409
+    stale_review = _review(client, requirement_id)
+    assert stale_review.failure is not None
+    assert stale_review.failure["code"] == "breakdown_review_stale"
 
-    refreshed = client.post(f"/requirements/{requirement_id}/architecture-mapping")
-    assert refreshed.status_code == 200
-    assert refreshed.json()["features"][0]["architecture"]["knowledge_version"] == "release-2"
-    review = client.post(f"/requirements/{requirement_id}/breakdown-review")
-    assert review.status_code == 200
+    assert _map(client, requirement_id)["status"] == "succeeded"
+    features = client.get(f"/requirements/{requirement_id}/features").json()["features"]
+    assert features[0]["architecture"]["knowledge_version"] == "release-2"
+    assert _review(client, requirement_id).succeeded
+    review = client.get(f"/requirements/{requirement_id}/breakdown-review")
     assert review.json()["fresh"] is True
 
 

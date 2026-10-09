@@ -10,7 +10,7 @@ def test_change_preview_and_commit_recompute_downstream_impact(client: TestClien
         "/requirements", json={"title": "Title", "description": "Need"}
     ).json()
     requirement_id = requirement["id"]
-    assert post_analysis(client, requirement_id).status_code == 200
+    assert post_analysis(client, requirement_id).succeeded
     proposed = {
         "title": "Changed",
         "description": "Changed need",

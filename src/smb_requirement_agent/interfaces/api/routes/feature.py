@@ -8,16 +8,12 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends
 
 from smb_requirement_agent.breakdown.application.use_cases.feature_review import (
     EditFeature,
     EditFeatureInput,
     GetFeatures,
-)
-from smb_requirement_agent.breakdown.application.use_cases.generate_features import (
-    GenerateFeatures,
-    GenerateFeaturesResult,
 )
 from smb_requirement_agent.breakdown.domain.feature.entities import Feature
 from smb_requirement_agent.breakdown.domain.feature.value_objects import FeatureId
@@ -28,10 +24,8 @@ from smb_requirement_agent.interfaces.api.dependencies import (
     RequirementCommandsDep,
     get_approve_feature,
     get_edit_feature,
-    get_generate_features,
     get_generation_context_tokens,
     get_get_features,
-    limit_provider_calls,
     require_authenticated_actor,
 )
 from smb_requirement_agent.interfaces.api.schemas.architecture import ArchitectureImpactResponse
@@ -44,7 +38,6 @@ from smb_requirement_agent.interfaces.api.schemas.feature import (
 )
 from smb_requirement_agent.interfaces.api.schemas.generation import (
     ActionAvailabilityResponse,
-    GenerationRequest,
 )
 from smb_requirement_agent.interfaces.api.schemas.governance import (
     ApprovalRequest,
@@ -53,9 +46,6 @@ from smb_requirement_agent.interfaces.api.schemas.governance import (
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from smb_requirement_agent.workflows.application.use_cases.generation_context import (
     GenerationContextTokens,
-)
-from smb_requirement_agent.workflows.application.use_cases.requirement_commands import (
-    ExpectedContext,
 )
 
 router = APIRouter(
@@ -116,36 +106,6 @@ def _to_set_response(
         ],
         set_version=generation_context.feature_set_version(requirement_id),
         generation_context_token=generation_context.features(requirement_id),
-    )
-
-
-@router.post(
-    "/{requirement_id}/features",
-    response_model=FeatureSetResponse,
-    dependencies=[Depends(limit_provider_calls)],
-)
-def generate_features(
-    requirement_id: str,
-    body: GenerationRequest,
-    actor: CurrentActorDep,
-    response: Response,
-    commands: RequirementCommandsDep,
-    generation_context: Annotated[GenerationContextTokens, Depends(get_generation_context_tokens)],
-    use_case: Annotated[GenerateFeatures, Depends(get_generate_features)],
-) -> FeatureSetResponse:
-    """Decompose the approved Epic. 201 on first generation, 200 when replaced."""
-    resolved = RequirementId(requirement_id)
-
-    def present(result: GenerateFeaturesResult) -> FeatureSetResponse:
-        response.status_code = 200 if result.replaced_existing else 201
-        return _to_set_response(resolved, result.features, generation_context)
-
-    return commands.run_and_present(
-        resolved,
-        actor,
-        lambda: use_case.execute(actor, resolved, force=body.force),
-        present,
-        expected=ExpectedContext(body.context_token, lambda: generation_context.features(resolved)),
     )
 
 

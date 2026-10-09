@@ -19,6 +19,7 @@ from smb_requirement_agent.requirements.domain.requirement.value_objects import 
 )
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.conftest import FAKE_PROVIDER_SETTINGS
+from tests.job_driver import run_job
 from tests.unit.workflow_helpers import (
     drain_requirement_index,
     post_analysis,
@@ -212,7 +213,7 @@ def test_knowledge_review_decision_and_worklist_states_are_public(
     assert client.get(f"/requirements/{candidate_id}/knowledge-review").json()["status"] == (
         "required"
     )
-    assert post_analysis(client, candidate_id).status_code == 200
+    assert post_analysis(client, candidate_id).succeeded
     for question in container.analysis_audit_repository.list_questions(RequirementId(candidate_id)):
         container.analysis_audit_repository.save_question(question.supersede())
     screen_current_knowledge(client, candidate_id)
@@ -269,7 +270,7 @@ def test_suggestion_job_and_human_resolution_preserve_suggestion_origin(
         "Launch ownership",
         "Prepare business broadband ordering for launch.",
     )
-    assert post_analysis(client, requirement_id).status_code == 200
+    assert post_analysis(client, requirement_id).succeeded
     typed_id = RequirementId(requirement_id)
     question = container.analysis_audit_repository.list_questions(typed_id)[0]
 
@@ -302,18 +303,19 @@ def test_suggestion_job_and_human_resolution_preserve_suggestion_origin(
         "combined",
     }
 
-    resolved = client.post(
-        f"/requirements/{requirement_id}/analysis/questions/{question.id.value}/resolution",
-        json={
-            "answer": f"{suggestion['answer']} Confirmed by the owner.",
-            "expected_version": question.version,
-            "source_suggestion_id": suggestion["id"],
-        },
+    resolved = run_job(
+        client,
+        requirement_id,
+        "resolve_clarification_question",
+        question_id=question.id.value,
+        answer=f"{suggestion['answer']} Confirmed by the owner.",
+        expected_version=question.version,
+        source_suggestion_id=suggestion["id"],
     )
-    assert resolved.status_code == 200
+    assert resolved.succeeded, resolved.job
+    analysis = client.get(f"/requirements/{requirement_id}/analysis").json()
     assert any(
-        item["source_suggestion_id"] == suggestion["id"]
-        for item in resolved.json()["clarifications"]
+        item["source_suggestion_id"] == suggestion["id"] for item in analysis["clarifications"]
     )
 
 
@@ -332,7 +334,7 @@ def test_re_screening_the_same_input_keeps_an_undecided_finding() -> None:
     client = TestClient(application)
     _requirement(client, "XGPON", "Customers order XGPON through BCRM and CPP.")
     candidate_id = _requirement(client, "XGPON", "Customers order XGPON through BCRM and CPP.")
-    assert post_analysis(client, candidate_id).status_code == 200
+    assert post_analysis(client, candidate_id).succeeded
     typed_id = RequirementId(candidate_id)
     for question in container.analysis_audit_repository.list_questions(typed_id):
         container.analysis_audit_repository.save_question(question.supersede())

@@ -85,12 +85,34 @@ test("login route presents responsive development access", async ({ page }, test
   await expect(page).toHaveURL(/\/reports\?weeks=4$/);
 });
 
+/**
+ * Model work runs only as a durable job (ADR-0105): start it, wait for the API's
+ * worker to finish it, and fail the test with the job's own failure otherwise.
+ */
+async function runJob(page: Page, requirementId: string, operation: string, args: Record<string, unknown> = {}) {
+  const jobs = `${apiUrl}/requirements/${requirementId}/ai-jobs`;
+  const started = await page.request.post(jobs, {
+    data: { operation, ...args },
+    headers: { "Idempotency-Key": crypto.randomUUID() },
+  });
+  expect(started.ok(), await started.text()).toBeTruthy();
+  const { id } = await started.json() as { id: string };
+  let job = { status: "queued", failure: null as unknown };
+  await expect(async () => {
+    job = await (await page.request.get(`${jobs}/${id}`)).json() as typeof job;
+    expect(["succeeded", "failed", "cancelled"]).toContain(job.status);
+  }).toPass({ timeout: 30_000 });
+  expect(job.status, JSON.stringify(job.failure)).toBe("succeeded");
+}
+
 async function postAnalysis(page: Page, requirementId: string, force = false) {
   const current = await page.request.get(`${apiUrl}/requirements/${requirementId}`);
   const requirement = await current.json() as { analysis_context_token: string };
-  return page.request.post(`${apiUrl}/requirements/${requirementId}/analysis`, {
-    data: { context_token: requirement.analysis_context_token, force },
+  await runJob(page, requirementId, "analyse_requirement", {
+    context_token: requirement.analysis_context_token,
+    force,
   });
+  return page.request.get(`${apiUrl}/requirements/${requirementId}/analysis`);
 }
 
 async function settleKnowledgeReview(page: Page, requirementId: string) {
@@ -234,17 +256,16 @@ async function createGovernableBacklog(page: Page) {
   const requirement = await created.json() as { id: string };
   const generatedAnalysisResponse = await postAnalysis(page, requirement.id);
   const generatedAnalysis = await generatedAnalysisResponse.json() as { version: number };
-  const clarified = await page.request.post(`${apiUrl}/requirements/${requirement.id}/analysis/clarifications`, {
-    data: {
-      answers: [
-        { kind: "assumption", subject: "This is an assumption.", answer: "Confirmed." },
-        { kind: "open_question", subject: "Is this a question?", answer: "Yes." },
-        { kind: "ambiguity", subject: "This is ambiguous.", answer: "Use the first interpretation." },
-        { kind: "potential_dependency", subject: "This is a dependency.", answer: "Available." },
-      ],
-      expected_analysis_version: generatedAnalysis.version,
-    },
+  await runJob(page, requirement.id, "clarify_requirement_analysis", {
+    answers: [
+      { kind: "assumption", subject: "This is an assumption.", answer: "Confirmed." },
+      { kind: "open_question", subject: "Is this a question?", answer: "Yes." },
+      { kind: "ambiguity", subject: "This is ambiguous.", answer: "Use the first interpretation." },
+      { kind: "potential_dependency", subject: "This is a dependency.", answer: "Available." },
+    ],
+    expected_analysis_version: generatedAnalysis.version,
   });
+  const clarified = await page.request.get(`${apiUrl}/requirements/${requirement.id}/analysis`);
   const analysis = await clarified.json() as {
     business_intent: { proposals: Array<{ id: string; status: string; version: number }> };
   };
@@ -271,9 +292,10 @@ async function createGovernableBacklog(page: Page) {
   const confirmedAnalysis = await confirmedAnalysisResponse.json() as {
     epic_context_token: string;
   };
-  const epicResponse = await page.request.post(`${apiUrl}/requirements/${requirement.id}/epic`, {
-    data: { context_token: confirmedAnalysis.epic_context_token },
+  await runJob(page, requirement.id, "generate_epic", {
+    context_token: confirmedAnalysis.epic_context_token,
   });
+  const epicResponse = await page.request.get(`${apiUrl}/requirements/${requirement.id}/epic`);
   const epic = await epicResponse.json() as {
     version: number;
     content_fingerprint: string;
@@ -290,10 +312,10 @@ async function createGovernableBacklog(page: Page) {
     `${apiUrl}/requirements/${requirement.id}/epic`,
   );
   const currentEpic = await currentEpicResponse.json() as { feature_context_token: string };
-  const featureResponse = await page.request.post(
-    `${apiUrl}/requirements/${requirement.id}/features`,
-    { data: { context_token: currentEpic.feature_context_token } },
-  );
+  await runJob(page, requirement.id, "generate_features", {
+    context_token: currentEpic.feature_context_token,
+  });
+  const featureResponse = await page.request.get(`${apiUrl}/requirements/${requirement.id}/features`);
   expect(featureResponse.ok()).toBeTruthy();
   const features = await featureResponse.json() as {
     features: Array<{
@@ -320,9 +342,12 @@ async function createGovernableBacklog(page: Page) {
     };
     const currentFeature = currentFeatures.features.find((item) => item.id === feature.id);
     expect(currentFeature).toBeTruthy();
-    const storyResponse = await page.request.post(
+    await runJob(page, requirement.id, "generate_stories", {
+      context_token: currentFeature!.story_context_token,
+      feature_id: feature.id,
+    });
+    const storyResponse = await page.request.get(
       `${apiUrl}/requirements/${requirement.id}/features/${feature.id}/stories`,
-      { data: { context_token: currentFeature!.story_context_token } },
     );
     expect(storyResponse.ok()).toBeTruthy();
     const body = await storyResponse.json() as {
@@ -339,7 +364,7 @@ async function createGovernableBacklog(page: Page) {
       stories.push({ id: story.id, featureId: feature.id });
     }
   }
-  await page.request.post(`${apiUrl}/requirements/${requirement.id}/breakdown-review`);
+  await runJob(page, requirement.id, "generate_breakdown_review");
   const accessResponse = await page.request.get(
     `${apiUrl}/requirements/${requirement.id}/assignments`,
   );

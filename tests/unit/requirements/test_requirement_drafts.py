@@ -136,8 +136,8 @@ def test_analysis_can_start_when_promoted_source_has_no_desired_outcome(
         "eligible": True,
         "missing_fields": [],
     }
-    analysis = post_analysis(client, requirement_id)
-    assert analysis.status_code == 200
+    assert post_analysis(client, requirement_id).succeeded
+    analysis = client.get(f"/requirements/{requirement_id}/analysis")
     assert analysis.json()["business_intent"]["proposals"][0]["kind"] == "desired_outcome"
 
 

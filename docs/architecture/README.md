@@ -127,3 +127,5 @@ Bounded contexts: [context map](context-map.md) and [ubiquitous language](ubiqui
 - [ADR-0101: The product architecture explorer lives on the knowledge catalogue](adr-0101-product-architecture-explorer-on-the-catalogue.md)
 - [ADR-0102: Historic Requirements and their Azure DevOps lineage](adr-0102-historic-requirements-and-ado-lineage.md)
 - [ADR-0103: Bounded-context packages and in-process domain events](adr-0103-bounded-context-packages-and-domain-events.md) — Accepted; implemented 2026-10-08 (PRs 1–16)
+- [ADR-0104: Independent portals with optional links](adr-0104-independent-portals-with-optional-links.md)
+- [ADR-0105: Model-backed work runs only as a durable job](adr-0105-durable-only-provider-work.md) — Accepted; implemented 2026-10-09 (production hardening PR 4a and PR 4b)

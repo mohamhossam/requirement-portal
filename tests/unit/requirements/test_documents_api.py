@@ -87,8 +87,8 @@ def test_document_journey_records_exact_analysis_version_and_checksum(
         json={"included": True, "expected_version": uploaded["version"]},
     )
     assert included.status_code == 200
-    analysis = post_analysis(client, requirement_id)
-    assert analysis.status_code == 200
+    assert post_analysis(client, requirement_id).succeeded
+    analysis = client.get(f"/requirements/{requirement_id}/analysis")
     assert analysis.json()["document_references"] == [
         {
             "document_id": document_id,
@@ -191,7 +191,7 @@ def test_new_version_detaches_inclusion_and_invalidates_current_analysis(
         f"/requirements/{requirement_id}/attachments/{document_id}/analysis-inclusion",
         json={"included": True, "expected_version": uploaded["version"]},
     )
-    assert post_analysis(client, requirement_id).status_code == 200
+    assert post_analysis(client, requirement_id).succeeded
 
     current = client.get(f"/documents/{document_id}").json()
 

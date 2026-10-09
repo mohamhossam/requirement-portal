@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -34,6 +35,7 @@ from smb_requirement_agent.interfaces.api.container import build_container
 from smb_requirement_agent.interfaces.api.main import create_app
 from smb_requirement_agent.shared_kernel.generation import Provenance
 from tests.conftest import FAKE_PROVIDER_SETTINGS
+from tests.job_driver import run_job
 from tests.unit.workflow_helpers import generate_story_tree
 
 NOW = datetime(2026, 9, 3, tzinfo=UTC)
@@ -162,24 +164,38 @@ def test_semantic_mapper_rejects_an_incomplete_focused_retry() -> None:
         request_complete_quality_findings(request_schema, requested)
 
 
-def test_story_and_feature_quality_endpoints_are_reviewable(client: TestClient) -> None:
-    requirement_id, feature_id, stories = generate_story_tree(client)
+def _evaluate_feature_quality(
+    client: TestClient, requirement_id: str, feature_id: str
+) -> dict[str, Any]:
     base = f"/requirements/{requirement_id}/features/{feature_id}/stories"
+    run = run_job(
+        client,
+        requirement_id,
+        "evaluate_feature_quality",
+        context_token=client.get(base).json()["generation_context_token"],
+        feature_id=feature_id,
+    )
+    assert run.succeeded, run.job
+    response = client.get(f"{base}/quality-assessment")
+    assert response.status_code == 200
+    snapshot: dict[str, Any] = response.json()
+    return snapshot
 
-    feature = client.get(f"{base}/quality")
-    single = client.get(f"{base}/{stories[0]['id']}/quality")
-    recommendations = client.get(f"{base}/{stories[0]['id']}/quality/split-recommendations")
 
-    assert feature.status_code == 200
-    assert len(feature.json()["stories"]) == len(stories)
-    assert single.status_code == 200
-    assert [item["criterion"] for item in single.json()["findings"]] == [
+def test_story_and_feature_quality_assessments_are_reviewable(client: TestClient) -> None:
+    requirement_id, feature_id, stories = generate_story_tree(client)
+
+    feature = _evaluate_feature_quality(client, requirement_id, feature_id)
+    single = next(item for item in feature["stories"] if item["story_id"] == stories[0]["id"])
+
+    assert feature["fresh"] is True
+    assert len(feature["stories"]) == len(stories)
+    assert [item["criterion"] for item in single["findings"]] == [
         item.value for item in InvestCriterion
     ]
-    assert single.json()["status"] == "passes"
-    assert single.json()["provenance"]["model"] == "fake"
-    assert recommendations.status_code == 200
-    assert recommendations.json() == []
+    assert single["status"] == "passes"
+    assert single["provenance"]["model"] == "fake"
+    assert single["recommendations"] == []
 
 
 def test_fake_semantic_failures_drive_split_status_and_recommendations() -> None:
@@ -196,14 +212,11 @@ def test_fake_semantic_failures_drive_split_status_and_recommendations() -> None
     )
     with TestClient(create_app(lambda: container)) as client:
         requirement_id, feature_id, stories = generate_story_tree(client)
-        response = client.get(
-            f"/requirements/{requirement_id}/features/{feature_id}/stories/"
-            f"{stories[0]['id']}/quality"
-        )
+        feature = _evaluate_feature_quality(client, requirement_id, feature_id)
 
-    assert response.status_code == 200
-    assert response.json()["status"] == "split_recommended"
-    assert {item["pattern"] for item in response.json()["recommendations"]} == {
+    single = next(item for item in feature["stories"] if item["story_id"] == stories[0]["id"])
+    assert single["status"] == "split_recommended"
+    assert {item["pattern"] for item in single["recommendations"]} == {
         "spike",
         "paths",
     }

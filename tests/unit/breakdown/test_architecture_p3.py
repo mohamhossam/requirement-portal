@@ -84,16 +84,22 @@ def _mapped_requirement(client: TestClient) -> str:
         },
         headers=OWNER,
     ).json()["id"]
-    assert post_analysis(client, requirement_id, headers=OWNER).status_code == 200
+    assert post_analysis(client, requirement_id, headers=OWNER).succeeded
     confirm_fake_analysis(client, requirement_id)
-    assert post_epic(client, requirement_id, headers=OWNER).status_code == 201
+    assert post_epic(client, requirement_id, headers=OWNER).succeeded
     assert post_epic_approval(client, requirement_id).status_code == 200
-    features = post_features(client, requirement_id).json()["features"]
+    assert post_features(client, requirement_id).succeeded
+    features = client.get(f"/requirements/{requirement_id}/features").json()["features"]
     assert post_feature_approval(client, requirement_id, features[0]["id"]).status_code == 200
-    post_stories(client, requirement_id, features[0]["id"])
-    mapped = client.post(f"/requirements/{requirement_id}/architecture-mapping", headers=OWNER)
-    assert mapped.status_code == 200
+    assert post_stories(client, requirement_id, features[0]["id"]).succeeded
+    _map(client, requirement_id)
     return str(requirement_id)
+
+
+def _map(client: TestClient, requirement_id: str) -> None:
+    mapped = client.post(f"/requirements/{requirement_id}/architecture-mapping/jobs", headers=OWNER)
+    assert mapped.status_code == 202
+    assert mapped.json()["status"] == "succeeded"
 
 
 def _counts(client: TestClient) -> dict[str, MappingCount]:
@@ -125,8 +131,7 @@ def test_mappings_are_counted_by_the_release_they_pinned_until_remapped(
     sync(container)
     assert _counts(client) == before
 
-    remapped = client.post(f"/requirements/{requirement_id}/architecture-mapping", headers=OWNER)
-    assert remapped.status_code == 200
+    _map(client, requirement_id)
     after = _counts(client)
     assert set(after) == {"release-2"}
     assert replace(after["release-2"], release_id=OFFLINE_RELEASE_ID) == counted

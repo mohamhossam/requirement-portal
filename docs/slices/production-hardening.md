@@ -2,7 +2,7 @@
 
 ## Status
 
-**Specified 2026-10-08; in progress since 2026-10-09.** PR 1, PR 8, PR 2 and PR 4a are delivered (see their entries and Validation Evidence); everything else is not implemented yet. This record keeps the
+**Specified 2026-10-08; in progress since 2026-10-09.** PR 1, PR 8, PR 2, PR 4a and PR 4b are delivered (see their entries and Validation Evidence); everything else is not implemented yet. This record keeps the
 plan for closing every finding of the second production-readiness review (security, deployment and
 CI, reliability and observability, frontend) so it can be scheduled later. When work starts, each
 PR converts its part into the `WORKSPACE.md` §10 sections and fills in Validation Evidence here.
@@ -113,18 +113,59 @@ Then bump `pyproject.toml:12` and `uv.lock`, and wire the new settings. Phase 1 
 - **Shutdown.** `serve.py` gives in-flight requests 25s (`timeout_graceful_shutdown`), within the manifest's new `api.stop_grace_period: 30s`; `web` has a healthcheck.
 - The "no architecture catalogue connected" state needs no new UI: offline mapping still succeeds with the declared systems and the catalogue's uncertainty, as before.
 
-**PR 4b · Retire the synchronous provider routes** (ADR-0105, part 2)
-- **Delete:**
-  - `analysis.py:405,463,499,569,662,689`;
-  - `epic.py:96`;
-  - the `features` and `story.py` POSTs, plus the unused `story.py:301,318`;
-  - the review routes;
-  - `architecture.py:103`.
-- **Keep:** `knowledge_views.py:78` unified search.
-- **Tests:** a new `tests/job_driver.py` drives jobs through the public API and the container's existing executor. Migrate the 26 test files that use these routes and the sets at `test_provider_rate_limit.py:63-105`.
-- **Regenerate** `frontend/openapi.json` and remove the unused client functions.
-- **Early refusal:** extend G2's pre-enqueue `require_can_generate` refusal to Epic, Features and Stories, so they keep their immediate 409/422 now that the synchronous routes are gone.
-- **Timeouts:** nginx `/api/` `proxy_read_timeout` goes from 600s to 60s (`default.conf.template:85-86`).
+**PR 4b · Retire the synchronous provider routes** (ADR-0105, part 2) — *delivered on `claude/production-hardening-pr4b`, 2026-10-09*
+- **Deleted** every route that ran a model inside the request, 16 in all:
+  - analysis:
+    - `POST …/analysis`;
+    - `…/analysis/clarifications`;
+    - `…/analysis/question-resolutions`;
+    - `…/analysis/questions/{id}/resolution`;
+  - mapping: `POST …/architecture-mapping`;
+  - generation:
+    - `POST …/epic`;
+    - `POST …/features`;
+    - `POST …/features/{id}/stories`;
+  - Story regeneration and proposals:
+    - `…/stories/regeneration`;
+    - `…/stories/{id}/regeneration`;
+    - `…/stories/change-proposals`;
+  - quality reads that ran the evaluator:
+    - `GET …/stories/quality`;
+    - `…/stories/{id}/quality`;
+    - `…/split-recommendations`;
+  - review:
+    - `POST …/breakdown-review`;
+    - `…/breakdown-review/open-questions/{id}/resolution`.
+
+  Each has a job equivalent or was unused; Feature quality is read from its stored snapshot.
+  Their providers, schemas and `Container` fields went with them, along with three pieces that
+  only those routes used:
+  - `ValidateStory`: its users now take `AssessStoryCandidate`;
+  - `SuggestStorySplit.execute`;
+  - `RequirementCommands`' expected-context check, since a job checks the context token when it
+    starts.
+- **Kept**, where the plan named them for deletion:
+  - asking a clarification question (`analysis.py:569` in the plan) and deciding an intent
+    proposal. These are human actions that only queue model work, and they stay rate-limited as
+    automatic triggers;
+  - unified search.
+- **Refused before enqueue.** `GenerateEpic`, `GenerateFeatures` and `GenerateStories` expose
+  `require_can_generate`, which `AiJobs` calls beside G2's analysis check. A start that can only
+  fail gets 409 at once:
+  - an Epic from an unconfirmed analysis, or over human work without `force`;
+  - Features before the Epic is approved, or over human work without `force`;
+  - first Stories that already exist, or for a Feature that is not ready.
+
+  Story regeneration over human work, and mapping refusals, still surface as failed jobs.
+- **Tests.** `tests/job_driver.py` starts a job through the public route and plays the worker
+  with the container's queue and executor. The workflow helpers and the test files that used the
+  routes now go through it, including the PostgreSQL persistence suite. The provider rate-limit
+  sets shrink to the job, mapping-job, index-retry and search routes.
+- **Client.** `frontend/openapi.json` and `schema.d.ts` are regenerated, and the 15 unused client
+  functions are removed.
+- **Edge.** nginx `/api/` `proxy_read_timeout` and `proxy_send_timeout` drop from 600s to 60s,
+  pinned by a deployment test.
+- ADR-0105 records the decision, with an ADR-0020 amendment.
 
 **PR 5 · Session safety and crash handling** (exception, ADR-0109)
 - **Renewal stops aborting requests:**
@@ -371,4 +412,26 @@ npm run typecheck / lint    clean
 npm run api:check           OpenAPI types match frontend/openapi.json (no API change)
 npm run build               ✓ built in 1.16s
 docker compose -f deploy/compose.production.yaml config   valid
+```
+
+### PR 4b (2026-10-09, branch `claude/production-hardening-pr4b`)
+
+Run locally on Python 3.13 with platform-kernel v1.1.0, against a local PostgreSQL 16 with
+pgvector (`TEST_DATABASE_URL`), so the PostgreSQL suites ran here too. The Playwright smoke ran
+against the API with the fake model, in-memory store and in-process workers, on a preinstalled
+Chromium. Its two failures are that browser's missing built-in PDF viewer frame, which this
+change does not touch; CI installs Playwright's own browser. The one vitest failure is the known
+Node 22 export test.
+
+```text
+pytest --cov (PostgreSQL)   1938 passed in 339.05s; total coverage 94.61% (floor 92.5%)
+ruff check .                All checks passed!
+ruff format --check .       1242 files already formatted
+mypy src tests              Success: no issues found in 680 source files
+lint-imports                Contracts: 43 kept, 0 broken.
+npm run test                511 passed, 1 failed (client.test.ts export, Node 22 only)
+npm run typecheck / lint    clean
+npm run api:check           OpenAPI types match the regenerated frontend/openapi.json
+npm run build               ✓ built
+npm run test:smoke          45 passed, 2 failed (content-security-policy PDF viewer frame, local Chromium only)
 ```

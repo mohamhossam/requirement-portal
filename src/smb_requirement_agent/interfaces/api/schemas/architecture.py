@@ -267,22 +267,6 @@ class ArchitectureImpactResponse(BaseModel):
         )
 
 
-class StoryArchitectureMappingResponse(BaseModel):
-    story_id: str
-    architecture: ArchitectureImpactResponse
-
-
-class FeatureArchitectureMappingResponse(BaseModel):
-    feature_id: str
-    architecture: ArchitectureImpactResponse
-    stories: list[StoryArchitectureMappingResponse]
-
-
-class BreakdownArchitectureMappingResponse(BaseModel):
-    requirement_id: str
-    features: list[FeatureArchitectureMappingResponse]
-
-
 class ArchitectureJobResponse(BaseModel):
     """A queued mapping of a Requirement's backlog to the catalogue (ADR-0099)."""
 

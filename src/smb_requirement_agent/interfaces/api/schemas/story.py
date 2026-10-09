@@ -15,7 +15,6 @@ from smb_requirement_agent.breakdown.domain.story.quality import (
 )
 from smb_requirement_agent.interfaces.api.schemas.architecture import ArchitectureImpactResponse
 from smb_requirement_agent.interfaces.api.schemas.bounds import (
-    MAX_IDENTIFIER_CHARACTERS,
     MAX_ITEMS,
     Identifier,
     Name,
@@ -91,12 +90,6 @@ class StorySetResponse(BaseModel):
     set_version: int
     generation_context_token: str
     model_config = ConfigDict(frozen=True)
-
-
-class StoryChangeProposalRequest(BaseModel):
-    operation: StoryChangeOperation
-    source_story_ids: list[Identifier] = Field(min_length=1, max_length=MAX_ITEMS)
-    context_token: str = Field(min_length=1, max_length=MAX_IDENTIFIER_CHARACTERS)
 
 
 class StoryProposalCandidateResponse(BaseModel):

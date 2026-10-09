@@ -25,9 +25,9 @@ def test_requirement_and_breakdown_history_are_created_automatically(
     client: TestClient,
 ) -> None:
     requirement_id = _requirement(client)
-    assert post_analysis(client, requirement_id).status_code == 200
+    assert post_analysis(client, requirement_id).succeeded
     confirm_fake_analysis(client, requirement_id)
-    assert post_epic(client, requirement_id).status_code == 201
+    assert post_epic(client, requirement_id).succeeded
 
     response = client.get(f"/requirements/{requirement_id}/revisions")
 
@@ -73,14 +73,18 @@ def test_story_state_is_counted_and_compared_in_breakdown_history(client: TestCl
     confirm_fake_analysis(client, requirement_id)
     post_epic(client, requirement_id)
     post_epic_approval(client, requirement_id)
-    features = post_features(client, requirement_id).json()["features"]
+    assert post_features(client, requirement_id).succeeded
+    features = client.get(f"/requirements/{requirement_id}/features").json()["features"]
     feature_id = features[0]["id"]
     post_feature_approval(client, requirement_id, feature_id)
     before = client.get(f"/requirements/{requirement_id}/revisions").json()["breakdown_revisions"][
         -1
     ]["number"]
 
-    stories = post_stories(client, requirement_id, feature_id).json()["stories"]
+    assert post_stories(client, requirement_id, feature_id).succeeded
+    stories = client.get(f"/requirements/{requirement_id}/features/{feature_id}/stories").json()[
+        "stories"
+    ]
     history = client.get(f"/requirements/{requirement_id}/revisions").json()["breakdown_revisions"]
     assert history[-1]["story_count"] == 2
     assert history[-1]["edited_story_count"] == 0

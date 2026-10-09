@@ -12,16 +12,12 @@ from smb_requirement_agent.breakdown.application.use_cases.story_change_proposal
 from smb_requirement_agent.breakdown.application.use_cases.story_quality import (
     GetFeatureQualitySnapshot,
     SuggestStorySplit,
-    ValidateFeatureStories,
-    ValidateStory,
 )
 from smb_requirement_agent.breakdown.application.use_cases.story_workflow import (
     AcceptanceCriterionInput,
     EditStory,
-    GenerateStories,
     GetStories,
     MergeStories,
-    RegenerateStory,
     SplitStory,
     StoryInput,
 )
@@ -47,25 +43,18 @@ from smb_requirement_agent.interfaces.api.dependencies import (
     get_approve_story,
     get_edit_story,
     get_feature_quality_snapshot,
-    get_generate_stories,
     get_generation_context_tokens,
     get_get_stories,
     get_merge_stories,
-    get_regenerate_story,
     get_reject_story,
     get_split_story,
     get_story_change_proposals,
-    get_suggest_story_split,
-    get_validate_feature_stories,
-    get_validate_story,
-    limit_provider_calls,
     require_authenticated_actor,
 )
 from smb_requirement_agent.interfaces.api.schemas.architecture import ArchitectureImpactResponse
 from smb_requirement_agent.interfaces.api.schemas.epic import ProvenanceResponse, StalenessResponse
 from smb_requirement_agent.interfaces.api.schemas.generation import (
     ActionAvailabilityResponse,
-    GenerationRequest,
 )
 from smb_requirement_agent.interfaces.api.schemas.governance import (
     ApprovalRequest,
@@ -74,13 +63,11 @@ from smb_requirement_agent.interfaces.api.schemas.governance import (
 )
 from smb_requirement_agent.interfaces.api.schemas.story import (
     AcceptanceCriterionPayload,
-    FeatureStoryQualityResponse,
     FeatureStoryQualitySnapshotResponse,
     MergeStoriesRequest,
     SpidrRecommendationResponse,
     SplitStoryRequest,
     StoryActionsResponse,
-    StoryChangeProposalRequest,
     StoryChangeProposalResponse,
     StoryContentRequest,
     StoryDraftRequest,
@@ -94,9 +81,6 @@ from smb_requirement_agent.interfaces.api.schemas.story import (
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from smb_requirement_agent.workflows.application.use_cases.generation_context import (
     GenerationContextTokens,
-)
-from smb_requirement_agent.workflows.application.use_cases.requirement_commands import (
-    ExpectedContext,
 )
 
 router = APIRouter(
@@ -256,26 +240,6 @@ def _quality_response(
 
 
 @router.get(
-    "/{requirement_id}/features/{feature_id}/stories/quality",
-    response_model=FeatureStoryQualityResponse,
-    dependencies=[Depends(limit_provider_calls)],
-)
-def validate_feature_story_quality(
-    requirement_id: str,
-    feature_id: str,
-    use_case: Annotated[ValidateFeatureStories, Depends(get_validate_feature_stories)],
-) -> FeatureStoryQualityResponse:
-    resolved = FeatureId(feature_id)
-    assessments = use_case.execute(RequirementId(requirement_id), resolved)
-    return FeatureStoryQualityResponse(
-        feature_id=resolved.value,
-        stories=[
-            _quality_response(item, SuggestStorySplit.for_assessment(item)) for item in assessments
-        ],
-    )
-
-
-@router.get(
     "/{requirement_id}/features/{feature_id}/stories/quality-assessment",
     response_model=FeatureStoryQualitySnapshotResponse,
 )
@@ -295,70 +259,6 @@ def get_feature_story_quality_assessment(
             _quality_response(item, SuggestStorySplit.for_assessment(item))
             for item in snapshot.assessments
         ],
-    )
-
-
-@router.get(
-    "/{requirement_id}/features/{feature_id}/stories/{story_id}/quality",
-    response_model=StoryQualityResponse,
-    dependencies=[Depends(limit_provider_calls)],
-)
-def validate_story_quality(
-    requirement_id: str,
-    feature_id: str,
-    story_id: str,
-    use_case: Annotated[ValidateStory, Depends(get_validate_story)],
-) -> StoryQualityResponse:
-    assessment = use_case.execute(
-        RequirementId(requirement_id), FeatureId(feature_id), StoryId(story_id)
-    )
-    return _quality_response(assessment, SuggestStorySplit.for_assessment(assessment))
-
-
-@router.get(
-    "/{requirement_id}/features/{feature_id}/stories/{story_id}/quality/split-recommendations",
-    response_model=list[SpidrRecommendationResponse],
-    dependencies=[Depends(limit_provider_calls)],
-)
-def suggest_story_split(
-    requirement_id: str,
-    feature_id: str,
-    story_id: str,
-    use_case: Annotated[SuggestStorySplit, Depends(get_suggest_story_split)],
-) -> list[SpidrRecommendationResponse]:
-    return [
-        SpidrRecommendationResponse(pattern=item.pattern, reason=item.reason)
-        for item in use_case.execute(
-            RequirementId(requirement_id), FeatureId(feature_id), StoryId(story_id)
-        )
-    ]
-
-
-@router.post(
-    "/{requirement_id}/features/{feature_id}/stories",
-    response_model=StorySetResponse,
-    status_code=201,
-    dependencies=[Depends(limit_provider_calls)],
-)
-def generate_stories(
-    requirement_id: str,
-    feature_id: str,
-    body: GenerationRequest,
-    actor: CurrentActorDep,
-    commands: RequirementCommandsDep,
-    generation_context: Annotated[GenerationContextTokens, Depends(get_generation_context_tokens)],
-    use_case: Annotated[GenerateStories, Depends(get_generate_stories)],
-) -> StorySetResponse:
-    requirement = RequirementId(requirement_id)
-    resolved = FeatureId(feature_id)
-    return commands.run_and_present(
-        requirement,
-        actor,
-        lambda: use_case.execute(actor, requirement, resolved),
-        lambda stories: _set(requirement, resolved, stories, generation_context),
-        expected=ExpectedContext(
-            body.context_token, lambda: generation_context.stories(requirement, resolved)
-        ),
     )
 
 
@@ -524,96 +424,6 @@ def merge_stories(
             body.expected_set_version,
         ),
         lambda stories: _set(requirement, resolved, stories, generation_context),
-    )
-
-
-@router.post(
-    "/{requirement_id}/features/{feature_id}/stories/regeneration",
-    response_model=StorySetResponse,
-    dependencies=[Depends(limit_provider_calls)],
-)
-def regenerate_stories(
-    requirement_id: str,
-    feature_id: str,
-    body: GenerationRequest,
-    actor: CurrentActorDep,
-    commands: RequirementCommandsDep,
-    generation_context: Annotated[GenerationContextTokens, Depends(get_generation_context_tokens)],
-    use_case: Annotated[RegenerateStory, Depends(get_regenerate_story)],
-) -> StorySetResponse:
-    requirement = RequirementId(requirement_id)
-    resolved = FeatureId(feature_id)
-    return commands.run_and_present(
-        requirement,
-        actor,
-        lambda: use_case.execute_all(actor, requirement, resolved, force=body.force),
-        lambda stories: _set(requirement, resolved, stories, generation_context),
-        expected=ExpectedContext(
-            body.context_token, lambda: generation_context.stories(requirement, resolved)
-        ),
-    )
-
-
-@router.post(
-    "/{requirement_id}/features/{feature_id}/stories/{story_id}/regeneration",
-    response_model=StorySetResponse,
-    dependencies=[Depends(limit_provider_calls)],
-)
-def regenerate_story(
-    requirement_id: str,
-    feature_id: str,
-    story_id: str,
-    body: GenerationRequest,
-    actor: CurrentActorDep,
-    commands: RequirementCommandsDep,
-    generation_context: Annotated[GenerationContextTokens, Depends(get_generation_context_tokens)],
-    use_case: Annotated[RegenerateStory, Depends(get_regenerate_story)],
-) -> StorySetResponse:
-    requirement = RequirementId(requirement_id)
-    resolved = FeatureId(feature_id)
-    story = StoryId(story_id)
-    return commands.run_and_present(
-        requirement,
-        actor,
-        lambda: use_case.execute_one(actor, requirement, resolved, story, force=body.force),
-        lambda stories: _set(requirement, resolved, stories, generation_context),
-        expected=ExpectedContext(
-            body.context_token, lambda: generation_context.story(requirement, resolved, story)
-        ),
-    )
-
-
-@router.post(
-    "/{requirement_id}/features/{feature_id}/stories/change-proposals",
-    response_model=StoryChangeProposalResponse,
-    status_code=201,
-    dependencies=[Depends(limit_provider_calls)],
-)
-def create_story_proposal(
-    requirement_id: str,
-    feature_id: str,
-    body: StoryChangeProposalRequest,
-    actor: CurrentActorDep,
-    commands: RequirementCommandsDep,
-    generation_context: Annotated[GenerationContextTokens, Depends(get_generation_context_tokens)],
-    use_case: Annotated[StoryChangeProposals, Depends(get_story_change_proposals)],
-) -> StoryChangeProposalResponse:
-    requirement = RequirementId(requirement_id)
-    resolved = FeatureId(feature_id)
-    return commands.run_and_present(
-        requirement,
-        actor,
-        lambda: use_case.create(
-            actor,
-            requirement,
-            resolved,
-            body.operation,
-            tuple(StoryId(item) for item in body.source_story_ids),
-        ),
-        _proposal_response,
-        expected=ExpectedContext(
-            body.context_token, lambda: generation_context.stories(requirement, resolved)
-        ),
     )
 
 

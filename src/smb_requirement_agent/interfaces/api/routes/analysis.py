@@ -12,14 +12,6 @@ from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration
     AnalysisCollaboration,
     AnalysisRoundView,
     AnalysisWorkspace,
-    ClarificationResolutionInput,
-)
-from smb_requirement_agent.analysis.application.use_cases.analyze_requirement import (
-    AnalyzeRequirement,
-)
-from smb_requirement_agent.analysis.application.use_cases.clarify_requirement_analysis import (
-    ClarificationAnswerInput,
-    ClarifyRequirementAnalysis,
 )
 from smb_requirement_agent.analysis.application.use_cases.confirm_requirement_analysis import (
     ConfirmRequirementAnalysis,
@@ -44,8 +36,6 @@ from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     RequirementCommandsDep,
     get_analysis_collaboration,
-    get_analyze_requirement,
-    get_clarify_requirement_analysis,
     get_confirm_requirement_analysis,
     get_generation_context_tokens,
     get_get_requirement_analysis,
@@ -68,7 +58,6 @@ from smb_requirement_agent.interfaces.api.schemas.analysis import (
     BusinessIntentResponse,
     BusinessRuleResponse,
     ClarificationQuestionResponse,
-    ClarifyAnalysisRequest,
     ClassifyClarificationQuestionRequest,
     ConfirmAnalysisRequest,
     ConfirmedIntentItemResponse,
@@ -82,22 +71,16 @@ from smb_requirement_agent.interfaces.api.schemas.analysis import (
     PotentialDependencyResponse,
     QuestionAssignmentChangeResponse,
     RequirementAnalysisResponse,
-    ResolveClarificationQuestionRequest,
-    ResolveClarificationQuestionsRequest,
     SaveClarificationDraftRequest,
 )
 from smb_requirement_agent.interfaces.api.schemas.epic import ProvenanceResponse
 from smb_requirement_agent.interfaces.api.schemas.generation import (
     ActionAvailabilityResponse,
-    GenerationRequest,
 )
 from smb_requirement_agent.shared_kernel.actors import ActorId
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from smb_requirement_agent.workflows.application.use_cases.generation_context import (
     GenerationContextTokens,
-)
-from smb_requirement_agent.workflows.application.use_cases.requirement_commands import (
-    ExpectedContext,
 )
 
 router = APIRouter(
@@ -405,32 +388,6 @@ def round_response(view: AnalysisRoundView) -> AnalysisRoundResponse:
     )
 
 
-@router.post(
-    "/{requirement_id}/analysis",
-    response_model=RequirementAnalysisResponse,
-    status_code=200,
-    dependencies=[Depends(limit_provider_calls)],
-)
-def analyze_requirement(
-    requirement_id: str,
-    body: GenerationRequest,
-    actor: CurrentActorDep,
-    commands: RequirementCommandsDep,
-    generation_context: Annotated[GenerationContextTokens, Depends(get_generation_context_tokens)],
-    use_case: Annotated[AnalyzeRequirement, Depends(get_analyze_requirement)],
-) -> RequirementAnalysisResponse:
-    resolved = RequirementId(requirement_id)
-    return commands.run_and_present(
-        resolved,
-        actor,
-        lambda: use_case.execute_workspace(actor, resolved, force=body.force),
-        lambda workspace: _with_context_tokens(
-            workspace_response(workspace), resolved, generation_context
-        ),
-        expected=ExpectedContext(body.context_token, lambda: generation_context.analysis(resolved)),
-    )
-
-
 def _with_context_tokens(
     response: RequirementAnalysisResponse,
     requirement_id: RequirementId,
@@ -461,42 +418,6 @@ def get_requirement_analysis(
         )
 
     return commands.read(resolved, read)
-
-
-@router.post(
-    "/{requirement_id}/analysis/clarifications",
-    response_model=RequirementAnalysisResponse,
-    status_code=200,
-    dependencies=[Depends(limit_provider_calls)],
-)
-def clarify_requirement_analysis(
-    requirement_id: str,
-    request: ClarifyAnalysisRequest,
-    actor: CurrentActorDep,
-    commands: RequirementCommandsDep,
-    use_case: Annotated[
-        ClarifyRequirementAnalysis,
-        Depends(get_clarify_requirement_analysis),
-    ],
-) -> RequirementAnalysisResponse:
-    answers = tuple(
-        ClarificationAnswerInput(
-            kind=item.kind,
-            subject=item.subject,
-            answer=item.answer,
-        )
-        for item in request.answers
-    )
-    resolved = RequirementId(requirement_id)
-    return workspace_response(
-        commands.run(
-            resolved,
-            actor,
-            lambda: use_case.execute_workspace(
-                resolved, answers, request.expected_analysis_version, actor
-            ),
-        )
-    )
 
 
 @router.post(
@@ -658,62 +579,5 @@ def save_clarification_draft(
             request.answer,
             request.expected_version,
             actor,
-        )
-    )
-
-
-@router.post(
-    "/{requirement_id}/analysis/question-resolutions",
-    response_model=RequirementAnalysisResponse,
-    dependencies=[Depends(limit_provider_calls)],
-)
-def resolve_clarification_questions(
-    requirement_id: str,
-    request: ResolveClarificationQuestionsRequest,
-    actor: CurrentActorDep,
-    commands: RequirementCommandsDep,
-    use_case: Annotated[AnalysisCollaboration, Depends(get_analysis_collaboration)],
-) -> RequirementAnalysisResponse:
-    resolved = RequirementId(requirement_id)
-    answers = tuple(
-        ClarificationResolutionInput(
-            QuestionId(item.question_id),
-            item.answer,
-            item.expected_version,
-            item.source_suggestion_id,
-        )
-        for item in request.answers
-    )
-    return workspace_response(
-        commands.run(resolved, actor, lambda: use_case.resolve_batch(resolved, answers, actor))
-    )
-
-
-@router.post(
-    "/{requirement_id}/analysis/questions/{question_id}/resolution",
-    response_model=RequirementAnalysisResponse,
-    dependencies=[Depends(limit_provider_calls)],
-)
-def resolve_clarification_question(
-    requirement_id: str,
-    question_id: str,
-    request: ResolveClarificationQuestionRequest,
-    actor: CurrentActorDep,
-    commands: RequirementCommandsDep,
-    use_case: Annotated[AnalysisCollaboration, Depends(get_analysis_collaboration)],
-) -> RequirementAnalysisResponse:
-    resolved = RequirementId(requirement_id)
-    return workspace_response(
-        commands.run(
-            resolved,
-            actor,
-            lambda: use_case.resolve(
-                resolved,
-                QuestionId(question_id),
-                request.answer,
-                request.expected_version,
-                actor,
-                source_suggestion_id=request.source_suggestion_id,
-            ),
         )
     )

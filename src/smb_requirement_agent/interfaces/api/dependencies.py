@@ -20,12 +20,6 @@ from smb_kernel.time.clock import ClockPort
 from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration import (
     AnalysisCollaboration,
 )
-from smb_requirement_agent.analysis.application.use_cases.analyze_requirement import (
-    AnalyzeRequirement,
-)
-from smb_requirement_agent.analysis.application.use_cases.clarify_requirement_analysis import (
-    ClarifyRequirementAnalysis,
-)
 from smb_requirement_agent.analysis.application.use_cases.confirm_requirement_analysis import (
     ConfirmRequirementAnalysis,
 )
@@ -33,9 +27,6 @@ from smb_requirement_agent.analysis.application.use_cases.get_requirement_analys
     GetRequirementAnalysis,
 )
 from smb_requirement_agent.application.errors import AuthenticationRequiredError
-from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping import (
-    MapBreakdownArchitecture,
-)
 from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping_jobs import (
     ArchitectureMappingJobs,
 )
@@ -44,24 +35,17 @@ from smb_requirement_agent.breakdown.application.use_cases.feature_review import
     EditFeature,
     GetFeatures,
 )
-from smb_requirement_agent.breakdown.application.use_cases.generate_epic import GenerateEpic
-from smb_requirement_agent.breakdown.application.use_cases.generate_features import GenerateFeatures
 from smb_requirement_agent.breakdown.application.use_cases.get_epic import GetEpic
 from smb_requirement_agent.breakdown.application.use_cases.story_change_proposals import (
     StoryChangeProposals,
 )
 from smb_requirement_agent.breakdown.application.use_cases.story_quality import (
     GetFeatureQualitySnapshot,
-    SuggestStorySplit,
-    ValidateFeatureStories,
-    ValidateStory,
 )
 from smb_requirement_agent.breakdown.application.use_cases.story_workflow import (
     EditStory,
-    GenerateStories,
     GetStories,
     MergeStories,
-    RegenerateStory,
     SplitStory,
 )
 from smb_requirement_agent.governance.application.use_cases.approval_workflow import (
@@ -75,11 +59,9 @@ from smb_requirement_agent.governance.application.use_cases.approval_workflow im
 from smb_requirement_agent.governance.application.use_cases.approve_epic import ApproveEpic
 from smb_requirement_agent.governance.application.use_cases.approve_feature import ApproveFeature
 from smb_requirement_agent.governance.application.use_cases.breakdown_review import (
-    GenerateBreakdownReview,
     GetBreakdownReview,
     RecordDecision,
     ResolveFlag,
-    ResolveOpenQuestion,
 )
 from smb_requirement_agent.governance.application.use_cases.export_breakdown import ExportBreakdown
 from smb_requirement_agent.governance.application.use_cases.revision_history import (
@@ -334,10 +316,6 @@ def get_update_requirement(container: ContainerDep) -> UpdateRequirementWithImpa
     return container.update_requirement
 
 
-def get_analyze_requirement(container: ContainerDep) -> AnalyzeRequirement:
-    return container.analyze_requirement
-
-
 def get_generation_context_tokens(container: ContainerDep) -> GenerationContextTokens:
     return container.generation_context_tokens
 
@@ -353,20 +331,12 @@ def get_analysis_collaboration(container: ContainerDep) -> AnalysisCollaboration
     return container.analysis_collaboration
 
 
-def get_clarify_requirement_analysis(container: ContainerDep) -> ClarifyRequirementAnalysis:
-    return container.clarify_requirement_analysis
-
-
 def get_confirm_requirement_analysis(container: ContainerDep) -> ConfirmRequirementAnalysis:
     return container.confirm_requirement_analysis
 
 
 def get_get_requirement_analysis(container: ContainerDep) -> GetRequirementAnalysis:
     return container.get_requirement_analysis
-
-
-def get_generate_epic(container: ContainerDep) -> GenerateEpic:
-    return container.generate_epic
 
 
 def get_get_epic(container: ContainerDep) -> GetEpic:
@@ -379,10 +349,6 @@ def get_edit_epic(container: ContainerDep) -> EditEpic:
 
 def get_approve_epic(container: ContainerDep) -> ApproveEpic:
     return container.approve_epic
-
-
-def get_generate_features(container: ContainerDep) -> GenerateFeatures:
-    return container.generate_features
 
 
 def get_get_features(container: ContainerDep) -> GetFeatures:
@@ -405,10 +371,6 @@ def get_reject_story(container: ContainerDep) -> RejectStory:
     return container.reject_story
 
 
-def get_generate_stories(container: ContainerDep) -> GenerateStories:
-    return container.generate_stories
-
-
 def get_get_stories(container: ContainerDep) -> GetStories:
     return container.get_stories
 
@@ -425,36 +387,12 @@ def get_merge_stories(container: ContainerDep) -> MergeStories:
     return container.merge_stories
 
 
-def get_regenerate_story(container: ContainerDep) -> RegenerateStory:
-    return container.regenerate_story
-
-
 def get_story_change_proposals(container: ContainerDep) -> StoryChangeProposals:
     return container.story_change_proposals
 
 
-def get_validate_story(container: ContainerDep) -> ValidateStory:
-    return container.validate_story
-
-
-def get_validate_feature_stories(container: ContainerDep) -> ValidateFeatureStories:
-    return container.validate_feature_stories
-
-
 def get_feature_quality_snapshot(container: ContainerDep) -> GetFeatureQualitySnapshot:
     return container.get_feature_quality_snapshot
-
-
-def get_suggest_story_split(container: ContainerDep) -> SuggestStorySplit:
-    return container.suggest_story_split
-
-
-def get_map_breakdown_architecture(container: ContainerDep) -> MapBreakdownArchitecture:
-    return container.map_breakdown_architecture
-
-
-def get_generate_breakdown_review(container: ContainerDep) -> GenerateBreakdownReview:
-    return container.generate_breakdown_review
 
 
 def get_get_breakdown_review(container: ContainerDep) -> GetBreakdownReview:
@@ -467,10 +405,6 @@ def get_record_decision(container: ContainerDep) -> RecordDecision:
 
 def get_resolve_flag(container: ContainerDep) -> ResolveFlag:
     return container.resolve_flag
-
-
-def get_resolve_open_question(container: ContainerDep) -> ResolveOpenQuestion:
-    return container.resolve_open_question
 
 
 def get_approval_workflow(container: ContainerDep) -> GetApprovalWorkflow:

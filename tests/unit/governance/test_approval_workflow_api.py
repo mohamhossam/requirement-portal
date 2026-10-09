@@ -11,6 +11,7 @@ from smb_requirement_agent.breakdown.domain.epic.value_objects import (
 )
 from smb_requirement_agent.governance.domain.review.fingerprints import artifact_fingerprint
 from smb_requirement_agent.interfaces.api.container import Container
+from tests.job_driver import run_job
 from tests.unit.breakdown.test_epic_domain import make_epic
 from tests.unit.workflow_helpers import (
     confirm_fake_analysis,
@@ -41,16 +42,21 @@ def _governable_tree(client: TestClient) -> tuple[str, list[dict[str, object]]]:
         "/requirements",
         json={"title": "Governed backlog", "description": "Review every generated item."},
     ).json()["id"]
-    assert post_analysis(client, requirement_id).status_code == 200
+    assert post_analysis(client, requirement_id).succeeded
     confirm_fake_analysis(client, requirement_id)
-    epic = post_epic(client, requirement_id).json()
+    assert post_epic(client, requirement_id).succeeded
+    epic = client.get(f"/requirements/{requirement_id}/epic").json()
     assert post_epic_approval(client, requirement_id).status_code == 200
-    features = post_features(client, requirement_id).json()["features"]
+    assert post_features(client, requirement_id).succeeded
+    features = client.get(f"/requirements/{requirement_id}/features").json()["features"]
     stories: list[dict[str, object]] = []
     for feature in features:
         feature_id = feature["id"]
         assert post_feature_approval(client, requirement_id, feature_id).status_code == 200
-        generated = post_stories(client, requirement_id, feature_id).json()["stories"]
+        assert post_stories(client, requirement_id, feature_id).succeeded
+        generated = client.get(
+            f"/requirements/{requirement_id}/features/{feature_id}/stories"
+        ).json()["stories"]
         for story in generated:
             assert (
                 client.post(
@@ -65,7 +71,7 @@ def _governable_tree(client: TestClient) -> tuple[str, list[dict[str, object]]]:
             )
             stories.append({**story, "feature_id": feature_id})
     assert epic["content_fingerprint"]
-    assert client.post(f"/requirements/{requirement_id}/breakdown-review").status_code == 200
+    assert run_job(client, requirement_id, "generate_breakdown_review").succeeded
     return str(requirement_id), stories
 
 
@@ -272,8 +278,15 @@ def test_story_regeneration_resets_the_review_before_refreshing_it(client: TestC
 
     base = f"/requirements/{requirement_id}/features/{stories[0]['feature_id']}/stories"
     token = client.get(base).json()["generation_context_token"]
-    regenerated = client.post(f"{base}/regeneration", json={"context_token": token, "force": True})
-    assert regenerated.status_code == 200, regenerated.text
+    regenerated = run_job(
+        client,
+        requirement_id,
+        "regenerate_story_set",
+        context_token=token,
+        feature_id=stories[0]["feature_id"],
+        force=True,
+    )
+    assert regenerated.succeeded, regenerated.job
 
     after = client.get(f"/requirements/{requirement_id}/breakdown-review").json()
     assert after["status"] == "needs_revision"

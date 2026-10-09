@@ -1,17 +1,10 @@
-"""Typed requests for model-backed mutations, and which of them are available now."""
+"""Which model-backed actions are available now (they run as jobs, ADR-0105)."""
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
-from smb_requirement_agent.interfaces.api.schemas.bounds import MAX_IDENTIFIER_CHARACTERS
 from smb_requirement_agent.shared_kernel.actions import ActionAvailability
-
-
-class GenerationRequest(BaseModel):
-    context_token: str = Field(min_length=1, max_length=MAX_IDENTIFIER_CHARACTERS)
-    force: bool = False
-    model_config = ConfigDict(frozen=True)
 
 
 class ActionAvailabilityResponse(BaseModel):

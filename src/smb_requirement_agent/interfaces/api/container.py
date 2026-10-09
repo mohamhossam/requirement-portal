@@ -38,9 +38,6 @@ from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration
 from smb_requirement_agent.analysis.application.use_cases.analyze_requirement import (
     AnalyzeRequirement,
 )
-from smb_requirement_agent.analysis.application.use_cases.clarify_requirement_analysis import (
-    ClarifyRequirementAnalysis,
-)
 from smb_requirement_agent.analysis.application.use_cases.confirm_requirement_analysis import (
     ConfirmRequirementAnalysis,
 )
@@ -67,7 +64,6 @@ from smb_requirement_agent.breakdown.application.ports.story_repository import (
     StoryRepositoryPort,
 )
 from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping import (
-    MapBreakdownArchitecture,
     MapFeatureArchitecture,
     MapStoryArchitecture,
 )
@@ -87,16 +83,12 @@ from smb_requirement_agent.breakdown.application.use_cases.story_change_proposal
 )
 from smb_requirement_agent.breakdown.application.use_cases.story_quality import (
     GetFeatureQualitySnapshot,
-    SuggestStorySplit,
-    ValidateFeatureStories,
-    ValidateStory,
 )
 from smb_requirement_agent.breakdown.application.use_cases.story_workflow import (
     EditStory,
     GenerateStories,
     GetStories,
     MergeStories,
-    RegenerateStory,
     SplitStory,
 )
 from smb_requirement_agent.governance.application.exports import ExportFormat
@@ -118,11 +110,9 @@ from smb_requirement_agent.governance.application.use_cases.approval_workflow im
 from smb_requirement_agent.governance.application.use_cases.approve_epic import ApproveEpic
 from smb_requirement_agent.governance.application.use_cases.approve_feature import ApproveFeature
 from smb_requirement_agent.governance.application.use_cases.breakdown_review import (
-    GenerateBreakdownReview,
     GetBreakdownReview,
     RecordDecision,
     ResolveFlag,
-    ResolveOpenQuestion,
 )
 from smb_requirement_agent.governance.application.use_cases.export_breakdown import ExportBreakdown
 from smb_requirement_agent.governance.application.use_cases.revision_history import (
@@ -427,7 +417,6 @@ class Container:
     update_requirement: UpdateRequirementWithImpact
     analyze_requirement: AnalyzeRequirement
     analysis_collaboration: AnalysisCollaboration
-    clarify_requirement_analysis: ClarifyRequirementAnalysis
     confirm_requirement_analysis: ConfirmRequirementAnalysis
     get_requirement_analysis: GetRequirementAnalysis
     generate_epic: GenerateEpic
@@ -445,20 +434,13 @@ class Container:
     edit_story: EditStory
     split_story: SplitStory
     merge_stories: MergeStories
-    regenerate_story: RegenerateStory
     story_change_proposals: StoryChangeProposals
-    validate_story: ValidateStory
-    validate_feature_stories: ValidateFeatureStories
     get_feature_quality_snapshot: GetFeatureQualitySnapshot
-    suggest_story_split: SuggestStorySplit
     map_feature_architecture: MapFeatureArchitecture
     map_story_architecture: MapStoryArchitecture
-    map_breakdown_architecture: MapBreakdownArchitecture
-    generate_breakdown_review: GenerateBreakdownReview
     get_breakdown_review: GetBreakdownReview
     record_decision: RecordDecision
     resolve_flag: ResolveFlag
-    resolve_open_question: ResolveOpenQuestion
     get_approval_workflow: GetApprovalWorkflow
     submit_for_review: SubmitForReview
     approve_breakdown: ApproveBreakdown
@@ -813,7 +795,6 @@ def _build_container(
         update_requirement=intake.update_requirement,
         analyze_requirement=analysis.analyze_requirement,
         analysis_collaboration=analysis.analysis_collaboration,
-        clarify_requirement_analysis=analysis.clarify_requirement_analysis,
         confirm_requirement_analysis=analysis.confirm_requirement_analysis,
         get_requirement_analysis=analysis.get_requirement_analysis,
         generate_epic=breakdown.generate_epic,
@@ -831,20 +812,13 @@ def _build_container(
         edit_story=breakdown.edit_story,
         split_story=breakdown.split_story,
         merge_stories=breakdown.merge_stories,
-        regenerate_story=breakdown.regenerate_story,
         story_change_proposals=breakdown.story_change_proposals,
-        validate_story=breakdown.validate_story,
-        validate_feature_stories=breakdown.validate_feature_stories,
         get_feature_quality_snapshot=breakdown.get_feature_quality_snapshot,
-        suggest_story_split=breakdown.suggest_story_split,
         map_feature_architecture=breakdown.map_feature_architecture,
         map_story_architecture=breakdown.map_story_architecture,
-        map_breakdown_architecture=breakdown.map_breakdown_architecture,
-        generate_breakdown_review=breakdown.generate_breakdown_review,
         get_breakdown_review=review.get_breakdown_review,
         record_decision=review.record_decision,
         resolve_flag=review.resolve_flag,
-        resolve_open_question=breakdown.resolve_open_question,
         get_approval_workflow=review.get_approval_workflow,
         submit_for_review=review.submit_for_review,
         approve_breakdown=review.approve_breakdown,

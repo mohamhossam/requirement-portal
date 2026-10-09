@@ -33,12 +33,9 @@ export type DocumentSummary = components["schemas"]["DocumentSummaryResponse"];
 export type DocumentDetail = components["schemas"]["DocumentDetailResponse"];
 export type DocumentContent = components["schemas"]["DocumentContentResponse"];
 export type StoryQuality = components["schemas"]["StoryQualityResponse"];
-export type FeatureStoryQuality = components["schemas"]["FeatureStoryQualityResponse"];
 export type FeatureStoryQualitySnapshot =
   components["schemas"]["FeatureStoryQualitySnapshotResponse"];
 export type ArchitectureImpact = components["schemas"]["ArchitectureImpactResponse"];
-export type BreakdownArchitectureMapping =
-  components["schemas"]["BreakdownArchitectureMappingResponse"];
 export type ArchitectureMappingJob = components["schemas"]["ArchitectureJobResponse"];
 export type BreakdownReview = components["schemas"]["BreakdownReviewResponse"];
 export type ReviewFlag = components["schemas"]["ReviewFlagResponse"];
@@ -574,11 +571,6 @@ export const api = {
     }),
   updateRequirement: (id: string, input: RequirementInput) =>
     request<Requirement>(requirementPath(id), { method: "PUT", body: JSON.stringify(input) }),
-  analyzeRequirement: (id: string, contextToken: string, force = false) =>
-    request<RequirementAnalysis>(
-      `${requirementPath(id)}/analysis`,
-      { method: "POST", body: JSON.stringify({ context_token: contextToken, force }) },
-    ),
   getAnalysis: (id: string) => optional<RequirementAnalysis>(`${requirementPath(id)}/analysis`),
   getAnswerSuggestions: (id: string, questionId: string) =>
     optional<AnswerSuggestionSet>(
@@ -636,26 +628,6 @@ export const api = {
       `${requirementPath(id)}/analysis/questions/${encodeURIComponent(questionId)}/draft`,
       { method: "PUT", body: JSON.stringify({ answer, expected_version: expectedVersion }) },
     ),
-  resolveClarificationQuestion: (
-    id: string,
-    questionId: string,
-    answer: string | null,
-    expectedVersion: number,
-  ) =>
-    request<RequirementAnalysis>(
-      `${requirementPath(id)}/analysis/questions/${encodeURIComponent(questionId)}/resolution`,
-      { method: "POST", body: JSON.stringify({ answer, expected_version: expectedVersion }) },
-    ),
-  resolveClarificationQuestions: (id: string, answers: ClarificationResolutionInput[]) =>
-    request<RequirementAnalysis>(`${requirementPath(id)}/analysis/question-resolutions`, {
-      method: "POST",
-      body: JSON.stringify({ answers }),
-    }),
-  clarifyAnalysis: (id: string, answers: ClarificationAnswerInput[], expectedVersion: number) =>
-    request<RequirementAnalysis>(`${requirementPath(id)}/analysis/clarifications`, {
-      method: "POST",
-      body: JSON.stringify({ answers, expected_analysis_version: expectedVersion }),
-    }),
   confirmAnalysis: (id: string, expectedVersion: number) =>
     request<RequirementAnalysis>(`${requirementPath(id)}/analysis/confirmation`, {
       method: "POST",
@@ -670,11 +642,6 @@ export const api = {
       `${requirementPath(id)}/analysis/proposals/${encodeURIComponent(proposalId)}`,
       { method: "PATCH", body: JSON.stringify(input) },
     ),
-  generateEpic: (id: string, contextToken: string, force = false) =>
-    request<Epic>(`${requirementPath(id)}/epic`, {
-      method: "POST",
-      body: JSON.stringify({ context_token: contextToken, force }),
-    }),
   getEpic: (id: string) => optional<Epic>(`${requirementPath(id)}/epic`),
   editEpic: (id: string, input: EpicInput & { expected_version: number }) =>
     request<Epic>(`${requirementPath(id)}/epic`, {
@@ -685,11 +652,6 @@ export const api = {
     request<Epic>(`${requirementPath(id)}/epic/approval`, {
       method: "POST",
       body: JSON.stringify({ expected_version: expectedVersion, expected_content_fingerprint: expected, rationale }),
-    }),
-  generateFeatures: (id: string, contextToken: string, force = false) =>
-    request<FeatureSet>(`${requirementPath(id)}/features`, {
-      method: "POST",
-      body: JSON.stringify({ context_token: contextToken, force }),
     }),
   getFeatures: (id: string) => optional<FeatureSet>(`${requirementPath(id)}/features`),
   editFeature: (
@@ -726,18 +688,8 @@ export const api = {
     ),
   getStories: (id: string, featureId: string) =>
     optional<StorySet>(storiesPath(id, featureId)),
-  getFeatureStoryQuality: (id: string, featureId: string) =>
-    request<FeatureStoryQuality>(`${storiesPath(id, featureId)}/quality`),
   getFeatureStoryQualityAssessment: (id: string, featureId: string) =>
     optional<FeatureStoryQualitySnapshot>(`${storiesPath(id, featureId)}/quality-assessment`),
-  getStoryQuality: (id: string, featureId: string, storyId: string) =>
-    request<StoryQuality>(
-      `${storiesPath(id, featureId)}/${encodeURIComponent(storyId)}/quality`,
-    ),
-  mapArchitecture: (id: string) =>
-    request<BreakdownArchitectureMapping>(`${requirementPath(id)}/architecture-mapping`, {
-      method: "POST",
-    }),
   startArchitectureMappingJob: (id: string) =>
     request<ArchitectureMappingJob>(`${requirementPath(id)}/architecture-mapping/jobs`, {
       method: "POST",
@@ -785,8 +737,6 @@ export const api = {
         expected_version: expectedVersion,
       }),
     }),
-  generateBreakdownReview: (id: string) =>
-    request<BreakdownReview>(`${requirementPath(id)}/breakdown-review`, { method: "POST" }),
   recordReviewDecision: (
     id: string,
     input: {
@@ -815,20 +765,6 @@ export const api = {
       `${requirementPath(id)}/breakdown-review/flags/${encodeURIComponent(flagId)}/resolution`,
       { method: "POST", body: JSON.stringify(input) },
     ),
-  answerReviewOpenQuestion: (
-    id: string,
-    flagId: string,
-    input: { answer: string; expected_fingerprint: string; expected_version: number },
-  ) =>
-    request<components["schemas"]["OpenQuestionResolutionResponse"]>(
-      `${requirementPath(id)}/breakdown-review/open-questions/${encodeURIComponent(flagId)}/resolution`,
-      { method: "POST", body: JSON.stringify(input) },
-    ),
-  generateStories: (id: string, featureId: string, contextToken: string) =>
-    request<StorySet>(storiesPath(id, featureId), {
-      method: "POST",
-      body: JSON.stringify({ context_token: contextToken, force: false }),
-    }),
   editStory: (
     id: string, featureId: string, storyId: string,
     input: StoryInput & { expected_version: number }
@@ -837,35 +773,8 @@ export const api = {
       method: "PUT",
       body: JSON.stringify(input),
     }),
-  regenerateStory: (
-    id: string, featureId: string, storyId: string, contextToken: string, force = false
-  ) =>
-    request<StorySet>(
-      `${storiesPath(id, featureId)}/${encodeURIComponent(storyId)}/regeneration`,
-      { method: "POST", body: JSON.stringify({ context_token: contextToken, force }) },
-    ),
-  regenerateStories: (id: string, featureId: string, contextToken: string, force = false) =>
-    request<StorySet>(`${storiesPath(id, featureId)}/regeneration`, {
-      method: "POST",
-      body: JSON.stringify({ context_token: contextToken, force }),
-    }),
   listStoryProposals: (id: string, featureId: string) =>
     request<StoryProposal[]>(`${storiesPath(id, featureId)}/change-proposals`),
-  createStoryProposal: (
-    id: string,
-    featureId: string,
-    operation: StoryChangeOperation,
-    sourceStoryIds: string[],
-    contextToken: string,
-  ) =>
-    request<StoryProposal>(`${storiesPath(id, featureId)}/change-proposals`, {
-      method: "POST",
-      body: JSON.stringify({
-        operation,
-        source_story_ids: sourceStoryIds,
-        context_token: contextToken,
-      }),
-    }),
   applyStoryProposal: (
     id: string,
     featureId: string,

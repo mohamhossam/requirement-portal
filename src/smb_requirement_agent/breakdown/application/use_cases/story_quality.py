@@ -9,7 +9,6 @@ from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
 from smb_requirement_agent.breakdown.application.errors import (
-    StoryNotFoundError,
     StoryQualitySnapshotConflictError,
     StoryQualitySnapshotNotFoundError,
 )
@@ -39,7 +38,6 @@ from smb_requirement_agent.breakdown.domain.story.quality import (
     ValidationFinding,
     spidr_recommendations,
 )
-from smb_requirement_agent.breakdown.domain.story.value_objects import StoryId
 from smb_requirement_agent.shared_kernel.actors import ActorProfile
 from smb_requirement_agent.shared_kernel.generation import Provenance
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
@@ -54,7 +52,7 @@ SEMANTIC_CRITERIA = (
 
 
 class AssessStoryCandidate:
-    """Assess an unsaved candidate against its projected siblings."""
+    """Assess a Story, saved or a candidate, against its (projected) siblings."""
 
     def __init__(self, evaluator: StoryQualityEvaluatorPort, clock: ClockPort) -> None:
         self._evaluator = evaluator
@@ -81,32 +79,8 @@ class AssessStoryCandidate:
         )
 
 
-class ValidateStory(AssessStoryCandidate):
-    def __init__(
-        self,
-        get_stories: GetStories,
-        evaluator: StoryQualityEvaluatorPort,
-        clock: ClockPort,
-    ) -> None:
-        super().__init__(evaluator, clock)
-        self._get_stories = get_stories
-
-    def execute(
-        self, requirement_id: RequirementId, feature_id: FeatureId, story_id: StoryId
-    ) -> InvestAssessment:
-        stories = tuple(self._get_stories.execute(requirement_id, feature_id))
-        story = next((item for item in stories if item.id == story_id), None)
-        if story is None:
-            raise StoryNotFoundError(
-                f"No Story {story_id.value!r} under Feature {feature_id.value!r}."
-            )
-        return self.assess(
-            story, stories, self._get_stories.quality_evidence(requirement_id, feature_id)
-        )
-
-
 class ValidateFeatureStories:
-    def __init__(self, get_stories: GetStories, validator: ValidateStory) -> None:
+    def __init__(self, get_stories: GetStories, validator: AssessStoryCandidate) -> None:
         self._get_stories = get_stories
         self._validator = validator
 
@@ -209,14 +183,6 @@ class GetFeatureQualitySnapshot:
 
 
 class SuggestStorySplit:
-    def __init__(self, validator: ValidateStory) -> None:
-        self._validator = validator
-
-    def execute(
-        self, requirement_id: RequirementId, feature_id: FeatureId, story_id: StoryId
-    ) -> tuple[SpidrRecommendation, ...]:
-        return self.for_assessment(self._validator.execute(requirement_id, feature_id, story_id))
-
     @staticmethod
     def for_assessment(
         assessment: InvestAssessment,

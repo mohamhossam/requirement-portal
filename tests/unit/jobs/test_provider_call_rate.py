@@ -19,6 +19,7 @@ from smb_requirement_agent.shared_kernel.actors import (
     ActorProfile,
 )
 from tests.conftest import FAKE_PROVIDER_SETTINGS
+from tests.job_driver import start_job
 
 START = datetime(2026, 9, 24, 12, 0, tzinfo=UTC)
 ALICE = ActorProfile(ActorId("alice"), "Alice")
@@ -150,8 +151,8 @@ def test_requests_refused_before_any_provider_call_are_refunded() -> None:
     with TestClient(create_app(lambda: container)) as client:
         # 422: the body fails validation. 404: the Requirement does not exist.
         assert client.post("/knowledge/search/unified", json={}, headers=owner).status_code == 422
-        missing = client.post(
-            "/requirements/no-such-id/analysis", json={"context_token": "x"}, headers=owner
+        missing = start_job(
+            client, "no-such-id", "analyse_requirement", headers=owner, context_token="x"
         )
         assert missing.status_code == 404
 

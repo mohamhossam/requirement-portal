@@ -59,6 +59,7 @@ from smb_requirement_agent.shared_kernel.approval import (
 )
 from smb_requirement_agent.shared_kernel.errors import InvalidApprovalContentError
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+from tests.job_driver import run_job
 from tests.unit.workflow_helpers import generate_story_tree, post_analysis
 
 NOW = datetime(2026, 9, 3, 12, tzinfo=UTC)
@@ -234,13 +235,13 @@ def test_partial_analysis_review_separates_uncertainty_and_answers_open_question
         "/requirements",
         json={"title": "Review", "description": "Review uncertain work"},
     ).json()["id"]
-    assert post_analysis(client, requirement_id).status_code == 200
+    assert post_analysis(client, requirement_id).succeeded
     analysis = client.get(f"/requirements/{requirement_id}/analysis").json()
 
-    created = client.post(f"/requirements/{requirement_id}/breakdown-review")
+    created = run_job(client, requirement_id, "generate_breakdown_review")
 
-    assert created.status_code == 201
-    body = created.json()
+    assert created.succeeded, created.job
+    body = client.get(f"/requirements/{requirement_id}/breakdown-review").json()
     assert body["fresh"] is True
     assert body["unresolved_blocker_count"] == 4
     assert body["unresolved_warning_count"] == 0
@@ -269,26 +270,27 @@ def test_partial_analysis_review_separates_uncertainty_and_answers_open_question
     )
     assert disallowed.status_code == 409
 
-    answered = client.post(
-        f"/requirements/{requirement_id}/breakdown-review/open-questions/"
-        f"{question['id']}/resolution",
-        json={
-            "answer": "Yes, the Business Owner confirmed it.",
-            "expected_fingerprint": body["evidence_fingerprint"],
-            "expected_version": body["version"],
-        },
+    answered = run_job(
+        client,
+        requirement_id,
+        "resolve_review_open_question",
+        flag_id=question["id"],
+        answer="Yes, the Business Owner confirmed it.",
+        expected_fingerprint=body["evidence_fingerprint"],
+        expected_version=body["version"],
     )
 
-    assert answered.status_code == 200
-    assert answered.json()["review"]["fresh"] is False
-    assert answered.json()["review"]["decisions"][0]["decision"] == "Answered open question"
-    assert answered.json()["review"]["decisions"][0]["recorded_by"]["id"] == "fake-owner"
+    assert answered.succeeded, answered.job
+    review = client.get(f"/requirements/{requirement_id}/breakdown-review").json()
+    assert review["fresh"] is False
+    assert review["decisions"][0]["decision"] == "Answered open question"
+    assert review["decisions"][0]["recorded_by"]["id"] == "fake-owner"
     history = client.get(f"/requirements/{requirement_id}/revisions").json()
     assert history["breakdown_revisions"][-1]["review_decision_count"] == 1
 
-    refreshed = client.post(f"/requirements/{requirement_id}/breakdown-review")
-    assert refreshed.status_code == 200
-    assert all(item["category"] != "open_question" for item in refreshed.json()["flags"])
+    assert run_job(client, requirement_id, "generate_breakdown_review").succeeded
+    refreshed = client.get(f"/requirements/{requirement_id}/breakdown-review").json()
+    assert all(item["category"] != "open_question" for item in refreshed["flags"])
 
 
 class ControllableQualityEvaluator:
@@ -330,9 +332,9 @@ def test_review_resolution_staleness_and_failed_refresh_preserve_last_success() 
     )
     with TestClient(create_app(lambda: container)) as client:
         requirement_id, feature_id, stories = generate_story_tree(client)
-        created = client.post(f"/requirements/{requirement_id}/breakdown-review")
-        assert created.status_code == 200
-        body = created.json()
+        created = run_job(client, requirement_id, "generate_breakdown_review")
+        assert created.succeeded, created.job
+        body = client.get(f"/requirements/{requirement_id}/breakdown-review").json()
         quality_flag = next(item for item in body["flags"] if item["category"] == "quality")
         story_count = len(stories)
         assert evaluator.calls == story_count * 2
@@ -397,8 +399,9 @@ def test_review_resolution_staleness_and_failed_refresh_preserve_last_success() 
         )
 
         evaluator.fail = True
-        failed = client.post(f"/requirements/{requirement_id}/breakdown-review")
-        assert failed.status_code == 502
+        failed = run_job(client, requirement_id, "generate_breakdown_review")
+        assert failed.failure is not None
+        assert failed.failure["code"] == "story_quality_evaluation"
         preserved = client.get(f"/requirements/{requirement_id}/breakdown-review").json()
         assert preserved["generated_at"] == body["generated_at"]
         assert len(preserved["decisions"]) == 2

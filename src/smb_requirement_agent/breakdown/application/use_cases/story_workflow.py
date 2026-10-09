@@ -266,14 +266,24 @@ class GenerateStories(StoryWorkflow):
         ):
             return self._execute(requirement_id=requirement_id, feature_id=feature_id)
 
-    def _execute(self, requirement_id: RequirementId, feature_id: FeatureId) -> list[UserStory]:
+    def require_can_generate(
+        self, requirement_id: RequirementId, feature_id: FeatureId
+    ) -> _StoryContext:
+        """Raise unless a Feature's first Stories could be generated now.
+
+        The job service calls this before queueing, so a request that can only fail is
+        refused at once instead of costing a queued job and a failure notification.
+        """
         context = self._context(requirement_id, feature_id)
         self._ensure_ready(context.feature)
-        existing = self._stories.get_by_feature_id(feature_id)
-        if existing:
+        if self._stories.get_by_feature_id(feature_id):
             raise StoriesAlreadyExistError(
                 "Stories already exist; use whole-Feature regeneration to replace them."
             )
+        return context
+
+    def _execute(self, requirement_id: RequirementId, feature_id: FeatureId) -> list[UserStory]:
+        context = self.require_can_generate(requirement_id, feature_id)
         expected_set_version = self._stories.set_version(feature_id)
         with self._transactions.external_call():
             prepared = self._checks.stories(
@@ -299,7 +309,7 @@ class GenerateStories(StoryWorkflow):
         with self._transactions.transaction():
             self._transactions.lock_requirement(requirement_id)
             self._require_generation_snapshot(
-                requirement_id, feature_id, context, existing, expected_set_version
+                requirement_id, feature_id, context, [], expected_set_version
             )
             self._stories.replace_for_feature(feature_id, stories, expected_set_version)
             self._events.publish(

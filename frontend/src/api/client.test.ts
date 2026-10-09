@@ -127,66 +127,6 @@ describe("API client", () => {
     );
   });
 
-  it("posts human clarification answers to the same requirement analysis", async () => {
-    let body: unknown;
-    server.use(
-      http.post("http://localhost/api/requirements/r-1/analysis/clarifications", async ({ request }) => {
-        body = await request.json();
-        return HttpResponse.json({ requirement_id: "r-1" });
-      }),
-    );
-
-    await api.clarifyAnalysis(
-      "r-1",
-      [{ kind: "open_question", subject: "Who owns it?", answer: "Product" }],
-      3,
-    );
-
-    expect(body).toEqual({
-      answers: [{ kind: "open_question", subject: "Who owns it?", answer: "Product" }],
-      expected_analysis_version: 3,
-    });
-  });
-
-  it("posts stable clarification answers as one batch", async () => {
-    let body: unknown;
-    server.use(
-      http.post(
-        "http://localhost/api/requirements/r-1/analysis/question-resolutions",
-        async ({ request }) => {
-          body = await request.json();
-          return HttpResponse.json({ requirement_id: "r-1" });
-        },
-      ),
-    );
-
-    await api.resolveClarificationQuestions("r-1", [
-      { question_id: "question-1", answer: "Product", expected_version: 2 },
-      { question_id: "question-2", answer: "Operations", expected_version: 1 },
-    ]);
-
-    expect(body).toEqual({
-      answers: [
-        { question_id: "question-1", answer: "Product", expected_version: 2 },
-        { question_id: "question-2", answer: "Operations", expected_version: 1 },
-      ],
-    });
-  });
-
-  it("maps the whole requirement breakdown through one explicit action", async () => {
-    let method = "";
-    server.use(
-      http.post("http://localhost/api/requirements/r-1/architecture-mapping", ({ request }) => {
-        method = request.method;
-        return HttpResponse.json({ requirement_id: "r-1", features: [] });
-      }),
-    );
-
-    await api.mapArchitecture("r-1");
-
-    expect(method).toBe("POST");
-  });
-
   it("lets the browser set the multipart upload boundary", async () => {
     let contentType = "";
     server.use(

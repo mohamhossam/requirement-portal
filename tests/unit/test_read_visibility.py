@@ -19,9 +19,9 @@ def _submitted_requirement_with_an_epic(client: TestClient) -> str:
     requirement_id: str = client.post(
         "/requirements", json={"title": "Bundle", "description": "SMB bundle"}, headers=OWNER
     ).json()["id"]
-    assert post_analysis(client, requirement_id, headers=OWNER).status_code == 200
+    assert post_analysis(client, requirement_id, headers=OWNER).succeeded
     confirm_fake_analysis(client, requirement_id)
-    assert post_epic(client, requirement_id, headers=OWNER).status_code == 201
+    assert post_epic(client, requirement_id, headers=OWNER).succeeded
     return requirement_id
 
 

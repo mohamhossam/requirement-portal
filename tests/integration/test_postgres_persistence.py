@@ -1528,6 +1528,7 @@ def test_generated_quality_and_checked_preview_survive_real_container_restart() 
     from smb_requirement_agent.infrastructure.config.settings import Settings
     from smb_requirement_agent.interfaces.api.container import build_container
     from smb_requirement_agent.interfaces.api.main import create_app
+    from tests.job_driver import run_job
     from tests.unit.workflow_helpers import generate_story_tree
 
     assert DATABASE_URL is not None
@@ -1546,16 +1547,17 @@ def test_generated_quality_and_checked_preview_survive_real_container_restart() 
         assert all(item["architecture"] is not None for item in stories)
         review = client.get(f"/requirements/{requirement_id}/breakdown-review").json()
         assert review["fresh"]
-        created = client.post(
-            f"{path}/change-proposals",
-            json={
-                "operation": "split",
-                "source_story_ids": [stories[0]["id"]],
-                "context_token": client.get(path).json()["generation_context_token"],
-            },
+        created = run_job(
+            client,
+            requirement_id,
+            "propose_story_change",
+            context_token=client.get(path).json()["generation_context_token"],
+            feature_id=feature_id,
+            change_operation="split",
+            source_story_ids=[stories[0]["id"]],
         )
-        assert created.status_code == 201, created.text
-        proposal = created.json()
+        assert created.succeeded, created.job
+        [proposal] = client.get(f"{path}/change-proposals").json()
     second = build_container(settings)
     with TestClient(create_app(lambda: second)) as client:
         assert client.get(f"{path}/quality-assessment").json() == quality

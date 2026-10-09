@@ -14,7 +14,6 @@ from smb_requirement_agent.governance.domain.review.entities import (
     ResolutionPolicy,
     ReviewSourceKind,
 )
-from smb_requirement_agent.interfaces.api.schemas.analysis import RequirementAnalysisResponse
 from smb_requirement_agent.interfaces.api.schemas.bounds import (
     MAX_IDENTIFIER_CHARACTERS,
     MAX_TEXT_CHARACTERS,
@@ -113,14 +112,3 @@ class ResolveFlagRequest(BaseModel):
     rationale: NonBlank
     expected_fingerprint: NonBlankIdentifier
     expected_version: int = Field(ge=1)
-
-
-class ResolveOpenQuestionRequest(BaseModel):
-    answer: NonBlank
-    expected_fingerprint: NonBlankIdentifier
-    expected_version: int = Field(ge=1)
-
-
-class OpenQuestionResolutionResponse(BaseModel):
-    analysis: RequirementAnalysisResponse
-    review: BreakdownReviewResponse
