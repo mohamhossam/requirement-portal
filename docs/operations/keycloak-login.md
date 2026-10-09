@@ -56,38 +56,32 @@ migration notes before changing that version.
    OIDC_PASSWORD_LOGIN_ENABLED=true
    ```
 
-5. Configure the knowledge service the same way, with its own audience and
-   client (ADR-0099):
-
-   ```dotenv
-   OIDC_ISSUER_URL=https://localhost:8443/realms/requirement-ai
-   OIDC_AUDIENCE=knowledge-api
-   OIDC_CLIENT_ID=knowledge-spa
-   ```
-
-   The `knowledge-spa` client signs in under `/knowledge/` on
-   `KNOWLEDGE_APP_ORIGIN`, which defaults to `REQUIREMENT_APP_ORIGIN`. Set it
-   when the portal's development server runs on another origin.
+5. The knowledge portal signs in through the same realm with its own client,
+   audience, roles and groups, which it defines in its own repository and adds
+   with its `deploy/keycloak/apply.py` (ADR-0104). This realm file holds only
+   requirement work's.
 
 ### Roles
 
 Each role is granted through a group; add a person to the group to grant it.
-Both browser clients put realm roles in the access token's `roles` claim, which
+`requirement-spa` puts realm roles in the access token's `roles` claim, which
 is what `OIDC_ROLES_CLAIM` reads.
 
 | Group | Realm roles | Grants |
 |---|---|---|
-| `knowledge-admins` | `knowledge_admin` | Opening the knowledge portal, and seeing the link to it in requirement work |
-| `knowledge-readers` | `knowledge_reader` | Reading the architecture and squad catalogues in the knowledge portal |
-| `knowledge-maintainers` | `knowledge_reader`, `knowledge_maintainer` | Also editing them in the knowledge portal |
 | `architecture-readers` | `architecture_reader` | Starting and reading architecture mapping jobs |
 | `architecture-maintainers` | `architecture_reader`, `architecture_maintainer` | Also cancelling and retrying other people's mapping jobs |
 
-A realm imported before these roles, groups and client existed does not gain
-them on restart. Add them in the admin console, matching
-`deploy/keycloak/realm-requirement-ai.json`: the five realm roles, the five
-groups, the `knowledge-spa` client with its `knowledge-api` audience mapper, and
-a `realm-roles` mapper (claim `roles`, access token only) on both clients.
+The link to the knowledge portal follows the portal's `knowledge_admin` role
+(`knowledge-admins` group), which exists once the portal's entities are added;
+`VITE_KNOWLEDGE_PORTAL_ROLE` names another.
+
+A realm imported before these roles and groups existed does not gain them on
+restart. Add them in the admin console, matching
+`deploy/keycloak/realm-requirement-ai.json`: the two realm roles, the two
+groups, and a `realm-roles` mapper (claim `roles`, access token only) on
+`requirement-spa`. Removing the knowledge portal's entities from this file
+does not remove them from a realm that already holds them.
 
 Compose maps `KEYCLOAK_ADMIN` and `KEYCLOAK_ADMIN_PASSWORD` to Keycloak's
 `KC_BOOTSTRAP_ADMIN_USERNAME` and `KC_BOOTSTRAP_ADMIN_PASSWORD` container settings.

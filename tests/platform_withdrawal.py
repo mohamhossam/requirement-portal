@@ -1,7 +1,8 @@
 """A withdrawal in the knowledge portal reaches requirement work within one poll (ADR-0099).
 
-Run by CI's deployment job against the whole platform, started offline with
-`deploy/compose.production.yaml`. Through the edge, as a knowledge admin, it adds a
+Run by CI's deployment job against both portals, started offline from their own
+manifests and joined on the peer network (ADR-0104). Through the knowledge portal's
+edge, as a knowledge admin, it adds a
 library document, reviews and approves it, and waits for requirement work's copy of
 that document (`reference_publication_state`, fed by the knowledge event feed) to show
 it published. It then withdraws the document and requires the copy to show no live
@@ -11,7 +12,7 @@ this is the step that makes them stale.
 Standard library only: the job runs it without installing the project.
 
     python3 tests/platform_withdrawal.py \
-        --knowledge-url http://127.0.0.1:8080/knowledge-api \
+        --knowledge-url http://127.0.0.1:8090/knowledge-api \
         --requirements-psql "docker compose -f deploy/compose.production.yaml exec -T postgres \
             psql -U smb -d smb_requirements"
 """
@@ -110,7 +111,7 @@ def read(platform: Platform, path: str) -> Any:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--knowledge-url", default="http://127.0.0.1:8080/knowledge-api")
+    parser.add_argument("--knowledge-url", default="http://127.0.0.1:8090/knowledge-api")
     parser.add_argument(
         "--requirements-psql",
         default=(

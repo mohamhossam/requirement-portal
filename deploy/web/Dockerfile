@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 #
 # The built browser app behind nginx, which also proxies /api to requirement
-# work and /knowledge-api and /knowledge to the knowledge service (ADR-0099).
+# work. The knowledge portal has its own address (ADR-0104).
 # Build from the repository root: docker build -f deploy/web/Dockerfile .
 # CSP_IDENTITY_ORIGINS must name the OIDC issuer origin for an OIDC deployment;
 # it is baked into the page's Content-Security-Policy at build time.
@@ -13,9 +13,9 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./
 ARG VITE_API_BASE=/api
-# Where the knowledge portal is (ADR-0104): the platform path by default, an
-# absolute URL when it has its own host, or empty to hide every link to it.
-ARG VITE_KNOWLEDGE_PORTAL_URL=/knowledge/
+# Where the knowledge portal is (ADR-0104): its absolute URL, ending in /, or
+# empty to hide every link to it.
+ARG VITE_KNOWLEDGE_PORTAL_URL=
 # Who sees those links: holders of this role, or everyone signed in when empty.
 ARG VITE_KNOWLEDGE_PORTAL_ROLE=knowledge_admin
 ARG CSP_IDENTITY_ORIGINS=
@@ -32,13 +32,14 @@ FROM nginxinc/nginx-unprivileged:1.31-alpine@sha256:26b0bf6fbf07297983cb341998d7
 USER root
 RUN apk upgrade --no-cache
 USER 101
-# The image renders templates with the environment at start-up (the *_UPSTREAM
-# variables below; nginx's own $variables are left alone).
+# The image renders templates with the environment at start-up (API_UPSTREAM
+# and KNOWLEDGE_PORTAL_URL below; nginx's own $variables are left alone).
 COPY deploy/web/default.conf.template /etc/nginx/templates/default.conf.template
 COPY deploy/web/security-headers.conf /etc/nginx/snippets/security-headers.conf
+COPY --chmod=755 deploy/web/check-knowledge-portal-url.sh /docker-entrypoint.d/10-check-knowledge-portal-url.sh
 COPY --from=build /app/dist /usr/share/nginx/html
-COPY deploy/web/knowledge-unavailable.html /usr/share/nginx/html/knowledge-unavailable.html
+# KNOWLEDGE_PORTAL_URL: where old /knowledge/ bookmarks redirect, ending in /;
+# empty answers them 404. Set when the container starts.
 ENV API_UPSTREAM=http://api:8000 \
-    KNOWLEDGE_API_UPSTREAM=http://knowledge-api:8000 \
-    KNOWLEDGE_WEB_UPSTREAM=http://knowledge-web:8080
+    KNOWLEDGE_PORTAL_URL=
 EXPOSE 8080
