@@ -477,6 +477,47 @@ jobs:
           curl --fail --silent -u admin:ci-only \
             'http://127.0.0.1:3000/api/datasources/uid/prometheus/health' | grep -q '"status":"OK"'
 
+      - name: Tracing add-on keeps a request's trace with its SQL
+        # The overlay points the API and worker at the bundled collector (ADR-0110).
+        run: |
+          MONITORING="$COMPOSE -f deploy/compose.monitoring.yaml"
+          $MONITORING up -d tempo otel-collector
+          $MONITORING up -d --wait api worker
+          curl --fail --silent --output /dev/null -H "X-Fake-Actor-Id: fake-owner" \
+            -H "traceparent: 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01" \
+            'http://127.0.0.1:8080/api/requirements?q=ci-private-search'
+          tempo() {
+            curl --silent -u admin:ci-only "http://127.0.0.1:3000/api/datasources/proxy/uid/tempo$1"
+          }
+          for attempt in $(seq 1 30); do
+            trace=$(tempo '/api/search?limit=20&q=%7Bresource.service.name%3D%22requirement-portal%22%20%26%26%20name%3D%22GET%20%2Frequirements%22%7D' |
+              python3 -c 'import json, sys; t = json.load(sys.stdin).get("traces", []); print(t[0]["traceID"] if t else "")' || true)
+            [ -n "$trace" ] && break
+            sleep 2
+          done
+          [ -n "$trace" ] || { echo "No request trace reached Tempo"; exit 1; }
+          # The edge dropped the browser's traceparent, so the API started its own trace.
+          [ "$trace" != "0af7651916cd43dd8448eb211c80319c" ] || { echo "The edge passed traceparent"; exit 1; }
+          tempo "/api/traces/$trace" > trace.json
+          python3 - <<'CHECK'
+          import json
+          body = open("trace.json").read()
+          assert "ci-private-search" not in body, "a query string reached a span"
+          spans = [
+              span
+              for batch in json.loads(body)["batches"]
+              for scope in batch.get("scopeSpans", batch.get("instrumentationLibrarySpans", []))
+              for span in scope["spans"]
+          ]
+          # OTLP JSON leaves out empty fields, so a span may come back without a name.
+          names = sorted({span.get("name", "") for span in spans})
+          print(names)
+          assert "GET /requirements" in names
+          assert len(spans) > 1, "the request's SQL is not in its trace"
+          CHECK
+          curl --fail --silent -u admin:ci-only \
+            'http://127.0.0.1:3000/api/datasources/uid/tempo/health' | grep -q '"status":"OK"'
+
       - name: The edge refuses one address's flood in the API's error shape
         # Last, so no step after it shares the spent per-address budget (ADR-0106).
         run: |

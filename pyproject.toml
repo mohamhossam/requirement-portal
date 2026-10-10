@@ -9,7 +9,7 @@ description = "SMB AI Requirement Breakdown Agent"
 requires-python = ">=3.12"
 dependencies = [
     # Shared mechanisms (ADR-0100), pinned by release tag; pip and uv both read this.
-    "smb-platform-kernel @ git+https://github.com/mohamhossam/platform-kernel@v1.2.0",
+    "smb-platform-kernel[tracing] @ git+https://github.com/mohamhossam/platform-kernel@v1.3.0",
     "fastapi>=0.115,<1",
     "httpx>=0.27,<1",
     "openpyxl>=3.1,<4",

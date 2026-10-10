@@ -33,6 +33,7 @@ from smb_kernel.observability.metrics import (
     provider_operation,
     provider_usage,
 )
+from smb_kernel.observability.tracing_setup import NO_TRACING
 from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.infrastructure.config.options import LogFormat
@@ -217,6 +218,7 @@ def test_the_worker_records_each_job_attempt_by_operation_and_status() -> None:
         cast(ExecuteAiJob, executor),
         FixedClock(NOW),
         metrics,
+        NO_TRACING,
         poll_interval_seconds=0.01,
         lease_seconds=30,
         heartbeat_seconds=5,

@@ -13,6 +13,7 @@ import httpx
 import pytest
 from smb_kernel.errors import ServiceUnavailableError
 from smb_kernel.observability.metrics import Metrics
+from smb_kernel.observability.tracing_setup import NO_TRACING
 
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
@@ -39,7 +40,7 @@ def test_failures_through_one_client_pause_the_other(monkeypatch: pytest.MonkeyP
         requirement_service_token="r" * 40,
     )
     with ExitStack() as resources:
-        service = build_knowledge_service(settings, resources, Metrics())
+        service = build_knowledge_service(settings, resources, Metrics(), NO_TRACING)
         for _ in range(5):
             with pytest.raises(ServiceUnavailableError):
                 service.references.has_published()

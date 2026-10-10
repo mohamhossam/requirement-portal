@@ -10,6 +10,7 @@ from time import monotonic, perf_counter
 
 from smb_kernel.observability.correlation import correlation_scope
 from smb_kernel.observability.metrics import Metrics
+from smb_kernel.observability.tracing_setup import Tracing
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.infrastructure.log_safety import exception_types
@@ -27,6 +28,7 @@ class PollingAiJobWorker:
         executor: ExecuteAiJob,
         clock: ClockPort,
         metrics: Metrics,
+        tracing: Tracing,
         *,
         poll_interval_seconds: float,
         lease_seconds: float,
@@ -37,6 +39,7 @@ class PollingAiJobWorker:
         self._executor = executor
         self._clock = clock
         self._metrics = metrics
+        self._tracing = tracing
         self._poll_interval = poll_interval_seconds
         self._lease_seconds = lease_seconds
         self._heartbeat_seconds = heartbeat_seconds
@@ -174,7 +177,18 @@ class PollingAiJobWorker:
         started = perf_counter()
         status = "error"
         try:
-            with correlation_scope(f"job:{record.job.id.value}"):
+            # One trace per attempt, holding its SQL and provider calls (ADR-0110).
+            with (
+                correlation_scope(f"job:{record.job.id.value}"),
+                self._tracing.span(
+                    f"ai_job {operation}",
+                    {
+                        "ai_job.id": record.job.id.value,
+                        "ai_job.operation": operation,
+                        "ai_job.attempt": record.job.attempt_count,
+                    },
+                ),
+            ):
                 status = metric_status(self._executor.execute(record))
         finally:
             elapsed = perf_counter() - started

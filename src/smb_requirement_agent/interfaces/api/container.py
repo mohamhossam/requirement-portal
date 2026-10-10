@@ -17,6 +17,7 @@ from smb_kernel.diagnostics import DebugTrace
 from smb_kernel.documents.ports import DocumentStoragePort
 from smb_kernel.identity.ports import IdentityProviderPort
 from smb_kernel.observability.metrics import Metrics
+from smb_kernel.observability.tracing_setup import Tracing
 from smb_kernel.time.clock import ClockPort
 from smb_kernel.time.system import SystemClock
 
@@ -158,6 +159,7 @@ from smb_requirement_agent.interfaces.api.composition.requirements import (
     build_documents,
     build_requirement_intake,
 )
+from smb_requirement_agent.interfaces.api.composition.tracing import build_tracing
 from smb_requirement_agent.jobs.application.ports.ai_jobs import (
     AiJobBacklogPort,
     AiJobQueuePort,
@@ -402,6 +404,7 @@ class Container:
     provider_call_rate_limit: ProviderCallRateLimit
     provider_spend_budget: ProviderSpendBudget
     metrics: Metrics
+    tracing: Tracing
     create_requirement: CreateOwnedRequirement
     get_requirement: GetRequirement
     list_requirement_worklist: RequirementWorklistReader
@@ -524,8 +527,10 @@ def _build_container(
         JsonBacklogExporter(),
         XlsxBacklogExporter(),
     )
+    # First, so its buffered spans are exported last, after every adapter has closed.
+    tracing = build_tracing(settings, resources)
     metrics = Metrics()
-    persistence = build_persistence(settings, resources, resolved_clock, metrics)
+    persistence = build_persistence(settings, resources, resolved_clock, metrics, tracing)
     # Every model response's tokens count toward one budget for all processes (ADR-0106).
     spend_budget = ProviderSpendBudget(
         settings.provider_daily_token_budget,
@@ -533,13 +538,15 @@ def _build_container(
         persistence.provider_spend,
         metrics.record_provider_spend_blocked,
     )
-    defaults = build_llm_adapters(settings, metrics, spend_budget.record)
+    defaults = build_llm_adapters(settings, metrics, tracing, spend_budget.record)
     resources.callback(defaults.close)
     resources.callback(defaults.debug_trace.close)
     # Tests may supply their own knowledge service; otherwise settings choose it.
-    knowledge_service = knowledge_service or build_knowledge_service(settings, resources, metrics)
+    knowledge_service = knowledge_service or build_knowledge_service(
+        settings, resources, metrics, tracing
+    )
     resolved_identity = build_identity(
-        settings, resources, persistence.actor_directory, identity_provider
+        settings, resources, persistence.actor_directory, identity_provider, tracing
     )
     resolved_analyzer = (
         analyzer
@@ -651,6 +658,7 @@ def _build_container(
         resolved_clock,
         access_service,
         metrics,
+        tracing,
         spend_budget,
     )
 
@@ -788,6 +796,7 @@ def _build_container(
         generation_context_tokens=analysis.generation_context_tokens,
         requirement_commands=analysis.requirement_commands,
         metrics=metrics,
+        tracing=tracing,
         provider_call_rate_limit=ProviderCallRateLimit(
             settings.provider_rate_limit_per_minute, resolved_clock, persistence.provider_call_log
         ),

@@ -318,6 +318,9 @@ class Settings:
     log_format: LogFormat = LogFormat.TEXT
     metrics_port: int | None = None
     metrics_host: str = "127.0.0.1"
+    # An OTLP/HTTP collector's base URL; None leaves tracing off (ADR-0110).
+    tracing_endpoint: str | None = None
+    tracing_sample_ratio: float = 1.0
     request_max_body_bytes: int = DEFAULT_REQUEST_MAX_BODY_BYTES
     # How the knowledge service proves itself on /internal routes (ADR-0099,
     # ADR-0104): the shared token it presents, and/or its client at the OIDC
@@ -760,12 +763,17 @@ def _prior_art_from_env() -> dict[str, Any]:
 
 
 def _operability_from_env() -> dict[str, Any]:
-    """Rate limiting, logging and metrics: the knobs an operator tunes per deployment."""
+    """Rate limiting, logging, metrics and tracing: the knobs an operator tunes per deployment."""
     raw_limit = os.getenv("PROVIDER_RATE_LIMIT_PER_MINUTE", "").strip()
     raw_budget = os.getenv("PROVIDER_DAILY_TOKEN_BUDGET", "").strip()
     raw_format = os.getenv("LOG_FORMAT", LogFormat.TEXT.value).strip().lower()
     raw_port = os.getenv("METRICS_PORT", "").strip()
     raw_body = os.getenv("REQUEST_MAX_BODY_BYTES", "").strip()
+    raw_ratio = os.getenv("OTEL_TRACES_SAMPLER_ARG", "").strip()
+    try:
+        ratio = float(raw_ratio) if raw_ratio else 1.0
+    except ValueError as exc:
+        raise ConfigurationError("OTEL_TRACES_SAMPLER_ARG must be a number from 0 to 1.") from exc
     try:
         limit = int(raw_limit) if raw_limit else DEFAULT_PROVIDER_RATE_LIMIT_PER_MINUTE
         budget = int(raw_budget) if raw_budget else 0
@@ -787,6 +795,8 @@ def _operability_from_env() -> dict[str, Any]:
         "log_format": log_format,
         "metrics_port": port,
         "metrics_host": os.getenv("METRICS_HOST", "127.0.0.1").strip(),
+        "tracing_endpoint": os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "").strip() or None,
+        "tracing_sample_ratio": ratio,
         "request_max_body_bytes": body,
         "knowledge_service_token": _secret("KNOWLEDGE_SERVICE_TOKEN"),
         "knowledge_api_base_url": os.getenv("KNOWLEDGE_API_BASE_URL", "").strip() or None,

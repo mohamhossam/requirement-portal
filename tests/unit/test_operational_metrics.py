@@ -11,8 +11,8 @@ from fastapi.testclient import TestClient
 
 from smb_requirement_agent.interfaces.api.container import build_container
 from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.interfaces.release import APPLICATION_VERSION
 from smb_requirement_agent.interfaces.runtime import (
-    APPLICATION_VERSION,
     sample_queue,
     start_metrics,
 )

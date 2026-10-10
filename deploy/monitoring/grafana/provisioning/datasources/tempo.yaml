@@ -1,0 +1,11 @@
+apiVersion: 1
+
+# Traces from the bundled Tempo (ADR-0110), browsed in Explore. A span's trace ID
+# is the `trace_id` field of the API's and workers' JSON log lines.
+datasources:
+  - name: Tempo
+    type: tempo
+    uid: tempo
+    access: proxy
+    url: http://tempo:3200
+    editable: false

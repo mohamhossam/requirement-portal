@@ -12,7 +12,7 @@ restoring a backup.
 ## v0.1.0
 
 The first published release: the pilot candidate, closing the pilot gate of
-`docs/slices/production-hardening.md`, with its shared provider limits and platform-kernel 1.2.0.
+`docs/slices/production-hardening.md`, with its shared provider limits and platform-kernel 1.3.0.
 
 - **Production configuration fails closed.**
   - The production manifest always runs `APP_ENV=production` with OIDC sign-in.
@@ -117,5 +117,19 @@ The first published release: the pilot candidate, closing the pilot gate of
     their inputs (ADR-0079 amendment).
   - Each run also reports the document blobs' count and size, and how many nothing refers to.
     It deletes none.
+- **Optional tracing (ADR-0110), with platform-kernel 1.3.0.**
+  - Set `OTEL_EXPORTER_OTLP_ENDPOINT` to export OpenTelemetry traces over OTLP/HTTP. Unset (the
+    default), nothing is traced. Each traced unit has one trace:
+    - an API request, named by its route;
+    - an AI job attempt.
+  - Each trace holds that unit's SQL statements and its calls to the knowledge portal, model
+    providers and the identity provider.
+  - No path, query string, body, SQL value or exception message is recorded.
+  - Only the knowledge portal is sent `traceparent`. The edge drops one a browser sends.
+  - `OTEL_TRACES_SAMPLER_ARG` keeps a share of new traces (default all).
+  - JSON log lines carry `trace_id` and `span_id` inside a kept trace.
+  - The monitoring overlay adds an OpenTelemetry Collector and Grafana Tempo
+    (`TEMPO_RETENTION`, 72h), with a Grafana data source.
+  - FastAPI's own telemetry is off, so `OTEL_*` variables can no longer stop the API starting.
 
 Upgrade: none (first release). Contract-step migrations: none after `202610091200`.

@@ -440,6 +440,8 @@ stdout. Fields:
 - `timestamp`, `level`, `logger` and `message`;
 - `correlation_id`: the request's `X-Request-ID`, or `job:<id>` inside an AI
   job;
+- `trace_id` and `span_id`, while tracing is on and the line was written inside
+  a kept trace ("Tracing"), so a log line leads to its trace in Grafana;
 - event fields:
   - `smb_requirement_agent.http` logs one line per request, with `method`,
     `route`, `status` and `duration_ms`;
@@ -483,7 +485,7 @@ and `alerts.md`; the objectives they guard are in `slos.md`.
 ### Monitoring add-on (Prometheus, Alertmanager and Grafana)
 
 `deploy/compose.monitoring.yaml` is an optional overlay that collects these metrics, alerts on
-them and shows them. It adds five containers.
+them and shows them. It adds five containers for metrics, and two for traces ("Tracing").
 
 - **Prometheus**
   - It scrapes every `api` and `worker` container through Docker's DNS, so `--scale` needs no
@@ -548,6 +550,51 @@ image and never updates them online.
   - scrape `:9464` on each `api` and `worker` container;
   - load `alerts.yml`;
   - import `deploy/monitoring/grafana/dashboards/requirement-ai.json`.
+
+## Tracing
+
+Optional OpenTelemetry tracing (ADR-0110). With `OTEL_EXPORTER_OTLP_ENDPOINT` unset (the
+default), nothing is traced. Set, the API and the worker export spans over OTLP/HTTP to that
+collector's base URL:
+
+- **a request**: one server span named by its route (`GET /requirements/{requirement_id}`), with
+  the status and the request's correlation ID. Probes (`/health`, `/ready`) are not traced;
+- **an AI job attempt**: one span named `ai_job <operation>`, with the job's ID and attempt;
+- **inside either**: each SQL statement, as written with its `%s` placeholders, and each outbound
+  call to the knowledge portal, a model provider or the identity provider, with its host and
+  status.
+
+**What spans never carry:** query strings, request or response bodies, SQL parameter values,
+requirement text, provider payloads or exception messages. A failure records its type only.
+Background loops' polling starts no trace.
+
+**Trace context**
+- Only the knowledge portal is sent `traceparent`, so its spans join the request's trace. Model
+  providers and the identity provider are never sent it.
+- The edge drops any `traceparent` a browser sends: the API starts each request's trace.
+- A call from the knowledge portal to the internal API continues the portal's trace, when the
+  portal sends one.
+
+| Variable | Meaning |
+|---|---|
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | The collector's OTLP/HTTP base URL (spans go to `<url>/v1/traces`). Unset: tracing is off. |
+| `OTEL_TRACES_SAMPLER_ARG` | The share of new traces kept, 0 to 1 (default 1). A trace started by the knowledge portal is kept when it was kept there. |
+
+**Bundled backend.** The monitoring overlay adds two containers, and points `api` and `worker` at
+the first:
+- **otel-collector** receives OTLP/HTTP on 4318, batches, and forwards to Tempo. It is not
+  published. Edit `deploy/monitoring/otel-collector/config.yaml` to send traces elsewhere too.
+- **Tempo** keeps traces on the `tempo_data` volume for `TEMPO_RETENTION` (Compose, default
+  `72h`). It is not published; Grafana's **Tempo** data source reads it. In **Explore**, search
+  by `{ resource.service.name = "requirement-portal" }`, or paste a log line's `trace_id`.
+
+To use your own collector or vendor instead, set `OTEL_EXPORTER_OTLP_ENDPOINT` in
+`production.env` and leave the overlay out, or export it before `up` to override the overlay's
+default.
+
+**Checks.** CI's deployment job starts the overlay, sends a request through the edge with a
+forged `traceparent`, and finds its trace in Tempo through Grafana: started by the API, holding
+its SQL, and without the query string.
 
 ## Rate limiting
 
@@ -642,6 +689,8 @@ passages and evidence. The link is optional (ADR-0104), and set in `production.e
   bookmarks there, keeping the rest of the path. Unset, the links are hidden and `/knowledge/`
   answers 404. Rebuild `web` when it changes.
 - **Or a client of its own** in place of the token: see "Service credentials".
+- **Tracing.** With tracing on, every call to the knowledge portal carries `traceparent`, so a
+  request's trace continues there ("Tracing").
 - **Neither set:** deterministic fakes stand in, with no library, one empty catalogue version
   (`offline-catalogue`), and nothing for the viewers to show. Production may run this way too
   (ADR-0104).

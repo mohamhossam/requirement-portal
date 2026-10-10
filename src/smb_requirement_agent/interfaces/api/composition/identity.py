@@ -14,6 +14,7 @@ from smb_kernel.http.service_auth import (
 )
 from smb_kernel.identity.oidc import OidcIdentityProvider, OidcSigningKeys
 from smb_kernel.identity.ports import IdentityProviderPort
+from smb_kernel.observability.tracing_setup import Tracing
 
 from smb_requirement_agent.identity.application.ports.actor_directory import ActorDirectoryPort
 from smb_requirement_agent.identity.infrastructure.fake_identity import (
@@ -22,6 +23,7 @@ from smb_requirement_agent.identity.infrastructure.fake_identity import (
 )
 from smb_requirement_agent.infrastructure.config.options import IdentityProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
+from smb_requirement_agent.interfaces.api.composition.tracing import identity_client
 
 # The audience a token the OIDC issuer grants the knowledge service must carry to
 # reach this service's internal API. The knowledge portal's service client adds it.
@@ -33,6 +35,7 @@ def build_identity(
     resources: ExitStack,
     actor_directory: ActorDirectoryPort,
     override: IdentityProviderPort | None,
+    tracing: Tracing,
 ) -> IdentityProviderPort:
     """Select the identity provider; fake identity also seeds its known actors."""
     if settings.identity_provider is IdentityProvider.FAKE:
@@ -46,7 +49,7 @@ def build_identity(
         settings.oidc_issuer_url,
         settings.oidc_audience,
         settings.oidc_allowed_algorithms,
-        resources.enter_context(httpx.Client(timeout=10)),
+        resources.enter_context(identity_client(tracing)),
         monotonic,
         jwks_ttl_seconds=settings.oidc_jwks_ttl_seconds,
         unknown_key_ttl_seconds=settings.oidc_unknown_key_ttl_seconds,
@@ -60,7 +63,7 @@ def build_identity(
 
 
 def build_internal_verifier(
-    settings: Settings, resources: ExitStack
+    settings: Settings, resources: ExitStack, tracing: Tracing
 ) -> ServiceCallerVerifier | None:
     """Who may call /internal: the knowledge service, named "knowledge" (ADR-0099).
 
@@ -75,7 +78,7 @@ def build_internal_verifier(
     if settings.knowledge_service_client_id is not None:
         keys = OidcSigningKeys(
             settings.oidc_issuer_url,
-            resources.enter_context(httpx.Client(timeout=10)),
+            resources.enter_context(identity_client(tracing)),
             monotonic,
             jwks_ttl_seconds=settings.oidc_jwks_ttl_seconds,
             unknown_key_ttl_seconds=settings.oidc_unknown_key_ttl_seconds,

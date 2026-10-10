@@ -2,7 +2,7 @@
 
 ## Status
 
-**Specified 2026-10-08; in progress since 2026-10-09.** Phase 0 (platform-kernel v1.2.0, and this repository's move to it) is delivered. PR 1, PR 8, PR 2, PR 4a, PR 4b, PR 5 and PR 6 are delivered, which completes the pilot gate (Phase 1), and so is all of Phase 2: PR 7, PR 3, PR 9, PR 10, PR 11 and PR 12 (see their entries and Validation Evidence). Phase 3 has started: PR 13 is delivered. This record keeps the
+**Specified 2026-10-08; in progress since 2026-10-09.** Phase 0 (platform-kernel v1.2.0, and this repository's move to it) is delivered. PR 1, PR 8, PR 2, PR 4a, PR 4b, PR 5 and PR 6 are delivered, which completes the pilot gate (Phase 1), and so is all of Phase 2: PR 7, PR 3, PR 9, PR 10, PR 11 and PR 12 (see their entries and Validation Evidence). Phase 3 has started: PR 13 and PR 14 are delivered. This record keeps the
 plan for closing every finding of the second production-readiness review (security, deployment and
 CI, reliability and observability, frontend) so it can be scheduled later. When work starts, each
 PR converts its part into the `WORKSPACE.md` §10 sections and fills in Validation Evidence here.
@@ -554,7 +554,37 @@ the response; `DashboardPage` asks for one draft. The layout is unchanged.
   - `DocumentsPage` and `DashboardPage` move to `useInfiniteQuery` (exception).
 - **Retention:** prune payloads of succeeded and cancelled AI jobs only. Report orphaned document blobs, and add a size metric (dropped by the owner: `pg_database_size_bytes` already covers it). The daily retention schedule is already documented.
 
-**PR 14 · Tracing**
+**PR 14 · Tracing** — *delivered on `claude/production-hardening-pr14` with platform-kernel 1.3.0, 2026-10-10*
+
+*Owner decisions (2026-10-10):* the mechanism goes in the kernel (1.3.0, `tracing` extra); every
+outbound call is a span but only the knowledge portal is sent `traceparent`; a bundled backend.
+Recorded in ADR-0110.
+
+**Kernel 1.3.0** (mohamhossam/platform-kernel#8):
+- `configure_tracing` returns a `Tracing`: OTLP/HTTP, ratio sampling, no global provider.
+- `TracedTransport`/`TracedTransport2` trace calls and propagate only when asked.
+- `request_span`, `span` and `instrument_connection` cover requests, named units of work and SQL.
+- JSON logs gain `trace_id`/`span_id`. A parentless client span starts no trace.
+
+**Portal**
+- **Settings:** `OTEL_EXPORTER_OTLP_ENDPOINT` (unset: off) and `OTEL_TRACES_SAMPLER_ARG`, both
+  validated. `build_tracing` makes the container's `Tracing`, flushed when it closes.
+- **Requests:** the request middleware opens the server span. It is named by route template,
+  with the correlation ID; probes are not traced. FastAPI's own telemetry is disabled
+  (`auto_configure: False`).
+- **Jobs:** `PollingAiJobWorker` wraps each attempt in `ai_job <operation>`. Pooled connections
+  are instrumented in the pool's `configure` hook (`pooled_session`).
+- **Outbound calls:**
+  - the knowledge client propagates;
+  - the model clients (OpenAI via `TracedTransport2`), the JWKS clients and the token client do
+    not (`identity_client`).
+- **Edge:** nginx clears `traceparent`/`tracestate`.
+- **Overlay:** the collector (0.159.0) and Tempo (3.1.0), digest-pinned, with a Grafana Tempo
+  data source. `api` and `worker` default to the collector.
+- **CI:** the deployment job finds a request's trace in Tempo through Grafana. The trace was
+  started by the API despite a forged `traceparent`, holds its SQL, and has no query string.
+
+*Plan as specified:*
 - Optional OpenTelemetry, off when no OTLP endpoint is set.
 - Instrument FastAPI, httpx (which also covers the token client at `references.py:133`) and psycopg.
 - Send `traceparent` to the portal only when one is connected.
@@ -934,3 +964,32 @@ New tests cover:
 - the Documents page's server parameters, "Load more", and owners from the response; the detail page's owner; the dashboard's one-draft read.
 
 Not run locally: Playwright. Two specs that read `GET /requirements/drafts` now read its envelope.
+
+### PR 14 (2026-10-10, branch `claude/production-hardening-pr14`)
+
+Run locally on Python 3.13 against PostgreSQL 16:
+- **Kernel 1.3.0:** pytest (with PostgreSQL), ruff, format, `mypy --strict`, lint-imports and
+  actionlint are clean.
+- **Portal:**
+  - full pytest with coverage, ruff (with `S`), format, mypy, lint-imports, actionlint and
+    gitleaks are clean;
+  - `npm run api:check` is current;
+  - `docker compose -f deploy/compose.production.yaml -f deploy/compose.monitoring.yaml config`
+    renders the collector and Tempo, and points `api` and `worker` at the collector.
+- **End to end, with the release binaries:**
+  - `otelcol validate` accepts the collector config;
+  - Tempo 3.1.0 starts single-binary with it and the retention flags;
+  - the portal exported a request's spans through the collector into Tempo, found by TraceQL
+    and named `GET /requirements/{requirement_id}`.
+
+New tests cover:
+- the settings and their refusals;
+- the off path (`NO_TRACING`, FastAPI's telemetry never configured);
+- request spans: named by route, continuing a caller's trace, with the correlation ID, no path
+  ID or query text, and no probe spans;
+- a job attempt as one root span holding its work;
+- `traceparent` to the knowledge portal only, never to a model or the identity provider;
+- SQL spans under a request in PostgreSQL, without values;
+- the nginx header clearing.
+
+Not run locally: the overlay's containers (no Docker daemon). CI's deployment job runs them.
