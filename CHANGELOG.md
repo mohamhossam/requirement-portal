@@ -131,5 +131,13 @@ The first published release: the pilot candidate, closing the pilot gate of
   - The monitoring overlay adds an OpenTelemetry Collector and Grafana Tempo
     (`TEMPO_RETENTION`, 72h), with a Grafana data source.
   - FastAPI's own telemetry is off, so `OTEL_*` variables can no longer stop the API starting.
+- **The browser is easier to find your way in.**
+  - An address that matches no page says so, with a link to the dashboard, instead of showing
+    the dashboard under a wrong address.
+  - A new page takes keyboard focus, so a screen reader starts at its content. Choosing an item
+    that changes the address within a page leaves focus where it is.
+  - Links to Azure DevOps work items are shown only for `https:` addresses.
+  - Remembering the last requirement no longer fails a save in private browsing, and
+    downloads keep their file long enough for Firefox and Safari.
 
 Upgrade: none (first release). Contract-step migrations: none after `202610091200`.

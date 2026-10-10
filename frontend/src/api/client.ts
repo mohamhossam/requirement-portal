@@ -209,6 +209,8 @@ export type RequestOptions = { signal?: AbortSignal };
 const JSON_TIMEOUT_MS = 30_000;
 /** Uploads and downloads carry whole files. */
 const TRANSFER_TIMEOUT_MS = 120_000;
+/** How long a downloaded file's object URL outlives the click that started it. */
+export const DOWNLOAD_URL_LIFETIME_MS = 40_000;
 
 /**
  * A signal that aborts when any of these does. `AbortSignal.any` where the browser
@@ -405,7 +407,9 @@ async function download(path: string, fallbackFilename: string): Promise<void> {
   document.body.append(anchor);
   anchor.click();
   anchor.remove();
-  URL.revokeObjectURL(objectUrl);
+  // Firefox and Safari start the download after `click()` returns; revoked at once,
+  // the file can arrive empty or not at all.
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), DOWNLOAD_URL_LIFETIME_MS);
 }
 
 function documentListPath(params: DocumentListParams = {}) {

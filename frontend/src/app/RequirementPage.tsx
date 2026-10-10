@@ -76,6 +76,7 @@ const SourceConfirmation = lazy(() => import("./requirement/SourcePanel").then((
 const RequirementAccessPanel = lazy(() => import("../features/identity/RequirementAccessPanel").then((m) => ({ default: m.RequirementAccessPanel })));
 import { useSourceEditing } from "./requirement/useSourceEditing";
 import { useDocumentTitle } from "./useDocumentTitle";
+import { rememberLastRequirement } from "./lastRequirement";
 
 type RequirementView = "capture" | "clarify" | "knowledge" | "confirm" | "breakdown" | "review" | "revisions";
 
@@ -150,7 +151,7 @@ function RequirementWorkspaceShell({ view }: { view: RequirementView }) {
   const source = useSourceEditing({ id, requirement: requirement.data, refresh: workspace.refresh });
 
   useEffect(() => {
-    if (requirement.data) localStorage.setItem("lastRequirementId", requirement.data.id);
+    if (requirement.data) rememberLastRequirement(requirement.data.id);
   }, [requirement.data]);
 
   // Started here rather than inside the knowledge stage, because arriving at
