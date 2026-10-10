@@ -196,3 +196,112 @@ def test_a_long_refusal_message_is_cut() -> None:
         publisher.create(STORY, PARENT)
 
     assert len(str(raised.value)) < 400
+
+
+MARKED = PlannedWorkItem(
+    key=STORY.key,
+    kind=STORY.kind,
+    label=STORY.label,
+    title=STORY.title,
+    description=STORY.description,
+    acceptance_criteria=STORY.acceptance_criteria,
+    parent_key=STORY.parent_key,
+    owning_squad_id=STORY.owning_squad_id,
+    owning_squad_name=STORY.owning_squad_name,
+    marker="smb-rp-0123456789abcdef0123",
+)
+
+
+def test_a_created_item_is_tagged_with_its_marker() -> None:
+    publisher, requests = _publisher(lambda _: httpx.Response(200, json={"id": 42}))
+
+    publisher.create(MARKED, PARENT)
+
+    fields = {op["path"]: op["value"] for op in json.loads(requests[0].content)}
+    assert fields["/fields/System.Tags"] == "smb-requirement-portal; smb-rp-0123456789abcdef0123"
+
+
+def test_an_update_replaces_only_what_a_person_reads() -> None:
+    publisher, requests = _publisher(lambda _: httpx.Response(200, json={"id": 42}))
+
+    updated = publisher.update("42", MARKED)
+
+    assert updated == PublishedWorkItem(
+        "story-1", "42", "https://dev.azure.com/contoso/SMB%20Delivery/_workitems/edit/42"
+    )
+    (request,) = requests
+    assert request.method == "PATCH"
+    assert str(request.url) == (
+        "https://dev.azure.com/contoso/SMB%20Delivery/_apis/wit/workitems/42?api-version=7.1"
+    )
+    assert request.headers["Content-Type"] == "application/json-patch+json"
+    paths = [op["path"] for op in json.loads(request.content)]
+    # Area, iteration, tags and the parent link stay as people left them in the tracker.
+    assert paths == [
+        "/fields/System.Title",
+        "/fields/System.Description",
+        "/fields/Microsoft.VSTS.Common.AcceptanceCriteria",
+    ]
+
+
+def test_find_looks_the_item_up_by_its_marker() -> None:
+    publisher, requests = _publisher(
+        lambda _: httpx.Response(200, json={"workItems": [{"id": 42, "url": "x"}]})
+    )
+
+    found = publisher.find(MARKED)
+
+    assert found == PublishedWorkItem(
+        "story-1", "42", "https://dev.azure.com/contoso/SMB%20Delivery/_workitems/edit/42"
+    )
+    (request,) = requests
+    assert request.method == "POST"
+    assert str(request.url) == (
+        "https://dev.azure.com/contoso/SMB%20Delivery/_apis/wit/wiql?api-version=7.1"
+    )
+    query = json.loads(request.content)["query"]
+    assert "[System.TeamProject] = @project" in query
+    assert "[System.Tags] CONTAINS 'smb-rp-0123456789abcdef0123'" in query
+
+
+def test_find_answers_none_when_no_item_carries_the_marker() -> None:
+    publisher, _ = _publisher(lambda _: httpx.Response(200, json={"workItems": []}))
+
+    assert publisher.find(MARKED) is None
+
+
+@pytest.mark.parametrize(
+    ("body", "message"),
+    [
+        ({"workItems": [{"id": 1}, {"id": 2}]}, "Several Azure DevOps items"),
+        ({"workItems": [{"id": "1"}]}, "without a work item id"),
+        ({"value": []}, "without work items"),
+    ],
+)
+def test_find_refuses_an_ambiguous_or_unusable_answer(
+    body: dict[str, object], message: str
+) -> None:
+    publisher, _ = _publisher(lambda _: httpx.Response(200, json=body))
+
+    with pytest.raises(PublicationTargetError, match=message):
+        publisher.find(MARKED)
+
+
+def test_find_never_sends_a_marker_it_did_not_make() -> None:
+    publisher, requests = _publisher(lambda _: httpx.Response(200, json={"workItems": []}))
+    tampered = PlannedWorkItem(
+        key=STORY.key,
+        kind=STORY.kind,
+        label=STORY.label,
+        title=STORY.title,
+        description=STORY.description,
+        acceptance_criteria=(),
+        parent_key=None,
+        owning_squad_id=None,
+        owning_squad_name=None,
+        marker="smb-rp-x' OR 1=1 --",
+    )
+
+    with pytest.raises(PublicationTargetError, match="no marker"):
+        publisher.find(tampered)
+    assert requests == []

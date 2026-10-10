@@ -19,9 +19,11 @@ class FakeBacklogPublisher:
     def __init__(self) -> None:
         self._lock = Lock()
         self._created: list[tuple[PlannedWorkItem, PublishedWorkItem, str | None]] = []
+        self._updated: list[tuple[str, PlannedWorkItem]] = []
 
     def target(self) -> PublicationTarget:
         return PublicationTarget(
+            key="fake:local",
             system="Offline stand-in",
             project="Local",
             default_location="Local",
@@ -38,6 +40,26 @@ class FakeBacklogPublisher:
             )
             self._created.append((item, created, parent.external_id if parent else None))
             return created
+
+    def update(self, external_id: str, item: PlannedWorkItem) -> PublishedWorkItem:
+        with self._lock:
+            self._updated.append((external_id, item))
+            return PublishedWorkItem(
+                item.key, external_id, f"https://work-items.example.invalid/{external_id}"
+            )
+
+    def find(self, item: PlannedWorkItem) -> PublishedWorkItem | None:
+        with self._lock:
+            return next(
+                (created for sent, created, _ in self._created if sent.marker == item.marker),
+                None,
+            )
+
+    @property
+    def updated(self) -> tuple[tuple[str, PlannedWorkItem], ...]:
+        """Each update sent, by the tracker id it went to."""
+        with self._lock:
+            return tuple(self._updated)
 
     @property
     def created(self) -> tuple[tuple[PlannedWorkItem, PublishedWorkItem, str | None], ...]:

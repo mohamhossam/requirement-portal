@@ -43,3 +43,11 @@ class PublicationConfirmationError(Exception):
 
 class PublicationTargetError(Exception):
     """The work-item tracker refused an item or could not be reached."""
+
+
+class PublicationTargetChangedError(Exception):
+    """The backlog was published to another tracker or project than the one configured now."""
+
+
+class PublicationRetryNotAllowedError(Exception):
+    """There is no incomplete attempt to retry, or a newer approved revision supersedes it."""

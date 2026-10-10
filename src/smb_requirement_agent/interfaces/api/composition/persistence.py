@@ -101,6 +101,9 @@ from smb_requirement_agent.governance.application.ports.breakdown_repository imp
 from smb_requirement_agent.governance.application.ports.breakdown_review_repository import (
     BreakdownReviewRepositoryPort,
 )
+from smb_requirement_agent.governance.application.ports.publication_repository import (
+    PublicationRepositoryPort,
+)
 from smb_requirement_agent.governance.infrastructure.in_memory_breakdown_review_repository import (
     InMemoryBreakdownReviewRepository,
 )
@@ -113,6 +116,10 @@ from smb_requirement_agent.governance.infrastructure.postgres_breakdown_review i
 from smb_requirement_agent.governance.infrastructure.postgres_revisions import (
     PostgresRevisionRepository,
     PostgresRevisionWriter,
+)
+from smb_requirement_agent.governance.infrastructure.publication_records import (
+    InMemoryPublicationRecords,
+    PostgresPublicationRecords,
 )
 from smb_requirement_agent.governance.infrastructure.revision_tracking import (
     TrackingAccessRepository,
@@ -410,6 +417,8 @@ class PersistenceAdapters:
     attachment_ingestions: AttachmentIngestionRepositoryPort
     # Approved backlogs on their way to the knowledge service (ADR-0101 Amendment 2).
     backlog_handoffs: ApprovedBacklogOutboxPort
+    # What each Requirement's backlog became in the work-item tracker (Slice 13).
+    publication_records: PublicationRepositoryPort
     revision_repository: BreakdownRepositoryPort
     transaction_manager: TransactionManagerPort
     dependency_index: SourceDependencyPort
@@ -519,6 +528,7 @@ def _postgres(
         postgres
     )
     backlog_handoffs: ApprovedBacklogOutboxPort = PostgresBacklogHandoffs(postgres)
+    publication_records: PublicationRepositoryPort = PostgresPublicationRecords(postgres)
     analysis_repository = PostgresAnalysisRepository(postgres)
     analysis_audit_repository = PostgresAnalysisAuditRepository(postgres)
     epic_repository = PostgresEpicRepository(postgres)
@@ -621,6 +631,7 @@ def _postgres(
         provider_spend=PostgresProviderSpend(connector),
         attachment_ingestions=attachment_ingestions,
         backlog_handoffs=backlog_handoffs,
+        publication_records=publication_records,
         revision_repository=revision_repository,
         transaction_manager=transaction_manager,
         dependency_index=dependency_index,
@@ -648,6 +659,7 @@ def _memory(
     memory_attachments = InMemoryAttachmentIngestions(memory_lock)
     attachment_ingestions = memory_attachments
     memory_handoffs = InMemoryBacklogHandoffs(memory_lock)
+    memory_publication_records = InMemoryPublicationRecords(memory_lock)
     memory_publications = InMemoryReferencePublications(memory_lock)
     reference_publications = memory_publications
     memory_historic = InMemoryHistoricCorpus(memory_lock)
@@ -786,6 +798,7 @@ def _memory(
         memory_releases,
         memory_attachments,
         memory_handoffs,
+        memory_publication_records,
         base_requirements,
         requirement_draft_repository,
         document_repository,
@@ -865,6 +878,7 @@ def _memory(
         provider_spend=InMemoryProviderSpend(),
         attachment_ingestions=attachment_ingestions,
         backlog_handoffs=memory_handoffs,
+        publication_records=memory_publication_records,
         revision_repository=revision_repository,
         transaction_manager=transaction_manager,
         dependency_index=dependency_index,

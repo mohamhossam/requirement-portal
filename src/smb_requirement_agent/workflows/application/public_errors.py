@@ -84,9 +84,15 @@ from smb_requirement_agent.governance.application.errors import (
     BreakdownRevisionNotExportableError,
     BreakdownRevisionNotPublishableError,
     PublicationConfirmationError,
+    PublicationRetryNotAllowedError,
+    PublicationTargetChangedError,
     PublicationTargetError,
     PublicationUnavailableError,
     ReviewFlagNotFoundError,
+)
+from smb_requirement_agent.governance.domain.publication.errors import (
+    InvalidPublicationError,
+    PublicationInProgressError,
 )
 from smb_requirement_agent.governance.domain.review.errors import (
     FlagResolutionConflictError,
@@ -222,6 +228,10 @@ ERROR_CATALOGUE: tuple[tuple[type[Exception], str, FailureCategory], ...] = (
     ),
     (PublicationConfirmationError, "publication_confirmation_mismatch", FailureCategory.CONFLICT),
     (PublicationUnavailableError, "publication_unavailable", FailureCategory.UNAVAILABLE),
+    (PublicationTargetChangedError, "publication_target_changed", FailureCategory.CONFLICT),
+    (PublicationRetryNotAllowedError, "publication_retry_not_allowed", FailureCategory.CONFLICT),
+    (PublicationInProgressError, "publication_in_progress", FailureCategory.CONFLICT),
+    (InvalidPublicationError, "invalid_publication", FailureCategory.INTERNAL),
     (PublicationTargetError, "publication_target_refused", FailureCategory.PROVIDER),
     (AiJobConflictError, "ai_job_conflict", FailureCategory.CONFLICT),
     (AiJobInputsPrunedError, "ai_job_inputs_pruned", FailureCategory.CONFLICT),
