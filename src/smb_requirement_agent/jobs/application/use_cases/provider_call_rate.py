@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
 
@@ -84,14 +85,24 @@ class ProviderSpendBudget:
     the day's budget is spent, new AI work is refused and queued jobs wait for the
     next day; calls already under way finish, so a day can overshoot by them.
     A budget of 0 records spend without limiting it.
+
+    `held_back` is told each time work is held back, with `start` for a refused
+    start and `claim` for a claim a worker skipped, for the spend-blocked metric.
     """
 
-    def __init__(self, daily_tokens: int, clock: ClockPort, spend: ProviderSpendPort) -> None:
+    def __init__(
+        self,
+        daily_tokens: int,
+        clock: ClockPort,
+        spend: ProviderSpendPort,
+        held_back: Callable[[str], None],
+    ) -> None:
         if daily_tokens < 0:
             raise ValueError("The daily token budget must not be negative.")
         self._daily = daily_tokens
         self._clock = clock
         self._spend = spend
+        self._held_back = held_back
 
     def record(self, tokens: int) -> None:
         if tokens > 0:
@@ -100,10 +111,18 @@ class ProviderSpendBudget:
     def exhausted(self) -> bool:
         return self._daily > 0 and self._spend.spent(self._today()) >= self._daily
 
+    def admits_claim(self) -> bool:
+        """Whether a worker may claim a queued job now; while the budget is spent, it may not."""
+        if not self.exhausted():
+            return True
+        self._held_back("claim")
+        return False
+
     def require_available(self) -> None:
         """Refuse new AI work once today's budget is spent, saying when it resets."""
         if not self.exhausted():
             return
+        self._held_back("start")
         now = self._clock.now().astimezone(UTC)
         reset = datetime.combine(now.date() + timedelta(days=1), time(), tzinfo=UTC)
         raise ProviderBudgetExhaustedError(

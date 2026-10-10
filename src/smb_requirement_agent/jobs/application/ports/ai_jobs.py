@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Protocol
@@ -82,6 +83,22 @@ class AiJobRepositoryPort(Protocol):
     ) -> list[AiJobRecord]:
         """Newest first; `limit` keeps only the newest rows, None keeps all."""
         ...
+
+
+@dataclass(frozen=True)
+class AiJobBacklog:
+    """Jobs waiting to be claimed: how many per operation, and since when the oldest could be.
+
+    A job waiting out a retry's backoff counts as queued, but its wait starts when
+    its next attempt is due, so backoff is not mistaken for a stuck queue.
+    """
+
+    queued: Mapping[str, int]
+    oldest_claimable_since: datetime | None
+
+
+class AiJobBacklogPort(Protocol):
+    def backlog(self, now: datetime) -> AiJobBacklog: ...
 
 
 class AiJobQueuePort(Protocol):

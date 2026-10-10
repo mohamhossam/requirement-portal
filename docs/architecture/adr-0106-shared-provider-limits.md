@@ -66,8 +66,9 @@ the browser calls while a person edits, recomputes a Requirement's impact on eve
 - **Shared addresses.** People behind one NAT share an address at the edge, so the defaults are
   generous and configurable. A deployment behind a TLS proxy must set `TRUSTED_PROXY_CIDR`, or
   the edge limit applies to everyone together.
-- **No blocked-spend metric yet.** Refusals are not yet counted. Platform-kernel v1.2.0 exports
-  `smb_provider_spend_blocked_total`; PR 9 counts refusals into it and alerts on it.
+- **Blocked spend is counted.** Since production hardening PR 9, `smb_provider_spend_blocked_total`
+  counts each refused start and each claim a worker skipped, and `ProviderSpendBlocked` alerts on
+  it (`docs/operations/alerts.md`).
 
 ## Alternatives Considered
 

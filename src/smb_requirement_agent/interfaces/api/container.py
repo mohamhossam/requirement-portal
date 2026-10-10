@@ -159,6 +159,7 @@ from smb_requirement_agent.interfaces.api.composition.requirements import (
     build_requirement_intake,
 )
 from smb_requirement_agent.jobs.application.ports.ai_jobs import (
+    AiJobBacklogPort,
     AiJobQueuePort,
     AiJobRepositoryPort,
     AiJobWorkerPort,
@@ -380,6 +381,7 @@ class Container:
     backlog_handoffs: ApprovedBacklogOutboxPort
     ai_job_repository: AiJobRepositoryPort
     ai_job_queue: AiJobQueuePort
+    ai_job_backlog: AiJobBacklogPort
     notification_repository: NotificationRepositoryPort
     activity_reader: ActivityReadPort
     reporting_reader: ReportingReadPort
@@ -526,7 +528,10 @@ def _build_container(
     persistence = build_persistence(settings, resources, resolved_clock, metrics)
     # Every model response's tokens count toward one budget for all processes (ADR-0106).
     spend_budget = ProviderSpendBudget(
-        settings.provider_daily_token_budget, resolved_clock, persistence.provider_spend
+        settings.provider_daily_token_budget,
+        resolved_clock,
+        persistence.provider_spend,
+        metrics.record_provider_spend_blocked,
     )
     defaults = build_llm_adapters(settings, metrics, spend_budget.record)
     resources.callback(defaults.close)
@@ -761,6 +766,7 @@ def _build_container(
         backlog_handoffs=persistence.backlog_handoffs,
         ai_job_repository=persistence.ai_job_repository,
         ai_job_queue=persistence.ai_job_queue,
+        ai_job_backlog=persistence.ai_job_backlog,
         notification_repository=persistence.notification_repository,
         activity_reader=persistence.activity_reader,
         reporting_reader=persistence.reporting_reader,

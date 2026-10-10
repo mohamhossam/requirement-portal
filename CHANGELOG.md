@@ -62,5 +62,16 @@ The first published release: the pilot candidate, closing the pilot gate of
   - PostgreSQL starts with `max_connections=${POSTGRES_MAX_CONNECTIONS:-200}`; size it with
     `deployment.md`.
   - Pool use is exported as `smb_db_pool_connections`.
+- **Alerting, SLOs and runbooks.**
+  - The monitoring overlay adds:
+    - Alertmanager, sending to `ALERTMANAGER_RECEIVER` (`none`, `webhook` or `slack`) at
+      `ALERTMANAGER_URL`;
+    - a PostgreSQL exporter;
+    - a host exporter.
+  - 18 alerts, each with a runbook in `docs/operations/alerts.md` and unit tests run by CI.
+  - Proposed objectives in `docs/operations/slos.md`, for the owner to confirm.
+  - New metrics: `smb_build_info`, `smb_ready`, the AI job queue (`smb_ai_jobs_queued`,
+    `smb_ai_job_oldest_queued_age_seconds`), `smb_provider_spend_blocked_total`, and the
+    process, Python and garbage-collector series.
 
 Upgrade: none (first release). Contract-step migrations: none after `202610091200`.

@@ -1,5 +1,7 @@
 """Pooled sessions are bounded, and a busy database answers 503 (production hardening PR 3).
 
+The queue backlog the alerts read is counted here too (PR 9).
+
 Every pooled connection carries `statement_timeout`, `lock_timeout` and
 `idle_in_transaction_session_timeout`. A statement or lock wait past its limit
 reaches callers as `DatabaseBusyError`, which the API answers with 503
@@ -13,6 +15,7 @@ import time
 import uuid
 from collections.abc import Iterator
 from dataclasses import replace
+from datetime import UTC, datetime, timedelta
 from urllib.parse import quote
 
 import psycopg
@@ -25,6 +28,7 @@ from smb_requirement_agent.application.errors import DatabaseBusyError
 from smb_requirement_agent.governance.infrastructure.postgres_revisions import (
     PostgresRevisionWriter,
 )
+from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.config.options import LLMProvider, PersistenceProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.persistence.migration_runner import run_migrations
@@ -35,6 +39,9 @@ from smb_requirement_agent.interfaces.api.composition.projections import (
 )
 from smb_requirement_agent.interfaces.api.container import build_container
 from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
+    CreateRequirementInput,
+)
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 DATABASE_URL = os.getenv("TEST_DATABASE_URL")
@@ -159,3 +166,38 @@ def test_the_api_answers_503_while_a_table_is_locked_and_reports_its_pool(
         exposed = generate_latest(container.metrics.registry).decode()
     assert 'smb_db_pool_connections{state="idle"}' in exposed
     assert "smb_db_pool_max_connections 20.0" in exposed
+
+
+def test_the_backlog_counts_queued_jobs_and_ages_only_those_due(isolated_url: str) -> None:
+    container = build_container(_settings(isolated_url))
+    try:
+        requirement = container.create_requirement.execute(
+            CreateRequirementInput(title="Backlog", description="Jobs waiting for a worker."),
+            FAKE_ACTORS[0],
+        )
+        now = datetime.now(UTC)
+        with psycopg.connect(isolated_url, autocommit=True) as connection:
+            for name, status, created, retry in (
+                ("waiting", "queued", now - timedelta(minutes=20), None),
+                ("backing-off", "queued", now - timedelta(hours=1), now + timedelta(minutes=5)),
+                ("done", "succeeded", now - timedelta(hours=2), None),
+            ):
+                connection.execute(
+                    "INSERT INTO ai_jobs (job_id, requirement_id, operation, status, created_by, "
+                    "command, command_fingerprint, idempotency_key, created_at, updated_at, "
+                    "next_attempt_at) VALUES (%s, %s, 'analyse_requirement', %s, "
+                    '\'{"id": "fake-owner", "display_name": "Owner"}\', \'{}\', %s, %s, '
+                    "%s, %s, %s)",
+                    (name, requirement.id.value, status, name, name, created, created, retry),
+                )
+
+        backlog = container.ai_job_backlog.backlog(now)
+    finally:
+        container.close_resources()
+
+    # Creating the Requirement queued its own screening job too.
+    assert backlog.queued["analyse_requirement"] == 2
+    assert backlog.oldest_claimable_since is not None
+    assert abs((now - backlog.oldest_claimable_since) - timedelta(minutes=20)) < timedelta(
+        seconds=1
+    )

@@ -1,5 +1,6 @@
 # Scrapes requirement work's exporters in deploy/compose.production.yaml
-# (METRICS_PORT=9464). The knowledge portal's exporters belong to its own deployment.
+# (METRICS_PORT=9464), and the monitoring overlay's PostgreSQL, host and Alertmanager
+# exporters. The knowledge portal's exporters belong to its own deployment.
 # Docker's DNS returns one address per replica, so `--scale api=N` and
 # `--scale worker=N` are picked up without editing this file.
 
@@ -9,6 +10,11 @@ global:
 
 rule_files:
   - /etc/prometheus/alerts.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]
 
 scrape_configs:
   - job_name: api
@@ -24,6 +30,18 @@ scrape_configs:
         type: A
         port: 9464
         refresh_interval: 30s
+
+  - job_name: postgres
+    static_configs:
+      - targets: ["postgres-exporter:9187"]
+
+  - job_name: node
+    static_configs:
+      - targets: ["node-exporter:9100"]
+
+  - job_name: alertmanager
+    static_configs:
+      - targets: ["alertmanager:9093"]
 
   - job_name: prometheus
     static_configs:
