@@ -171,6 +171,16 @@ class WorkflowStatusCountsResponse(BaseModel):
     duplicate: int
 
 
+class RequirementDraftListResponse(BaseModel):
+    """One page of drafts (production hardening PR 13)."""
+
+    drafts: list[RequirementDraftResponse]
+    total: int
+    offset: int
+    limit: int
+    has_more: bool
+
+
 class RequirementListResponse(BaseModel):
     requirements: list[RequirementWorklistItemResponse]
     attention: list[RequirementWorklistItemResponse]

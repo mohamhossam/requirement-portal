@@ -11,3 +11,7 @@ class InvalidAiJobError(AiJobError):
 
 class AiJobConflictError(AiJobError):
     """A job mutation conflicts with its current state or idempotency key."""
+
+
+class AiJobInputsPrunedError(AiJobError):
+    """The job's stored inputs were pruned by retention (ADR-0079), so it cannot be retried."""

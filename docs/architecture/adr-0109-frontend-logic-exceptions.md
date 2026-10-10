@@ -79,6 +79,15 @@ An exception sets no precedent for the redesign: it changes behaviour, not the l
     the kind of failure, once per kind per page load, to `POST /api/client-errors`.
   - **Runtime values** (`api/knowledge.ts`). The knowledge portal's address and role come from
     `<meta>` tags the web container renders when it starts, before `import.meta.env`.
+- **Production hardening PR 13:**
+  - **Paged documents** (`app/DocumentsPage.tsx`). Search, filter, owner and sort are sent to
+    `GET /documents`, which answers a page with its counts and owners; the page reads more with
+    "Load more" (`useInfiniteQuery`). Client-side filtering and sorting are gone.
+  - **Owners from the server** (`features/documents/owners.ts`). Each document carries its
+    owner's title, so `useDocumentOwners`, which fetched each owner one by one, is deleted;
+    `DocumentDetailPage` reads the owner from the detail response.
+  - **Drafts envelope** (`api/client.ts`, `app/DashboardPage.tsx`). `GET /requirements/drafts`
+    answers a page; the dashboard asks for the newest one only.
 
 ## Consequences
 

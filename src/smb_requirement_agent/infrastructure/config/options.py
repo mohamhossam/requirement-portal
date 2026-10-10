@@ -201,6 +201,8 @@ DEFAULT_PRIOR_ART_JUDGE_CALLS_PER_HOUR = 60
 DEFAULT_HISTORIC_EMBED_CHUNKS_PER_HOUR = 500
 # Read notifications older than this are pruned by the retention command (ADR-0079).
 DEFAULT_NOTIFICATION_RETENTION_DAYS = 90
+# Finished AI jobs' stored inputs are cleared after this many days (ADR-0079 amendment).
+DEFAULT_AI_JOB_PAYLOAD_RETENTION_DAYS = 90
 
 
 DEFAULT_REQUEST_MAX_BODY_BYTES = 2 * 1024 * 1024

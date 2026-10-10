@@ -2,7 +2,7 @@
 
 ## Status
 
-**Specified 2026-10-08; in progress since 2026-10-09.** Phase 0 (platform-kernel v1.2.0, and this repository's move to it) is delivered. PR 1, PR 8, PR 2, PR 4a, PR 4b, PR 5 and PR 6 are delivered, which completes the pilot gate (Phase 1), and so is all of Phase 2: PR 7, PR 3, PR 9, PR 10, PR 11 and PR 12 (see their entries and Validation Evidence). Phase 3 is not implemented yet. This record keeps the
+**Specified 2026-10-08; in progress since 2026-10-09.** Phase 0 (platform-kernel v1.2.0, and this repository's move to it) is delivered. PR 1, PR 8, PR 2, PR 4a, PR 4b, PR 5 and PR 6 are delivered, which completes the pilot gate (Phase 1), and so is all of Phase 2: PR 7, PR 3, PR 9, PR 10, PR 11 and PR 12 (see their entries and Validation Evidence). Phase 3 has started: PR 13 is delivered. This record keeps the
 plan for closing every finding of the second production-readiness review (security, deployment and
 CI, reliability and observability, frontend) so it can be scheduled later. When work starts, each
 PR converts its part into the `WORKSPACE.md` §10 sections and fills in Validation Evidence here.
@@ -506,12 +506,53 @@ whose logic changes:
 
 ## Phase 3: P2 and scale
 
-**PR 13 · Bounded reads and payload retention**
+**PR 13 · Bounded reads and payload retention** (part exception) — *delivered on `claude/production-hardening-pr13`, 2026-10-10*
+
+*Owner decisions (2026-10-10):* prune succeeded and cancelled jobs' inputs, so a cancelled job
+past the window can't be retried (ADR-0079 amendment); the server returns owner titles; no new
+metric, the retention command reports blob usage instead.
+
+**Drafts, paged** (`GET /requirements/drafts`)
+- `q` (title, case-insensitive, wildcards literal), `sort` (`updated_desc` by default,
+  `updated_asc`, `title_asc`, `title_desc`), `offset` and `limit` (1–100, default 20); `unowned`
+  stays. The answer is `{drafts, total, offset, limit, has_more}`.
+- `CataloguePagesPort` reads a page in SQL, joining `draft_ownership` for the owner filter, with
+  `draft_id` breaking ties. Eligibility is read for the whole page with
+  `DocumentRepositoryPort.list_for_drafts` (`= ANY`).
+
+**Documents, paged** (`GET /documents`)
+- `q` (filename or owner title), `filter` (`all`, `attention`, `included`, `excluded`), `owner`,
+  `sort` (`added_desc` by default, `added_asc`, `name_asc`, `name_desc`; documents needing
+  attention first), `offset` and `limit` (1–100, default 50).
+- The answer adds `counts` per state and the `owners` to filter by, and each document its
+  `owner {kind, id, title}`. `GET /documents/{id}` carries the owner too.
+- Visibility is unchanged and decided in SQL: requirement documents for everyone, draft
+  documents for the draft's owner only, in rows, counts and owners alike.
+- No per-row lookups: the integration test fails if a page reads a draft's ownership or
+  documents one by one. A batched `get_draft_ownerships` was not needed.
+
+**Frontend** (exception, ADR-0109): `DocumentsPage` sends its search, filter, owner and sort to
+the API and loads more with `useInfiniteQuery`; `useDocumentOwners` is deleted
+(`features/documents/owners.ts` builds the links); `DocumentDetailPage` reads the owner from
+the response; `DashboardPage` asks for one draft. The layout is unchanged.
+
+**Retention**
+- `AI_JOB_PAYLOAD_RETENTION_DAYS` (default 90). The `retention` command clears `command` of
+  succeeded and cancelled jobs finished before the window, in batches of 500
+  (`FOR UPDATE SKIP LOCKED`), and sets `payload_pruned_at` (additive migration
+  `202610101000`, with a partial index). Knowledge screens are skipped. Rows stay.
+- Retrying a pruned job answers 409 `ai_job_inputs_pruned`. A pruned clarification job reports
+  no `item_count`.
+- The command prints the document blobs' count, bytes and orphans: blobs that no source
+  document version (removed ones included) or attachment upload refers to. It deletes none.
+- `deployment.md` "Retention" and the `DatabaseSizeGrowth` runbook describe both.
+
+*Plan as specified:*
 - **Paging:**
   - `GET /documents` (`documents.py:361`) and `GET /requirements/drafts` (`requirements.py:334`) get `offset`/`limit` plus `q` and sort, following `requirements.py:290-291` and `schemas/requirements.py:178-179`.
   - Batch the ownership lookups (`identity_access.py:371-384`, `owned_requirements.py:98-99`).
   - `DocumentsPage` and `DashboardPage` move to `useInfiniteQuery` (exception).
-- **Retention:** prune payloads of succeeded and cancelled AI jobs only. Report orphaned document blobs, and add a size metric. The daily retention schedule is already documented.
+- **Retention:** prune payloads of succeeded and cancelled AI jobs only. Report orphaned document blobs, and add a size metric (dropped by the owner: `pg_database_size_bytes` already covers it). The daily retention schedule is already documented.
 
 **PR 14 · Tracing**
 - Optional OpenTelemetry, off when no OTLP endpoint is set.
@@ -876,3 +917,20 @@ New tests cover:
 - the knowledge metas and the CSP placeholder mode.
 
 Not run locally: the image itself (no Docker daemon). CI's deployment job builds it and runs the stack with the rendered page.
+
+### PR 13 (2026-10-10, branch `claude/production-hardening-pr13`)
+
+Run locally on Python 3.13 against PostgreSQL 16, and Node 22:
+- Backend: full pytest with coverage (94.77%), ruff (with `S`), format, mypy and lint-imports are clean.
+- Frontend: `npm test` (60 files, 545 tests), lint, typecheck, `npm run build` and `npm run api:check` pass.
+- gitleaks finds no leaks.
+
+New tests cover:
+- both pages against the in-memory store and PostgreSQL alike (`tests/catalogue_scenarios.py`): paging metadata, the 422 limits, search (wildcards literal), sort, the state filter and counts, owners, and privacy of another person's draft documents;
+- no per-row lookups: the PostgreSQL test fails if a page reads a draft's ownership or documents one by one;
+- pruning in PostgreSQL: only old succeeded and cancelled jobs change, screens, failed, recent and running jobs keep their inputs, a batch of one still reaches every job, a rerun prunes nothing, a pruned job still reads with no `item_count`, and its retry answers 409 `ai_job_inputs_pruned`;
+- the blob report: uploads are referenced, a stray blob is counted with its size, and nothing is deleted;
+- the setting's default and refusals, the use case, and the command's output;
+- the Documents page's server parameters, "Load more", and owners from the response; the detail page's owner; the dashboard's one-draft read.
+
+Not run locally: Playwright. Two specs that read `GET /requirements/drafts` now read its envelope.

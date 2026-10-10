@@ -1,16 +1,16 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useInfiniteQuery } from "@tanstack/react-query";
 import { Check, CircleAlert, ExternalLink, Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useDeferredValue, useState } from "react";
 import { Link } from "react-router-dom";
 
-import { api, type DocumentSummary } from "../api/client";
+import { api, type DocumentListParams, type DocumentSummary } from "../api/client";
 import { errorMessage } from "../api/errors";
 import { KNOWLEDGE_PORTAL_URL } from "../api/knowledge";
 import { useIsKnowledgeAdmin } from "../auth/useIsKnowledgeAdmin";
 import { PageHeader } from "../components/shell";
 import { AsyncState, asyncStatus } from "../components/states";
 import { Badge, Pill } from "../components/ui/Badge";
-import { ButtonLink } from "../components/ui/Button";
+import { Button, ButtonLink } from "../components/ui/Button";
 import { cx } from "../components/ui/cx";
 import {
   Table,
@@ -22,7 +22,7 @@ import {
   type SortDirection,
 } from "../components/ui/Table";
 import { fileTypeLabel, readinessView, sizeLabel } from "../features/documents/labels";
-import { useDocumentOwners, type DocumentOwner } from "../features/documents/useDocumentOwners";
+import { ownerLink, type DocumentOwner } from "../features/documents/owners";
 import { CONTROL, SEARCH_FRAME, SEARCH_INPUT } from "./dashboard/controls";
 import { updatedLabel } from "./dashboard/labels";
 import { queryKeys } from "./queryKeys";
@@ -40,11 +40,15 @@ type SortKey = "name" | "added";
  * person (PRODUCT.md Principle 1).
  */
 const blocksAnalysis = (document: DocumentSummary) => document.requires_attention;
-const FILTERS: Array<{ key: Exclude<Filter, "all">; label: string; test: (document: DocumentSummary) => boolean }> = [
-  { key: "attention", label: "Blocks analysis", test: blocksAnalysis },
-  { key: "included", label: "In analysis", test: (document) => !blocksAnalysis(document) && document.included_in_analysis },
-  { key: "excluded", label: "Left out", test: (document) => !blocksAnalysis(document) && !document.included_in_analysis },
+// The API counts and filters by these same three groups (`GET /documents`).
+const FILTERS: Array<{ key: Exclude<Filter, "all">; label: string }> = [
+  { key: "attention", label: "Blocks analysis" },
+  { key: "included", label: "In analysis" },
+  { key: "excluded", label: "Left out" },
 ];
+
+/** Rows per request; "Load more" asks for the next ones. */
+const pageSize = 50;
 
 const FOLD = "max-md:hidden";
 
@@ -107,10 +111,6 @@ function Added({ document }: { document: DocumentSummary }) {
   return <time dateTime={raw} title={new Date(raw).toLocaleString()}>{updatedLabel(raw)}</time>;
 }
 
-function added(document: DocumentSummary) {
-  return new Date(document.current_version.created_at);
-}
-
 /**
  * Every file attached to a requirement or a draft (docs/ux-plan.md Phase 7).
  *
@@ -121,43 +121,42 @@ function added(document: DocumentSummary) {
  * (docs/design-system.md §14), so this is the worklist's table: one row per
  * file, the whole row one link, readiness in words beside it.
  *
- * Filtering and sorting are on the rows already loaded; the API returns the
- * whole catalogue in one read.
+ * Search, filters and sort are the API's (`GET /documents`), a page at a time,
+ * so the list costs the same however many files there are.
  */
 export function DocumentsPage() {
   const knowledgeAdmin = useIsKnowledgeAdmin();
   useDocumentTitle("Documents");
-  const documents = useQuery({ queryKey: queryKeys.documents(), queryFn: ({ signal }) => api.listDocuments({ signal }) });
-  const ownerOf = useDocumentOwners(documents.data);
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
   const [filter, setFilter] = useState<Filter>("all");
   const [ownerFilter, setOwnerFilter] = useState("");
   const [sort, setSort] = useState<{ key: SortKey; direction: SortDirection }>({ key: "added", direction: "desc" });
-
-  const counts = useMemo(() => Object.fromEntries(FILTERS.map(({ key, test }) =>
-    [key, documents.data?.filter(test).length ?? 0])) as Record<Exclude<Filter, "all">, number>, [documents.data]);
+  const params: DocumentListParams = {
+    q: deferredSearch.trim() || undefined,
+    filter,
+    owner: ownerFilter || undefined,
+    sort: `${sort.key}_${sort.direction}`,
+    limit: pageSize,
+  };
+  const documents = useInfiniteQuery({
+    queryKey: queryKeys.documentList(params),
+    initialPageParam: 0,
+    queryFn: ({ pageParam, signal }) => api.listDocuments({ ...params, offset: pageParam }, { signal }),
+    getNextPageParam: (page) => (page.has_more ? page.offset + page.documents.length : undefined),
+    // A new search or filter keeps the rows on screen until its answer arrives.
+    placeholderData: keepPreviousData,
+  });
+  const firstPage = documents.data?.pages[0];
+  const rows = documents.data?.pages.flatMap((page) => page.documents) ?? [];
+  // The counts and owners cover every file, whatever the search or filter.
+  const counts = firstPage?.counts ?? { attention: 0, included: 0, excluded: 0 };
 
   // The requirements and drafts files are attached to, for the filter: people
   // look for "the files on High-speed business bundles", not for a filename.
-  const owners = [...new Map((documents.data ?? []).flatMap((document) => {
-    const owner = ownerOf(document);
-    return owner ? [[owner.to, owner] as const] : [];
-  })).values()].sort((a, b) => (a.title ?? "").localeCompare(b.title ?? ""));
+  const owners = (firstPage?.owners ?? []).map(ownerLink);
 
-  const needle = search.trim().toLowerCase();
-  const test = FILTERS.find(({ key }) => key === filter)?.test;
-  const sign = sort.direction === "asc" ? 1 : -1;
-  const rows = (documents.data ?? [])
-    .filter((document) => !test || test(document))
-    .filter((document) => !ownerFilter || ownerOf(document)?.to === ownerFilter)
-    .filter((document) => !needle
-      || document.current_version.filename.toLowerCase().includes(needle)
-      || Boolean(ownerOf(document)?.title?.toLowerCase().includes(needle)))
-    // Whatever the sort, a file blocking analysis comes first: it is the one
-    // row that needs somebody, and it should not depend on being the newest.
-    .sort((a, b) => Number(blocksAnalysis(b)) - Number(blocksAnalysis(a)) || sign * (sort.key === "name"
-      ? a.current_version.filename.localeCompare(b.current_version.filename)
-      : added(a).getTime() - added(b).getTime()));
+  const needle = deferredSearch.trim();
   // Two requirements can share a title; the select tells them apart by the
   // start of their id, as the worklist does.
   const titleCounts = new Map<string, number>();
@@ -176,7 +175,7 @@ export function DocumentsPage() {
       : key === "name" ? "asc" : "desc",
   }));
   const direction = (key: SortKey) => (sort.key === key ? sort.direction : null);
-  const total = documents.data?.length ?? 0;
+  const total = counts.attention + counts.included + counts.excluded;
   const filtered = filter !== "all" || needle !== "" || ownerFilter !== "";
 
   return (
@@ -195,7 +194,7 @@ export function DocumentsPage() {
           : undefined}
       />
       <AsyncState
-        status={asyncStatus(documents, documents.data?.length === 0)}
+        status={asyncStatus(documents, firstPage !== undefined && total === 0)}
         loading={{ label: "Loading documents", variant: "row", bars: 4 }}
         error={{ title: "We couldn’t load the documents", message: errorMessage(documents.error) }}
         onRetry={() => void documents.refetch()}
@@ -232,7 +231,7 @@ export function DocumentsPage() {
                   >
                     <option value="">Every requirement</option>
                     {owners.map((owner) => (
-                      <option key={owner.to} value={owner.to}>{ownerLabel(owner)}</option>
+                      <option key={owner.id} value={owner.id}>{ownerLabel(owner)}</option>
                     ))}
                   </select>
                 </label>
@@ -270,7 +269,7 @@ export function DocumentsPage() {
               {/* Beside the pills it counts, not at the far end of the row. */}
               {filtered && (
                 <p className="text-meta text-ink-muted m-0 tabular-nums" role="status">
-                  Showing {rows.length} of {total}
+                  Showing {firstPage?.total ?? 0} of {total}
                 </p>
               )}
             </div>
@@ -303,7 +302,7 @@ export function DocumentsPage() {
             >
               {rows.map((document) => {
                 const version = document.current_version;
-                const owner = ownerOf(document);
+                const owner = ownerLink(document.owner);
                 const statusId = `document-${document.id}-status`;
                 return (
                   <TableRow
@@ -350,6 +349,18 @@ export function DocumentsPage() {
               })}
             </TableBody>
           </Table>
+          {documents.hasNextPage ? (
+            <div className="border-line border-0 border-t border-solid p-3 text-center">
+              <Button
+                variant="secondary"
+                loading={documents.isFetchingNextPage}
+                loadingLabel="Loading…"
+                onClick={() => documents.fetchNextPage()}
+              >
+                Load more
+              </Button>
+            </div>
+          ) : null}
         </div>
       </AsyncState>
     </>

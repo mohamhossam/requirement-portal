@@ -61,3 +61,29 @@ Nothing pruned either table.
 - **Paginate with cursors, with the browser following.** Deferred. The
   browser needs only the newest page. A cursor API is a frontend data-fetching
   change the redesign can take on.
+
+## Amendment — Finished jobs' inputs are pruned (2026-10-10, production hardening PR 13)
+
+The owner chose this. Job rows stay; what grew without bound was each job's stored
+inputs (`ai_jobs.command`), which can carry whole answer sets and edited drafts.
+
+- **What is cleared.** The same `retention` command clears `command` of jobs that
+  **succeeded or were cancelled** more than `AI_JOB_PAYLOAD_RETENTION_DAYS` ago
+  (default 90), and sets `payload_pruned_at` (an additive migration). It works in
+  batches of 500, one short transaction each, skipping rows another transaction holds.
+- **What is kept.**
+  - The job row, its status, failure, timestamps and `result_resources`, so the
+    activity feed and the job lists read as before.
+  - Failed jobs' inputs: a retryable failure can still be retried.
+  - Knowledge screens' inputs: the automatic-screen reservation and its manual
+    retry still need them (the reason this ADR first kept every job).
+- **Consequence.** A cancelled job past the window can no longer be retried. Retry
+  refuses with `ai_job_inputs_pruned` (409); the person starts the action again.
+  A pruned clarification job reports no `item_count`.
+- **Blob report.** Each run also prints how many document blobs are stored, their
+  size, and how many no document version (removed ones included) or attachment
+  upload refers to. It deletes nothing; the `DatabaseSizeGrowth` runbook starts there.
+- **No new metric.** Database size is already exported and alerted
+  (`pg_database_size_bytes`, `DatabaseSizeGrowth`).
+- **Rejected:** deleting old job rows (it would still erase activity history), and
+  pruning failed jobs too (it would take away a retry the person was offered).

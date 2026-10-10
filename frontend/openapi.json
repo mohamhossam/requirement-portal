@@ -3419,6 +3419,30 @@
         "title": "DocumentContentResponse",
         "type": "object"
       },
+      "DocumentCountsResponse": {
+        "description": "As the documents page groups them; a document blocking analysis counts only there.",
+        "properties": {
+          "attention": {
+            "title": "Attention",
+            "type": "integer"
+          },
+          "excluded": {
+            "title": "Excluded",
+            "type": "integer"
+          },
+          "included": {
+            "title": "Included",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "attention",
+          "included",
+          "excluded"
+        ],
+        "title": "DocumentCountsResponse",
+        "type": "object"
+      },
       "DocumentDetailResponse": {
         "properties": {
           "current_version": {
@@ -3641,6 +3665,205 @@
         ],
         "title": "DocumentExtractionWarningResponse",
         "type": "object"
+      },
+      "DocumentFilter": {
+        "description": "As the documents page groups them: blocking analysis first, never also counted below.",
+        "enum": [
+          "all",
+          "attention",
+          "included",
+          "excluded"
+        ],
+        "title": "DocumentFilter",
+        "type": "string"
+      },
+      "DocumentListItemResponse": {
+        "properties": {
+          "current_version": {
+            "$ref": "#/components/schemas/DocumentVersionMetadataResponse"
+          },
+          "draft_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Draft Id"
+          },
+          "hidden_worksheets": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Hidden Worksheets",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "included_hidden_worksheets": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Included Hidden Worksheets",
+            "type": "array"
+          },
+          "included_in_analysis": {
+            "title": "Included In Analysis",
+            "type": "boolean"
+          },
+          "included_version_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Included Version Id"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/DocumentOwnerResponse"
+          },
+          "requirement_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requirement Id"
+          },
+          "requires_attention": {
+            "default": false,
+            "title": "Requires Attention",
+            "type": "boolean"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          },
+          "version_count": {
+            "title": "Version Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "version",
+          "requirement_id",
+          "draft_id",
+          "included_in_analysis",
+          "included_version_id",
+          "version_count",
+          "current_version",
+          "owner"
+        ],
+        "title": "DocumentListItemResponse",
+        "type": "object"
+      },
+      "DocumentListResponse": {
+        "description": "One page of documents (production hardening PR 13). The counts and owners cover every\ndocument the actor may open, whatever the search or filter.",
+        "properties": {
+          "counts": {
+            "$ref": "#/components/schemas/DocumentCountsResponse"
+          },
+          "documents": {
+            "items": {
+              "$ref": "#/components/schemas/DocumentListItemResponse"
+            },
+            "title": "Documents",
+            "type": "array"
+          },
+          "has_more": {
+            "title": "Has More",
+            "type": "boolean"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "owners": {
+            "items": {
+              "$ref": "#/components/schemas/DocumentOwnerResponse"
+            },
+            "title": "Owners",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "documents",
+          "total",
+          "offset",
+          "limit",
+          "has_more",
+          "counts",
+          "owners"
+        ],
+        "title": "DocumentListResponse",
+        "type": "object"
+      },
+      "DocumentOwnerResponse": {
+        "description": "The Requirement or draft a document is attached to; its title, if it still exists.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "requirement",
+              "draft"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "title"
+        ],
+        "title": "DocumentOwnerResponse",
+        "type": "object"
+      },
+      "DocumentSort": {
+        "description": "By the current version; a document blocking analysis comes first whatever the sort.",
+        "enum": [
+          "added_desc",
+          "added_asc",
+          "name_asc",
+          "name_desc"
+        ],
+        "title": "DocumentSort",
+        "type": "string"
       },
       "DocumentSummaryResponse": {
         "properties": {
@@ -3958,6 +4181,16 @@
         ],
         "title": "DomainSuggestionResponse",
         "type": "object"
+      },
+      "DraftSort": {
+        "enum": [
+          "updated_desc",
+          "updated_asc",
+          "title_asc",
+          "title_desc"
+        ],
+        "title": "DraftSort",
+        "type": "string"
       },
       "EditEpicRequest": {
         "properties": {
@@ -5905,6 +6138,107 @@
         "title": "OrganisationReferenceResponse",
         "type": "object"
       },
+      "OwnedDocumentDetailResponse": {
+        "properties": {
+          "current_version": {
+            "$ref": "#/components/schemas/DocumentVersionMetadataResponse"
+          },
+          "draft_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Draft Id"
+          },
+          "hidden_worksheets": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Hidden Worksheets",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "included_hidden_worksheets": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Included Hidden Worksheets",
+            "type": "array"
+          },
+          "included_in_analysis": {
+            "title": "Included In Analysis",
+            "type": "boolean"
+          },
+          "included_version_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Included Version Id"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/DocumentOwnerResponse"
+          },
+          "requirement_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requirement Id"
+          },
+          "requires_attention": {
+            "default": false,
+            "title": "Requires Attention",
+            "type": "boolean"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          },
+          "version_count": {
+            "title": "Version Count",
+            "type": "integer"
+          },
+          "versions": {
+            "items": {
+              "$ref": "#/components/schemas/DocumentVersionDetailResponse"
+            },
+            "title": "Versions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "version",
+          "requirement_id",
+          "draft_id",
+          "included_in_analysis",
+          "included_version_id",
+          "version_count",
+          "current_version",
+          "versions",
+          "owner"
+        ],
+        "title": "OwnedDocumentDetailResponse",
+        "type": "object"
+      },
       "OwnerFacetResponse": {
         "properties": {
           "actor": {
@@ -6871,6 +7205,43 @@
           "business_intent"
         ],
         "title": "RequirementAnalysisResponse",
+        "type": "object"
+      },
+      "RequirementDraftListResponse": {
+        "description": "One page of drafts (production hardening PR 13).",
+        "properties": {
+          "drafts": {
+            "items": {
+              "$ref": "#/components/schemas/RequirementDraftResponse"
+            },
+            "title": "Drafts",
+            "type": "array"
+          },
+          "has_more": {
+            "title": "Has More",
+            "type": "boolean"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "drafts",
+          "total",
+          "offset",
+          "limit",
+          "has_more"
+        ],
+        "title": "RequirementDraftListResponse",
         "type": "object"
       },
       "RequirementDraftRequest": {
@@ -9876,8 +10247,84 @@
     },
     "/documents": {
       "get": {
+        "description": "One page of the documents the actor may open: every Requirement's, and their own\ndrafts'. A document blocking analysis comes first, whatever the sort.",
         "operationId": "list_documents_documents_get",
         "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/DocumentFilter",
+              "default": "all"
+            }
+          },
+          {
+            "in": "query",
+            "name": "owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Owner"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/DocumentSort",
+              "default": "added_desc"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
           {
             "in": "header",
             "name": "X-Fake-Actor-Id",
@@ -9900,11 +10347,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/DocumentSummaryResponse"
-                  },
-                  "title": "Response List Documents Documents Get",
-                  "type": "array"
+                  "$ref": "#/components/schemas/DocumentListResponse"
                 }
               }
             },
@@ -9967,7 +10410,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DocumentDetailResponse"
+                  "$ref": "#/components/schemas/OwnedDocumentDetailResponse"
                 }
               }
             },
@@ -11493,6 +11936,7 @@
     },
     "/requirements/drafts": {
       "get": {
+        "description": "One page of the actor's drafts, or with `unowned` of the drafts nobody owns.",
         "operationId": "list_requirement_drafts_requirements_drafts_get",
         "parameters": [
           {
@@ -11503,6 +11947,55 @@
               "default": false,
               "title": "Unowned",
               "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/DraftSort",
+              "default": "updated_desc"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
             }
           },
           {
@@ -11527,11 +12020,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/RequirementDraftResponse"
-                  },
-                  "title": "Response List Requirement Drafts Requirements Drafts Get",
-                  "type": "array"
+                  "$ref": "#/components/schemas/RequirementDraftListResponse"
                 }
               }
             },

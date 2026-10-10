@@ -72,13 +72,14 @@ export function DashboardPage() {
         ? 2_000
         : false,
   });
+  // Only the newest of each is offered, so only it is read.
   const drafts = useQuery({
     queryKey: queryKeys.requirementDrafts(),
-    queryFn: ({ signal }) => api.listRequirementDrafts(false, { signal }),
+    queryFn: ({ signal }) => api.listRequirementDrafts({ limit: 1 }, { signal }),
   });
   const legacyDrafts = useQuery({
     queryKey: queryKeys.scope("requirement-drafts", "unowned"),
-    queryFn: ({ signal }) => api.listRequirementDrafts(true, { signal }),
+    queryFn: ({ signal }) => api.listRequirementDrafts({ unowned: true, limit: 1 }, { signal }),
   });
   const savedViews = useQuery({ queryKey: queryKeys.savedViews(), queryFn: ({ signal }) => api.listSavedViews({ signal }) });
   const currentCriteria = (): SavedViewCriteria => ({
@@ -130,8 +131,8 @@ export function DashboardPage() {
   const list = requirements.data?.pages.flatMap((page) => page.requirements) ?? [];
   const counts = firstPage?.status_counts;
   const attention = firstPage?.attention ?? [];
-  const latestDraft = drafts.data?.[0];
-  const firstLegacyDraft = legacyDrafts.data?.[0];
+  const latestDraft = drafts.data?.drafts[0];
+  const firstLegacyDraft = legacyDrafts.data?.drafts[0];
   const hasFilters = Boolean(search || statuses.length || ownerId || assignedToMe);
   // Only from what the worklist already loaded: no extra request for a link.
   const lastVisited = lastRequirementId ? list.find((item) => item.id === lastRequirementId) : undefined;

@@ -56,7 +56,6 @@ from smb_requirement_agent.requirements.application.use_cases.owned_requirements
 from smb_requirement_agent.requirements.application.use_cases.requirement_drafts import (
     CreateRequirementDraft,
     GetRequirementDraft,
-    ListRequirementDrafts,
     PromoteRequirementDraft,
     SaveRequirementDraft,
 )
@@ -124,9 +123,7 @@ def build_requirement_intake(
             CreateRequirementDraft(drafts, clock), access, transactions
         ),
         get_requirement_draft=GetOwnedRequirementDraft(GetRequirementDraft(drafts), access),
-        list_requirement_drafts=ListOwnedRequirementDrafts(
-            ListRequirementDrafts(drafts), persistence.access_repository
-        ),
+        list_requirement_drafts=ListOwnedRequirementDrafts(persistence.catalogue_pages),
         save_requirement_draft=SaveOwnedRequirementDraft(
             SaveRequirementDraft(drafts, clock), access, transactions
         ),
@@ -233,7 +230,9 @@ def build_documents(
             shutdown_grace_seconds=settings.ai_job_shutdown_grace_seconds,
             monotonic_seconds=monotonic,
         ),
-        list_documents=ListDocuments(persistence.document_repository, access),
+        list_documents=ListDocuments(
+            persistence.document_repository, access, persistence.catalogue_pages
+        ),
         get_document=GetDocument(
             persistence.document_repository,
             persistence.document_storage,

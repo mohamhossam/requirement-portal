@@ -14,9 +14,10 @@ test("Business need files survive draft resume and drive attachment-only analysi
   await page.screenshot({ path: testInfo.outputPath("business-need-attachments.png"), fullPage: true });
   await page.getByRole("button", { name: "Save draft and exit" }).click();
   await expect(page).toHaveURL(/\/$/);
-  const response = await page.request.get("/api/requirements/drafts");
-  const drafts = await response.json() as Array<{ id: string; title: string }>;
-  const draft = drafts.find((item) => item.title.startsWith(`Attachment source ${testInfo.project.name}`));
+  const source = `Attachment source ${testInfo.project.name}`;
+  const response = await page.request.get("/api/requirements/drafts", { params: { q: source } });
+  const { drafts } = await response.json() as { drafts: Array<{ id: string; title: string }> };
+  const draft = drafts.find((item) => item.title.startsWith(source));
   expect(draft).toBeDefined();
   await page.goto(`/requirements/new?draft=${draft!.id}`);
   await expect(page.getByRole("checkbox", { name: "Include in analysis" })).toHaveCount(2);

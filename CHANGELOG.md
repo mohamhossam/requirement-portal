@@ -106,5 +106,16 @@ The first published release: the pilot candidate, closing the pilot gate of
     `KNOWLEDGE_PORTAL_ROLE` are read when the container starts, which refuses to start under OIDC
     without an issuer origin.
   - The frontend declares Node 24 (`engines`, `.nvmrc`).
+- **Long lists are paged, and old job inputs are cleared.**
+  - `GET /documents` and `GET /requirements/drafts` answer a page (`offset`, `limit`, `total`,
+    `has_more`) with search and sort, instead of a bare list. Documents also carry their
+    owner's title, the counts per state and the owners to filter by. The Documents page loads
+    more on request.
+  - The `retention` command also clears the stored inputs of AI jobs that succeeded or were
+    cancelled more than `AI_JOB_PAYLOAD_RETENTION_DAYS` (90) ago. Job rows and history stay;
+    such a job can no longer be retried (`ai_job_inputs_pruned`, 409). Knowledge screens keep
+    their inputs (ADR-0079 amendment).
+  - Each run also reports the document blobs' count and size, and how many nothing refers to.
+    It deletes none.
 
 Upgrade: none (first release). Contract-step migrations: none after `202610091200`.

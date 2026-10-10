@@ -58,7 +58,7 @@ describe("NewRequirementPage", () => {
 
   beforeEach(() => {
     vi.spyOn(api, "listAttachmentIngestions").mockResolvedValue([]);
-    vi.spyOn(api, "listRequirementDrafts").mockResolvedValue([]);
+    vi.spyOn(api, "listRequirementDrafts").mockResolvedValue({ drafts: [], total: 0, offset: 0, limit: 20, has_more: false });
     vi.spyOn(api, "getRequirementDraft").mockResolvedValue(draft);
     vi.spyOn(api, "listDraftDocuments").mockResolvedValue([]);
     vi.spyOn(api, "createRequirementDraft").mockResolvedValue(draft);
@@ -136,7 +136,7 @@ describe("NewRequirementPage", () => {
 
   it("starts blank even when an older draft exists", async () => {
     const olderDraft = { ...draft, id: "draft-older", title: "Existing requirement" };
-    vi.mocked(api.listRequirementDrafts).mockResolvedValue([olderDraft]);
+    vi.mocked(api.listRequirementDrafts).mockResolvedValue({ drafts: [olderDraft], total: 1, offset: 0, limit: 20, has_more: false });
     localStorage.setItem("activeRequirementDraftId", olderDraft.id);
 
     renderPage();

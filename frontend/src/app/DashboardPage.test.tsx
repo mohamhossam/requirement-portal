@@ -5,12 +5,7 @@ import type { ReactElement } from "react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import {
-  api,
-  type RequirementDraft,
-  type RequirementList,
-  type RequirementWorklistItem,
-} from "../api/client";
+import { api, type RequirementDraft, type RequirementList, type RequirementWorklistItem, type RequirementDraftList } from "../api/client";
 import { DashboardPage } from "./DashboardPage";
 
 function renderDashboard(ui: ReactElement) {
@@ -61,9 +56,14 @@ const twoRequirements = response([
   item("req-older-9876", "Older requirement"),
 ]);
 
+/** `GET /requirements/drafts` with these drafts on its first page. */
+const drafts = (items: RequirementDraft[]): RequirementDraftList => ({
+  drafts: items, total: items.length, offset: 0, limit: 1, has_more: false,
+});
+
 describe("DashboardPage", () => {
   beforeEach(() => {
-    vi.spyOn(api, "listRequirementDrafts").mockResolvedValue([]);
+    vi.spyOn(api, "listRequirementDrafts").mockResolvedValue(drafts([]));
     vi.spyOn(api, "listSavedViews").mockResolvedValue([]);
   });
   afterEach(() => vi.restoreAllMocks());
@@ -148,7 +148,7 @@ describe("DashboardPage", () => {
         missing_fields: ["description", "desired_outcome"],
       },
     };
-    vi.mocked(api.listRequirementDrafts).mockResolvedValue([resumable]);
+    vi.mocked(api.listRequirementDrafts).mockResolvedValue(drafts([resumable]));
     vi.spyOn(api, "listRequirements").mockResolvedValue(response([]));
 
     renderDashboard(<DashboardPage />);

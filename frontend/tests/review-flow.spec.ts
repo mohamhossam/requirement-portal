@@ -860,7 +860,7 @@ test("owner and reviewer identities enforce assignments and private drafts", asy
   const reviewerDrafts = await page.request.get(`${apiUrl}/requirements/drafts`, {
     headers: reviewerHeaders,
   });
-  expect(await reviewerDrafts.json()).toEqual([]);
+  expect((await reviewerDrafts.json() as { drafts: unknown[] }).drafts).toEqual([]);
 });
 
 test("reviewer saves a worklist view and drills through activity and reporting", async ({ page }, testInfo) => {

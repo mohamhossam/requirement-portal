@@ -400,17 +400,30 @@ Put the password in the URL, or keep it out of the URL: set `DATABASE_PASSWORD_F
 
 ## Retention
 
-Read notifications are deleted after `NOTIFICATION_RETENTION_DAYS` (default 90)
-by an online command. It is safe to run with the API and workers live.
-Schedule it, for example daily:
+An online command applies the retention rules. It is safe to run with the API
+and workers live. Schedule it, for example daily:
 
 ```bash
 docker compose -f deploy/compose.production.yaml run --rm retention
 ```
 
-AI jobs are never deleted: they are the activity feed's record of AI work
-(ADR-0079). The browser's job and notification lists are bounded to the
-newest 100, so their cost does not grow with a workspace's age.
+Each run:
+
+- deletes notifications read more than `NOTIFICATION_RETENTION_DAYS` ago (default 90);
+- clears the stored inputs of AI jobs that succeeded or were cancelled more than
+  `AI_JOB_PAYLOAD_RETENTION_DAYS` ago (default 90). Knowledge screens keep theirs;
+- reports how many document blobs are stored, their total size, and how many no
+  document version or attachment upload refers to. It deletes none of them.
+
+AI job rows are never deleted: they are the activity feed's record of AI work
+(ADR-0079). A job whose inputs were cleared still shows in the feed, but it can
+no longer be retried (`ai_job_inputs_pruned`); start the action again instead.
+The browser's job and notification lists are bounded to the newest 100, so
+their cost does not grow with a workspace's age.
+
+An orphaned blob is a lead, not a verdict: find out why nothing refers to it
+before removing it by hand. The `DatabaseSizeGrowth` runbook starts from this
+report.
 
 ## Health
 

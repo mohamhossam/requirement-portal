@@ -361,6 +361,33 @@ class PostgresAiJobStore:
             records.setdefault(record.job.requirement_id.value, []).append(record)
         return records
 
+    def prune_finished_inputs(self, completed_before: datetime, batch_size: int) -> int:
+        pruned = 0
+        while True:
+            # One short transaction per batch, so pruning never holds many rows at once.
+            with self._store.connection() as connection:
+                cursor = connection.execute(
+                    """
+                    WITH due AS (
+                        SELECT job_id FROM ai_jobs
+                        WHERE status IN ('succeeded','cancelled') AND completed_at < %s
+                            AND payload_pruned_at IS NULL AND operation <> %s
+                        ORDER BY completed_at LIMIT %s FOR UPDATE SKIP LOCKED
+                    )
+                    UPDATE ai_jobs j SET command='{}'::jsonb, payload_pruned_at=now()
+                    FROM due WHERE j.job_id=due.job_id
+                    """,
+                    (
+                        completed_before,
+                        AiJobOperation.SCREEN_REQUIREMENT_KNOWLEDGE.value,
+                        batch_size,
+                    ),
+                )
+                batch = cursor.rowcount
+            pruned += batch
+            if batch < batch_size:
+                return pruned
+
     def backlog(self, now: datetime) -> AiJobBacklog:
         with self._store.connection() as connection:
             rows = connection.execute(
@@ -753,6 +780,7 @@ def record_from_row(row: tuple[object, ...]) -> AiJobRecord:
         str(row[15]) if row[15] is not None else None,
         str(row[24]) if len(row) > 24 and row[24] is not None else None,
         cast(datetime | None, row[16]),
+        inputs_pruned=len(row) > 27 and row[27] is not None,
     )
 
 
