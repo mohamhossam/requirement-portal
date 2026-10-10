@@ -2,7 +2,7 @@
 
 ## Status
 
-**Specified 2026-10-08; in progress since 2026-10-09.** Phase 0 (platform-kernel v1.2.0, and this repository's move to it) is delivered. PR 1, PR 8, PR 2, PR 4a, PR 4b, PR 5 and PR 6 are delivered, which completes the pilot gate (Phase 1), and so is all of Phase 2: PR 7, PR 3, PR 9, PR 10, PR 11 and PR 12 (see their entries and Validation Evidence). Phase 3 has started: PR 13, PR 14 and PR 15 are delivered. This record keeps the
+**Specified 2026-10-08; in progress since 2026-10-09.** Phase 0 (platform-kernel v1.2.0, and this repository's move to it) is delivered. PR 1, PR 8, PR 2, PR 4a, PR 4b, PR 5 and PR 6 are delivered, which completes the pilot gate (Phase 1), and so is all of Phase 2: PR 7, PR 3, PR 9, PR 10, PR 11 and PR 12 (see their entries and Validation Evidence). Phase 3 is delivered too (PR 13, PR 14, PR 15 and PR 16), which completes the slice. One owner decision stays open: the repository's licence. This record keeps the
 plan for closing every finding of the second production-readiness review (security, deployment and
 CI, reliability and observability, frontend) so it can be scheduled later. When work starts, each
 PR converts its part into the `WORKSPACE.md` §10 sections and fills in Validation Evidence here.
@@ -616,7 +616,35 @@ Recorded in ADR-0110.
   - a guarded storage helper at `RequirementPage.tsx:153` and `NewRequirementPage.tsx:149`;
   - delay `revokeObjectURL` (`client.ts:319`).
 
-**PR 16 · Governance and accepted risks**
+**PR 16 · Governance and accepted risks** — *delivered on `claude/production-hardening-pr16`, 2026-10-10*
+
+*Owner decisions (2026-10-10):*
+- no LICENSE file yet; the licence stays an open decision, recorded in ADR-0111;
+- vulnerabilities are reported through GitHub's private reporting;
+- `@mohamhossam` owns every path;
+- the knowledge-portal follow-up is an issue in that repository.
+
+**What was added**
+- **`SECURITY.md`:**
+  - reports go through the repository's private "Report a vulnerability" form;
+  - what a report should say, and the supported versions (the latest release and `main`);
+  - scope, with a pointer to the accepted risks.
+- **`.github/CODEOWNERS`:** `* @mohamhossam`.
+- **`.github/pull_request_template.md`:**
+  - what and why, the changes, and validation;
+  - a checklist of AGENTS.md's gates and rules: the ADR-0109 exceptions, env vars in
+    `settings.py`/`.env.example`, expand-only migrations, the public error catalogue, and
+    CHANGELOG.
+- **ADR-0111 Accepted risks,** each with why, its limits, and when to revisit:
+  - tokens in `sessionStorage`;
+  - the silent-renewal iframe;
+  - workspace-wide read access (ADR-0075), for the product owner to confirm per deployment;
+  - English only.
+- **Follow-up:** mohamhossam/knowledge-portal#57 covers PR 1's fail-closed config and demo split,
+  PR 12's runtime CSP, and PR 6's releases and backups, for that portal's own deployment.
+- **CHANGELOG** already exists (PR 6), and records this PR under v0.1.0.
+
+*Plan as specified:*
 - **Files:** LICENSE (owner chooses), CHANGELOG.md, SECURITY.md, `.github/CODEOWNERS` and a PR template.
 - **Accepted risks to record:**
   - tokens in `sessionStorage`;
@@ -1029,3 +1057,20 @@ New tests cover:
 - the download revoke waiting `DOWNLOAD_URL_LIFETIME_MS`.
 
 Not run locally: Playwright (CI's smoke job).
+
+### PR 16 (2026-10-10, branch `claude/production-hardening-pr16`)
+
+Documentation and repository settings only: no code, so no test changes. `actionlint` stays
+clean (no workflow changed), and gitleaks finds no leaks. Each claim in ADR-0111 was checked
+against the code:
+- `userStore` in `AuthProvider.tsx`;
+- `script-src` in `contentSecurityPolicy.ts`;
+- `frame-ancestors` in `security-headers.conf`;
+- `CSP_IDENTITY_ORIGINS` in `render-index.sh`;
+- the 5-minute access tokens and refresh tokens in `identity-provider.md`;
+- `test_read_visibility.py`;
+- `lang="en"`.
+
+For the owner to do:
+- enable private vulnerability reporting (Settings → Code security);
+- decide on a licence.

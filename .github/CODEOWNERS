@@ -1,0 +1,4 @@
+# Every path is reviewed by the repository owner (production hardening PR 16).
+# Add narrower lines below this one when areas gain their own owners; the last
+# matching line wins.
+* @mohamhossam
