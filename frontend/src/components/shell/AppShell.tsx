@@ -1,5 +1,5 @@
 import { X } from "lucide-react";
-import { useCallback, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 
 import { Modal } from "../Modal";
@@ -56,6 +56,24 @@ export function AppShell({ children }: { children: ReactNode }) {
    */
   const [navOpenedAt, setNavOpenedAt] = useState<string | null>(null);
   const navOpen = navOpenedAt === location.pathname;
+  const main = useRef<HTMLElement>(null);
+  const landedOn = useRef(location.pathname);
+
+  /**
+   * A new page takes the focus, so a keyboard or screen-reader user starts at its
+   * content rather than on the link they left, or on nothing at all once that link
+   * has gone. Focus that is still inside the page stays put: choosing a feature in
+   * the breakdown tree changes the address but not the page, and the person is
+   * still working in that tree. The query string is not a new page either.
+   */
+  useEffect(() => {
+    if (landedOn.current === location.pathname) return;
+    landedOn.current = location.pathname;
+    const content = main.current;
+    const active = document.activeElement;
+    if (!content || (active && active !== document.body && content.contains(active))) return;
+    content.focus({ preventScroll: true });
+  }, [location.pathname]);
 
   const toggleCollapsed = useCallback(() => {
     setCollapsed((current) => {
@@ -121,9 +139,13 @@ export function AppShell({ children }: { children: ReactNode }) {
           to by keyboard has to clear it or the focused control lands underneath
           (§10.4). tokens.css sets it on :root for the document scroller; this is
           the same clearance for main's own scroll-into-view. */}
+      {/* `tabIndex={-1}`: focusable by the route change above and the skip link, never
+          a Tab stop. No outline: it is the page, not a control on it. */}
       <main
+        ref={main}
         id="main-content"
-        className="app-main scroll-pt-[calc(var(--header-height)+var(--space-2))] pt-[var(--header-height)] md:pl-[var(--nav-width)]"
+        tabIndex={-1}
+        className="app-main scroll-pt-[calc(var(--header-height)+var(--space-2))] pt-[var(--header-height)] outline-none md:pl-[var(--nav-width)]"
       >
         {/* Two jobs, two elements. `main` carries the offset that clears the
             fixed chrome; the column inside it carries the measure. Combining

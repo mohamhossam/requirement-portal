@@ -21,22 +21,9 @@ import { WorklistTable } from "./dashboard/WorklistTable";
 import { WorklistToolbar } from "./dashboard/WorklistToolbar";
 import { stagePath } from "./stagePath";
 import { useDocumentTitle } from "./useDocumentTitle";
+import { lastRequirementId } from "./lastRequirement";
 
 const pageSize = 20;
-
-/**
- * The requirement this person last opened. RequirementPage and the intake page
- * have always written it and nothing read it (docs/ux-plan.md §3.12). Read once,
- * and wrapped: Safari's private mode throws on localStorage rather than
- * returning null, and a resume link is not worth an error screen.
- */
-function lastVisitedId(): string | null {
-  try {
-    return localStorage.getItem("lastRequirementId");
-  } catch {
-    return null;
-  }
-}
 
 export function DashboardPage() {
   useDocumentTitle("Requirements");
@@ -50,7 +37,8 @@ export function DashboardPage() {
   const [assignedToMe, setAssignedToMe] = useState(false);
   const [selectedViewId, setSelectedViewId] = useState("");
   const [viewName, setViewName] = useState("");
-  const [lastRequirementId] = useState(lastVisitedId);
+  // Read once: RequirementPage and the intake page write it (docs/ux-plan.md §3.12).
+  const [lastVisitedId] = useState(lastRequirementId);
 
   const baseParams: RequirementListParams = {
     q: deferredSearch,
@@ -135,7 +123,7 @@ export function DashboardPage() {
   const firstLegacyDraft = legacyDrafts.data?.drafts[0];
   const hasFilters = Boolean(search || statuses.length || ownerId || assignedToMe);
   // Only from what the worklist already loaded: no extra request for a link.
-  const lastVisited = lastRequirementId ? list.find((item) => item.id === lastRequirementId) : undefined;
+  const lastVisited = lastVisitedId ? list.find((item) => item.id === lastVisitedId) : undefined;
 
   const toggleStatus = (status: WorkflowStatus) => {
     setStatuses((current) =>

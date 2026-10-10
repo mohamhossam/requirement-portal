@@ -2,7 +2,7 @@
 
 ## Status
 
-**Specified 2026-10-08; in progress since 2026-10-09.** Phase 0 (platform-kernel v1.2.0, and this repository's move to it) is delivered. PR 1, PR 8, PR 2, PR 4a, PR 4b, PR 5 and PR 6 are delivered, which completes the pilot gate (Phase 1), and so is all of Phase 2: PR 7, PR 3, PR 9, PR 10, PR 11 and PR 12 (see their entries and Validation Evidence). Phase 3 has started: PR 13 and PR 14 are delivered. This record keeps the
+**Specified 2026-10-08; in progress since 2026-10-09.** Phase 0 (platform-kernel v1.2.0, and this repository's move to it) is delivered. PR 1, PR 8, PR 2, PR 4a, PR 4b, PR 5 and PR 6 are delivered, which completes the pilot gate (Phase 1), and so is all of Phase 2: PR 7, PR 3, PR 9, PR 10, PR 11 and PR 12 (see their entries and Validation Evidence). Phase 3 has started: PR 13, PR 14 and PR 15 are delivered. This record keeps the
 plan for closing every finding of the second production-readiness review (security, deployment and
 CI, reliability and observability, frontend) so it can be scheduled later. When work starts, each
 PR converts its part into the `WORKSPACE.md` §10 sections and fills in Validation Evidence here.
@@ -589,7 +589,25 @@ Recorded in ADR-0110.
 - Instrument FastAPI, httpx (which also covers the token client at `references.py:133`) and psycopg.
 - Send `traceparent` to the portal only when one is connected.
 
-**PR 15 · Frontend polish**
+**PR 15 · Frontend polish** (part exception) — *delivered on `claude/production-hardening-pr15`, 2026-10-10*
+
+**Presentation only**
+- **404 page.** `NotFoundPage` (an `EmptyState` under a "Page not found" title, with a link
+  to the dashboard) replaces the dashboard on the catch-all route. `/auth/*` keeps the
+  dashboard: after an OIDC sign-in, `AuthProvider` rewrites the address outside the router,
+  which can still be on the callback path.
+- **Focus on route change.** `<main tabIndex={-1}>` (`AppShell.tsx`) takes focus when the
+  pathname changes, unless focus is still inside the page, as when a breakdown-tree choice
+  changes the address. A query-string change is not a new page.
+- **Prior-art links.** `PriorArtPanel` links a work item only through an `https:` URL;
+  `javascript:`, `data:`, `http:` and unparseable values show the ID without a link.
+
+**Under the exception** (ADR-0109)
+- `app/lastRequirement.ts` guards every `localStorage` access for the last requirement:
+  `RequirementPage`, `NewRequirementPage` and `DashboardPage`.
+- `client.ts` revokes a download's object URL after 40 s (`DOWNLOAD_URL_LIFETIME_MS`).
+
+*Plan as specified:*
 - **Presentation only:**
   - a 404 page from `EmptyState` (`App.tsx:73`);
   - focus on route change, with `<main tabIndex={-1}>` (`AppShell.tsx:124`);
@@ -993,3 +1011,21 @@ New tests cover:
 - the nginx header clearing.
 
 Not run locally: the overlay's containers (no Docker daemon). CI's deployment job runs them.
+
+### PR 15 (2026-10-10, branch `claude/production-hardening-pr15`)
+
+Run locally on Node 22:
+- `npm test` (62 files, 552 tests), lint, typecheck, `npm run build` and `npm run api:check`
+  pass. There is no backend change.
+
+New tests cover:
+- the 404 page: its title, heading, way back and document title, and the sign-in callback
+  path still landing on the dashboard;
+- focus moving to the new page from a link inside the page and from the navigation, and
+  staying put for an in-page address or query change;
+- `main` as a non-Tab-stop target;
+- the https-only work-item links, including `javascript:`, `data:`, `http:` and an
+  unparseable value;
+- the download revoke waiting `DOWNLOAD_URL_LIFETIME_MS`.
+
+Not run locally: Playwright (CI's smoke job).

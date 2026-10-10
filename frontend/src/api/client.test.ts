@@ -7,6 +7,7 @@ import {
   configureAuthentication,
   configureAuthenticationHeaders,
   replaceAuthenticationHeaders,
+  DOWNLOAD_URL_LIFETIME_MS,
 } from "./client";
 import { ABORTED_REQUEST, ApiError, REQUEST_TIMEOUT } from "./errors";
 
@@ -231,12 +232,20 @@ describe("API client", () => {
       ),
     );
 
-    await api.exportBreakdownRevision("r-1", 7, "json");
+    vi.useFakeTimers({ shouldAdvanceTime: true, toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      await api.exportBreakdownRevision("r-1", 7, "json");
 
-    expect(authorization).toBe("Bearer export-token");
-    expect(createObjectUrl).toHaveBeenCalledOnce();
-    expect(click).toHaveBeenCalledOnce();
-    expect(revokeObjectUrl).toHaveBeenCalledWith("blob:export");
+      expect(authorization).toBe("Bearer export-token");
+      expect(createObjectUrl).toHaveBeenCalledOnce();
+      expect(click).toHaveBeenCalledOnce();
+      // Kept alive past the click, so a browser that starts the download later still has it.
+      expect(revokeObjectUrl).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(DOWNLOAD_URL_LIFETIME_MS);
+      expect(revokeObjectUrl).toHaveBeenCalledWith("blob:export");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

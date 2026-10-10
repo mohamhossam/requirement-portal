@@ -18,16 +18,34 @@ const QUOTE = "font-serif text-document text-ink m-0 max-w-[var(--measure-docume
 const EXTERNAL =
   "text-accent inline-flex min-h-6 shrink-0 items-center gap-1 whitespace-nowrap underline underline-offset-2 focus-visible:outline-none";
 
+/**
+ * The work item's address, only when it is an `https:` link.
+ *
+ * It comes from a historic import, not from this app, so `javascript:` or
+ * `data:` must never become a clickable href; plain `http:` is refused too, for a
+ * page opened from a signed-in session.
+ */
+function httpsOnly(url: string | null): string | null {
+  if (!url) return null;
+  try {
+    return new URL(url).protocol === "https:" ? url : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Epic › Feature › User Story, each id opening its work item in Azure DevOps. */
 function Lineage({ passage }: { passage: PriorArtPassage }) {
   return (
     <ol className="text-meta text-ink-muted m-0 flex list-none flex-wrap items-center gap-x-1 p-0">
-      {passage.lineage.map((item, index) => (
+      {passage.lineage.map((item, index) => {
+        const href = httpsOnly(item.url);
+        return (
         <li className="inline-flex min-w-0 items-center gap-1" key={item.id}>
           {index > 0 && <span aria-hidden="true">›</span>}
           <span className="shrink-0 whitespace-nowrap">{WORK_ITEM_TYPE[item.type]}</span>
-          {item.url ? (
-            <a className={EXTERNAL} href={item.url} rel="noopener noreferrer" target="_blank">
+          {href ? (
+            <a className={EXTERNAL} href={href} rel="noopener noreferrer" target="_blank">
               #{item.id}{" "}
               <ExternalLink aria-hidden="true" className="size-3.5" />
               <span className="sr-only">(opens Azure DevOps)</span>
@@ -37,7 +55,8 @@ function Lineage({ passage }: { passage: PriorArtPassage }) {
           )}
           <span className="text-ink-soft [overflow-wrap:anywhere]">{item.title}</span>
         </li>
-      ))}
+        );
+      })}
     </ol>
   );
 }

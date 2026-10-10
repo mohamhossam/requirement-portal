@@ -21,6 +21,7 @@ import { queryKeys } from "./queryKeys";
 import { useDocumentTitle } from "./useDocumentTitle";
 import { Button, ButtonLink, Card } from "../components/ui";
 import { IntakeExample } from "../features/requirement/IntakeExample";
+import { rememberLastRequirement } from "./lastRequirement";
 
 type CreateIntent = "primary" | "secondary";
 type SaveState = "saved" | "saving" | "failed" | "unsaved";
@@ -146,7 +147,7 @@ export function NewRequirementPage() {
   }, [autosave, draft, input, saveState, attachmentState.busy]);
 
   const remember = async (requirement: Requirement, promotedDraftId: string) => {
-    localStorage.setItem("lastRequirementId", requirement.id);
+    rememberLastRequirement(requirement.id);
     await queryClient.invalidateQueries({ queryKey: queryKeys.requirementLists() });
     await queryClient.invalidateQueries({ queryKey: queryKeys.requirementDrafts() });
     queryClient.removeQueries({ queryKey: queryKeys.requirementDraft(promotedDraftId) });

@@ -88,6 +88,13 @@ An exception sets no precedent for the redesign: it changes behaviour, not the l
     `DocumentDetailPage` reads the owner from the detail response.
   - **Drafts envelope** (`api/client.ts`, `app/DashboardPage.tsx`). `GET /requirements/drafts`
     answers a page; the dashboard asks for the newest one only.
+- **Production hardening PR 15:**
+  - **Guarded storage** (`app/lastRequirement.ts`). The requirement page and the intake page
+    remember the last requirement through a helper that swallows a storage error. Safari's
+    private mode throws there, which could fail the intake page's save after the requirement
+    was already created. The dashboard reads it through the same helper.
+  - **Downloads** (`api/client.ts`). The object URL is revoked 40 seconds after the click,
+    not at once, so Firefox and Safari still have the file when they start the download.
 
 ## Consequences
 

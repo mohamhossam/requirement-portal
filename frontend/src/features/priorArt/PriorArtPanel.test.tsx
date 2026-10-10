@@ -65,6 +65,36 @@ describe("PriorArtPanel", () => {
     expect(screen.getByText("How similar past requirements were found")).toBeInTheDocument();
   });
 
+  it("links a work item only through an https address", () => {
+    const match = current.matches[0]!;
+    const backlog = match.passages[1]!;
+    const unsafe: PriorArt = {
+      ...current,
+      matches: [{
+        ...match,
+        passages: [{
+          ...backlog,
+          lineage: [
+            { id: 1, type: "epic", title: "Script", state: "Closed", url: "javascript:alert(1)" },
+            { id: 2, type: "feature", title: "Inline", state: "Closed", url: "data:text/html,hi" },
+            { id: 3, type: "user_story", title: "Plain", state: "Closed", url: "http://dev.azure.com/x/3" },
+            { id: 4, type: "user_story", title: "Broken", state: "Closed", url: "not a url" },
+            { id: 5, type: "user_story", title: "Safe", state: "Closed", url: "https://dev.azure.com/x/5" },
+          ],
+        }],
+      }],
+    };
+    render(<PriorArtPanel priorArt={unsafe} />);
+    for (const id of [1, 2, 3, 4]) {
+      expect(screen.queryByRole("link", { name: new RegExp(`#${id}\\s`) })).toBeNull();
+      expect(screen.getByText(`#${id}`)).toBeInTheDocument();
+    }
+    expect(screen.getByRole("link", { name: /#5\s+\(opens Azure DevOps\)/ })).toHaveAttribute(
+      "href",
+      "https://dev.azure.com/x/5",
+    );
+  });
+
   it("says when nothing is similar, and stays away when it is off or has nothing to compare", () => {
     const { rerender, container } = render(<PriorArtPanel priorArt={{ ...current, matches: [] }} />);
     expect(screen.getByText("No delivered requirement looks like this one.")).toBeInTheDocument();

@@ -5,6 +5,7 @@ import { AppShell } from "../components/shell";
 import { ErrorBoundary, LoadingState } from "../components/states";
 import { DashboardPage } from "./DashboardPage";
 import { LegacyEvidenceLink, LegacyLibraryLink } from "./legacyKnowledgeLinks";
+import { NotFoundPage } from "./NotFoundPage";
 import { RequirementEntryRedirect } from "./RequirementEntryRedirect";
 
 /**
@@ -73,7 +74,12 @@ export function App() {
             <Route path="/requirements/:id/breakdown/features/:featureId/stories/:storyId" element={<RequirementPage view="breakdown" />} />
             <Route path="/requirements/:id/revisions" element={<RequirementPage view="revisions" />} />
             <Route path="/requirements/:id/review" element={<RequirementPage view="review" />} />
-            <Route path="*" element={<DashboardPage />} />
+            {/* After an OIDC sign-in the address is rewritten outside the router
+                (AuthProvider's `replaceState`), so the router can still be on the
+                callback path. It lands on the dashboard, as it always has, not on
+                "Page not found". */}
+            <Route path="/auth/*" element={<DashboardPage />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
       </ErrorBoundary>
