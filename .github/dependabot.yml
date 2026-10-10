@@ -52,13 +52,15 @@ updates:
         update-types: [version-update:semver-major]
 
   - package-ecosystem: docker-compose
-    directories: [/, /deploy]
+    directories: [/, /deploy, /deploy/keycloak]
     schedule: { interval: weekly }
     open-pull-requests-limit: 3
     ignore:
       # A PostgreSQL major changes the on-disk format and needs a dump and
       # restore or pg_upgrade; it is never an image bump.
       - dependency-name: pgvector/pgvector
+        update-types: [version-update:semver-major]
+      - dependency-name: postgres
         update-types: [version-update:semver-major]
 
   - package-ecosystem: github-actions

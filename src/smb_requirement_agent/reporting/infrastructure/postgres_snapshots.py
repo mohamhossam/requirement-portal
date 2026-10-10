@@ -53,15 +53,15 @@ class PostgresSnapshotReader:
         parameters = () if requirement_ids is None else (list(requirement_ids),)
         with self._store.connection() as connection:
             requirement_rows = connection.execute(
-                "SELECT requirement_id, payload, updated_at FROM requirements" + clause,
+                "SELECT requirement_id, payload, updated_at FROM requirements" + clause,  # noqa: S608 - constant fragments; values are parameters
                 parameters,
             ).fetchall()
             analysis_rows = connection.execute(
-                "SELECT requirement_id, payload, updated_at FROM requirement_analyses" + clause,
+                "SELECT requirement_id, payload, updated_at FROM requirement_analyses" + clause,  # noqa: S608 - constant fragments; values are parameters
                 parameters,
             ).fetchall()
             epic_rows = connection.execute(
-                "SELECT requirement_id, payload, updated_at FROM epics" + clause,
+                "SELECT requirement_id, payload, updated_at FROM epics" + clause,  # noqa: S608 - constant fragments; values are parameters
                 parameters,
             ).fetchall()
             joined_clause = "" if requirement_ids is None else " WHERE e.requirement_id=ANY(%s)"
@@ -69,7 +69,7 @@ class PostgresSnapshotReader:
                 """
                 SELECT e.requirement_id, f.payload, f.updated_at
                 FROM features f JOIN epics e ON e.epic_id = f.epic_id
-                """
+                """  # noqa: S608 - constant fragments; values are parameters
                 + joined_clause
                 + " ORDER BY e.requirement_id, f.position",
                 parameters,
@@ -80,7 +80,7 @@ class PostgresSnapshotReader:
                 FROM stories s
                 JOIN features f ON f.feature_id = s.feature_id
                 JOIN epics e ON e.epic_id = f.epic_id
-                """
+                """  # noqa: S608 - constant fragments; values are parameters
                 + joined_clause
                 + " ORDER BY e.requirement_id, f.position, s.position",
                 parameters,
@@ -94,7 +94,7 @@ class PostgresSnapshotReader:
                     UNION ALL
                     SELECT requirement_id, created_at FROM breakdown_revisions
                 ) revision_activity
-                """
+                """  # noqa: S608 - constant fragments; values are parameters
                 + activity_filter
                 + """
                 GROUP BY requirement_id
@@ -102,11 +102,11 @@ class PostgresSnapshotReader:
                 parameters,
             ).fetchall()
             access_rows = connection.execute(
-                "SELECT requirement_id, payload, updated_at FROM requirement_access" + clause,
+                "SELECT requirement_id, payload, updated_at FROM requirement_access" + clause,  # noqa: S608 - constant fragments; values are parameters
                 parameters,
             ).fetchall()
             question_rows = connection.execute(
-                "SELECT requirement_id, payload, updated_at FROM analysis_questions" + clause,
+                "SELECT requirement_id, payload, updated_at FROM analysis_questions" + clause,  # noqa: S608 - constant fragments; values are parameters
                 parameters,
             ).fetchall()
             job_clause = "" if requirement_ids is None else " AND requirement_id=ANY(%s)"
@@ -115,13 +115,13 @@ class PostgresSnapshotReader:
                 SELECT DISTINCT ON (requirement_id) requirement_id, operation, updated_at
                 FROM ai_jobs
                 WHERE status IN ('queued','running','cancellation_requested')
-                """
+                """  # noqa: S608 - constant fragments; values are parameters
                 + job_clause
                 + " ORDER BY requirement_id, created_at",
                 parameters,
             ).fetchall()
             review_rows = connection.execute(
-                "SELECT requirement_id, payload, updated_at FROM breakdown_reviews" + clause,
+                "SELECT requirement_id, payload, updated_at FROM breakdown_reviews" + clause,  # noqa: S608 - constant fragments; values are parameters
                 parameters,
             ).fetchall()
 

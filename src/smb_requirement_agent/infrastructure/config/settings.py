@@ -699,7 +699,7 @@ class Settings:
             oidc_company_sso_alias=(
                 os.getenv("OIDC_COMPANY_SSO_ALIAS", "").strip() or "company-sso"
             ),
-            oidc_password_login_enabled=raw_password_login_enabled == "true",
+            oidc_password_login_enabled=raw_password_login_enabled == "true",  # noqa: S105 - a flag, not a password
             oidc_allowed_algorithms=allowed_algorithms,
             oidc_jwks_ttl_seconds=oidc_jwks_ttl,
             oidc_unknown_key_ttl_seconds=oidc_unknown_ttl,

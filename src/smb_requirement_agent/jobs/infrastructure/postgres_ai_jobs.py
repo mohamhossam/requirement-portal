@@ -343,7 +343,7 @@ class PostgresAiJobStore:
         )
         with self._store.connection() as connection:
             rows = connection.execute(
-                f"SELECT * FROM ai_jobs WHERE requirement_id=%s{where} "  # noqa: S608
+                f"SELECT * FROM ai_jobs WHERE requirement_id=%s{where} "  # noqa: S608 - constant filter; values are parameters
                 "ORDER BY created_at DESC LIMIT %s",
                 (requirement_id.value, limit),
             ).fetchall()
@@ -627,8 +627,8 @@ class PostgresNotificationRepository:
         where = " AND read_at IS NULL" if unread_only else ""
         with self._store.connection() as connection:
             rows = connection.execute(
-                f"SELECT * FROM actor_notifications WHERE recipient_id=%s{where} "
-                "ORDER BY created_at DESC LIMIT %s",  # noqa: S608
+                f"SELECT * FROM actor_notifications WHERE recipient_id=%s{where} "  # noqa: S608 - constant filter; values are parameters
+                "ORDER BY created_at DESC LIMIT %s",
                 (actor_id.value, limit),
             ).fetchall()
         return [_notification(row) for row in rows]

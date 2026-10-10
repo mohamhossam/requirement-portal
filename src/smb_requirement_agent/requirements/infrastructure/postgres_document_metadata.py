@@ -88,7 +88,7 @@ class PostgresDocumentRepository:
             clauses.append("draft_id = %s")
             parameters.append(draft_id.value)
         query = (
-            "SELECT payload FROM source_documents WHERE "
+            "SELECT payload FROM source_documents WHERE "  # noqa: S608 - constant fragments; values are parameters
             + " AND ".join(clauses)
             + " ORDER BY updated_at DESC"
         )

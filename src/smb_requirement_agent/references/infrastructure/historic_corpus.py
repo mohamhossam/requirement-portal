@@ -639,7 +639,7 @@ class PostgresHistoricCorpus:
             return ()
         with self._store.connection() as connection:
             rows = connection.execute(
-                f"SELECT {_CHUNK_COLUMNS} FROM historic_knowledge_chunks "
+                f"SELECT {_CHUNK_COLUMNS} FROM historic_knowledge_chunks "  # noqa: S608 - constant column list
                 "WHERE historic_requirement_id = %s AND seq = %s AND embedding_identity = %s "
                 "AND embedding IS NULL ORDER BY chunk_id LIMIT %s",
                 (historic_id, seq, identity, limit),

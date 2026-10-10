@@ -876,7 +876,7 @@ class TestOperabilitySettings:
         monkeypatch.setenv("LOG_LEVEL", "warning")
         monkeypatch.setenv("LOG_FORMAT", "JSON")
         monkeypatch.setenv("METRICS_PORT", "9464")
-        monkeypatch.setenv("METRICS_HOST", "0.0.0.0")
+        monkeypatch.setenv("METRICS_HOST", "0.0.0.0")  # noqa: S104 - asserts the value parsed
 
         settings = Settings.from_env()
 
@@ -884,7 +884,7 @@ class TestOperabilitySettings:
         assert settings.provider_daily_token_budget == 2_000_000
         assert settings.log_level == "WARNING"
         assert settings.log_format is LogFormat.JSON
-        assert (settings.metrics_host, settings.metrics_port) == ("0.0.0.0", 9464)
+        assert (settings.metrics_host, settings.metrics_port) == ("0.0.0.0", 9464)  # noqa: S104 - asserts the value parsed
 
     @pytest.mark.parametrize(
         ("name", "value", "message"),

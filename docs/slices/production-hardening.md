@@ -2,7 +2,7 @@
 
 ## Status
 
-**Specified 2026-10-08; in progress since 2026-10-09.** Phase 0 (platform-kernel v1.2.0, and this repository's move to it) is delivered. PR 1, PR 8, PR 2, PR 4a, PR 4b, PR 5 and PR 6 are delivered, which completes the pilot gate (Phase 1), and so are PR 7, PR 3, PR 9 and PR 10 of Phase 2 (see their entries and Validation Evidence). The rest of Phase 2 and Phase 3 are not implemented yet. This record keeps the
+**Specified 2026-10-08; in progress since 2026-10-09.** Phase 0 (platform-kernel v1.2.0, and this repository's move to it) is delivered. PR 1, PR 8, PR 2, PR 4a, PR 4b, PR 5 and PR 6 are delivered, which completes the pilot gate (Phase 1), and so are PR 7, PR 3, PR 9, PR 10 and PR 11 of Phase 2 (see their entries and Validation Evidence). PR 12 and Phase 3 are not implemented yet. This record keeps the
 plan for closing every finding of the second production-readiness review (security, deployment and
 CI, reliability and observability, frontend) so it can be scheduled later. When work starts, each
 PR converts its part into the `WORKSPACE.md` §10 sections and fills in Validation Evidence here.
@@ -409,7 +409,34 @@ Then bump `pyproject.toml:12` and `uv.lock`, and wire the new settings. Phase 1 
   - `error_handlers.py:58-67` logs the exception type and correlation ID only.
   - The heartbeat (`polling_worker.py:125-143`) tolerates transient errors until the lease is at risk, then cancels cooperatively. A provider call already in progress finishes first.
 
-**PR 11 · CI and supply chain**
+**PR 11 · CI and supply chain** — *delivered on `claude/production-hardening-pr11`, 2026-10-10*
+
+**CI**
+- `ci.yml` has top-level `permissions: contents: read`. It also binds the release workflow, which calls it.
+- A `secrets` job runs gitleaks 8.30.1 (a digest-pinned image, like release's Trivy) over the whole history.
+  - `.gitleaks.toml` keeps the default rules and allows only lines containing `ci-only`.
+  - Before the allowlist, the history had 4 findings: the Grafana `curl -u admin:ci-only` checks.
+- Ruff's `S` rules are on. Tests ignore `S101`, `S105` and `S106`: asserts, and made-up credentials.
+  - The other 52 findings carry a `noqa` with its reason. The 33 S608 ones in `src/` only interpolate a constant table name, a table checked against `BLOB_TABLES`, a constant column list, or clauses of constant fragments with `%s` parameters.
+- `test_image_pins.py` now reads every workflow, including images named in an environment variable for `docker run`, and the Keycloak manifest.
+
+**More scanning**
+- `codeql.yml` covers `python`, `javascript-typescript` and `actions` with `build-mode: none`, so the private kernel is not needed. It runs on pull requests, on `main` and weekly. The repository is public, so code scanning needs no Advanced Security licence.
+- `rescan.yml` runs Trivy (release's image and flags) every Monday, and on demand, over the latest release's two images. It does nothing until a release exists. `deployment.md` says what a red run means.
+
+**Keycloak**
+- Both images are digest-pinned and `restart: unless-stopped`.
+- Keycloak comes from Docker Hub's `keycloak/keycloak`, the project's own namespace there, because quay.io was unreachable from the build environment to resolve a digest.
+- Dependabot covers `/deploy/keycloak`, and ignores `postgres` majors as it does `pgvector`.
+
+**Docs**
+- New `docs/operations/identity-provider.md`:
+  - the public `requirement-spa` and confidential `requirement-service` clients;
+  - Keycloak's default lifetimes, since the export sets none;
+  - why renewal uses refresh tokens, so needs no third-party cookies, and that offline tokens are not used.
+- A test keeps refresh tokens on for `requirement-spa`.
+
+*Plan as specified:*
 - **`ci.yml`:**
   - top-level `permissions: contents: read`;
   - a gitleaks job, with an allowlist for the CI-only tokens at `ci.yml:193-197`;
@@ -769,3 +796,16 @@ New tests cover:
 - the heartbeat riding out failures while the lease lasts, stopping when it lapses or is taken
   back, and the worker staying healthy under the attempt;
 - manifest and edge structure.
+
+### PR 11 (2026-10-10, branch `claude/production-hardening-pr11`)
+
+Run locally on Python 3.13 against PostgreSQL 16:
+- gitleaks 8.30.1 over the full history (`gitleaks git`) and the working tree (`gitleaks dir`):
+  - 4 findings without `.gitleaks.toml`, all `curl-auth-user` on the `ci-only` Grafana checks;
+  - none with it.
+- `ruff check .` with `S` enabled is clean, and so are `ruff format --check`, mypy, lint-imports and the full pytest suite with coverage.
+- actionlint is clean on `ci.yml`, `codeql.yml`, `rescan.yml` and `release.yml`.
+- `docker compose -f deploy/keycloak/compose.yaml config` renders.
+- The image-pin test fails when the Keycloak digests are removed.
+
+Not run locally: the workflows themselves. CI runs `secrets` and CodeQL on this PR. `rescan.yml` runs on its schedule, or from the Actions tab.

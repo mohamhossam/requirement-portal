@@ -53,7 +53,7 @@ def with_merge_ranges(content: bytes, references: tuple[str, ...], *, dimension:
         for entry in source.infolist():
             data = source.read(entry.filename)
             if entry.filename == "xl/worksheets/sheet1.xml":
-                root = ElementTree.fromstring(data)
+                root = ElementTree.fromstring(data)  # noqa: S314 - a workbook the test built
                 previous = root.find(f"{{{SHEET_NS}}}mergeCells")
                 if previous is not None:
                     root.remove(previous)

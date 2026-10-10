@@ -139,7 +139,7 @@ class PostgresProjectedActivity:
         with self._store.connection() as connection:
             # One statement gives the count and page the same database snapshot.
             row = connection.execute(
-                "WITH selected AS (SELECT * FROM activity_event_projection WHERE " + where + "), "
+                "WITH selected AS (SELECT * FROM activity_event_projection WHERE " + where + "), "  # noqa: S608 - constant fragments; values are parameters
                 "page AS (SELECT payload,occurred_at,event_id FROM selected "
                 "ORDER BY occurred_at DESC,event_id DESC OFFSET %s LIMIT %s) "
                 "SELECT (SELECT count(*) FROM selected), "

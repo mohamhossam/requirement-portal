@@ -1,6 +1,7 @@
 services:
   postgres:
-    image: postgres:17
+    image: postgres:17@sha256:2d2b8998d31037bf721cfdf764d76ba74171b4fab3431b7f72c27c56ddbdf9e3
+    restart: unless-stopped
     environment:
       POSTGRES_DB: keycloak
       POSTGRES_USER: keycloak
@@ -14,7 +15,9 @@ services:
       retries: 30
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.7.3
+    # The Keycloak project's own image, as published on Docker Hub (also on quay.io).
+    image: keycloak/keycloak:26.7.3@sha256:29be7252db0a106f1cd2ac17b9a56ff2668073da645638a38b9fc67deeb2d6c4
+    restart: unless-stopped
     command: ["start", "--import-realm"]
     depends_on:
       postgres:

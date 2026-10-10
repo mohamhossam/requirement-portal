@@ -4,8 +4,10 @@ The application trusts one OIDC issuer: Keycloak. Keycloak provides local
 administrator-created accounts and brokers Microsoft Entra ID. The React app
 never receives a password.
 
-The optional Compose stack pins Keycloak 26.7.3. Review Keycloak release and
-migration notes before changing that version.
+The optional Compose stack pins Keycloak 26.7.3 and PostgreSQL 17 by digest, and
+Dependabot proposes their updates. Review Keycloak release and migration notes
+before accepting a new Keycloak version. `identity-provider.md` describes the
+realm's clients and its token and session lifetimes.
 
 ## Local setup
 

@@ -1,0 +1,10 @@
+# Secret scanning for CI (production hardening PR 11): gitleaks' default rules, plus
+# the one exception below.
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "CI-only credentials: the throwaway stack in ci.yml's deployment job uses them, and nothing else accepts them."
+regexTarget = "line"
+regexes = ['''ci-only''']
