@@ -9,6 +9,13 @@ Under each heading, list what changed for whoever deploys, then any upgrade step
 contract-step migration (WORKSPACE.md, "Migrations"), because rolling back past one means
 restoring a backup.
 
+## Unreleased
+
+- **Publishing approved backlogs to Azure DevOps (Slice 12, ADR-0112).** Off by default
+  (`ADO_PUBLISHER=none`). To turn it on, set `ADO_PUBLISHER=azure_devops`, `ADO_ORGANIZATION_URL`,
+  `ADO_PROJECT` and `ADO_PERSONAL_ACCESS_TOKEN` (or `_FILE`), a token with Work Items read and
+  write. `ADO_SQUAD_AREA_PATHS` sends each squad's Features to its board. No migration.
+
 ## v0.1.0
 
 The first published release: the pilot candidate, closing the pilot gate of
