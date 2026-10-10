@@ -509,7 +509,8 @@ jobs:
               for scope in batch.get("scopeSpans", batch.get("instrumentationLibrarySpans", []))
               for span in scope["spans"]
           ]
-          names = sorted({span["name"] for span in spans})
+          # OTLP JSON leaves out empty fields, so a span may come back without a name.
+          names = sorted({span.get("name", "") for span in spans})
           print(names)
           assert "GET /requirements" in names
           assert len(spans) > 1, "the request's SQL is not in its trace"
