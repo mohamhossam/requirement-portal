@@ -2,9 +2,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 
 import { api } from "../../api/client";
-import { errorMessage, errorReference } from "../../api/errors";
+import { ApiError, errorMessage, errorReference } from "../../api/errors";
 import { Skeleton } from "../../components/Skeleton";
 import { ErrorState } from "../../components/states";
+import { PublicationPanel } from "../../features/publication/PublicationPanel";
 import { RevisionPanel } from "../../features/revisions/RevisionPanel";
 import { queryKeys } from "../queryKeys";
 import type { RequirementWorkspace } from "./useRequirementWorkspace";
@@ -34,6 +35,22 @@ export function RevisionsView({ id, workspace }: { id: string; workspace: Requir
       api.exportBreakdownRevision(id, revision, format),
   });
 
+  const approved = [...(revisions.data?.breakdown_revisions ?? [])].reverse().find((item) => item.exportable)?.number ?? null;
+  const preview = useQuery({
+    queryKey: queryKeys.publication(id, approved ?? 0),
+    queryFn: ({ signal }) => api.getPublicationPreview(id, approved ?? 0, { signal }),
+    enabled: approved !== null,
+    // "Not set up" and "not publishable" are answers, not failures to retry.
+    retry: false,
+  });
+  const publish = useMutation({
+    meta: { action: "Publishing the backlog" },
+    mutationFn: ({ revision, fingerprint }: { revision: number; fingerprint: string }) =>
+      api.publishBreakdownRevision(id, revision, fingerprint),
+  });
+  const unavailable =
+    preview.error instanceof ApiError && preview.error.code === "publication_unavailable" ? preview.error.detail : null;
+
   return (
     <>
       {revisions.isPending ? <Skeleton label="Loading the history" variant="page" /> : revisions.data ? (
@@ -60,6 +77,29 @@ export function RevisionsView({ id, workspace }: { id: string; workspace: Requir
           onRetry={() => void revisions.refetch()}
           title="We couldn’t load the history"
         />
+      )}
+      {approved !== null && (
+        <div className="mt-8">
+          <PublicationPanel
+            key={approved}
+            canPublish={workspace.canGovern}
+            onPublish={(fingerprint) => publish.mutate({ revision: approved, fingerprint })}
+            preview={preview.data ?? null}
+            previewError={
+              preview.error && !unavailable
+                ? { message: errorMessage(preview.error), reference: errorReference(preview.error) }
+                : null
+            }
+            previewLoading={preview.isPending}
+            publishError={
+              publish.error ? { message: errorMessage(publish.error), reference: errorReference(publish.error) } : null
+            }
+            publishing={publish.isPending}
+            report={publish.data && publish.variables?.revision === approved ? publish.data : null}
+            revision={approved}
+            unavailable={unavailable}
+          />
+        </div>
       )}
     </>
   );

@@ -82,6 +82,10 @@ from smb_requirement_agent.governance.application.errors import (
     BreakdownReviewNotFoundError,
     BreakdownReviewStaleError,
     BreakdownRevisionNotExportableError,
+    BreakdownRevisionNotPublishableError,
+    PublicationConfirmationError,
+    PublicationTargetError,
+    PublicationUnavailableError,
     ReviewFlagNotFoundError,
 )
 from smb_requirement_agent.governance.domain.review.errors import (
@@ -211,6 +215,14 @@ ERROR_CATALOGUE: tuple[tuple[type[Exception], str, FailureCategory], ...] = (
         FailureCategory.CONFLICT,
     ),
     (BacklogExportFormatError, "backlog_export_format", FailureCategory.INVALID_INPUT),
+    (
+        BreakdownRevisionNotPublishableError,
+        "breakdown_revision_not_publishable",
+        FailureCategory.CONFLICT,
+    ),
+    (PublicationConfirmationError, "publication_confirmation_mismatch", FailureCategory.CONFLICT),
+    (PublicationUnavailableError, "publication_unavailable", FailureCategory.UNAVAILABLE),
+    (PublicationTargetError, "publication_target_refused", FailureCategory.PROVIDER),
     (AiJobConflictError, "ai_job_conflict", FailureCategory.CONFLICT),
     (AiJobInputsPrunedError, "ai_job_inputs_pruned", FailureCategory.CONFLICT),
     (InvalidAiJobError, "invalid_ai_job", FailureCategory.INVALID_INPUT),

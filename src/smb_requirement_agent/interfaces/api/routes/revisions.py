@@ -10,6 +10,10 @@ from smb_requirement_agent.governance.application.use_cases.export_breakdown imp
     formal_final_approval,
     is_exportable_revision,
 )
+from smb_requirement_agent.governance.application.use_cases.publish_breakdown import (
+    PreviewPublication,
+    PublishBreakdown,
+)
 from smb_requirement_agent.governance.application.use_cases.revision_history import (
     CompareBreakdownVersions,
     GetRevisionHistory,
@@ -22,10 +26,21 @@ from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     get_compare_breakdown_versions,
     get_export_breakdown,
+    get_preview_publication,
+    get_publish_breakdown,
     get_revision_history,
     require_authenticated_actor,
 )
 from smb_requirement_agent.interfaces.api.schemas.identity import ActorResponse
+from smb_requirement_agent.interfaces.api.schemas.publication import (
+    PublicationPreviewResponse,
+    PublicationReportResponse,
+    PublishBreakdownRequest,
+    counts_response,
+    planned_item_response,
+    report_response,
+    target_response,
+)
 from smb_requirement_agent.interfaces.api.schemas.revisions import (
     BreakdownComparisonResponse,
     BreakdownRevisionResponse,
@@ -164,3 +179,47 @@ def export_revision(
             "Cache-Control": "private, no-store",
         },
     )
+
+
+@router.get(
+    "/{requirement_id}/revisions/{revision_number}/publication",
+    response_model=PublicationPreviewResponse,
+)
+def preview_publication(
+    requirement_id: str,
+    revision_number: Annotated[int, Path(ge=1)],
+    actor: CurrentActorDep,
+    use_case: Annotated[PreviewPublication, Depends(get_preview_publication)],
+) -> PublicationPreviewResponse:
+    preview = use_case.execute(
+        RequirementId(requirement_id), RevisionNumber(revision_number), actor
+    )
+    plan, target = preview.plan, preview.target
+    return PublicationPreviewResponse(
+        requirement_id=plan.requirement_id,
+        revision=plan.revision,
+        approval_fingerprint=plan.approval_fingerprint,
+        target=target_response(target),
+        counts=counts_response(plan),
+        items=[planned_item_response(item, target) for item in plan.items],
+    )
+
+
+@router.post(
+    "/{requirement_id}/revisions/{revision_number}/publication",
+    response_model=PublicationReportResponse,
+)
+def publish_revision(
+    requirement_id: str,
+    revision_number: Annotated[int, Path(ge=1)],
+    request: PublishBreakdownRequest,
+    actor: CurrentActorDep,
+    use_case: Annotated[PublishBreakdown, Depends(get_publish_breakdown)],
+) -> PublicationReportResponse:
+    report = use_case.execute(
+        RequirementId(requirement_id),
+        RevisionNumber(revision_number),
+        actor,
+        request.approval_fingerprint,
+    )
+    return report_response(report)

@@ -94,6 +94,9 @@ from smb_requirement_agent.breakdown.application.use_cases.story_workflow import
 )
 from smb_requirement_agent.governance.application.exports import ExportFormat
 from smb_requirement_agent.governance.application.ports.backlog_export import BacklogExportPort
+from smb_requirement_agent.governance.application.ports.backlog_publisher import (
+    BacklogPublisherPort,
+)
 from smb_requirement_agent.governance.application.ports.breakdown_repository import (
     BreakdownRepositoryPort,
 )
@@ -116,6 +119,10 @@ from smb_requirement_agent.governance.application.use_cases.breakdown_review imp
     ResolveFlag,
 )
 from smb_requirement_agent.governance.application.use_cases.export_breakdown import ExportBreakdown
+from smb_requirement_agent.governance.application.use_cases.publish_breakdown import (
+    PreviewPublication,
+    PublishBreakdown,
+)
 from smb_requirement_agent.governance.application.use_cases.revision_history import (
     CompareBreakdownVersions,
     GetRevisionHistory,
@@ -143,7 +150,10 @@ from smb_requirement_agent.interfaces.api.composition.breakdown import (
 from smb_requirement_agent.interfaces.api.composition.events import (
     subscribe_domain_event_handlers,
 )
-from smb_requirement_agent.interfaces.api.composition.governance import build_review
+from smb_requirement_agent.interfaces.api.composition.governance import (
+    build_backlog_publisher,
+    build_review,
+)
 from smb_requirement_agent.interfaces.api.composition.identity import build_identity
 from smb_requirement_agent.interfaces.api.composition.jobs import build_ai_jobs
 from smb_requirement_agent.interfaces.api.composition.knowledge import build_requirement_knowledge
@@ -389,6 +399,7 @@ class Container:
     reporting_reader: ReportingReadPort
     saved_view_repository: SavedViewRepositoryPort
     backlog_exporters: tuple[BacklogExportPort, ...]
+    backlog_publisher: BacklogPublisherPort
     ai_jobs: AiJobs
     execute_ai_job: ExecuteAiJob
     notifications: Notifications
@@ -455,6 +466,8 @@ class Container:
     get_revision_history: GetRevisionHistory
     compare_breakdown_versions: CompareBreakdownVersions
     export_breakdown: ExportBreakdown
+    preview_publication: PreviewPublication
+    publish_breakdown: PublishBreakdown
     knowledge_index: RequirementKnowledgeIndexPort
     knowledge_repository: RequirementKnowledgeRepositoryPort
     evidence_fragment_cache: EvidenceFragmentCachePort
@@ -616,6 +629,7 @@ def _build_container(
         resolved_clock,
         access_service,
     )
+    backlog_publisher = build_backlog_publisher(settings.ado_publication, resources)
     review = build_review(
         persistence,
         resolved_clock,
@@ -623,6 +637,7 @@ def _build_container(
         knowledge.source_impact,
         backlog_exporters,
         knowledge.current_release,
+        backlog_publisher,
         # Approvals hand their backlog over only when there is an inbox to deliver to.
         persistence.backlog_handoffs if knowledge_service.change_requests is not None else None,
     )
@@ -782,6 +797,7 @@ def _build_container(
         reporting_reader=persistence.reporting_reader,
         saved_view_repository=persistence.saved_view_repository,
         backlog_exporters=backlog_exporters,
+        backlog_publisher=backlog_publisher,
         story_quality_repository=persistence.story_quality_repository,
         ai_jobs=jobs.ai_jobs,
         execute_ai_job=jobs.execute_ai_job,
@@ -851,6 +867,8 @@ def _build_container(
         get_revision_history=review.get_revision_history,
         compare_breakdown_versions=review.compare_breakdown_versions,
         export_breakdown=review.export_breakdown,
+        preview_publication=review.preview_publication,
+        publish_breakdown=review.publish_breakdown,
         knowledge_index=persistence.knowledge_index,
         knowledge_index_generations=persistence.index_generations,
         rebuild_knowledge_index=knowledge.rebuild_index,

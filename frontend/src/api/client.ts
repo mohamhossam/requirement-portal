@@ -33,6 +33,8 @@ export type IntentProposal = components["schemas"]["IntentProposalResponse"];
 export type IntentProposalStatus = components["schemas"]["IntentProposalStatus"];
 export type RevisionHistory = components["schemas"]["RevisionHistoryResponse"];
 export type BreakdownComparison = components["schemas"]["BreakdownComparisonResponse"];
+export type PublicationPreview = components["schemas"]["PublicationPreviewResponse"];
+export type PublicationReport = components["schemas"]["PublicationReportResponse"];
 export type Story = components["schemas"]["StoryResponse"];
 export type StorySet = components["schemas"]["StorySetResponse"];
 export type AcceptanceCriterion = components["schemas"]["AcceptanceCriterionPayload"];
@@ -799,6 +801,13 @@ export const api = {
       `${requirementPath(id)}/revisions/${revision}/export?format=${format}`,
       `requirement-${id}-breakdown-v${revision}.${format}`,
     ),
+  getPublicationPreview: (id: string, revision: number, options?: RequestOptions) =>
+    request<PublicationPreview>(`${requirementPath(id)}/revisions/${revision}/publication`, options),
+  publishBreakdownRevision: (id: string, revision: number, approvalFingerprint: string) =>
+    request<PublicationReport>(`${requirementPath(id)}/revisions/${revision}/publication`, {
+      method: "POST",
+      body: JSON.stringify({ approval_fingerprint: approvalFingerprint }),
+    }),
   getStories: (id: string, featureId: string, options?: RequestOptions) =>
     optional<StorySet>(storiesPath(id, featureId), options),
   getFeatureStoryQualityAssessment: (id: string, featureId: string, options?: RequestOptions) =>

@@ -7,11 +7,17 @@ approval workflow.
 
 from __future__ import annotations
 
+from contextlib import ExitStack
 from dataclasses import dataclass
 
+import httpx
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.governance.application.ports.backlog_export import BacklogExportPort
+from smb_requirement_agent.governance.application.ports.backlog_publisher import (
+    BacklogPublisherPort,
+)
+from smb_requirement_agent.governance.application.publication import WorkItemKind
 from smb_requirement_agent.governance.application.use_cases.approval_workflow import (
     AddReviewComment,
     ApprovalRecorder,
@@ -26,11 +32,25 @@ from smb_requirement_agent.governance.application.use_cases.breakdown_review imp
     ReviewEvidenceLoader,
 )
 from smb_requirement_agent.governance.application.use_cases.export_breakdown import ExportBreakdown
+from smb_requirement_agent.governance.application.use_cases.publish_breakdown import (
+    PreviewPublication,
+    PublishBreakdown,
+)
 from smb_requirement_agent.governance.application.use_cases.revision_history import (
     CompareBreakdownVersions,
     GetRevisionHistory,
 )
 from smb_requirement_agent.governance.domain.review.policy import ApprovalPolicy
+from smb_requirement_agent.governance.infrastructure.publication.azure_devops import (
+    AzureDevOpsConfiguration,
+    AzureDevOpsWorkItemPublisher,
+)
+from smb_requirement_agent.governance.infrastructure.publication.fake import FakeBacklogPublisher
+from smb_requirement_agent.governance.infrastructure.publication.unavailable import (
+    UnavailableBacklogPublisher,
+)
+from smb_requirement_agent.infrastructure.config.options import AdoPublisher
+from smb_requirement_agent.infrastructure.config.settings import AdoPublicationSettings
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
 from smb_requirement_agent.knowledge.application.use_cases.source_impact import SourceImpactReview
 from smb_requirement_agent.references.application.ports.architecture_knowledge import (
@@ -59,6 +79,42 @@ class ReviewWiring:
     get_revision_history: GetRevisionHistory
     compare_breakdown_versions: CompareBreakdownVersions
     export_breakdown: ExportBreakdown
+    preview_publication: PreviewPublication
+    publish_breakdown: PublishBreakdown
+
+
+def build_backlog_publisher(
+    settings: AdoPublicationSettings, resources: ExitStack
+) -> BacklogPublisherPort:
+    """The publisher ADO_PUBLISHER chooses (Slice 12)."""
+    if settings.publisher is AdoPublisher.FAKE:
+        return FakeBacklogPublisher()
+    if settings.publisher is AdoPublisher.NONE:
+        return UnavailableBacklogPublisher()
+    if settings.personal_access_token is None:
+        raise ValueError("Azure DevOps settings were validated without a token.")
+    http = httpx.Client()
+    resources.callback(http.close)
+    return AzureDevOpsWorkItemPublisher(
+        AzureDevOpsConfiguration(
+            organization_url=settings.organization_url,
+            project=settings.project,
+            personal_access_token=settings.personal_access_token,
+            area_path=settings.default_area_path,
+            iteration_path=settings.iteration_path or None,
+            work_item_types={
+                WorkItemKind.EPIC: settings.epic_type,
+                WorkItemKind.FEATURE: settings.feature_type,
+                WorkItemKind.STORY: settings.story_type,
+            },
+            description_field=settings.description_field,
+            acceptance_criteria_field=settings.acceptance_criteria_field,
+            tags=settings.tags,
+            squad_area_paths=dict(settings.squad_area_paths),
+            timeout_seconds=settings.timeout_seconds,
+        ),
+        http,
+    )
 
 
 def build_review(
@@ -68,6 +124,7 @@ def build_review(
     source_impact: SourceImpactReview,
     exporters: tuple[BacklogExportPort, ...],
     current_release: ActiveArchitectureReleasePort,
+    publisher: BacklogPublisherPort,
     handoffs: ApprovedBacklogOutboxPort | None = None,
 ) -> ReviewWiring:
     reviews = persistence.breakdown_review_repository
@@ -108,5 +165,11 @@ def build_review(
             access,
             persistence.revision_repository,
             exporters,
+        ),
+        preview_publication=PreviewPublication(
+            persistence.requirement_repository, access, persistence.revision_repository, publisher
+        ),
+        publish_breakdown=PublishBreakdown(
+            persistence.requirement_repository, access, persistence.revision_repository, publisher
         ),
     )
