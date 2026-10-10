@@ -1,4 +1,4 @@
-import type { ActivityListParams, RequirementListParams } from "../api/client";
+import type { ActivityListParams, DocumentListParams, RequirementListParams } from "../api/client";
 
 let actorNamespace = "anonymous";
 
@@ -16,6 +16,7 @@ export const queryKeys = {
   requirementDrafts: () => scoped("requirement-drafts"),
   requirementDraft: (id: string) => scoped("requirement-draft", id),
   documents: () => scoped("documents"),
+  documentList: (params: DocumentListParams = {}) => scoped("documents", params),
   document: (id: string) => scoped("document", id),
   requirementDocuments: (id: string) => scoped("requirement-documents", id),
   draftDocuments: (id: string) => scoped("draft-documents", id),

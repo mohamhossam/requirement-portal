@@ -4,16 +4,19 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, expect, it, vi } from "vitest";
 
-import { api, type DocumentDetail, type Requirement, type RequirementDraft } from "../api/client";
+import { api, type OwnedDocumentDetail } from "../api/client";
 import { ApiError } from "../api/errors";
 import { DocumentDetailPage } from "./DocumentDetailPage";
 
 afterEach(() => vi.restoreAllMocks());
 
-type Version = DocumentDetail["versions"][number];
+type Version = OwnedDocumentDetail["versions"][number];
 type Block = Version["evidence_blocks"][number];
 
-function sourceDocument(overrides: Partial<DocumentDetail> = {}, version: Partial<Version> = {}): DocumentDetail {
+const BUNDLES = { kind: "requirement" as const, id: "requirement-1", title: "High-speed business bundles" };
+const INVOICES = { kind: "draft" as const, id: "draft-1", title: "Invoice discount display" };
+
+function sourceDocument(overrides: Partial<OwnedDocumentDetail> = {}, version: Partial<Version> = {}): OwnedDocumentDetail {
   const detail: Version = {
     id: "version-1", number: 1, filename: "evidence.docx",
     mime_type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -27,7 +30,7 @@ function sourceDocument(overrides: Partial<DocumentDetail> = {}, version: Partia
     evidence_blocks: [{ id: "block-1", kind: "paragraph", ordinal: 1, section_path: ["Description"], label: "Description", text: '<img src=x onerror="alert(1)">', asset_id: null }],
     ...version,
   };
-  const current: DocumentDetail["current_version"] = {
+  const current: OwnedDocumentDetail["current_version"] = {
     id: detail.id, number: detail.number, filename: detail.filename, mime_type: detail.mime_type,
     size_bytes: detail.size_bytes, checksum_sha256: detail.checksum_sha256,
     extraction_status: detail.extraction_status, extraction_error: detail.extraction_error,
@@ -47,14 +50,13 @@ function sourceDocument(overrides: Partial<DocumentDetail> = {}, version: Partia
     included_hidden_worksheets: [],
     current_version: current,
     versions: [detail],
+    owner: BUNDLES,
     ...overrides,
   };
 }
 
-function renderPage(document: DocumentDetail) {
+function renderPage(document: OwnedDocumentDetail) {
   vi.spyOn(api, "getDocument").mockResolvedValue(document);
-  vi.spyOn(api, "getRequirement").mockResolvedValue({ id: "requirement-1", title: "High-speed business bundles" } as Requirement);
-  vi.spyOn(api, "listRequirementDrafts").mockResolvedValue([{ id: "draft-1", title: "Invoice discount display" } as RequirementDraft]);
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
@@ -172,7 +174,7 @@ it("tells a person what to do with a file that could not be read, and offers no 
 });
 
 it("sends a draft's file back to the draft for the decision", async () => {
-  renderPage(sourceDocument({ requirement_id: null, draft_id: "draft-1" }));
+  renderPage(sourceDocument({ requirement_id: null, draft_id: "draft-1", owner: INVOICES }));
 
   expect(await screen.findByRole("link", { name: "Open the draft" })).toHaveAttribute("href", "/requirements/new?draft=draft-1");
   expect(screen.getByText("Left out on the draft.")).toBeVisible();

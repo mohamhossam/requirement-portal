@@ -13,7 +13,6 @@ from smb_requirement_agent.requirements.application.use_cases.create_requirement
 from smb_requirement_agent.requirements.application.use_cases.requirement_drafts import (
     CreateRequirementDraft,
     GetRequirementDraft,
-    ListRequirementDrafts,
     PromoteRequirementDraft,
     RequirementDraftInput,
     SaveRequirementDraft,
@@ -44,7 +43,7 @@ def test_partial_draft_is_saved_resumed_and_reports_missing_fields() -> None:
     assert created.title == "New offer"
     assert created.analysis_eligibility.missing_fields == ("description",)
     assert GetRequirementDraft(drafts).execute(created.id) == created
-    assert ListRequirementDrafts(drafts).execute() == (created,)
+    assert drafts.list_all() == [created]
 
 
 def test_autosave_uses_optimistic_versions_and_normalizes_lists() -> None:

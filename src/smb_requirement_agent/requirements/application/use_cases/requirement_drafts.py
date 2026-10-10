@@ -95,14 +95,6 @@ class GetRequirementDraft:
         return draft
 
 
-class ListRequirementDrafts:
-    def __init__(self, drafts: RequirementDraftRepositoryPort) -> None:
-        self._drafts = drafts
-
-    def execute(self) -> tuple[RequirementDraft, ...]:
-        return tuple(self._drafts.list_all())
-
-
 class SaveRequirementDraft:
     def __init__(self, drafts: RequirementDraftRepositoryPort, clock: ClockPort) -> None:
         self._drafts = drafts

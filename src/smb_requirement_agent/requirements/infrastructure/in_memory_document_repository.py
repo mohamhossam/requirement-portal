@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from copy import deepcopy
 from threading import RLock
 from typing import Any
@@ -74,6 +74,10 @@ class InMemoryDocumentRepository(DocumentRepositoryPort):
 
     def list_for_draft(self, draft_id: RequirementId) -> list[SourceDocument]:
         return [item for item in self.list_all() if item.draft_id == draft_id]
+
+    def list_for_drafts(self, draft_ids: Sequence[RequirementId]) -> list[SourceDocument]:
+        wanted = set(draft_ids)
+        return [item for item in self.list_all() if item.draft_id in wanted]
 
 
 class InMemoryDocumentStorage(DocumentStoragePort):

@@ -37,6 +37,7 @@ from smb_requirement_agent.interfaces.api.schemas.requirements import (
     LastActivityResponse,
     OwnerFacetResponse,
     PromoteRequirementDraftRequest,
+    RequirementDraftListResponse,
     RequirementDraftRequest,
     RequirementDraftResponse,
     RequirementImpactResponse,
@@ -56,6 +57,7 @@ from smb_requirement_agent.reporting.application.use_cases.requirement_worklist 
     RequirementWorklistQuery,
     RequirementWorklistReader,
 )
+from smb_requirement_agent.requirements.application.ports.catalogue_pages import DraftSort
 from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
     CreateRequirementInput,
 )
@@ -76,6 +78,7 @@ from smb_requirement_agent.requirements.application.use_cases.update_requirement
     UpdateRequirementInput,
 )
 from smb_requirement_agent.requirements.domain.requirement.entities import (
+    AnalysisEligibility,
     Requirement,
     RequirementDraft,
 )
@@ -135,7 +138,12 @@ def _to_response(
 def _draft_to_response(
     draft: RequirementDraft, documents: ListDocuments
 ) -> RequirementDraftResponse:
-    eligibility = documents.eligibility(draft)
+    return _draft_with_eligibility(draft, documents.eligibility(draft))
+
+
+def _draft_with_eligibility(
+    draft: RequirementDraft, eligibility: AnalysisEligibility
+) -> RequirementDraftResponse:
     return RequirementDraftResponse(
         id=draft.id.value,
         title=draft.title,
@@ -331,16 +339,29 @@ def create_requirement_draft(
     return _draft_to_response(use_case.execute(_draft_input(body), actor), documents)
 
 
-@router.get("/drafts", response_model=list[RequirementDraftResponse])
+@router.get("/drafts", response_model=RequirementDraftListResponse)
 def list_requirement_drafts(
     documents: Annotated[ListDocuments, Depends(get_list_documents)],
     actor: CurrentActorDep,
     use_case: Annotated[ListOwnedRequirementDrafts, Depends(get_list_requirement_drafts)],
     unowned: bool = False,
-) -> list[RequirementDraftResponse]:
-    return [
-        _draft_to_response(draft, documents) for draft in use_case.execute(actor, unowned=unowned)
-    ]
+    q: Annotated[str | None, Query(max_length=200)] = None,
+    sort: DraftSort = DraftSort.UPDATED_DESC,
+    offset: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=100)] = 20,
+) -> RequirementDraftListResponse:
+    """One page of the actor's drafts, or with `unowned` of the drafts nobody owns."""
+    page = use_case.execute(actor, unowned=unowned, q=q, sort=sort, offset=offset, limit=limit)
+    eligibility = documents.eligibility_of_drafts(page.drafts)
+    return RequirementDraftListResponse(
+        drafts=[
+            _draft_with_eligibility(draft, eligibility[draft.id.value]) for draft in page.drafts
+        ],
+        total=page.total,
+        offset=offset,
+        limit=limit,
+        has_more=offset + len(page.drafts) < page.total,
+    )
 
 
 @router.get("/drafts/{draft_id}", response_model=RequirementDraftResponse)

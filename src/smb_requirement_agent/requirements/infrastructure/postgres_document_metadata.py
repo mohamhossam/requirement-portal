@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 from psycopg.types.json import Jsonb
 
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
@@ -78,15 +80,19 @@ class PostgresDocumentRepository:
         *,
         requirement_id: RequirementId | None = None,
         draft_id: RequirementId | None = None,
+        draft_ids: Sequence[RequirementId] | None = None,
     ) -> list[SourceDocument]:
         clauses = ["(payload->>'removed')::boolean = false"]
-        parameters: list[str] = []
+        parameters: list[object] = []
         if requirement_id is not None:
             clauses.append("requirement_id = %s")
             parameters.append(requirement_id.value)
         if draft_id is not None:
             clauses.append("draft_id = %s")
             parameters.append(draft_id.value)
+        if draft_ids is not None:
+            clauses.append("draft_id = ANY(%s)")
+            parameters.append([item.value for item in draft_ids])
         query = (
             "SELECT payload FROM source_documents WHERE "  # noqa: S608 - constant fragments; values are parameters
             + " AND ".join(clauses)
@@ -104,3 +110,6 @@ class PostgresDocumentRepository:
 
     def list_for_draft(self, draft_id: RequirementId) -> list[SourceDocument]:
         return self.list_documents(draft_id=draft_id)
+
+    def list_for_drafts(self, draft_ids: Sequence[RequirementId]) -> list[SourceDocument]:
+        return self.list_documents(draft_ids=draft_ids)

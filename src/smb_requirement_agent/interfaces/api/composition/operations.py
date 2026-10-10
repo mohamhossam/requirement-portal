@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import io
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from time import monotonic
 
@@ -38,8 +39,12 @@ from smb_requirement_agent.infrastructure.persistence.postgres_store import Post
 from smb_requirement_agent.interfaces.api.composition.projections import (
     refresh_postgres_projections,
 )
-from smb_requirement_agent.jobs.application.use_cases.retention import PruneReadNotifications
+from smb_requirement_agent.jobs.application.use_cases.retention import (
+    PruneFinishedJobPayloads,
+    PruneReadNotifications,
+)
 from smb_requirement_agent.jobs.infrastructure.postgres_ai_jobs import (
+    PostgresAiJobStore,
     PostgresNotificationRepository,
 )
 from smb_requirement_agent.knowledge.infrastructure.source_dependencies import (
@@ -54,17 +59,32 @@ from smb_requirement_agent.reporting.application.use_cases.dependency_projection
 from smb_requirement_agent.reporting.infrastructure.postgres_snapshots import (
     PostgresSnapshotReader,
 )
+from smb_requirement_agent.requirements.infrastructure.postgres_blob_report import (
+    PostgresDocumentBlobReport,
+)
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
-def build_notification_retention(database_url: str) -> PruneReadNotifications:
+@dataclass(frozen=True)
+class Retention:
+    notifications: PruneReadNotifications
+    job_payloads: PruneFinishedJobPayloads
+    blobs: PostgresDocumentBlobReport
+
+
+def build_retention(database_url: str) -> Retention:
     """Build the online retention path using persistence adapters only."""
     store = PostgresStore(
         DirectPostgresConnector(database_url),
         PostgresRevisionWriter().capture,
         refresh_postgres_projections,
     )
-    return PruneReadNotifications(PostgresNotificationRepository(store), SystemClock())
+    clock = SystemClock()
+    return Retention(
+        PruneReadNotifications(PostgresNotificationRepository(store), clock),
+        PruneFinishedJobPayloads(PostgresAiJobStore(store), clock),
+        PostgresDocumentBlobReport(store),
+    )
 
 
 def build_projection_rebuild(database_url: str) -> Callable[[], int]:

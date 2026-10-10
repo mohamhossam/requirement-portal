@@ -42,7 +42,7 @@ from smb_requirement_agent.jobs.domain.entities import (
     NotificationId,
     NotificationPreference,
 )
-from smb_requirement_agent.jobs.domain.errors import AiJobConflictError
+from smb_requirement_agent.jobs.domain.errors import AiJobConflictError, AiJobInputsPrunedError
 from smb_requirement_agent.requirements.application.errors import RequirementNotFoundError
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
@@ -375,6 +375,11 @@ class AiJobs:
             and record.job.operation is AiJobOperation.SCREEN_REQUIREMENT_KNOWLEDGE
         ):
             raise AiJobConflictError("Only failed or cancelled AI jobs can be retried.")
+        if record.inputs_pruned:
+            raise AiJobInputsPrunedError(
+                "This AI job is past the retention window and its inputs were removed. "
+                "Start the action again instead."
+            )
         result = self.start(
             requirement_id, record.job.operation, record.command, idempotency_key, actor
         )

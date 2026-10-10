@@ -22,7 +22,7 @@ import {
   sizeLabel,
 } from "../features/documents/labels";
 import { hiddenSheetTitles } from "../features/documents/passages";
-import { useDocumentOwners } from "../features/documents/useDocumentOwners";
+import { ownerLink } from "../features/documents/owners";
 import { queryKeys } from "./queryKeys";
 import { useDocumentTitle } from "./useDocumentTitle";
 
@@ -89,7 +89,6 @@ export function DocumentDetailPage() {
         ),
     onSuccess: refresh,
   });
-  const ownerOf = useDocumentOwners(document.data ? [document.data] : undefined);
   // Above the error return, because a hook cannot be called after one.
   useDocumentTitle(
     document.data ? `${document.data.current_version.filename} · Documents` : "Document",
@@ -120,7 +119,7 @@ export function DocumentDetailPage() {
     return <div>{back}<LoadingState label="Loading document" variant="page" /></div>;
   }
 
-  const owner = ownerOf(data);
+  const owner = ownerLink(data.owner);
   const readiness = readinessView(current);
   const blocked = current.analysis_readiness === "blocked";
   const unread = current.extraction_status === "failed";
