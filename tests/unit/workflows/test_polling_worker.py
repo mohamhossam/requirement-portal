@@ -1,8 +1,13 @@
-"""Shutdown and lease-heartbeat behavior for in-process AI workers."""
+"""Shutdown and lease-heartbeat behavior for in-process AI workers.
+
+A heartbeat rides out a brief database failure while the lease lasts, then stops renewing
+without restarting the process under the attempt (production hardening PR 10)."""
 
 from __future__ import annotations
 
 import threading
+import time
+from collections.abc import Callable
 from datetime import timedelta
 from typing import cast
 
@@ -132,3 +137,98 @@ def test_worker_group_uses_one_shared_shutdown_deadline() -> None:
     assert second.join_timeouts[0] <= first.join_timeouts[0]
     assert first.fenced == 1
     assert second.fenced == 0
+
+
+class FlakyQueue(RecordingQueue):
+    """Renewals fail with `failures` errors first, then answer `renewed`."""
+
+    def __init__(self, record: AiJobRecord, *, failures: int, renewed: bool = True) -> None:
+        super().__init__(record)
+        self.failures = failures
+        self.renewed = renewed
+
+    def heartbeat(self, *args: object) -> bool:
+        del args
+        self.heartbeats += 1
+        if self.heartbeats <= self.failures:
+            raise ConnectionError("database restarting")
+        return self.renewed
+
+
+def _running(lease: timedelta) -> AiJobRecord:
+    return AiJobRecord(
+        _job().claim(NOW),
+        command=AiJobCommand({}),
+        worker_id="claimed-by-store",
+        attempt_token="attempt-1",
+        lease_until=NOW + lease,
+    )
+
+
+def _worker(queue: RecordingQueue, executor: BlockingExecutor) -> PollingAiJobWorker:
+    return PollingAiJobWorker(
+        cast(AiJobQueuePort, queue),
+        cast(ExecuteAiJob, executor),
+        FixedClock(NOW),
+        Metrics(),
+        poll_interval_seconds=0.01,
+        lease_seconds=30,
+        heartbeat_seconds=0.01,
+        shutdown_grace_seconds=1,
+    )
+
+
+def _until(condition: Callable[[], bool]) -> bool:
+    deadline = time.monotonic() + 2
+    while not condition() and time.monotonic() < deadline:
+        time.sleep(0.01)
+    return condition()
+
+
+def test_a_heartbeat_that_fails_while_the_lease_lasts_is_tried_again() -> None:
+    queue = FlakyQueue(_running(timedelta(seconds=30)), failures=3)
+    executor = BlockingExecutor()
+    worker = _worker(queue, executor)
+    worker.start()
+    try:
+        assert executor.started.wait(timeout=1)
+        assert _until(lambda: queue.heartbeats > 5)
+        assert not worker.lease_lost
+        assert worker.healthy
+    finally:
+        executor.finish.set()
+        worker.stop()
+
+
+def test_a_lease_about_to_lapse_stops_renewing_but_lets_the_attempt_finish() -> None:
+    queue = FlakyQueue(_running(timedelta(milliseconds=5)), failures=1_000)
+    executor = BlockingExecutor()
+    worker = _worker(queue, executor)
+    worker.start()
+    try:
+        assert executor.started.wait(timeout=1)
+        assert _until(lambda: worker.lease_lost)
+        attempts = queue.heartbeats
+        time.sleep(0.05)
+        # Renewing has stopped, and the process is not restarted under the running attempt.
+        assert queue.heartbeats == attempts
+        assert worker.healthy
+    finally:
+        executor.finish.set()
+        worker.stop()
+    assert queue.released == 1
+
+
+def test_a_lease_another_worker_took_back_stops_renewing_at_once() -> None:
+    queue = FlakyQueue(_running(timedelta(seconds=30)), failures=0, renewed=False)
+    executor = BlockingExecutor()
+    worker = _worker(queue, executor)
+    worker.start()
+    try:
+        assert executor.started.wait(timeout=1)
+        assert _until(lambda: worker.lease_lost)
+        time.sleep(0.05)
+        assert queue.heartbeats == 1
+    finally:
+        executor.finish.set()
+        worker.stop()

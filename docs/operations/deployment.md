@@ -58,6 +58,42 @@ image installs dependencies from `uv.lock` (`uv sync --locked --no-dev`).
     `deploy/.env`.
   - nginx passes its `$request_id` as `X-Request-ID`, so one ID links the edge
     log, the API's log line and any error body the browser receives.
+  - The scheme the browser used reaches the API as `X-Forwarded-Proto`. The edge believes it only
+    from the TLS proxy (`TRUSTED_PROXY_CIDR`). It sends `Strict-Transport-Security` (one year)
+    only over HTTPS.
+  - The API believes `X-Forwarded-*` only from the deployment's own network, a fixed subnet
+    (`REQUIREMENT_SUBNET`, default `172.30.80.0/24`). A peer on another network, such as the
+    knowledge portal on `compose.peer.yaml`'s network, cannot set them.
+    - Change the subnet if it overlaps a network on the host.
+    - A deployment that existed before this subnet must run `docker compose down` once (volumes
+      are kept) so the network is recreated.
+
+### Limits, health and logs
+
+Every container rotates its log: five files of 10 MB each. Each one has memory, CPU and process
+limits, so one runaway container cannot starve the host.
+
+| Container | Memory | CPUs | Processes |
+|---|---|---|---|
+| `api` | `API_MEM_LIMIT` (2g) | 2 | 512 |
+| `worker` | `WORKER_MEM_LIMIT` (3g); document extraction runs inside it | 2 | 1024 |
+| `postgres` | `POSTGRES_MEM_LIMIT` (2g) | 2 | 512 |
+| `clamav` | `CLAMAV_MEM_LIMIT` (4g); clamd holds its signatures twice while reloading | 1 | 256 |
+| `web` | 256m | 1 | 128 |
+| `migrate`, `maintenance`, `retention`, `backup` | 1g | 1 | 256 (128 for `backup`) |
+
+- The memory limits are Compose variables; set them in `deploy/.env`.
+- Docker refuses a CPU limit above the host's CPU count, so the host needs at least 2 CPUs.
+- A container that reaches its limit is stopped by the kernel and restarted by Compose.
+  `ProcessMemoryHigh` warns at 80% of the API's and worker's defaults; change its thresholds in
+  `alerts.yml` with the limits.
+
+Healthchecks:
+- `api`: `/ready`.
+- `worker`: its exporter reports `smb_ready 1`, meaning every background worker is running.
+- `clamav`: `clamdcheck.sh`, allowing 10 minutes for the first signature download.
+- `postgres`: `pg_isready`.
+- `web`: nginx serves the app.
 
 ## First install
 
@@ -71,7 +107,8 @@ export KERNEL_READ_TOKEN=...   # Contents: read-only on platform-kernel
 ```
 
 Compose reads its own variables from the shell or from `deploy/.env`
-(git-ignored). Generate each secret, for example with `openssl rand -hex 32`:
+(git-ignored). Every secret, how it can be read from a file instead (`NAME_FILE`), and how to
+rotate it, is in `secrets.md`. Generate each secret, for example with `openssl rand -hex 32`:
 
 ```bash
 # deploy/.env
@@ -331,6 +368,24 @@ POSTGRES_MAX_CONNECTIONS >= (API containers + worker containers) × DATABASE_POO
 - Raise it before adding replicas. Each connection costs PostgreSQL memory, so keep pools no
   larger than the concurrent work needs.
 - A managed PostgreSQL sets its own ceiling; size against that.
+
+**A managed PostgreSQL.** Set `DATABASE_URL` as a Compose variable, in the shell or
+`deploy/.env` rather than `production.env`. It replaces the bundled database for the API,
+worker and one-shot commands. Require TLS in the URL:
+
+```bash
+# deploy/.env
+DATABASE_URL=postgresql://smb@db.example.com:5432/smb_requirements?sslmode=verify-full
+```
+
+Put the password in the URL, or keep it out of the URL: set `DATABASE_PASSWORD_FILE` in
+`production.env` and mount the file (`secrets.md`).
+
+- Without `DATABASE_URL`, the bundled database is used with `sslmode=${DATABASE_SSLMODE:-prefer}`.
+- The bundled `postgres` container still starts, unused. The `backup` service and the PostgreSQL
+  exporter still point at it, so use the provider's backups and metrics instead, or point them at
+  the managed server in an override.
+- The database needs the `vector` extension (pgvector).
 - `smb_db_pool_connections` shows each process's pool in use.
 
 ## Retention

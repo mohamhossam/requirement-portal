@@ -462,3 +462,29 @@ def test_mapped_server_error_is_logged(caplog: pytest.LogCaptureFixture) -> None
     assert "POST" in caplog.text
     assert "/requirements/req-1/analysis-check" in caplog.text
     assert "InvalidAnalysisContentError" in caplog.text
+    # The type and correlation ID only: the message can quote request content.
+    assert "Blank known fact" not in caplog.text
+    assert response.json()["correlation_id"] in caplog.text
+
+
+def test_an_unexpected_failure_logs_where_it_happened_but_not_its_message(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    app = FastAPI()
+    register_error_handlers(app)
+    marker = "".join(("private-", "requirement-text"))
+
+    @app.get("/boom")
+    def boom() -> None:
+        raise RuntimeError(marker)
+
+    with (
+        TestClient(app, raise_server_exceptions=False) as client,
+        caplog.at_level(logging.ERROR, logger="smb_requirement_agent.api.errors"),
+    ):
+        response = client.get("/boom")
+
+    assert response.status_code == 500
+    assert "RuntimeError" in caplog.text
+    assert "in boom" in caplog.text
+    assert marker not in caplog.text

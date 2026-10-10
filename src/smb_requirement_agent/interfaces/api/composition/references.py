@@ -12,6 +12,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from contextlib import ExitStack, closing
 from dataclasses import dataclass
+from time import monotonic
 
 import httpx
 from smb_kernel.http.client import CircuitBreaker, InternalHttpClient
@@ -145,6 +146,7 @@ def build_backlog_handoff_worker(
     inbox: ChangeRequestInboxPort,
     clock: ClockPort,
     metrics: Metrics,
+    grace_seconds: float,
 ) -> IngestionLoop:
     """The worker handing approved backlogs to the knowledge service (ADR-0101 Amendment 2).
 
@@ -160,4 +162,10 @@ def build_backlog_handoff_worker(
             "approved_backlog_handoff", outcome, seconds
         ),
     )
-    return IngestionLoop("approved-backlogs", (deliver.deliver_next,))
+    return IngestionLoop(
+        "approved-backlogs",
+        (deliver.deliver_next,),
+        failed=metrics.record_ingestion_failure,
+        shutdown_grace_seconds=grace_seconds,
+        monotonic_seconds=monotonic,
+    )

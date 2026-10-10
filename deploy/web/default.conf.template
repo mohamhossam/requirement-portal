@@ -11,6 +11,23 @@ limit_req_zone $binary_remote_addr zone=api_per_address:10m rate=${EDGE_RATE_PER
 limit_req_zone $binary_remote_addr zone=impact_preview_per_address:1m rate=2r/s;
 limit_req_status 429;
 
+# The scheme the browser used: what the TLS proxy in front (TRUSTED_PROXY_CIDR) reports,
+# else this connection's own. Anyone else's X-Forwarded-Proto is ignored.
+geo $realip_remote_addr $from_trusted_proxy {
+    default 0;
+    ${TRUSTED_PROXY_CIDR} 1;
+}
+map "$from_trusted_proxy:$http_x_forwarded_proto" $forwarded_scheme {
+    default $scheme;
+    "1:https" https;
+    "1:http" http;
+}
+# HSTS only for a page the browser received over HTTPS; an empty value sends no header.
+map $forwarded_scheme $strict_transport_security {
+    https "max-age=31536000";
+    default "";
+}
+
 # What follows /knowledge/ in an old bookmark, query string included, for the
 # redirect to the knowledge portal's own address (ADR-0104).
 map $request_uri $knowledge_bookmark {
@@ -108,7 +125,7 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto $forwarded_scheme;
         # One correlation ID from the edge to the API's logs and error bodies.
         proxy_set_header X-Request-ID $request_id;
         # Model work runs as durable jobs (ADR-0105), so no request waits on a

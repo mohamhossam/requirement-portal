@@ -73,5 +73,18 @@ The first published release: the pilot candidate, closing the pilot gate of
   - New metrics: `smb_build_info`, `smb_ready`, the AI job queue (`smb_ai_jobs_queued`,
     `smb_ai_job_oldest_queued_age_seconds`), `smb_provider_spend_blocked_total`, and the
     process, Python and garbage-collector series.
+- **Containers and the edge are hardened.**
+  - Every container rotates its logs and has memory, CPU and process limits
+    (`API_MEM_LIMIT`, `WORKER_MEM_LIMIT`, `POSTGRES_MEM_LIMIT`, `CLAMAV_MEM_LIMIT`).
+  - `clamav` and `worker` have healthchecks.
+  - Secrets can be read from files (`NAME_FILE`; `docs/operations/secrets.md`, with rotation
+    steps), including a new `DATABASE_PASSWORD`.
+  - `DATABASE_URL` can name a managed PostgreSQL as a Compose variable.
+  - The edge forwards the browser's scheme only from `TRUSTED_PROXY_CIDR` and sends HSTS over
+    HTTPS.
+  - The API trusts forwarded headers only from the deployment's fixed subnet
+    (`REQUIREMENT_SUBNET`).
+  - Logs carry exception types and correlation IDs, never messages.
+  - A job heartbeat rides out a brief database failure while its lease lasts.
 
 Upgrade: none (first release). Contract-step migrations: none after `202610091200`.

@@ -15,6 +15,7 @@ from smb_requirement_agent.application.errors import (
     DocumentExtractionBusyError,
     DocumentExtractionTimeoutError,
 )
+from smb_requirement_agent.infrastructure.log_safety import exception_frames, exception_types
 from smb_requirement_agent.jobs.application.errors import (
     ProviderBudgetExhaustedError,
     ProviderRateLimitExceededError,
@@ -59,14 +60,14 @@ def register_error_handlers(app: FastAPI) -> None:
         status_code = status_code_for(exc) or 500
         correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
         if status_code >= 500:
+            # Types and the correlation ID only: a message or traceback can quote request
+            # content. The opt-in debug trace below keeps the detail.
             logger.error(
-                "%s %s failed with %s: %s [correlation_id=%s]",
+                "%s %s failed with %s [correlation_id=%s]",
                 request.method,
                 request.url.path,
-                type(exc).__name__,
-                exc,
+                exception_types(exc),
                 correlation_id,
-                exc_info=(type(exc), exc, exc.__traceback__),
             )
         container = getattr(request.app.state, "container", None)
         debug_trace = getattr(container, "debug_trace", None)
@@ -123,12 +124,14 @@ def register_error_handlers(app: FastAPI) -> None:
 
     async def unhandled(request: Request, exc: Exception) -> JSONResponse:
         correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
+        # A defect: where it happened, but not its message, which can quote request content.
         logger.error(
-            "%s %s failed unexpectedly [correlation_id=%s]",
+            "%s %s failed unexpectedly with %s [correlation_id=%s]\n%s",
             request.method,
             request.url.path,
+            exception_types(exc),
             correlation_id,
-            exc_info=(type(exc), exc, exc.__traceback__),
+            exception_frames(exc),
         )
         return JSONResponse(
             status_code=500,
