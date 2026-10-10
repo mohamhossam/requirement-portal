@@ -139,5 +139,11 @@ The first published release: the pilot candidate, closing the pilot gate of
   - Links to Azure DevOps work items are shown only for `https:` addresses.
   - Remembering the last requirement no longer fails a save in private browsing, and
     downloads keep their file long enough for Firefox and Safari.
+- **Governance.**
+  - `SECURITY.md`: report vulnerabilities privately through GitHub.
+  - `CODEOWNERS` and a pull request template.
+  - Four accepted risks recorded in ADR-0111: tokens in `sessionStorage`, the silent-renewal
+    iframe, workspace-wide read access, and English only.
+  - The repository has no licence yet.
 
 Upgrade: none (first release). Contract-step migrations: none after `202610091200`.
