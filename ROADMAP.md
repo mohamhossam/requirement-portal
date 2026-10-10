@@ -1654,7 +1654,7 @@ Suggested order: A, B, F, E, C (after 8A.2), D.
 ## Enhancement — Knowledge Center
 
 **Status: re-planned 2026-10-06 for the three repositories (ADR-0099 Amendment 1). B1, A′,
-B2, B3, C and D are delivered. E is scheduled 2026-10-06 (ADR-0102): E1, then E2.**
+B2, B3, C and D are delivered, then E (ADR-0102): E1 on 2026-10-06 and E2 on 2026-10-07.**
 **Specification:** `docs/slices/enhancement-knowledge-center.md`
 
 ### User Outcome
@@ -1665,7 +1665,7 @@ knowledge on a review cycle. Later, historic BRDs come in with their delivered A
 breakdown as cited prior art.
 
 ### Sub-slices (each built where its data lives)
-- **B1 — Attachments in the requirement corpus** (requirement-portal), **next.** An
+- **B1 — Attachments in the requirement corpus** (requirement-portal), **delivered.** An
   `attachment` source kind: analysis-included attachment passages are indexed and screened,
   and re-indexed when an attachment's version or inclusion changes.
 - **A′ — Knowledge Center front page** (knowledge-portal). Freshness per body, catalogue
@@ -1689,9 +1689,9 @@ breakdown as cited prior art.
     `historic_requirement_changed` events on the outbox this service already polls.
   - **E2** (here, with knowledge-portal's light event and paged read, and its "Cited by"
     view): the historic corpus (`historic_brd`, `historic_backlog`, reference trust), prior art
-    by search then the AI judge, informational on the Knowledge step. **In progress**
-    (`docs/slices/enhancement-knowledge-center-e2-prior-art.md`, ADR-0102 Amendment 1); off by
-    default behind `PRIOR_ART_ENABLED`.
+    by search then the AI judge, informational on the Knowledge step. **Delivered 2026-10-07**
+    (#47 here, knowledge-portal#47 and #48; `docs/slices/enhancement-knowledge-center-e2-prior-art.md`,
+    ADR-0102 Amendment 1); off by default behind `PRIOR_ART_ENABLED`.
 - **F — AI-assisted catalogue extraction:** **delivered**
   (`docs/slices/enhancement-squad-and-architecture-catalogues.md`, ADR-0081, then
   knowledge-portal).
