@@ -21,15 +21,25 @@ from smb_requirement_agent.interfaces.api.dependencies import (
 )
 from smb_requirement_agent.interfaces.api.schemas.documents import (
     DocumentContentResponse,
+    DocumentCountsResponse,
     DocumentDetailResponse,
     DocumentEvidenceBlockResponse,
     DocumentEvidenceSummaryResponse,
     DocumentExtractionWarningResponse,
+    DocumentListItemResponse,
+    DocumentListResponse,
+    DocumentOwnerResponse,
     DocumentSummaryResponse,
     DocumentVersionDetailResponse,
     DocumentVersionMetadataResponse,
+    OwnedDocumentDetailResponse,
     SetDocumentInclusionRequest,
     SetHiddenWorksheetInclusionRequest,
+)
+from smb_requirement_agent.requirements.application.ports.catalogue_pages import (
+    DocumentFilter,
+    DocumentOwner,
+    DocumentSort,
 )
 from smb_requirement_agent.requirements.application.use_cases.attachment_ingestion import (
     AttachmentIngestion,
@@ -358,22 +368,63 @@ async def upload_draft_document_version(
     return _detail(document)
 
 
-@router.get("/documents", response_model=list[DocumentSummaryResponse])
+def _owner(owner: DocumentOwner) -> DocumentOwnerResponse:
+    return DocumentOwnerResponse(kind=owner.kind, id=owner.id.value, title=owner.title)
+
+
+@router.get("/documents", response_model=DocumentListResponse)
 def list_documents(
     actor: CurrentActorDep,
     use_case: Annotated[ListDocuments, Depends(get_list_documents)],
-) -> list[DocumentSummaryResponse]:
-    return [_summary(item) for item in use_case.visible_to(actor)]
+    q: Annotated[str | None, Query(max_length=200)] = None,
+    document_filter: Annotated[DocumentFilter, Query(alias="filter")] = DocumentFilter.ALL,
+    owner: Annotated[str | None, Query(max_length=200)] = None,
+    sort: DocumentSort = DocumentSort.ADDED_DESC,
+    offset: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+) -> DocumentListResponse:
+    """One page of the documents the actor may open: every Requirement's, and their own
+    drafts'. A document blocking analysis comes first, whatever the sort."""
+    page = use_case.page(
+        actor,
+        q=q,
+        document_filter=document_filter,
+        owner_id=RequirementId(owner) if owner else None,
+        sort=sort,
+        offset=offset,
+        limit=limit,
+    )
+    return DocumentListResponse(
+        documents=[
+            DocumentListItemResponse(
+                **_summary(item.document).model_dump(), owner=_owner(item.owner)
+            )
+            for item in page.documents
+        ],
+        total=page.total,
+        offset=offset,
+        limit=limit,
+        has_more=offset + len(page.documents) < page.total,
+        counts=DocumentCountsResponse(
+            attention=page.counts.attention,
+            included=page.counts.included,
+            excluded=page.counts.excluded,
+        ),
+        owners=[_owner(item) for item in page.owners],
+    )
 
 
-@router.get("/documents/{document_id}", response_model=DocumentDetailResponse)
+@router.get("/documents/{document_id}", response_model=OwnedDocumentDetailResponse)
 def get_document(
     document_id: str,
     actor: CurrentActorDep,
     use_case: Annotated[GetDocument, Depends(get_get_document)],
-) -> DocumentDetailResponse:
+    documents: Annotated[ListDocuments, Depends(get_list_documents)],
+) -> OwnedDocumentDetailResponse:
     document = use_case.execute(DocumentId(document_id), actor)
-    return _detail(document)
+    return OwnedDocumentDetailResponse(
+        **_detail(document).model_dump(), owner=_owner(documents.owner_of(document))
+    )
 
 
 @router.get("/documents/{document_id}/content", response_model=DocumentContentResponse)

@@ -342,7 +342,7 @@ def test_drafts_are_owner_scoped(client: TestClient) -> None:
     draft_id = created.json()["id"]
 
     reviewer_headers = {"X-Fake-Actor-Id": "fake-reviewer"}
-    assert client.get("/requirements/drafts", headers=reviewer_headers).json() == []
+    assert client.get("/requirements/drafts", headers=reviewer_headers).json()["drafts"] == []
     assert (
         client.get(f"/requirements/drafts/{draft_id}", headers=reviewer_headers).status_code == 403
     )

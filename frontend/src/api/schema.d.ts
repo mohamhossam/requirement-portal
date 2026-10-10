@@ -88,7 +88,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Documents */
+        /**
+         * List Documents
+         * @description One page of the documents the actor may open: every Requirement's, and their own
+         *     drafts'. A document blocking analysis comes first, whatever the sort.
+         */
         get: operations["list_documents_documents_get"];
         put?: never;
         post?: never;
@@ -457,7 +461,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Requirement Drafts */
+        /**
+         * List Requirement Drafts
+         * @description One page of the actor's drafts, or with `unowned` of the drafts nobody owns.
+         */
         get: operations["list_requirement_drafts_requirements_drafts_get"];
         put?: never;
         /** Create Requirement Draft */
@@ -2828,6 +2835,18 @@ export interface components {
             /** Version Id */
             version_id: string;
         };
+        /**
+         * DocumentCountsResponse
+         * @description As the documents page groups them; a document blocking analysis counts only there.
+         */
+        DocumentCountsResponse: {
+            /** Attention */
+            attention: number;
+            /** Excluded */
+            excluded: number;
+            /** Included */
+            included: number;
+        };
         /** DocumentDetailResponse */
         DocumentDetailResponse: {
             current_version: components["schemas"]["DocumentVersionMetadataResponse"];
@@ -2902,6 +2921,87 @@ export interface components {
             message: string;
             severity: components["schemas"]["ExtractionWarningSeverity"];
         };
+        /**
+         * DocumentFilter
+         * @description As the documents page groups them: blocking analysis first, never also counted below.
+         * @enum {string}
+         */
+        DocumentFilter: "all" | "attention" | "included" | "excluded";
+        /** DocumentListItemResponse */
+        DocumentListItemResponse: {
+            current_version: components["schemas"]["DocumentVersionMetadataResponse"];
+            /** Draft Id */
+            draft_id: string | null;
+            /**
+             * Hidden Worksheets
+             * @default []
+             */
+            hidden_worksheets: string[];
+            /** Id */
+            id: string;
+            /**
+             * Included Hidden Worksheets
+             * @default []
+             */
+            included_hidden_worksheets: string[];
+            /** Included In Analysis */
+            included_in_analysis: boolean;
+            /** Included Version Id */
+            included_version_id: string | null;
+            owner: components["schemas"]["DocumentOwnerResponse"];
+            /** Requirement Id */
+            requirement_id: string | null;
+            /**
+             * Requires Attention
+             * @default false
+             */
+            requires_attention: boolean;
+            /** Version */
+            version: number;
+            /** Version Count */
+            version_count: number;
+        };
+        /**
+         * DocumentListResponse
+         * @description One page of documents (production hardening PR 13). The counts and owners cover every
+         *     document the actor may open, whatever the search or filter.
+         */
+        DocumentListResponse: {
+            counts: components["schemas"]["DocumentCountsResponse"];
+            /** Documents */
+            documents: components["schemas"]["DocumentListItemResponse"][];
+            /** Has More */
+            has_more: boolean;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Owners */
+            owners: components["schemas"]["DocumentOwnerResponse"][];
+            /** Total */
+            total: number;
+        };
+        /**
+         * DocumentOwnerResponse
+         * @description The Requirement or draft a document is attached to; its title, if it still exists.
+         */
+        DocumentOwnerResponse: {
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "requirement" | "draft";
+            /** Title */
+            title: string | null;
+        };
+        /**
+         * DocumentSort
+         * @description By the current version; a document blocking analysis comes first whatever the sort.
+         * @enum {string}
+         */
+        DocumentSort: "added_desc" | "added_asc" | "name_asc" | "name_desc";
         /** DocumentSummaryResponse */
         DocumentSummaryResponse: {
             current_version: components["schemas"]["DocumentVersionMetadataResponse"];
@@ -3008,6 +3108,11 @@ export interface components {
             /** System Names */
             system_names?: string[];
         };
+        /**
+         * DraftSort
+         * @enum {string}
+         */
+        DraftSort: "updated_desc" | "updated_asc" | "title_asc" | "title_desc";
         /** EditEpicRequest */
         EditEpicRequest: {
             /** Business Case */
@@ -3717,6 +3822,42 @@ export interface components {
             /** Name */
             name: string;
         };
+        /** OwnedDocumentDetailResponse */
+        OwnedDocumentDetailResponse: {
+            current_version: components["schemas"]["DocumentVersionMetadataResponse"];
+            /** Draft Id */
+            draft_id: string | null;
+            /**
+             * Hidden Worksheets
+             * @default []
+             */
+            hidden_worksheets: string[];
+            /** Id */
+            id: string;
+            /**
+             * Included Hidden Worksheets
+             * @default []
+             */
+            included_hidden_worksheets: string[];
+            /** Included In Analysis */
+            included_in_analysis: boolean;
+            /** Included Version Id */
+            included_version_id: string | null;
+            owner: components["schemas"]["DocumentOwnerResponse"];
+            /** Requirement Id */
+            requirement_id: string | null;
+            /**
+             * Requires Attention
+             * @default false
+             */
+            requires_attention: boolean;
+            /** Version */
+            version: number;
+            /** Version Count */
+            version_count: number;
+            /** Versions */
+            versions: components["schemas"]["DocumentVersionDetailResponse"][];
+        };
         /** OwnerFacetResponse */
         OwnerFacetResponse: {
             actor: components["schemas"]["ActorResponse"];
@@ -4075,6 +4216,22 @@ export interface components {
             stale_reference_proposal_ids: string[];
             /** Version */
             version: number;
+        };
+        /**
+         * RequirementDraftListResponse
+         * @description One page of drafts (production hardening PR 13).
+         */
+        RequirementDraftListResponse: {
+            /** Drafts */
+            drafts: components["schemas"]["RequirementDraftResponse"][];
+            /** Has More */
+            has_more: boolean;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
         };
         /** RequirementDraftRequest */
         RequirementDraftRequest: {
@@ -5145,7 +5302,14 @@ export interface operations {
     };
     list_documents_documents_get: {
         parameters: {
-            query?: never;
+            query?: {
+                q?: string | null;
+                filter?: components["schemas"]["DocumentFilter"];
+                owner?: string | null;
+                sort?: components["schemas"]["DocumentSort"];
+                offset?: number;
+                limit?: number;
+            };
             header?: {
                 "X-Fake-Actor-Id"?: string | null;
             };
@@ -5160,7 +5324,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DocumentSummaryResponse"][];
+                    "application/json": components["schemas"]["DocumentListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -5193,7 +5357,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DocumentDetailResponse"];
+                    "application/json": components["schemas"]["OwnedDocumentDetailResponse"];
                 };
             };
             /** @description Validation Error */
@@ -5933,6 +6097,10 @@ export interface operations {
         parameters: {
             query?: {
                 unowned?: boolean;
+                q?: string | null;
+                sort?: components["schemas"]["DraftSort"];
+                offset?: number;
+                limit?: number;
             };
             header?: {
                 "X-Fake-Actor-Id"?: string | null;
@@ -5948,7 +6116,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RequirementDraftResponse"][];
+                    "application/json": components["schemas"]["RequirementDraftListResponse"];
                 };
             };
             /** @description Validation Error */

@@ -27,6 +27,8 @@ class AiJobRecord:
     worker_id: str | None = None
     attempt_token: str | None = None
     lease_until: datetime | None = None
+    # The retention command cleared `command` (ADR-0079 amendment): it cannot be retried.
+    inputs_pruned: bool = False
 
 
 class AiJobRepositoryPort(Protocol):
@@ -95,6 +97,16 @@ class AiJobBacklog:
 
     queued: Mapping[str, int]
     oldest_claimable_since: datetime | None
+
+
+class AiJobRetentionPort(Protocol):
+    def prune_finished_inputs(self, completed_before: datetime, batch_size: int) -> int:
+        """Clear the stored inputs of succeeded and cancelled jobs finished before the cutoff.
+
+        Knowledge screens keep theirs: the automatic-screen reservation and its manual
+        retry need them. Rows are kept. Works in batches; returns how many were pruned.
+        """
+        ...
 
 
 class AiJobBacklogPort(Protocol):

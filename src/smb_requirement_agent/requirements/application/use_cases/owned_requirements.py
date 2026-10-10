@@ -7,6 +7,12 @@ from smb_requirement_agent.identity.application.ports.access_repository import A
 from smb_requirement_agent.identity.application.ports.requirement_access import (
     RequirementAccessPort,
 )
+from smb_requirement_agent.requirements.application.ports.catalogue_pages import (
+    CataloguePagesPort,
+    DraftPage,
+    DraftPageQuery,
+    DraftSort,
+)
 from smb_requirement_agent.requirements.application.ports.screening_requests import (
     ScreeningRequestPort,
 )
@@ -17,7 +23,6 @@ from smb_requirement_agent.requirements.application.use_cases.create_requirement
 from smb_requirement_agent.requirements.application.use_cases.requirement_drafts import (
     CreateRequirementDraft,
     GetRequirementDraft,
-    ListRequirementDrafts,
     PromoteRequirementDraft,
     RequirementDraftInput,
     SaveRequirementDraft,
@@ -83,30 +88,24 @@ class GetOwnedRequirementDraft:
 
 
 class ListOwnedRequirementDrafts:
-    def __init__(
-        self,
-        listed: ListRequirementDrafts,
-        repository: AccessRepositoryPort,
-    ) -> None:
-        self._listed = listed
-        self._repository = repository
+    """One page of the actor's drafts, or of the drafts nobody owns."""
+
+    def __init__(self, pages: CataloguePagesPort) -> None:
+        self._pages = pages
 
     def execute(
-        self, actor: ActorProfile, *, unowned: bool = False
-    ) -> tuple[RequirementDraft, ...]:
-        result: list[RequirementDraft] = []
-        for draft in self._listed.execute():
-            ownership = self._repository.get_draft_ownership(draft.id)
-            if unowned and (ownership is None or ownership.owner is None):
-                result.append(draft)
-            elif (
-                not unowned
-                and ownership is not None
-                and ownership.owner is not None
-                and ownership.owner.actor.id == actor.id
-            ):
-                result.append(draft)
-        return tuple(result)
+        self,
+        actor: ActorProfile,
+        *,
+        unowned: bool = False,
+        q: str | None = None,
+        sort: DraftSort = DraftSort.UPDATED_DESC,
+        offset: int = 0,
+        limit: int = 20,
+    ) -> DraftPage:
+        return self._pages.drafts(
+            DraftPageQuery(None if unowned else actor.id, q, sort, offset, limit)
+        )
 
 
 class SaveOwnedRequirementDraft:

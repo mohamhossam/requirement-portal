@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import uuid
+from collections.abc import Sequence
 from dataclasses import dataclass, replace
 from pathlib import PurePosixPath, PureWindowsPath
 
@@ -27,6 +28,14 @@ from smb_requirement_agent.identity.application.ports.requirement_access import 
 from smb_requirement_agent.requirements.application.errors import (
     DocumentNotFoundError,
     DocumentVersionConflictError,
+)
+from smb_requirement_agent.requirements.application.ports.catalogue_pages import (
+    CataloguePagesPort,
+    DocumentFilter,
+    DocumentOwner,
+    DocumentPage,
+    DocumentPageQuery,
+    DocumentSort,
 )
 from smb_requirement_agent.requirements.application.ports.document_repository import (
     DocumentRepositoryPort,
@@ -350,17 +359,46 @@ class UploadDocument:
 
 
 class ListDocuments:
-    def __init__(self, documents: DocumentRepositoryPort, access: RequirementAccessPort) -> None:
+    def __init__(
+        self,
+        documents: DocumentRepositoryPort,
+        access: RequirementAccessPort,
+        pages: CataloguePagesPort,
+    ) -> None:
         self._documents = documents
         self._access = access
+        self._pages = pages
 
-    def visible_to(self, actor: ActorProfile) -> tuple[SourceDocument, ...]:
-        """Requirement documents, plus attachments of drafts the actor may open."""
-        return tuple(
-            item
-            for item in self._documents.list_all()
-            if item.draft_id is None or self._access.can_access_draft(item.draft_id, actor)
+    def page(
+        self,
+        actor: ActorProfile,
+        *,
+        q: str | None = None,
+        document_filter: DocumentFilter = DocumentFilter.ALL,
+        owner_id: RequirementId | None = None,
+        sort: DocumentSort = DocumentSort.ADDED_DESC,
+        offset: int = 0,
+        limit: int = 50,
+    ) -> DocumentPage:
+        """Requirement documents, plus attachments of the actor's own drafts, one page at a time."""
+        return self._pages.documents(
+            DocumentPageQuery(actor.id, q, document_filter, owner_id, sort, offset, limit)
         )
+
+    def owner_of(self, document: SourceDocument) -> DocumentOwner:
+        return self._pages.owner_of(document)
+
+    def eligibility_of_drafts(
+        self, drafts: Sequence[RequirementDraft]
+    ) -> dict[str, AnalysisEligibility]:
+        """Each draft's analysis eligibility, from one read of all their documents."""
+        documents = self._documents.list_for_drafts([draft.id for draft in drafts])
+        return {
+            draft.id.value: source_eligibility(
+                draft, tuple(item for item in documents if item.draft_id == draft.id)
+            )
+            for draft in drafts
+        }
 
     def for_owned_draft(
         self, draft_id: RequirementId, actor: ActorProfile

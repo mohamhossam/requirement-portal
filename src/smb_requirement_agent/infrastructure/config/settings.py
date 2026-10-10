@@ -26,6 +26,7 @@ from smb_requirement_agent.infrastructure.config.options import (
     DEFAULT_AI_JOB_HEARTBEAT_SECONDS,
     DEFAULT_AI_JOB_LEASE_SECONDS,
     DEFAULT_AI_JOB_MAX_ATTEMPTS,
+    DEFAULT_AI_JOB_PAYLOAD_RETENTION_DAYS,
     DEFAULT_AI_JOB_POLL_INTERVAL_SECONDS,
     DEFAULT_AI_JOB_RETRY_FIRST_SECONDS,
     DEFAULT_AI_JOB_RETRY_MAX_SECONDS,
@@ -197,23 +198,35 @@ class RetentionSettings:
 
     persistence: PersistenceSettings
     notification_retention_days: int = DEFAULT_NOTIFICATION_RETENTION_DAYS
+    # Succeeded and cancelled AI jobs keep their stored inputs this long (ADR-0079 amendment).
+    ai_job_payload_retention_days: int = DEFAULT_AI_JOB_PAYLOAD_RETENTION_DAYS
 
     def __post_init__(self) -> None:
         if self.notification_retention_days < 1:
-            raise ConfigurationError(_RETENTION_DAYS_ERROR)
+            raise ConfigurationError(_retention_days_error("NOTIFICATION_RETENTION_DAYS"))
+        if self.ai_job_payload_retention_days < 1:
+            raise ConfigurationError(_retention_days_error("AI_JOB_PAYLOAD_RETENTION_DAYS"))
 
     @classmethod
     def from_env(cls) -> RetentionSettings:
         persistence = PersistenceSettings.from_env()
-        raw = os.getenv("NOTIFICATION_RETENTION_DAYS", "").strip()
-        try:
-            days = int(raw) if raw else DEFAULT_NOTIFICATION_RETENTION_DAYS
-        except ValueError as exc:
-            raise ConfigurationError(_RETENTION_DAYS_ERROR) from exc
-        return cls(persistence, days)
+        return cls(
+            persistence,
+            _retention_days("NOTIFICATION_RETENTION_DAYS", DEFAULT_NOTIFICATION_RETENTION_DAYS),
+            _retention_days("AI_JOB_PAYLOAD_RETENTION_DAYS", DEFAULT_AI_JOB_PAYLOAD_RETENTION_DAYS),
+        )
 
 
-_RETENTION_DAYS_ERROR = "NOTIFICATION_RETENTION_DAYS must be a positive whole number of days."
+def _retention_days_error(name: str) -> str:
+    return f"{name} must be a positive whole number of days."
+
+
+def _retention_days(name: str, default: int) -> int:
+    raw = os.getenv(name, "").strip()
+    try:
+        return int(raw) if raw else default
+    except ValueError as exc:
+        raise ConfigurationError(_retention_days_error(name)) from exc
 
 
 @dataclass(frozen=True)

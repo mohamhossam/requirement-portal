@@ -100,7 +100,7 @@ def test_document_journey_records_exact_analysis_version_and_checksum(
     content = client.get(f"/documents/{document_id}/content")
     assert content.status_code == 200
     assert content.json()["extracted_text"] == "Policy A"
-    assert any(item["id"] == document_id for item in client.get("/documents").json())
+    assert any(item["id"] == document_id for item in client.get("/documents").json()["documents"])
 
 
 def test_xlsx_upload_exposes_structured_evidence_and_hidden_sheet_selection(

@@ -309,6 +309,9 @@ from smb_requirement_agent.reporting.infrastructure.postgres_worklist import (
 from smb_requirement_agent.requirements.application.ports.attachment_ingestions import (
     AttachmentIngestionRepositoryPort,
 )
+from smb_requirement_agent.requirements.application.ports.catalogue_pages import (
+    CataloguePagesPort,
+)
 from smb_requirement_agent.requirements.application.ports.document_repository import (
     DocumentRepositoryPort,
 )
@@ -322,6 +325,9 @@ from smb_requirement_agent.requirements.infrastructure.attachment_ingestions imp
     InMemoryAttachmentIngestions,
     PostgresAttachmentIngestions,
 )
+from smb_requirement_agent.requirements.infrastructure.in_memory_catalogue_pages import (
+    InMemoryCataloguePages,
+)
 from smb_requirement_agent.requirements.infrastructure.in_memory_document_repository import (
     InMemoryDocumentRepository,
     InMemoryDocumentStorage,
@@ -332,6 +338,9 @@ from smb_requirement_agent.requirements.infrastructure.in_memory_requirement_dra
 from smb_requirement_agent.requirements.infrastructure.in_memory_requirement_repository import (
     InMemoryRequirementRepository,
 )
+from smb_requirement_agent.requirements.infrastructure.postgres_catalogue_pages import (
+    PostgresCataloguePages,
+)
 from smb_requirement_agent.requirements.infrastructure.postgres_document_repository import (
     PostgresDocumentRepository,
     PostgresDocumentStorage,
@@ -340,6 +349,8 @@ from smb_requirement_agent.requirements.infrastructure.postgres_requirements imp
     PostgresRequirementDraftRepository,
     PostgresRequirementRepository,
 )
+from smb_requirement_agent.shared_kernel.actors import ActorId
+from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 
 @dataclass(frozen=True)
@@ -355,6 +366,8 @@ class PersistenceAdapters:
     requirement_repository: RequirementRepositoryPort
     requirement_draft_repository: RequirementDraftRepositoryPort
     document_repository: DocumentRepositoryPort
+    # Paged drafts and documents, filtered where they are stored (production hardening PR 13).
+    catalogue_pages: CataloguePagesPort
     document_storage: DocumentStoragePort
     analysis_repository: RequirementAnalysisRepositoryPort
     analysis_audit_repository: AnalysisAuditRepositoryPort
@@ -502,6 +515,7 @@ def _postgres(
     dependency_index: SourceDependencyPort = PostgresSourceDependencies(postgres)
     worklist_snapshots = PostgresSnapshotReader(postgres)
     access_repository = PostgresAccessRepository(postgres)
+    catalogue_pages = PostgresCataloguePages(postgres)
     actor_directory = PostgresActorDirectory(postgres)
     postgres_ai_jobs = PostgresAiJobStore(postgres)
     ai_job_repository = postgres_ai_jobs
@@ -551,6 +565,7 @@ def _postgres(
         requirement_repository=requirement_repository,
         requirement_draft_repository=requirement_draft_repository,
         document_repository=document_repository,
+        catalogue_pages=catalogue_pages,
         document_storage=document_storage,
         analysis_repository=analysis_repository,
         analysis_audit_repository=analysis_audit_repository,
@@ -688,6 +703,14 @@ def _memory(
     access_repository = TrackingAccessRepository(
         base_access, revision_repository, memory_transactions
     )
+
+    def draft_owner(draft_id: RequirementId) -> ActorId | None:
+        ownership = access_repository.get_draft_ownership(draft_id)
+        return ownership.owner.actor.id if ownership and ownership.owner else None
+
+    catalogue_pages = InMemoryCataloguePages(
+        requirement_draft_repository, requirement_repository, document_repository, draft_owner
+    )
     transaction_manager = memory_transactions
     memory_nudges = InMemoryFindingNudges(memory_lock)
     memory_transactions.enroll(memory_nudges)
@@ -786,6 +809,7 @@ def _memory(
         requirement_repository=requirement_repository,
         requirement_draft_repository=requirement_draft_repository,
         document_repository=document_repository,
+        catalogue_pages=catalogue_pages,
         document_storage=document_storage,
         analysis_repository=analysis_repository,
         analysis_audit_repository=analysis_audit_repository,

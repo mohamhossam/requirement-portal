@@ -3,6 +3,15 @@ import { ABORTED_REQUEST, ApiError, normalizeErrorDetail, REQUEST_TIMEOUT } from
 
 export type Requirement = components["schemas"]["RequirementResponse"];
 export type RequirementDraft = components["schemas"]["RequirementDraftResponse"];
+export type RequirementDraftList = components["schemas"]["RequirementDraftListResponse"];
+export type RequirementDraftListParams = {
+  /** The drafts nobody owns, which a person may claim, instead of their own. */
+  unowned?: boolean;
+  q?: string;
+  sort?: components["schemas"]["DraftSort"];
+  offset?: number;
+  limit?: number;
+};
 export type RequirementImpact = components["schemas"]["RequirementImpactResponse"];
 export type RequirementList = components["schemas"]["RequirementListResponse"];
 export type RequirementWorklistItem = components["schemas"]["RequirementWorklistItemResponse"];
@@ -31,6 +40,20 @@ export type StoryChangeOperation = components["schemas"]["StoryChangeOperation"]
 export type StoryProposal = components["schemas"]["StoryChangeProposalResponse"];
 export type DocumentSummary = components["schemas"]["DocumentSummaryResponse"];
 export type DocumentDetail = components["schemas"]["DocumentDetailResponse"];
+/** A document with the Requirement or draft it is attached to, as the list and its page show it. */
+export type DocumentListItem = components["schemas"]["DocumentListItemResponse"];
+export type DocumentList = components["schemas"]["DocumentListResponse"];
+export type DocumentOwnerSummary = components["schemas"]["DocumentOwnerResponse"];
+export type OwnedDocumentDetail = components["schemas"]["OwnedDocumentDetailResponse"];
+export type DocumentListParams = {
+  q?: string;
+  filter?: components["schemas"]["DocumentFilter"];
+  /** A requirement's or draft's id. */
+  owner?: string;
+  sort?: components["schemas"]["DocumentSort"];
+  offset?: number;
+  limit?: number;
+};
 export type DocumentContent = components["schemas"]["DocumentContentResponse"];
 export type StoryQuality = components["schemas"]["StoryQualityResponse"];
 export type FeatureStoryQualitySnapshot =
@@ -385,6 +408,29 @@ async function download(path: string, fallbackFilename: string): Promise<void> {
   URL.revokeObjectURL(objectUrl);
 }
 
+function documentListPath(params: DocumentListParams = {}) {
+  const query = new URLSearchParams();
+  if (params.q?.trim()) query.set("q", params.q.trim());
+  if (params.filter) query.set("filter", params.filter);
+  if (params.owner) query.set("owner", params.owner);
+  if (params.sort) query.set("sort", params.sort);
+  if (params.offset !== undefined) query.set("offset", String(params.offset));
+  if (params.limit !== undefined) query.set("limit", String(params.limit));
+  const encoded = query.toString();
+  return `/documents${encoded ? `?${encoded}` : ""}`;
+}
+
+function draftListPath(params: RequirementDraftListParams = {}) {
+  const query = new URLSearchParams();
+  if (params.unowned) query.set("unowned", "true");
+  if (params.q?.trim()) query.set("q", params.q.trim());
+  if (params.sort) query.set("sort", params.sort);
+  if (params.offset !== undefined) query.set("offset", String(params.offset));
+  if (params.limit !== undefined) query.set("limit", String(params.limit));
+  const encoded = query.toString();
+  return `/requirements/drafts${encoded ? `?${encoded}` : ""}`;
+}
+
 function activityListPath(params: ActivityListParams = {}) {
   const query = new URLSearchParams();
   if (params.requirementId) query.set("requirement_id", params.requirementId);
@@ -546,9 +592,10 @@ export const api = {
       `/requirements/drafts/${encodeURIComponent(id)}/ownership/claim`,
       { method: "POST" },
     ),
-  listDocuments: (options?: RequestOptions) => request<DocumentSummary[]>("/documents", options),
+  listDocuments: (params: DocumentListParams = {}, options?: RequestOptions) =>
+    request<DocumentList>(documentListPath(params), options),
   getDocument: (id: string, options?: RequestOptions) =>
-    request<DocumentDetail>(`/documents/${encodeURIComponent(id)}`, options),
+    request<OwnedDocumentDetail>(`/documents/${encodeURIComponent(id)}`, options),
   getDocumentContent: (id: string) =>
     request<DocumentContent>(`/documents/${encodeURIComponent(id)}/content`),
   getDocumentPdf: (id: string, options?: RequestOptions) =>
@@ -613,8 +660,8 @@ export const api = {
       method: "POST",
       body: JSON.stringify(input),
     }),
-  listRequirementDrafts: (unowned = false, options?: RequestOptions) =>
-    request<RequirementDraft[]>(`/requirements/drafts${unowned ? "?unowned=true" : ""}`, options),
+  listRequirementDrafts: (params: RequirementDraftListParams = {}, options?: RequestOptions) =>
+    request<RequirementDraftList>(draftListPath(params), options),
   getRequirementDraft: (id: string, options?: RequestOptions) =>
     request<RequirementDraft>(`/requirements/drafts/${encodeURIComponent(id)}`, options),
   saveRequirementDraft: (id: string, input: RequirementDraftInput, expectedVersion: number) =>

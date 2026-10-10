@@ -106,7 +106,11 @@ from smb_requirement_agent.jobs.application.errors import (
     ProviderBudgetExhaustedError,
     ProviderRateLimitExceededError,
 )
-from smb_requirement_agent.jobs.domain.errors import AiJobConflictError, InvalidAiJobError
+from smb_requirement_agent.jobs.domain.errors import (
+    AiJobConflictError,
+    AiJobInputsPrunedError,
+    InvalidAiJobError,
+)
 from smb_requirement_agent.knowledge.application.errors import (
     AnswerSuggestionNotFoundError,
     KnowledgeFindingNotFoundError,
@@ -208,6 +212,7 @@ ERROR_CATALOGUE: tuple[tuple[type[Exception], str, FailureCategory], ...] = (
     ),
     (BacklogExportFormatError, "backlog_export_format", FailureCategory.INVALID_INPUT),
     (AiJobConflictError, "ai_job_conflict", FailureCategory.CONFLICT),
+    (AiJobInputsPrunedError, "ai_job_inputs_pruned", FailureCategory.CONFLICT),
     (InvalidAiJobError, "invalid_ai_job", FailureCategory.INVALID_INPUT),
     (RequirementAccessConflictError, "requirement_access_conflict", FailureCategory.CONFLICT),
     (InvalidIdentityError, "invalid_identity", FailureCategory.INVALID_INPUT),

@@ -122,7 +122,11 @@ from smb_requirement_agent.jobs.application.errors import (
     ProviderBudgetExhaustedError,
     ProviderRateLimitExceededError,
 )
-from smb_requirement_agent.jobs.domain.errors import AiJobConflictError, InvalidAiJobError
+from smb_requirement_agent.jobs.domain.errors import (
+    AiJobConflictError,
+    AiJobInputsPrunedError,
+    InvalidAiJobError,
+)
 from smb_requirement_agent.knowledge.application.errors import (
     AnswerSuggestionNotFoundError,
     KnowledgeFindingNotFoundError,
@@ -246,6 +250,7 @@ EXPECTED_STATUS_CODES: dict[type[Exception], int] = {
     BreakdownRevisionNotExportableError: 409,
     BacklogExportFormatError: 422,
     AiJobConflictError: 409,
+    AiJobInputsPrunedError: 409,
     KnowledgeFindingConflictError: 409,
     RequirementRetiredError: 409,
     CorpusMembershipConflictError: 409,

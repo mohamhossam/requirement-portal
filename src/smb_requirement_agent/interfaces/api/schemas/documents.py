@@ -1,6 +1,7 @@
 """HTTP schemas for source-document review."""
 
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -78,6 +79,43 @@ class DocumentVersionDetailResponse(DocumentVersionMetadataResponse):
 
 class DocumentDetailResponse(DocumentSummaryResponse):
     versions: list[DocumentVersionDetailResponse]
+
+
+class DocumentOwnerResponse(BaseModel):
+    """The Requirement or draft a document is attached to; its title, if it still exists."""
+
+    kind: Literal["requirement", "draft"]
+    id: str
+    title: str | None
+
+
+class DocumentListItemResponse(DocumentSummaryResponse):
+    owner: DocumentOwnerResponse
+
+
+class DocumentCountsResponse(BaseModel):
+    """As the documents page groups them; a document blocking analysis counts only there."""
+
+    attention: int
+    included: int
+    excluded: int
+
+
+class DocumentListResponse(BaseModel):
+    """One page of documents (production hardening PR 13). The counts and owners cover every
+    document the actor may open, whatever the search or filter."""
+
+    documents: list[DocumentListItemResponse]
+    total: int
+    offset: int
+    limit: int
+    has_more: bool
+    counts: DocumentCountsResponse
+    owners: list[DocumentOwnerResponse]
+
+
+class OwnedDocumentDetailResponse(DocumentDetailResponse):
+    owner: DocumentOwnerResponse
 
 
 class DocumentContentResponse(BaseModel):

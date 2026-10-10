@@ -177,7 +177,12 @@ The database grew by more than 20% in a day.
 
 - Expected after a large import. Otherwise, find the largest tables:
   `SELECT relname, pg_size_pretty(pg_total_relation_size(relid)) FROM pg_statio_user_tables ORDER BY pg_total_relation_size(relid) DESC LIMIT 10;`
-- Make sure the `retention` command is scheduled (`deployment.md`, "Retention").
+- Make sure the `retention` command is scheduled (`deployment.md`, "Retention"). Its output
+  gives the document blobs' total size and how many nothing refers to. If `document_blobs`
+  is the largest table and the orphans are a large share of it, find out why before removing
+  any by hand.
+- If `ai_jobs` is the largest table, check that the command's run cleared the inputs of old
+  jobs, and consider a shorter `AI_JOB_PAYLOAD_RETENTION_DAYS`.
 - Check that the host has room for the growth and for the backups (**DiskLow**).
 
 ## Host
