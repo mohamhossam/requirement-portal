@@ -28,6 +28,9 @@ from smb_requirement_agent.interfaces.api.routes.activity import (
 )
 from smb_requirement_agent.interfaces.api.routes.analysis import router as analysis_router
 from smb_requirement_agent.interfaces.api.routes.architecture import router as architecture_router
+from smb_requirement_agent.interfaces.api.routes.client_errors import (
+    router as client_errors_router,
+)
 from smb_requirement_agent.interfaces.api.routes.documents import router as documents_router
 from smb_requirement_agent.interfaces.api.routes.epic import router as epic_router
 from smb_requirement_agent.interfaces.api.routes.feature import router as feature_router
@@ -276,6 +279,7 @@ def create_app(container_factory: Callable[[], Container] = build_container) -> 
         report_router,
         saved_view_router,
         public_identity_router,
+        client_errors_router,
         identity_router,
         identity_assignment_router,
         jobs_router,

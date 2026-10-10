@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { buildPolicy } from "../../contentSecurityPolicy";
+import { buildPolicy, IDENTITY_ORIGINS_PLACEHOLDER } from "../../contentSecurityPolicy";
+import { runtimeConfig } from "../../runtimeConfig";
 
 const THEME_SCRIPT = "\n  (function () { document.documentElement.dataset.x = '1'; })();\n";
 const HTML = `<html><head><script>${THEME_SCRIPT}</script><script type="module" src="/assets/index.js"></script></head></html>`;
@@ -60,4 +61,32 @@ describe("buildPolicy", () => {
       expect(() => buildPolicy(HTML, { identityOrigins: value })).toThrow(/CSP_IDENTITY_ORIGINS/);
     },
   );
+});
+
+describe("the container image's build", () => {
+  it("leaves the issuer origins for the container to fill in, each after a space", () => {
+    const policy = buildPolicy(HTML, { runtimeIdentityOrigins: true });
+
+    for (const name of ["connect-src", "frame-src", "form-action"]) {
+      expect(directive(policy, name)).toContain(IDENTITY_ORIGINS_PLACEHOLDER);
+    }
+    expect(policy.split(` ${IDENTITY_ORIGINS_PLACEHOLDER}`)).toHaveLength(4);
+  });
+
+  it("refuses origins given at build time, which the container would never use", () => {
+    expect(() =>
+      buildPolicy(HTML, { runtimeIdentityOrigins: true, identityOrigins: "https://login.example.com" }),
+    ).toThrow("CSP_IDENTITY_ORIGINS is set when the web container starts");
+  });
+
+  it("adds the knowledge portal's placeholders only to that build", () => {
+    const transform = (enabled: boolean) => {
+      const hook = runtimeConfig(enabled).transformIndexHtml as (html: string) => string;
+      return hook("<html><head><title>App</title></head></html>");
+    };
+
+    expect(transform(true)).toContain('<meta name="knowledge-portal-url" content="__KNOWLEDGE_PORTAL_URL__" />');
+    expect(transform(true)).toContain('<meta name="knowledge-portal-role" content="__KNOWLEDGE_PORTAL_ROLE__" />');
+    expect(transform(false)).toBe("<html><head><title>App</title></head></html>");
+  });
 });

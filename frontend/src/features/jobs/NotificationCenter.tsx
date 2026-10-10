@@ -26,12 +26,12 @@ export function NotificationCenter() {
   const browserNotificationsAvailable = typeof Notification !== "undefined";
   const notifications = useQuery({
     queryKey: queryKeys.notifications(),
-    queryFn: () => api.listNotifications(true),
+    queryFn: ({ signal }) => api.listNotifications(true, { signal }),
     refetchInterval: 10_000,
   });
   const preference = useQuery({
     queryKey: queryKeys.notificationPreference(),
-    queryFn: api.getNotificationPreference,
+    queryFn: ({ signal }) => api.getNotificationPreference({ signal }),
   });
   const markRead = useMutation({
     mutationFn: (notificationId: string) => api.markNotificationRead(notificationId),

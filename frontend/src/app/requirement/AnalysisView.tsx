@@ -12,7 +12,7 @@ import {
   type IntentProposal,
   type IntentProposalStatus,
 } from "../../api/client";
-import { errorMessage } from "../../api/errors";
+import { errorMessage, errorReference } from "../../api/errors";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { EmptyState } from "../../components/EmptyState";
 import { ErrorNotice } from "../../components/ErrorNotice";
@@ -56,14 +56,14 @@ export function AnalysisView({
 
   const rounds = useQuery({
     queryKey: queryKeys.analysisRounds(id),
-    queryFn: () => api.listAnalysisRounds(id),
+    queryFn: ({ signal }) => api.listAnalysisRounds(id, { signal }),
     enabled: Boolean(data),
     refetchOnMount: "always",
   });
   const suggestions = useQueries({
     queries: (data?.questions ?? []).map((question) => ({
       queryKey: queryKeys.answerSuggestions(id, question.id),
-      queryFn: () => api.getAnswerSuggestions(id, question.id),
+      queryFn: ({ signal }) => api.getAnswerSuggestions(id, question.id, { signal }),
       refetchOnMount: "always" as const,
     })),
   });
@@ -264,7 +264,7 @@ export function AnalysisView({
               </Button>
             } />
         )}
-        {analyse.error && <ErrorNotice message={errorMessage(analyse.error)} />}
+        {analyse.error && <ErrorNotice message={errorMessage(analyse.error)} reference={errorReference(analyse.error)} />}
         {/* After the analysis, not before it. Above, it put a lineage tool
             between a person and the first question on every visit; the gate
             points here by name when changed reference evidence is what blocks

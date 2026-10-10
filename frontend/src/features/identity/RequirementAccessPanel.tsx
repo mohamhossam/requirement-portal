@@ -3,7 +3,7 @@ import { UserRoundPlus, X } from "lucide-react";
 import { useState } from "react";
 
 import { api, type RequirementAccess } from "../../api/client";
-import { errorMessage } from "../../api/errors";
+import { errorMessage, errorReference } from "../../api/errors";
 import { queryKeys } from "../../app/queryKeys";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { ErrorNotice } from "../../components/ErrorNotice";
@@ -39,7 +39,7 @@ export function RequirementAccessPanel({
   const queryClient = useQueryClient();
   const [selectedActor, setSelectedActor] = useState("");
   const [confirmTransfer, setConfirmTransfer] = useState(false);
-  const actors = useQuery({ queryKey: queryKeys.scope("identity-actors"), queryFn: () => api.searchActors() });
+  const actors = useQuery({ queryKey: queryKeys.scope("identity-actors"), queryFn: ({ signal }) => api.searchActors(undefined, undefined, { signal }) });
   const update = async (value: RequirementAccess) => {
     queryClient.setQueryData(queryKeys.assignments(requirementId), value);
     setSelectedActor("");
@@ -169,7 +169,7 @@ export function RequirementAccessPanel({
           onConfirm={() => { setConfirmTransfer(false); transfer.mutate(selectedActor); }}
         />
       )}
-      {mutationError && <ErrorNotice message={errorMessage(mutationError)} />}
+      {mutationError && <ErrorNotice message={errorMessage(mutationError)} reference={errorReference(mutationError)} />}
       {access.changes.length > 0 && (
         <Disclosure label={`Access history (${access.changes.length})`}>
           <ol className="text-meta text-ink-soft m-0 grid gap-1.5 pl-5">

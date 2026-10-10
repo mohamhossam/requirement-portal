@@ -2,7 +2,7 @@
 
 ## Status
 
-**Specified 2026-10-08; in progress since 2026-10-09.** Phase 0 (platform-kernel v1.2.0, and this repository's move to it) is delivered. PR 1, PR 8, PR 2, PR 4a, PR 4b, PR 5 and PR 6 are delivered, which completes the pilot gate (Phase 1), and so are PR 7, PR 3, PR 9, PR 10 and PR 11 of Phase 2 (see their entries and Validation Evidence). PR 12 and Phase 3 are not implemented yet. This record keeps the
+**Specified 2026-10-08; in progress since 2026-10-09.** Phase 0 (platform-kernel v1.2.0, and this repository's move to it) is delivered. PR 1, PR 8, PR 2, PR 4a, PR 4b, PR 5 and PR 6 are delivered, which completes the pilot gate (Phase 1), and so is all of Phase 2: PR 7, PR 3, PR 9, PR 10, PR 11 and PR 12 (see their entries and Validation Evidence). Phase 3 is not implemented yet. This record keeps the
 plan for closing every finding of the second production-readiness review (security, deployment and
 CI, reliability and observability, frontend) so it can be scheduled later. When work starts, each
 PR converts its part into the `WORKSPACE.md` §10 sections and fills in Validation Evidence here.
@@ -447,7 +447,52 @@ Then bump `pyproject.toml:12` and `uv.lock`, and wire the new settings. Phase 1 
   - token lifespans and refresh tokens, so silent renewal doesn't need third-party cookies;
   - the public `requirement-spa` and confidential `requirement-service` clients.
 
-**PR 12 · Frontend resilience** (exception)
+**PR 12 · Frontend resilience** (exception) — *delivered on `claude/production-hardening-pr12`, 2026-10-10*
+
+*Exception to CLAUDE.md's presentation-only rule (ADR-0109, owner-approved).* The frontend files
+whose logic changes:
+- `api/client.ts`, `api/errors.ts`, `api/knowledge.ts` and the new `api/clientErrors.ts`;
+- `app/mutationErrors.ts`, `components/states/ErrorBoundary.tsx` and `main.tsx`;
+- each `queryFn`, which now passes `{ signal }`.
+
+**Timeouts and cancellation**
+- `sessionFetch` gives up after 30 s, or 120 s for `FormData` uploads, `download` and `requestBlob`.
+- It tells three endings apart:
+  - an identity change, or a caller's abort: `request_aborted`, which is silent;
+  - a timeout: the new `request_timeout`, which keeps the status-0 retry policy;
+  - a network failure.
+- The 34 read methods of `api`, and the 3 of `knowledgeApi`, take `{ signal }`. All 47 `queryFn`s pass it. The two `skipToken` ones need none.
+
+**Correlation IDs**
+- `errorReference(error)`, and a small `ErrorReference` (mono, `select-all`) under the message of `ErrorNotice`, `ErrorState` and failure toasts.
+- 33 call sites that hold the error pass it. Those holding only a string have no ID to show; the global mutation toast carries it for every failed action.
+
+**Client error reports**
+- `POST /client-errors` is public (`PUBLIC_OPERATIONS`). It takes `{kind}` with `extra="forbid"`: `render`, `chunk_load`, `uncaught_error` or `unhandled_rejection`. It counts `smb_client_errors_total{kind}`, logs the kind, and answers 204.
+- The edge gives it its own zone: 1 r/s, burst 10, and a 1 KB body.
+- `reportClientError` sends each kind once per page load, with `keepalive`, outside the session. The callers:
+  - the boundaries (`chunk_load` or `render`);
+  - `error`/`unhandledrejection` listeners, which skip `request_aborted`.
+
+**Runtime values**
+- The image's build (`WEB_RUNTIME_CONFIG=true`) leaves placeholders:
+  - `__CSP_IDENTITY_ORIGINS__`, always after a space, in `connect-src`, `frame-src` and `form-action`;
+  - `<meta name="knowledge-portal-url|role">`.
+- `deploy/web/render-index.sh` (`/docker-entrypoint.d/30-render-index.sh`) checks the values character by character, so they can't break the HTML or `sed`. It refuses to start under OIDC without an origin, and writes `/run/web/index.html`, which `location = /index.html` serves.
+- `knowledge.ts` reads the metas, then `import.meta.env`.
+- Compose drops the web build args and gains `IDENTITY_PROVIDER`, `CSP_IDENTITY_ORIGINS`, `KNOWLEDGE_PORTAL_ROLE` and the `/run/web` tmpfs. The demo sets `IDENTITY_PROVIDER: fake`.
+- `release.yml` builds the web image without deployment values.
+- Any other build bakes the values as before.
+- CI's deployment job checks that:
+  - the served page has no placeholder left;
+  - `web` refuses to start under the production manifest without an issuer origin.
+- `sessionFetch` joins its signals with `AbortSignal.any`, or by hand on Safari before 17.4. Vite's default build target still includes Safari 16.
+
+**Node**
+- `engines.node >=24` and `.nvmrc`.
+- `client.test.ts` uses a string body, which closes the deferred trace-gap item.
+
+*Plan as specified:*
 - **Timeouts and cancellation:**
   - `sessionFetch` default timeouts: 30s for JSON, 120s for uploads and downloads.
   - `api` methods accept an optional `{ signal }`, and query functions pass it through.
@@ -809,3 +854,25 @@ Run locally on Python 3.13 against PostgreSQL 16:
 - The image-pin test fails when the Keycloak digests are removed.
 
 Not run locally: the workflows themselves. CI runs `secrets` and CodeQL on this PR. `rescan.yml` runs on its schedule, or from the Actions tab.
+
+### PR 12 (2026-10-10, branch `claude/production-hardening-pr12`)
+
+Run locally on Python 3.13 against PostgreSQL 16, and Node 22, the only version on this machine:
+- Backend: full pytest with coverage, ruff (with `S`), format, mypy and lint-imports are clean.
+- Frontend: `npm test` passes (now including the export test on Node 22); so do lint, typecheck, `npm run build` and `npm run api:check`.
+- The image's build, served through `default.conf.template` on a local nginx with a stub API (`nginx -t` passes):
+  - `vite build` with `WEB_RUNTIME_CONFIG=true` emits the placeholders, and none reach the JS bundles;
+  - `render-index.sh` fills them;
+  - `/`, a deep route and `/index.html` all serve the rendered page with `no-cache`, its CSP naming the configured issuer, and assets stay immutable;
+  - `/api/client-errors` lets 10 of a burst of 20 through, then answers 429, and answers 413 to a 2 KB body, while the rest of `/api/` keeps its own budget.
+
+New tests cover:
+- timeouts (30 s and 120 s), caller cancellation and network failure;
+- the reference in `ErrorState`, `ErrorNotice` and toasts;
+- reports: once per kind, no token, swallowed failures, the listeners, and the boundary kinds;
+- the route: public, counted, and refusing unknown kinds and extra fields;
+- the edge zone;
+- `render-index.sh`: rendering, the demo, and 13 refusals including quote, pipe, `&`, wildcard and newline injection;
+- the knowledge metas and the CSP placeholder mode.
+
+Not run locally: the image itself (no Docker daemon). CI's deployment job builds it and runs the stack with the rendered page.

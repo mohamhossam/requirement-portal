@@ -8,7 +8,7 @@ import {
   configureAuthenticationHeaders,
   replaceAuthenticationHeaders,
 } from "./client";
-import { ABORTED_REQUEST, ApiError } from "./errors";
+import { ABORTED_REQUEST, ApiError, REQUEST_TIMEOUT } from "./errors";
 
 const server = setupServer();
 
@@ -221,7 +221,7 @@ describe("API client", () => {
         "http://localhost/api/requirements/r-1/revisions/7/export",
         ({ request }) => {
           authorization = request.headers.get("authorization") ?? "";
-          return new HttpResponse(new Blob(["{}"]), {
+          return new HttpResponse("{}", {
             headers: {
               "Content-Type": "application/json",
               "Content-Disposition": 'attachment; filename="approved-v7.json"',
@@ -237,5 +237,90 @@ describe("API client", () => {
     expect(createObjectUrl).toHaveBeenCalledOnce();
     expect(click).toHaveBeenCalledOnce();
     expect(revokeObjectUrl).toHaveBeenCalledWith("blob:export");
+  });
+});
+
+describe("timeouts and cancellation", () => {
+  /** A server that never answers: the request ends only when its signal aborts. */
+  function hangingFetch() {
+    return vi.spyOn(globalThis, "fetch").mockImplementation((_input, init) =>
+      new Promise<Response>((_resolve, reject) => {
+        init?.signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));
+      }));
+  }
+
+  /** Hands out a timeout signal the test fires itself. */
+  function controlledTimeout() {
+    const timeout = new AbortController();
+    const spy = vi.spyOn(AbortSignal, "timeout").mockReturnValue(timeout.signal);
+    return { spy, fire: () => timeout.abort(new DOMException("Timed out", "TimeoutError")) };
+  }
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it("gives up on a JSON request after 30 seconds, as a timeout", async () => {
+    const timeout = controlledTimeout();
+    hangingFetch();
+
+    const request = api.getRequirement("r-1");
+    timeout.fire();
+
+    expect(timeout.spy).toHaveBeenCalledWith(30_000);
+    await expect(request).rejects.toMatchObject({ status: 0, code: REQUEST_TIMEOUT });
+  });
+
+  it("allows two minutes for uploads and document downloads", async () => {
+    const timeout = controlledTimeout();
+    hangingFetch();
+
+    const upload = api.uploadRequirementDocument("r-1", new File(["policy"], "policy.txt"));
+    const pdf = api.getDocumentPdf("document-1");
+    timeout.fire();
+
+    expect(timeout.spy.mock.calls).toEqual([[120_000], [120_000]]);
+    await expect(upload).rejects.toMatchObject({ code: REQUEST_TIMEOUT });
+    await expect(pdf).rejects.toMatchObject({ code: REQUEST_TIMEOUT });
+  });
+
+  it("passes a query's signal to fetch, and its abort is a silent cancellation", async () => {
+    const fetchMock = hangingFetch();
+    const query = new AbortController();
+
+    const request = api.getRequirement("r-1", { signal: query.signal });
+    query.abort();
+
+    await expect(request).rejects.toMatchObject({ status: 0, code: ABORTED_REQUEST });
+    const sent = fetchMock.mock.calls[0]?.[1]?.signal;
+    expect(sent?.aborted).toBe(true);
+  });
+
+  it("works where the browser has no AbortSignal.any, as older Safari", async () => {
+    const native = AbortSignal.any;
+    Reflect.deleteProperty(AbortSignal, "any");
+    try {
+      expect(AbortSignal.any).toBeUndefined();
+      const timeout = controlledTimeout();
+      hangingFetch();
+      const query = new AbortController();
+
+      const timedOut = api.getRequirement("r-1");
+      const cancelled = api.getRequirement("r-2", { signal: query.signal });
+      query.abort();
+      timeout.fire();
+
+      await expect(cancelled).rejects.toMatchObject({ code: ABORTED_REQUEST });
+      await expect(timedOut).rejects.toMatchObject({ code: REQUEST_TIMEOUT });
+    } finally {
+      AbortSignal.any = native;
+    }
+  });
+
+  it("still reports a network failure as one", async () => {
+    vi.spyOn(globalThis, "fetch").mockRejectedValue(new TypeError("Failed to fetch"));
+
+    const failure = await api.getRequirement("r-1").catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(ApiError);
+    expect(failure).toMatchObject({ status: 0, code: undefined, detail: "Failed to fetch" });
   });
 });

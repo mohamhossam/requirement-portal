@@ -1,7 +1,7 @@
 import { ChevronDown } from "lucide-react";
 
 import type { SavedRequirementView } from "../../api/client";
-import { errorMessage } from "../../api/errors";
+import { errorMessage, errorReference } from "../../api/errors";
 import { ErrorNotice } from "../../components/ErrorNotice";
 import { Button } from "../../components/ui/Button";
 import { cx } from "../../components/ui/cx";
@@ -92,7 +92,7 @@ export function SavedViewsMenu({
             Delete
           </Button>
         </div>
-        {error ? <ErrorNotice message={errorMessage(error)} /> : null}
+        {error ? <ErrorNotice message={errorMessage(error)} reference={errorReference(error)} /> : null}
       </div>
     </details>
   );

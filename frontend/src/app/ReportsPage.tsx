@@ -60,7 +60,7 @@ export function ReportsPage() {
   const weeks: Weeks = initial === 4 || initial === 26 ? initial : 12;
   const report = useQuery({
     queryKey: queryKeys.reports(weeks),
-    queryFn: () => api.getOperationalReport(weeks),
+    queryFn: ({ signal }) => api.getOperationalReport(weeks, { signal }),
   });
   const choose = (value: Weeks) => setSearchParams({ weeks: String(value) });
 

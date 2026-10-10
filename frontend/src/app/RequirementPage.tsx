@@ -4,7 +4,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { api } from "../api/client";
-import { errorMessage } from "../api/errors";
+import { errorMessage, errorReference } from "../api/errors";
 import { useAuth } from "../auth/authContext";
 import { PageHeader } from "../components/shell";
 import { Skeleton } from "../components/Skeleton";
@@ -187,8 +187,8 @@ function RequirementWorkspaceShell({ view }: { view: RequirementView }) {
 
   // Read-only views of what the Backlog stage fetches, for the job panel's
   // Feature names and the stale flag. Disabled, so they never issue a request.
-  const cachedEpic = useQuery({ queryKey: queryKeys.epic(id), queryFn: () => api.getEpic(id), enabled: false });
-  const cachedFeatures = useQuery({ queryKey: queryKeys.features(id), queryFn: () => api.getFeatures(id), enabled: false });
+  const cachedEpic = useQuery({ queryKey: queryKeys.epic(id), queryFn: ({ signal }) => api.getEpic(id, { signal }), enabled: false });
+  const cachedFeatures = useQuery({ queryKey: queryKeys.features(id), queryFn: ({ signal }) => api.getFeatures(id, { signal }), enabled: false });
 
   // Above the early returns, because a hook cannot be called after one. The
   // Requirement comes first: a reviewer with four of these open is looking for
@@ -210,6 +210,7 @@ function RequirementWorkspaceShell({ view }: { view: RequirementView }) {
         headingLevel="h2"
         title="We couldn’t open this requirement"
         message={errorMessage(requirement.error)}
+        reference={errorReference(requirement.error)}
         onRetry={() => void requirement.refetch()}
         action={<ButtonLink variant="primary" to="/">Return to requirements</ButtonLink>}
       />
@@ -360,6 +361,7 @@ function RequirementWorkspaceShell({ view }: { view: RequirementView }) {
             <ErrorState
               title="We couldn’t load the people on this requirement"
               message={errorMessage(assignments.error)}
+              reference={errorReference(assignments.error)}
               onRetry={() => void assignments.refetch()}
             />
           )}

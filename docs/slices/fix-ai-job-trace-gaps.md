@@ -166,4 +166,6 @@ parametrised cases) and passes with G7.
 - **Back-off between reclaims.** A dying job is now bounded, but its attempts run back to back.
 - **Frontend pre-existing failure on Node 22.** `src/api/client.test.ts` ("downloads an
   authenticated export…") fails on Node 22 with or without this change; it passes on Node 24,
-  which CI uses.
+  which CI uses. *(2026-10-10: closed by production hardening PR 12. The test's response
+  body is now a string, so it passes on Node 22 too, and `frontend/package.json` declares
+  `engines.node >=24`, with a `.nvmrc`.)*

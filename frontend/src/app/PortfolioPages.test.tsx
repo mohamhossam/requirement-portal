@@ -71,7 +71,7 @@ describe("activity", () => {
       actions: ["question_resolved"],
       occurredFrom: "2026-09-21T00:00:00Z",
       occurredBefore: "2026-09-28T00:00:00Z",
-    }));
+    }), { signal: expect.any(AbortSignal) });
   });
 
   it("filters by a requirement chosen by name, not by ID", async () => {
@@ -81,7 +81,7 @@ describe("activity", () => {
     const picker = screen.getByRole("combobox", { name: "Requirement" });
     await userEvent.type(picker, "Leg");
     await userEvent.click(await within(screen.getByRole("listbox", { name: "Requirement" })).findByRole("option", { name: /Legacy/ }));
-    await waitFor(() => expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ requirementId: "req-2" })));
+    await waitFor(() => expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ requirementId: "req-2" }), { signal: expect.any(AbortSignal) }));
     expect(screen.getByRole("button", { name: "Clear requirement" })).toBeVisible();
   });
 
@@ -92,13 +92,13 @@ describe("activity", () => {
     const picker = screen.getByRole("combobox", { name: "Person" });
     await userEvent.click(picker);
     await userEvent.keyboard("{Enter}");
-    expect(list).not.toHaveBeenCalledWith(expect.objectContaining({ actorId: "actor-1" }));
+    expect(list).not.toHaveBeenCalledWith(expect.objectContaining({ actorId: "actor-1" }), { signal: expect.any(AbortSignal) });
     expect(picker).not.toHaveAttribute("aria-activedescendant");
     await userEvent.keyboard("{ArrowDown}");
     expect(picker).toHaveAttribute("aria-activedescendant");
     expect(within(screen.getByRole("listbox", { name: "Person" })).getByRole("option", { selected: true })).toHaveTextContent("Amina");
     await userEvent.keyboard("{Enter}");
-    await waitFor(() => expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ actorId: "actor-1" })));
+    await waitFor(() => expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ actorId: "actor-1" }), { signal: expect.any(AbortSignal) }));
   });
 
   it("says how many events are not shown, and loads the next page", async () => {
@@ -109,7 +109,7 @@ describe("activity", () => {
     renderActivity();
     expect(await screen.findByText("Showing 1 of 150 events")).toHaveAttribute("role", "status");
     await userEvent.click(screen.getByRole("button", { name: /Show 100 more/ }));
-    await waitFor(() => expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ offset: 1 })));
+    await waitFor(() => expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ offset: 1 }), { signal: expect.any(AbortSignal) }));
     expect(await screen.findByText("Answer recorded")).toBeVisible();
   });
 });
@@ -139,6 +139,6 @@ describe("reports", () => {
     expect(screen.queryByRole("link", { name: /^0 / })).toBeNull();
 
     await userEvent.click(screen.getByRole("button", { name: "12 weeks" }));
-    await waitFor(() => expect(api.getOperationalReport).toHaveBeenLastCalledWith(12));
+    await waitFor(() => expect(api.getOperationalReport).toHaveBeenLastCalledWith(12, { signal: expect.any(AbortSignal) }));
   });
 });

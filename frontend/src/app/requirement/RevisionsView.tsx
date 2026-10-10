@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 
 import { api } from "../../api/client";
-import { errorMessage } from "../../api/errors";
+import { errorMessage, errorReference } from "../../api/errors";
 import { Skeleton } from "../../components/Skeleton";
 import { ErrorState } from "../../components/states";
 import { RevisionPanel } from "../../features/revisions/RevisionPanel";
@@ -15,7 +15,7 @@ export function RevisionsView({ id, workspace }: { id: string; workspace: Requir
 
   const revisions = useQuery({
     queryKey: queryKeys.revisions(id),
-    queryFn: () => api.getRevisionHistory(id),
+    queryFn: ({ signal }) => api.getRevisionHistory(id, { signal }),
     refetchOnMount: "always",
   });
 
@@ -56,6 +56,7 @@ export function RevisionsView({ id, workspace }: { id: string; workspace: Requir
         <ErrorState
           headingLevel="h2"
           message={revisions.error ? errorMessage(revisions.error) : "The history is unavailable."}
+          reference={errorReference(revisions.error)}
           onRetry={() => void revisions.refetch()}
           title="We couldn’t load the history"
         />

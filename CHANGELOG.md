@@ -95,5 +95,16 @@ The first published release: the pilot candidate, closing the pilot gate of
     Keycloak from Docker Hub (`keycloak/keycloak`) rather than quay.io.
   - `docs/operations/identity-provider.md` describes the two clients and the token and session
     lifetimes.
+- **The browser copes with a slow or failing API, and says when it fails.**
+  - Requests give up after 30 seconds, or 2 minutes for uploads and downloads. A page nobody
+    shows any more stops its requests.
+  - Error messages and failure notices show the request's reference (its correlation ID), to
+    quote to support.
+  - Browsers report crashes to `POST /api/client-errors`, by kind only, counted as
+    `smb_client_errors_total`. The edge limits each address to 1 report a second.
+  - One `web` image serves every deployment. `CSP_IDENTITY_ORIGINS`, `KNOWLEDGE_PORTAL_URL` and
+    `KNOWLEDGE_PORTAL_ROLE` are read when the container starts, which refuses to start under OIDC
+    without an issuer origin.
+  - The frontend declares Node 24 (`engines`, `.nvmrc`).
 
 Upgrade: none (first release). Contract-step migrations: none after `202610091200`.

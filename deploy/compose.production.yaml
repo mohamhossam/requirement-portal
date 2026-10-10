@@ -221,18 +221,23 @@ services:
         condition: service_completed_successfully
 
   web:
-    # Built per deployment: its CSP and links name this deployment's issuer and portal.
+    # The same image for every deployment: it renders this deployment's issuer
+    # origins and portal link into the page when it starts (render-index.sh).
     image: ${REQUIREMENT_WEB_IMAGE:-requirement-platform/web}:${IMAGE_TAG:-local}
     build:
       context: ..
       dockerfile: deploy/web/Dockerfile
-      args:
-        CSP_IDENTITY_ORIGINS: ${CSP_IDENTITY_ORIGINS:-}
-        # Where the knowledge portal is, for its links; empty hides them (ADR-0104).
-        VITE_KNOWLEDGE_PORTAL_URL: ${KNOWLEDGE_PORTAL_URL:-}
     environment:
-      # Old /knowledge/ bookmarks redirect here for one release; empty answers 404.
+      # Like the API's, so the page and the API agree on how people sign in. Under
+      # OIDC the page needs the issuer's origin for its Content-Security-Policy,
+      # and refuses to start without it.
+      IDENTITY_PROVIDER: oidc
+      CSP_IDENTITY_ORIGINS: ${CSP_IDENTITY_ORIGINS:-}
+      # Where the knowledge portal is, for the app's links and old /knowledge/
+      # bookmarks; empty hides the links and answers bookmarks 404 (ADR-0104).
       KNOWLEDGE_PORTAL_URL: ${KNOWLEDGE_PORTAL_URL:-}
+      # Who sees those links; set it empty for everyone signed in.
+      KNOWLEDGE_PORTAL_ROLE: ${KNOWLEDGE_PORTAL_ROLE-knowledge_admin}
       # The TLS proxy in front, which may name the client address, and each
       # address's API budget at this edge (docs/operations/deployment.md, "Rate limiting").
       TRUSTED_PROXY_CIDR: ${TRUSTED_PROXY_CIDR:-127.0.0.1/32}
@@ -247,10 +252,12 @@ services:
     cpus: 1.0
     pids_limit: 128
     read_only: true
-    # nginx-unprivileged runs as uid 101 and renders its config into conf.d.
+    # nginx-unprivileged runs as uid 101 and renders its config into conf.d, and
+    # the app's index.html into /run/web.
     tmpfs:
       - /tmp:uid=101,gid=101
       - /etc/nginx/conf.d:uid=101,gid=101
+      - /run/web:uid=101,gid=101
     security_opt:
       - no-new-privileges:true
     # Busybox wget, in the nginx-unprivileged image: nginx answers and serves the app.

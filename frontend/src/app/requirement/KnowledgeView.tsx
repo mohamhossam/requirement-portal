@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 
 import { api, type KnowledgeFinding } from "../../api/client";
-import { errorMessage } from "../../api/errors";
+import { errorMessage, errorReference } from "../../api/errors";
 import { ErrorNotice } from "../../components/ErrorNotice";
 import { Skeleton } from "../../components/Skeleton";
 import { Card } from "../../components/ui";
@@ -49,7 +49,7 @@ export function KnowledgeView({
   });
 
   if (knowledgeReview.isPending) return <Skeleton label="Loading the knowledge review" />;
-  if (knowledgeReview.isError) return <ErrorNotice message={errorMessage(knowledgeReview.error)} />;
+  if (knowledgeReview.isError) return <ErrorNotice message={errorMessage(knowledgeReview.error)} reference={errorReference(knowledgeReview.error)} />;
   if (!knowledgeReview.data) return null;
 
   const conflicts = knowledgeReview.data.reference_conflict_ids?.length ?? 0;

@@ -7,6 +7,7 @@ import { App } from "./app/App";
 import { UnsavedChangesProvider } from "./app/UnsavedChangesProvider";
 import { ErrorBoundary } from "./components/states";
 import { Toaster } from "./components/Toaster";
+import { reportUncaughtErrors } from "./api/clientErrors";
 import { ApiError } from "./api/errors";
 import { mutationErrorToast } from "./app/mutationErrors";
 import { publishToast } from "./components/toastBus";
@@ -54,6 +55,9 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Failures the boundaries cannot catch: event handlers, timers, promises.
+reportUncaughtErrors();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

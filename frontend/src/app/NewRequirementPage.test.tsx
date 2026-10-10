@@ -158,7 +158,7 @@ describe("NewRequirementPage", () => {
     expect(await screen.findByLabelText(/Requirement title/)).toHaveValue(
       "Explicitly resumed requirement",
     );
-    expect(api.getRequirementDraft).toHaveBeenCalledWith("draft-resume");
+    expect(api.getRequirementDraft).toHaveBeenCalledWith("draft-resume", { signal: expect.any(AbortSignal) });
   });
 
   it("keeps the form interactive while autosave is running", async () => {

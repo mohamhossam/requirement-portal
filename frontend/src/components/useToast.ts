@@ -6,6 +6,8 @@ export type ToastInput = {
   tone: ToastTone;
   title: string;
   message?: string;
+  /** The API's correlation ID of a failure, from `errorReference(error)`. */
+  reference?: string | null;
   /** In-app destination for the toast's link, if the result is worth opening. */
   to?: string;
   linkLabel?: string;

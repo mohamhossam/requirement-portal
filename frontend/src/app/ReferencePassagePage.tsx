@@ -26,7 +26,7 @@ export function ReferencePassagePage() {
   const citation = citationFrom(params);
   const passage = useQuery({
     queryKey: ["reference-passage", citation],
-    queryFn: () => knowledgeApi.passage(citation!),
+    queryFn: ({ signal }) => knowledgeApi.passage(citation!, { signal }),
     enabled: citation !== null,
     retry: false,
   });

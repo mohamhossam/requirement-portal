@@ -15,7 +15,17 @@ export type PolicySources = {
   apiBase?: string;
   /** Space-separated OIDC issuer origins (`CSP_IDENTITY_ORIGINS`). */
   identityOrigins?: string;
+  /**
+   * The container image's build (`WEB_RUNTIME_CONFIG=true`): the issuer origins
+   * are left as `IDENTITY_ORIGINS_PLACEHOLDER`, which the web container fills
+   * from its own `CSP_IDENTITY_ORIGINS` when it starts
+   * (`deploy/web/render-index.sh`). One image then serves every deployment.
+   */
+  runtimeIdentityOrigins?: boolean;
 };
+
+/** Where the web container writes the issuer origins; always after a space. */
+export const IDENTITY_ORIGINS_PLACEHOLDER = "__CSP_IDENTITY_ORIGINS__";
 
 const INLINE_SCRIPT = /<script>([\s\S]*?)<\/script>/g;
 
@@ -44,11 +54,19 @@ function origin(value: string, variable: string): string {
   return url.origin;
 }
 
+function identitySources(sources: PolicySources): string[] {
+  const configured = (sources.identityOrigins ?? "").split(/\s+/).filter(Boolean);
+  if (!sources.runtimeIdentityOrigins) {
+    return configured.map((value) => origin(value, "CSP_IDENTITY_ORIGINS"));
+  }
+  if (configured.length) {
+    throw new Error("CSP_IDENTITY_ORIGINS is set when the web container starts, not at build time.");
+  }
+  return [IDENTITY_ORIGINS_PLACEHOLDER];
+}
+
 export function buildPolicy(html: string, sources: PolicySources): string {
-  const identity = (sources.identityOrigins ?? "")
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((value) => origin(value, "CSP_IDENTITY_ORIGINS"));
+  const identity = identitySources(sources);
   const api = /^https?:\/\//.test(sources.apiBase ?? "")
     ? [new URL(sources.apiBase as string).origin]
     : [];

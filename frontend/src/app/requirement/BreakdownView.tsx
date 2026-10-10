@@ -26,7 +26,7 @@ export function BreakdownView({ id, workspace }: { id: string; workspace: Requir
 
   const epic = useQuery({
     queryKey: queryKeys.epic(id),
-    queryFn: () => api.getEpic(id),
+    queryFn: ({ signal }) => api.getEpic(id, { signal }),
     refetchOnMount: "always",
   });
   /**
@@ -38,7 +38,7 @@ export function BreakdownView({ id, workspace }: { id: string; workspace: Requir
    */
   const features = useQuery({
     queryKey: queryKeys.features(id),
-    queryFn: () => api.getFeatures(id),
+    queryFn: ({ signal }) => api.getFeatures(id, { signal }),
     refetchOnMount: "always",
   });
 

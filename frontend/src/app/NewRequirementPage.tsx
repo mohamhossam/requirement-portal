@@ -11,7 +11,7 @@ import {
   type RequirementDraft,
   type RequirementDraftInput,
 } from "../api/client";
-import { errorMessage } from "../api/errors";
+import { errorMessage, errorReference } from "../api/errors";
 import { Disclosure } from "../components/Disclosure";
 import { PageHeader } from "../components/shell";
 import { ErrorState, LoadingState } from "../components/states";
@@ -83,7 +83,7 @@ export function NewRequirementPage() {
 
   const draftQuery = useQuery({
     queryKey: queryKeys.requirementDraft(requestedDraftId ?? "new"),
-    queryFn: () => api.getRequirementDraft(requestedDraftId!),
+    queryFn: ({ signal }) => api.getRequirementDraft(requestedDraftId!, { signal }),
     enabled: Boolean(requestedDraftId),
     staleTime: Infinity,
   });
@@ -305,6 +305,7 @@ export function NewRequirementPage() {
           headingLevel="h2"
           title="We couldn’t open that draft"
           message={errorMessage(draftQuery.error)}
+          reference={errorReference(draftQuery.error)}
           onRetry={() => void draftQuery.refetch()}
         />
       ) : (

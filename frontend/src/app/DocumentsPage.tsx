@@ -127,7 +127,7 @@ function added(document: DocumentSummary) {
 export function DocumentsPage() {
   const knowledgeAdmin = useIsKnowledgeAdmin();
   useDocumentTitle("Documents");
-  const documents = useQuery({ queryKey: queryKeys.documents(), queryFn: api.listDocuments });
+  const documents = useQuery({ queryKey: queryKeys.documents(), queryFn: ({ signal }) => api.listDocuments({ signal }) });
   const ownerOf = useDocumentOwners(documents.data);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("all");

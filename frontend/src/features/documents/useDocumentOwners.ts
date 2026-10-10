@@ -32,13 +32,13 @@ export function useDocumentOwners(documents: DocumentSummary[] | undefined) {
   const requirements = useQueries({
     queries: requirementIds.map((id) => ({
       queryKey: queryKeys.requirement(id),
-      queryFn: () => api.getRequirement(id),
+      queryFn: ({ signal }) => api.getRequirement(id, { signal }),
     })),
   });
   const hasDrafts = Boolean(documents?.some((document) => document.draft_id));
   const drafts = useQuery({
     queryKey: queryKeys.requirementDrafts(),
-    queryFn: () => api.listRequirementDrafts(),
+    queryFn: ({ signal }) => api.listRequirementDrafts(false, { signal }),
     enabled: hasDrafts,
   });
 

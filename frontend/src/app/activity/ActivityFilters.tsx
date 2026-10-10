@@ -66,16 +66,16 @@ export function ActivityFilters({
 
   const requirementOptions = useQuery({
     queryKey: queryKeys.scope("activity-requirement-options", requirementSearch),
-    queryFn: () => api.listRequirements({ q: requirementSearch || undefined, limit: 8 }),
+    queryFn: ({ signal }) => api.listRequirements({ q: requirementSearch || undefined, limit: 8 }, { signal }),
   });
   const actorOptions = useQuery({
     queryKey: queryKeys.scope("activity-actor-options", actorSearch),
-    queryFn: () => api.searchActors(actorSearch, 8),
+    queryFn: ({ signal }) => api.searchActors(actorSearch, 8, { signal }),
   });
   // A link can arrive holding only an ID; find the name it stands for.
   const chosenRequirement = useQuery({
     queryKey: queryKeys.scope("activity-requirement", state.requirementId),
-    queryFn: () => api.listRequirements({ q: state.requirementId, limit: 5 }),
+    queryFn: ({ signal }) => api.listRequirements({ q: state.requirementId, limit: 5 }, { signal }),
     enabled: Boolean(state.requirementId) && !knownRequirements.has(state.requirementId),
   });
 

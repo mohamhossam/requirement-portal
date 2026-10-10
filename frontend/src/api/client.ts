@@ -1,5 +1,5 @@
 import type { components } from "./schema";
-import { ABORTED_REQUEST, ApiError, normalizeErrorDetail } from "./errors";
+import { ABORTED_REQUEST, ApiError, normalizeErrorDetail, REQUEST_TIMEOUT } from "./errors";
 
 export type Requirement = components["schemas"]["RequirementResponse"];
 export type RequirementDraft = components["schemas"]["RequirementDraftResponse"];
@@ -155,7 +155,8 @@ export type ActivityListParams = {
   limit?: number;
 };
 
-const baseUrl = (import.meta.env.VITE_API_BASE ?? "/api").replace(/\/$/, "");
+/** Where the API is: `VITE_API_BASE`, else this origin's `/api`. */
+export const baseUrl = (import.meta.env.VITE_API_BASE ?? "/api").replace(/\/$/, "");
 let authorizationHeaders: () => Record<string, string> = () => ({});
 let authenticationFailure: (() => void) | null = null;
 let credentialSession = new AbortController();
@@ -178,41 +179,88 @@ export function replaceAuthenticationHeaders(headers: () => Record<string, strin
   authorizationHeaders = headers;
 }
 
+/** A query's `signal`: TanStack Query aborts it when nobody needs the answer any more. */
+export type RequestOptions = { signal?: AbortSignal };
+
+/** How long a request may take, body included, before the client gives up on it. */
+const JSON_TIMEOUT_MS = 30_000;
+/** Uploads and downloads carry whole files. */
+const TRANSFER_TIMEOUT_MS = 120_000;
+
 /**
- * A request the client gave up on: the network failed, or the identity changed
- * while it was in flight. Both are status 0, because either may have reached the
- * server; only the second carries `ABORTED_REQUEST`, which nobody needs to be told about.
+ * A signal that aborts when any of these does. `AbortSignal.any` where the browser
+ * has it; Safari before 17.4 does not, so there the signals are joined by hand.
  */
-function transportError(error: unknown, session: AbortSignal): ApiError {
-  if (session.aborted) {
+function anySignal(signals: AbortSignal[]): AbortSignal {
+  if (typeof AbortSignal.any === "function") return AbortSignal.any(signals);
+  const joined = new AbortController();
+  for (const signal of signals) {
+    if (signal.aborted) {
+      joined.abort(signal.reason);
+      break;
+    }
+    signal.addEventListener("abort", () => joined.abort(signal.reason), { once: true });
+  }
+  return joined.signal;
+}
+
+/** The signals one request runs under, so a failure can say which one ended it. */
+type Transfer = { session: AbortSignal; timeout: AbortSignal; caller?: AbortSignal };
+
+/**
+ * A request the client gave up on. All are status 0, because any may have reached
+ * the server:
+ * - the identity changed, or the caller stopped waiting (a cancelled query): both
+ *   carry `ABORTED_REQUEST`, which nobody needs to be told about;
+ * - the server took longer than the timeout: `REQUEST_TIMEOUT`;
+ * - the network failed.
+ */
+function transportError(error: unknown, transfer: Transfer): ApiError {
+  if (transfer.session.aborted) {
     return new ApiError(0, "The request was cancelled because the signed-in identity changed.", ABORTED_REQUEST);
+  }
+  if (transfer.caller?.aborted) {
+    return new ApiError(0, "The request was cancelled.", ABORTED_REQUEST);
+  }
+  if (transfer.timeout.aborted) {
+    return new ApiError(0, "The server took too long to answer. Please try again.", REQUEST_TIMEOUT);
   }
   return new ApiError(0, error instanceof Error ? error.message : "The API is unavailable.");
 }
 
 /** Read a response body, refusing it if the identity changed while it arrived. */
-async function sessionBody<T>(session: AbortSignal, read: () => Promise<T>): Promise<T> {
+async function sessionBody<T>(transfer: Transfer, read: () => Promise<T>): Promise<T> {
   let body: T;
   try {
     body = await read();
   } catch (error) {
-    throw transportError(error, session);
+    throw transportError(error, transfer);
   }
-  if (session.aborted) throw transportError(null, session);
+  if (transfer.session.aborted) throw transportError(null, transfer);
   return body;
 }
 
-async function sessionFetch(url: string, init?: RequestInit): Promise<Response> {
-  const session = credentialSession.signal;
-  const signal = init?.signal
-    ? AbortSignal.any([session, init.signal])
-    : session;
+async function sessionFetch(
+  url: string,
+  init: RequestInit | undefined,
+  timeoutMs: number,
+): Promise<{ response: Response; transfer: Transfer }> {
+  const transfer: Transfer = {
+    session: credentialSession.signal,
+    timeout: AbortSignal.timeout(timeoutMs),
+    caller: init?.signal ?? undefined,
+  };
+  const signal = anySignal(
+    [transfer.session, transfer.timeout, transfer.caller].filter(
+      (item): item is AbortSignal => item !== undefined,
+    ),
+  );
   try {
     const response = await fetch(url, { ...init, signal });
-    if (session.aborted) throw transportError(null, session);
-    return response;
+    if (transfer.session.aborted) throw transportError(null, transfer);
+    return { response, transfer };
   } catch (error) {
-    throw error instanceof ApiError ? error : transportError(error, session);
+    throw error instanceof ApiError ? error : transportError(error, transfer);
   }
 }
 
@@ -229,31 +277,30 @@ export function configureAuthentication(
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const session = credentialSession.signal;
   const isFormData = init?.body instanceof FormData;
-  const response = await sessionFetch(`${baseUrl}${path}`, {
+  const { response, transfer } = await sessionFetch(`${baseUrl}${path}`, {
     ...init,
     headers: {
       ...(isFormData ? {} : { "Content-Type": "application/json" }),
       ...authorizationHeaders(),
       ...init?.headers,
     },
-  });
+  }, isFormData ? TRANSFER_TIMEOUT_MS : JSON_TIMEOUT_MS);
   if (!response.ok) {
     if (response.status === 401) authenticationFailure?.();
     const payload: unknown = await response.json().catch(() => null);
     throw responseError(response.status, payload);
   }
-  return sessionBody(session, () => response.json() as Promise<T>);
+  return sessionBody(transfer, () => response.json() as Promise<T>);
 }
 
 export const apiRequest = request;
 export const apiRequestNoContent = requestNoContent;
 export const apiDownload = (path: string, fallbackFilename: string) => download(path, fallbackFilename);
 
-async function optional<T>(path: string): Promise<T | null> {
+async function optional<T>(path: string, options?: RequestOptions): Promise<T | null> {
   try {
-    return await request<T>(path);
+    return await request<T>(path, options);
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) return null;
     throw error;
@@ -261,14 +308,14 @@ async function optional<T>(path: string): Promise<T | null> {
 }
 
 async function requestNoContent(path: string, init?: RequestInit): Promise<void> {
-  const response = await sessionFetch(`${baseUrl}${path}`, {
+  const { response } = await sessionFetch(`${baseUrl}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
       ...authorizationHeaders(),
       ...init?.headers,
     },
-  });
+  }, JSON_TIMEOUT_MS);
   if (!response.ok) {
     if (response.status === 401) authenticationFailure?.();
     const payload: unknown = await response.json().catch(() => null);
@@ -316,10 +363,9 @@ function requirementListPath(params: RequirementListParams = {}) {
 }
 
 async function download(path: string, fallbackFilename: string): Promise<void> {
-  const session = credentialSession.signal;
-  const response = await sessionFetch(`${baseUrl}${path}`, {
+  const { response, transfer } = await sessionFetch(`${baseUrl}${path}`, {
     headers: authorizationHeaders(),
-  });
+  }, TRANSFER_TIMEOUT_MS);
   if (!response.ok) {
     if (response.status === 401) authenticationFailure?.();
     const payload: unknown = await response.json().catch(() => null);
@@ -327,7 +373,7 @@ async function download(path: string, fallbackFilename: string): Promise<void> {
   }
   const disposition = response.headers.get("Content-Disposition") ?? "";
   const filename = disposition.match(/filename="([^"]+)"/i)?.[1] ?? fallbackFilename;
-  const body = await sessionBody(session, () => response.blob());
+  const body = await sessionBody(transfer, () => response.blob());
   const objectUrl = URL.createObjectURL(body);
   const anchor = document.createElement("a");
   anchor.href = objectUrl;
@@ -353,22 +399,25 @@ function activityListPath(params: ActivityListParams = {}) {
   return `/activity${encoded ? `?${encoded}` : ""}`;
 }
 
-async function requestBlob(path: string): Promise<Blob> {
-  const session = credentialSession.signal;
-  const response = await sessionFetch(`${baseUrl}${path}`, { headers: authorizationHeaders() });
+async function requestBlob(path: string, options?: RequestOptions): Promise<Blob> {
+  const { response, transfer } = await sessionFetch(
+    `${baseUrl}${path}`,
+    { ...options, headers: authorizationHeaders() },
+    TRANSFER_TIMEOUT_MS,
+  );
   if (!response.ok) {
     if (response.status === 401) authenticationFailure?.();
     const payload: unknown = await response.json().catch(() => null);
     throw responseError(response.status, payload);
   }
-  return sessionBody(session, () => response.blob());
+  return sessionBody(transfer, () => response.blob());
 }
 
 export const api = {
-  getRequirementIndex: (id: string) => request<components["schemas"]["RequirementIndexStatus"]>(`/requirements/${encodeURIComponent(id)}/knowledge-index`),
+  getRequirementIndex: (id: string, options?: RequestOptions) => request<components["schemas"]["RequirementIndexStatus"]>(`/requirements/${encodeURIComponent(id)}/knowledge-index`, options),
   retryRequirementIndex: (id: string) => request<components["schemas"]["RequirementIndexStatus"]>(`/requirements/${encodeURIComponent(id)}/knowledge-index/retry`, { method: "POST" }),
-  listAttachmentIngestions: (sourceId: string, draft: boolean) =>
-    request<components["schemas"]["AttachmentIngestionView"][]>(`/${draft ? "requirement-drafts" : "requirements"}/${encodeURIComponent(sourceId)}/document-ingestions`),
+  listAttachmentIngestions: (sourceId: string, draft: boolean, options?: RequestOptions) =>
+    request<components["schemas"]["AttachmentIngestionView"][]>(`/${draft ? "requirement-drafts" : "requirements"}/${encodeURIComponent(sourceId)}/document-ingestions`, options),
   submitAttachment: (sourceId: string, draft: boolean, file: File, key: string, include: boolean, replacement?: DocumentSummary) => {
     const body = documentForm(file, replacement?.version, include);
     body.append("idempotency_key", key);
@@ -379,18 +428,18 @@ export const api = {
     request<components["schemas"]["AttachmentIngestionView"]>(`/${draft ? "requirement-drafts" : "requirements"}/${encodeURIComponent(sourceId)}/document-ingestions/${encodeURIComponent(id)}/${action}`, {
       method: "POST", body: JSON.stringify({ expected_version: version }),
     }),
-  sourceImpact: ({ requirementId, offset, activeOnly, query }: { requirementId: string; offset: number; activeOnly: boolean; query: string }) =>
-    request<components["schemas"]["DependencyImpactPage"]>(`/requirements/${encodeURIComponent(requirementId)}/source-impact?offset=${offset}&limit=20&active_only=${activeOnly}&query=${encodeURIComponent(query)}`),
+  sourceImpact: ({ requirementId, offset, activeOnly, query }: { requirementId: string; offset: number; activeOnly: boolean; query: string }, options?: RequestOptions) =>
+    request<components["schemas"]["DependencyImpactPage"]>(`/requirements/${encodeURIComponent(requirementId)}/source-impact?offset=${offset}&limit=20&active_only=${activeOnly}&query=${encodeURIComponent(query)}`, options),
   decideSourceImpact: (requirementId: string, item: DependencyImpact, decision: "retain_historical" | "revise_content", reason: string) =>
     request<DependencyImpact>(`/requirements/${encodeURIComponent(requirementId)}/source-impact/${encodeURIComponent(item.dependency.id)}/decisions`, { method: "POST", body: JSON.stringify({ publication_state: item.publication_state, expected_version: item.decisions.length, decision, reason }) }),
   searchUnifiedKnowledge: (query: string) => request<components["schemas"]["UnifiedSearchHit"][]>("/knowledge/search/unified", {
     method: "POST", body: JSON.stringify({ query }),
   }),
-  listActivity: (params: ActivityListParams = {}) =>
-    request<ActivityList>(activityListPath(params)),
-  getOperationalReport: (weeks: 4 | 12 | 26 = 12) =>
-    request<OperationalReport>(`/reports/operational?weeks=${weeks}`),
-  listSavedViews: () => request<SavedRequirementView[]>("/saved-views"),
+  listActivity: (params: ActivityListParams = {}, options?: RequestOptions) =>
+    request<ActivityList>(activityListPath(params), options),
+  getOperationalReport: (weeks: 4 | 12 | 26 = 12, options?: RequestOptions) =>
+    request<OperationalReport>(`/reports/operational?weeks=${weeks}`, options),
+  listSavedViews: (options?: RequestOptions) => request<SavedRequirementView[]>("/saved-views", options),
   createSavedView: (name: string, criteria: SavedViewCriteria) =>
     request<SavedRequirementView>("/saved-views", {
       method: "POST",
@@ -417,8 +466,8 @@ export const api = {
       headers: { "Idempotency-Key": idempotencyKey },
       body: JSON.stringify(input),
     }),
-  listAiJobs: (id: string, activeOnly = false) =>
-    request<AiJob[]>(`${requirementPath(id)}/ai-jobs?active_only=${activeOnly}`),
+  listAiJobs: (id: string, activeOnly = false, options?: RequestOptions) =>
+    request<AiJob[]>(`${requirementPath(id)}/ai-jobs?active_only=${activeOnly}`, options),
   getAiJob: (id: string, jobId: string) =>
     request<AiJob>(`${requirementPath(id)}/ai-jobs/${encodeURIComponent(jobId)}`),
   cancelAiJob: (id: string, jobId: string, expectedVersion: number) =>
@@ -437,14 +486,14 @@ export const api = {
       headers: { "Idempotency-Key": idempotencyKey },
       body: JSON.stringify({ expected_version: expectedVersion }),
     }),
-  listNotifications: (unreadOnly = false) =>
-    request<Notification[]>(`/notifications?unread_only=${unreadOnly}`),
+  listNotifications: (unreadOnly = false, options?: RequestOptions) =>
+    request<Notification[]>(`/notifications?unread_only=${unreadOnly}`, options),
   markNotificationRead: (notificationId: string) =>
     request<Notification>(`/notifications/${encodeURIComponent(notificationId)}/read`, {
       method: "POST",
     }),
-  getNotificationPreference: () =>
-    request<NotificationPreference>("/notifications/preferences/current"),
+  getNotificationPreference: (options?: RequestOptions) =>
+    request<NotificationPreference>("/notifications/preferences/current", options),
   setNotificationPreference: (browserEnabled: boolean) =>
     request<NotificationPreference>("/notifications/preferences/current", {
       method: "PUT",
@@ -452,14 +501,14 @@ export const api = {
     }),
   getIdentityConfig: () => request<IdentityConfig>("/identity/config"),
   getCurrentActor: () => request<Actor>("/identity/me"),
-  searchActors: (query = "", limit = 20) =>
-    request<Actor[]>(`/identity/actors?q=${encodeURIComponent(query)}&limit=${limit}`),
-  getAssignments: (id: string) =>
-    request<RequirementAccess>(`${requirementPath(id)}/assignments`),
-  getPriorArt: (id: string) =>
-    request<PriorArt>(`${requirementPath(id)}/prior-art`),
-  getKnowledgeReview: (id: string) =>
-    request<KnowledgeReview>(`${requirementPath(id)}/knowledge-review`),
+  searchActors: (query = "", limit = 20, options?: RequestOptions) =>
+    request<Actor[]>(`/identity/actors?q=${encodeURIComponent(query)}&limit=${limit}`, options),
+  getAssignments: (id: string, options?: RequestOptions) =>
+    request<RequirementAccess>(`${requirementPath(id)}/assignments`, options),
+  getPriorArt: (id: string, options?: RequestOptions) =>
+    request<PriorArt>(`${requirementPath(id)}/prior-art`, options),
+  getKnowledgeReview: (id: string, options?: RequestOptions) =>
+    request<KnowledgeReview>(`${requirementPath(id)}/knowledge-review`, options),
   ensureKnowledgeScreen: (id: string) =>
     request<KnowledgeScreenEnsure>(`${requirementPath(id)}/knowledge-screen/ensure`, {
       method: "POST",
@@ -497,20 +546,19 @@ export const api = {
       `/requirements/drafts/${encodeURIComponent(id)}/ownership/claim`,
       { method: "POST" },
     ),
-  listDocuments: () => request<DocumentSummary[]>("/documents"),
-  getDocument: (id: string) =>
-    request<DocumentDetail>(`/documents/${encodeURIComponent(id)}`),
+  listDocuments: (options?: RequestOptions) => request<DocumentSummary[]>("/documents", options),
+  getDocument: (id: string, options?: RequestOptions) =>
+    request<DocumentDetail>(`/documents/${encodeURIComponent(id)}`, options),
   getDocumentContent: (id: string) =>
     request<DocumentContent>(`/documents/${encodeURIComponent(id)}/content`),
-  getDocumentPdf: (id: string) =>
-    requestBlob(`/documents/${encodeURIComponent(id)}/pdf`),
-  getDocumentAsset: (documentId: string, versionId: string, assetId: string) =>
+  getDocumentPdf: (id: string, options?: RequestOptions) =>
+    requestBlob(`/documents/${encodeURIComponent(id)}/pdf`, options),
+  getDocumentAsset: (documentId: string, versionId: string, assetId: string, options?: RequestOptions) =>
     requestBlob(
       `/documents/${encodeURIComponent(documentId)}/versions/` +
-      `${encodeURIComponent(versionId)}/assets/${encodeURIComponent(assetId)}`,
-    ),
-  listRequirementDocuments: (id: string) =>
-    request<DocumentSummary[]>(`${requirementPath(id)}/attachments`),
+      `${encodeURIComponent(versionId)}/assets/${encodeURIComponent(assetId)}`, options),
+  listRequirementDocuments: (id: string, options?: RequestOptions) =>
+    request<DocumentSummary[]>(`${requirementPath(id)}/attachments`, options),
   uploadRequirementDocument: (id: string, file: File, includeInAnalysis = false) =>
     request<DocumentDetail>(`${requirementPath(id)}/attachments`, {
       method: "POST",
@@ -523,8 +571,8 @@ export const api = {
       `${requirementPath(requirementId)}/attachments/${encodeURIComponent(documentId)}/versions`,
       { method: "POST", body: documentForm(file, expectedVersion, includeInAnalysis) },
     ),
-  listDraftDocuments: (id: string) =>
-    request<DocumentSummary[]>(`/requirement-drafts/${encodeURIComponent(id)}/attachments`),
+  listDraftDocuments: (id: string, options?: RequestOptions) =>
+    request<DocumentSummary[]>(`/requirement-drafts/${encodeURIComponent(id)}/attachments`, options),
   uploadDraftDocument: (id: string, file: File, includeInAnalysis = false) =>
     request<DocumentDetail>(`/requirement-drafts/${encodeURIComponent(id)}/attachments`, {
       method: "POST",
@@ -557,18 +605,18 @@ export const api = {
     requestNoContent(`/requirement-drafts/${encodeURIComponent(draftId)}/attachments/${encodeURIComponent(documentId)}?expected_version=${expectedVersion}`, { method: "DELETE" }),
   createRequirement: (input: RequirementInput) =>
     request<Requirement>("/requirements", { method: "POST", body: JSON.stringify(input) }),
-  listRequirements: (params: RequirementListParams = {}) =>
-    request<RequirementList>(requirementListPath(params)),
-  getRequirement: (id: string) => request<Requirement>(requirementPath(id)),
+  listRequirements: (params: RequirementListParams = {}, options?: RequestOptions) =>
+    request<RequirementList>(requirementListPath(params), options),
+  getRequirement: (id: string, options?: RequestOptions) => request<Requirement>(requirementPath(id), options),
   createRequirementDraft: (input: RequirementDraftInput) =>
     request<RequirementDraft>("/requirements/drafts", {
       method: "POST",
       body: JSON.stringify(input),
     }),
-  listRequirementDrafts: (unowned = false) =>
-    request<RequirementDraft[]>(`/requirements/drafts${unowned ? "?unowned=true" : ""}`),
-  getRequirementDraft: (id: string) =>
-    request<RequirementDraft>(`/requirements/drafts/${encodeURIComponent(id)}`),
+  listRequirementDrafts: (unowned = false, options?: RequestOptions) =>
+    request<RequirementDraft[]>(`/requirements/drafts${unowned ? "?unowned=true" : ""}`, options),
+  getRequirementDraft: (id: string, options?: RequestOptions) =>
+    request<RequirementDraft>(`/requirements/drafts/${encodeURIComponent(id)}`, options),
   saveRequirementDraft: (id: string, input: RequirementDraftInput, expectedVersion: number) =>
     request<RequirementDraft>(`/requirements/drafts/${encodeURIComponent(id)}`, {
       method: "PUT",
@@ -586,11 +634,10 @@ export const api = {
     }),
   updateRequirement: (id: string, input: RequirementInput) =>
     request<Requirement>(requirementPath(id), { method: "PUT", body: JSON.stringify(input) }),
-  getAnalysis: (id: string) => optional<RequirementAnalysis>(`${requirementPath(id)}/analysis`),
-  getAnswerSuggestions: (id: string, questionId: string) =>
+  getAnalysis: (id: string, options?: RequestOptions) => optional<RequirementAnalysis>(`${requirementPath(id)}/analysis`, options),
+  getAnswerSuggestions: (id: string, questionId: string, options?: RequestOptions) =>
     optional<AnswerSuggestionSet>(
-      `${requirementPath(id)}/analysis/questions/${encodeURIComponent(questionId)}/answer-suggestions`,
-    ),
+      `${requirementPath(id)}/analysis/questions/${encodeURIComponent(questionId)}/answer-suggestions`, options),
   setHiddenWorksheetInclusion: (
     requirementId: string,
     documentId: string,
@@ -601,8 +648,8 @@ export const api = {
       "/hidden-worksheets",
     { method: "PUT", body: JSON.stringify({ worksheet_names: worksheetNames, expected_version: expectedVersion }) },
   ),
-  listAnalysisRounds: (id: string) =>
-    request<AnalysisRound[]>(`${requirementPath(id)}/analysis/rounds`),
+  listAnalysisRounds: (id: string, options?: RequestOptions) =>
+    request<AnalysisRound[]>(`${requirementPath(id)}/analysis/rounds`, options),
   askClarificationQuestion: (
     id: string,
     input: components["schemas"]["AskClarificationQuestionRequest"],
@@ -657,7 +704,7 @@ export const api = {
       `${requirementPath(id)}/analysis/proposals/${encodeURIComponent(proposalId)}`,
       { method: "PATCH", body: JSON.stringify(input) },
     ),
-  getEpic: (id: string) => optional<Epic>(`${requirementPath(id)}/epic`),
+  getEpic: (id: string, options?: RequestOptions) => optional<Epic>(`${requirementPath(id)}/epic`, options),
   editEpic: (id: string, input: EpicInput & { expected_version: number }) =>
     request<Epic>(`${requirementPath(id)}/epic`, {
       method: "PUT",
@@ -668,7 +715,7 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ expected_version: expectedVersion, expected_content_fingerprint: expected, rationale }),
     }),
-  getFeatures: (id: string) => optional<FeatureSet>(`${requirementPath(id)}/features`),
+  getFeatures: (id: string, options?: RequestOptions) => optional<FeatureSet>(`${requirementPath(id)}/features`, options),
   editFeature: (
     requirementId: string, featureId: string, input: FeatureInput & { expected_version: number }
   ) =>
@@ -690,8 +737,8 @@ export const api = {
         body: JSON.stringify({ expected_version: expectedVersion, expected_content_fingerprint: expected, rationale }),
       },
     ),
-  getRevisionHistory: (id: string) =>
-    request<RevisionHistory>(`${requirementPath(id)}/revisions`),
+  getRevisionHistory: (id: string, options?: RequestOptions) =>
+    request<RevisionHistory>(`${requirementPath(id)}/revisions`, options),
   compareBreakdownRevisions: (id: string, fromRevision: number, toRevision: number) =>
     request<BreakdownComparison>(
       `${requirementPath(id)}/revisions/compare?from_revision=${fromRevision}&to_revision=${toRevision}`,
@@ -701,10 +748,10 @@ export const api = {
       `${requirementPath(id)}/revisions/${revision}/export?format=${format}`,
       `requirement-${id}-breakdown-v${revision}.${format}`,
     ),
-  getStories: (id: string, featureId: string) =>
-    optional<StorySet>(storiesPath(id, featureId)),
-  getFeatureStoryQualityAssessment: (id: string, featureId: string) =>
-    optional<FeatureStoryQualitySnapshot>(`${storiesPath(id, featureId)}/quality-assessment`),
+  getStories: (id: string, featureId: string, options?: RequestOptions) =>
+    optional<StorySet>(storiesPath(id, featureId), options),
+  getFeatureStoryQualityAssessment: (id: string, featureId: string, options?: RequestOptions) =>
+    optional<FeatureStoryQualitySnapshot>(`${storiesPath(id, featureId)}/quality-assessment`, options),
   startArchitectureMappingJob: (id: string) =>
     request<ArchitectureMappingJob>(`${requirementPath(id)}/architecture-mapping/jobs`, {
       method: "POST",
@@ -713,10 +760,10 @@ export const api = {
     request<ArchitectureMappingJob>(
       `${requirementPath(id)}/architecture-mapping/jobs/${encodeURIComponent(jobId)}`,
     ),
-  getBreakdownReview: (id: string) =>
-    optional<BreakdownReview>(`${requirementPath(id)}/breakdown-review`),
-  getApprovalWorkflow: (id: string) =>
-    optional<ApprovalWorkflow>(`${requirementPath(id)}/approval-workflow`),
+  getBreakdownReview: (id: string, options?: RequestOptions) =>
+    optional<BreakdownReview>(`${requirementPath(id)}/breakdown-review`, options),
+  getApprovalWorkflow: (id: string, options?: RequestOptions) =>
+    optional<ApprovalWorkflow>(`${requirementPath(id)}/approval-workflow`, options),
   submitForReview: (id: string, expectedFingerprint: string, expectedVersion: number) =>
     request<ApprovalWorkflow>(`${requirementPath(id)}/review-submission`, {
       method: "POST",
@@ -788,8 +835,8 @@ export const api = {
       method: "PUT",
       body: JSON.stringify(input),
     }),
-  listStoryProposals: (id: string, featureId: string) =>
-    request<StoryProposal[]>(`${storiesPath(id, featureId)}/change-proposals`),
+  listStoryProposals: (id: string, featureId: string, options?: RequestOptions) =>
+    request<StoryProposal[]>(`${storiesPath(id, featureId)}/change-proposals`, options),
   applyStoryProposal: (
     id: string,
     featureId: string,

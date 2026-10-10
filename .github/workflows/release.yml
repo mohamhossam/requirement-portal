@@ -35,10 +35,9 @@ jobs:
   publish:
     needs: gates
     runs-on: ubuntu-latest
-    # The deployment the web image is built for. Its Content-Security-Policy and
-    # links are baked in at build time, so they come from this GitHub environment's
-    # variables: CSP_IDENTITY_ORIGINS (required), KNOWLEDGE_PORTAL_URL and
-    # KNOWLEDGE_PORTAL_ROLE (optional). A second deployment is a second web build.
+    # Both images serve every deployment: the web container takes its issuer
+    # origins and portal link when it starts (deploy/web/render-index.sh). The
+    # environment stays, so any protection rules on it still gate a publish.
     environment: production
     permissions:
       contents: write # the GitHub release
@@ -48,27 +47,15 @@ jobs:
       KERNEL_READ_TOKEN: ${{ secrets.KERNEL_READ_TOKEN }}
       API_IMAGE: ghcr.io/${{ github.repository_owner }}/requirement-api:${{ github.ref_name }}
       WEB_IMAGE: ghcr.io/${{ github.repository_owner }}/requirement-web-production:${{ github.ref_name }}
-      CSP_IDENTITY_ORIGINS: ${{ vars.CSP_IDENTITY_ORIGINS }}
-      KNOWLEDGE_PORTAL_URL: ${{ vars.KNOWLEDGE_PORTAL_URL }}
-      KNOWLEDGE_PORTAL_ROLE: ${{ vars.KNOWLEDGE_PORTAL_ROLE || 'knowledge_admin' }}
       TRIVY: aquasec/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Production sign-in is configured for the web image
-        run: |
-          test -n "$CSP_IDENTITY_ORIGINS" || {
-            echo "Set CSP_IDENTITY_ORIGINS on the 'production' environment: the OIDC issuer origin."; exit 1; }
 
       - name: Build both images once
         run: |
           DOCKER_BUILDKIT=1 docker build --secret id=kernel_read_token,env=KERNEL_READ_TOKEN \
             -f deploy/api/Dockerfile -t "$API_IMAGE" .
-          DOCKER_BUILDKIT=1 docker build -f deploy/web/Dockerfile \
-            --build-arg CSP_IDENTITY_ORIGINS="$CSP_IDENTITY_ORIGINS" \
-            --build-arg VITE_KNOWLEDGE_PORTAL_URL="$KNOWLEDGE_PORTAL_URL" \
-            --build-arg VITE_KNOWLEDGE_PORTAL_ROLE="$KNOWLEDGE_PORTAL_ROLE" \
-            -t "$WEB_IMAGE" .
+          DOCKER_BUILDKIT=1 docker build -f deploy/web/Dockerfile -t "$WEB_IMAGE" .
 
       - name: Refuse fixable HIGH and CRITICAL vulnerabilities
         run: |

@@ -11,7 +11,7 @@ import {
   type StoryQuality,
 } from "../../api/client";
 import { invalidateWorkspaceKeys } from "../../app/workspaceInvalidation";
-import { errorMessage } from "../../api/errors";
+import { errorMessage, errorReference } from "../../api/errors";
 import { queryKeys } from "../../app/queryKeys";
 import { ErrorNotice } from "../../components/ErrorNotice";
 import { useRequirementJobs } from "../jobs/useRequirementJobs";
@@ -97,7 +97,7 @@ export function ApprovalWorkflowPanel({
   const [commentTarget, setCommentTarget] = useState(`breakdown:${requirementId}`);
   const workflow = useQuery({
     queryKey: queryKeys.approvalWorkflow(requirementId),
-    queryFn: () => api.getApprovalWorkflow(requirementId),
+    queryFn: ({ signal }) => api.getApprovalWorkflow(requirementId, { signal }),
     refetchOnMount: "always",
   });
 
@@ -175,7 +175,7 @@ export function ApprovalWorkflowPanel({
   });
 
   if (workflow.isPending) return <Skeleton label="Loading the approval workflow" bars={2} />;
-  if (workflow.isError) return <ErrorNotice message={errorMessage(workflow.error)} />;
+  if (workflow.isError) return <ErrorNotice message={errorMessage(workflow.error)} reference={errorReference(workflow.error)} />;
   if (!workflow.data) return null;
 
   const data = workflow.data;
@@ -321,7 +321,7 @@ export function ApprovalWorkflowPanel({
                 );
               })}
             </ul>
-            {approveStory.error && <ErrorNotice message={errorMessage(approveStory.error)} />}
+            {approveStory.error && <ErrorNotice message={errorMessage(approveStory.error)} reference={errorReference(approveStory.error)} />}
             {unlisted.length > 0 && (
               <Disclosure label={`Readiness checks for ${unlisted.length} more ${unlisted.length === 1 ? "Story" : "Stories"}`}>
                 <div className="grid gap-4">
@@ -470,7 +470,7 @@ export function ApprovalWorkflowPanel({
               onChange={(event) => setCommentBody(event.target.value)}
               rows={3}
             />
-            {comment.error && <ErrorNotice message={errorMessage(comment.error)} />}
+            {comment.error && <ErrorNotice message={errorMessage(comment.error)} reference={errorReference(comment.error)} />}
             <div>
               <Button variant="secondary" type="submit" disabled={!data.can_comment || aiBusy || comment.isPending}>
                 {comment.isPending ? "Adding…" : "Add comment"}
@@ -518,7 +518,7 @@ export function ApprovalWorkflowPanel({
                   rows={3}
                 />
               )}
-              {dialogError && <ErrorNotice message={errorMessage(dialogError)} />}
+              {dialogError && <ErrorNotice message={errorMessage(dialogError)} reference={errorReference(dialogError)} />}
             </ModalBody>
             <ModalFooter>
               <Button variant="text" type="button" disabled={dialogBusy} onClick={() => setPendingAction(null)}>Cancel</Button>

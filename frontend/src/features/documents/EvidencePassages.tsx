@@ -3,7 +3,7 @@ import { useEffect, useMemo } from "react";
 
 import { api } from "../../api/client";
 import { Disclosure } from "../../components/Disclosure";
-import { errorMessage } from "../../api/errors";
+import { errorMessage, errorReference } from "../../api/errors";
 import { queryKeys } from "../../app/queryKeys";
 import { ErrorNotice, Skeleton } from "../../components/states";
 import { Badge, Table, cx } from "../../components/ui";
@@ -20,12 +20,12 @@ function EvidenceImage({
 }) {
   const asset = useQuery({
     queryKey: queryKeys.scope("document-asset", documentId, versionId, block.asset_id),
-    queryFn: () => api.getDocumentAsset(documentId, versionId, block.asset_id!),
+    queryFn: ({ signal }) => api.getDocumentAsset(documentId, versionId, block.asset_id!, { signal }),
     enabled: Boolean(block.asset_id),
   });
   const url = useMemo(() => asset.data ? URL.createObjectURL(asset.data) : null, [asset.data]);
   useEffect(() => () => { if (url) URL.revokeObjectURL(url); }, [url]);
-  if (asset.isError) return <ErrorNotice message={errorMessage(asset.error)} />;
+  if (asset.isError) return <ErrorNotice message={errorMessage(asset.error)} reference={errorReference(asset.error)} />;
   return url
     ? <img className="border-line block max-h-[42rem] max-w-full rounded-sm border border-solid object-contain" src={url} alt={`${block.label} evidence`} loading="lazy" />
     : <Skeleton label="Loading protected image" variant="inline" />;

@@ -3,7 +3,7 @@ import { useId, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { api, type DependencyImpact } from "../../api/client";
-import { errorMessage } from "../../api/errors";
+import { errorMessage, errorReference } from "../../api/errors";
 import { queryKeys } from "../../app/queryKeys";
 import { Button } from "../../components/ui";
 import "./source-impact.css";
@@ -20,7 +20,7 @@ export function SourceImpactPanel({ requirementId, canDecide = false }: {
   const [search, setSearch] = useState("");
   const result = useQuery({
     queryKey: queryKeys.scope("source-impact", requirementId, offset, activeOnly, search),
-    queryFn: () => api.sourceImpact({ requirementId, offset, activeOnly, query: search }),
+    queryFn: ({ signal }) => api.sourceImpact({ requirementId, offset, activeOnly, query: search }, { signal }),
     enabled: open,
   });
   return <section className="source-impact" aria-labelledby={heading}>
@@ -34,7 +34,7 @@ export function SourceImpactPanel({ requirementId, canDecide = false }: {
       </form>
       <label className="source-impact-checkbox"><input type="checkbox" checked={activeOnly} onChange={event => { setActiveOnly(event.target.checked); setOffset(0); }} />Active content only</label>
       <Button disabled={result.isFetching} onClick={() => { void result.refetch(); }}>Refresh source impact</Button>
-      {result.isPending ? <LoadingState label="Loading source impact" variant="row" /> : result.isError ? <ErrorNotice message={errorMessage(result.error)} /> : <>
+      {result.isPending ? <LoadingState label="Loading source impact" variant="row" /> : result.isError ? <ErrorNotice message={errorMessage(result.error)} reference={errorReference(result.error)} /> : <>
         {result.data.items.length ? result.data.items.map(item => <ImpactRow key={`${item.dependency.id}:${item.publication_state}`} item={item} canDecide={canDecide} />) : <p>No recorded dependencies match this view.</p>}
         <nav className="source-impact-actions" aria-label="Source impact pages">
           <Button disabled={offset === 0} onClick={() => setOffset(value => Math.max(0, value - 20))}>Previous impact page</Button>
@@ -86,7 +86,7 @@ function ImpactRow({ item, canDecide }: { item: DependencyImpact; canDecide: boo
       <p>{decision === "revise_content" ? "This stays unresolved until the affected content is revised or regenerated. Earlier decisions and approvals remain in history." : "Record why this exact historical source still applies. Later content or publication changes require another review."}</p>
       <label>Reason for impact decision<textarea required maxLength={2000} value={reason} onChange={event => setReason(event.target.value)} rows={2} /></label>
       <Button type="submit" disabled={!reason.trim() || mutation.isPending}>{mutation.isPending ? "Saving review…" : "Record impact decision"}</Button>
-      {mutation.isError ? <ErrorNotice message={errorMessage(mutation.error)} /> : null}
+      {mutation.isError ? <ErrorNotice message={errorMessage(mutation.error)} reference={errorReference(mutation.error)} /> : null}
       {mutation.isSuccess ? <p role="status">Impact decision recorded.</p> : null}
     </form> : <p>The Requirement owner can record a decision in its <Link to={`/requirements/${row.requirement_id}/clarify`}>source impact review</Link>.</p> : null}
   </article>;

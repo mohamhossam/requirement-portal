@@ -157,7 +157,7 @@ export function ActivityPage() {
   const activity = useInfiniteQuery({
     queryKey: queryKeys.activity(params),
     initialPageParam: 0,
-    queryFn: ({ pageParam }) => api.listActivity({ ...params, offset: pageParam }),
+    queryFn: ({ pageParam, signal }) => api.listActivity({ ...params, offset: pageParam }, { signal }),
     getNextPageParam: (page) => (page.has_more ? page.offset + page.items.length : undefined),
     placeholderData: keepPreviousData,
   });

@@ -60,7 +60,7 @@ describe("ReferencePassagePage", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Coverage policy" })).toBeVisible();
     expect(read).toHaveBeenCalledWith({
       document_id: "doc-1", publication_id: "pub-1", version_id: "v-1", revision_id: "r-1", block_id: "b-1",
-    });
+    }, { signal: expect.any(AbortSignal) });
   });
 
   it("says so, without asking, when the link does not name a whole citation", () => {
@@ -105,7 +105,7 @@ describe("ArchitectureEvidencePage", () => {
     const card = await screen.findByRole("region", { name: "Cited passage" });
     expect(card).toHaveTextContent("BSCS overview · Section 2 · version rel-2");
     expect(card).toHaveTextContent("BSCS rates usage.");
-    expect(read).toHaveBeenCalledWith("rel-2", "chunk-1");
+    expect(read).toHaveBeenCalledWith("rel-2", "chunk-1", { signal: expect.any(AbortSignal) });
     expect(screen.queryByRole("link", { name: "Knowledge portal" })).not.toBeInTheDocument();
   });
 });
