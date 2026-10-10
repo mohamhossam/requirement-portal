@@ -389,58 +389,86 @@ never be reached through the proxy. Scrape each container.
 | `smb_ai_jobs_total` | `operation`, `status` | Job attempts by resulting status. |
 | `smb_ai_job_duration_seconds` | `operation` | Job attempt duration. |
 | `smb_db_pool_connections` | `state` | The process's database pool: connections `in_use` and `idle`, read on each scrape. With `smb_db_pool_max_connections` and `smb_db_pool_requests_waiting`. |
+| `smb_build_info` | `service`, `version` | Always 1; names the release each process runs. |
+| `smb_ready` | — | 1 when the process's latest readiness check passed: the API's `/ready`, the worker's health loop. |
+| `smb_ai_jobs_queued` | `operation` | AI jobs waiting to be claimed, sampled every 15 seconds. Every process reports the same queue; take `max()`. |
+| `smb_ai_job_oldest_queued_age_seconds` | — | How long the oldest claimable job has waited. A job in retry backoff waits from when it is due. |
+| `smb_provider_spend_blocked_total` | `action` | Work held back because today's token budget is spent: `start` (refused) or `claim` (skipped by a worker). |
 
-Suggested alerts:
-- a rising rate of `smb_provider_requests_total` with `outcome` of `4xx` or
-  `error` (quota, authentication or outage);
-- `smb_ai_jobs_total{status="failed"}`;
-- the rate of `smb_provider_tokens_total` against a daily token budget, which
-  is the direct spend signal;
-- `status="429"` in `smb_http_requests_total` (the rate limit is biting);
-- `smb_http_request_duration_seconds` p95 on generation routes;
-- `smb_db_pool_requests_waiting` above 0 for minutes, or `in_use` at the pool maximum
-  (the pool is too small, or queries are slow).
+The process, Python and garbage-collector series every Prometheus client exports
+(`process_resident_memory_bytes`, `python_gc_*`, …) are there too.
 
-### Monitoring add-on (Prometheus and Grafana)
+The alerts, their thresholds and their runbooks are in `deploy/monitoring/prometheus/alerts.yml`
+and `alerts.md`; the objectives they guard are in `slos.md`.
 
-`deploy/compose.monitoring.yaml` is an optional overlay that collects and
-shows these metrics. It adds two containers:
+### Monitoring add-on (Prometheus, Alertmanager and Grafana)
 
-- **Prometheus** scrapes every `api` and `worker` container through Docker's
-  DNS, so `--scale` needs no configuration change. The knowledge portal's
-  exporters belong to its own deployment. It evaluates the alerts
-  above (`deploy/monitoring/prometheus/alerts.yml`) and keeps 15 days of data
-  (`PROMETHEUS_RETENTION`). It is not published.
-- **Grafana** opens on the provisioned **Requirement AI — overview**
-  dashboard: API traffic and slow routes, provider requests, latency and
-  tokens by model, and AI job outcomes. It is published on
-  `127.0.0.1:3000` only (`GRAFANA_PORT`); sign in as `admin`.
+`deploy/compose.monitoring.yaml` is an optional overlay that collects these metrics, alerts on
+them and shows them. It adds five containers.
+
+- **Prometheus**
+  - It scrapes every `api` and `worker` container through Docker's DNS, so `--scale` needs no
+    configuration change. The knowledge portal's exporters belong to its own deployment.
+  - It also scrapes the two exporters below, and Alertmanager.
+  - It evaluates the alerts in `deploy/monitoring/prometheus/alerts.yml`. Each one has a runbook in
+    `alerts.md`, and `slos.md` says which ones guard an objective.
+  - It keeps 15 days of data (`PROMETHEUS_RETENTION`) and is not published.
+- **Alertmanager** sends warning and critical alerts to one receiver. Info alerts are only shown.
+  It is not published.
+- **postgres-exporter** reports PostgreSQL's connections, `max_connections` and database size.
+  It reads them as the application's user, with the same password the API and worker use.
+- **node-exporter** reports the host's disks, memory and CPU through a read-only view of its root.
+- **Grafana** opens on the provisioned **Requirement AI — overview** dashboard: API traffic and
+  slow routes, provider requests, latency and tokens by model, and AI job outcomes. It is
+  published on `127.0.0.1:3000` only (`GRAFANA_PORT`); sign in as `admin`.
 
 ```bash
 export GRAFANA_ADMIN_PASSWORD=...        # used when Grafana first creates its database
+export ALERTMANAGER_RECEIVER=webhook     # none (the default), webhook or slack
+export ALERTMANAGER_URL=https://...      # the webhook, or the Slack incoming-webhook URL
 docker compose -f deploy/compose.production.yaml -f deploy/compose.monitoring.yaml up -d
 ```
 
-Pass both `-f` files to every command for these containers (`ps`, `logs`,
-`down`). The dashboard and data source are read-only in the UI: change
-`deploy/monitoring/` and restart Grafana. Grafana runs on a read-only root with its plugin
-preinstaller off, so it uses the plugins in the pinned image and never updates them online.
-`tests/architecture/test_monitoring_metrics.py`
-fails when a panel or alert names a metric the application does not export,
-and CI starts the overlay and checks that both exporters are scraped.
+**Alert delivery** is set by two Compose variables.
 
-Before relying on it in production:
+| Variable | Meaning |
+|---|---|
+| `ALERTMANAGER_RECEIVER` | `none` (default): alerts are only shown in Alertmanager, Grafana and Prometheus. `webhook`: each notification is POSTed as Alertmanager's JSON. `slack`: posted to a Slack incoming webhook, with each alert's runbook link. |
+| `ALERTMANAGER_URL` | The receiver's URL, required for `webhook` and `slack`. It is written to a file only Alertmanager can read, and the configuration names that file, never the URL. |
 
-- **Alert delivery.** Firing alerts are visible in Grafana (Alerting > Alert
-  rules) and Prometheus, but nothing is sent until you add an Alertmanager or
-  point Prometheus at an existing one.
-- **Thresholds.** Set `DailyTokenBudgetExceeded` to your own daily budget and
-  tune the others to your traffic.
-- **Access.** Put Grafana behind TLS and your identity provider before
-  exposing it beyond the host.
-- **An existing stack.** If your organization already runs Prometheus, skip
-  the overlay: scrape `:9464` on each `api` and `worker` container and import
-  `deploy/monitoring/grafana/dashboards/requirement-ai.json`.
+- Alertmanager refuses to start with a receiver but no URL.
+- `deploy/monitoring/alertmanager/entrypoint.sh` renders the configuration. Edit it for another
+  kind of receiver, such as email.
+- An alert for a container that cannot be scraped suppresses that container's other warnings.
+
+Pass both `-f` files to every command for these containers (`ps`, `logs`, `down`). The dashboard
+and data source are read-only in the UI: change `deploy/monitoring/` and restart Grafana. Grafana
+runs on a read-only root with its plugin preinstaller off, so it uses the plugins in the pinned
+image and never updates them online.
+
+**Checks**
+- `tests/architecture/test_monitoring_metrics.py` fails when:
+  - a panel or alert reads a series that is neither one of the application's instruments nor an
+    allow-listed exporter metric;
+  - an alert has no runbook section.
+- CI starts the overlay and checks that all five targets are scraped and PostgreSQL is reached.
+- CI also runs `promtool check config`, the alert unit tests (`promtool test rules
+  alerts.test.yml`, including a forced readiness failure), and `amtool check-config` for every
+  receiver.
+
+**Before relying on it in production**
+- **Receiver.** Set `ALERTMANAGER_RECEIVER` and `ALERTMANAGER_URL`, then send a test alert:
+  `docker compose ... exec alertmanager amtool alert add Test severity=warning
+  --alertmanager.url=http://127.0.0.1:9093`.
+- **Thresholds.** Set `DailyTokenBudgetExceeded` to your own daily budget and `ProcessMemoryHigh`
+  below the containers' memory limit. Tune the others to your traffic, keeping `alerts.test.yml`
+  passing.
+- **Access.** Put Grafana behind TLS and your identity provider before exposing it beyond the
+  host.
+- **An existing stack.** If your organization already runs Prometheus, skip the overlay:
+  - scrape `:9464` on each `api` and `worker` container;
+  - load `alerts.yml`;
+  - import `deploy/monitoring/grafana/dashboards/requirement-ai.json`.
 
 ## Rate limiting
 

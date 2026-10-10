@@ -12,6 +12,7 @@ from psycopg.types.json import Jsonb
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 from smb_requirement_agent.infrastructure.persistence.postgres_values import DbConnection
 from smb_requirement_agent.jobs.application.ports.ai_jobs import (
+    AiJobBacklog,
     AiJobCommand,
     AiJobRecord,
     JsonValue,
@@ -282,6 +283,13 @@ class PostgresAiJobStore:
 
     @staticmethod
     def _insert(connection: DbConnection, record: AiJobRecord) -> None:
+        # Lock the Requirement row first, as the revision capture at commit does. Otherwise
+        # the job's foreign key share-locks it, the lease insert waits on another transaction's
+        # new lease row, and that transaction's capture waits on the share lock: a deadlock.
+        connection.execute(
+            "SELECT 1 FROM requirements WHERE requirement_id = %s FOR UPDATE",
+            (record.job.requirement_id.value,),
+        )
         try:
             connection.execute(
                 """
@@ -352,6 +360,20 @@ class PostgresAiJobStore:
             record = record_from_row(row)
             records.setdefault(record.job.requirement_id.value, []).append(record)
         return records
+
+    def backlog(self, now: datetime) -> AiJobBacklog:
+        with self._store.connection() as connection:
+            rows = connection.execute(
+                "SELECT operation, count(*), "
+                "min(coalesce(next_attempt_at, created_at)) FILTER ("
+                "WHERE next_attempt_at IS NULL OR next_attempt_at <= %s) "
+                "FROM ai_jobs WHERE status='queued' GROUP BY operation",
+                (now,),
+            ).fetchall()
+        since = [cast(datetime, row[2]) for row in rows if row[2] is not None]
+        return AiJobBacklog(
+            {str(row[0]): int(cast(int, row[1])) for row in rows}, min(since, default=None)
+        )
 
     def claim_next(
         self,

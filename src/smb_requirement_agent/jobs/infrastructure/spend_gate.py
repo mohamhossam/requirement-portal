@@ -25,7 +25,7 @@ class SpendGatedQueue:
         lease_until: datetime,
         blocked_operations: tuple[AiJobOperation, ...] = (),
     ) -> AiJobRecord | None:
-        if self._budget.exhausted():
+        if not self._budget.admits_claim():
             return None
         return self._queue.claim_next(worker_id, now, lease_until, blocked_operations)
 

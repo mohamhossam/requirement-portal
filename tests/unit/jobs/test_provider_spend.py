@@ -30,6 +30,10 @@ EVENING = datetime(2026, 10, 9, 22, 30, tzinfo=UTC)
 OWNER = {"X-Fake-Actor-Id": "fake-owner"}
 
 
+def _ignore(action: str) -> None:
+    return None
+
+
 class Clock:
     def __init__(self, now: datetime) -> None:
         self.current = now
@@ -40,7 +44,7 @@ class Clock:
 
 def test_the_budget_is_spent_by_reported_tokens_and_resets_with_the_utc_day() -> None:
     clock = Clock(EVENING)
-    budget = ProviderSpendBudget(1_000, clock, InMemoryProviderSpend())
+    budget = ProviderSpendBudget(1_000, clock, InMemoryProviderSpend(), _ignore)
 
     budget.record(999)
     assert not budget.exhausted()
@@ -59,7 +63,7 @@ def test_the_budget_is_spent_by_reported_tokens_and_resets_with_the_utc_day() ->
 
 def test_a_zero_budget_records_spend_without_limiting_it() -> None:
     spend = InMemoryProviderSpend()
-    budget = ProviderSpendBudget(0, Clock(EVENING), spend)
+    budget = ProviderSpendBudget(0, Clock(EVENING), spend, _ignore)
 
     budget.record(10_000_000)
 
@@ -69,7 +73,7 @@ def test_a_zero_budget_records_spend_without_limiting_it() -> None:
 
 def test_a_negative_budget_is_rejected() -> None:
     with pytest.raises(ValueError):
-        ProviderSpendBudget(-1, Clock(EVENING), InMemoryProviderSpend())
+        ProviderSpendBudget(-1, Clock(EVENING), InMemoryProviderSpend(), _ignore)
 
 
 def _response(status: int, body: object) -> httpx.MockTransport:
@@ -137,7 +141,8 @@ class _OneJobQueue:
 
 def test_workers_claim_nothing_while_the_budget_is_spent() -> None:
     clock = Clock(EVENING)
-    budget = ProviderSpendBudget(100, clock, InMemoryProviderSpend())
+    held_back: list[str] = []
+    budget = ProviderSpendBudget(100, clock, InMemoryProviderSpend(), held_back.append)
     queue = _OneJobQueue()
     gated = SpendGatedQueue(queue, budget)
 
@@ -146,9 +151,14 @@ def test_workers_claim_nothing_while_the_budget_is_spent() -> None:
     gated.claim_next("w", EVENING, EVENING)
 
     assert queue.claims == 1
+    with pytest.raises(ProviderBudgetExhaustedError):
+        budget.require_available()
+    # Each piece of work held back is counted, by what was held back.
+    assert held_back == ["claim", "start"]
     clock.current += timedelta(hours=2)
     gated.claim_next("w", clock.current, clock.current)
     assert queue.claims == 2
+    assert held_back == ["claim", "start"]
 
 
 def test_a_spent_budget_refuses_new_ai_work_but_not_editing() -> None:
@@ -172,6 +182,10 @@ def test_a_spent_budget_refuses_new_ai_work_but_not_editing() -> None:
 
         assert refused.status_code == 429
         assert refused.json()["code"] == "provider_budget_exhausted"
+        blocked = container.metrics.registry.get_sample_value(
+            "smb_provider_spend_blocked_total", {"action": "start"}
+        )
+        assert blocked == 1
         assert 1 <= int(refused.headers["Retry-After"]) <= 24 * 3600
         changed = client.put(
             f"/requirements/{requirement_id}",

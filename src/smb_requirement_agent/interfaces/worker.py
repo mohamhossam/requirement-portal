@@ -59,8 +59,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         start_workers(workers)
         _LOGGER.info("Worker process started: %s", ", ".join(workers))
+        container.metrics.set_ready(True)
         while not stop.wait(HEALTH_CHECK_INTERVAL_SECONDS):
             unhealthy = [name for name, worker in workers.items() if not worker.healthy]
+            container.metrics.set_ready(not unhealthy)
             if unhealthy:
                 _LOGGER.error("Unhealthy background workers %s; exiting for restart", unhealthy)
                 exit_code = 1

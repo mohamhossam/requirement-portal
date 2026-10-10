@@ -9,7 +9,7 @@ from datetime import datetime
 from threading import RLock
 from typing import Any
 
-from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobRecord
+from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobBacklog, AiJobRecord
 from smb_requirement_agent.jobs.domain.entities import (
     ActorNotification,
     AiJob,
@@ -229,6 +229,21 @@ class InMemoryAiJobStore:
             ]
         newest = sorted(result, key=lambda item: item.job.created_at, reverse=True)
         return newest if limit is None else newest[:limit]
+
+    def backlog(self, now: datetime) -> AiJobBacklog:
+        with self._lock:
+            queued = [
+                item.job for item in self._jobs.values() if item.job.status is AiJobStatus.QUEUED
+            ]
+        counts: dict[str, int] = {}
+        for job in queued:
+            counts[job.operation.value] = counts.get(job.operation.value, 0) + 1
+        since = [
+            job.next_attempt_at or job.created_at
+            for job in queued
+            if job.next_attempt_at is None or job.next_attempt_at <= now
+        ]
+        return AiJobBacklog(counts, min(since, default=None))
 
     def claim_next(
         self,

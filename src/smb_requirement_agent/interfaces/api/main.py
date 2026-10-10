@@ -6,7 +6,6 @@ import uuid
 from collections.abc import AsyncIterator, Callable
 from contextlib import ExitStack, asynccontextmanager
 from dataclasses import asdict
-from importlib.metadata import version
 from time import perf_counter
 
 import anyio
@@ -59,6 +58,7 @@ from smb_requirement_agent.interfaces.api.routes.revisions import router as revi
 from smb_requirement_agent.interfaces.api.routes.source_impact import router as source_impact_router
 from smb_requirement_agent.interfaces.api.routes.story import router as story_router
 from smb_requirement_agent.interfaces.runtime import (
+    APPLICATION_VERSION,
     start_metrics,
     start_workers,
     stop_workers_and_close,
@@ -67,8 +67,6 @@ from smb_requirement_agent.interfaces.runtime import (
 _REQUESTS = logging.getLogger("smb_requirement_agent.http")
 # A readiness probe answers within this, or reports the database unavailable.
 READINESS_TIMEOUT_SECONDS = 2.5
-# The installed package's version, which a release tag must match (ADR-0108).
-APPLICATION_VERSION = version("smb-requirement-agent")
 
 
 def _route_template(request: Request) -> str:
@@ -267,6 +265,8 @@ def create_app(container_factory: Callable[[], Container] = build_container) -> 
             **{name: worker.healthy for name, worker in workers.items()},
         }
         available = all(checks.values())
+        if container is not None:
+            container.metrics.set_ready(available)
         response.status_code = 200 if available else 503
         return {"status": "ready" if available else "unavailable", "checks": checks}
 

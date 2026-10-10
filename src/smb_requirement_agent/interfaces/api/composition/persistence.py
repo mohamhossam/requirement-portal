@@ -145,6 +145,7 @@ from smb_requirement_agent.interfaces.api.composition.projections import (
     refresh_postgres_projections,
 )
 from smb_requirement_agent.jobs.application.ports.ai_jobs import (
+    AiJobBacklogPort,
     AiJobQueuePort,
     AiJobRepositoryPort,
 )
@@ -367,6 +368,7 @@ class PersistenceAdapters:
     actor_directory: ActorDirectoryPort
     ai_job_repository: AiJobRepositoryPort
     ai_job_queue: AiJobQueuePort
+    ai_job_backlog: AiJobBacklogPort
     notification_repository: NotificationRepositoryPort
     story_quality_repository: StoryQualityRepositoryPort
     saved_view_repository: SavedViewRepositoryPort
@@ -504,6 +506,7 @@ def _postgres(
     postgres_ai_jobs = PostgresAiJobStore(postgres)
     ai_job_repository = postgres_ai_jobs
     ai_job_queue = postgres_ai_jobs
+    ai_job_backlog = postgres_ai_jobs
     notification_repository = PostgresNotificationRepository(postgres)
     story_quality_repository = PostgresStoryQualityRepository(postgres)
     saved_view_repository = PostgresSavedViewRepository(postgres)
@@ -561,6 +564,7 @@ def _postgres(
         actor_directory=actor_directory,
         ai_job_repository=ai_job_repository,
         ai_job_queue=ai_job_queue,
+        ai_job_backlog=ai_job_backlog,
         notification_repository=notification_repository,
         story_quality_repository=story_quality_repository,
         saved_view_repository=saved_view_repository,
@@ -631,6 +635,7 @@ def _memory(
     memory_ai_jobs = InMemoryAiJobStore(memory_lock)
     ai_job_repository = memory_ai_jobs
     ai_job_queue = memory_ai_jobs
+    ai_job_backlog = memory_ai_jobs
     notification_repository = InMemoryNotificationRepository(memory_ai_jobs)
 
     story_quality_repository = InMemoryStoryQualityRepository()
@@ -794,6 +799,7 @@ def _memory(
         actor_directory=actor_directory,
         ai_job_repository=ai_job_repository,
         ai_job_queue=ai_job_queue,
+        ai_job_backlog=ai_job_backlog,
         notification_repository=notification_repository,
         story_quality_repository=story_quality_repository,
         saved_view_repository=saved_view_repository,

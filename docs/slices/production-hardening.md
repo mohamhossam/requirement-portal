@@ -2,7 +2,7 @@
 
 ## Status
 
-**Specified 2026-10-08; in progress since 2026-10-09.** Phase 0 (platform-kernel v1.2.0, and this repository's move to it) is delivered. PR 1, PR 8, PR 2, PR 4a, PR 4b, PR 5 and PR 6 are delivered, which completes the pilot gate (Phase 1), and so are PR 7 and PR 3 of Phase 2 (see their entries and Validation Evidence). The rest of Phase 2 and Phase 3 are not implemented yet. This record keeps the
+**Specified 2026-10-08; in progress since 2026-10-09.** Phase 0 (platform-kernel v1.2.0, and this repository's move to it) is delivered. PR 1, PR 8, PR 2, PR 4a, PR 4b, PR 5 and PR 6 are delivered, which completes the pilot gate (Phase 1), and so are PR 7, PR 3 and PR 9 of Phase 2 (see their entries and Validation Evidence). The rest of Phase 2 and Phase 3 are not implemented yet. This record keeps the
 plan for closing every finding of the second production-readiness review (security, deployment and
 CI, reliability and observability, frontend) so it can be scheduled later. When work starts, each
 PR converts its part into the `WORKSPACE.md` §10 sections and fills in Validation Evidence here.
@@ -315,7 +315,33 @@ Then bump `pyproject.toml:12` and `uv.lock`, and wire the new settings. Phase 1 
 - **Docs.** ADR-0106. The AGENTS.md per-process debt row is removed. `deployment.md` "Rate
   limiting" is rewritten, and `.env.example` updated.
 
-**PR 9 · Alerting, SLOs and runbooks**
+**PR 9 · Alerting, SLOs and runbooks** — *delivered on `claude/production-hardening-pr9`, 2026-10-10*
+- **The application reports what the alerts read** (kernel 1.2.0 instruments):
+  - `smb_build_info`, set when the exporter starts;
+  - `smb_ready`, from the API's `/ready` and the worker's health loop;
+  - `smb_ai_jobs_queued` and `smb_ai_job_oldest_queued_age_seconds`. Each exporting process samples them every 15s through a new `AiJobBacklogPort` (Postgres and in-memory). A job in retry backoff ages from when it is due.
+  - `smb_provider_spend_blocked_total`. `ProviderSpendBudget` takes a required `held_back` callable and reports `start` and `claim`.
+- **Monitoring overlay.**
+  - Alertmanager v0.34.1. Its entrypoint renders the configuration for `ALERTMANAGER_RECEIVER` (`none`, `webhook` or `slack`). The URL goes to a mode-600 tmpfs file used through `url_file`/`api_url_file`, and is never written into the configuration.
+  - postgres-exporter v0.20.1, reading as the application's user. Its password is passed as `DATA_SOURCE_PASS`, like the API's `DATABASE_URL`: Compose refuses an environment-sourced secret for a read-only container ("`file` is the sole supported option"), which CI's first run showed.
+  - node-exporter v1.12.1.
+  - All three are digest-pinned and scraped, and Prometheus sends alerts to Alertmanager.
+- **Alerts.** There are 18 alerts, each with `runbook_url` to `docs/operations/alerts.md`.
+  - `ProcessDown` now covers every target.
+  - `AiJobsFailing` became a ratio with `for: 15m`.
+  - Added: ReadinessFailing, HttpLatencyP95, AiJobsExhausted, QueueBacklog and OldestQueuedJobAge (both with `max()`), ProviderSpendBlocked, DbPoolSaturation, ProcessMemoryHigh, PostgresConnectionsHigh, DatabaseSizeGrowth and DiskLow.
+  - Alertmanager inhibits a down target's other warnings.
+- **Docs.**
+  - `docs/operations/alerts.md` has a runbook per alert.
+  - `docs/operations/slos.md` has four objectives with their PromQL, proposed for the owner to confirm.
+  - `deployment.md` "Monitoring add-on" is rewritten.
+- **CI.**
+  - The monitoring step starts all five containers, and checks they are scraped and `pg_up`.
+  - It runs `promtool check config` and `promtool test rules` (`alerts.test.yml`, including a forced readiness failure), and `amtool check-config` for every receiver.
+  - It checks that Prometheus has an active Alertmanager.
+  - `test_monitoring_metrics.py` parses PromQL: series must be instruments or allow-listed exporter metrics, and every alert needs a runbook section.
+
+*Plan as specified:*
 - **Monitoring stack** (`compose.monitoring.yaml`, currently Prometheus and Grafana only): add Alertmanager (config rendered by an entrypoint, secrets through `*_file`), one postgres-exporter and node-exporter, all digest-pinned. Scrape them in `prometheus.yml:13-30`.
 - **Alerts:**
   - Fix `AiJobsFailing` (`alerts.yml:39-44`) to use a ratio with `for: 15m`.
@@ -654,4 +680,33 @@ ruff check .                All checks passed!
 ruff format --check .       1260 files already formatted
 mypy src tests              Success: no issues found in 693 source files
 lint-imports                Contracts: 43 kept, 0 broken.
+```
+
+### PR 9 (2026-10-10, branch `claude/production-hardening-pr9`, stacked on PR 3)
+
+Run locally on Python 3.13 against PostgreSQL 16, with promtool 3.15.0 and amtool 0.34.1 (the
+pinned images' versions):
+- `promtool check rules` found 18 rules.
+- `promtool test rules alerts.test.yml` passed: readiness, process down, the failure ratio, the
+  queue alerts firing once across processes, pool saturation, spend blocked and PostgreSQL
+  connections, each with its negative case.
+- `promtool check config` passed.
+- `amtool check-config` passed for `none`, `webhook` and `slack`, and a receiver without a URL
+  is refused.
+- `docker compose config` rendered the overlay with the production manifest.
+
+New tests show:
+- the in-memory and PostgreSQL backlog count queued jobs and age only those due;
+- a sample sets the queue gauges;
+- the exporter names the release;
+- `/ready` sets `smb_ready`;
+- a refused start and a skipped claim are counted.
+
+```text
+pytest --cov (PostgreSQL)   2006 passed; total coverage 94.62% (floor 92.5%)
+ruff check .                All checks passed!
+ruff format --check .       all files formatted
+mypy src tests              Success: no issues found
+lint-imports                Contracts: 43 kept, 0 broken.
+actionlint                  ci.yml, release.yml clean
 ```

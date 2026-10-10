@@ -1,0 +1,144 @@
+# `promtool test rules alerts.test.yml`: synthetic series that must fire, or must not fire,
+# the alerts in alerts.yml. CI runs it inside the Prometheus container.
+
+rule_files:
+  - alerts.yml
+
+evaluation_interval: 1m
+
+tests:
+  # A forced readiness failure fires its alert; a ready worker beside it does not.
+  - interval: 1m
+    input_series:
+      - series: 'smb_ready{job="api", instance="api:9464"}'
+        values: "1 0x10"
+      - series: 'smb_ready{job="worker", instance="worker:9464"}'
+        values: "1x10"
+    alert_rule_test:
+      - eval_time: 4m
+        alertname: ReadinessFailing
+        exp_alerts: []
+      - eval_time: 7m
+        alertname: ReadinessFailing
+        exp_alerts:
+          - exp_labels: { severity: critical, job: api, instance: "api:9464" }
+            exp_annotations:
+              summary: "api api:9464 has reported not ready for 5 minutes"
+              runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#readinessfailing
+
+  - interval: 1m
+    input_series:
+      - series: 'up{job="worker", instance="worker:9464"}'
+        values: "0x5"
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: ProcessDown
+        exp_alerts:
+          - exp_labels: { severity: critical, job: worker, instance: "worker:9464" }
+            exp_annotations:
+              summary: "worker worker:9464 cannot be scraped"
+              description: "Prometheus cannot reach this container's metrics. Check `docker compose ps` and its logs."
+              runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#processdown
+
+  # A third of analysis attempts failing for 15 minutes fires; one in eleven does not.
+  - interval: 1m
+    input_series:
+      - series: 'smb_ai_jobs_total{operation="analyse_requirement", status="succeeded"}'
+        values: "0+10x45"
+      - series: 'smb_ai_jobs_total{operation="analyse_requirement", status="failed"}'
+        values: "0+5x45"
+      - series: 'smb_ai_jobs_total{operation="generate_epic", status="succeeded"}'
+        values: "0+10x45"
+      - series: 'smb_ai_jobs_total{operation="generate_epic", status="failed"}'
+        values: "0+1x45"
+    alert_rule_test:
+      - eval_time: 40m
+        alertname: AiJobsFailing
+        exp_alerts:
+          - exp_labels: { severity: warning, operation: analyse_requirement }
+            exp_annotations:
+              summary: "More than 20% of analyse_requirement job attempts fail"
+              runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#aijobsfailing
+
+  # Every process reports the same queue; it fires once, not once per process.
+  - interval: 1m
+    input_series:
+      - series: 'smb_ai_jobs_queued{job="api", instance="api:9464", operation="analyse_requirement"}'
+        values: "60x20"
+      - series: 'smb_ai_jobs_queued{job="worker", instance="worker:9464", operation="analyse_requirement"}'
+        values: "60x20"
+      - series: 'smb_ai_job_oldest_queued_age_seconds{job="api", instance="api:9464"}'
+        values: "2000x20"
+      - series: 'smb_ai_job_oldest_queued_age_seconds{job="worker", instance="worker:9464"}'
+        values: "2000x20"
+    alert_rule_test:
+      - eval_time: 16m
+        alertname: QueueBacklog
+        exp_alerts:
+          - exp_labels: { severity: warning }
+            exp_annotations:
+              summary: "More than 50 AI jobs have been waiting for 15 minutes"
+              runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#queuebacklog
+      - eval_time: 6m
+        alertname: OldestQueuedJobAge
+        exp_alerts:
+          - exp_labels: { severity: warning }
+            exp_annotations:
+              summary: "An AI job has waited over 30 minutes to start"
+              runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#oldestqueuedjobage
+
+  # Borrowers waiting for a connection, or 9 of 10 connections in use, both saturate.
+  - interval: 1m
+    input_series:
+      - series: 'smb_db_pool_requests_waiting{job="api", instance="api:9464"}'
+        values: "2x10"
+      - series: 'smb_db_pool_requests_waiting{job="worker", instance="worker:9464"}'
+        values: "0x10"
+      - series: 'smb_db_pool_connections{job="worker", instance="worker:9464", state="in_use"}'
+        values: "9x10"
+      - series: 'smb_db_pool_max_connections{job="worker", instance="worker:9464"}'
+        values: "10x10"
+      - series: 'smb_db_pool_connections{job="api", instance="api:9464", state="in_use"}'
+        values: "3x10"
+      - series: 'smb_db_pool_max_connections{job="api", instance="api:9464"}'
+        values: "10x10"
+    alert_rule_test:
+      - eval_time: 6m
+        alertname: DbPoolSaturation
+        exp_alerts:
+          - exp_labels: { severity: warning, job: api, instance: "api:9464" }
+            exp_annotations:
+              summary: "api api:9464 is short of database connections"
+              runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#dbpoolsaturation
+          - exp_labels: { severity: warning, job: worker, instance: "worker:9464" }
+            exp_annotations:
+              summary: "worker worker:9464 is short of database connections"
+              runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#dbpoolsaturation
+
+  - interval: 1m
+    input_series:
+      - series: 'smb_provider_spend_blocked_total{job="worker", instance="worker:9464", action="claim"}'
+        values: "0 0 3 6 9"
+    alert_rule_test:
+      - eval_time: 4m
+        alertname: ProviderSpendBlocked
+        exp_alerts:
+          - exp_labels: { severity: warning }
+            exp_annotations:
+              summary: "AI work is paused: today's provider token budget is spent"
+              runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#providerspendblocked
+
+  - interval: 1m
+    input_series:
+      - series: 'pg_stat_database_numbackends{job="postgres", datname="smb_requirements"}'
+        values: "170x15"
+      - series: 'pg_settings_max_connections{job="postgres"}'
+        values: "200x15"
+    alert_rule_test:
+      - eval_time: 11m
+        alertname: PostgresConnectionsHigh
+        exp_alerts:
+          - exp_labels: { severity: warning }
+            exp_annotations:
+              summary: "PostgreSQL is using over 80% of max_connections"
+              runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#postgresconnectionshigh

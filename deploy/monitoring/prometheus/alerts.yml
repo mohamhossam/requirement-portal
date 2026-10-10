@@ -1,19 +1,33 @@
-# The alerts suggested in docs/operations/deployment.md ("Metrics"), plus a
-# scrape-target check. Firing alerts show in Grafana (Alerting > Alert rules)
-# and in Prometheus. Nothing is sent anywhere until an Alertmanager is added.
-# Thresholds are starting points: tune them to your traffic and budget.
+# Alerts for requirement work (production hardening PR 9). Each one links to its runbook in
+# docs/operations/alerts.md; docs/operations/slos.md says which ones guard an objective.
+# Alertmanager (deploy/monitoring/alertmanager) sends warning and critical alerts to the
+# receiver the deployment chooses; info alerts are only shown.
+# Thresholds are starting points: tune them to your traffic and budget, and keep
+# deploy/monitoring/prometheus/alerts.test.yml passing (`promtool test rules`).
+#
+# Every API and worker process reports the same AI job queue, so queue alerts take max().
 
 groups:
   - name: requirement-ai
     rules:
       - alert: ProcessDown
-        expr: up{job=~"api|worker"} == 0
+        expr: up == 0
         for: 2m
         labels:
           severity: critical
         annotations:
-          summary: "{{ $labels.job }} {{ $labels.instance }} is not serving metrics"
-          description: "Prometheus cannot scrape this container. Check `docker compose ps` and its logs."
+          summary: "{{ $labels.job }} {{ $labels.instance }} cannot be scraped"
+          description: "Prometheus cannot reach this container's metrics. Check `docker compose ps` and its logs."
+          runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#processdown
+
+      - alert: ReadinessFailing
+        expr: max by (job, instance) (smb_ready) == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.job }} {{ $labels.instance }} has reported not ready for 5 minutes"
+          runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#readinessfailing
 
       - alert: HttpServerErrors
         expr: |
@@ -24,6 +38,19 @@ groups:
           severity: warning
         annotations:
           summary: "More than 5% of API requests fail with a 5xx status"
+          runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#httpservererrors
+
+      - alert: HttpLatencyP95
+        expr: |
+          histogram_quantile(0.95,
+            sum by (le) (rate(smb_http_request_duration_seconds_bucket{route!~"/health|/ready|unmatched"}[10m]))
+          ) > 2
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "95th-percentile API latency is over 2 seconds"
+          runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#httplatencyp95
 
       - alert: ProviderErrors
         expr: |
@@ -35,13 +62,7 @@ groups:
         annotations:
           summary: "More than 10% of {{ $labels.provider }} requests fail"
           description: "Usually quota, authentication or a provider outage."
-
-      - alert: AiJobsFailing
-        expr: sum by (operation) (increase(smb_ai_jobs_total{status=~"failed|error|attempts_exhausted"}[15m])) > 0
-        labels:
-          severity: warning
-        annotations:
-          summary: "AI job attempts for {{ $labels.operation }} are failing"
+          runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#providererrors
 
       - alert: SlowAiGeneration
         expr: |
@@ -53,19 +74,123 @@ groups:
           severity: warning
         annotations:
           summary: "95th-percentile {{ $labels.provider }} generation takes over 2 minutes"
+          runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#slowaigeneration
+
+      - alert: AiJobsFailing
+        expr: |
+          sum by (operation) (rate(smb_ai_jobs_total{status=~"failed|error|attempts_exhausted"}[15m]))
+            / sum by (operation) (rate(smb_ai_jobs_total[15m])) > 0.2
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "More than 20% of {{ $labels.operation }} job attempts fail"
+          runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#aijobsfailing
+
+      - alert: AiJobsExhausted
+        expr: sum by (operation) (increase(smb_ai_jobs_total{status="attempts_exhausted"}[30m])) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.operation }} jobs failed after every retry"
+          runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#aijobsexhausted
+
+      - alert: QueueBacklog
+        expr: max(sum by (job, instance) (smb_ai_jobs_queued)) > 50
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "More than 50 AI jobs have been waiting for 15 minutes"
+          runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#queuebacklog
+
+      - alert: OldestQueuedJobAge
+        expr: max(smb_ai_job_oldest_queued_age_seconds) > 1800
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "An AI job has waited over 30 minutes to start"
+          runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#oldestqueuedjobage
 
       - alert: RateLimitBiting
         expr: sum(increase(smb_http_requests_total{status="429"}[15m])) > 10
         labels:
           severity: info
         annotations:
-          summary: "Users are hitting PROVIDER_RATE_LIMIT_PER_MINUTE"
+          summary: "People are hitting a rate limit"
           description: "More than 10 refused requests in 15 minutes. Raise the limit if this is legitimate use."
+          runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#ratelimitbiting
 
       - alert: DailyTokenBudgetExceeded
-        # Replace 5000000 with your own daily token budget.
+        # Replace 5000000 with your PROVIDER_DAILY_TOKEN_BUDGET, or a share of it.
         expr: sum(increase(smb_provider_tokens_total[24h])) > 5000000
         labels:
           severity: warning
         annotations:
           summary: "Provider token use in the last 24 hours is over budget"
+          runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#dailytokenbudgetexceeded
+
+      - alert: ProviderSpendBlocked
+        expr: sum(increase(smb_provider_spend_blocked_total[15m])) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: "AI work is paused: today's provider token budget is spent"
+          runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#providerspendblocked
+
+      - alert: DbPoolSaturation
+        expr: |
+          max by (job, instance) (smb_db_pool_requests_waiting) > 0
+            or max by (job, instance) (
+              smb_db_pool_connections{state="in_use"} / ignoring(state) smb_db_pool_max_connections
+            ) >= 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.job }} {{ $labels.instance }} is short of database connections"
+          runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#dbpoolsaturation
+
+      - alert: ProcessMemoryHigh
+        # 2 GB is a starting point; set it below the container's memory limit.
+        expr: max by (job, instance) (process_resident_memory_bytes{job=~"api|worker"}) > 2e9
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.job }} {{ $labels.instance }} uses over 2 GB of memory"
+          runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#processmemoryhigh
+
+  - name: platform
+    rules:
+      - alert: PostgresConnectionsHigh
+        expr: sum(pg_stat_database_numbackends) / max(pg_settings_max_connections) > 0.8
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL is using over 80% of max_connections"
+          runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#postgresconnectionshigh
+
+      - alert: DatabaseSizeGrowth
+        expr: |
+          pg_database_size_bytes{datname="smb_requirements"}
+            > 1.2 * (pg_database_size_bytes{datname="smb_requirements"} offset 1d)
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "The database grew by more than 20% in a day"
+          runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#databasesizegrowth
+
+      - alert: DiskLow
+        expr: |
+          node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs|nsfs|ramfs"}
+            / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs|nsfs|ramfs"} < 0.15
+        for: 15m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.mountpoint }} on the host has less than 15% free"
+          runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#disklow
