@@ -1,10 +1,9 @@
 # Enhancement — Knowledge Center E2: the historic corpus and prior art
 
-> **Status:** in progress on `feat/knowledge-center-historic-corpus` (this repository),
-> `feat/knowledge-center-historic-content-read` (knowledge-portal, E2a) and
-> `feat/knowledge-center-historic-citations` (knowledge-portal, E2b), 2026-10-07.
-> E2a merges first, because this repository pins its contract; E2b is cut from E2a and
-> follows this one.
+> **Status:** delivered 2026-10-07: knowledge-portal#47 (E2a) merged first, because this
+> repository pins its contract, then requirement-portal#47, then knowledge-portal#48 (E2b).
+> Prior art stays off in production behind `PRIOR_ART_ENABLED` until an operator has run the
+> evaluation below against the configured provider.
 > **Parent:** the Knowledge Center re-plan, sub-slice E
 > ([enhancement-knowledge-center.md](enhancement-knowledge-center.md)), decisions 10–13,
 > [ADR-0102](../architecture/adr-0102-historic-requirements-and-ado-lineage.md) and its
@@ -93,7 +92,8 @@ real BRDs before treating the result as release evidence.
 
 ## Validation evidence
 
-Recorded on 2026-10-06, before the pull requests.
+Recorded on 2026-10-06, before the pull requests. All three merged on 2026-10-07 with CI green:
+knowledge-portal#47 (E2a), requirement-portal#47 and knowledge-portal#48 (E2b).
 
 **Gates.**
 
