@@ -26,6 +26,9 @@ services:
       - ./monitoring/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
       - ./monitoring/prometheus/alerts.test.yml:/etc/prometheus/alerts.test.yml:ro
       - prometheus_data:/prometheus
+    # promtool test rules builds its scratch storage here.
+    tmpfs:
+      - /tmp
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:9090/-/ready"]
       interval: 10s
