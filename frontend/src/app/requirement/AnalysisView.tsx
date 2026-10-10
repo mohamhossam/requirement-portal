@@ -21,6 +21,7 @@ import { Button } from "../../components/ui";
 import { missingLabel } from "../../features/documents/labels";
 import { SourceImpactPanel } from "../../features/documents/SourceImpactPanel";
 import { AnalysisPanel } from "../../features/analysis/AnalysisPanel";
+import type { ProductImpactChoice } from "../../features/analysis/ProductImpactCard";
 import { useRequirementJobs } from "../../features/jobs/useRequirementJobs";
 import { queryKeys } from "../queryKeys";
 import type { RequirementWorkspace } from "./useRequirementWorkspace";
@@ -149,6 +150,13 @@ export function AnalysisView({
     onSuccess: async () => Promise.all([refresh("analysis"), queryClient.invalidateQueries({ queryKey: queryKeys.aiJobs(id) })]),
   });
 
+  const decideProductImpact = useMutation({
+    meta: { action: "Recording the product impact decision" },
+    mutationFn: (choice: ProductImpactChoice) =>
+      api.decideProductImpact(id, { ...choice, expected_version: data?.version ?? 0 }),
+    onSuccess: async () => refresh("analysis"),
+  });
+
   const running = new Set(jobs.active.map((job) => job.operation));
   const analysing = analyse.isPending || running.has("analyse_requirement");
   const questionBusy = saveDraft.isPending || resolveQuestions.isPending || classifyQuestion.isPending ||
@@ -220,9 +228,10 @@ export function AnalysisView({
               analysis={data}
               rounds={rounds.data ?? []}
               team={team}
-              busy={!canManageContent || clarify.isPending || confirmAnalysis.isPending || decideIntent.isPending || questionBusy}
+              busy={!canManageContent || clarify.isPending || confirmAnalysis.isPending || decideIntent.isPending || decideProductImpact.isPending || questionBusy}
               error={questionError ? errorMessage(questionError)
                 : decideIntent.error ? errorMessage(decideIntent.error)
+                : decideProductImpact.error ? errorMessage(decideProductImpact.error)
                 : clarify.error ? errorMessage(clarify.error)
                 : confirmAnalysis.error ? errorMessage(confirmAnalysis.error) : null}
               onClarify={(answers) => clarify.mutate(answers)}
@@ -239,6 +248,7 @@ export function AnalysisView({
               canDecideIntent={canConfirmAnalysis}
               onDecideIntent={(proposal, decision, replacement, successMeasures, rationale) =>
                 decideIntent.mutate({ proposal, decision, replacement, successMeasures, rationale })}
+              onDecideProductImpact={(choice) => decideProductImpact.mutate(choice)}
               confirmPermissionReason={
                 canConfirmAnalysis && !knowledgeReview.data?.ready
                   ? "Complete the current Requirement knowledge screen and resolve every finding before confirmation."

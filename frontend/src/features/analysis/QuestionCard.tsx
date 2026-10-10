@@ -290,6 +290,28 @@ function QuestionCard({
           rows={3}
           value={answer}
         />
+        {/* A catalogue question comes with the answers the catalogue knows
+            (ADR-0115). Picking one fills the box; it is still yours to edit. */}
+        {(question.options ?? []).length > 0 && (
+          <div className="grid gap-1.5" role="group" aria-label={`Answers the catalogue knows for: ${question.subject}`}>
+            <span className="text-meta text-ink-muted">From the catalogue</span>
+            <ul role="list" className="m-0 flex list-none flex-wrap gap-2 p-0">
+              {(question.options ?? []).map((option) => (
+                <li key={option}>
+                  <Button
+                    aria-pressed={answer.trim() === option}
+                    disabled={busy}
+                    onClick={() => onAnswer(option)}
+                    size="sm"
+                    variant="secondary"
+                  >
+                    {option}
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
       <div className="border-line grid gap-2 rounded-sm border border-dashed p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">

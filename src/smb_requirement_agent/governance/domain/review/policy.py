@@ -11,6 +11,10 @@ import hashlib
 from dataclasses import dataclass
 from datetime import datetime
 
+from smb_requirement_agent.analysis.domain.product_impact import (
+    ProductImpact,
+    ProductImpactDecision,
+)
 from smb_requirement_agent.analysis.domain.value_objects import ClarificationKind
 from smb_requirement_agent.breakdown.domain.architecture.entities import ArchitectureImpact
 from smb_requirement_agent.breakdown.domain.story.quality import (
@@ -40,7 +44,10 @@ from smb_requirement_agent.governance.domain.review.evidence import (
     evidence_fingerprint,
 )
 
-# Bumped whenever the rules below change, so saved reviews are rebuilt.
+# Bumped whenever the rules below change, so saved reviews are rebuilt. The product impact
+# flags (ADR-0115) did not bump it: they arise only from a decided impact, which already
+# changes the evidence fingerprint, and a bump would make every existing approval
+# non-current, which ADR-0115 rules out.
 REVIEW_RULESET_VERSION = "breakdown-review-v3"
 
 
@@ -113,6 +120,9 @@ class BreakdownReviewPolicy:
                         DependencyEvidenceKind.POTENTIAL,
                     )
                 )
+
+        if evidence.analysis.product_impact is not None:
+            self._add_product_impact(evidence.analysis.product_impact, flags)
 
         if evidence.epic is not None and evidence.epic.is_stale:
             self._add_staleness(evidence.epic.id.value, "Epic", ReviewSourceKind.EPIC, risks, flags)
@@ -313,6 +323,52 @@ class BreakdownReviewPolicy:
                 ResolutionPolicy.SOURCE_ACTION,
             )
         )
+
+    @staticmethod
+    def _add_product_impact(impact: ProductImpact, flags: list[Flag]) -> None:
+        """What a reviewer should weigh about where the requirement sits (ADR-0115)."""
+        source = ReviewSource(ReviewSourceKind.ANALYSIS, "product-impact", "Product impact")
+        if impact.decision in (None, ProductImpactDecision.UNKNOWN):
+            flags.append(
+                _flag(
+                    "product-undecided",
+                    impact.release_id,
+                    FlagCategory.PRODUCT,
+                    FlagSeverity.WARNING,
+                    "Product verdict not decided",
+                    "No one decided whether this changes an existing offering or needs a new "
+                    "one, so the breakdown may miss product set-up work.",
+                    source,
+                    ResolutionPolicy.DECISION,
+                )
+            )
+        for gap in impact.capability_gaps:
+            flags.append(
+                _flag(
+                    "product-gap",
+                    gap.concept_id,
+                    FlagCategory.PRODUCT,
+                    FlagSeverity.WARNING,
+                    "A capability gap needs an architect",
+                    f"{gap.label}: {gap.reason}",
+                    source,
+                    ResolutionPolicy.DECISION,
+                )
+            )
+        for need in impact.weak_needs:
+            flags.append(
+                _flag(
+                    "product-weak-link",
+                    need.concept_id,
+                    FlagCategory.PRODUCT,
+                    FlagSeverity.WARNING,
+                    "Weak capability link",
+                    f"{need.label} fits the requirement only loosely; check it before relying "
+                    "on the systems it brings in.",
+                    source,
+                    ResolutionPolicy.DECISION,
+                )
+            )
 
     @staticmethod
     def _add_architecture(

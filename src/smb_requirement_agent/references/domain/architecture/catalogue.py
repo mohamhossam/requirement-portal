@@ -195,6 +195,10 @@ class SystemReference:
     squads: tuple[OrganisationReference, ...] = ()
     value_streams: tuple[OrganisationReference, ...] = ()
     products: tuple[OrganisationReference, ...] = ()
+    # Why a decided product impact names the system, and what the requirement does to it
+    # (ADR-0115). Kept as the knowledge portal wrote them; none without a decided impact.
+    role: str | None = None
+    change_type: str | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "id", _text(self.id, "system id"))

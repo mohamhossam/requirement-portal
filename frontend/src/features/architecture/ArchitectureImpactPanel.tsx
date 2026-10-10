@@ -8,7 +8,7 @@ import type { ArchitectureImpact } from "../../api/client";
 type SystemReference = ArchitectureImpact["systems"][number];
 import { KNOWLEDGE_PORTAL_URL, evidenceHref, knowledgeApi } from "../../api/knowledge";
 import { useIsKnowledgeAdmin } from "../../auth/useIsKnowledgeAdmin";
-import { kindNote, roleLabel } from "./labels";
+import { changeTypeLabel, kindNote, roleLabel, systemRoleLabel } from "./labels";
 import { Badge, cx } from "../../components/ui";
 
 /**
@@ -106,6 +106,15 @@ export function ArchitectureImpactPanel({
                 {!system.catalogued && <Badge tone="warning">Not in the catalogue</Badge>}
               </div>
               <dl className="text-meta m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-2 gap-y-0.5">
+                {/* Set only when the requirement's product impact was decided (ADR-0115). */}
+                {system.role && <>
+                  <dt className="text-ink-muted">Role</dt>
+                  <dd className="text-ink-soft m-0">{systemRoleLabel(system.role)}</dd>
+                </>}
+                {system.change_type && <>
+                  <dt className="text-ink-muted">Change</dt>
+                  <dd className="text-ink-soft m-0">{changeTypeLabel(system.change_type)}</dd>
+                </>}
                 <dt className="text-ink-muted">Squads</dt>
                 <dd className="text-ink-soft m-0">{names(system.squads) ?? "not assigned"}</dd>
                 {system.value_streams.length > 0 && <>

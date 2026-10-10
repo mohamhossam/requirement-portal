@@ -330,14 +330,32 @@ class GenerationContextTokens:
 
 def _analysis_state(analysis: RequirementAnalysis) -> dict[str, Any]:
     state = asdict(analysis)
-    # Unrecorded grounding stays out, so tokens minted before it was recorded stay valid.
-    if state["reference_grounding"] is None:
-        del state["reference_grounding"]
+    # What was not recorded stays out, so tokens minted before it was recorded stay valid.
+    for key in ("reference_grounding", "product_impact", "product_impact_status"):
+        if state[key] is None:
+            del state[key]
     return state
 
 
+def _unplaced(value: Any) -> Any:
+    """Drop a mapped system's unset role and change type (ADR-0115).
+
+    They are set only from a decided product impact, so tokens minted before systems
+    had them stay valid.
+    """
+    if isinstance(value, dict):
+        return {
+            key: _unplaced(item)
+            for key, item in value.items()
+            if not ("catalogued" in value and key in ("role", "change_type") and item is None)
+        }
+    if isinstance(value, list | tuple):
+        return [_unplaced(item) for item in value]
+    return value
+
+
 def _token(payload: dict[str, Any]) -> str:
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str).encode(
-        "utf-8"
-    )
+    encoded = json.dumps(
+        _unplaced(payload), sort_keys=True, separators=(",", ":"), default=str
+    ).encode("utf-8")
     return f"{CONTEXT_TOKEN_FORMAT}:{hashlib.sha256(encoded).hexdigest()}"

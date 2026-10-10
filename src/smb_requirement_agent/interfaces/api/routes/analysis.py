@@ -24,6 +24,7 @@ from smb_requirement_agent.analysis.domain.entities import (
     ClarificationQuestion,
     RequirementAnalysis,
 )
+from smb_requirement_agent.analysis.domain.product_impact import ProductImpact
 from smb_requirement_agent.analysis.domain.value_objects import (
     AnalysisEvidenceReference,
     AnalysisId,
@@ -57,18 +58,26 @@ from smb_requirement_agent.interfaces.api.schemas.analysis import (
     AssumptionResponse,
     BusinessIntentResponse,
     BusinessRuleResponse,
+    CapabilityNeedResponse,
     ClarificationQuestionResponse,
     ClassifyClarificationQuestionRequest,
     ConfirmAnalysisRequest,
     ConfirmedIntentItemResponse,
     ConstraintResponse,
     DecideIntentProposalRequest,
+    DecideProductImpactRequest,
     HumanClarificationResponse,
+    ImpactGapResponse,
+    ImpactOwnerResponse,
+    ImpactPathStepResponse,
+    ImpactQuestionResponse,
+    ImpactSystemResponse,
     IntentProposalDecisionResponse,
     IntentProposalResponse,
     KnownFactResponse,
     OpenQuestionResponse,
     PotentialDependencyResponse,
+    ProductImpactResponse,
     QuestionAssignmentChangeResponse,
     RequirementAnalysisResponse,
     SaveClarificationDraftRequest,
@@ -143,6 +152,83 @@ def question_response(question: ClarificationQuestion) -> ClarificationQuestionR
         replaces_question_id=(
             question.replaces_question_id.value if question.replaces_question_id else None
         ),
+        options=list(question.options),
+    )
+
+
+def product_impact_response(
+    impact: ProductImpact, *, verdict_validated: bool
+) -> ProductImpactResponse:
+    return ProductImpactResponse(
+        release_id=impact.release_id,
+        suggested_verdict=impact.suggested_verdict,
+        verdict_validated=verdict_validated,
+        reason=impact.reason,
+        assessed_at=impact.assessed_at,
+        offering_id=impact.offering_id,
+        offering_name=impact.offering_name,
+        proposal=impact.proposal,
+        new_values=list(impact.new_values),
+        needs=[
+            CapabilityNeedResponse(
+                concept_id=item.concept_id,
+                label=item.label,
+                path=item.path,
+                covered=item.covered,
+                weak=item.weak,
+            )
+            for item in impact.needs
+        ],
+        gaps=[
+            ImpactGapResponse(
+                kind=item.kind,
+                concept_id=item.concept_id,
+                label=item.label,
+                reason=item.reason,
+                system_id=item.system_id,
+            )
+            for item in impact.gaps
+        ],
+        systems=[
+            ImpactSystemResponse(
+                id=item.id,
+                name=item.name,
+                role=item.role,
+                change_type=item.change_type,
+                paths=[
+                    [
+                        ImpactPathStepResponse(kind=step.kind, id=step.id, label=step.label)
+                        for step in path
+                    ]
+                    for path in item.paths
+                ],
+            )
+            for item in impact.systems
+        ],
+        owners=[
+            ImpactOwnerResponse(
+                concept_id=item.concept_id,
+                system_id=item.system_id,
+                squads=list(item.squads),
+                people=list(item.people),
+                open_seats=item.open_seats,
+            )
+            for item in impact.owners
+        ],
+        questions=[
+            ImpactQuestionResponse(
+                facet=item.facet, question=item.question, options=list(item.options)
+            )
+            for item in impact.questions
+        ],
+        uncertainty=impact.uncertainty,
+        model=impact.model,
+        prompt_version=impact.prompt_version,
+        decision=impact.decision,
+        verdict=impact.verdict,
+        rationale=impact.rationale,
+        decided_by=actor_response(impact.decided_by) if impact.decided_by else None,
+        decided_at=impact.decided_at,
     )
 
 
@@ -150,6 +236,8 @@ def analysis_response(
     analysis: RequirementAnalysis,
     questions: tuple[ClarificationQuestion, ...] = (),
     question_changes: tuple[AnalysisQuestionChange, ...] = (),
+    *,
+    verdict_validated: bool = False,
 ) -> RequirementAnalysisResponse:
     outcome = analysis.effective_desired_outcome()
     outcome_proposal = next(
@@ -361,6 +449,12 @@ def analysis_response(
         reference_grounding=(
             analysis.reference_grounding.value if analysis.reference_grounding else None
         ),
+        product_impact_status=analysis.product_impact_status,
+        product_impact=(
+            product_impact_response(analysis.product_impact, verdict_validated=verdict_validated)
+            if analysis.product_impact is not None
+            else None
+        ),
     )
 
 
@@ -369,6 +463,7 @@ def workspace_response(workspace: AnalysisWorkspace) -> RequirementAnalysisRespo
         workspace.analysis,
         workspace.questions,
         workspace.question_changes,
+        verdict_validated=workspace.product_verdict_validated,
     ).model_copy(
         update={
             "stale_reference_proposal_ids": list(workspace.stale_reference_proposal_ids),
@@ -438,6 +533,30 @@ def confirm_requirement_analysis(
     resolved_id = RequirementId(requirement_id)
     use_case.execute(resolved_id, actor, request.expected_version)
     return workspace_response(collaboration.workspace(resolved_id))
+
+
+@router.put(
+    "/{requirement_id}/analysis/product-impact/decision",
+    response_model=RequirementAnalysisResponse,
+    dependencies=[Depends(limit_provider_calls)],
+)
+def decide_product_impact(
+    requirement_id: str,
+    request: DecideProductImpactRequest,
+    actor: CurrentActorDep,
+    use_case: Annotated[AnalysisCollaboration, Depends(get_analysis_collaboration)],
+) -> RequirementAnalysisResponse:
+    """Accept the suggested product impact, override its verdict, or mark it unknown."""
+    return workspace_response(
+        use_case.decide_product_impact(
+            RequirementId(requirement_id),
+            request.decision,
+            request.expected_version,
+            actor,
+            verdict=request.verdict,
+            rationale=request.rationale,
+        )
+    )
 
 
 @router.patch(

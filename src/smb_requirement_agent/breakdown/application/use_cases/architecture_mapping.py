@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 
 from smb_kernel.time.clock import ClockPort
@@ -12,6 +12,7 @@ from smb_kernel.time.clock import ClockPort
 from smb_requirement_agent.analysis.application.ports.requirement_analysis_repository import (
     RequirementAnalysisRepositoryPort,
 )
+from smb_requirement_agent.analysis.domain.product_impact import ProductImpact
 from smb_requirement_agent.application.errors import ArtifactVersionConflictError
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.application.ports.transaction_manager import TransactionManagerPort
@@ -34,6 +35,7 @@ from smb_requirement_agent.references.application.ports.architecture_knowledge i
     ArchitectureKnowledgePort,
     ArchitectureQuery,
 )
+from smb_requirement_agent.references.domain.architecture.catalogue import SystemReference
 from smb_requirement_agent.requirements.application.errors import RequirementNotFoundError
 from smb_requirement_agent.requirements.application.ports.requirement_repository import (
     RequirementRepositoryPort,
@@ -66,11 +68,33 @@ class BreakdownArchitectureMapping:
     features: tuple[FeatureArchitectureMapping, ...]
 
 
-def _impact(match: ArchitectureKnowledgeMatch, mapped_at: datetime) -> ArchitectureImpact:
+def _placed(
+    systems: tuple[SystemReference, ...], decided: ProductImpact | None
+) -> tuple[SystemReference, ...]:
+    """Mark each system the decided product impact names with its role and change type."""
+    if decided is None:
+        return systems
+    named = {item.id: item for item in decided.systems}
+    return tuple(
+        replace(item, role=named[item.id].role, change_type=named[item.id].change_type)
+        if item.id in named
+        else item
+        for item in systems
+    )
+
+
+def decided_impact(impact: ProductImpact | None) -> ProductImpact | None:
+    """The product impact breakdown follows: one a person gave a verdict (ADR-0116)."""
+    return impact if impact is not None and impact.verdict is not None else None
+
+
+def _impact(
+    match: ArchitectureKnowledgeMatch, mapped_at: datetime, decided: ProductImpact | None
+) -> ArchitectureImpact:
     return ArchitectureImpact(
         match.knowledge_version,
         mapped_at,
-        match.systems,
+        _placed(match.systems, decided),
         match.dependencies,
         match.citation_ids,
         match.uncertainty,
@@ -99,6 +123,8 @@ class MapFeatureArchitecture:
         feature: Feature,
         mapped_at: datetime,
         release_id: str | None = None,
+        *,
+        decided: ProductImpact | None = None,
     ) -> FeatureArchitectureMapping:
         match = self._knowledge.match(
             ArchitectureQuery(
@@ -111,7 +137,7 @@ class MapFeatureArchitecture:
                 release_id=release_id,
             )
         )
-        impact = _impact(match, mapped_at)
+        impact = _impact(match, mapped_at, decided)
         return FeatureArchitectureMapping(feature.with_architecture(impact), impact, ())
 
 
@@ -126,6 +152,8 @@ class MapStoryArchitecture:
         story: UserStory,
         mapped_at: datetime,
         release_id: str | None = None,
+        *,
+        decided: ProductImpact | None = None,
     ) -> StoryArchitectureMapping:
         criteria = tuple(
             part
@@ -144,7 +172,7 @@ class MapStoryArchitecture:
                 release_id=release_id,
             )
         )
-        impact = _impact(match, mapped_at)
+        impact = _impact(match, mapped_at, decided)
         return StoryArchitectureMapping(story.with_architecture(impact), impact)
 
 
@@ -263,15 +291,18 @@ class MapBreakdownArchitecture:
             )
 
         mapped_at = self._clock.now()
+        decided = decided_impact(analysis.product_impact)
         mappings: list[FeatureArchitectureMapping] = []
         pinned_release = release_id
         for feature in features:
             feature_mapping = self._feature_mapper.execute(
-                requirement, feature, mapped_at, pinned_release
+                requirement, feature, mapped_at, pinned_release, decided=decided
             )
             pinned_release = feature_mapping.impact.knowledge_version
             story_mappings = tuple(
-                self._story_mapper.execute(requirement, feature, story, mapped_at, pinned_release)
+                self._story_mapper.execute(
+                    requirement, feature, story, mapped_at, pinned_release, decided=decided
+                )
                 for story in stories_by_feature[feature.id]
             )
             mappings.append(

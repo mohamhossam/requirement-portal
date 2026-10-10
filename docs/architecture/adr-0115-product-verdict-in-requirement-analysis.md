@@ -71,3 +71,20 @@ Slice 13's publication record already has room for an accepted verdict and its v
   dropped, and Phase 7 needs a decided verdict to compare with what was delivered.
 - **Let the knowledge portal store the decision.** Rejected: the decision belongs to the
   requirement's reviewers, and the knowledge portal never stores requirement work (ADR-0104).
+
+## Amendment 1 — as built in Phase 4 (2026-10-10)
+
+- **Catalogue questions have their own source.** The knowledge portal's questions are
+  clarification questions with source `catalogue`, not `ai`: each round's AI questions must
+  equal that round's uncertainties, so the catalogue's are reconciled on their own (kept while
+  asked again, retired when not). They block confirmation and carry the catalogue's options.
+- **The gate is a setting.** `PRODUCT_VERDICT_VALIDATED` (default `false`) records that the live
+  gate has passed. Until it is set, reviewers still see the verdict, labelled a suggestion whose
+  accuracy is unproven; "unknown" is always allowed.
+- **An unreachable portal keeps what was decided.** A round whose assessment failed keeps the
+  previous impact and its decision, and the screen says the impact is from an earlier round. A
+  new round with the same suggested verdict and offering keeps the decision; a different one
+  asks again.
+- **The review ruleset version is unchanged.** Bumping it would change every approval's
+  fingerprint; the decided impact joins the evidence fingerprint instead, and only once decided.
+

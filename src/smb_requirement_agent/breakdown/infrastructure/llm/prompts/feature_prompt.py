@@ -14,7 +14,7 @@ from smb_requirement_agent.breakdown.infrastructure.llm.prompts.generation_guida
     render_guidance,
 )
 
-PROMPT_VERSION = "feature-v5"
+PROMPT_VERSION = "feature-v6"
 
 FEATURE_SYSTEM_PROMPT = """You are an expert Agile Consultant (SAFe-aligned) supporting a
 Telecom SMB value stream.

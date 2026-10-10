@@ -48,6 +48,9 @@ from smb_requirement_agent.analysis.application.use_cases.evidence_analysis impo
 from smb_requirement_agent.analysis.application.use_cases.get_requirement_analysis import (
     GetRequirementAnalysis,
 )
+from smb_requirement_agent.analysis.application.use_cases.product_impact import (
+    AssessProductImpact,
+)
 from smb_requirement_agent.analysis.application.use_cases.reference_grounding import (
     ReferenceGrounding,
 )
@@ -57,6 +60,9 @@ from smb_requirement_agent.infrastructure.text.budget import Utf8BudgetCounter
 from smb_requirement_agent.interfaces.api.composition.knowledge import RequirementKnowledgeWiring
 from smb_requirement_agent.interfaces.api.composition.llm import LLMAdapters
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
+from smb_requirement_agent.references.application.ports.architecture_assessment import (
+    ArchitectureAssessmentPort,
+)
 from smb_requirement_agent.workflows.application.use_cases.ai_jobs import AnalysisProgressReporter
 from smb_requirement_agent.workflows.application.use_cases.generation_context import (
     GenerationContextTokens,
@@ -137,6 +143,9 @@ def build_analysis_workflow(
     reference_proposer: ReferenceProposerPort,
     clock: ClockPort,
     access: RequirementAccessService,
+    assessment: ArchitectureAssessmentPort,
+    *,
+    product_verdict_validated: bool = False,
 ) -> AnalysisWorkflowWiring:
     contexts = GenerationContextTokens(
         persistence.requirement_repository,
@@ -173,6 +182,8 @@ def build_analysis_workflow(
         ),
         references=knowledge.source_impact,
         reviews=knowledge.reference_currency,
+        product_impact=AssessProductImpact(assessment, clock),
+        product_verdict_validated=product_verdict_validated,
     )
     return AnalysisWorkflowWiring(
         generation_context_tokens=contexts,

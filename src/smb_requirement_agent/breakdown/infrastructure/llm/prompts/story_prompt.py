@@ -12,7 +12,7 @@ from smb_requirement_agent.breakdown.infrastructure.llm.prompts.generation_guida
     render_guidance,
 )
 
-PROMPT_VERSION = "story-v5"
+PROMPT_VERSION = "story-v6"
 
 SPLIT_OPERATION = """\
 Split the one source Story into TWO OR MORE distinct, smaller Stories.

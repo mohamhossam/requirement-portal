@@ -168,6 +168,18 @@ def confirm_fake_analysis(client: TestClient, requirement_id: str) -> None:
                 json={"decision": "accepted", "expected_version": proposal["version"]},
             )
             assert decided.status_code == 200
+    current = client.get(f"/requirements/{requirement_id}/analysis").json()
+    impact = current.get("product_impact")
+    if impact and impact["decision"] is None:
+        # A connected knowledge portal's suggestion is accepted, or marked unknown.
+        decided = client.put(
+            f"/requirements/{requirement_id}/analysis/product-impact/decision",
+            json={
+                "decision": "accepted" if impact["suggested_verdict"] else "unknown",
+                "expected_version": current["version"],
+            },
+        )
+        assert decided.status_code == 200, decided.text
     screen_current_knowledge(client, requirement_id)
     current = client.get(f"/requirements/{requirement_id}/analysis").json()
     assert (

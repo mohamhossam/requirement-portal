@@ -17,11 +17,12 @@ Items removed from the backlog are reported and left in the tracker: nothing is 
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import timedelta
 
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
 from smb_requirement_agent.governance.application.errors import (
     BreakdownRevisionNotPublishableError,
     PublicationConfirmationError,
@@ -137,7 +138,10 @@ class _Publications:
                 "Only a revision with a formal final approval and a Story under every Feature "
                 "can be published."
             )
-        return publication_plan(document)
+        verdict, version = _decided_impact(revision.analysis)
+        return replace(
+            publication_plan(document), product_verdict=verdict, product_impact_version=version
+        )
 
     def latest_approved_revision(self, requirement_id: RequirementId) -> int | None:
         numbers = [
@@ -287,6 +291,7 @@ class _Run:
         record = self._publications.record(requirement_id, target)
         if record is None:
             record = BacklogPublication(requirement_id=requirement_id, target_key=target.key)
+        record = record.with_product_impact(plan.product_verdict, plan.product_impact_version)
         now = self._clock.now()
         record = record.start(plan.revision, actor.id.value, actor.display_name, now, now + LEASE)
         self._records.save(record)
@@ -396,3 +401,11 @@ def build_publication_use_cases(
         RetryFailedPublication(shared, publisher),
         GetPublicationStatus(shared),
     )
+
+
+def _decided_impact(analysis: RequirementAnalysis | None) -> tuple[str | None, str | None]:
+    """The verdict a person decided in analysis, and the analysis version that holds it."""
+    impact = analysis.product_impact if analysis is not None else None
+    if analysis is None or analysis.id is None or impact is None or impact.verdict is None:
+        return None, None
+    return impact.verdict.value, f"{analysis.id.value}@{analysis.version}"

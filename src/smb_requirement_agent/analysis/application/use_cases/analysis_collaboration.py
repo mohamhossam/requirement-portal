@@ -13,6 +13,7 @@ from smb_requirement_agent.analysis.application.errors import (
     AnalysisRoundNotFoundError,
     ClarificationQuestionNotFoundError,
     IntentProposalNotFoundError,
+    ProductImpactNotFoundError,
     RequirementAnalysisConflictError,
     RequirementAnalysisNotFoundError,
 )
@@ -24,6 +25,7 @@ from smb_requirement_agent.analysis.application.ports.knowledge_screening import
     AnswerSuggestionRequestPort,
     SuggestionProvenancePort,
 )
+from smb_requirement_agent.analysis.application.ports.product_impact import ProductImpactPort
 from smb_requirement_agent.analysis.application.ports.reference_analysis import (
     ReferenceAnalysisPort,
     ReferenceEvidencePort,
@@ -56,6 +58,10 @@ from smb_requirement_agent.analysis.domain.entities import (
 from smb_requirement_agent.analysis.domain.errors import (
     AnalysisClarificationConflictError,
     InvalidClarificationError,
+)
+from smb_requirement_agent.analysis.domain.product_impact import (
+    ProductImpactDecision,
+    ProductVerdict,
 )
 from smb_requirement_agent.analysis.domain.value_objects import (
     AnalysisId,
@@ -109,6 +115,8 @@ class AnalysisWorkspace:
     stale_reference_proposal_ids: tuple[str, ...] = ()
     # Cited library documents past their review date, with that date (Knowledge Center D).
     overdue_reference_reviews: Mapping[str, date] = field(default_factory=dict)
+    # Whether the live models met the verdict gate (ADR-0115); until then a suggestion.
+    product_verdict_validated: bool = False
 
 
 @dataclass(frozen=True)
@@ -148,8 +156,12 @@ class AnalysisCollaboration:
         references: ReferenceEvidencePort,
         authorization: RequirementAccessPort,
         reviews: ReferenceReviewPort | None = None,
+        product_impact: ProductImpactPort | None = None,
+        product_verdict_validated: bool = False,
     ) -> None:
         self._reviews = reviews
+        self._product_impact = product_impact
+        self._product_verdict_validated = product_verdict_validated
         self._requirements = requirements
         self._reference_grounding, self._references = reference_grounding, references
         self._contexts = contexts
@@ -179,6 +191,7 @@ class AnalysisCollaboration:
             round_.question_changes if round_ is not None else (),
             self._references.stale_analysis(analysis),
             self._overdue_reviews(analysis),
+            self._product_verdict_validated,
         )
 
     def list_rounds(self, requirement_id: RequirementId) -> tuple[AnalysisRoundView, ...]:
@@ -261,9 +274,10 @@ class AnalysisCollaboration:
                 clarifications,
                 documents.contexts,
                 decisions,
-                tuple(_question_context(item) for item in active_questions),
+                _analyzer_questions(active_questions),
             )
             candidate = self._reference_grounding.augment(requirement, candidate, decisions)
+            candidate = self._assess_impact(requirement, candidate, clarifications)
         prepared = self._build_next_analysis(
             requirement, candidate, clarifications, documents.references, current
         )
@@ -377,6 +391,38 @@ class AnalysisCollaboration:
             if status is not IntentProposalStatus.REJECTED:
                 proposal = next(p for p in updated.intent_proposals if p.id == proposal_id)
                 self._references.require_current(proposal.reference_evidence)
+            self._analyses.save(updated)
+            self._knowledge.schedule(requirement_id)
+        return self.workspace(requirement_id)
+
+    def decide_product_impact(
+        self,
+        requirement_id: RequirementId,
+        decision: ProductImpactDecision,
+        expected_version: int,
+        actor: ActorProfile,
+        *,
+        verdict: ProductVerdict | None = None,
+        rationale: str | None = None,
+    ) -> AnalysisWorkspace:
+        """Accept the suggested product impact, override its verdict, or mark it unknown."""
+        with self._transactions.transaction():
+            self._transactions.lock_requirement(requirement_id)
+            self._require_requirement(requirement_id)
+            analysis = self._require_analysis(requirement_id)
+            self._authorization.require(requirement_id, actor, RequirementPermission.OWNER)
+            if analysis.product_impact is None:
+                raise ProductImpactNotFoundError(
+                    "The current analysis has no product impact to decide."
+                )
+            updated = analysis.decide_product_impact(
+                decision,
+                actor,
+                self._clock.now(),
+                expected_version,
+                verdict=verdict,
+                rationale=rationale,
+            )
             self._analyses.save(updated)
             self._knowledge.schedule(requirement_id)
         return self.workspace(requirement_id)
@@ -541,12 +587,12 @@ class AnalysisCollaboration:
                 combined,
                 documents.contexts,
                 _decided_intent(current),
-                tuple(
-                    _question_context(item)
-                    for item in active_questions
-                    if item.id not in set(question_ids)
+                _analyzer_questions(
+                    tuple(item for item in active_questions if item.id not in set(question_ids))
                 ),
             )
+            # Answering a question re-asks where the requirement sits (ADR-0115).
+            candidate = self._assess_impact(requirement, candidate, combined)
         prepared = self._build_next_analysis(
             requirement, candidate, combined, documents.references, current
         )
@@ -633,7 +679,18 @@ class AnalysisCollaboration:
                 else None
             ),
             version=current.version + 1 if current is not None else 1,
+            previous_impact=current.product_impact if current is not None else None,
         )
+
+    def _assess_impact(
+        self,
+        requirement: Requirement,
+        candidate: RequirementAnalysisCandidate,
+        clarifications: tuple[HumanClarification, ...],
+    ) -> RequirementAnalysisCandidate:
+        if self._product_impact is None:
+            return candidate
+        return self._product_impact.augment(requirement, candidate, clarifications)
 
     def _persist_round(
         self,
@@ -659,6 +716,7 @@ class AnalysisCollaboration:
             reconciled.round.question_changes,
             self._references.stale_analysis(analysis),
             self._overdue_reviews(analysis),
+            self._product_verdict_validated,
         )
 
     def _overdue_reviews(self, analysis: RequirementAnalysis) -> Mapping[str, date]:
@@ -752,6 +810,17 @@ def _decided_intent(
         item
         for item in analysis.intent_proposals
         if item.status is not IntentProposalStatus.PENDING
+    )
+
+
+def _analyzer_questions(
+    questions: tuple[ClarificationQuestion, ...],
+) -> tuple[ActiveQuestionContext, ...]:
+    """What the analyzer reconciles: its own and people's questions, not the catalogue's."""
+    return tuple(
+        _question_context(item)
+        for item in questions
+        if item.source is not ClarificationSource.CATALOGUE
     )
 
 

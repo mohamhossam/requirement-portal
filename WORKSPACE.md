@@ -1016,7 +1016,7 @@ The product becomes safer and easier to evolve when the core requirement/backlog
 
 Story assessment includes source facts, confirmed decisions and unresolved evidence. Its cache
 is bound to those inputs as well as Story content. Existing assessments made without that context
-are stale and require explicit reassessment. Feature/Story prompts are `feature-v5` / `story-v5`;
+are stale and require explicit reassessment. Feature/Story prompts are `feature-v6` / `story-v6`;
 the grounded semantic rubric is `story-quality-v3`. Correction tasks distinguish a failed AI draft
 from source requirements, request discovery when Estimable fails, and reject a refused split for
 a sole oversized candidate when the operation allows multiple Stories. Provider schemas require

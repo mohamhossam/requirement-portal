@@ -420,6 +420,9 @@ class QuestionChangeAction(StrEnum):
 class ClarificationSource(StrEnum):
     AI = "ai"
     HUMAN = "human"
+    # Asked for the knowledge portal's product impact (ADR-0115): what it needs to know to
+    # place the requirement. Each round's product impact, not the analyzer, keeps these.
+    CATALOGUE = "catalogue"
 
 
 @dataclass(frozen=True)

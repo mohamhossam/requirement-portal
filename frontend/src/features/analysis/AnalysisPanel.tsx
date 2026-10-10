@@ -20,6 +20,8 @@ import { AnalysisSourcesProvider } from "./AnalysisSources";
 import { IntentProposalCard } from "./IntentProposalCard";
 import type { IntentProposalDraft } from "./IntentProposalCard";
 import { LegacyClarificationForm } from "./LegacyClarificationForm";
+import { ProductImpactCard } from "./ProductImpactCard";
+import type { ProductImpactChoice } from "./ProductImpactCard";
 import type { LegacyEntry } from "./LegacyClarificationForm";
 import { QuestionGroup } from "./QuestionCard";
 import { RoundHistory } from "./RoundHistory";
@@ -111,6 +113,7 @@ function AnalysisPanelContent({
   confirmPermissionReason,
   canDecideIntent,
   onDecideIntent,
+  onDecideProductImpact,
   view = "clarify",
 }: Required<
   Pick<AnalysisPanelProps, "analysis" | "busy" | "error" | "onClarify" | "onConfirm">
@@ -150,6 +153,17 @@ function AnalysisPanelContent({
   const questionChanges = analysis.question_changes ?? [];
   const intentReady =
     pendingProposals.length === 0 && Boolean(analysis.business_intent.desired_outcome);
+  // A product impact waits on the Requirement Owner until they decide it (ADR-0115).
+  const impactPending = Boolean(analysis.product_impact && !analysis.product_impact.decision);
+  const impactCard = (
+    <ProductImpactCard
+      analysis={analysis}
+      busy={busy}
+      canDecide={Boolean(canDecideIntent)}
+      onDecide={onDecideProductImpact}
+      permissionReason={confirmPermissionReason}
+    />
+  );
 
   const readyAnswers = questions.flatMap((question) => {
     const answer = (answers[question.id] ?? question.draft_answer ?? "").trim();
@@ -255,6 +269,8 @@ function AnalysisPanelContent({
       {pendingProposals.length === 0 && decided.length > 0 && (
         <div className="grid gap-2">{decided.map(intentCard)}</div>
       )}
+      {/* A decided product impact is settled understanding, like the outcome. */}
+      {!impactPending && impactCard}
     </section>
   );
 
@@ -314,6 +330,8 @@ function AnalysisPanelContent({
     ? `${blockingCount} question${blockingCount === 1 ? "" : "s"} must be answered first.`
     : !intentReady
       ? "Each item under “Decisions you owe” needs a decision, and this requirement needs an agreed outcome."
+      : impactPending
+        ? "Decide the product impact: accept the suggested verdict, choose another, or mark it unknown."
       : !canConfirm
         ? confirmPermissionReason
         : undefined;
@@ -550,6 +568,7 @@ function AnalysisPanelContent({
               {pendingProposals.map(intentCard)}
             </section>
           )}
+          {impactPending && impactCard}
 
           {/* Clarify ends here: the gate is where the work leads. On /confirm it
               leads the screen instead, above both columns. Every branch —
@@ -642,6 +661,7 @@ export type AnalysisPanelProps = {
     successMeasures?: string[],
     rationale?: string,
   ) => void;
+  onDecideProductImpact?: (choice: ProductImpactChoice) => void;
 };
 
 export function AnalysisPanel(props: AnalysisPanelProps) {

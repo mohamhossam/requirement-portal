@@ -4,6 +4,10 @@ from collections.abc import Sequence
 from datetime import datetime
 from typing import NotRequired, Protocol, TypedDict
 
+from smb_requirement_agent.analysis.domain.product_impact import (
+    ProductImpact,
+    ProductImpactStatus,
+)
 from smb_requirement_agent.analysis.domain.value_objects import (
     ClarificationKind,
     ClarificationSource,
@@ -121,6 +125,8 @@ class RequirementAnalysisCandidate(TypedDict):
     clarification_references: NotRequired[dict[str, list[int]]]
     stage_provenance: NotRequired[list[AnalysisStageProvenanceCandidate]]
     reference_grounding: NotRequired[ReferenceGroundingStatus]
+    product_impact: NotRequired[ProductImpact]
+    product_impact_status: NotRequired[ProductImpactStatus]
 
 
 class RequirementAnalyzerPort(Protocol):

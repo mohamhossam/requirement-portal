@@ -460,6 +460,10 @@ class Settings:
     prior_art_judge_calls_per_hour: int = DEFAULT_PRIOR_ART_JUDGE_CALLS_PER_HOUR
     # At most this many historic chunks embedded an hour, per historic requirement.
     historic_embed_chunks_per_hour: int = DEFAULT_HISTORIC_EMBED_CHUNKS_PER_HOUR
+    # Whether the live models met ADR-0115's verdict gate on knowledge-portal's golden set
+    # (at least 80% verdict accuracy, no new offering called a change). Until an operator
+    # says so, reviewers see the product verdict as an unvalidated suggestion.
+    product_verdict_validated: bool = False
     # Publishing approved backlogs to Azure DevOps (Slice 12); off unless chosen.
     ado_publication: AdoPublicationSettings = field(default_factory=AdoPublicationSettings)
 
@@ -876,7 +880,11 @@ def _prior_art_from_env() -> dict[str, Any]:
     raw_enabled = os.getenv("PRIOR_ART_ENABLED", "false").strip().lower()
     if raw_enabled not in {"true", "false"}:
         raise ConfigurationError("PRIOR_ART_ENABLED must be true or false.")
+    raw_validated = os.getenv("PRODUCT_VERDICT_VALIDATED", "false").strip().lower()
+    if raw_validated not in {"true", "false"}:
+        raise ConfigurationError("PRODUCT_VERDICT_VALIDATED must be true or false.")
     return {
+        "product_verdict_validated": raw_validated == "true",
         "prior_art_enabled": raw_enabled == "true",
         "prior_art_judge_calls_per_hour": calls,
         "historic_embed_chunks_per_hour": chunks,

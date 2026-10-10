@@ -19,6 +19,15 @@ restoring a backup.
   already sent instead of duplicating them, and Retry continues a publication that stopped
   part-way. Migration `202610101200_backlog_publications` (expand only: a new table).
 
+- **Product impact in analysis (ontology plan Phase 4, ADR-0115, ADR-0116).** With a knowledge
+  portal linked, analysis asks it where the requirement sits (a new offering or a change to one),
+  and the owner accepts, overrides or marks the verdict unknown before confirming. Breakdown
+  follows the decided impact (prompts `feature-v6` and `story-v6`), review flags an undecided
+  verdict, capability gaps and weak links, and publication records the verdict. Needs
+  knowledge-portal v0.3.0 or later; an older one assesses nothing and blocks nothing.
+  `PRODUCT_VERDICT_VALIDATED` (default `false`) stops calling the verdict a suggestion once the
+  live gate has passed. No migration: the impact is stored in the analysis snapshot.
+
 ## v0.1.0
 
 The first published release: the pilot candidate, closing the pilot gate of

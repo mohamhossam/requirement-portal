@@ -117,7 +117,7 @@ def _capability_from_payload(raw: object) -> SystemCapability:
 
 
 def _system_to_payload(system: SystemReference) -> JsonObject:
-    return {
+    payload: JsonObject = {
         "id": system.id,
         "name": system.name,
         "catalogued": system.catalogued,
@@ -127,6 +127,11 @@ def _system_to_payload(system: SystemReference) -> JsonObject:
         "value_streams": _references_to_payload(system.value_streams),
         "products": _references_to_payload(system.products),
     }
+    if system.role is not None:
+        payload["role"] = system.role
+    if system.change_type is not None:
+        payload["change_type"] = system.change_type
+    return payload
 
 
 def _dependency_to_payload(dependency: ArchitectureDependency) -> JsonObject:
@@ -287,6 +292,8 @@ def _system_from_payload(raw: object) -> SystemReference:
         squads=_references_from_payload(system, "squads"),
         value_streams=_references_from_payload(system, "value_streams"),
         products=_references_from_payload(system, "products"),
+        role=nullable_text(system, "role"),
+        change_type=nullable_text(system, "change_type"),
     )
 
 
