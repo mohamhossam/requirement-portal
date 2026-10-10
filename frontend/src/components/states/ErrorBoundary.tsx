@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 
+import { reportClientError } from "../../api/clientErrors";
 import { Button } from "../ui/Button";
 import { isChunkLoadError } from "./chunkLoadError";
 import { ErrorState } from "./ErrorState";
@@ -39,6 +40,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: unknown, info: ErrorInfo) {
     console.error("The page failed to render.", error, info.componentStack);
+    reportClientError(isChunkLoadError(error) ? "chunk_load" : "render");
   }
 
   render() {

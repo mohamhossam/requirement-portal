@@ -312,6 +312,10 @@ jobs:
           curl --fail --silent http://127.0.0.1:8090/knowledge-api/ready
           curl --fail --silent --head http://127.0.0.1:8080/ | grep -i "frame-ancestors 'none'"
           curl --fail --silent http://127.0.0.1:8080/ | grep -q 'http-equiv="Content-Security-Policy"'
+          # The web container filled in this deployment's values when it started (PR 12).
+          if curl --fail --silent http://127.0.0.1:8080/ | grep -q '__CSP_IDENTITY_ORIGINS__\|__KNOWLEDGE_PORTAL_'; then
+            echo "The served page still has a placeholder"; exit 1
+          fi
           # Service-to-service routes never pass an edge (ADR-0099).
           for url in http://127.0.0.1:8080/api/internal/architecture-mapping/stats \
                      http://127.0.0.1:8090/knowledge-api/internal/events; do
@@ -374,6 +378,9 @@ jobs:
           set +e
           timeout 120 $PROD run --rm --no-deps $PRODUCTION_SETTINGS -e IDENTITY_PROVIDER=fake api
           boot=$?
+          # Under OIDC the page needs the issuer's origin, so web refuses to start without it.
+          timeout 60 $PROD run --rm --no-deps -e CSP_IDENTITY_ORIGINS= web > web-boot.log 2>&1
+          web=$?
           $PROD run --rm --no-deps $PRODUCTION_SETTINGS -e LLM_PROVIDER=fake api \
             python -m smb_requirement_agent.interfaces.deployment_preflight
           preflight=$?
@@ -381,6 +388,8 @@ jobs:
           test "$boot" != 0 && test "$boot" != 124 ||
             { echo "The API booted with fake identity in production ($boot)"; exit 1; }
           test "$preflight" = 2 || { echo "The preflight answered $preflight for the fake model"; exit 1; }
+          test "$web" != 0 && test "$web" != 124 && grep -q "must name the OIDC issuer origin" web-boot.log ||
+            { cat web-boot.log; echo "web started under OIDC without an issuer origin ($web)"; exit 1; }
 
       - name: The portals reach each other on the peer network
         run: |

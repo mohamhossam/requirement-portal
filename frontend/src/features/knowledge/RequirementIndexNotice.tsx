@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { api } from "../../api/client";
-import { ApiError, errorMessage } from "../../api/errors";
+import { ApiError, errorMessage, errorReference } from "../../api/errors";
 import { queryKeys } from "../../app/queryKeys";
 import { ErrorNotice } from "../../components/ErrorNotice";
 import { Button, Card } from "../../components/ui";
@@ -16,7 +16,7 @@ import { Button, Card } from "../../components/ui";
 export function RequirementIndexNotice({ requirementId }: { requirementId: string }) {
   const index = useQuery({
     queryKey: queryKeys.scope("requirement-index", requirementId),
-    queryFn: () => api.getRequirementIndex(requirementId),
+    queryFn: ({ signal }) => api.getRequirementIndex(requirementId, { signal }),
     refetchInterval: 2000,
   });
   const retry = useMutation({
@@ -27,7 +27,7 @@ export function RequirementIndexNotice({ requirementId }: { requirementId: strin
   // and has nothing to do about it: a red "We couldn't complete that action"
   // on arrival reported a failure they never caused.
   if (index.isError && index.error instanceof ApiError && index.error.status === 403) return null;
-  if (index.isError) return <ErrorNotice message={errorMessage(index.error)} />;
+  if (index.isError) return <ErrorNotice message={errorMessage(index.error)} reference={errorReference(index.error)} />;
   if (!index.data || index.data.state === "ready") return null;
   const stuck = index.data.state === "failed" || index.data.state === "rebuild_required";
   return (
@@ -58,7 +58,7 @@ export function RequirementIndexNotice({ requirementId }: { requirementId: strin
           Retry knowledge preparation
         </Button>
       )}
-      {retry.isError && <ErrorNotice message={errorMessage(retry.error)} />}
+      {retry.isError && <ErrorNotice message={errorMessage(retry.error)} reference={errorReference(retry.error)} />}
     </Card>
   );
 }

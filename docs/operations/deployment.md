@@ -32,7 +32,7 @@ A release publishes them as `ghcr.io/mohamhossam/requirement-api` and
 | Image | Built from | Runs |
 |---|---|---|
 | `requirement-platform/api` | `deploy/api/Dockerfile` | Four processes, each chosen by the container command: the **API** (`python -m smb_requirement_agent.interfaces.api.serve`); the **worker** (`python -m smb_requirement_agent.interfaces.worker`); **migrate** (`python -m smb_requirement_agent.infrastructure.persistence.migrate`); and **maintenance** (`python -m smb_requirement_agent.interfaces.maintenance`). |
-| `requirement-platform/web` | `deploy/web/Dockerfile` | nginx serving the built browser app and proxying `/api/` to the API. |
+| `requirement-platform/web` | `deploy/web/Dockerfile` | nginx serving the built browser app and proxying `/api/` to the API. At start it writes this deployment's issuer origins and knowledge-portal link into the page (`CSP_IDENTITY_ORIGINS`, `KNOWLEDGE_PORTAL_URL`, `KNOWLEDGE_PORTAL_ROLE`), so one image serves every deployment. |
 
 Both images run as non-root users on read-only root filesystems. The backend
 image installs dependencies from `uv.lock` (`uv sync --locked --no-dev`).
@@ -54,8 +54,8 @@ image installs dependencies from `uv.lock` (`uv sync --locked --no-dev`).
   - `/knowledge-api/` answers 404, and `/knowledge/` redirects old bookmarks to
     the knowledge portal's own address for one release (see "Connecting the
     knowledge portal").
-  - `CSP_IDENTITY_ORIGINS` is built into the `web` image. Set it in
-    `deploy/.env`.
+  - `CSP_IDENTITY_ORIGINS` names the OIDC issuer for the page's Content-Security-Policy. The
+    `web` container reads it when it starts, so set it in `deploy/.env`.
   - nginx passes its `$request_id` as `X-Request-ID`, so one ID links the edge
     log, the API's log line and any error body the browser receives.
   - The scheme the browser used reaches the API as `X-Forwarded-Proto`. The edge believes it only
@@ -133,9 +133,12 @@ rebuilds the derived projections and records the maintenance marker. `/ready`
 refuses traffic until that marker exists. On an empty database it takes
 seconds.
 
-`CSP_IDENTITY_ORIGINS` is built into the page's Content-Security-Policy. If it
-is missing, the browser blocks the OIDC sign-in and token calls. Rebuild the web
-image when the issuer changes.
+`CSP_IDENTITY_ORIGINS` goes into the page's Content-Security-Policy. Without it the browser
+would block the OIDC sign-in and token calls, so the `web` container refuses to start under
+OIDC when it is empty. The container writes it, with `KNOWLEDGE_PORTAL_URL` and
+`KNOWLEDGE_PORTAL_ROLE`, into the page each time it starts (`deploy/web/render-index.sh`), so
+one `web` image serves every deployment. Restart `web` after changing any of them; nothing needs
+rebuilding.
 
 Before opening the edge to users, run the preflight with the deployment's
 settings. It exits 2, naming the setting, while identity is not OIDC or the fake
@@ -183,9 +186,8 @@ passage and evidence views.
 - **Offline (fake identity):** Amina Owner and Ravi Reviewer are knowledge
   admins in both portals; Omar Observer is not.
 
-`VITE_KNOWLEDGE_PORTAL_ROLE` (a web image build argument) names another role
-for the link, or, empty, shows it to everyone signed in and leaves the decision
-to the portal.
+`KNOWLEDGE_PORTAL_ROLE` (in `deploy/.env`, read when `web` starts) names another role for the
+link, or, set empty, shows it to everyone signed in and leaves the decision to the portal.
 
 Any member of a Requirement may map its architecture; anyone signed in may read
 the mapping jobs (ADR-0104 amendment, 2026-10-09). One role of requirement work's
@@ -238,7 +240,7 @@ once and publishes it:
 | Image | For |
 |---|---|
 | `ghcr.io/mohamhossam/requirement-api:vX.Y.Z` | Every deployment: the API, worker and one-shot commands |
-| `ghcr.io/mohamhossam/requirement-web-production:vX.Y.Z` | The production deployment. Its Content-Security-Policy and links are built in from the `production` GitHub environment's variables: `CSP_IDENTITY_ORIGINS`, which is required, and the optional `KNOWLEDGE_PORTAL_URL` and `KNOWLEDGE_PORTAL_ROLE`. |
+| `ghcr.io/mohamhossam/requirement-web-production:vX.Y.Z` | Every deployment. Its Content-Security-Policy and links come from the container's `CSP_IDENTITY_ORIGINS`, `KNOWLEDGE_PORTAL_URL` and `KNOWLEDGE_PORTAL_ROLE` when it starts. |
 
 Each image is:
 - scanned by Trivy, which refuses fixable HIGH or CRITICAL findings;
@@ -457,6 +459,7 @@ never be reached through the proxy. Scrape each container.
 | `smb_ai_jobs_queued` | `operation` | AI jobs waiting to be claimed, sampled every 15 seconds. Every process reports the same queue; take `max()`. |
 | `smb_ai_job_oldest_queued_age_seconds` | — | How long the oldest claimable job has waited. A job in retry backoff waits from when it is due. |
 | `smb_provider_spend_blocked_total` | `action` | Work held back because today's token budget is spent: `start` (refused) or `claim` (skipped by a worker). |
+| `smb_client_errors_total` | `kind` | Failures browsers reported (`POST /api/client-errors`): `render` (a page crashed), `chunk_load` (a page's code was gone after a redeploy), `uncaught_error` and `unhandled_rejection`. Only the kind is sent, never a message. A browser reports each kind once per page load. |
 
 The process, Python and garbage-collector series every Prometheus client exports
 (`process_resident_memory_bytes`, `python_gc_*`, …) are there too.
@@ -568,8 +571,10 @@ without limiting it.
 
 **Per client address, at the edge.** nginx limits each client address on `/api/` to
 `EDGE_RATE_PER_SECOND` requests a second (default 50), with bursts of `EDGE_BURST` (default 100).
-Impact preview is held to 2 a second (bursts of 5). Refusals are 429, code `edge_rate_limited`, in
-the API's error shape, with `Retry-After`. The API's own 429s pass through unchanged. These are
+Impact preview is held to 2 a second (bursts of 5). Browser error reports
+(`/api/client-errors`), which need no sign-in, are held to 1 a second (bursts of 10) with bodies of
+1 KB at most. Refusals are 429, code `edge_rate_limited`, in the API's error shape, with
+`Retry-After`. The API's own 429s pass through unchanged. These are
 Compose variables, set in `deploy/.env`.
 
 The edge sees the TLS proxy in front of it, not the browser, unless it trusts that proxy to name

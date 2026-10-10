@@ -20,7 +20,7 @@ export function ArchitectureRemapBanner({ mappedWith, canRemap, busy, onRemap }:
   onRemap: () => void;
 }) {
   const [confirming, setConfirming] = useState(false);
-  const active = useQuery({ queryKey: ["knowledge", "active"], queryFn: knowledgeApi.activeRelease,
+  const active = useQuery({ queryKey: ["knowledge", "active"], queryFn: ({ signal }) => knowledgeApi.activeRelease({ signal }),
     enabled: mappedWith.length > 0, retry: false });
   const catalogue = active.data;
   if (!catalogue || !mappedWith.some((version) => version !== catalogue.id)) return null;

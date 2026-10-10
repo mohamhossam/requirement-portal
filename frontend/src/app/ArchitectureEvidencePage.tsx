@@ -24,7 +24,7 @@ export function ArchitectureEvidencePage() {
   const admin = useIsKnowledgeAdmin();
   const evidence = useQuery({
     queryKey: ["architecture-evidence", releaseId, chunkId],
-    queryFn: () => knowledgeApi.evidence(releaseId, chunkId),
+    queryFn: ({ signal }) => knowledgeApi.evidence(releaseId, chunkId, { signal }),
     enabled: Boolean(releaseId && chunkId),
     retry: false,
   });

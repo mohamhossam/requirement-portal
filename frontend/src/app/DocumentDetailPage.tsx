@@ -4,7 +4,7 @@ import { useEffect, useId, useMemo, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { api } from "../api/client";
-import { ApiError, errorMessage } from "../api/errors";
+import { ApiError, errorMessage, errorReference } from "../api/errors";
 import { Disclosure } from "../components/Disclosure";
 import { PageHeader } from "../components/shell";
 import { ErrorNotice, ErrorState, LoadingState, Skeleton } from "../components/states";
@@ -51,12 +51,12 @@ export function DocumentDetailPage() {
   const queryClient = useQueryClient();
   const document = useQuery({
     queryKey: queryKeys.document(documentId),
-    queryFn: () => api.getDocument(documentId),
+    queryFn: ({ signal }) => api.getDocument(documentId, { signal }),
     enabled: Boolean(documentId),
   });
   const pdf = useQuery({
     queryKey: queryKeys.scope("document-pdf", documentId),
-    queryFn: () => api.getDocumentPdf(documentId),
+    queryFn: ({ signal }) => api.getDocumentPdf(documentId, { signal }),
     enabled: document.data?.current_version.mime_type === "application/pdf",
   });
   const pdfUrl = useMemo(() => pdf.data ? URL.createObjectURL(pdf.data) : null, [pdf.data]);
@@ -102,6 +102,7 @@ export function DocumentDetailPage() {
         headingLevel="h2"
         title={missing ? "This document isn’t here" : "We couldn’t open this document"}
         message={missing ? "It may have been removed, or the link may be wrong." : errorMessage(document.error)}
+        reference={errorReference(document.error)}
         onRetry={missing ? undefined : () => void document.refetch()}
         action={<ButtonLink variant="secondary" to="/documents">Back to documents</ButtonLink>}
       />
@@ -168,7 +169,7 @@ export function DocumentDetailPage() {
             )}
           </header>
           {pdf.isError
-            ? <ErrorNotice message={errorMessage(pdf.error)} />
+            ? <ErrorNotice message={errorMessage(pdf.error)} reference={errorReference(pdf.error)} />
             : pdfUrl
               ? <iframe className="border-line bg-surface block min-h-[42rem] w-full rounded-md border border-solid" title={`Preview of ${current.filename}`} src={pdfUrl} />
               : <Skeleton label="Loading protected PDF" />}
@@ -238,7 +239,7 @@ export function DocumentDetailPage() {
         disabled={uploadVersion.isPending}
         onChange={(event) => { const file = event.target.files?.[0]; if (file) uploadVersion.mutate(file); }}
       />
-      {uploadVersion.error && <div className="mb-6"><ErrorNotice message={errorMessage(uploadVersion.error)} /></div>}
+      {uploadVersion.error && <div className="mb-6"><ErrorNotice message={errorMessage(uploadVersion.error)} reference={errorReference(uploadVersion.error)} /></div>}
 
       {/* DOM order is card, passages, record: the order a narrow screen reads
           them in. At `lg` the record is placed beside the card; it holds no
@@ -355,7 +356,7 @@ export function DocumentDetailPage() {
               </fieldset>
             ) : null}
 
-            {decisionError && <ErrorNotice message={errorMessage(decisionError)} />}
+            {decisionError && <ErrorNotice message={errorMessage(decisionError)} reference={errorReference(decisionError)} />}
 
             {/* The decision comes after what it rests on, and says what it
                 means right under it. */}

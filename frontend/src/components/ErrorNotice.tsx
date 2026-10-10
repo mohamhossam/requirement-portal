@@ -1,3 +1,5 @@
+import { ErrorReference } from "./ErrorReference";
+
 /**
  * The inline alert beside a control that just refused.
  *
@@ -10,7 +12,14 @@
  * redeclare — one of them with two hardcoded hex values that predate the
  * palette.
  */
-export function ErrorNotice({ message }: { message: string }) {
+export function ErrorNotice({
+  message,
+  reference,
+}: {
+  message: string;
+  /** The API's correlation ID, from `errorReference(error)`. */
+  reference?: string | null;
+}) {
   return (
     <div
       className="error-notice border-line bg-danger-wash my-3 grid gap-1 rounded-sm border border-solid border-l-[3px] border-l-[var(--danger)] px-3 py-2"
@@ -18,6 +27,7 @@ export function ErrorNotice({ message }: { message: string }) {
     >
       <strong className="text-danger text-body">We couldn’t complete that action.</strong>
       <span className="text-ink-soft text-body">{message}</span>
+      <ErrorReference id={reference} />
     </div>
   );
 }

@@ -68,6 +68,17 @@ An exception sets no precedent for the redesign: it changes behaviour, not the l
     notice, and keeps a job start's idempotency key.
   - **Error boundaries.** A root boundary and a route boundary built on `ErrorState` replace a
     blank page, and offer a reload when a redeploy removed the page's code.
+- **Production hardening PR 12:**
+  - **Timeouts and cancellation** (`api/client.ts`). Requests give up after 30 seconds, or 120 for
+    uploads and downloads, as `ApiError(0, "request_timeout")`. The read methods take a query's
+    `{ signal }`, and every `queryFn` passes it, so a query nobody needs any more stops its fetch.
+    A cancelled query is `request_aborted`, like an identity change.
+  - **Correlation IDs.** `errorReference(error)` (`api/errors.ts`) gives `ErrorNotice`, `ErrorState`
+    and failure toasts (`app/mutationErrors.ts`) the API's correlation ID to show.
+  - **Client error reports** (`api/clientErrors.ts`). The boundaries and window listeners report
+    the kind of failure, once per kind per page load, to `POST /api/client-errors`.
+  - **Runtime values** (`api/knowledge.ts`). The knowledge portal's address and role come from
+    `<meta>` tags the web container renders when it starts, before `import.meta.env`.
 
 ## Consequences
 

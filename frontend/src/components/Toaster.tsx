@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import { CircleCheck, Info, TriangleAlert, X } from "lucide-react";
 
+import { ErrorReference } from "./ErrorReference";
 import { connectToastBus } from "./toastBus";
 import { ToastContext, type ToastInput } from "./useToast";
 
@@ -138,6 +139,7 @@ export function Toaster({ children }: { children: ReactNode }) {
                       {toast.message}
                     </span>
                   )}
+                  <ErrorReference id={toast.reference} tone="text-ink-muted" />
                   {toast.to && (
                     <Link
                       className="text-accent hover:text-accent-strong text-meta mt-0.5 flex min-h-6 w-fit items-center font-semibold underline underline-offset-2"

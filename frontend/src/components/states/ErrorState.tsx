@@ -1,6 +1,7 @@
 import { TriangleAlert } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { ErrorReference } from "../ErrorReference";
 import { Button } from "../ui/Button";
 
 /**
@@ -23,6 +24,7 @@ export function ErrorState({
   retryLabel = "Try again",
   action,
   headingLevel: Heading = "h3",
+  reference,
 }: {
   title?: string;
   /** What went wrong, from the API or from `errorMessage(error)`. */
@@ -32,6 +34,8 @@ export function ErrorState({
   /** An alternative route out, when retrying is not the one. */
   action?: ReactNode;
   headingLevel?: "h1" | "h2" | "h3" | "h4";
+  /** The API's correlation ID, from `errorReference(error)`. */
+  reference?: string | null;
 }) {
   return (
     <div
@@ -45,6 +49,7 @@ export function ErrorState({
       </p>
       <Heading className="text-title text-ink m-0">{title}</Heading>
       <p className="text-ink-soft text-body m-0 max-w-[80ch]">{message}</p>
+      <ErrorReference id={reference} />
       {(onRetry || action) && (
         <div className="mt-1 flex flex-wrap items-center gap-2">
           {onRetry ? (

@@ -1,4 +1,4 @@
-import { ApiError, errorMessage, isAbortedRequest } from "../api/errors";
+import { ApiError, errorMessage, errorReference, isAbortedRequest } from "../api/errors";
 import type { ToastInput } from "../components/useToast";
 
 /** What a mutation may declare about how its failures should be reported. */
@@ -42,6 +42,7 @@ export function mutationErrorToast(error: unknown, meta?: MutationErrorMeta): To
     tone: "error",
     title: action ? `${action} failed` : "That action could not be completed",
     message: errorMessage(error),
+    reference: errorReference(error),
     // Repeated attempts at the same action replace rather than stack.
     key: `mutation-${action ?? "generic"}`,
   };

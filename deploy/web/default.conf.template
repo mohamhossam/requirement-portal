@@ -6,9 +6,11 @@ map $request_uri $api_request_uri {
 
 # Per client address (ADR-0106): one address flooding the API cannot starve
 # everyone else. Impact preview recomputes a Requirement's impact on every
-# keystroke pause, so it gets a stricter budget of its own.
+# keystroke pause, so it gets a stricter budget of its own. Browser error
+# reports need no sign-in, so they get the strictest.
 limit_req_zone $binary_remote_addr zone=api_per_address:10m rate=${EDGE_RATE_PER_SECOND}r/s;
 limit_req_zone $binary_remote_addr zone=impact_preview_per_address:1m rate=2r/s;
+limit_req_zone $binary_remote_addr zone=client_errors_per_address:1m rate=1r/s;
 limit_req_status 429;
 
 # The scheme the browser used: what the TLS proxy in front (TRUSTED_PROXY_CIDR) reports,
@@ -141,6 +143,15 @@ server {
             limit_req zone=api_per_address burst=${EDGE_BURST} nodelay;
             limit_req zone=impact_preview_per_address burst=5 nodelay;
         }
+
+        # Public: a browser reports its own failures, signed in or not. The body
+        # names only a kind, so it never needs more than a few bytes.
+        location = /api/client-errors {
+            proxy_pass ${API_UPSTREAM}$api_request_uri;
+            client_max_body_size 1k;
+            limit_req zone=api_per_address burst=${EDGE_BURST} nodelay;
+            limit_req zone=client_errors_per_address burst=10 nodelay;
+        }
     }
 
     location @edge_rate_limited {
@@ -156,5 +167,13 @@ server {
         include /etc/nginx/snippets/security-headers.conf;
         add_header Cache-Control "no-cache" always;
         try_files $uri /index.html;
+    }
+
+    # The app shell this container rendered when it started, with this
+    # deployment's issuer origins and knowledge-portal link (render-index.sh).
+    location = /index.html {
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Cache-Control "no-cache" always;
+        root /run/web;
     }
 }

@@ -15,6 +15,11 @@ describe("mutation error notices", () => {
     });
   });
 
+  it("carries the API's correlation ID, for the person to quote", () => {
+    const notice = mutationErrorToast(new ApiError(500, "Upstream exploded.", "internal_error", "req-7f3a"));
+    expect(notice?.reference).toBe("req-7f3a");
+  });
+
   it("still reports an action that did not declare itself", () => {
     expect(mutationErrorToast(new ApiError(500, "Upstream exploded."))).toMatchObject({
       title: "That action could not be completed",

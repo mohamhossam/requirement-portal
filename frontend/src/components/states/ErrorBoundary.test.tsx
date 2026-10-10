@@ -2,7 +2,10 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
+import { reportClientError } from "../../api/clientErrors";
 import { ErrorBoundary } from "./ErrorBoundary";
+
+vi.mock("../../api/clientErrors", () => ({ reportClientError: vi.fn() }));
 
 let failure: Error | null = null;
 
@@ -23,6 +26,8 @@ it("shows a way out instead of a blank page, and recovers when tried again", asy
 
   expect(screen.getByRole("heading", { name: "This page stopped working", level: 2 })).toBeVisible();
   expect(screen.getByRole("button", { name: "Reload the page" })).toBeVisible();
+  // Operators hear of it too, as the kind of failure only.
+  expect(reportClientError).toHaveBeenCalledWith("render");
 
   failure = null;
   await userEvent.click(screen.getByRole("button", { name: "Try again" }));
@@ -38,6 +43,7 @@ it("asks for a reload when a redeploy removed the page's code", async () => {
   expect(screen.getByRole("main")).toBeInTheDocument();
   expect(screen.getByRole("heading", { name: "A new version is available", level: 1 })).toBeVisible();
   expect(screen.queryByRole("button", { name: "Try again" })).not.toBeInTheDocument();
+  expect(reportClientError).toHaveBeenCalledWith("chunk_load");
   await userEvent.click(screen.getByRole("button", { name: "Reload the page" }));
   expect(reload).toHaveBeenCalledOnce();
 });

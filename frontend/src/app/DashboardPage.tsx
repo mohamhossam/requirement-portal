@@ -63,7 +63,7 @@ export function DashboardPage() {
   const requirements = useInfiniteQuery({
     queryKey: queryKeys.requirementList(baseParams),
     initialPageParam: 0,
-    queryFn: ({ pageParam }) => api.listRequirements({ ...baseParams, offset: pageParam }),
+    queryFn: ({ pageParam, signal }) => api.listRequirements({ ...baseParams, offset: pageParam }, { signal }),
     getNextPageParam: (page) => (page.has_more ? page.offset + page.requirements.length : undefined),
     refetchInterval: (query) =>
       query.state.data?.pages.some((page) =>
@@ -74,13 +74,13 @@ export function DashboardPage() {
   });
   const drafts = useQuery({
     queryKey: queryKeys.requirementDrafts(),
-    queryFn: () => api.listRequirementDrafts(),
+    queryFn: ({ signal }) => api.listRequirementDrafts(false, { signal }),
   });
   const legacyDrafts = useQuery({
     queryKey: queryKeys.scope("requirement-drafts", "unowned"),
-    queryFn: () => api.listRequirementDrafts(true),
+    queryFn: ({ signal }) => api.listRequirementDrafts(true, { signal }),
   });
-  const savedViews = useQuery({ queryKey: queryKeys.savedViews(), queryFn: api.listSavedViews });
+  const savedViews = useQuery({ queryKey: queryKeys.savedViews(), queryFn: ({ signal }) => api.listSavedViews({ signal }) });
   const currentCriteria = (): SavedViewCriteria => ({
     query: search.trim() || null,
     workflow_statuses: statuses,

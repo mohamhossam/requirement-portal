@@ -103,7 +103,7 @@ describe("DashboardPage", () => {
     expect(updated).toHaveAttribute("aria-sort", "descending");
 
     await userEvent.click(within(requirement).getByRole("button"));
-    await waitFor(() => expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ sort: "title_asc" })));
+    await waitFor(() => expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ sort: "title_asc" }), { signal: expect.any(AbortSignal) }));
     // A new order is a new query, so the table is re-rendered: find it again.
     const resorted = await screen.findByRole("table", { name: "Requirements worklist" });
     expect(within(resorted).getByRole("columnheader", { name: /Requirement/ })).toHaveAttribute("aria-sort", "ascending");
@@ -166,7 +166,7 @@ describe("DashboardPage", () => {
     await userEvent.type(screen.getByRole("searchbox", { name: "Search requirements" }), "older");
     await userEvent.click(screen.getByRole("button", { name: /Draft/ }));
     await userEvent.selectOptions(screen.getByLabelText("Sort"), "title_asc");
-    await waitFor(() => expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ q: "older", workflowStatus: ["draft"], sort: "title_asc" })));
+    await waitFor(() => expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ q: "older", workflowStatus: ["draft"], sort: "title_asc" }), { signal: expect.any(AbortSignal) }));
   });
 
   it("filters by owner and assignments to the current actor", async () => {
@@ -182,7 +182,7 @@ describe("DashboardPage", () => {
     await waitFor(() => expect(list).toHaveBeenLastCalledWith(expect.objectContaining({
       ownerId: "fake-owner",
       assignedToMe: true,
-    })));
+    }), { signal: expect.any(AbortSignal) }));
   });
 
   it("collapses the real attention band", async () => {
@@ -244,6 +244,6 @@ describe("DashboardPage", () => {
       ownerId: "fake-owner",
       assignedToMe: true,
       offset: 0,
-    })));
+    }), { signal: expect.any(AbortSignal) }));
   });
 });

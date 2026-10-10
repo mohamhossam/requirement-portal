@@ -22,6 +22,8 @@ PUBLIC_OPERATIONS = {
     ("GET", "/health"),
     ("GET", "/ready"),
     ("GET", "/identity/config"),
+    # A browser reports its own failures, signed in or not (production hardening PR 12).
+    ("POST", "/client-errors"),
 }
 
 

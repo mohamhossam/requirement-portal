@@ -38,7 +38,7 @@ function useJobsController(requirementId: string) {
   const jobs = useQuery({
     queryKey: queryKeys.aiJobs(requirementId),
     queryFn: async ({ signal }) => {
-      const items = await api.listAiJobs(requirementId);
+      const items = await api.listAiJobs(requirementId, false, { signal });
       signal.throwIfAborted();
       processJobs(items);
       return items;

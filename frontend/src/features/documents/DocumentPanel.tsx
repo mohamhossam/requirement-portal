@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { api, type DocumentSummary } from "../../api/client";
-import { errorMessage } from "../../api/errors";
+import { errorMessage, errorReference } from "../../api/errors";
 import { ErrorNotice } from "../../components/ErrorNotice";
 import { queryKeys } from "../../app/queryKeys";
 import { Skeleton } from "../../components/Skeleton";
@@ -51,13 +51,13 @@ export function DocumentPanel({ scope, prepareScope, onContextChanged, readOnly 
     : queryKeys.draftDocuments(scope?.id ?? "pending");
   const documents = useQuery({
     queryKey,
-    queryFn: () => scope?.kind === "requirement" ? api.listRequirementDocuments(scope.id)
-      : api.listDraftDocuments(scope!.id),
+    queryFn: ({ signal }) => scope?.kind === "requirement" ? api.listRequirementDocuments(scope.id, { signal })
+      : api.listDraftDocuments(scope!.id, { signal }),
     enabled: Boolean(scope),
   });
   const ingestions = useQuery({
     queryKey: ["attachment-ingestions", scope?.kind, scope?.id],
-    queryFn: () => api.listAttachmentIngestions(scope!.id, scope!.kind === "draft"),
+    queryFn: ({ signal }) => api.listAttachmentIngestions(scope!.id, scope!.kind === "draft", { signal }),
     enabled: Boolean(scope),
     refetchInterval: query => query.state.data?.some(item =>
       ["queued", "scanning", "extracting"].includes(item.stage)
@@ -196,7 +196,7 @@ export function DocumentPanel({ scope, prepareScope, onContextChanged, readOnly 
         <p className="text-meta text-ink-muted m-0">{ACCEPTED_FORMATS}.</p>
       )}
 
-      {failure && <ErrorNotice message={errorMessage(failure)} />}
+      {failure && <ErrorNotice message={errorMessage(failure)} reference={errorReference(failure)} />}
       {!readOnly && (inclusion.isError || removal.isError || documents.isError) && <Button variant="text" className="w-fit" disabled={busy}
         onClick={async () => { inclusion.reset(); removal.reset(); if (scope) await refresh(scope); }}>Reload attachment state</Button>}
       {uploadStatus && (

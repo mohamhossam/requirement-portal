@@ -35,7 +35,7 @@ export function ArchitectureImpactPanel({
   impact: ArchitectureImpact | null;
   compact?: boolean;
 }) {
-  const active = useQuery({ queryKey: ["knowledge", "active"], queryFn: knowledgeApi.activeRelease,
+  const active = useQuery({ queryKey: ["knowledge", "active"], queryFn: ({ signal }) => knowledgeApi.activeRelease({ signal }),
     enabled: Boolean(impact) });
   if (!impact) {
     return (

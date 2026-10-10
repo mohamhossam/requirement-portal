@@ -46,6 +46,7 @@ SERVICES: dict[str, Any] = MANIFEST["services"]
 EDGE = (DEPLOY / "web" / "default.conf.template").read_text(encoding="utf-8")
 WEB_IMAGE = (DEPLOY / "web" / "Dockerfile").read_text(encoding="utf-8")
 URL_CHECK = DEPLOY / "web" / "check-knowledge-portal-url.sh"
+RENDER_INDEX = DEPLOY / "web" / "render-index.sh"
 REALM: dict[str, Any] = json.loads(
     (DEPLOY / "keycloak" / "realm-requirement-ai.json").read_text(encoding="utf-8")
 )
@@ -152,6 +153,7 @@ def test_the_edge_limits_each_client_address_and_answers_in_the_api_error_shape(
         EDGE,
         re.S,
     )
+    reports = re.search(r"location = /api/client-errors \{(.*?)\n        \}", EDGE, re.S)
     refusal = re.search(r"location @edge_rate_limited \{(.*?)\n    \}", EDGE, re.S)
 
     assert "set_real_ip_from ${TRUSTED_PROXY_CIDR};" in EDGE
@@ -163,6 +165,12 @@ def test_the_edge_limits_each_client_address_and_answers_in_the_api_error_shape(
     # A nested location replaces its parent's limits, so it names both.
     assert "zone=api_per_address" in preview.group(1)
     assert "zone=impact_preview_per_address" in preview.group(1)
+    # Public browser error reports (PR 12): the strictest budget, and a tiny body.
+    assert "zone=client_errors_per_address:1m rate=1r/s" in EDGE
+    assert reports is not None
+    assert "zone=api_per_address" in reports.group(1)
+    assert "zone=client_errors_per_address burst=10 nodelay" in reports.group(1)
+    assert "client_max_body_size 1k;" in reports.group(1)
     assert '"code":"edge_rate_limited"' in refusal.group(1)
     assert "Retry-After" in refusal.group(1)
     for setting, default in (
@@ -215,7 +223,10 @@ def test_the_demo_overlay_keeps_development_personas_on_this_machine() -> None:
         assert demo[name] == {
             "environment": {"APP_ENV": "development", "IDENTITY_PROVIDER": "fake"}
         }, name
-    assert demo["web"] == {"ports": {"!override": ["127.0.0.1:${WEB_PORT:-8080}:8080"]}}
+    assert demo["web"] == {
+        "environment": {"IDENTITY_PROVIDER": "fake"},
+        "ports": {"!override": ["127.0.0.1:${WEB_PORT:-8080}:8080"]},
+    }
 
 
 def test_the_edge_proxies_nothing_of_the_knowledge_portal() -> None:
@@ -231,11 +242,12 @@ def test_old_bookmarks_redirect_to_the_configured_address() -> None:
     assert re.search(r"location \^~ /knowledge/ \{", EDGE)
     assert 'set $knowledge_portal_url "${KNOWLEDGE_PORTAL_URL}";' in EDGE
     assert "return 301 $knowledge_portal_url$knowledge_bookmark;" in EDGE
-    # One setting for the links and the redirect; empty leaves both out.
+    # One setting for the links and the redirect, read when the container starts;
+    # empty leaves both out.
     web = SERVICES["web"]
-    assert web["build"]["args"]["VITE_KNOWLEDGE_PORTAL_URL"] == "${KNOWLEDGE_PORTAL_URL:-}"
+    assert "args" not in web["build"]
     assert web["environment"]["KNOWLEDGE_PORTAL_URL"] == "${KNOWLEDGE_PORTAL_URL:-}"
-    assert "ARG VITE_KNOWLEDGE_PORTAL_URL=\n" in WEB_IMAGE
+    assert "VITE_KNOWLEDGE_PORTAL" not in WEB_IMAGE
     assert (
         "COPY --chmod=755 deploy/web/check-knowledge-portal-url.sh "
         "/docker-entrypoint.d/10-check-knowledge-portal-url.sh" in WEB_IMAGE
@@ -341,3 +353,130 @@ def test_the_edge_forwards_the_original_scheme_and_sends_hsts_over_https_only() 
     assert '"1:https" https;' in EDGE
     assert 'https "max-age=31536000";' in EDGE
     assert "add_header Strict-Transport-Security $strict_transport_security always;" in headers
+
+
+def test_one_web_image_takes_its_deployment_values_when_it_starts() -> None:
+    """The issuer origins and portal link are rendered at start (production hardening PR 12)."""
+    web = SERVICES["web"]
+
+    assert "ENV VITE_API_BASE=$VITE_API_BASE \\\n    WEB_RUNTIME_CONFIG=true" in WEB_IMAGE
+    assert "ARG CSP_IDENTITY_ORIGINS" not in WEB_IMAGE
+    assert (
+        "COPY --chmod=755 deploy/web/render-index.sh /docker-entrypoint.d/30-render-index.sh"
+        in WEB_IMAGE
+    )
+    assert web["environment"]["IDENTITY_PROVIDER"] == "oidc"
+    assert web["environment"]["CSP_IDENTITY_ORIGINS"] == "${CSP_IDENTITY_ORIGINS:-}"
+    assert web["environment"]["KNOWLEDGE_PORTAL_ROLE"] == "${KNOWLEDGE_PORTAL_ROLE-knowledge_admin}"
+    assert "/run/web:uid=101,gid=101" in web["tmpfs"]
+    page = re.search(r"location = /index.html \{(.*?)\n    \}", EDGE, re.S)
+    assert page is not None
+    assert "root /run/web;" in page.group(1)
+    assert 'add_header Cache-Control "no-cache" always;' in page.group(1)
+    assert "security-headers.conf" in page.group(1)
+
+
+_PAGE = (
+    "<html><head>"
+    '<meta http-equiv="Content-Security-Policy" content="connect-src \'self\' '
+    '__CSP_IDENTITY_ORIGINS__; frame-src blob: __CSP_IDENTITY_ORIGINS__" />'
+    '<meta name="knowledge-portal-url" content="__KNOWLEDGE_PORTAL_URL__" />'
+    '<meta name="knowledge-portal-role" content="__KNOWLEDGE_PORTAL_ROLE__" />'
+    "</head></html>"
+)
+
+
+def _render(tmp_path: Path, **environment: str) -> tuple[subprocess.CompletedProcess[str], str]:
+    source, target = tmp_path / "source.html", tmp_path / "index.html"
+    source.write_text(_PAGE, encoding="utf-8")
+    result = subprocess.run(  # noqa: S603 - the repository's own script
+        ["sh", str(RENDER_INDEX)],  # noqa: S607 - the repository's own script
+        env={
+            "PATH": os.environ["PATH"],
+            "RENDER_INDEX_SOURCE": str(source),
+            "RENDER_INDEX_TARGET": str(target),
+            **environment,
+        },
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return result, target.read_text(encoding="utf-8") if target.exists() else ""
+
+
+def test_the_page_names_the_deployment_issuer_and_portal(tmp_path: Path) -> None:
+    result, page = _render(
+        tmp_path,
+        CSP_IDENTITY_ORIGINS="https://login.example.com https://sso.example.com:8443/",
+        KNOWLEDGE_PORTAL_URL="https://knowledge.example.com/",
+        KNOWLEDGE_PORTAL_ROLE="curators",
+    )
+
+    assert result.returncode == 0, result.stderr
+    origins = "https://login.example.com https://sso.example.com:8443"
+    assert f"connect-src 'self' {origins}; frame-src blob: {origins}\"" in page
+    assert 'name="knowledge-portal-url" content="https://knowledge.example.com/"' in page
+    assert 'name="knowledge-portal-role" content="curators"' in page
+    assert "__" not in page
+
+
+def test_the_demo_page_needs_no_issuer_and_keeps_the_default_role(tmp_path: Path) -> None:
+    result, page = _render(tmp_path, IDENTITY_PROVIDER="fake")
+
+    assert result.returncode == 0, result.stderr
+    assert "connect-src 'self'; frame-src blob:\"" in page
+    assert 'name="knowledge-portal-url" content=""' in page
+    assert 'name="knowledge-portal-role" content="knowledge_admin"' in page
+
+
+@pytest.mark.parametrize(
+    ("environment", "refusal"),
+    [
+        # Under OIDC the browser could not reach the issuer: refuse to start.
+        ({}, "must name the OIDC issuer origin"),
+        ({"IDENTITY_PROVIDER": "oidc", "CSP_IDENTITY_ORIGINS": " "}, "must name the OIDC issuer"),
+        ({"CSP_IDENTITY_ORIGINS": "https://login.example.com/realms/x"}, "without a path"),
+        ({"CSP_IDENTITY_ORIGINS": "login.example.com"}, "without a path"),
+        ({"CSP_IDENTITY_ORIGINS": 'https://a.example.com" onload="x'}, "without a path"),
+        ({"CSP_IDENTITY_ORIGINS": "https://a.example.com|b"}, "without a path"),
+        ({"CSP_IDENTITY_ORIGINS": "https://*.example.com"}, "without a path"),
+        (
+            {"CSP_IDENTITY_ORIGINS": "https://login.example.com", "KNOWLEDGE_PORTAL_URL": "x/"},
+            "KNOWLEDGE_PORTAL_URL",
+        ),
+        (
+            {
+                "CSP_IDENTITY_ORIGINS": "https://login.example.com",
+                "KNOWLEDGE_PORTAL_URL": 'https://k.example.com/"/',
+            },
+            "KNOWLEDGE_PORTAL_URL",
+        ),
+        (
+            {
+                "CSP_IDENTITY_ORIGINS": "https://login.example.com",
+                "KNOWLEDGE_PORTAL_URL": "https://k.example.com/\n<script>/",
+            },
+            "KNOWLEDGE_PORTAL_URL",
+        ),
+        (
+            {"CSP_IDENTITY_ORIGINS": "https://login.example.com", "KNOWLEDGE_PORTAL_ROLE": "a b"},
+            "KNOWLEDGE_PORTAL_ROLE",
+        ),
+        (
+            {"CSP_IDENTITY_ORIGINS": "https://login.example.com", "KNOWLEDGE_PORTAL_ROLE": "a\nb"},
+            "KNOWLEDGE_PORTAL_ROLE",
+        ),
+        (
+            {"CSP_IDENTITY_ORIGINS": "https://login.example.com", "KNOWLEDGE_PORTAL_ROLE": "a&b"},
+            "KNOWLEDGE_PORTAL_ROLE",
+        ),
+    ],
+)
+def test_the_page_refuses_values_that_could_break_it(
+    tmp_path: Path, environment: dict[str, str], refusal: str
+) -> None:
+    result, page = _render(tmp_path, **environment)
+
+    assert result.returncode == 1
+    assert refusal in result.stderr
+    assert page == ""

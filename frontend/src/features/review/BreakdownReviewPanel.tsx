@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { api, type BreakdownReview, type ReviewFlag } from "../../api/client";
 import { invalidateWorkspaceKeys } from "../../app/workspaceInvalidation";
 import { useRequirementJobs } from "../jobs/useRequirementJobs";
-import { errorMessage } from "../../api/errors";
+import { errorMessage, errorReference } from "../../api/errors";
 import { queryKeys } from "../../app/queryKeys";
 import { EmptyState } from "../../components/EmptyState";
 import { ErrorNotice } from "../../components/ErrorNotice";
@@ -372,7 +372,7 @@ export function BreakdownReviewPanel({
   const [filter, setFilter] = useState<FlagFilter>("all");
   const review = useQuery({
     queryKey: queryKeys.breakdownReview(requirementId),
-    queryFn: () => api.getBreakdownReview(requirementId),
+    queryFn: ({ signal }) => api.getBreakdownReview(requirementId, { signal }),
     refetchOnMount: "always",
   });
   const update = async (value: BreakdownReview) => {
@@ -416,7 +416,7 @@ export function BreakdownReviewPanel({
   });
 
   if (review.isPending) return <Skeleton label="Loading the breakdown review" />;
-  if (review.isError) return <ErrorNotice message={errorMessage(review.error)} />;
+  if (review.isError) return <ErrorNotice message={errorMessage(review.error)} reference={errorReference(review.error)} />;
   if (!review.data) {
     return (
       <div className="grid gap-4">
@@ -425,7 +425,7 @@ export function BreakdownReviewPanel({
           message={canGenerate ? "Generate one evidence-backed view of uncertainty, dependencies, architecture impact and Story quality." : "Analyse the Requirement before generating its review."}
           action={canGenerate ? <Button variant="primary" type="button" disabled={generate.isPending} onClick={() => generate.mutate()}>{generate.isPending ? "Generating review…" : "Generate breakdown review"}</Button> : <ButtonLink variant="primary" to={`/requirements/${requirementId}/clarify`}>Go to analysis</ButtonLink>}
         />
-        {generate.error && <ErrorNotice message={errorMessage(generate.error)} />}
+        {generate.error && <ErrorNotice message={errorMessage(generate.error)} reference={errorReference(generate.error)} />}
       </div>
     );
   }
@@ -526,7 +526,7 @@ export function BreakdownReviewPanel({
           </p>
         </Card>
       )}
-      {generate.error && <ErrorNotice message={errorMessage(generate.error)} />}
+      {generate.error && <ErrorNotice message={errorMessage(generate.error)} reference={errorReference(generate.error)} />}
       </div>
 
       {/* 2. The work. */}

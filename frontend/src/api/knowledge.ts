@@ -6,7 +6,7 @@
  * Requirement cites, the evidence behind an architecture impact, and which
  * catalogue version new mappings use.
  */
-import { apiRequest } from "./client";
+import { apiRequest, type RequestOptions } from "./client";
 import type { components } from "./schema";
 
 type Schemas = components["schemas"];
@@ -36,8 +36,18 @@ export function knowledgePortalUrl(
   return url === "" ? null : url;
 }
 
+/**
+ * A value the web container rendered into `index.html` when it started
+ * (`deploy/web/render-index.sh`), or undefined in a build without one, such as
+ * the development server, which reads `import.meta.env` instead.
+ */
+export function runtimeValue(name: string): string | undefined {
+  const tag = document.querySelector<HTMLMetaElement>(`meta[name="${name}"]`);
+  return tag === null ? undefined : tag.content;
+}
+
 export const KNOWLEDGE_PORTAL_URL = knowledgePortalUrl(
-  import.meta.env.VITE_KNOWLEDGE_PORTAL_URL,
+  runtimeValue("knowledge-portal-url") ?? import.meta.env.VITE_KNOWLEDGE_PORTAL_URL,
 );
 /**
  * Who sees the links to the knowledge portal: people holding this role, which the portal
@@ -54,19 +64,21 @@ export function knowledgePortalRole(
 }
 
 export const KNOWLEDGE_ADMIN_ROLE = knowledgePortalRole(
-  import.meta.env.VITE_KNOWLEDGE_PORTAL_ROLE,
+  runtimeValue("knowledge-portal-role") ?? import.meta.env.VITE_KNOWLEDGE_PORTAL_ROLE,
 );
 
 export const knowledgeApi = {
-  activeRelease: () =>
-    apiRequest<ActiveRelease | null>("/architecture/active-release"),
-  evidence: (releaseId: string, chunkId: string) =>
+  activeRelease: (options?: RequestOptions) =>
+    apiRequest<ActiveRelease | null>("/architecture/active-release", options),
+  evidence: (releaseId: string, chunkId: string, options?: RequestOptions) =>
     apiRequest<ArchitectureEvidence>(
       `/architecture-evidence/${encodeURIComponent(releaseId)}/${encodeURIComponent(chunkId)}`,
+      options,
     ),
-  passage: (citation: PassageCitation) =>
+  passage: (citation: PassageCitation, options?: RequestOptions) =>
     apiRequest<CitedPassage>(
       `/references/passage?${new URLSearchParams({ ...citation })}`,
+      options,
     ),
 };
 

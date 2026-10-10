@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { api, type Feature, type StoryInput, type StoryProposal } from "../../api/client";
-import { errorMessage } from "../../api/errors";
+import { errorMessage, errorReference } from "../../api/errors";
 import { queryKeys } from "../../app/queryKeys";
 import { invalidateWorkspace, invalidateWorkspaceKeys } from "../../app/workspaceInvalidation";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
@@ -57,13 +57,13 @@ export function StoryList({ requirementId, feature, canManage, focused = false, 
 
   const stories = useQuery({
     queryKey: queryKeys.stories(requirementId, feature.id),
-    queryFn: () => api.getStories(requirementId, feature.id),
+    queryFn: ({ signal }) => api.getStories(requirementId, feature.id, { signal }),
     refetchOnMount: "always",
     enabled: !focused || visible || expanded,
   });
   const proposals = useQuery({
     queryKey: queryKeys.storyProposals(requirementId, feature.id),
-    queryFn: () => api.listStoryProposals(requirementId, feature.id),
+    queryFn: ({ signal }) => api.listStoryProposals(requirementId, feature.id, { signal }),
     refetchOnMount: "always",
     enabled: !focused || visible,
   });
@@ -76,7 +76,7 @@ export function StoryList({ requirementId, feature, canManage, focused = false, 
    */
   const quality = useQuery({
     queryKey: queryKeys.storyQuality(requirementId, feature.id),
-    queryFn: () => api.getFeatureStoryQualityAssessment(requirementId, feature.id),
+    queryFn: ({ signal }) => api.getFeatureStoryQualityAssessment(requirementId, feature.id, { signal }),
     refetchOnMount: "always",
     enabled: !focused || visible,
   });
@@ -246,7 +246,7 @@ export function StoryList({ requirementId, feature, canManage, focused = false, 
     ? "You do not have permission to change this Requirement."
     : generation.ok ? null : generation.reason;
 
-  if (stories.isError && !stories.data) return <div hidden={focused && !visible}><ErrorNotice message={errorMessage(stories.error)} /></div>;
+  if (stories.isError && !stories.data) return <div hidden={focused && !visible}><ErrorNotice message={errorMessage(stories.error)} reference={errorReference(stories.error)} /></div>;
 
   if (stories.isPending) return <div hidden={focused && !visible}><Skeleton label="Loading Stories" /></div>;
 
@@ -283,14 +283,14 @@ export function StoryList({ requirementId, feature, canManage, focused = false, 
             </Button>
           }
         />
-        {generate.error && <ErrorNotice message={errorMessage(generate.error)} />}
+        {generate.error && <ErrorNotice message={errorMessage(generate.error)} reference={errorReference(generate.error)} />}
       </div>
     );
   }
 
   return (
     <div className="grid gap-4" hidden={focused && !visible}>
-      {stories.isError && <ErrorNotice message={errorMessage(stories.error)} />}
+      {stories.isError && <ErrorNotice message={errorMessage(stories.error)} reference={errorReference(stories.error)} />}
 
       {focused && selectedStoryId && selectedIndex >= 0 && (
         // The one filled action on a Story is the way forward through the
@@ -395,12 +395,13 @@ export function StoryList({ requirementId, feature, canManage, focused = false, 
       </div>
 
 
-      {regenerateAll.error && <ErrorNotice message={errorMessage(regenerateAll.error)} />}
-      {proposals.error && <ErrorNotice message={errorMessage(proposals.error)} />}
-      {proposalError && <ErrorNotice message={errorMessage(proposalError)} />}
+      {regenerateAll.error && <ErrorNotice message={errorMessage(regenerateAll.error)} reference={errorReference(regenerateAll.error)} />}
+      {proposals.error && <ErrorNotice message={errorMessage(proposals.error)} reference={errorReference(proposals.error)} />}
+      {proposalError && <ErrorNotice message={errorMessage(proposalError)} reference={errorReference(proposalError)} />}
       {quality.error && (
         <ErrorNotice
           message={`Story quality could not be evaluated: ${errorMessage(quality.error)}`}
+          reference={errorReference(quality.error)}
         />
       )}
 
@@ -427,7 +428,7 @@ export function StoryList({ requirementId, feature, canManage, focused = false, 
           </div>
         </Card>
       )}
-      {evaluateQuality.error && <ErrorNotice message={errorMessage(evaluateQuality.error)} />}
+      {evaluateQuality.error && <ErrorNotice message={errorMessage(evaluateQuality.error)} reference={errorReference(evaluateQuality.error)} />}
 
       {proposalData.map((proposal) => (
         <StoryProposalPanel

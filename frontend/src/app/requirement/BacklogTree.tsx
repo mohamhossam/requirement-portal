@@ -94,7 +94,7 @@ function FeatureBranch({
 }) {
   const stories = useQuery({
     queryKey: queryKeys.stories(requirementId, feature.id),
-    queryFn: () => api.getStories(requirementId, feature.id),
+    queryFn: ({ signal }) => api.getStories(requirementId, feature.id, { signal }),
     enabled: expanded || selectedFeatureId === feature.id,
   });
   const path = `/requirements/${requirementId}/breakdown/features/${feature.id}`;

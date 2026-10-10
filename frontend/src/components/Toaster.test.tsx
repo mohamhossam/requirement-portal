@@ -36,6 +36,14 @@ const publish = (index = 0) =>
   userEvent.click(screen.getByRole("button", { name: `publish ${index}` }));
 
 describe("Toaster", () => {
+  it("shows a failure's reference with its message", async () => {
+    mount([{ tone: "error", title: "Saving failed", message: "Upstream exploded.", reference: "req-7f3a" }]);
+    await publish();
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("Upstream exploded.");
+    expect(alert).toHaveTextContent("Reference: req-7f3a");
+  });
+
   it("announces a notice politely", async () => {
     mount([{ tone: "success", title: "Epic generation finished" }]);
     await publish();

@@ -20,7 +20,7 @@ export function useRequirementWorkspace(id: string) {
 
   const requirement = useQuery({
     queryKey: queryKeys.requirement(id),
-    queryFn: () => api.getRequirement(id),
+    queryFn: ({ signal }) => api.getRequirement(id, { signal }),
     enabled: Boolean(id),
     refetchOnMount: "always",
   });
@@ -34,26 +34,26 @@ export function useRequirementWorkspace(id: string) {
    */
   const assignments = useQuery({
     queryKey: queryKeys.assignments(id),
-    queryFn: () => api.getAssignments(id),
+    queryFn: ({ signal }) => api.getAssignments(id, { signal }),
     enabled: Boolean(id),
     refetchOnMount: "always",
   });
   const analysis = useQuery({
     queryKey: queryKeys.analysis(id),
-    queryFn: () => api.getAnalysis(id),
+    queryFn: ({ signal }) => api.getAnalysis(id, { signal }),
     enabled: Boolean(id),
     refetchOnMount: "always",
   });
   const knowledgeReview = useQuery({
     queryKey: queryKeys.knowledgeReview(id),
-    queryFn: () => api.getKnowledgeReview(id),
+    queryFn: ({ signal }) => api.getKnowledgeReview(id, { signal }),
     enabled: Boolean(id),
     refetchOnMount: "always",
   });
   // Similar past requirements (Knowledge Center E2): beside the review, never part of it.
   const priorArt = useQuery({
     queryKey: queryKeys.priorArt(id),
-    queryFn: () => api.getPriorArt(id),
+    queryFn: ({ signal }) => api.getPriorArt(id, { signal }),
     enabled: Boolean(id),
     refetchOnMount: "always",
   });

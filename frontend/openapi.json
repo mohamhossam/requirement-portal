@@ -3012,6 +3012,27 @@
         "title": "ClassifyClarificationQuestionRequest",
         "type": "object"
       },
+      "ClientErrorReport": {
+        "additionalProperties": false,
+        "description": "Only the kind of failure: never a message, stack or URL, which could carry content.",
+        "properties": {
+          "kind": {
+            "enum": [
+              "render",
+              "chunk_load",
+              "uncaught_error",
+              "unhandled_rejection"
+            ],
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "ClientErrorReport",
+        "type": "object"
+      },
       "ConfirmAnalysisRequest": {
         "properties": {
           "expected_version": {
@@ -9815,6 +9836,41 @@
         "summary": "Active Release",
         "tags": [
           "knowledge views"
+        ]
+      }
+    },
+    "/client-errors": {
+      "post": {
+        "description": "Count one browser failure in `smb_client_errors_total`.",
+        "operationId": "report_client_error_client_errors_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientErrorReport"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Report Client Error",
+        "tags": [
+          "client-errors"
         ]
       }
     },

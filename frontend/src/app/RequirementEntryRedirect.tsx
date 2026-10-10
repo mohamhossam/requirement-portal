@@ -10,7 +10,7 @@ export function RequirementEntryRedirect() {
   const { id = "" } = useParams();
   const result = useQuery({
     queryKey: queryKeys.scope("requirement-entry", id),
-    queryFn: () => api.listRequirements({ q: id, limit: 100 }),
+    queryFn: ({ signal }) => api.listRequirements({ q: id, limit: 100 }, { signal }),
     enabled: Boolean(id),
   });
   // No <main> of its own any more: the shell owns it, and this renders inside it.

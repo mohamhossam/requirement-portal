@@ -61,6 +61,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/client-errors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Report Client Error
+         * @description Count one browser failure in `smb_client_errors_total`.
+         */
+        post: operations["report_client_error_client_errors_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/documents": {
         parameters: {
             query?: never;
@@ -2671,6 +2691,17 @@ export interface components {
             is_blocker: boolean;
             severity: components["schemas"]["ClarificationSeverity"];
         };
+        /**
+         * ClientErrorReport
+         * @description Only the kind of failure: never a message, stack or URL, which could carry content.
+         */
+        ClientErrorReport: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "render" | "chunk_load" | "uncaught_error" | "unhandled_rejection";
+        };
         /** ConfirmAnalysisRequest */
         ConfirmAnalysisRequest: {
             /** Expected Version */
@@ -5069,6 +5100,37 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ActiveRelease"] | null;
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    report_client_error_client_errors_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClientErrorReport"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
