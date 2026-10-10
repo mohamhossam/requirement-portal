@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed 2026-10-10, for the owner to accept. Amends the "show-only" rules of ADR-0089 and
+Accepted 2026-10-10 by the owner. Amends the "show-only" rules of ADR-0089 and
 ADR-0092 for capability concepts only. Phase 0 of the ontology and impact plan
 ([plan](https://claude.ai/code/artifact/27b1b1d1-b01b-40d4-9264-1999bc29b2bf)); built in its
 Phase 4 with ADR-0115.

@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed 2026-10-10, for the owner to accept. Phase 0 of the ontology and impact plan
+Accepted 2026-10-10 by the owner. Phase 0 of the ontology and impact plan
 ([plan](https://claude.ai/code/artifact/27b1b1d1-b01b-40d4-9264-1999bc29b2bf), from the
 [catalogue ontology gap review](https://claude.ai/code/artifact/041e2507-4337-4cf9-80d5-ddd4b7f55470)).
 Supersedes one rule each of ADR-0089 and ADR-0094, named below. Pairs with ADR-0115 (the product

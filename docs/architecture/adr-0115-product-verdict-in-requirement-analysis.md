@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed 2026-10-10, for the owner to accept. Extends ADR-0097. Phase 0 of the ontology and
+Accepted 2026-10-10 by the owner. Extends ADR-0097. Phase 0 of the ontology and
 impact plan ([plan](https://claude.ai/code/artifact/27b1b1d1-b01b-40d4-9264-1999bc29b2bf));
 built in its Phase 4, on knowledge-portal's assessment route from Phase 3. Pairs with ADR-0114
 and ADR-0116.
@@ -39,8 +39,10 @@ Slice 13's publication record already has room for an accepted verdict and its v
   mark it unknown.
 - With no knowledge portal connected (ADR-0104), assess answers nothing and confirmation is not
   blocked.
-- Until the owner sets the verdict accuracy gate from the golden set (after Phase 3), the
-  verdict is shown to reviewers as a suggestion only, and "unknown" is always allowed.
+- **The verdict gate** (set by the owner 2026-10-10): the verdict is shown to reviewers only once
+  the live models score at least 80% verdict accuracy on knowledge-portal's golden set, and call
+  no new-offering or new-product-line case a change to an existing offering. Until then it is a
+  suggestion only, and "unknown" is always allowed.
 
 **Breakdown reads the decision.**
 - `GenerationChecks.guidance` takes the stored verdict and covered capabilities instead of a
