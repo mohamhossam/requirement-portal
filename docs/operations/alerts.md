@@ -193,8 +193,10 @@ when its disk is full.
 
 ### ProcessMemoryHigh
 
-An API or worker process has used over 2 GB of memory for 15 minutes. The threshold is a starting
-point; set it below the container's memory limit.
+An API or worker process has used over 80% of its container's memory limit for 15 minutes. The
+thresholds follow the manifest's defaults, `API_MEM_LIMIT` (2g) and `WORKER_MEM_LIMIT` (3g);
+change them in `alerts.yml` with the limits. At the limit, the kernel stops the container and
+Compose restarts it.
 
 - Document extraction runs in bounded subprocesses (`DOCUMENT_EXTRACTION_MEMORY_BYTES`), so steady
   growth in the main process is the signal.

@@ -297,3 +297,46 @@ def test_the_realm_defines_every_role_requirement_work_checks() -> None:
     assert checked <= {role["name"] for role in REALM["roles"]["realm"]}
     # The knowledge portal's roles are its own (ADR-0104).
     assert "knowledge_" not in source
+
+
+def test_every_container_rotates_its_logs_and_has_resource_limits() -> None:
+    """Production hardening PR 10: one runaway container cannot fill the disk or starve the host."""
+    for name, service in SERVICES.items():
+        assert service["logging"] == {
+            "driver": "json-file",
+            "options": {"max-size": "10m", "max-file": "5"},
+        }, name
+        assert service.get("mem_limit") and service.get("cpus") and service.get("pids_limit"), name
+    # The alerts compare memory against these defaults (docs/operations/alerts.md).
+    assert SERVICES["api"]["mem_limit"] == "${API_MEM_LIMIT:-2g}"
+    assert SERVICES["worker"]["mem_limit"] == "${WORKER_MEM_LIMIT:-3g}"
+
+
+def test_the_scanner_and_the_worker_report_their_health() -> None:
+    assert SERVICES["clamav"]["healthcheck"]["test"] == ["CMD", "clamdcheck.sh"]
+    probe = " ".join(SERVICES["worker"]["healthcheck"]["test"])
+    assert "9464/metrics" in probe and "smb_ready 1.0" in probe
+
+
+def test_the_api_trusts_forwarded_headers_from_its_own_network_only() -> None:
+    subnet = "${REQUIREMENT_SUBNET:-172.30.80.0/24}"
+    assert MANIFEST["networks"]["default"]["ipam"]["config"] == [{"subnet": subnet}]
+    assert f"--forwarded-allow-ips={subnet}" in SERVICES["api"]["command"]
+    assert not any("allow-ips=*" in part for part in SERVICES["api"]["command"])
+
+
+def test_a_managed_database_replaces_the_bundled_one_by_its_url() -> None:
+    url = MANIFEST["x-backend"]["environment"]["DATABASE_URL"]
+    assert url.startswith("${DATABASE_URL:-postgresql://smb:")
+    assert "sslmode=${DATABASE_SSLMODE:-prefer}" in url
+
+
+def test_the_edge_forwards_the_original_scheme_and_sends_hsts_over_https_only() -> None:
+    headers = (DEPLOY / "web" / "security-headers.conf").read_text(encoding="utf-8")
+    assert "proxy_set_header X-Forwarded-Proto $forwarded_scheme;" in EDGE
+    assert "proxy_set_header X-Forwarded-Proto $scheme;" not in EDGE
+    # Only the trusted TLS proxy may say the browser used HTTPS.
+    assert "geo $realip_remote_addr $from_trusted_proxy" in EDGE
+    assert '"1:https" https;' in EDGE
+    assert 'https "max-age=31536000";' in EDGE
+    assert "add_header Strict-Transport-Security $strict_transport_security always;" in headers

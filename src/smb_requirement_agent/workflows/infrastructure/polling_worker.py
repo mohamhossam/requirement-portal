@@ -12,6 +12,7 @@ from smb_kernel.observability.correlation import correlation_scope
 from smb_kernel.observability.metrics import Metrics
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.infrastructure.log_safety import exception_types
 from smb_requirement_agent.jobs.application.ports.ai_jobs import AiJobQueuePort, AiJobRecord
 from smb_requirement_agent.jobs.domain.entities import AiJob, AiJobStatus
 from smb_requirement_agent.workflows.application.use_cases.ai_job_execution import ExecuteAiJob
@@ -46,17 +47,21 @@ class PollingAiJobWorker:
         self._active_lock = threading.Lock()
         self._active: AiJobRecord | None = None
         self._last_healthy = monotonic()
-        self._heartbeat_failed = threading.Event()
+        self._lease_lost = threading.Event()
 
     @property
     def healthy(self) -> bool:
-        return bool(
-            self._thread
-            and self._thread.is_alive()
-            and not self._stop.is_set()
-            and not self._heartbeat_failed.is_set()
-            and monotonic() - self._last_healthy < self._lease_seconds
-        )
+        """Alive, and either running an attempt or claiming within a lease's time.
+
+        An attempt under way keeps the worker healthy even while its heartbeat fails,
+        so the process is not restarted under a provider call: provider and database
+        calls are bounded by their own timeouts, so the attempt always returns.
+        """
+        if not (self._thread and self._thread.is_alive() and not self._stop.is_set()):
+            return False
+        with self._active_lock:
+            busy = self._active is not None
+        return busy or monotonic() - self._last_healthy < self._lease_seconds
 
     def start(self) -> None:
         if self._thread is not None and self._thread.is_alive():
@@ -117,30 +122,46 @@ class PollingAiJobWorker:
                 logger.exception("AI job worker polling failed")
                 self._stop.wait(self._poll_interval)
 
+    @property
+    def lease_lost(self) -> bool:
+        """Whether the attempt under way, or the last one, stopped holding its lease."""
+        return self._lease_lost.is_set()
+
     def _execute(self, record: AiJobRecord) -> None:
-        self._heartbeat_failed.clear()
+        self._lease_lost.clear()
         with self._active_lock:
             self._active = record
         heartbeat_stop = threading.Event()
 
         def heartbeat() -> None:
+            # A renewal that fails is tried again while the lease still has time; once
+            # the next try would come too late, or the lease was taken back, renewing
+            # stops. The attempt runs on: a provider call under way finishes, and the
+            # fenced writes refuse its result if another worker has claimed the job.
+            held_until = record.lease_until
             while not heartbeat_stop.wait(self._heartbeat_seconds):
                 now = self._clock.now()
+                until = now + timedelta(seconds=self._lease_seconds)
                 try:
                     renewed = self._queue.heartbeat(
-                        record.job.id,
-                        self._worker_id,
-                        record.attempt_token or "",
-                        now,
-                        now + timedelta(seconds=self._lease_seconds),
+                        record.job.id, self._worker_id, record.attempt_token or "", now, until
                     )
-                except Exception:
-                    self._heartbeat_failed.set()
-                    logger.exception("AI job heartbeat failed [job_id=%s]", record.job.id.value)
+                except Exception as exc:
+                    next_try = now + timedelta(seconds=self._heartbeat_seconds)
+                    if held_until is not None and next_try < held_until:
+                        logger.warning(
+                            "AI job heartbeat failed with %s; trying again while the lease "
+                            "lasts [job_id=%s]",
+                            exception_types(exc),
+                            record.job.id.value,
+                        )
+                        continue
+                    self._lose_lease(record, f"its renewal failed with {exception_types(exc)}")
                     return
                 if not renewed:
-                    self._heartbeat_failed.set()
+                    self._lose_lease(record, "another worker holds it now")
                     return
+                held_until = until
                 self._last_healthy = monotonic()
 
         heartbeat_thread = threading.Thread(
@@ -176,6 +197,15 @@ class PollingAiJobWorker:
             )
             with self._active_lock:
                 self._active = None
+
+    def _lose_lease(self, record: AiJobRecord, reason: str) -> None:
+        self._lease_lost.set()
+        logger.error(
+            "AI job lease lost: %s; the attempt finishes, and its result is kept only if "
+            "no other worker claimed the job [job_id=%s]",
+            reason,
+            record.job.id.value,
+        )
 
 
 class AiJobWorkerGroup:

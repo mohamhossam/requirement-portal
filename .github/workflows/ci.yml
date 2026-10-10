@@ -382,8 +382,9 @@ jobs:
       - name: A withdrawal reaches requirement work within one poll
         # A library document is published and withdrawn in the knowledge portal, through
         # its edge; requirement work's copy, which judges citations current, follows the
-        # event feed (ADR-0099). Uploads are scanned, so the scanner must be ready first.
+        # event feed (ADR-0099). Uploads are scanned, so the scanners must be ready first.
         run: |
+          $COMPOSE up -d --wait --wait-timeout 600 clamav
           $KNOWLEDGE up -d --wait --wait-timeout 600 clamav
           python3 tests/platform_withdrawal.py \
             --knowledge-url http://127.0.0.1:8090/knowledge-api \

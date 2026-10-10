@@ -153,13 +153,16 @@ groups:
           runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#dbpoolsaturation
 
       - alert: ProcessMemoryHigh
-        # 2 GB is a starting point; set it below the container's memory limit.
-        expr: max by (job, instance) (process_resident_memory_bytes{job=~"api|worker"}) > 2e9
+        # 80% of the manifest's default limits, API_MEM_LIMIT (2g) and WORKER_MEM_LIMIT (3g).
+        # Change these with the limits.
+        expr: |
+          max by (job, instance) (process_resident_memory_bytes{job="api"}) > 1.6e9
+            or max by (job, instance) (process_resident_memory_bytes{job="worker"}) > 2.4e9
         for: 15m
         labels:
           severity: warning
         annotations:
-          summary: "{{ $labels.job }} {{ $labels.instance }} uses over 2 GB of memory"
+          summary: "{{ $labels.job }} {{ $labels.instance }} uses over 80% of its memory limit"
           runbook_url: https://github.com/mohamhossam/requirement-portal/blob/main/docs/operations/alerts.md#processmemoryhigh
 
   - name: platform

@@ -2,7 +2,7 @@
 
 ## Status
 
-**Specified 2026-10-08; in progress since 2026-10-09.** Phase 0 (platform-kernel v1.2.0, and this repository's move to it) is delivered. PR 1, PR 8, PR 2, PR 4a, PR 4b, PR 5 and PR 6 are delivered, which completes the pilot gate (Phase 1), and so are PR 7, PR 3 and PR 9 of Phase 2 (see their entries and Validation Evidence). The rest of Phase 2 and Phase 3 are not implemented yet. This record keeps the
+**Specified 2026-10-08; in progress since 2026-10-09.** Phase 0 (platform-kernel v1.2.0, and this repository's move to it) is delivered. PR 1, PR 8, PR 2, PR 4a, PR 4b, PR 5 and PR 6 are delivered, which completes the pilot gate (Phase 1), and so are PR 7, PR 3, PR 9 and PR 10 of Phase 2 (see their entries and Validation Evidence). The rest of Phase 2 and Phase 3 are not implemented yet. This record keeps the
 plan for closing every finding of the second production-readiness review (security, deployment and
 CI, reliability and observability, frontend) so it can be scheduled later. When work starts, each
 PR converts its part into the `WORKSPACE.md` §10 sections and fills in Validation Evidence here.
@@ -350,7 +350,43 @@ Then bump `pyproject.toml:12` and `uv.lock`, and wire the new settings. Phase 1 
 - **Docs:** `docs/operations/slos.md` and `docs/operations/alerts.md`.
 - **CI:** `promtool check rules` and `amtool check-config` next to `ci.yml:353`, plus a metric-name allow-list in `test_monitoring_metrics.py`.
 
-**PR 10 · Container and edge hardening**
+**PR 10 · Container and edge hardening** — *delivered on `claude/production-hardening-pr10`, 2026-10-10*
+
+**Compose**
+- `x-logging` (json-file, 10m × 5) on every service, and `mem_limit`, `cpus` and `pids_limit` on every service, including `backup`.
+- The memory limits of api, worker, postgres and clamav are Compose variables. `ProcessMemoryHigh` now warns at 80% of the API and worker defaults.
+- Healthchecks:
+  - `clamav` runs `clamdcheck.sh`, with a 10-minute start period;
+  - `worker` reads its exporter's `smb_ready 1.0`, from PR 9.
+- CI's platform step waits for this stack's `clamav` as well as the knowledge portal's.
+
+**Secrets**
+- `_secret(name)` in `settings.py` reads `NAME` or `NAME_FILE`, never both, and an unreadable or empty file stops the boot. It covers:
+  - `OPENAI_API_KEY` and `OPENROUTER_API_KEY`;
+  - both shared service tokens and `REQUIREMENT_SERVICE_CLIENT_SECRET`;
+  - a new `DATABASE_PASSWORD`, filled into a `DATABASE_URL` without a password (a URL that has one is refused);
+  - model profiles' `api_key_env` names. Only the names a profile asks for are resolved, so an unrelated `*_FILE`, such as `SSL_CERT_FILE`, is never read.
+- `docs/operations/secrets.md` gives rotation steps for each.
+
+**Managed Postgres**
+- `DATABASE_URL: ${DATABASE_URL:-postgresql://smb:…@postgres:5432/smb_requirements?sslmode=${DATABASE_SSLMODE:-prefer}}`.
+- `deployment.md` has a "managed PostgreSQL" paragraph. The plan's line reference to old wording no longer matched anything.
+
+**Forwarded headers**
+- nginx believes `X-Forwarded-Proto` only from `TRUSTED_PROXY_CIDR` (a `geo` and `map` on `$realip_remote_addr`), forwards that as `$forwarded_scheme`, and sends `Strict-Transport-Security: max-age=31536000` only over HTTPS. The value is a `map`, set in the shared header snippet.
+- `networks.default` has a fixed subnet (`REQUIREMENT_SUBNET`, `172.30.80.0/24`), and uvicorn's `--forwarded-allow-ips` names it instead of `*`.
+
+**IngestionLoop**
+- Every failure increments `smb_ingestion_failures_total`. This covers the knowledge-event, historic-requirement, historic-index, approved-backlog and attachment loops.
+- A report goes to the log at most once a minute: the exception types, the count, and the frames, never the message.
+- Stopping joins for `AI_JOB_SHUTDOWN_GRACE_SECONDS`.
+
+**Errors and heartbeat**
+- `error_handlers.py` logs the exception type chain and correlation ID for mapped 5xx errors. For unexpected failures it adds frames, without the message. The opt-in debug trace keeps the detail. `infrastructure/log_safety.py` holds the shared helpers.
+- The heartbeat retries a failed renewal while the next try still falls inside the lease. When the lease is about to lapse, or another worker took it, renewing stops and `lease_lost` is set.
+- A worker running an attempt stays healthy, so the process is not restarted under a provider call. The attempt finishes, and fenced saves refuse its result if another worker claimed the job.
+
+*Plan as specified:*
 - **Compose:**
   - `x-logging` with rotation, and `mem_limit`/`cpus`/`pids_limit` on postgres, clamav, migrate, maintenance, retention, api, worker and web;
   - healthchecks for `clamav` and `worker`;
@@ -710,3 +746,26 @@ mypy src tests              Success: no issues found
 lint-imports                Contracts: 43 kept, 0 broken.
 actionlint                  ci.yml, release.yml clean
 ```
+
+### PR 10 (2026-10-10, branch `claude/production-hardening-pr10`, stacked on PR 9)
+
+Run locally on Python 3.13 against PostgreSQL 16:
+- `docker compose config` renders the manifest with its limits, logging, subnet and
+  healthchecks, and a managed `DATABASE_URL` overrides the default.
+- The edge template, rendered and served by a local nginx (`nginx -t` passes), was checked against
+  a stub upstream:
+  - from a trusted proxy, `X-Forwarded-Proto: https` reaches the API and HSTS is sent;
+  - from an untrusted address, the API sees `http` and no HSTS is sent;
+  - a plain request gets no HSTS.
+- promtool still finds 18 rules, and their tests pass.
+
+New tests cover:
+- reading secrets from files, refusing both forms at once, and refusing a missing or empty file;
+- filling the database password into the URL;
+- profile keys from files;
+- ingestion failures counted every time and reported once a minute, without messages;
+- stopping that waits for the step under way;
+- error logs without messages;
+- the heartbeat riding out failures while the lease lasts, stopping when it lapses or is taken
+  back, and the worker staying healthy under the attempt;
+- manifest and edge structure.

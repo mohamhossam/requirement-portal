@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
+from time import monotonic
 
+from smb_kernel.observability.metrics import Metrics
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.analysis.application.use_cases.reference_staleness import (
@@ -121,8 +124,19 @@ def build_requirement_knowledge(
     clock: ClockPort,
     access: RequirementAccessService,
     service: KnowledgeService,
+    metrics: Metrics,
 ) -> RequirementKnowledgeWiring:
     embedding_identity = _embedding_identity(settings)
+
+    def loop(name: str, step: Callable[[], bool]) -> IngestionLoop:
+        return IngestionLoop(
+            name,
+            (step,),
+            failed=metrics.record_ingestion_failure,
+            shutdown_grace_seconds=settings.ai_job_shutdown_grace_seconds,
+            monotonic_seconds=monotonic,
+        )
+
     corpus = RequirementKnowledgeCorpus(
         persistence.requirement_repository,
         persistence.analysis_repository,
@@ -233,7 +247,7 @@ def build_requirement_knowledge(
         reference_currency=reference_currency,
         current_references=current_references,
         current_release=CurrentArchitectureRelease(persistence.architecture_releases),
-        knowledge_event_worker=IngestionLoop("knowledge-events", (projector.project_next,)),
+        knowledge_event_worker=loop("knowledge-events", projector.project_next),
         projection=projector,
         source_impact=SourceImpactReview(
             persistence.dependency_index,
@@ -308,11 +322,9 @@ def build_requirement_knowledge(
             corpus,
         ),
         historic_projection=historic_projector,
-        historic_event_worker=IngestionLoop(
-            "historic-requirements", (historic_projector.project_next,)
-        ),
+        historic_event_worker=loop("historic-requirements", historic_projector.project_next),
         historic_indexer=historic_indexer,
-        historic_index_worker=IngestionLoop("historic-index", (historic_indexer.process_next,)),
+        historic_index_worker=loop("historic-index", historic_indexer.process_next),
         unified_search=UnifiedKnowledgeSearch(
             corpus,
             persistence.knowledge_index,

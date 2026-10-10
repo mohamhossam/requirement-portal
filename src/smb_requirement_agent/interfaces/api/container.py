@@ -586,7 +586,7 @@ def _build_container(
         persistence.analysis_audit_repository,
     )
     knowledge = build_requirement_knowledge(
-        settings, persistence, defaults, resolved_clock, access_service, knowledge_service
+        settings, persistence, defaults, resolved_clock, access_service, knowledge_service, metrics
     )
     documents = build_documents(
         settings,
@@ -594,6 +594,7 @@ def _build_container(
         resolved_clock,
         domain_events,
         access_service,
+        metrics,
     )
     reporting = build_reporting(persistence, knowledge.review, resolved_clock)
     intake = build_requirement_intake(
@@ -670,6 +671,7 @@ def _build_container(
             knowledge_service.change_requests,
             resolved_clock,
             metrics,
+            settings.ai_job_shutdown_grace_seconds,
         )
 
     backlog = IndexBacklogReader(

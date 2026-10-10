@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import multiprocessing
 from dataclasses import dataclass
+from time import monotonic
 
 from smb_kernel.documents.bounded_extractor import (
     BoundedSubprocessDocumentExtractor,
@@ -17,6 +18,7 @@ from smb_kernel.documents.process_resources import (
     child_process_resource_limiter,
 )
 from smb_kernel.documents.scanner import ClamAvDocumentScanner, OfflineDocumentScanner
+from smb_kernel.observability.metrics import Metrics
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.analysis.application.use_cases.analysis_documents import (
@@ -168,6 +170,7 @@ def build_documents(
     clock: ClockPort,
     events: DomainEventPublisher,
     access: RequirementAccessService,
+    metrics: Metrics,
 ) -> DocumentWiring:
     extractor = BoundedSubprocessDocumentExtractor(
         concurrency=settings.document_extraction_concurrency,
@@ -224,7 +227,12 @@ def build_documents(
         ),
         upload=upload,
         attachment_ingestion=attachment_ingestion,
-        attachment_worker=AttachmentIngestionWorker(attachment_ingestion),
+        attachment_worker=AttachmentIngestionWorker(
+            attachment_ingestion,
+            failed=metrics.record_ingestion_failure,
+            shutdown_grace_seconds=settings.ai_job_shutdown_grace_seconds,
+            monotonic_seconds=monotonic,
+        ),
         list_documents=ListDocuments(persistence.document_repository, access),
         get_document=GetDocument(
             persistence.document_repository,

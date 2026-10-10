@@ -9,8 +9,11 @@ instead of returning a provider error on the first analysis request.
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
+from urllib.parse import quote, urlsplit, urlunsplit
 
 from dotenv import load_dotenv
 from smb_kernel.llm.profiles import (
@@ -88,6 +91,52 @@ RENAMED_SETTINGS = {
 }
 
 
+def _secret(name: str, environment: Mapping[str, str] = os.environ) -> str | None:
+    """A secret from NAME, or from the file NAME_FILE names (Docker or Kubernetes secrets).
+
+    A file keeps the value out of the process environment and `docker inspect`.
+    Setting both is refused, so a stale value cannot silently win.
+    """
+    value = environment.get(name, "").strip()
+    path = environment.get(f"{name}_FILE", "").strip()
+    if value and path:
+        raise ConfigurationError(f"Set {name} or {name}_FILE, not both.")
+    if not path:
+        return value or None
+    try:
+        content = Path(path).read_text(encoding="utf-8").strip()
+    except OSError as exc:
+        raise ConfigurationError(f"{name}_FILE names {path}, which cannot be read.") from exc
+    if not content:
+        raise ConfigurationError(f"{name}_FILE names {path}, which is empty.")
+    return content
+
+
+class _ProfileEnvironment(dict[str, str]):
+    """The environment as model profiles read it: the variable a profile's `api_key_env`
+    names may instead come from the file its NAME_FILE names, like every other secret."""
+
+    def get(self, key: str, default: str | None = None) -> str | None:  # type: ignore[override]
+        secret = _secret(key, dict(self))
+        return default if secret is None else secret
+
+
+def _database_url() -> str | None:
+    """DATABASE_URL, with DATABASE_PASSWORD (or its file) filled in when the URL has none."""
+    url = os.getenv("DATABASE_URL", "").strip() or None
+    password = _secret("DATABASE_PASSWORD")
+    if url is None or password is None:
+        return url
+    parts = urlsplit(url)
+    if parts.password is not None or parts.username is None:
+        raise ConfigurationError(
+            "DATABASE_PASSWORD needs a DATABASE_URL that names a user and no password."
+        )
+    host = parts.netloc.rpartition("@")[2]
+    netloc = f"{quote(parts.username, safe='')}:{quote(password, safe='')}@{host}"
+    return urlunsplit(parts._replace(netloc=netloc))
+
+
 def _renamed_env(name: str, default: str) -> str:
     """The setting under its current name, else its former one, else the default."""
     value = os.getenv(name)
@@ -138,7 +187,7 @@ class PersistenceSettings:
             ) from exc
         return cls(
             provider=provider,
-            database_url=os.getenv("DATABASE_URL", "").strip() or None,
+            database_url=_database_url(),
         )
 
 
@@ -309,7 +358,7 @@ class Settings:
         llm_profiles = None
         if llm_config_path:
             try:
-                llm_profiles = load_profiles(llm_config_path, dict(os.environ))
+                llm_profiles = load_profiles(llm_config_path, _ProfileEnvironment(os.environ))
             except ProfileConfigurationError as exc:
                 raise ConfigurationError(str(exc)) from exc
         raw_provider = (
@@ -325,7 +374,7 @@ class Settings:
                 f"Unsupported LLM_PROVIDER {raw_provider!r}. Supported values: {supported}."
             ) from exc
 
-        api_key = os.getenv("OPENAI_API_KEY") or None
+        api_key = _secret("OPENAI_API_KEY")
         model = os.getenv("OPENAI_MODEL", "").strip() or DEFAULT_OPENAI_MODEL
         raw_openai_timeout = os.getenv("OPENAI_TIMEOUT_SECONDS", "").strip()
         try:
@@ -337,7 +386,7 @@ class Settings:
         embedding_model = (
             os.getenv("OPENAI_EMBEDDING_MODEL", "").strip() or DEFAULT_OPENAI_EMBEDDING_MODEL
         )
-        openrouter_api_key = os.getenv("OPENROUTER_API_KEY", "").strip() or None
+        openrouter_api_key = _secret("OPENROUTER_API_KEY")
         openrouter_model = os.getenv("OPENROUTER_MODEL", "").strip() or DEFAULT_OPENROUTER_MODEL
         openrouter_embedding_model = (
             os.getenv("OPENROUTER_EMBEDDING_MODEL", "").strip()
@@ -726,16 +775,14 @@ def _operability_from_env() -> dict[str, Any]:
         "metrics_port": port,
         "metrics_host": os.getenv("METRICS_HOST", "127.0.0.1").strip(),
         "request_max_body_bytes": body,
-        "knowledge_service_token": os.getenv("KNOWLEDGE_SERVICE_TOKEN", "").strip() or None,
+        "knowledge_service_token": _secret("KNOWLEDGE_SERVICE_TOKEN"),
         "knowledge_api_base_url": os.getenv("KNOWLEDGE_API_BASE_URL", "").strip() or None,
-        "requirement_service_token": os.getenv("REQUIREMENT_SERVICE_TOKEN", "").strip() or None,
+        "requirement_service_token": _secret("REQUIREMENT_SERVICE_TOKEN"),
         "knowledge_service_client_id": (
             os.getenv("KNOWLEDGE_SERVICE_CLIENT_ID", "").strip() or None
         ),
         "requirement_service_client_id": (
             os.getenv("REQUIREMENT_SERVICE_CLIENT_ID", "").strip() or None
         ),
-        "requirement_service_client_secret": (
-            os.getenv("REQUIREMENT_SERVICE_CLIENT_SECRET", "").strip() or None
-        ),
+        "requirement_service_client_secret": _secret("REQUIREMENT_SERVICE_CLIENT_SECRET"),
     }
