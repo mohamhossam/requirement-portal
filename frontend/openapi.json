@@ -6256,6 +6256,67 @@
         "title": "OwnerFacetResponse",
         "type": "object"
       },
+      "PlannedWorkItemResponse": {
+        "properties": {
+          "acceptance_criteria_count": {
+            "title": "Acceptance Criteria Count",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/WorkItemKind"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "location": {
+            "title": "Location",
+            "type": "string"
+          },
+          "owning_squad_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owning Squad Name"
+          },
+          "parent_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Key"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "kind",
+          "label",
+          "title",
+          "parent_key",
+          "acceptance_criteria_count",
+          "owning_squad_name",
+          "location"
+        ],
+        "title": "PlannedWorkItemResponse",
+        "type": "object"
+      },
       "PotentialDependencyResponse": {
         "properties": {
           "evidence_references": {
@@ -6624,6 +6685,257 @@
           "prompt_version"
         ],
         "title": "ProvenanceResponse",
+        "type": "object"
+      },
+      "PublicationCountsResponse": {
+        "properties": {
+          "epics": {
+            "title": "Epics",
+            "type": "integer"
+          },
+          "features": {
+            "title": "Features",
+            "type": "integer"
+          },
+          "stories": {
+            "title": "Stories",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "epics",
+          "features",
+          "stories"
+        ],
+        "title": "PublicationCountsResponse",
+        "type": "object"
+      },
+      "PublicationDetailResponse": {
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "value"
+        ],
+        "title": "PublicationDetailResponse",
+        "type": "object"
+      },
+      "PublicationOutcome": {
+        "enum": [
+          "published",
+          "partial",
+          "failed"
+        ],
+        "title": "PublicationOutcome",
+        "type": "string"
+      },
+      "PublicationPreviewResponse": {
+        "properties": {
+          "approval_fingerprint": {
+            "title": "Approval Fingerprint",
+            "type": "string"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/PublicationCountsResponse"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PlannedWorkItemResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "requirement_id": {
+            "title": "Requirement Id",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "target": {
+            "$ref": "#/components/schemas/PublicationTargetResponse"
+          }
+        },
+        "required": [
+          "requirement_id",
+          "revision",
+          "approval_fingerprint",
+          "target",
+          "counts",
+          "items"
+        ],
+        "title": "PublicationPreviewResponse",
+        "type": "object"
+      },
+      "PublicationReportResponse": {
+        "properties": {
+          "outcome": {
+            "$ref": "#/components/schemas/PublicationOutcome"
+          },
+          "project": {
+            "title": "Project",
+            "type": "string"
+          },
+          "requirement_id": {
+            "title": "Requirement Id",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/PublicationStepResponse"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
+          "system": {
+            "title": "System",
+            "type": "string"
+          }
+        },
+        "required": [
+          "requirement_id",
+          "revision",
+          "system",
+          "project",
+          "outcome",
+          "steps"
+        ],
+        "title": "PublicationReportResponse",
+        "type": "object"
+      },
+      "PublicationStepResponse": {
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "external_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Id"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/WorkItemKind"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PublicationStepStatus"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "key",
+          "kind",
+          "label",
+          "title",
+          "status",
+          "external_id",
+          "url",
+          "error"
+        ],
+        "title": "PublicationStepResponse",
+        "type": "object"
+      },
+      "PublicationStepStatus": {
+        "enum": [
+          "published",
+          "failed",
+          "not_attempted"
+        ],
+        "title": "PublicationStepStatus",
+        "type": "string"
+      },
+      "PublicationTargetResponse": {
+        "properties": {
+          "default_location": {
+            "title": "Default Location",
+            "type": "string"
+          },
+          "details": {
+            "items": {
+              "$ref": "#/components/schemas/PublicationDetailResponse"
+            },
+            "title": "Details",
+            "type": "array"
+          },
+          "project": {
+            "title": "Project",
+            "type": "string"
+          },
+          "system": {
+            "title": "System",
+            "type": "string"
+          }
+        },
+        "required": [
+          "system",
+          "project",
+          "default_location",
+          "details"
+        ],
+        "title": "PublicationTargetResponse",
+        "type": "object"
+      },
+      "PublishBreakdownRequest": {
+        "properties": {
+          "approval_fingerprint": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Approval Fingerprint",
+            "type": "string"
+          }
+        },
+        "required": [
+          "approval_fingerprint"
+        ],
+        "title": "PublishBreakdownRequest",
         "type": "object"
       },
       "PublishedReference": {
@@ -9784,6 +10096,15 @@
         ],
         "title": "WeeklyMetricsResponse",
         "type": "object"
+      },
+      "WorkItemKind": {
+        "enum": [
+          "epic",
+          "feature",
+          "story"
+        ],
+        "title": "WorkItemKind",
+        "type": "string"
       },
       "WorkflowStage": {
         "enum": [
@@ -17326,6 +17647,160 @@
           }
         ],
         "summary": "Export Revision",
+        "tags": [
+          "revisions"
+        ]
+      }
+    },
+    "/requirements/{requirement_id}/revisions/{revision_number}/publication": {
+      "get": {
+        "operationId": "preview_publication_requirements__requirement_id__revisions__revision_number__publication_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "requirement_id",
+            "required": true,
+            "schema": {
+              "title": "Requirement Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "revision_number",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "Revision Number",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Fake-Actor-Id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fake-Actor-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicationPreviewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Preview Publication",
+        "tags": [
+          "revisions"
+        ]
+      },
+      "post": {
+        "operationId": "publish_revision_requirements__requirement_id__revisions__revision_number__publication_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "requirement_id",
+            "required": true,
+            "schema": {
+              "title": "Requirement Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "revision_number",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "Revision Number",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Fake-Actor-Id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fake-Actor-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishBreakdownRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicationReportResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Publish Revision",
         "tags": [
           "revisions"
         ]

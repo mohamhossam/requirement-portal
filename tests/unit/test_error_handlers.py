@@ -91,6 +91,10 @@ from smb_requirement_agent.governance.application.errors import (
     BreakdownReviewNotFoundError,
     BreakdownReviewStaleError,
     BreakdownRevisionNotExportableError,
+    BreakdownRevisionNotPublishableError,
+    PublicationConfirmationError,
+    PublicationTargetError,
+    PublicationUnavailableError,
     ReviewFlagNotFoundError,
 )
 from smb_requirement_agent.governance.domain.review.errors import (
@@ -248,6 +252,10 @@ EXPECTED_STATUS_CODES: dict[type[Exception], int] = {
     InvalidSavedViewError: 422,
     InvalidReportingWindowError: 422,
     BreakdownRevisionNotExportableError: 409,
+    BreakdownRevisionNotPublishableError: 409,
+    PublicationConfirmationError: 409,
+    PublicationUnavailableError: 503,
+    PublicationTargetError: 502,
     BacklogExportFormatError: 422,
     AiJobConflictError: 409,
     AiJobInputsPrunedError: 409,

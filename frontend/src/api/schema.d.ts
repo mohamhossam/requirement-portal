@@ -1558,6 +1558,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/requirements/{requirement_id}/revisions/{revision_number}/publication": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Preview Publication */
+        get: operations["preview_publication_requirements__requirement_id__revisions__revision_number__publication_get"];
+        put?: never;
+        /** Publish Revision */
+        post: operations["publish_revision_requirements__requirement_id__revisions__revision_number__publication_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/requirements/{requirement_id}/source-impact": {
         parameters: {
             query?: never;
@@ -3864,6 +3882,24 @@ export interface components {
             /** Count */
             count: number;
         };
+        /** PlannedWorkItemResponse */
+        PlannedWorkItemResponse: {
+            /** Acceptance Criteria Count */
+            acceptance_criteria_count: number;
+            /** Key */
+            key: string;
+            kind: components["schemas"]["WorkItemKind"];
+            /** Label */
+            label: string;
+            /** Location */
+            location: string;
+            /** Owning Squad Name */
+            owning_squad_name: string | null;
+            /** Parent Key */
+            parent_key: string | null;
+            /** Title */
+            title: string;
+        };
         /** PotentialDependencyResponse */
         PotentialDependencyResponse: {
             /**
@@ -4016,6 +4052,92 @@ export interface components {
             model: string;
             /** Prompt Version */
             prompt_version: string;
+        };
+        /** PublicationCountsResponse */
+        PublicationCountsResponse: {
+            /** Epics */
+            epics: number;
+            /** Features */
+            features: number;
+            /** Stories */
+            stories: number;
+        };
+        /** PublicationDetailResponse */
+        PublicationDetailResponse: {
+            /** Label */
+            label: string;
+            /** Value */
+            value: string;
+        };
+        /**
+         * PublicationOutcome
+         * @enum {string}
+         */
+        PublicationOutcome: "published" | "partial" | "failed";
+        /** PublicationPreviewResponse */
+        PublicationPreviewResponse: {
+            /** Approval Fingerprint */
+            approval_fingerprint: string;
+            counts: components["schemas"]["PublicationCountsResponse"];
+            /** Items */
+            items: components["schemas"]["PlannedWorkItemResponse"][];
+            /** Requirement Id */
+            requirement_id: string;
+            /** Revision */
+            revision: number;
+            target: components["schemas"]["PublicationTargetResponse"];
+        };
+        /** PublicationReportResponse */
+        PublicationReportResponse: {
+            outcome: components["schemas"]["PublicationOutcome"];
+            /** Project */
+            project: string;
+            /** Requirement Id */
+            requirement_id: string;
+            /** Revision */
+            revision: number;
+            /** Steps */
+            steps: components["schemas"]["PublicationStepResponse"][];
+            /** System */
+            system: string;
+        };
+        /** PublicationStepResponse */
+        PublicationStepResponse: {
+            /** Error */
+            error: string | null;
+            /** External Id */
+            external_id: string | null;
+            /** Key */
+            key: string;
+            kind: components["schemas"]["WorkItemKind"];
+            /** Label */
+            label: string;
+            status: components["schemas"]["PublicationStepStatus"];
+            /** Title */
+            title: string;
+            /** Url */
+            url: string | null;
+        };
+        /**
+         * PublicationStepStatus
+         * @enum {string}
+         */
+        PublicationStepStatus: "published" | "failed" | "not_attempted";
+        /** PublicationTargetResponse */
+        PublicationTargetResponse: {
+            /** Default Location */
+            default_location: string;
+            /** Details */
+            details: components["schemas"]["PublicationDetailResponse"][];
+            /** Project */
+            project: string;
+            /** System */
+            system: string;
+        };
+        /** PublishBreakdownRequest */
+        PublishBreakdownRequest: {
+            /** Approval Fingerprint */
+            approval_fingerprint: string;
         };
         /** PublishedReference */
         PublishedReference: {
@@ -5119,6 +5241,11 @@ export interface components {
              */
             week_start: string;
         };
+        /**
+         * WorkItemKind
+         * @enum {string}
+         */
+        WorkItemKind: "epic" | "feature" | "story";
         /**
          * WorkflowStage
          * @enum {string}
@@ -8629,6 +8756,78 @@ export interface operations {
                 content: {
                     "application/json": unknown;
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_publication_requirements__requirement_id__revisions__revision_number__publication_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Fake-Actor-Id"?: string | null;
+            };
+            path: {
+                requirement_id: string;
+                revision_number: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicationPreviewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    publish_revision_requirements__requirement_id__revisions__revision_number__publication_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Fake-Actor-Id"?: string | null;
+            };
+            path: {
+                requirement_id: string;
+                revision_number: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishBreakdownRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicationReportResponse"];
                 };
             };
             /** @description Validation Error */

@@ -33,6 +33,7 @@ different things in different places.
 | Flag | governance | A review finding with a category (open question, assumption, ambiguity, dependency, architecture, quality, staleness) and a severity. A *blocking* flag prevents final approval until resolved. |
 | Revision | governance | An immutable snapshot of the Requirement (*requirement revision*) or of the whole breakdown (*breakdown revision*), taken at commit (ADR-0009). |
 | Export | governance | A versioned, neutral file produced from an approved breakdown revision (ADR-0023). It is not ADO publication. |
+| Publication (ADO publication) | governance | Creating an approved breakdown revision's Epic, Features and Stories as linked work items in Azure DevOps, after the owner confirms a preview (Slice 12, ADR-0112). The *publisher* is the adapter behind `BacklogPublisherPort`; the *target* is where it sends items. |
 | Knowledge finding | knowledge | Something the knowledge screen found in the library or in historic requirements that bears on a Requirement, such as a conflict, a duplicate or prior art. A person decides it. |
 | Reference document | references | A reviewed library document published through knowledge-portal and cited as grounding. Not a *source document*. |
 | Historic requirement | references | An old BRD with the Epics, Features and Stories it was delivered as in ADO, published by knowledge-portal and kept here as reference knowledge, never as confirmed intent (ADR-0102). |

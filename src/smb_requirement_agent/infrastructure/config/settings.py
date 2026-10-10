@@ -23,6 +23,7 @@ from smb_kernel.llm.profiles import (
 )
 
 from smb_requirement_agent.infrastructure.config.options import (
+    DEFAULT_ADO_TIMEOUT_SECONDS,
     DEFAULT_AI_JOB_HEARTBEAT_SECONDS,
     DEFAULT_AI_JOB_LEASE_SECONDS,
     DEFAULT_AI_JOB_MAX_ATTEMPTS,
@@ -74,6 +75,7 @@ from smb_requirement_agent.infrastructure.config.options import (
     DEFAULT_PRIOR_ART_JUDGE_CALLS_PER_HOUR,
     DEFAULT_PROVIDER_RATE_LIMIT_PER_MINUTE,
     DEFAULT_REQUEST_MAX_BODY_BYTES,
+    AdoPublisher,
     ConfigurationError,
     IdentityProvider,
     LLMProvider,
@@ -230,6 +232,122 @@ def _retention_days(name: str, default: int) -> int:
 
 
 @dataclass(frozen=True)
+class AdoPublicationSettings:
+    """Where approved backlogs are published (Slice 12, ADR-0112).
+
+    Everything here stays out of the domain (AGENTS.md §9): the organization, project, area
+    and iteration paths, work-item type names and field names are the adapter's.
+    """
+
+    publisher: AdoPublisher = AdoPublisher.NONE
+    organization_url: str = ""
+    project: str = ""
+    personal_access_token: str | None = field(default=None, repr=False)
+    # Unset, items land at the project's root area.
+    area_path: str = ""
+    iteration_path: str = ""
+    epic_type: str = "Epic"
+    feature_type: str = "Feature"
+    story_type: str = "User Story"
+    description_field: str = "System.Description"
+    acceptance_criteria_field: str = "Microsoft.VSTS.Common.AcceptanceCriteria"
+    tags: tuple[str, ...] = ()
+    # Squad id to its board's area path, so a squad's Features land on its board.
+    squad_area_paths: tuple[tuple[str, str], ...] = ()
+    timeout_seconds: float = DEFAULT_ADO_TIMEOUT_SECONDS
+
+    def __post_init__(self) -> None:
+        if self.publisher is not AdoPublisher.AZURE_DEVOPS:
+            return
+        missing = [
+            name
+            for name, value in (
+                ("ADO_ORGANIZATION_URL", self.organization_url),
+                ("ADO_PROJECT", self.project),
+                ("ADO_PERSONAL_ACCESS_TOKEN", self.personal_access_token),
+            )
+            if not value
+        ]
+        if missing:
+            raise ConfigurationError(
+                f"ADO_PUBLISHER=azure_devops requires {', '.join(missing)}. Set them, or use "
+                "ADO_PUBLISHER=none."
+            )
+        parts = urlsplit(self.organization_url)
+        if parts.scheme not in {"https", "http"} or not parts.netloc:
+            raise ConfigurationError(
+                "ADO_ORGANIZATION_URL must be an http(s) URL, such as https://dev.azure.com/org."
+            )
+        if self.timeout_seconds <= 0:
+            raise ConfigurationError("ADO_TIMEOUT_SECONDS must be a positive number.")
+        for name, value in (
+            ("ADO_EPIC_TYPE", self.epic_type),
+            ("ADO_FEATURE_TYPE", self.feature_type),
+            ("ADO_STORY_TYPE", self.story_type),
+            ("ADO_DESCRIPTION_FIELD", self.description_field),
+            ("ADO_ACCEPTANCE_CRITERIA_FIELD", self.acceptance_criteria_field),
+        ):
+            if not value:
+                raise ConfigurationError(f"{name} must not be empty.")
+
+    @property
+    def default_area_path(self) -> str:
+        return self.area_path or self.project
+
+    @classmethod
+    def from_env(cls) -> AdoPublicationSettings:
+        raw_publisher = os.getenv("ADO_PUBLISHER", AdoPublisher.NONE.value).strip().lower()
+        try:
+            publisher = AdoPublisher(raw_publisher or AdoPublisher.NONE.value)
+        except ValueError as exc:
+            supported = ", ".join(item.value for item in AdoPublisher)
+            raise ConfigurationError(
+                f"Unsupported ADO_PUBLISHER {raw_publisher!r}. Supported: {supported}."
+            ) from exc
+        raw_timeout = os.getenv("ADO_TIMEOUT_SECONDS", "").strip()
+        try:
+            timeout = float(raw_timeout) if raw_timeout else DEFAULT_ADO_TIMEOUT_SECONDS
+        except ValueError as exc:
+            raise ConfigurationError("ADO_TIMEOUT_SECONDS must be a number.") from exc
+        return cls(
+            publisher=publisher,
+            organization_url=os.getenv("ADO_ORGANIZATION_URL", "").strip().rstrip("/"),
+            project=os.getenv("ADO_PROJECT", "").strip(),
+            personal_access_token=_secret("ADO_PERSONAL_ACCESS_TOKEN"),
+            area_path=os.getenv("ADO_AREA_PATH", "").strip(),
+            iteration_path=os.getenv("ADO_ITERATION_PATH", "").strip(),
+            epic_type=os.getenv("ADO_EPIC_TYPE", "Epic").strip(),
+            feature_type=os.getenv("ADO_FEATURE_TYPE", "Feature").strip(),
+            story_type=os.getenv("ADO_STORY_TYPE", "User Story").strip(),
+            description_field=os.getenv("ADO_DESCRIPTION_FIELD", "System.Description").strip(),
+            acceptance_criteria_field=os.getenv(
+                "ADO_ACCEPTANCE_CRITERIA_FIELD", "Microsoft.VSTS.Common.AcceptanceCriteria"
+            ).strip(),
+            tags=tuple(tag.strip() for tag in os.getenv("ADO_TAGS", "").split(";") if tag.strip()),
+            squad_area_paths=parse_squad_area_paths(os.getenv("ADO_SQUAD_AREA_PATHS", "")),
+            timeout_seconds=timeout,
+        )
+
+
+def parse_squad_area_paths(raw: str) -> tuple[tuple[str, str], ...]:
+    """`squad-id=Project\\Area;other=Project\\Other` as (squad id, area path) pairs."""
+    pairs: dict[str, str] = {}
+    for entry in raw.split(";"):
+        if not entry.strip():
+            continue
+        squad_id, separator, path = entry.partition("=")
+        squad_id, path = squad_id.strip(), path.strip()
+        if not separator or not squad_id or not path:
+            raise ConfigurationError(
+                "ADO_SQUAD_AREA_PATHS entries must read squad-id=Area\\Path, separated by ';'."
+            )
+        if squad_id in pairs:
+            raise ConfigurationError(f"ADO_SQUAD_AREA_PATHS names squad {squad_id!r} twice.")
+        pairs[squad_id] = path
+    return tuple(sorted(pairs.items()))
+
+
+@dataclass(frozen=True)
 class Settings:
     """Resolved runtime configuration."""
 
@@ -342,6 +460,8 @@ class Settings:
     prior_art_judge_calls_per_hour: int = DEFAULT_PRIOR_ART_JUDGE_CALLS_PER_HOUR
     # At most this many historic chunks embedded an hour, per historic requirement.
     historic_embed_chunks_per_hour: int = DEFAULT_HISTORIC_EMBED_CHUNKS_PER_HOUR
+    # Publishing approved backlogs to Azure DevOps (Slice 12); off unless chosen.
+    ado_publication: AdoPublicationSettings = field(default_factory=AdoPublicationSettings)
 
     def __post_init__(self) -> None:
         validate_settings(self)
@@ -737,6 +857,7 @@ class Settings:
             ),
             **_operability_from_env(),
             **_prior_art_from_env(),
+            ado_publication=AdoPublicationSettings.from_env(),
         )
 
 
