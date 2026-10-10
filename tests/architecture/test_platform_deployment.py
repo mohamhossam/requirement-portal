@@ -39,7 +39,8 @@ def _override(loader: yaml.SafeLoader, node: yaml.Node) -> dict[str, Any]:
 
 _ComposeLoader.add_constructor("!override", _override)
 DEMO: dict[str, Any] = yaml.load(
-    (DEPLOY / "compose.demo.yaml").read_text(encoding="utf-8"), Loader=_ComposeLoader
+    (DEPLOY / "compose.demo.yaml").read_text(encoding="utf-8"),
+    Loader=_ComposeLoader,  # noqa: S506 - a SafeLoader subclass
 )
 SERVICES: dict[str, Any] = MANIFEST["services"]
 EDGE = (DEPLOY / "web" / "default.conf.template").read_text(encoding="utf-8")
@@ -257,8 +258,8 @@ def test_old_bookmarks_redirect_to_the_configured_address() -> None:
 def test_the_web_image_refuses_a_redirect_address_without_a_trailing_slash(
     url: str, accepted: bool
 ) -> None:
-    result = subprocess.run(
-        ["sh", str(URL_CHECK)],
+    result = subprocess.run(  # noqa: S603 - the repository's own script
+        ["sh", str(URL_CHECK)],  # noqa: S607 - the repository's own script
         env={**os.environ, "KNOWLEDGE_PORTAL_URL": url},
         capture_output=True,
         check=False,

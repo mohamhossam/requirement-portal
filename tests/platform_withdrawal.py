@@ -45,9 +45,9 @@ class Platform:
         headers = {**ADMIN, "Accept": "application/json"}
         if body is not None:
             headers["Content-Type"] = "application/json"
-        request = urllib.request.Request(self._base + path, data, headers, method=method)
+        request = urllib.request.Request(self._base + path, data, headers, method=method)  # noqa: S310 - the test's own http base URL
         try:
-            with urllib.request.urlopen(request, timeout=30) as response:
+            with urllib.request.urlopen(request, timeout=30) as response:  # noqa: S310 - the test's own http base URL
                 return json.loads(response.read() or b"null")
         except urllib.error.HTTPError as error:
             detail = error.read()[:500]
@@ -65,22 +65,22 @@ class Platform:
             + b"\r\n"
         )
         body = b"".join(parts) + f"--{boundary}--\r\n".encode()
-        request = urllib.request.Request(
+        request = urllib.request.Request(  # noqa: S310 - the test's own http base URL
             self._base + "/library/ingestions",
             body,
             {**ADMIN, "Content-Type": f"multipart/form-data; boundary={boundary}"},
             method="POST",
         )
-        with urllib.request.urlopen(request, timeout=30) as response:
+        with urllib.request.urlopen(request, timeout=30) as response:  # noqa: S310 - the test's own http base URL
             return json.loads(response.read())
 
     def requirement_copy(self, document_id: str) -> dict[str, Any] | None:
         """Requirement work's copy of a document's publication, read from its database."""
         query = (
-            "SELECT payload FROM reference_publication_state "
+            "SELECT payload FROM reference_publication_state "  # noqa: S608 - test-made id, quotes stripped
             f"WHERE document_id = '{document_id.replace(chr(39), '')}'"
         )
-        found = subprocess.run(
+        found = subprocess.run(  # noqa: S603 - fixed psql argv
             [*self._psql, "-tAc", query],
             check=True,
             capture_output=True,

@@ -84,7 +84,7 @@ WHERE (%(owner)s::text IS NULL OR a.payload->'owner'->'actor'->>'id' = %(owner)s
   AND (NOT %(retired_only)s OR m.requirement_id IS NOT NULL)
 ORDER BY lower(r.payload->>'title'), r.requirement_id
 OFFSET %(offset)s LIMIT %(limit)s
-"""
+"""  # noqa: S608 - constant fragments only
 
 _FINDINGS = f"""
 SELECT f.finding_id, f.payload->>'kind', f.payload->>'rationale', s.generated_at,
@@ -116,7 +116,7 @@ WHERE {_IN_FORCE}
        OR ra.payload->'owner'->'actor'->>'id' = %(owner)s)
 ORDER BY s.generated_at, f.finding_id
 OFFSET %(offset)s LIMIT %(limit)s
-"""
+"""  # noqa: S608 - constant fragments only
 
 
 def _like(text: str) -> str:

@@ -74,14 +74,14 @@ class PostgresRequirementWorklistReader:
                        feature_count, story_count, latest_activity, last_activity_payload
                 FROM requirement_worklist_projection
                 WHERE true
-                """
+                """  # noqa: S608 - constant fragments; values are parameters
                 + scope_sql
                 + status_sql
                 + f" ORDER BY {order_sql} OFFSET %s LIMIT %s",
                 scope_params + status_params + (query.offset, query.limit),
             ).fetchall()
             total_row = connection.execute(
-                "SELECT count(*) FROM requirement_worklist_projection WHERE true"
+                "SELECT count(*) FROM requirement_worklist_projection WHERE true"  # noqa: S608 - constant fragments; values are parameters
                 + scope_sql
                 + status_sql,
                 scope_params + status_params,
@@ -90,7 +90,7 @@ class PostgresRequirementWorklistReader:
                 """
                 SELECT workflow_status, count(*)
                 FROM requirement_worklist_projection WHERE true
-                """
+                """  # noqa: S608 - constant fragments; values are parameters
                 + scope_sql
                 + " GROUP BY workflow_status",
                 scope_params,
@@ -100,7 +100,7 @@ class PostgresRequirementWorklistReader:
                 SELECT owner_payload, count(*)
                 FROM requirement_worklist_projection
                 WHERE true
-                """
+                """  # noqa: S608 - constant fragments; values are parameters
                 + scope_sql
                 + " AND owner_payload IS NOT NULL GROUP BY owner_id, owner_payload "
                 + "ORDER BY lower(owner_payload->>'display_name')",
@@ -115,7 +115,7 @@ class PostgresRequirementWorklistReader:
                 WHERE workflow_status IN (
                     'needs_answers','stale','ready_for_review','needs_revision','knowledge_review'
                 )
-                """
+                """  # noqa: S608 - constant fragments; values are parameters
                 + access_sql
                 + " ORDER BY attention_rank ASC, latest_activity ASC, requirement_id ASC LIMIT 3",
                 access_params,

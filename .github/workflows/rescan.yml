@@ -1,0 +1,44 @@
+name: Release image rescan
+
+# Rescans the latest release's published images every week (production hardening
+# PR 11). A release was clean when it was built (release.yml), but new
+# vulnerabilities are published for packages it already ships. A failed run is
+# the signal to cut a patch release (docs/operations/deployment.md, "Releases and
+# upgrades").
+on:
+  schedule:
+    - cron: "41 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  trivy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # the latest release's tag
+      packages: read # pull its images from ghcr.io
+    env:
+      # The same scanner and flags as release.yml's gate.
+      TRIVY: aquasec/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: The latest release
+        run: |
+          if ! tag=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName 2>/dev/null); then
+            echo "No release yet; nothing to rescan."
+            exit 0
+          fi
+          echo "TAG=$tag" >> "$GITHUB_ENV"
+
+      - name: Its images have no fixable HIGH or CRITICAL vulnerability
+        if: env.TAG != ''
+        run: |
+          echo "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          for name in requirement-api requirement-web-production; do
+            image="ghcr.io/$GITHUB_REPOSITORY_OWNER/$name:$TAG"
+            docker pull "$image"
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY" \
+              image --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 "$image"
+          done

@@ -105,7 +105,7 @@ def test_the_historic_copy_is_projected_indexed_and_withdrawn(
     assert gone not in _search(container, "Roaming packs")
     assert _rows(
         url,
-        f"SELECT count(*) FROM historic_knowledge_chunks WHERE historic_requirement_id = '{gone}'",
+        f"SELECT count(*) FROM historic_knowledge_chunks WHERE historic_requirement_id = '{gone}'",  # noqa: S608 - test-made uuid
     ) == [(0,)]
     standing = container.historic_corpus.standing((kept, gone))
     assert standing[kept].published and not standing[gone].published
@@ -124,7 +124,7 @@ def test_the_historic_copy_is_projected_indexed_and_withdrawn(
     assert container.historic_corpus.version() == 3
     seqs = _rows(
         url,
-        "SELECT DISTINCT seq FROM historic_knowledge_chunks "
+        "SELECT DISTINCT seq FROM historic_knowledge_chunks "  # noqa: S608 - test-made uuid
         f"WHERE historic_requirement_id = '{kept}'",
     )
     assert len(seqs) == 1, "only the searchable publication's chunks are kept"

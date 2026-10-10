@@ -49,7 +49,7 @@ class PostgresArchitectureJobs:
         try:
             with self._connector.connection() as connection:
                 row = connection.execute(
-                    f"INSERT INTO {self._table} "
+                    f"INSERT INTO {self._table} "  # noqa: S608 - constant table name
                     "(job_id, kind, subject_id, fingerprint, actor_id, status) "
                     "VALUES (%s, %s, %s, %s, %s, 'queued') "
                     "ON CONFLICT (kind, subject_id, fingerprint) DO UPDATE SET "
@@ -78,7 +78,7 @@ class PostgresArchitectureJobs:
         try:
             with self._connector.connection() as connection:
                 rows = connection.execute(
-                    "SELECT job_id, kind, subject_id, fingerprint, actor_id, status, attempts, "
+                    "SELECT job_id, kind, subject_id, fingerprint, actor_id, status, attempts, "  # noqa: S608 - constant table name
                     f"error_category, lease_until FROM {self._table} "
                     "WHERE kind = %s AND subject_id = %s ORDER BY updated_at, created_at",
                     (kind.value, subject_id),
@@ -91,7 +91,7 @@ class PostgresArchitectureJobs:
         try:
             with self._connector.connection() as connection:
                 row = connection.execute(
-                    "SELECT job_id, kind, subject_id, fingerprint, actor_id, status, attempts, "
+                    "SELECT job_id, kind, subject_id, fingerprint, actor_id, status, attempts, "  # noqa: S608 - constant table name
                     f"error_category, lease_until FROM {self._table} WHERE job_id = %s",
                     (job_id,),
                 ).fetchone()
@@ -116,12 +116,12 @@ class PostgresArchitectureJobs:
                     FROM candidate WHERE j.job_id = candidate.job_id
                     RETURNING j.job_id, j.kind, j.subject_id, j.fingerprint, j.actor_id,
                               j.status, j.attempts, j.error_category, j.lease_until
-                    """,
+                    """,  # noqa: S608 - constant table name
                     (now, now),
                 ).fetchone()
                 if row is None:
                     connection.execute(
-                        f"UPDATE {self._table} SET status = 'failed', "
+                        f"UPDATE {self._table} SET status = 'failed', "  # noqa: S608 - constant table name
                         "error_category = 'attempts_exhausted', lease_until = NULL, "
                         "updated_at = now() WHERE attempts >= 3 AND "
                         "(status = 'queued' OR (status = 'running' AND lease_until < %s))",
@@ -135,7 +135,7 @@ class PostgresArchitectureJobs:
         try:
             with self._connector.connection() as connection:
                 row = connection.execute(
-                    f"UPDATE {self._table} SET lease_until = %s + interval '5 minutes', "
+                    f"UPDATE {self._table} SET lease_until = %s + interval '5 minutes', "  # noqa: S608 - constant table name
                     "updated_at = now() WHERE job_id = %s AND attempts = %s "
                     "AND status = 'running' RETURNING job_id",
                     (now, job_id, attempt),
@@ -154,7 +154,7 @@ class PostgresArchitectureJobs:
         try:
             with self._connector.connection() as connection:
                 connection.execute(
-                    f"UPDATE {self._table} SET status = %s, error_category = %s, "
+                    f"UPDATE {self._table} SET status = %s, error_category = %s, "  # noqa: S608 - constant table name
                     "lease_until = NULL, updated_at = now() "
                     "WHERE job_id = %s AND attempts = %s AND status = 'running'",
                     (status.value, error_category, job_id, attempt),
@@ -179,7 +179,7 @@ class PostgresArchitectureJobs:
         try:
             with self._connector.connection() as connection:
                 row = connection.execute(
-                    f"UPDATE {self._table} SET status = %s, attempts = 0, "
+                    f"UPDATE {self._table} SET status = %s, attempts = 0, "  # noqa: S608 - constant table name
                     "error_category = NULL, lease_until = NULL, updated_at = now() "
                     "WHERE job_id = %s AND status = %s "
                     "RETURNING job_id, kind, subject_id, fingerprint, actor_id, status, "

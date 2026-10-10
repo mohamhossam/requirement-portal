@@ -58,6 +58,17 @@ def test_company_sso_rejects_unlinked_identities_without_creating_or_linking_use
     assert executions[0]["authenticatorFlow"] is False
 
 
+def test_the_browser_client_renews_with_refresh_tokens_not_offline_tokens() -> None:
+    """Silent renewal without third-party cookies (docs/operations/identity-provider.md)."""
+    realm = json.loads(
+        (ROOT / "deploy/keycloak/realm-requirement-ai.json").read_text(encoding="utf-8")
+    )
+    client = next(item for item in realm["clients"] if item["clientId"] == "requirement-spa")
+    # Keycloak issues refresh tokens unless the client turns them off.
+    assert client["attributes"].get("use.refresh.tokens", "true") == "true"
+    assert "offline_access" not in client.get("defaultClientScopes", [])
+
+
 def test_keycloak_compose_passes_required_admin_secrets_to_recognized_settings() -> None:
     compose = yaml.safe_load((ROOT / "deploy/keycloak/compose.yaml").read_text(encoding="utf-8"))
     environment = compose["services"]["keycloak"]["environment"]

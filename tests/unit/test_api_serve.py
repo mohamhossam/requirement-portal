@@ -26,7 +26,7 @@ def test_configures_logging_before_serving_the_application(
     )
     monkeypatch.setattr("uvicorn.run", lambda app, **options: events.append(("run", options)))
 
-    assert serve.main(["--host", "0.0.0.0", "--port", "9000"]) == 0
+    assert serve.main(["--host", "0.0.0.0", "--port", "9000"]) == 0  # noqa: S104 - asserts the value passed through
 
     assert events[0] == ("logging", ("WARNING", LogFormat.JSON))
     name, options = events[1]
@@ -36,7 +36,7 @@ def test_configures_logging_before_serving_the_application(
     # access log or replace the configured handlers.
     assert options["log_config"] is None
     assert options["access_log"] is False
-    assert (options["host"], options["port"]) == ("0.0.0.0", 9000)
+    assert (options["host"], options["port"]) == ("0.0.0.0", 9000)  # noqa: S104 - asserts the value passed through
 
 
 def test_an_invalid_configuration_exits_before_serving(

@@ -38,14 +38,14 @@ class PostgresDocumentStorage(DocumentStoragePort):
                     (document_version_id, checksum_sha256, size_bytes, content)
                 VALUES (%s, %s, %s, %s)
                 ON CONFLICT (document_version_id) DO NOTHING
-                """,
+                """,  # noqa: S608 - table checked against BLOB_TABLES
                 (version_id.value, checksum, len(content), content),
             )
             row = connection.execute(
                 f"""
                 SELECT checksum_sha256, size_bytes, content FROM {self._table}
                 WHERE document_version_id=%s
-                """,
+                """,  # noqa: S608 - table checked against BLOB_TABLES
                 (version_id.value,),
             ).fetchone()
             stored_content = _stored_bytes(row[2]) if row is not None else b""
@@ -65,7 +65,7 @@ class PostgresDocumentStorage(DocumentStoragePort):
                 f"""
                 SELECT content, checksum_sha256, size_bytes FROM {self._table}
                 WHERE document_version_id=%s
-                """,
+                """,  # noqa: S608 - table checked against BLOB_TABLES
                 (version_id.value,),
             ).fetchone()
         if row is None:
@@ -79,7 +79,7 @@ class PostgresDocumentStorage(DocumentStoragePort):
         """Remove a blob only when its surrounding application action is rolling back."""
         with self._store.connection() as connection:
             connection.execute(
-                f"DELETE FROM {self._table} WHERE document_version_id=%s",
+                f"DELETE FROM {self._table} WHERE document_version_id=%s",  # noqa: S608 - table checked against BLOB_TABLES
                 (version_id.value,),
             )
 

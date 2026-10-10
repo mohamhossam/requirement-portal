@@ -86,5 +86,14 @@ The first published release: the pilot candidate, closing the pilot gate of
     (`REQUIREMENT_SUBNET`).
   - Logs carry exception types and correlation IDs, never messages.
   - A job heartbeat rides out a brief database failure while its lease lasts.
+- **Supply chain.**
+  - CI scans every commit for secrets (gitleaks), and CodeQL analyses the backend, the frontend
+    and the workflows.
+  - Every Monday, the latest release's images are scanned again for new vulnerabilities
+    (`deployment.md`, "Releases and upgrades").
+  - The optional Keycloak stack pins its images by digest, restarts with the host, and now pulls
+    Keycloak from Docker Hub (`keycloak/keycloak`) rather than quay.io.
+  - `docs/operations/identity-provider.md` describes the two clients and the token and session
+    lifetimes.
 
 Upgrade: none (first release). Contract-step migrations: none after `202610091200`.

@@ -15,6 +15,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Every job only reads the repository. A job that needs more asks for it itself.
+permissions:
+  contents: read
+
 jobs:
   quality-gates:
     runs-on: ubuntu-latest
@@ -182,6 +186,26 @@ jobs:
       - name: npm audit
         working-directory: frontend
         run: npm audit --audit-level=high
+
+  secrets:
+    # No credential in any commit, not only the tip (production hardening PR 11).
+    # .gitleaks.toml keeps gitleaks' default rules and allows one thing: the
+    # CI-only credentials of the deployment job's throwaway stack.
+    runs-on: ubuntu-latest
+    env:
+      GITLEAKS: ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: gitleaks over the whole history
+        # The checkout belongs to the runner's user, not the container's, so git is
+        # told the directory is safe.
+        run: |
+          docker run --rm -v "$PWD:/repo" -w /repo \
+            -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0=/repo \
+            "$GITLEAKS" git --no-banner --redact --exit-code 1 --config .gitleaks.toml .
 
   deployment:
     # Builds both images and brings requirement work up offline beside the

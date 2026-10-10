@@ -45,7 +45,7 @@ from smb_requirement_agent.requirements.application.ports.requirement_repository
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
-CONTEXT_TOKEN_FORMAT = "generation-context-v2"
+CONTEXT_TOKEN_FORMAT = "generation-context-v2"  # noqa: S105 - a format name
 
 
 class GenerationContextTokens:

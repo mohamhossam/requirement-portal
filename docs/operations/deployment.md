@@ -247,6 +247,14 @@ Each image is:
 
 The release notes name both digests. `GET /api/health` reports the version a deployment runs.
 
+A clean scan at release time does not stay clean: new vulnerabilities are published for packages
+an image already ships. Every Monday, `.github/workflows/rescan.yml` scans the latest release's
+two images again with the same Trivy rules (run it by hand from the Actions tab at any time).
+- **Green:** nothing to do.
+- **Red:** a fix exists for a HIGH or CRITICAL finding in what the release ships. The run's log
+  names the package. Cut a patch release (`vX.Y.Z+1`), whose fresh build picks up the fixed
+  package, and upgrade to it. GitHub emails the repository's owner when a scheduled run fails.
+
 Run a release by naming it in `deploy/.env`:
 
 ```bash
