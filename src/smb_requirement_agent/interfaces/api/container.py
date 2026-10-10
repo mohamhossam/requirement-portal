@@ -103,6 +103,9 @@ from smb_requirement_agent.governance.application.ports.breakdown_repository imp
 from smb_requirement_agent.governance.application.ports.breakdown_review_repository import (
     BreakdownReviewRepositoryPort,
 )
+from smb_requirement_agent.governance.application.ports.publication_repository import (
+    PublicationRepositoryPort,
+)
 from smb_requirement_agent.governance.application.use_cases.approval_workflow import (
     AddReviewComment,
     ApproveBreakdown,
@@ -120,8 +123,10 @@ from smb_requirement_agent.governance.application.use_cases.breakdown_review imp
 )
 from smb_requirement_agent.governance.application.use_cases.export_breakdown import ExportBreakdown
 from smb_requirement_agent.governance.application.use_cases.publish_breakdown import (
+    GetPublicationStatus,
     PreviewPublication,
     PublishBreakdown,
+    RetryFailedPublication,
 )
 from smb_requirement_agent.governance.application.use_cases.revision_history import (
     CompareBreakdownVersions,
@@ -468,6 +473,9 @@ class Container:
     export_breakdown: ExportBreakdown
     preview_publication: PreviewPublication
     publish_breakdown: PublishBreakdown
+    retry_failed_publication: RetryFailedPublication
+    get_publication_status: GetPublicationStatus
+    publication_records: PublicationRepositoryPort
     knowledge_index: RequirementKnowledgeIndexPort
     knowledge_repository: RequirementKnowledgeRepositoryPort
     evidence_fragment_cache: EvidenceFragmentCachePort
@@ -869,6 +877,9 @@ def _build_container(
         export_breakdown=review.export_breakdown,
         preview_publication=review.preview_publication,
         publish_breakdown=review.publish_breakdown,
+        retry_failed_publication=review.retry_failed_publication,
+        get_publication_status=review.get_publication_status,
+        publication_records=persistence.publication_records,
         knowledge_index=persistence.knowledge_index,
         knowledge_index_generations=persistence.index_generations,
         rebuild_knowledge_index=knowledge.rebuild_index,

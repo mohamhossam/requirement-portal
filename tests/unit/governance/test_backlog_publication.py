@@ -26,8 +26,6 @@ from smb_requirement_agent.governance.application.exports import (
 from smb_requirement_agent.governance.application.publication import (
     TITLE_LIMIT,
     PlannedWorkItem,
-    PublicationOutcome,
-    PublicationStepStatus,
     PublicationTarget,
     PublishedWorkItem,
     SquadLocation,
@@ -35,7 +33,15 @@ from smb_requirement_agent.governance.application.publication import (
     publication_plan,
 )
 from smb_requirement_agent.governance.application.use_cases.publish_breakdown import (
+    GetPublicationStatus,
+    PreviewPublication,
     PublishBreakdown,
+    RetryFailedPublication,
+    build_publication_use_cases,
+)
+from smb_requirement_agent.governance.domain.publication.entities import (
+    ItemResult,
+    PublicationOutcome,
 )
 from smb_requirement_agent.governance.domain.revision.entities import RevisionNumber
 from smb_requirement_agent.governance.infrastructure.publication.fake import FakeBacklogPublisher
@@ -114,7 +120,7 @@ def test_owner_publishes_every_item_under_its_parent(
     report = response.json()
     assert report["outcome"] == "published"
     assert [step["key"] for step in report["steps"]] == [item["key"] for item in preview["items"]]
-    assert all(step["status"] == "published" and step["url"] for step in report["steps"])
+    assert all(step["status"] == "created" and step["url"] for step in report["steps"])
     publisher = publishing_container.backlog_publisher
     assert isinstance(publisher, FakeBacklogPublisher)
     ids = {item.key: created.external_id for item, created, _ in publisher.created}
@@ -176,21 +182,42 @@ def test_without_a_publisher_the_preview_says_it_is_not_set_up(client: TestClien
     assert response.json()["code"] == "publication_unavailable"
 
 
-class FailingPublisher:
-    """Accepts the first `accepted` items, then refuses."""
+class RefusingPublisher(FakeBacklogPublisher):
+    """Accepts the first `accepted` creates, then refuses every item."""
 
     def __init__(self, accepted: int) -> None:
-        self._accepted = accepted
+        super().__init__()
+        self.accepted = accepted
         self.calls: list[str] = []
-
-    def target(self) -> PublicationTarget:
-        return PublicationTarget("Tracker", "Project", "Project", ())
 
     def create(self, item: PlannedWorkItem, parent: PublishedWorkItem | None) -> PublishedWorkItem:
         self.calls.append(item.key)
-        if len(self.calls) > self._accepted:
+        if len(self.calls) > self.accepted:
             raise PublicationTargetError("The tracker refused the item (400).")
-        return PublishedWorkItem(item.key, str(len(self.calls)), f"https://t/{len(self.calls)}")
+        return super().create(item, parent)
+
+
+def approved_fingerprint(container: Container, requirement_id: str, revision: int) -> str:
+    saved = container.breakdown_repository.get_breakdown_revision(
+        RequirementId(requirement_id), RevisionNumber(revision)
+    )
+    assert saved is not None and saved.review is not None
+    fingerprint = saved.review.submitted_fingerprint
+    assert fingerprint is not None
+    return fingerprint
+
+
+def use_cases(
+    container: Container, publisher: FakeBacklogPublisher
+) -> tuple[PreviewPublication, PublishBreakdown, RetryFailedPublication, GetPublicationStatus]:
+    return build_publication_use_cases(
+        container.requirement_repository,
+        container.requirement_access,
+        container.breakdown_repository,
+        container.publication_records,
+        container.clock,
+        publisher,
+    )
 
 
 @pytest.mark.parametrize(
@@ -201,30 +228,22 @@ def test_a_refused_item_stops_publication_and_reports_what_was_created(
     client: TestClient, container: Container, accepted: int, outcome: PublicationOutcome
 ) -> None:
     requirement_id, _, revision = approve_fake_breakdown(client)
-    publisher = FailingPublisher(accepted)
-    use_case = PublishBreakdown(
-        container.requirement_repository,
-        container.requirement_access,
-        container.breakdown_repository,
-        publisher,
-    )
-    saved = container.breakdown_repository.get_breakdown_revision(
-        RequirementId(requirement_id), RevisionNumber(revision)
-    )
-    assert saved is not None and saved.review is not None
-    fingerprint = saved.review.submitted_fingerprint
-    assert fingerprint is not None
+    publisher = RefusingPublisher(accepted)
+    _, publish, _, _ = use_cases(container, publisher)
 
-    report = use_case.execute(
-        RequirementId(requirement_id), RevisionNumber(revision), OWNER, fingerprint
+    report = publish.execute(
+        RequirementId(requirement_id),
+        RevisionNumber(revision),
+        OWNER,
+        approved_fingerprint(container, requirement_id, revision),
     )
 
     assert report.outcome is outcome
     statuses = [step.status for step in report.steps]
-    assert statuses[:accepted] == [PublicationStepStatus.PUBLISHED] * accepted
-    assert statuses[accepted] is PublicationStepStatus.FAILED
+    assert statuses[:accepted] == [ItemResult.CREATED] * accepted
+    assert statuses[accepted] is ItemResult.FAILED
     assert report.steps[accepted].error == "The tracker refused the item (400)."
-    assert set(statuses[accepted + 1 :]) == {PublicationStepStatus.NOT_ATTEMPTED}
+    assert set(statuses[accepted + 1 :]) == {ItemResult.NOT_ATTEMPTED}
     assert len(publisher.calls) == accepted + 1
 
 
@@ -327,7 +346,7 @@ def test_a_feature_belongs_to_a_squad_only_when_one_squad_owns_its_systems() -> 
         WorkItemKind.STORY,
     ]
     target = PublicationTarget(
-        "Tracker", "SMB", "SMB", (), (SquadLocation("billing", "SMB\\Billing"),)
+        "tracker:smb", "Tracker", "SMB", "SMB", (), (SquadLocation("billing", "SMB\\Billing"),)
     )
     assert target.location_for("billing") == "SMB\\Billing"
     assert target.location_for("network") == "SMB"

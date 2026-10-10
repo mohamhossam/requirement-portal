@@ -1472,6 +1472,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/requirements/{requirement_id}/publication": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Publication Status */
+        get: operations["publication_status_requirements__requirement_id__publication_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/requirements/{requirement_id}/publication/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry Publication */
+        post: operations["retry_publication_requirements__requirement_id__publication_retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/requirements/{requirement_id}/review-submission": {
         parameters: {
             query?: never;
@@ -3538,6 +3572,26 @@ export interface components {
          * @enum {string}
          */
         InvestCriterion: "independent" | "negotiable" | "valuable" | "estimable" | "small" | "testable";
+        /**
+         * ItemAction
+         * @description What publishing a plan would do with one item, given what was published before.
+         * @enum {string}
+         */
+        ItemAction: "create" | "update" | "unchanged";
+        /** ItemOutcomeResponse */
+        ItemOutcomeResponse: {
+            /** Error */
+            error: string | null;
+            /** Local Key */
+            local_key: string;
+            result: components["schemas"]["ItemResult"];
+        };
+        /**
+         * ItemResult
+         * @description What one attempt did with one backlog item.
+         * @enum {string}
+         */
+        ItemResult: "created" | "updated" | "unchanged" | "recovered" | "failed" | "not_attempted";
         /** JourneyNeighbourResponse */
         JourneyNeighbourResponse: {
             /** Name */
@@ -3886,6 +3940,9 @@ export interface components {
         PlannedWorkItemResponse: {
             /** Acceptance Criteria Count */
             acceptance_criteria_count: number;
+            action: components["schemas"]["ItemAction"];
+            /** External Id */
+            external_id: string | null;
             /** Key */
             key: string;
             kind: components["schemas"]["WorkItemKind"];
@@ -3899,6 +3956,8 @@ export interface components {
             parent_key: string | null;
             /** Title */
             title: string;
+            /** Url */
+            url: string | null;
         };
         /** PotentialDependencyResponse */
         PotentialDependencyResponse: {
@@ -4053,6 +4112,25 @@ export interface components {
             /** Prompt Version */
             prompt_version: string;
         };
+        /** PublicationAttemptResponse */
+        PublicationAttemptResponse: {
+            /** Actor Name */
+            actor_name: string;
+            /** Finished At */
+            finished_at: string | null;
+            /** Items */
+            items: components["schemas"]["ItemOutcomeResponse"][];
+            /** Number */
+            number: number;
+            outcome: components["schemas"]["PublicationOutcome"] | null;
+            /** Revision */
+            revision: number;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+        };
         /** PublicationCountsResponse */
         PublicationCountsResponse: {
             /** Epics */
@@ -4073,7 +4151,7 @@ export interface components {
          * PublicationOutcome
          * @enum {string}
          */
-        PublicationOutcome: "published" | "partial" | "failed";
+        PublicationOutcome: "published" | "partial" | "failed" | "interrupted";
         /** PublicationPreviewResponse */
         PublicationPreviewResponse: {
             /** Approval Fingerprint */
@@ -4081,10 +4159,15 @@ export interface components {
             counts: components["schemas"]["PublicationCountsResponse"];
             /** Items */
             items: components["schemas"]["PlannedWorkItemResponse"][];
+            /** Published Revision */
+            published_revision: number | null;
+            /** Removed */
+            removed: components["schemas"]["WorkItemMappingResponse"][];
             /** Requirement Id */
             requirement_id: string;
             /** Revision */
             revision: number;
+            status: components["schemas"]["PublicationStatus"];
             target: components["schemas"]["PublicationTargetResponse"];
         };
         /** PublicationReportResponse */
@@ -4101,6 +4184,29 @@ export interface components {
             /** System */
             system: string;
         };
+        /**
+         * PublicationStatus
+         * @enum {string}
+         */
+        PublicationStatus: "not_published" | "in_progress" | "published" | "incomplete" | "outdated";
+        /** PublicationStatusResponse */
+        PublicationStatusResponse: {
+            /** Attempts */
+            attempts: components["schemas"]["PublicationAttemptResponse"][];
+            /** Latest Approved Revision */
+            latest_approved_revision: number | null;
+            /** Mappings */
+            mappings: components["schemas"]["WorkItemMappingResponse"][];
+            /** Product Impact Version */
+            product_impact_version: string | null;
+            /** Product Verdict */
+            product_verdict: string | null;
+            /** Published Revision */
+            published_revision: number | null;
+            /** Requirement Id */
+            requirement_id: string;
+            status: components["schemas"]["PublicationStatus"];
+        };
         /** PublicationStepResponse */
         PublicationStepResponse: {
             /** Error */
@@ -4112,17 +4218,12 @@ export interface components {
             kind: components["schemas"]["WorkItemKind"];
             /** Label */
             label: string;
-            status: components["schemas"]["PublicationStepStatus"];
+            status: components["schemas"]["ItemResult"];
             /** Title */
             title: string;
             /** Url */
             url: string | null;
         };
-        /**
-         * PublicationStepStatus
-         * @enum {string}
-         */
-        PublicationStepStatus: "published" | "failed" | "not_attempted";
         /** PublicationTargetResponse */
         PublicationTargetResponse: {
             /** Default Location */
@@ -5246,6 +5347,24 @@ export interface components {
          * @enum {string}
          */
         WorkItemKind: "epic" | "feature" | "story";
+        /** WorkItemMappingResponse */
+        WorkItemMappingResponse: {
+            /** External Id */
+            external_id: string;
+            /** Kind */
+            kind: string;
+            /** Local Key */
+            local_key: string;
+            /**
+             * Published At
+             * Format: date-time
+             */
+            published_at: string;
+            /** Revision */
+            revision: number;
+            /** Url */
+            url: string;
+        };
         /**
          * WorkflowStage
          * @enum {string}
@@ -8537,6 +8656,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PriorArtResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    publication_status_requirements__requirement_id__publication_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Fake-Actor-Id"?: string | null;
+            };
+            path: {
+                requirement_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicationStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retry_publication_requirements__requirement_id__publication_retry_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Fake-Actor-Id"?: string | null;
+            };
+            path: {
+                requirement_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicationReportResponse"];
                 };
             };
             /** @description Validation Error */

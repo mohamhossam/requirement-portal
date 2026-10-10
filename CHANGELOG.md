@@ -15,6 +15,9 @@ restoring a backup.
   (`ADO_PUBLISHER=none`). To turn it on, set `ADO_PUBLISHER=azure_devops`, `ADO_ORGANIZATION_URL`,
   `ADO_PROJECT` and `ADO_PERSONAL_ACCESS_TOKEN` (or `_FILE`), a token with Work Items read and
   write. `ADO_SQUAD_AREA_PATHS` sends each squad's Features to its board. No migration.
+- **Safe republish to Azure DevOps (Slice 13, ADR-0113).** Publishing again updates the items
+  already sent instead of duplicating them, and Retry continues a publication that stopped
+  part-way. Migration `202610101200_backlog_publications` (expand only: a new table).
 
 ## v0.1.0
 

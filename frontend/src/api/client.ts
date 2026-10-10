@@ -35,6 +35,7 @@ export type RevisionHistory = components["schemas"]["RevisionHistoryResponse"];
 export type BreakdownComparison = components["schemas"]["BreakdownComparisonResponse"];
 export type PublicationPreview = components["schemas"]["PublicationPreviewResponse"];
 export type PublicationReport = components["schemas"]["PublicationReportResponse"];
+export type PublicationStatus = components["schemas"]["PublicationStatusResponse"];
 export type Story = components["schemas"]["StoryResponse"];
 export type StorySet = components["schemas"]["StorySetResponse"];
 export type AcceptanceCriterion = components["schemas"]["AcceptanceCriterionPayload"];
@@ -808,6 +809,10 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ approval_fingerprint: approvalFingerprint }),
     }),
+  getPublicationStatus: (id: string, options?: RequestOptions) =>
+    request<PublicationStatus>(`${requirementPath(id)}/publication`, options),
+  retryPublication: (id: string) =>
+    request<PublicationReport>(`${requirementPath(id)}/publication/retry`, { method: "POST" }),
   getStories: (id: string, featureId: string, options?: RequestOptions) =>
     optional<StorySet>(storiesPath(id, featureId), options),
   getFeatureStoryQualityAssessment: (id: string, featureId: string, options?: RequestOptions) =>

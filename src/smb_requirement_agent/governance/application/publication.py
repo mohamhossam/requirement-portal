@@ -7,13 +7,19 @@ work-item type, is the publisher adapter's business (AGENTS.md §9).
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import hashlib
+import json
+from dataclasses import asdict, dataclass
 from enum import StrEnum
 
 from smb_requirement_agent.governance.application.exports import (
     ExportArchitecture,
     ExportFeature,
     NeutralBacklogExport,
+)
+from smb_requirement_agent.governance.domain.publication.entities import (
+    ItemResult,
+    PublicationOutcome,
 )
 
 # A tracker title is a single line; longer titles are cut with an ellipsis.
@@ -49,6 +55,23 @@ class PlannedWorkItem:
     # The one squad whose systems the Feature changes, or None when it names none or several.
     owning_squad_id: str | None
     owning_squad_name: str | None
+    # A stable tag on the tracker item, so an item created by an interrupted attempt can be
+    # found again instead of created twice (Slice 13).
+    marker: str = ""
+
+    def content_fingerprint(self) -> str:
+        """What a person reads on the tracker item; a change to it is sent as an update.
+
+        Where the item lands is left out: once published, people triage it in the tracker.
+        """
+        content = {
+            "kind": self.kind.value,
+            "title": self.title,
+            "description": [list(pair) for pair in self.description],
+            "acceptance_criteria": [asdict(item) for item in self.acceptance_criteria],
+        }
+        encoded = json.dumps(content, sort_keys=True, ensure_ascii=False).encode()
+        return f"sha256:{hashlib.sha256(encoded).hexdigest()}"
 
 
 @dataclass(frozen=True)
@@ -73,6 +96,8 @@ class SquadLocation:
 class PublicationTarget:
     """Where a publisher sends items, described for the people confirming it."""
 
+    # Identifies the tracker and project, so mappings are never reused in another one.
+    key: str
     system: str
     project: str
     default_location: str
@@ -97,25 +122,20 @@ class PublishedWorkItem:
     url: str
 
 
-class PublicationStepStatus(StrEnum):
-    PUBLISHED = "published"
-    FAILED = "failed"
-    NOT_ATTEMPTED = "not_attempted"
+class ItemAction(StrEnum):
+    """What publishing a plan would do with one item, given what was published before."""
+
+    CREATE = "create"
+    UPDATE = "update"
+    UNCHANGED = "unchanged"
 
 
 @dataclass(frozen=True)
 class PublicationStep:
     item: PlannedWorkItem
-    status: PublicationStepStatus
+    status: ItemResult
     published: PublishedWorkItem | None = None
     error: str | None = None
-
-
-class PublicationOutcome(StrEnum):
-    PUBLISHED = "published"
-    # Some items were created before one failed; they stay in the tracker.
-    PARTIAL = "partial"
-    FAILED = "failed"
 
 
 @dataclass(frozen=True)
@@ -139,6 +159,7 @@ def publication_plan(document: NeutralBacklogExport) -> PublicationPlan:
             parent_key=None,
             owning_squad_id=None,
             owning_squad_name=None,
+            marker=_marker(document, epic.id),
         )
     ]
     for feature in epic.features:
@@ -159,6 +180,7 @@ def publication_plan(document: NeutralBacklogExport) -> PublicationPlan:
                 parent_key=epic.id,
                 owning_squad_id=squad_id,
                 owning_squad_name=squad_name,
+                marker=_marker(document, feature.id),
             )
         )
         for story in feature.stories:
@@ -177,6 +199,7 @@ def publication_plan(document: NeutralBacklogExport) -> PublicationPlan:
                     # A Story lands where its Feature does, on the same squad's board.
                     owning_squad_id=squad_id,
                     owning_squad_name=squad_name,
+                    marker=_marker(document, story.id),
                 )
             )
     manifest = document.manifest
@@ -186,6 +209,12 @@ def publication_plan(document: NeutralBacklogExport) -> PublicationPlan:
         approval_fingerprint=manifest.final_approval.subject_fingerprint,
         items=tuple(items),
     )
+
+
+def _marker(document: NeutralBacklogExport, key: str) -> str:
+    """`smb-rp-` and a digest of the Requirement and item: stable across revisions."""
+    source = f"{document.manifest.requirement_id}\n{key}".encode()
+    return f"smb-rp-{hashlib.sha256(source).hexdigest()[:20]}"
 
 
 def _owning_squad(feature: ExportFeature) -> tuple[str, str] | None:

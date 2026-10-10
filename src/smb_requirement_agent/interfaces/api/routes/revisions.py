@@ -11,8 +11,10 @@ from smb_requirement_agent.governance.application.use_cases.export_breakdown imp
     is_exportable_revision,
 )
 from smb_requirement_agent.governance.application.use_cases.publish_breakdown import (
+    GetPublicationStatus,
     PreviewPublication,
     PublishBreakdown,
+    RetryFailedPublication,
 )
 from smb_requirement_agent.governance.application.use_cases.revision_history import (
     CompareBreakdownVersions,
@@ -27,7 +29,9 @@ from smb_requirement_agent.interfaces.api.dependencies import (
     get_compare_breakdown_versions,
     get_export_breakdown,
     get_preview_publication,
+    get_publication_status,
     get_publish_breakdown,
+    get_retry_failed_publication,
     get_revision_history,
     require_authenticated_actor,
 )
@@ -35,11 +39,11 @@ from smb_requirement_agent.interfaces.api.schemas.identity import ActorResponse
 from smb_requirement_agent.interfaces.api.schemas.publication import (
     PublicationPreviewResponse,
     PublicationReportResponse,
+    PublicationStatusResponse,
     PublishBreakdownRequest,
-    counts_response,
-    planned_item_response,
+    preview_response,
     report_response,
-    target_response,
+    status_response,
 )
 from smb_requirement_agent.interfaces.api.schemas.revisions import (
     BreakdownComparisonResponse,
@@ -194,15 +198,7 @@ def preview_publication(
     preview = use_case.execute(
         RequirementId(requirement_id), RevisionNumber(revision_number), actor
     )
-    plan, target = preview.plan, preview.target
-    return PublicationPreviewResponse(
-        requirement_id=plan.requirement_id,
-        revision=plan.revision,
-        approval_fingerprint=plan.approval_fingerprint,
-        target=target_response(target),
-        counts=counts_response(plan),
-        items=[planned_item_response(item, target) for item in plan.items],
-    )
+    return preview_response(preview)
 
 
 @router.post(
@@ -223,3 +219,22 @@ def publish_revision(
         request.approval_fingerprint,
     )
     return report_response(report)
+
+
+@router.get("/{requirement_id}/publication", response_model=PublicationStatusResponse)
+def publication_status(
+    requirement_id: str,
+    actor: CurrentActorDep,
+    use_case: Annotated[GetPublicationStatus, Depends(get_publication_status)],
+) -> PublicationStatusResponse:
+    overview = use_case.execute(RequirementId(requirement_id), actor)
+    return status_response(requirement_id, overview)
+
+
+@router.post("/{requirement_id}/publication/retry", response_model=PublicationReportResponse)
+def retry_publication(
+    requirement_id: str,
+    actor: CurrentActorDep,
+    use_case: Annotated[RetryFailedPublication, Depends(get_retry_failed_publication)],
+) -> PublicationReportResponse:
+    return report_response(use_case.execute(RequirementId(requirement_id), actor))

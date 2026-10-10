@@ -43,13 +43,33 @@ export function RevisionsView({ id, workspace }: { id: string; workspace: Requir
     // "Not set up" and "not publishable" are answers, not failures to retry.
     retry: false,
   });
+  const unavailable =
+    preview.error instanceof ApiError && preview.error.code === "publication_unavailable" ? preview.error.detail : null;
+  const record = useQuery({
+    queryKey: queryKeys.publicationStatus(id),
+    queryFn: ({ signal }) => api.getPublicationStatus(id, { signal }),
+    enabled: approved !== null && preview.isSuccess,
+    retry: false,
+  });
+  // What was sent changes what the next publish does, so both are read again afterwards.
+  const refreshPublication = () => {
+    void queryClient.invalidateQueries({ queryKey: queryKeys.publication(id, approved ?? 0) });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.publicationStatus(id) });
+  };
   const publish = useMutation({
     meta: { action: "Publishing the backlog" },
     mutationFn: ({ revision, fingerprint }: { revision: number; fingerprint: string }) =>
       api.publishBreakdownRevision(id, revision, fingerprint),
+    onSettled: refreshPublication,
   });
-  const unavailable =
-    preview.error instanceof ApiError && preview.error.code === "publication_unavailable" ? preview.error.detail : null;
+  const retry = useMutation({
+    meta: { action: "Retrying the publication" },
+    mutationFn: () => api.retryPublication(id),
+    onSuccess: () => publish.reset(),
+    onSettled: refreshPublication,
+  });
+  const report = retry.data ?? (publish.data && publish.variables?.revision === approved ? publish.data : null);
+  const actionError = retry.error ?? publish.error;
 
   return (
     <>
@@ -83,7 +103,13 @@ export function RevisionsView({ id, workspace }: { id: string; workspace: Requir
           <PublicationPanel
             key={approved}
             canPublish={workspace.canGovern}
-            onPublish={(fingerprint) => publish.mutate({ revision: approved, fingerprint })}
+            onPublish={(fingerprint) => {
+              retry.reset();
+              publish.mutate({ revision: approved, fingerprint });
+            }}
+            onRetry={() => retry.mutate()}
+            retrying={retry.isPending}
+            status={record.data ?? null}
             preview={preview.data ?? null}
             previewError={
               preview.error && !unavailable
@@ -92,10 +118,10 @@ export function RevisionsView({ id, workspace }: { id: string; workspace: Requir
             }
             previewLoading={preview.isPending}
             publishError={
-              publish.error ? { message: errorMessage(publish.error), reference: errorReference(publish.error) } : null
+              actionError ? { message: errorMessage(actionError), reference: errorReference(actionError) } : null
             }
             publishing={publish.isPending}
-            report={publish.data && publish.variables?.revision === approved ? publish.data : null}
+            report={report && report.revision === approved ? report : null}
             revision={approved}
             unavailable={unavailable}
           />
