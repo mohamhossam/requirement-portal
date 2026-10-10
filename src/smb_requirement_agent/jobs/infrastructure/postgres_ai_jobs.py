@@ -283,6 +283,13 @@ class PostgresAiJobStore:
 
     @staticmethod
     def _insert(connection: DbConnection, record: AiJobRecord) -> None:
+        # Lock the Requirement row first, as the revision capture at commit does. Otherwise
+        # the job's foreign key share-locks it, the lease insert waits on another transaction's
+        # new lease row, and that transaction's capture waits on the share lock: a deadlock.
+        connection.execute(
+            "SELECT 1 FROM requirements WHERE requirement_id = %s FOR UPDATE",
+            (record.job.requirement_id.value,),
+        )
         try:
             connection.execute(
                 """

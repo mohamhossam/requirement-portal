@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import hashlib
 import os
+import time
 import uuid
 from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from threading import Event
 from typing import Never
 
 import psycopg
@@ -771,6 +773,83 @@ def test_postgres_automatic_reservation_is_concurrent_and_attempt_idempotent() -
     persisted = PostgresAiJobStore(PostgresStore(DATABASE_URL)).get(AiJobId(results[0][0]))
     assert persisted is not None
     PostgresAiJobStore(PostgresStore(DATABASE_URL)).save(persisted.job.request_cancellation(now))
+
+
+def test_concurrent_jobs_for_one_requirement_queue_instead_of_deadlocking() -> None:
+    """Two transactions adding jobs for one Requirement take its row lock in the same order.
+
+    The first inserts the Requirement's lease row and, at commit, captures the revision under
+    the Requirement row lock. The second waits for that lock before touching either row.
+    """
+    assert DATABASE_URL is not None
+    requirement_id = RequirementId(str(uuid.uuid4()))
+    now = datetime.now(UTC)
+    PostgresStore(DATABASE_URL).add(
+        Requirement(
+            requirement_id,
+            RequirementTitle("Concurrent jobs"),
+            RequirementDescription("An automatic screen and a user's job start together."),
+            RequirementStatus.DRAFT,
+        )
+    )
+
+    def record(origin: AiJobOrigin) -> AiJobRecord:
+        fingerprint = hashlib.sha256(str(uuid.uuid4()).encode()).hexdigest()
+        return AiJobRecord(
+            AiJob(
+                AiJobId(str(uuid.uuid4())),
+                requirement_id,
+                AiJobOperation.SCREEN_REQUIREMENT_KNOWLEDGE,
+                AiJobStatus.QUEUED,
+                ActorSnapshot(ActorId("automatic-system"), "Automatic system"),
+                now,
+                now,
+                f"concurrent-{uuid.uuid4()}",
+                fingerprint,
+                origin=origin,
+            ),
+            AiJobCommand({"knowledge_fingerprint": fingerprint}),
+        )
+
+    first_inserted = Event()
+
+    def automatic() -> None:
+        store = PostgresStore(DATABASE_URL)
+        with store.transaction():
+            PostgresAiJobStore(store).reserve_automatic(record(AiJobOrigin.AUTOMATIC))
+            first_inserted.set()
+            _wait_for_a_blocked_session()
+
+    def started_by_a_user() -> None:
+        first_inserted.wait(5)
+        store = PostgresStore(DATABASE_URL)
+        with store.transaction():
+            PostgresAiJobStore(store).add(record(AiJobOrigin.USER))
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        futures = [executor.submit(automatic), executor.submit(started_by_a_user)]
+        for future in futures:
+            future.result(timeout=30)
+
+    with psycopg.connect(DATABASE_URL) as connection:
+        row = connection.execute(
+            "SELECT count(*) FROM ai_jobs WHERE requirement_id = %s", (requirement_id.value,)
+        ).fetchone()
+    assert row == (2,)
+
+
+def _wait_for_a_blocked_session() -> None:
+    assert DATABASE_URL is not None
+    with psycopg.connect(DATABASE_URL, autocommit=True) as connection:
+        for _ in range(100):
+            waiting = connection.execute(
+                "SELECT count(*) FROM pg_stat_activity "
+                "WHERE wait_event_type = 'Lock' AND datname = current_database()"
+            ).fetchone()
+            if waiting is not None and waiting[0] > 0:
+                return
+            time.sleep(0.05)
+    raise AssertionError("The second transaction never waited for the first.")
 
 
 def test_postgres_automatic_reservation_rolls_back_with_its_business_action() -> None:
