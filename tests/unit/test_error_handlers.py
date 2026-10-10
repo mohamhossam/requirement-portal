@@ -93,9 +93,15 @@ from smb_requirement_agent.governance.application.errors import (
     BreakdownRevisionNotExportableError,
     BreakdownRevisionNotPublishableError,
     PublicationConfirmationError,
+    PublicationRetryNotAllowedError,
+    PublicationTargetChangedError,
     PublicationTargetError,
     PublicationUnavailableError,
     ReviewFlagNotFoundError,
+)
+from smb_requirement_agent.governance.domain.publication.errors import (
+    InvalidPublicationError,
+    PublicationInProgressError,
 )
 from smb_requirement_agent.governance.domain.review.errors import (
     FlagResolutionConflictError,
@@ -256,6 +262,10 @@ EXPECTED_STATUS_CODES: dict[type[Exception], int] = {
     PublicationConfirmationError: 409,
     PublicationUnavailableError: 503,
     PublicationTargetError: 502,
+    PublicationTargetChangedError: 409,
+    PublicationRetryNotAllowedError: 409,
+    PublicationInProgressError: 409,
+    InvalidPublicationError: 500,
     BacklogExportFormatError: 422,
     AiJobConflictError: 409,
     AiJobInputsPrunedError: 409,

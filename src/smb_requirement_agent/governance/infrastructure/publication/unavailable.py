@@ -18,3 +18,9 @@ class UnavailableBacklogPublisher:
 
     def create(self, item: PlannedWorkItem, parent: PublishedWorkItem | None) -> PublishedWorkItem:
         raise PublicationUnavailableError(MESSAGE)
+
+    def update(self, external_id: str, item: PlannedWorkItem) -> PublishedWorkItem:
+        raise PublicationUnavailableError(MESSAGE)
+
+    def find(self, item: PlannedWorkItem) -> PublishedWorkItem | None:
+        raise PublicationUnavailableError(MESSAGE)

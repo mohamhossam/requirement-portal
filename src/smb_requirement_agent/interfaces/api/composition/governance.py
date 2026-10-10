@@ -33,8 +33,11 @@ from smb_requirement_agent.governance.application.use_cases.breakdown_review imp
 )
 from smb_requirement_agent.governance.application.use_cases.export_breakdown import ExportBreakdown
 from smb_requirement_agent.governance.application.use_cases.publish_breakdown import (
+    GetPublicationStatus,
     PreviewPublication,
     PublishBreakdown,
+    RetryFailedPublication,
+    build_publication_use_cases,
 )
 from smb_requirement_agent.governance.application.use_cases.revision_history import (
     CompareBreakdownVersions,
@@ -81,6 +84,8 @@ class ReviewWiring:
     export_breakdown: ExportBreakdown
     preview_publication: PreviewPublication
     publish_breakdown: PublishBreakdown
+    retry_failed_publication: RetryFailedPublication
+    get_publication_status: GetPublicationStatus
 
 
 def build_backlog_publisher(
@@ -139,6 +144,14 @@ def build_review(
         source_impact,
     )
     get_review = GetBreakdownReview(evidence, reviews, current_release)
+    preview, publish, retry, publication_status = build_publication_use_cases(
+        persistence.requirement_repository,
+        access,
+        persistence.revision_repository,
+        persistence.publication_records,
+        clock,
+        publisher,
+    )
     recorder = ApprovalRecorder(persistence.access_repository, clock, access)
     workflow = GetApprovalWorkflow(evidence, reviews, recorder, ApprovalPolicy())
     return ReviewWiring(
@@ -166,10 +179,8 @@ def build_review(
             persistence.revision_repository,
             exporters,
         ),
-        preview_publication=PreviewPublication(
-            persistence.requirement_repository, access, persistence.revision_repository, publisher
-        ),
-        publish_breakdown=PublishBreakdown(
-            persistence.requirement_repository, access, persistence.revision_repository, publisher
-        ),
+        preview_publication=preview,
+        publish_breakdown=publish,
+        retry_failed_publication=retry,
+        get_publication_status=publication_status,
     )

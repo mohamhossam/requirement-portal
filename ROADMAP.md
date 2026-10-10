@@ -38,7 +38,7 @@ this ledger.
 | Knowledge Center (`docs/slices/enhancement-knowledge-center.md`, ADR-0099 Amendment 1, ADR-0102) | **Re-planned 2026-10-06 for the three repositories.** A is mostly delivered by the split, and F early. B1, A′, B2, B3, C and D are delivered (each built where its data lives). **E is scheduled 2026-10-06** (ADR-0102): E1, knowledge-portal's read-only ADO import and lineage, is delivered; E2, the historic corpus and prior art here, is delivered (merged as #47) | The ADO edition, for the REST adapter |
 | Bounded-context restructure toward Domain-Driven Design (ADR-0103; `docs/slices/refactor-bounded-contexts.md`) | **Delivered 2026-10-08** (ADR-0103 accepted and scheduled 2026-10-07; Amendment 2 records the implementation). PRs 1–16 and 11b: characterisation tests, the shared kernel, in-process domain events, governance rules in the domain, and the `identity`, `jobs`, `requirements`, `analysis`, `breakdown`, `governance`, `reporting`, `workflows`, `references` and `knowledge` packages. Each context owns its errors, and `lint-imports` enforces the dependency order with no exemptions (0 pairs against it). The context map and ubiquitous language are in `docs/architecture/` | Merge. The four follow-ups were delivered on the same branch (ADR-0103 Amendment 3) |
 | Independent portals with optional links (ADR-0104; `docs/slices/enhancement-independent-portals.md`) | **Scheduled 2026-10-09.** Phases 1 and 2 done (#52): the decision, and starting in production without the knowledge portal. Phase 3 done in knowledge-portal. Phase 4 done: architecture mapping checks this repository's own roles, knowledge-portal defines its sign-in, each service can hold only its own credential (platform-kernel 1.1.0), and the knowledge portal's writes are recorded against its service | Phases 6–7 and the cutover, mostly in knowledge-portal |
-| ADO publication and safe republish (12–13) | Slice 12 implemented (`docs/slices/slice-12-ado-publication.md`, ADR-0112); Slice 13 planned | Slice 13 implementation |
+| ADO publication and safe republish (12–13) | Slices 12 and 13 implemented (`docs/slices/slice-12-ado-publication.md`, ADR-0112; `docs/slices/slice-13-external-id-mapping-and-safe-republish.md`, ADR-0113) | Merge; the Epic-closed hook is the ontology implementation plan's Phase 7 |
 | Advanced workflow optimization (15) | Planned; evidence-gated | Demonstrate a need and measurable benefit before implementation |
 
 ### Merge and CI evidence
@@ -1394,7 +1394,9 @@ Approved backlog can be safely published to ADO.
 
 ## Slice 13 — External ID Mapping and Safe Republish
 
-**Status: Planned; not implemented.**
+**Status: Implemented** (`docs/slices/slice-13-external-id-mapping-and-safe-republish.md`,
+ADR-0113). The publication record also keeps a nullable product verdict and its version for the
+ontology implementation plan.
 
 ### User Outcome
 The system knows which local items already exist in ADO and avoids duplicates.
@@ -1967,7 +1969,7 @@ Do not reorder just because an external integration is exciting. The ADO adapter
 | R4 Governance | 9, 10, 10A | Approval + revisions + activity/reporting | Merged into `main` |
 | R5 Portability | 11 | Neutral export | Merged into `main` |
 | R5A Requirement Knowledge | 11A–11B.1 | Duplicate/conflict screening + lazy restart-safe screening + automatic dual-source clarification suggestions | Merged into `main` |
-| R6 ADO | 12–13 | Safe ADO publication/update | Planned |
+| R6 ADO | 12–13 | Safe ADO publication/update | Implemented; merge pending |
 | R7 Knowledge | 14 | Maintainable architecture knowledge | Merged into `main`; deployment-specific local-model qualification open |
 | R8 Advanced AI | 15 | Evidence-driven orchestration optimization | Planned; evidence-gated |
 | R9 Enterprise identity, administration and operations | 8A.2, Graylog, administration portal, Knowledge Center | AD sign-in, centralized logs, admin portal, one home for knowledge | Specified; not scheduled |

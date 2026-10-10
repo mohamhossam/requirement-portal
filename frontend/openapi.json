@@ -5300,6 +5300,58 @@
         "title": "InvestCriterion",
         "type": "string"
       },
+      "ItemAction": {
+        "description": "What publishing a plan would do with one item, given what was published before.",
+        "enum": [
+          "create",
+          "update",
+          "unchanged"
+        ],
+        "title": "ItemAction",
+        "type": "string"
+      },
+      "ItemOutcomeResponse": {
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "local_key": {
+            "title": "Local Key",
+            "type": "string"
+          },
+          "result": {
+            "$ref": "#/components/schemas/ItemResult"
+          }
+        },
+        "required": [
+          "local_key",
+          "result",
+          "error"
+        ],
+        "title": "ItemOutcomeResponse",
+        "type": "object"
+      },
+      "ItemResult": {
+        "description": "What one attempt did with one backlog item.",
+        "enum": [
+          "created",
+          "updated",
+          "unchanged",
+          "recovered",
+          "failed",
+          "not_attempted"
+        ],
+        "title": "ItemResult",
+        "type": "string"
+      },
       "JourneyNeighbourResponse": {
         "properties": {
           "name": {
@@ -6262,6 +6314,20 @@
             "title": "Acceptance Criteria Count",
             "type": "integer"
           },
+          "action": {
+            "$ref": "#/components/schemas/ItemAction"
+          },
+          "external_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Id"
+          },
           "key": {
             "title": "Key",
             "type": "string"
@@ -6302,6 +6368,17 @@
           "title": {
             "title": "Title",
             "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
           }
         },
         "required": [
@@ -6312,7 +6389,10 @@
           "parent_key",
           "acceptance_criteria_count",
           "owning_squad_name",
-          "location"
+          "location",
+          "action",
+          "external_id",
+          "url"
         ],
         "title": "PlannedWorkItemResponse",
         "type": "object"
@@ -6687,6 +6767,67 @@
         "title": "ProvenanceResponse",
         "type": "object"
       },
+      "PublicationAttemptResponse": {
+        "properties": {
+          "actor_name": {
+            "title": "Actor Name",
+            "type": "string"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ItemOutcomeResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "number": {
+            "title": "Number",
+            "type": "integer"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PublicationOutcome"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "number",
+          "revision",
+          "actor_name",
+          "started_at",
+          "finished_at",
+          "outcome",
+          "items"
+        ],
+        "title": "PublicationAttemptResponse",
+        "type": "object"
+      },
       "PublicationCountsResponse": {
         "properties": {
           "epics": {
@@ -6732,7 +6873,8 @@
         "enum": [
           "published",
           "partial",
-          "failed"
+          "failed",
+          "interrupted"
         ],
         "title": "PublicationOutcome",
         "type": "string"
@@ -6753,6 +6895,24 @@
             "title": "Items",
             "type": "array"
           },
+          "published_revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published Revision"
+          },
+          "removed": {
+            "items": {
+              "$ref": "#/components/schemas/WorkItemMappingResponse"
+            },
+            "title": "Removed",
+            "type": "array"
+          },
           "requirement_id": {
             "title": "Requirement Id",
             "type": "string"
@@ -6760,6 +6920,9 @@
           "revision": {
             "title": "Revision",
             "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PublicationStatus"
           },
           "target": {
             "$ref": "#/components/schemas/PublicationTargetResponse"
@@ -6771,7 +6934,10 @@
           "approval_fingerprint",
           "target",
           "counts",
-          "items"
+          "items",
+          "status",
+          "published_revision",
+          "removed"
         ],
         "title": "PublicationPreviewResponse",
         "type": "object"
@@ -6816,6 +6982,98 @@
         "title": "PublicationReportResponse",
         "type": "object"
       },
+      "PublicationStatus": {
+        "enum": [
+          "not_published",
+          "in_progress",
+          "published",
+          "incomplete",
+          "outdated"
+        ],
+        "title": "PublicationStatus",
+        "type": "string"
+      },
+      "PublicationStatusResponse": {
+        "properties": {
+          "attempts": {
+            "items": {
+              "$ref": "#/components/schemas/PublicationAttemptResponse"
+            },
+            "title": "Attempts",
+            "type": "array"
+          },
+          "latest_approved_revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Approved Revision"
+          },
+          "mappings": {
+            "items": {
+              "$ref": "#/components/schemas/WorkItemMappingResponse"
+            },
+            "title": "Mappings",
+            "type": "array"
+          },
+          "product_impact_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Impact Version"
+          },
+          "product_verdict": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Verdict"
+          },
+          "published_revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published Revision"
+          },
+          "requirement_id": {
+            "title": "Requirement Id",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PublicationStatus"
+          }
+        },
+        "required": [
+          "requirement_id",
+          "status",
+          "latest_approved_revision",
+          "published_revision",
+          "product_verdict",
+          "product_impact_version",
+          "mappings",
+          "attempts"
+        ],
+        "title": "PublicationStatusResponse",
+        "type": "object"
+      },
       "PublicationStepResponse": {
         "properties": {
           "error": {
@@ -6852,7 +7110,7 @@
             "type": "string"
           },
           "status": {
-            "$ref": "#/components/schemas/PublicationStepStatus"
+            "$ref": "#/components/schemas/ItemResult"
           },
           "title": {
             "title": "Title",
@@ -6882,15 +7140,6 @@
         ],
         "title": "PublicationStepResponse",
         "type": "object"
-      },
-      "PublicationStepStatus": {
-        "enum": [
-          "published",
-          "failed",
-          "not_attempted"
-        ],
-        "title": "PublicationStepStatus",
-        "type": "string"
       },
       "PublicationTargetResponse": {
         "properties": {
@@ -10105,6 +10354,45 @@
         ],
         "title": "WorkItemKind",
         "type": "string"
+      },
+      "WorkItemMappingResponse": {
+        "properties": {
+          "external_id": {
+            "title": "External Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "local_key": {
+            "title": "Local Key",
+            "type": "string"
+          },
+          "published_at": {
+            "format": "date-time",
+            "title": "Published At",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "local_key",
+          "kind",
+          "external_id",
+          "url",
+          "revision",
+          "published_at"
+        ],
+        "title": "WorkItemMappingResponse",
+        "type": "object"
       },
       "WorkflowStage": {
         "enum": [
@@ -17190,6 +17478,132 @@
         "summary": "Get Prior Art",
         "tags": [
           "requirement-knowledge"
+        ]
+      }
+    },
+    "/requirements/{requirement_id}/publication": {
+      "get": {
+        "operationId": "publication_status_requirements__requirement_id__publication_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "requirement_id",
+            "required": true,
+            "schema": {
+              "title": "Requirement Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Fake-Actor-Id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fake-Actor-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicationStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Publication Status",
+        "tags": [
+          "revisions"
+        ]
+      }
+    },
+    "/requirements/{requirement_id}/publication/retry": {
+      "post": {
+        "operationId": "retry_publication_requirements__requirement_id__publication_retry_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "requirement_id",
+            "required": true,
+            "schema": {
+              "title": "Requirement Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Fake-Actor-Id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fake-Actor-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicationReportResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Retry Publication",
+        "tags": [
+          "revisions"
         ]
       }
     },
