@@ -20,3 +20,7 @@ from smb_kernel.errors import UnsupportedDocumentError as UnsupportedDocumentErr
 
 class ArtifactVersionConflictError(Exception):
     """A generated artifact mutation used a stale aggregate version."""
+
+
+class DatabaseBusyError(PersistenceError):
+    """A statement or lock wait ran past the session's limit; trying again later may work."""

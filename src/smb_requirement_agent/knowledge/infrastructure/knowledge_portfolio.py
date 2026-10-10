@@ -16,8 +16,8 @@ import psycopg
 from psycopg.types.json import Jsonb
 from smb_kernel.persistence.connector import PostgresConnector
 
-from smb_requirement_agent.application.errors import PersistenceError
 from smb_requirement_agent.identity.application.ports.access_repository import AccessRepositoryPort
+from smb_requirement_agent.infrastructure.persistence.database_errors import database_error
 from smb_requirement_agent.infrastructure.persistence.postgres_session import PostgresSession
 from smb_requirement_agent.knowledge.application.ports.corpus_membership import CorpusMembershipPort
 from smb_requirement_agent.knowledge.application.ports.knowledge_portfolio import (
@@ -190,7 +190,7 @@ class PostgresKnowledgePortfolio:
             with self._connector.connection() as connection:
                 return list(connection.execute(sql, parameters).fetchall())
         except psycopg.Error as exc:
-            raise PersistenceError(f"{what} could not be read.") from exc
+            raise database_error(exc, f"{what} could not be read.") from exc
 
 
 class PostgresFindingNudges:

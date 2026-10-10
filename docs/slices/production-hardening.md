@@ -2,7 +2,7 @@
 
 ## Status
 
-**Specified 2026-10-08; in progress since 2026-10-09.** Phase 0 (platform-kernel v1.2.0, and this repository's move to it) is delivered. PR 1, PR 8, PR 2, PR 4a, PR 4b, PR 5 and PR 6 are delivered, which completes the pilot gate (Phase 1), and so is PR 7 of Phase 2 (see their entries and Validation Evidence). The rest of Phase 2 and Phase 3 are not implemented yet. This record keeps the
+**Specified 2026-10-08; in progress since 2026-10-09.** Phase 0 (platform-kernel v1.2.0, and this repository's move to it) is delivered. PR 1, PR 8, PR 2, PR 4a, PR 4b, PR 5 and PR 6 are delivered, which completes the pilot gate (Phase 1), and so are PR 7 and PR 3 of Phase 2 (see their entries and Validation Evidence). The rest of Phase 2 and Phase 3 are not implemented yet. This record keeps the
 plan for closing every finding of the second production-readiness review (security, deployment and
 CI, reliability and observability, frontend) so it can be scheduled later. When work starts, each
 PR converts its part into the `WORKSPACE.md` §10 sections and fills in Validation Evidence here.
@@ -257,7 +257,21 @@ Then bump `pyproject.toml:12` and `uv.lock`, and wire the new settings. Phase 1 
 
 ## Phase 2: P1 (PRs 3, 9 and 10 need kernel v1.2.0)
 
-**PR 3 · Postgres timeouts and connection budget**
+**PR 3 · Postgres timeouts and connection budget** — *delivered on `claude/production-hardening-pr3`, 2026-10-09* (ADR-0074 amendment)
+- **Session limits on every pooled connection.** `session_limits(settings)` in `composition/persistence.py` is the kernel pool's `configure` hook. It sets `statement_timeout`, `lock_timeout` and `idle_in_transaction_session_timeout` from `DATABASE_STATEMENT_TIMEOUT_SECONDS` (30), `DATABASE_LOCK_TIMEOUT_SECONDS` (5) and `DATABASE_IDLE_TRANSACTION_TIMEOUT_SECONDS` (60).
+  - The plan's four named adapters, and connections taken after `external_call`, all come from the one pool, so the hook covers them.
+  - The values are configurable rather than fixed, so a deployment with a legitimately slow statement can raise one without a release.
+- **`database_busy`.**
+  - `DatabaseBusyError(PersistenceError)` is raised for SQLSTATE 57014 and 55P03 by one helper, `infrastructure/persistence/database_errors.py`. The unit of work and every adapter that caught `psycopg.Error` use it.
+  - The catalogue answers 503 `database_busy`.
+  - Beyond the plan, AI jobs requeue it with backoff (an ADR-0020 amendment line).
+  - An idle transaction that lost its session stays 500 `persistence`: it is a defect in the code holding it.
+- **Connection budget.**
+  - The manifest's `postgres` runs `max_connections=${POSTGRES_MAX_CONNECTIONS:-200}`.
+  - `deployment.md` has "Database connections and limits", with the sizing formula.
+  - Each process's pool is exported on scrape (`watch_db_pool(connector.stats)`) as `smb_db_pool_connections`, `smb_db_pool_max_connections` and `smb_db_pool_requests_waiting`.
+
+*Plan as specified:*
 - **Timeouts:**
   - Use the kernel `configure` hook to set `statement_timeout` (30s), `lock_timeout` (5s) and `idle_in_transaction_session_timeout` (60s) on every pooled connection, including those used after `external_call`, and in `architecture_mapping_stats.py`, `postgres_architecture_jobs.py`, `corpus_counts.py` and `knowledge_portfolio.py`.
   - `lock_timeout` also bounds `pg_advisory_xact_lock` (`postgres_store.py:125-128`).
@@ -616,4 +630,28 @@ ruff format --check .       1257 files already formatted
 mypy src tests              Success: no issues found in 690 source files
 lint-imports                Contracts: 43 kept, 0 broken.
 npm run api:check           no drift
+```
+
+### PR 3 (2026-10-09, branch `claude/production-hardening-pr3`)
+
+Run locally on Python 3.13 against a local PostgreSQL 16 with pgvector, with platform-kernel 1.2.0.
+`docker compose config` renders `max_connections=200` by default, and the override when set.
+
+New PostgreSQL tests check that:
+- a pooled session shows its three limits;
+- `pg_sleep` past the statement limit raises `DatabaseBusyError`;
+- a Requirement advisory lock held elsewhere fails within the lock limit as `DatabaseBusyError`;
+- a transaction left idle past its limit loses its session, and the pool replaces it;
+- through the API, `GET /requirements/{id}` answers 503 `database_busy` while another session
+  holds `ACCESS EXCLUSIVE` on `requirements`, and 200 once it is released;
+- the exporter shows `smb_db_pool_connections` and `smb_db_pool_max_connections`.
+
+The whole suite passes with the limits on every pooled session.
+
+```text
+pytest --cov (PostgreSQL)   1998 passed; total coverage 94.60% (floor 92.5%)
+ruff check .                All checks passed!
+ruff format --check .       1260 files already formatted
+mypy src tests              Success: no issues found in 693 source files
+lint-imports                Contracts: 43 kept, 0 broken.
 ```

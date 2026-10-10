@@ -8,7 +8,7 @@ from typing import cast
 import psycopg
 from smb_kernel.persistence.connector import PostgresConnector
 
-from smb_requirement_agent.application.errors import PersistenceError
+from smb_requirement_agent.infrastructure.persistence.database_errors import database_error
 
 # Rows this much older than any window can no longer count toward one.
 _FORGOTTEN_AFTER = timedelta(hours=1)
@@ -50,7 +50,7 @@ class PostgresProviderCallLog:
                     (call_id, actor_key, now),
                 )
         except psycopg.Error as exc:
-            raise PersistenceError("Counting the provider call failed.") from exc
+            raise database_error(exc, "Counting the provider call failed.") from exc
         return None
 
     def remove(self, actor_key: str, call_id: str) -> None:
@@ -61,7 +61,7 @@ class PostgresProviderCallLog:
                     (actor_key, call_id),
                 )
         except psycopg.Error as exc:
-            raise PersistenceError("Refunding the provider call failed.") from exc
+            raise database_error(exc, "Refunding the provider call failed.") from exc
 
 
 class PostgresProviderSpend:
@@ -78,7 +78,7 @@ class PostgresProviderSpend:
                     (day, tokens),
                 )
         except psycopg.Error as exc:
-            raise PersistenceError("Recording provider token spend failed.") from exc
+            raise database_error(exc, "Recording provider token spend failed.") from exc
 
     def spent(self, day: date) -> int:
         try:
@@ -87,5 +87,5 @@ class PostgresProviderSpend:
                     "SELECT tokens FROM provider_token_spend WHERE day = %s", (day,)
                 ).fetchone()
         except psycopg.Error as exc:
-            raise PersistenceError("Reading provider token spend failed.") from exc
+            raise database_error(exc, "Reading provider token spend failed.") from exc
         return int(cast(int, row[0])) if row else 0

@@ -75,6 +75,8 @@ services:
       POSTGRES_DB: smb_requirements
       POSTGRES_USER: smb
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    # The connection ceiling; size it with docs/operations/deployment.md, "Database connections".
+    command: ["postgres", "-c", "max_connections=${POSTGRES_MAX_CONNECTIONS:-200}"]
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:

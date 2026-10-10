@@ -122,3 +122,37 @@ header-based development personas, and the demo published that on every network 
 - **CI boots the manifest in production.** OIDC discovery is lazy, so the API boots, reports
   ready and refuses an unauthenticated request with a placeholder HTTPS issuer; the deployment
   job checks that, and that fake identity or the fake model is refused.
+
+## Amendment — Bounded database sessions and a sized connection ceiling (2026-10-09)
+
+Production hardening PR 3 (`docs/slices/production-hardening.md`), on platform-kernel 1.2.0's
+pool `configure` hook and `stats()`.
+
+**Before this amendment**
+- A pooled session had no limits. A slow query, or a lock wait behind a long transaction, held a
+  pool connection and its request for as long as it took.
+- A forgotten open transaction held its locks indefinitely.
+- PostgreSQL ran with its default connection ceiling, which nothing related to the pools.
+
+**Decision**
+- **Session limits.** Every pooled connection, in the API and the worker, gets a
+  `statement_timeout` (30s), a `lock_timeout` (5s) and an `idle_in_transaction_session_timeout`
+  (60s) when it is opened. Each can be configured with a `DATABASE_*_TIMEOUT_SECONDS` setting.
+  - The lock timeout also bounds the Requirement advisory locks.
+  - One-shot commands keep direct connections without limits.
+- **A busy database is a 503.** Every adapter translates a cancelled statement (SQLSTATE 57014) or
+  an abandoned lock wait (55P03) into `DatabaseBusyError`, through one helper.
+  - The API answers it with 503 `database_busy`.
+  - AI jobs retry it with backoff (ADR-0020).
+  - Other database failures stay 500 `persistence`, including an idle transaction that lost its
+    session, since that is a defect in the code holding it.
+- **A sized ceiling.** The manifest starts PostgreSQL with
+  `max_connections=${POSTGRES_MAX_CONNECTIONS:-200}`, and `deployment.md` gives the sizing
+  formula.
+- **Pool metrics.** Each process reports `smb_db_pool_connections` (by state),
+  `smb_db_pool_max_connections` and `smb_db_pool_requests_waiting` from the pool on every scrape.
+
+**Consequences**
+- A request stuck behind a lock fails in seconds and says so, instead of holding a connection.
+- A legitimate statement longer than 30 seconds in the API or worker needs a higher
+  `DATABASE_STATEMENT_TIMEOUT_SECONDS`, or a move to a one-shot command.

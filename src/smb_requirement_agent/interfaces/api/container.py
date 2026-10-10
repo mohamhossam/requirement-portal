@@ -523,7 +523,7 @@ def _build_container(
         XlsxBacklogExporter(),
     )
     metrics = Metrics()
-    persistence = build_persistence(settings, resources, resolved_clock)
+    persistence = build_persistence(settings, resources, resolved_clock, metrics)
     # Every model response's tokens count toward one budget for all processes (ADR-0106).
     spend_budget = ProviderSpendBudget(
         settings.provider_daily_token_budget, resolved_clock, persistence.provider_spend

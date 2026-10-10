@@ -12,6 +12,7 @@ from smb_kernel.persistence.connector import PostgresConnector
 
 from smb_requirement_agent.application.errors import PersistenceError
 from smb_requirement_agent.application.ports.external_work import check_external_result
+from smb_requirement_agent.infrastructure.persistence.database_errors import database_error
 from smb_requirement_agent.infrastructure.persistence.migration_runner import (
     latest_packaged_migration,
 )
@@ -77,7 +78,7 @@ class PostgresStore:
         except RaiseException:
             raise
         except psycopg.Error as exc:
-            raise PersistenceError("PostgreSQL operation failed.") from exc
+            raise database_error(exc, "PostgreSQL operation failed.") from exc
 
     def _flush(self, connection: DbConnection) -> None:
         authoritative = set(self._dirty_var.get() or ())

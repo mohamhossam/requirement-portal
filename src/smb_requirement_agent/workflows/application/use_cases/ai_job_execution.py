@@ -577,11 +577,12 @@ class ExecuteAiJob:
         return actor
 
 
-# Outages that pass on their own: a provider rate limit or outage, or a platform service
-# (ADR-0099) that could not be reached. A timeout or unusable output is not retried
-# automatically: the call may have been billed, and a second one may fail the same way.
+# Outages that pass on their own: a provider rate limit or outage, a platform service
+# (ADR-0099) that could not be reached, or a database too busy to answer within its session
+# limits. A model timeout or unusable output is not retried automatically: the call may have
+# been billed, and a second one may fail the same way.
 TRANSIENT_FAILURE_CODES = frozenset(
-    {"model_rate_limit", "model_unavailable", "platform_service_unavailable"}
+    {"model_rate_limit", "model_unavailable", "platform_service_unavailable", "database_busy"}
 )
 
 

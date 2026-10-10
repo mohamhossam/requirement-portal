@@ -38,6 +38,7 @@ from smb_requirement_agent.analysis.domain.value_objects import HumanClarificati
 from smb_requirement_agent.application.errors import (
     ArtifactVersionConflictError,
     AuthenticationRequiredError,
+    DatabaseBusyError,
     DocumentExtractionBusyError,
     DocumentExtractionError,
     DocumentExtractionTimeoutError,
@@ -344,6 +345,7 @@ EXPECTED_STATUS_CODES: dict[type[Exception], int] = {
     InvalidStoryContentError: 422,
     StoryGenerationError: 502,
     PersistenceError: 500,
+    DatabaseBusyError: 503,
     ProviderRateLimitExceededError: 429,
     ProviderBudgetExhaustedError: 429,
     RequirementIntakeTooLargeError: 422,

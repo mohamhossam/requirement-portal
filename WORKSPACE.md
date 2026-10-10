@@ -901,6 +901,11 @@ python -m smb_requirement_agent.interfaces.worker
 The worker process exits non-zero if a worker becomes unhealthy, so run it under
 a supervisor that restarts it. Size `DATABASE_POOL_MAX_SIZE` per process for its
 concurrent requests plus workers; every API and worker process has its own pool.
+Pooled sessions run under `DATABASE_STATEMENT_TIMEOUT_SECONDS` (30),
+`DATABASE_LOCK_TIMEOUT_SECONDS` (5) and `DATABASE_IDLE_TRANSACTION_TIMEOUT_SECONDS` (60).
+A statement or lock wait past its limit answers 503 `database_busy`. Size PostgreSQL's
+`POSTGRES_MAX_CONNECTIONS` for every pool (`docs/operations/deployment.md`, "Database
+connections and limits").
 
 Production identity uses `APP_ENV=production`, `IDENTITY_PROVIDER=oidc`,
 `OIDC_ISSUER_URL`, `OIDC_AUDIENCE`, `OIDC_CLIENT_ID`, and `OIDC_ROLES_CLAIM`.

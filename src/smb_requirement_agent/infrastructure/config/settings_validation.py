@@ -235,6 +235,16 @@ def validate_settings(settings: Settings) -> None:
         raise ConfigurationError("DATABASE_POOL_MAX_SIZE must be at least 1.")
     if settings.database_pool_timeout_seconds <= 0:
         raise ConfigurationError("DATABASE_POOL_TIMEOUT_SECONDS must be greater than zero.")
+    for name, seconds in (
+        ("DATABASE_STATEMENT_TIMEOUT_SECONDS", settings.database_statement_timeout_seconds),
+        ("DATABASE_LOCK_TIMEOUT_SECONDS", settings.database_lock_timeout_seconds),
+        (
+            "DATABASE_IDLE_TRANSACTION_TIMEOUT_SECONDS",
+            settings.database_idle_transaction_timeout_seconds,
+        ),
+    ):
+        if seconds <= 0:
+            raise ConfigurationError(f"{name} must be greater than zero.")
     if (
         not settings.api_background_workers
         and settings.persistence_provider is PersistenceProvider.MEMORY

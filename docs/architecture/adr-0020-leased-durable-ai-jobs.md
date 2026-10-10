@@ -103,6 +103,8 @@ its own, but the attempt that met it failed the job at once and left the retry t
   creator is notified as before.
 - **Timeouts and unusable output are not retried.** The call may already have been billed, and a
   second one is likely to fail the same way.
+- **A busy database is transient too** (production hardening PR 3). `database_busy`, a statement or
+  lock wait past its session limit, requeues the job like the outages above.
 - **Backoff.** `AI_JOB_RETRY_FIRST_SECONDS` (30), doubling per attempt up to
   `AI_JOB_RETRY_MAX_SECONDS` (300).
 - **Order holds.** No claim takes a job before its `next_attempt_at`, and while one waits, its

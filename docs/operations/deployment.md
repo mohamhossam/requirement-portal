@@ -302,6 +302,37 @@ from this realm file changes only new realms.
 default 14) are removed after each successful run. Schedule it, copy each dump off the host, and
 restore by the steps in `backup-restore.md`, which also states the proposed RPO and RTO.
 
+## Database connections and limits
+
+**Session limits.** Every pooled connection, in the API and the worker, runs under three limits:
+
+| Setting | Default | What happens past it |
+|---|---|---|
+| `DATABASE_STATEMENT_TIMEOUT_SECONDS` | 30 | The statement is cancelled. |
+| `DATABASE_LOCK_TIMEOUT_SECONDS` | 5 | The wait for a row, table or Requirement lock is abandoned. |
+| `DATABASE_IDLE_TRANSACTION_TIMEOUT_SECONDS` | 60 | A transaction left open and idle loses its session, so its locks are released. |
+
+- A cancelled statement or abandoned lock wait answers 503 `database_busy`. An AI job retries it
+  with backoff, like a provider outage.
+- One-shot commands (`migrate`, `maintenance`, `retention`, `backup`) use direct connections
+  without these limits.
+
+**The connection ceiling.** PostgreSQL accepts at most `POSTGRES_MAX_CONNECTIONS` connections
+(a Compose variable, default 200). Size it as follows:
+
+```text
+POSTGRES_MAX_CONNECTIONS >= (API containers + worker containers) × DATABASE_POOL_MAX_SIZE
+                            + 5   one-shot commands (migrate, maintenance, retention, backup) and psql
+                            + 3   PostgreSQL's reserved superuser connections
+                            + monitoring (one per exporter)
+```
+
+- With the defaults (one API, one worker, a pool of 20), 48 are needed.
+- Raise it before adding replicas. Each connection costs PostgreSQL memory, so keep pools no
+  larger than the concurrent work needs.
+- A managed PostgreSQL sets its own ceiling; size against that.
+- `smb_db_pool_connections` shows each process's pool in use.
+
 ## Retention
 
 Read notifications are deleted after `NOTIFICATION_RETENTION_DAYS` (default 90)
@@ -357,6 +388,7 @@ never be reached through the proxy. Scrape each container.
 | `smb_provider_tokens_total` | `provider`, `model`, `direction` | Tokens the provider reported consuming (`usage` in its response); `direction` is `input` or `output`. Multiply by your price per token for spend. |
 | `smb_ai_jobs_total` | `operation`, `status` | Job attempts by resulting status. |
 | `smb_ai_job_duration_seconds` | `operation` | Job attempt duration. |
+| `smb_db_pool_connections` | `state` | The process's database pool: connections `in_use` and `idle`, read on each scrape. With `smb_db_pool_max_connections` and `smb_db_pool_requests_waiting`. |
 
 Suggested alerts:
 - a rising rate of `smb_provider_requests_total` with `outcome` of `4xx` or
@@ -365,7 +397,9 @@ Suggested alerts:
 - the rate of `smb_provider_tokens_total` against a daily token budget, which
   is the direct spend signal;
 - `status="429"` in `smb_http_requests_total` (the rate limit is biting);
-- `smb_http_request_duration_seconds` p95 on generation routes.
+- `smb_http_request_duration_seconds` p95 on generation routes;
+- `smb_db_pool_requests_waiting` above 0 for minutes, or `in_use` at the pool maximum
+  (the pool is too small, or queries are slow).
 
 ### Monitoring add-on (Prometheus and Grafana)
 

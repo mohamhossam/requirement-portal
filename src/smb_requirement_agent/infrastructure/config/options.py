@@ -100,6 +100,13 @@ DEFAULT_DATABASE_POOL_MAX_SIZE = 20
 DEFAULT_DATABASE_POOL_TIMEOUT_SECONDS = 10.0
 
 
+# Session limits on every pooled connection (production hardening PR 3). One-shot commands
+# (migrate, maintenance, retention) use direct connections without them.
+DEFAULT_DATABASE_STATEMENT_TIMEOUT_SECONDS = 30.0
+DEFAULT_DATABASE_LOCK_TIMEOUT_SECONDS = 5.0
+DEFAULT_DATABASE_IDLE_TRANSACTION_TIMEOUT_SECONDS = 60.0
+
+
 DEFAULT_AI_JOB_POLL_INTERVAL_SECONDS = 1.0
 
 
