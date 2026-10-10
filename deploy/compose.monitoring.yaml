@@ -59,15 +59,15 @@ services:
     security_opt:
       - no-new-privileges:true
 
-  # Connections, settings and database size, read as the application's own user.
+  # Connections, settings and database size, read as the application's own user. The
+  # password is passed like the API's DATABASE_URL: Compose can give a read-only container
+  # only a file-backed secret, and POSTGRES_PASSWORD is not a file.
   postgres-exporter:
     image: prometheuscommunity/postgres-exporter:v0.20.1@sha256:ac5ec343104fae0e2d84a27bb8d69b38430a11910c5382cad85d478d2bab713e
     environment:
       DATA_SOURCE_URI: postgres:5432/smb_requirements?sslmode=disable
       DATA_SOURCE_USER: smb
-      DATA_SOURCE_PASS_FILE: /run/secrets/postgres_password
-    secrets:
-      - postgres_password
+      DATA_SOURCE_PASS: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
     restart: unless-stopped
     read_only: true
     security_opt:
@@ -129,7 +129,3 @@ volumes:
   prometheus_data:
   grafana_data:
   alertmanager_data:
-
-secrets:
-  postgres_password:
-    environment: POSTGRES_PASSWORD

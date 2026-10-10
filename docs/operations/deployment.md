@@ -416,7 +416,7 @@ them and shows them. It adds five containers.
 - **Alertmanager** sends warning and critical alerts to one receiver. Info alerts are only shown.
   It is not published.
 - **postgres-exporter** reports PostgreSQL's connections, `max_connections` and database size.
-  It reads them as the application's user, with the password passed as a secret file.
+  It reads them as the application's user, with the same password the API and worker use.
 - **node-exporter** reports the host's disks, memory and CPU through a read-only view of its root.
 - **Grafana** opens on the provisioned **Requirement AI — overview** dashboard: API traffic and
   slow routes, provider requests, latency and tokens by model, and AI job outcomes. It is

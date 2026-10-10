@@ -323,7 +323,7 @@ Then bump `pyproject.toml:12` and `uv.lock`, and wire the new settings. Phase 1 
   - `smb_provider_spend_blocked_total`. `ProviderSpendBudget` takes a required `held_back` callable and reports `start` and `claim`.
 - **Monitoring overlay.**
   - Alertmanager v0.34.1. Its entrypoint renders the configuration for `ALERTMANAGER_RECEIVER` (`none`, `webhook` or `slack`). The URL goes to a mode-600 tmpfs file used through `url_file`/`api_url_file`, and is never written into the configuration.
-  - postgres-exporter v0.20.1. Its password is a Compose secret sourced from `POSTGRES_PASSWORD`, read through `DATA_SOURCE_PASS_FILE`.
+  - postgres-exporter v0.20.1, reading as the application's user. Its password is passed as `DATA_SOURCE_PASS`, like the API's `DATABASE_URL`: Compose refuses an environment-sourced secret for a read-only container ("`file` is the sole supported option"), which CI's first run showed.
   - node-exporter v1.12.1.
   - All three are digest-pinned and scraped, and Prometheus sends alerts to Alertmanager.
 - **Alerts.** There are 18 alerts, each with `runbook_url` to `docs/operations/alerts.md`.
