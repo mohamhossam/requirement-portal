@@ -18,6 +18,8 @@ import httpx
 from smb_kernel.http.client import CircuitBreaker, InternalHttpClient
 from smb_kernel.http.client_credentials import ClientCredentialsTokenSource
 from smb_kernel.observability.metrics import MeteredTransport, Metrics
+from smb_kernel.observability.tracing import TracedTransport
+from smb_kernel.observability.tracing_setup import Tracing
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.governance.application.ports.backlog_export import BacklogExportPort
@@ -27,6 +29,7 @@ from smb_requirement_agent.governance.application.use_cases.knowledge_handoff im
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.documents.ingestion_loop import IngestionLoop
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
+from smb_requirement_agent.interfaces.api.composition.tracing import identity_client
 from smb_requirement_agent.references.application.ports.architecture_knowledge import (
     ArchitectureKnowledgePort,
 )
@@ -77,7 +80,7 @@ class KnowledgeService:
 
 
 def build_knowledge_service(
-    settings: Settings, resources: ExitStack, metrics: Metrics
+    settings: Settings, resources: ExitStack, metrics: Metrics, tracing: Tracing
 ) -> KnowledgeService:
     url = settings.knowledge_service_url
     if url is None:
@@ -88,10 +91,19 @@ def build_knowledge_service(
             FakeKnowledgeViews(),
             remote=False,
         )
+    # The one peer sent the trace context, so a request's trace continues in the
+    # knowledge portal (ADR-0110). With no portal connected nothing is sent at all.
     http = resources.enter_context(
-        httpx.Client(transport=MeteredTransport(metrics, "knowledge", httpx.HTTPTransport()))
+        httpx.Client(
+            transport=TracedTransport(
+                MeteredTransport(metrics, "knowledge", httpx.HTTPTransport()),
+                tracer_provider=tracing.tracer_provider,
+                peer="knowledge",
+                propagate=True,
+            )
+        )
     )
-    token = _service_token(settings, resources, settings.requirement_service_token or "")
+    token = _service_token(settings, resources, tracing, settings.requirement_service_token or "")
     # One breaker for the one peer: either client's failures pause both.
     breaker = CircuitBreaker()
     client = InternalHttpClient(url, token, service="knowledge", http=http, breaker=breaker)
@@ -116,7 +128,7 @@ def build_knowledge_service(
 
 
 def _service_token(
-    settings: Settings, resources: ExitStack, shared: str
+    settings: Settings, resources: ExitStack, tracing: Tracing, shared: str
 ) -> str | Callable[[], str]:
     """How this service proves itself to the knowledge service (ADR-0099, ADR-0104).
 
@@ -133,7 +145,7 @@ def _service_token(
                     settings.oidc_issuer_url,
                     client_id,
                     secret,
-                    client=httpx.Client(timeout=10),
+                    client=identity_client(tracing),
                 )
             )
         )

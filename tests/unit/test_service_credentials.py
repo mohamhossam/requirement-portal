@@ -20,6 +20,7 @@ from fastapi.testclient import TestClient
 from smb_kernel.errors import ServiceAuthenticationError
 from smb_kernel.http.client_credentials import ClientCredentialsTokenSource
 from smb_kernel.http.service_auth import ServiceTokenVerifier, ServiceVerifierChain
+from smb_kernel.observability.tracing_setup import NO_TRACING
 
 from smb_requirement_agent.infrastructure.config.options import ConfigurationError, LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
@@ -66,7 +67,7 @@ def issuer(monkeypatch: pytest.MonkeyPatch) -> None:
     real = httpx.Client
 
     def client(**options: Any) -> httpx.Client:
-        return real(transport=httpx.MockTransport(handle), **options)
+        return real(**{**options, "transport": httpx.MockTransport(handle)})
 
     monkeypatch.setattr(identity.httpx, "Client", client)
 
@@ -150,11 +151,13 @@ def test_with_client_credentials_the_issuer_grants_the_outgoing_tokens() -> None
 class TestIncoming:
     def test_with_neither_credential_nothing_is_admitted(self) -> None:
         with ExitStack() as resources:
-            assert build_internal_verifier(_settings(), resources) is None
+            assert build_internal_verifier(_settings(), resources, NO_TRACING) is None
 
     def test_a_shared_token_alone_is_checked_in_memory(self) -> None:
         with ExitStack() as resources:
-            verifier = build_internal_verifier(_settings(knowledge_service_token=TOKEN), resources)
+            verifier = build_internal_verifier(
+                _settings(knowledge_service_token=TOKEN), resources, NO_TRACING
+            )
         assert isinstance(verifier, ServiceTokenVerifier)
 
     @pytest.mark.usefixtures("issuer")
@@ -163,7 +166,7 @@ class TestIncoming:
             oidc_issuer_url=ISSUER, knowledge_service_client_id="knowledge-service"
         )
         with ExitStack() as resources:
-            verifier = build_internal_verifier(settings, resources)
+            verifier = build_internal_verifier(settings, resources, NO_TRACING)
             assert verifier is not None
             assert verifier.caller(f"Bearer {_granted()}") == "knowledge"
             for refused in (
@@ -182,7 +185,7 @@ class TestIncoming:
             knowledge_service_token=TOKEN,
         )
         with ExitStack() as resources:
-            verifier = build_internal_verifier(settings, resources)
+            verifier = build_internal_verifier(settings, resources, NO_TRACING)
             assert isinstance(verifier, ServiceVerifierChain)
             assert verifier.caller(f"Bearer {TOKEN}") == "knowledge"
             assert verifier.caller(f"Bearer {_granted()}") == "knowledge"

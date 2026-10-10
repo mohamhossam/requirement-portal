@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from smb_kernel.observability.metrics import Metrics
+from smb_kernel.observability.tracing_setup import Tracing
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.infrastructure.config.settings import Settings
@@ -55,6 +56,7 @@ def build_ai_jobs(
     clock: ClockPort,
     access: RequirementAccessService,
     metrics: Metrics,
+    tracing: Tracing,
     spend_budget: ProviderSpendBudget,
 ) -> AiJobWiring:
     execute = ExecuteAiJob(
@@ -107,6 +109,7 @@ def build_ai_jobs(
                 execute,
                 clock,
                 metrics,
+                tracing,
                 poll_interval_seconds=settings.ai_job_poll_interval_seconds,
                 lease_seconds=settings.ai_job_lease_seconds,
                 heartbeat_seconds=settings.ai_job_heartbeat_seconds,

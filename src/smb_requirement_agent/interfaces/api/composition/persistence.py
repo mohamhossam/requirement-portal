@@ -16,6 +16,7 @@ from threading import RLock
 import httpx as httpx
 from smb_kernel.documents.ports import DocumentStoragePort
 from smb_kernel.observability.metrics import Metrics
+from smb_kernel.observability.tracing_setup import Tracing
 from smb_kernel.persistence.connector import (
     POOL_MAX_IDLE_SECONDS,
     DbConnection,
@@ -443,15 +444,30 @@ def session_limits(settings: Settings) -> Callable[[DbConnection], None]:
     return configure
 
 
+def pooled_session(settings: Settings, tracing: Tracing) -> Callable[[DbConnection], None]:
+    """Each new pooled connection: its session limits, and its statements traced (ADR-0110)."""
+    limit = session_limits(settings)
+
+    def configure(connection: DbConnection) -> None:
+        limit(connection)
+        tracing.instrument_connection(connection)
+
+    return configure
+
+
 def _milliseconds(seconds: float) -> str:
     return f"{max(1, round(seconds * 1000))}ms"
 
 
 def build_persistence(
-    settings: Settings, resources: ExitStack, resolved_clock: ClockPort, metrics: Metrics
+    settings: Settings,
+    resources: ExitStack,
+    resolved_clock: ClockPort,
+    metrics: Metrics,
+    tracing: Tracing,
 ) -> PersistenceAdapters:
     if settings.persistence_provider is PersistenceProvider.POSTGRES:
-        return _postgres(settings, resources, resolved_clock, metrics)
+        return _postgres(settings, resources, resolved_clock, metrics, tracing)
     return _memory(settings, resources, resolved_clock)
 
 
@@ -460,6 +476,7 @@ def _postgres(
     resources: ExitStack,
     resolved_clock: ClockPort,
     metrics: Metrics,
+    tracing: Tracing,
 ) -> PersistenceAdapters:
     # Imported here, not at module load, so memory/fake runs never need the
     # PostgreSQL driver (psycopg) installed. Only this branch requires it.
@@ -473,7 +490,7 @@ def _postgres(
         acquire_timeout_seconds=settings.database_pool_timeout_seconds,
         max_idle_seconds=POOL_MAX_IDLE_SECONDS,
         name="requirement-portal",
-        configure=session_limits(settings),
+        configure=pooled_session(settings, tracing),
     )
     metrics.watch_db_pool(connector.stats)
     connector.open()

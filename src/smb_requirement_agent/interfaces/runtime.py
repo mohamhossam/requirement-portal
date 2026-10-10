@@ -5,16 +5,13 @@ from __future__ import annotations
 import logging
 import threading
 from collections.abc import Callable, Mapping
-from importlib.metadata import version
 
 from smb_kernel.observability.metrics import serve_metrics
 
 from smb_requirement_agent.interfaces.api.container import BackgroundWorker, Container
+from smb_requirement_agent.interfaces.release import APPLICATION_VERSION, SERVICE_NAME
 
 _LOGGER = logging.getLogger(__name__)
-# The installed package's version, which a release tag must match (ADR-0108).
-APPLICATION_VERSION = version("smb-requirement-agent")
-SERVICE_NAME = "requirement-portal"
 # How often each exporting process samples the AI job queue. Every process reports the
 # same queue, so the alerts take the largest value (docs/operations/alerts.md).
 QUEUE_SAMPLE_SECONDS = 15.0

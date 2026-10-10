@@ -4,7 +4,7 @@ import logging
 import re
 import uuid
 from collections.abc import AsyncIterator, Callable
-from contextlib import ExitStack, asynccontextmanager
+from contextlib import ExitStack, asynccontextmanager, nullcontext
 from dataclasses import asdict
 from time import perf_counter
 
@@ -14,6 +14,7 @@ from fastapi import FastAPI, Request, Response
 from smb_kernel.http.body_limit import BodyLimits, RequestBodyLimit
 from smb_kernel.http.service_auth import INTERNAL_PREFIX, InternalRouteGuard
 from smb_kernel.observability.correlation import correlation_scope
+from smb_kernel.observability.tracing_setup import Tracing
 from starlette.middleware.base import RequestResponseEndpoint
 from starlette.types import ASGIApp, Receive, Scope, Send
 
@@ -60,14 +61,16 @@ from smb_requirement_agent.interfaces.api.routes.review import router as review_
 from smb_requirement_agent.interfaces.api.routes.revisions import router as revisions_router
 from smb_requirement_agent.interfaces.api.routes.source_impact import router as source_impact_router
 from smb_requirement_agent.interfaces.api.routes.story import router as story_router
+from smb_requirement_agent.interfaces.release import APPLICATION_VERSION
 from smb_requirement_agent.interfaces.runtime import (
-    APPLICATION_VERSION,
     start_metrics,
     start_workers,
     stop_workers_and_close,
 )
 
 _REQUESTS = logging.getLogger("smb_requirement_agent.http")
+# Orchestrator probes: frequent, and nothing to trace.
+_UNTRACED_PATHS = frozenset({"/health", "/ready"})
 # A readiness probe answers within this, or reports the database unavailable.
 READINESS_TIMEOUT_SECONDS = 2.5
 
@@ -99,7 +102,8 @@ class InternalAccess:
         if scope["type"] != "http" or not internal:
             await self._app(scope, receive, send)
             return
-        guard = self._guard_for(scope["app"].state.container.settings)
+        container = scope["app"].state.container
+        guard = self._guard_for(container.settings, container.tracing)
         if guard is None:
             await send(
                 {
@@ -112,17 +116,18 @@ class InternalAccess:
             return
         await guard(scope, receive, send)
 
-    def _guard_for(self, settings: Settings) -> InternalRouteGuard | None:
+    def _guard_for(self, settings: Settings, tracing: Tracing) -> InternalRouteGuard | None:
         key = (
             settings.knowledge_service_token,
             settings.knowledge_service_client_id,
             settings.oidc_issuer_url,
             settings.oidc_allowed_algorithms,
+            tracing,
         )
         if key != self._key:
             self._resources.close()
             self._resources = ExitStack()
-            verifier = build_internal_verifier(settings, self._resources)
+            verifier = build_internal_verifier(settings, self._resources, tracing)
             self._guard = None if verifier is None else InternalRouteGuard(self._app, verifier)
             self._key = key
         return self._guard
@@ -170,6 +175,16 @@ def create_app(container_factory: Callable[[], Container] = build_container) -> 
         title="SMB AI Requirement Breakdown Agent",
         version=APPLICATION_VERSION,
         lifespan=lifespan,
+        # FastAPI's own telemetry records raw paths, queries and exception messages,
+        # and configures itself from OTEL_* variables; requests are traced below
+        # instead, by route template (ADR-0110).
+        telemetry={
+            "tracing": False,
+            "metrics": False,
+            "logs": False,
+            "operation_spans": False,
+            "auto_configure": False,
+        },
     )
     register_error_handlers(application)
     # Registered before the trace middleware, so it runs inside it: a refused
@@ -190,7 +205,14 @@ def create_app(container_factory: Callable[[], Container] = build_container) -> 
         container: Container = request.app.state.container
         trace = container.debug_trace
         started = perf_counter()
-        with correlation_scope(correlation_id):
+        request_span = (
+            nullcontext(None)
+            if request.url.path in _UNTRACED_PATHS
+            else container.tracing.request_span(
+                request.method, request.headers, {"request.correlation_id": correlation_id}
+            )
+        )
+        with correlation_scope(correlation_id), request_span as span:
             trace.record(
                 "http.request_started",
                 method=request.method,
@@ -202,9 +224,10 @@ def create_app(container_factory: Callable[[], Container] = build_container) -> 
                 response: Response = await call_next(request)
             except Exception as exc:
                 elapsed = perf_counter() - started
-                container.metrics.record_http(
-                    request.method, _route_template(request), 500, elapsed
-                )
+                route = _route_template(request)
+                container.metrics.record_http(request.method, route, 500, elapsed)
+                if span is not None:
+                    span.finish(route, 500)
                 trace.record(
                     "http.request_failed",
                     method=request.method,
@@ -218,6 +241,8 @@ def create_app(container_factory: Callable[[], Container] = build_container) -> 
             elapsed = perf_counter() - started
             route = _route_template(request)
             container.metrics.record_http(request.method, route, response.status_code, elapsed)
+            if span is not None:
+                span.finish(route, response.status_code)
             # The route template, never the path: paths carry identifiers and
             # queries carry search text.
             _REQUESTS.info(

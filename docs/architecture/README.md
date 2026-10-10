@@ -132,3 +132,4 @@ Bounded contexts: [context map](context-map.md) and [ubiquitous language](ubiqui
 - [ADR-0106: Provider limits shared by every process, a daily token budget, and edge limits](adr-0106-shared-provider-limits.md) — Accepted; implemented 2026-10-09 (production hardening PR 7)
 - [ADR-0108: Signed releases deployed by tag, backups, and expand/contract migrations](adr-0108-releases-backups-and-migrations.md) — Accepted; implemented 2026-10-09 (production hardening PR 6)
 - [ADR-0109: Frontend logic changes during the UI redesign are recorded exceptions](adr-0109-frontend-logic-exceptions.md) — Accepted; recorded 2026-10-09 (production hardening PR 5)
+- [ADR-0110: Optional tracing: requests, jobs, SQL and calls, with trace context only for peers](adr-0110-optional-tracing.md) — Accepted; implemented 2026-10-10 (production hardening PR 14)

@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from smb_kernel.observability.metrics import Metrics
+from smb_kernel.observability.tracing_setup import NO_TRACING
 
 from smb_requirement_agent.analysis.infrastructure.llm.fake_requirement_analyzer import (
     FakeRequirementAnalyzer,
@@ -600,7 +601,9 @@ class TestSettings:
 
 class TestContainer:
     def test_fake_provider_selects_the_fake_analyzer(self) -> None:
-        adapters = build_llm_adapters(Settings(llm_provider=LLMProvider.FAKE), Metrics(), _no_spend)
+        adapters = build_llm_adapters(
+            Settings(llm_provider=LLMProvider.FAKE), Metrics(), NO_TRACING, _no_spend
+        )
 
         assert isinstance(adapters.analyzer, FakeRequirementAnalyzer)
         assert isinstance(adapters.knowledge_embedding, FakeKnowledgeEmbedding)
@@ -609,7 +612,8 @@ class TestContainer:
         settings = Settings(llm_provider=LLMProvider.OPENAI, openai_api_key="sk-test")
 
         assert isinstance(
-            build_llm_adapters(settings, Metrics(), _no_spend).analyzer, OpenAIRequirementAnalyzer
+            build_llm_adapters(settings, Metrics(), NO_TRACING, _no_spend).analyzer,
+            OpenAIRequirementAnalyzer,
         )
 
     def test_local_provider_selects_all_local_adapters(self) -> None:
@@ -619,7 +623,7 @@ class TestContainer:
             local_embedding_model="embedding-768",
         )
 
-        adapters = build_llm_adapters(settings, Metrics(), _no_spend)
+        adapters = build_llm_adapters(settings, Metrics(), NO_TRACING, _no_spend)
         assert isinstance(adapters.analyzer, LocalRequirementAnalyzer)
         assert isinstance(adapters.epic_generator, LocalEpicGenerator)
         assert isinstance(adapters.feature_generator, LocalFeatureGenerator)
@@ -633,7 +637,7 @@ class TestContainer:
             openrouter_api_key="sk-or-test",
         )
 
-        adapters = build_llm_adapters(settings, Metrics(), _no_spend)
+        adapters = build_llm_adapters(settings, Metrics(), NO_TRACING, _no_spend)
 
         assert isinstance(adapters.analyzer, OpenRouterRequirementAnalyzer)
         assert isinstance(adapters.epic_generator, OpenRouterEpicGenerator)
@@ -651,11 +655,11 @@ class TestContainer:
         settings = Settings(llm_provider=LLMProvider.OPENAI, openai_api_key="sk-test")
 
         assert isinstance(
-            build_llm_adapters(settings, Metrics(), _no_spend).story_quality_evaluator,
+            build_llm_adapters(settings, Metrics(), NO_TRACING, _no_spend).story_quality_evaluator,
             OpenAIStoryQualityEvaluator,
         )
         assert isinstance(
-            build_llm_adapters(settings, Metrics(), _no_spend).knowledge_embedding,
+            build_llm_adapters(settings, Metrics(), NO_TRACING, _no_spend).knowledge_embedding,
             OpenAIKnowledgeEmbedding,
         )
 
@@ -703,6 +707,7 @@ def test_provider_construction_failure_closes_the_owned_client(
                 local_embedding_model="test-embedding-model",
             ),
             Metrics(),
+            NO_TRACING,
             _no_spend,
         )
     client.close.assert_called_once()
@@ -725,6 +730,7 @@ def test_provider_cleanup_closes_one_shared_client_once(monkeypatch: pytest.Monk
             local_embedding_model="test-embedding-model",
         ),
         Metrics(),
+        NO_TRACING,
         _no_spend,
     )
     adapters.close()
@@ -858,6 +864,8 @@ class TestOperabilitySettings:
             "LOG_LEVEL",
             "LOG_FORMAT",
             "METRICS_PORT",
+            "OTEL_EXPORTER_OTLP_ENDPOINT",
+            "OTEL_TRACES_SAMPLER_ARG",
         ):
             monkeypatch.delenv(name, raising=False)
 
@@ -868,6 +876,7 @@ class TestOperabilitySettings:
         assert settings.log_level == "INFO"
         assert settings.log_format is LogFormat.TEXT
         assert settings.metrics_port is None
+        assert (settings.tracing_endpoint, settings.tracing_sample_ratio) == (None, 1.0)
 
     def test_reads_the_operator_choices(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("LLM_PROVIDER", "fake")
@@ -877,6 +886,8 @@ class TestOperabilitySettings:
         monkeypatch.setenv("LOG_FORMAT", "JSON")
         monkeypatch.setenv("METRICS_PORT", "9464")
         monkeypatch.setenv("METRICS_HOST", "0.0.0.0")  # noqa: S104 - asserts the value parsed
+        monkeypatch.setenv("OTEL_EXPORTER_OTLP_ENDPOINT", " http://otel-collector:4318 ")
+        monkeypatch.setenv("OTEL_TRACES_SAMPLER_ARG", "0.25")
 
         settings = Settings.from_env()
 
@@ -885,6 +896,8 @@ class TestOperabilitySettings:
         assert settings.log_level == "WARNING"
         assert settings.log_format is LogFormat.JSON
         assert (settings.metrics_host, settings.metrics_port) == ("0.0.0.0", 9464)  # noqa: S104 - asserts the value parsed
+        assert settings.tracing_endpoint == "http://otel-collector:4318"
+        assert settings.tracing_sample_ratio == 0.25
 
     @pytest.mark.parametrize(
         ("name", "value", "message"),
@@ -899,6 +912,11 @@ class TestOperabilitySettings:
             ("METRICS_HOST", "  ", "METRICS_HOST"),
             ("REQUEST_MAX_BODY_BYTES", "100", "REQUEST_MAX_BODY_BYTES"),
             ("REQUEST_MAX_BODY_BYTES", "big", "whole numbers"),
+            ("OTEL_EXPORTER_OTLP_ENDPOINT", "otel-collector:4318", "OTEL_EXPORTER_OTLP_ENDPOINT"),
+            ("OTEL_EXPORTER_OTLP_ENDPOINT", "grpc://collector:4317", "http"),
+            ("OTEL_TRACES_SAMPLER_ARG", "1.5", "OTEL_TRACES_SAMPLER_ARG"),
+            ("OTEL_TRACES_SAMPLER_ARG", "-0.1", "OTEL_TRACES_SAMPLER_ARG"),
+            ("OTEL_TRACES_SAMPLER_ARG", "half", "OTEL_TRACES_SAMPLER_ARG"),
         ],
     )
     def test_rejects_invalid_values_at_startup(

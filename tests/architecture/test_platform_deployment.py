@@ -355,6 +355,17 @@ def test_the_edge_forwards_the_original_scheme_and_sends_hsts_over_https_only() 
     assert "add_header Strict-Transport-Security $strict_transport_security always;" in headers
 
 
+def test_the_edge_drops_a_browsers_trace_context() -> None:
+    """Tracing (ADR-0110): the API starts each request's trace, never the browser."""
+    api = EDGE[EDGE.index("    location /api/ {") :]
+    api = api[: api.index("\n    }\n")]
+    assert 'proxy_set_header traceparent "";' in api
+    assert 'proxy_set_header tracestate "";' in api
+    # Nested locations inherit the parent's headers only while they set none of their own.
+    nested = api[api.index("        location ") :]
+    assert "proxy_set_header" not in nested
+
+
 def test_one_web_image_takes_its_deployment_values_when_it_starts() -> None:
     """The issuer origins and portal link are rendered at start (production hardening PR 12)."""
     web = SERVICES["web"]

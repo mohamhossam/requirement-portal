@@ -12,7 +12,7 @@ from fastapi.testclient import TestClient
 from smb_requirement_agent.interfaces.api import main
 from smb_requirement_agent.interfaces.api.container import build_container
 from smb_requirement_agent.interfaces.api.main import app
-from smb_requirement_agent.interfaces.runtime import APPLICATION_VERSION
+from smb_requirement_agent.interfaces.release import APPLICATION_VERSION
 from tests.conftest import FAKE_PROVIDER_SETTINGS
 
 PYPROJECT = Path(__file__).resolve().parents[2] / "pyproject.toml"

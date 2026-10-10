@@ -12,6 +12,7 @@ from datetime import timedelta
 from typing import cast
 
 from smb_kernel.observability.metrics import Metrics
+from smb_kernel.observability.tracing_setup import NO_TRACING
 from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.jobs.application.ports.ai_jobs import (
@@ -85,6 +86,7 @@ def test_shutdown_keeps_heartbeats_running_then_fences_at_grace_deadline() -> No
         cast(ExecuteAiJob, executor),
         FixedClock(NOW),
         Metrics(),
+        NO_TRACING,
         poll_interval_seconds=0.01,
         lease_seconds=30,
         heartbeat_seconds=0.01,
@@ -171,6 +173,7 @@ def _worker(queue: RecordingQueue, executor: BlockingExecutor) -> PollingAiJobWo
         cast(ExecuteAiJob, executor),
         FixedClock(NOW),
         Metrics(),
+        NO_TRACING,
         poll_interval_seconds=0.01,
         lease_seconds=30,
         heartbeat_seconds=0.01,

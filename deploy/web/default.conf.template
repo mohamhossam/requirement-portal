@@ -130,6 +130,10 @@ server {
         proxy_set_header X-Forwarded-Proto $forwarded_scheme;
         # One correlation ID from the edge to the API's logs and error bodies.
         proxy_set_header X-Request-ID $request_id;
+        # A browser cannot pick the trace a request joins, or force it to be kept:
+        # the API starts its own (ADR-0110).
+        proxy_set_header traceparent "";
+        proxy_set_header tracestate "";
         # Model work runs as durable jobs (ADR-0105), so no request waits on a
         # model; a minute bounds a stuck upstream without cutting off uploads.
         proxy_read_timeout 60s;

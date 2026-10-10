@@ -17,6 +17,7 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 from smb_kernel.errors import AuthenticationRequiredError
 from smb_kernel.identity.ports import IdentityCredential
+from smb_kernel.observability.tracing_setup import NO_TRACING
 
 from smb_requirement_agent.identity.infrastructure.in_memory_identity import (
     InMemoryActorDirectory,
@@ -45,7 +46,7 @@ def issuer(monkeypatch: pytest.MonkeyPatch) -> None:
     real = httpx.Client
 
     def client(**options: Any) -> httpx.Client:
-        return real(transport=httpx.MockTransport(handle), **options)
+        return real(**{**options, "transport": httpx.MockTransport(handle)})
 
     monkeypatch.setattr(identity.httpx, "Client", client)
 
@@ -77,7 +78,7 @@ def _authenticate(credential: IdentityCredential, **changes: Any) -> str:
     )
     with ExitStack() as resources:
         directory = InMemoryActorDirectory(lock=RLock())
-        provider = build_identity(settings, resources, directory, override=None)
+        provider = build_identity(settings, resources, directory, override=None, tracing=NO_TRACING)
         return provider.authenticate(credential).display_name
 
 

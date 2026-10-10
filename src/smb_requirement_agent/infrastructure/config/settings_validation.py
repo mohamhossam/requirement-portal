@@ -83,6 +83,15 @@ def validate_settings(settings: Settings) -> None:
         raise ConfigurationError("METRICS_PORT must be a TCP port between 1 and 65535.")
     if not settings.metrics_host.strip():
         raise ConfigurationError("METRICS_HOST must not be blank.")
+    if settings.tracing_endpoint is not None:
+        endpoint = urlsplit(settings.tracing_endpoint)
+        if endpoint.scheme not in {"http", "https"} or not endpoint.netloc:
+            raise ConfigurationError(
+                "OTEL_EXPORTER_OTLP_ENDPOINT must be an OTLP/HTTP collector's http(s) base URL, "
+                "such as http://otel-collector:4318."
+            )
+    if not 0.0 <= settings.tracing_sample_ratio <= 1.0:
+        raise ConfigurationError("OTEL_TRACES_SAMPLER_ARG must be a number from 0 to 1.")
     if settings.library_scan_mode not in {"clamav", "offline"}:
         raise ConfigurationError("ATTACHMENT_SCAN_MODE must be clamav or offline.")
     if settings.library_scan_mode == "offline" and (

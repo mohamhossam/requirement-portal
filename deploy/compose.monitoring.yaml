@@ -2,7 +2,9 @@
 # - Prometheus scrapes the API and worker exporters (port 9464), PostgreSQL and the
 #   host, and evaluates the alerts (docs/operations/alerts.md);
 # - Alertmanager sends them to the receiver you choose (ALERTMANAGER_RECEIVER);
-# - Grafana shows a ready-made dashboard.
+# - Grafana shows a ready-made dashboard;
+# - the OpenTelemetry Collector receives the API's and workers' traces and Tempo keeps
+#   them, browsed in Grafana's Explore view (ADR-0110).
 # Add this file to the usual command:
 #
 #   export GRAFANA_ADMIN_PASSWORD=...
@@ -11,8 +13,8 @@
 #
 # Grafana is published on 127.0.0.1:3000 only (sign in as `admin`); put it
 # behind TLS and your identity provider before exposing it further. Prometheus
-# and Alertmanager stay on the private network. See docs/operations/deployment.md
-# ("Metrics").
+# and Alertmanager stay on the private network, as do the collector and Tempo. See
+# docs/operations/deployment.md ("Metrics" and "Tracing").
 
 services:
   prometheus:
@@ -128,7 +130,52 @@ services:
       prometheus:
         condition: service_healthy
 
+  # The one OTLP/HTTP endpoint the API and workers export to. It batches and forwards
+  # to Tempo; point OTEL_EXPORTER_OTLP_ENDPOINT at your own collector to skip it.
+  otel-collector:
+    image: otel/opentelemetry-collector:0.159.0@sha256:7725a7a10c87d8853208bdd4bb3439ad3c0d7b32b4292b9300ac07c8daba14a2
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./monitoring/otel-collector/config.yaml:/etc/otelcol/config.yaml:ro
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      tempo:
+        condition: service_started
+
+  # Keeps traces for TEMPO_RETENTION on its volume; Grafana queries it.
+  tempo:
+    image: grafana/tempo:3.1.0@sha256:3076b8dcdfb32fd6bc5ccef85e7b7313e6199b9cb84366257fc17ecb696db5fd
+    command:
+      - -target=all
+      - -config.file=/etc/tempo/tempo.yaml
+      # Both halves of Tempo 3's compaction keep traces this long, then delete them.
+      - -backend-scheduler.provider.work.compaction.block-retention=${TEMPO_RETENTION:-72h}
+      - -backend-worker.compaction.block-retention=${TEMPO_RETENTION:-72h}
+    volumes:
+      - ./monitoring/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
+      - tempo_data:/var/tempo
+    # The image has no shell or HTTP client for a healthcheck; Grafana's data source
+    # check and the deployment job's trace query show it serving.
+    tmpfs:
+      - /tmp
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+
+  # The API and workers send their traces to the bundled collector.
+  api:
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4318}
+  worker:
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4318}
+
 volumes:
   prometheus_data:
   grafana_data:
   alertmanager_data:
+  tempo_data:

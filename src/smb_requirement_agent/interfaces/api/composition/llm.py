@@ -29,6 +29,8 @@ from smb_kernel.observability.metrics import (
     MeteredTransport2,
     Metrics,
 )
+from smb_kernel.observability.tracing import TracedTransport, TracedTransport2
+from smb_kernel.observability.tracing_setup import Tracing
 
 from smb_requirement_agent.analysis.application.ports.reference_analysis import (
     ReferenceProposerPort,
@@ -178,6 +180,7 @@ def _profile_adapters(
     resources: ExitStack,
     debug_trace: DebugTrace,
     metrics: Metrics,
+    tracing: Tracing,
     record_spend: Callable[[int], None],
 ) -> LLMAdapters:
 
@@ -185,7 +188,7 @@ def _profile_adapters(
     if config is None:  # Enforced by Settings for LLM_PROVIDER=profiles.
         raise ConfigurationError("LLM_PROVIDER=profiles requires LLM_CONFIG_PATH.")
     http = resources.enter_context(
-        httpx.Client(transport=_metered(metrics, "profiles", record_spend))
+        httpx.Client(transport=_metered(metrics, tracing, "profiles", record_spend))
     )
     analysis = config.for_task("analysis")
     generation = config.for_task("generation")
@@ -231,20 +234,28 @@ def _profile_adapters(
 
 
 def _metered(
-    metrics: Metrics, provider: str, record_spend: Callable[[int], None]
-) -> MeteredTransport:
-    """Every model request is metered and its reported tokens counted toward the budget."""
-    return MeteredTransport(
-        metrics, provider, SpendCountingTransport(record_spend, httpx.HTTPTransport())
+    metrics: Metrics, tracing: Tracing, provider: str, record_spend: Callable[[int], None]
+) -> TracedTransport:
+    """Every model request is traced and metered, and its reported tokens counted toward
+    the budget. It never carries the trace context: a provider is not a peer (ADR-0110)."""
+    return TracedTransport(
+        MeteredTransport(
+            metrics, provider, SpendCountingTransport(record_spend, httpx.HTTPTransport())
+        ),
+        tracer_provider=tracing.tracer_provider,
+        peer=provider,
     )
 
 
 def build_llm_adapters(
-    settings: Settings, metrics: Metrics, record_spend: Callable[[int], None]
+    settings: Settings,
+    metrics: Metrics,
+    tracing: Tracing,
+    record_spend: Callable[[int], None],
 ) -> LLMAdapters:
     """`record_spend` receives the tokens each model response reports (ADR-0106)."""
     with ExitStack() as resources:
-        result = _build_llm_adapters(settings, resources, metrics, record_spend)
+        result = _build_llm_adapters(settings, resources, metrics, tracing, record_spend)
         return replace(result, resources=resources.pop_all())
 
 
@@ -252,6 +263,7 @@ def _build_llm_adapters(
     settings: Settings,
     resources: ExitStack,
     metrics: Metrics,
+    tracing: Tracing,
     record_spend: Callable[[int], None],
 ) -> LLMAdapters:
     """Select the configured provider once and construct its focused adapters."""
@@ -274,7 +286,7 @@ def _build_llm_adapters(
     )
     resources.callback(debug_trace.close)
     if settings.llm_provider is LLMProvider.PROFILES:
-        return _profile_adapters(settings, resources, debug_trace, metrics, record_spend)
+        return _profile_adapters(settings, resources, debug_trace, metrics, tracing, record_spend)
     if settings.llm_provider is LLMProvider.FAKE:
         return LLMAdapters(
             analyzer=FakeRequirementAnalyzer(),
@@ -292,7 +304,7 @@ def _build_llm_adapters(
         )
     if settings.llm_provider is LLMProvider.LOCAL:
         http_client = resources.enter_context(
-            httpx.Client(transport=_metered(metrics, "local", record_spend))
+            httpx.Client(transport=_metered(metrics, tracing, "local", record_spend))
         )
         shared: _LocalAdapterSettings = {
             "http_client": http_client,
@@ -330,7 +342,7 @@ def _build_llm_adapters(
         if settings.openrouter_api_key is None:  # guarded by Settings, keeps mypy explicit
             raise AssertionError("OpenRouter settings require OPENROUTER_API_KEY.")
         http_client = resources.enter_context(
-            httpx.Client(transport=_metered(metrics, "openrouter", record_spend))
+            httpx.Client(transport=_metered(metrics, tracing, "openrouter", record_spend))
         )
         openrouter_shared: OpenRouterAdapterSettings = {
             "http_client": http_client,
@@ -376,8 +388,14 @@ def _build_llm_adapters(
         OpenAI(
             api_key=settings.openai_api_key,
             http_client=DefaultHttpxClient(
-                transport=MeteredTransport2(
-                    metrics, "openai", SpendCountingTransport2(record_spend, httpx2.HTTPTransport())
+                transport=TracedTransport2(
+                    MeteredTransport2(
+                        metrics,
+                        "openai",
+                        SpendCountingTransport2(record_spend, httpx2.HTTPTransport()),
+                    ),
+                    tracer_provider=tracing.tracer_provider,
+                    peer="openai",
                 )
             ),
         )
