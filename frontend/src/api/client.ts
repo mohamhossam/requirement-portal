@@ -28,11 +28,17 @@ export type SplittingPattern = components["schemas"]["SplittingPattern"];
 export type ClarificationKind = components["schemas"]["ClarificationKind"];
 export type ClarificationSeverity = components["schemas"]["ClarificationSeverity"];
 export type ClarificationQuestion = components["schemas"]["ClarificationQuestionResponse"];
+export type ProductImpact = components["schemas"]["ProductImpactResponse"];
+export type ProductVerdict = components["schemas"]["ProductVerdict"];
+export type ProductImpactDecision = components["schemas"]["ProductImpactDecision"];
 export type AnalysisRound = components["schemas"]["AnalysisRoundResponse"];
 export type IntentProposal = components["schemas"]["IntentProposalResponse"];
 export type IntentProposalStatus = components["schemas"]["IntentProposalStatus"];
 export type RevisionHistory = components["schemas"]["RevisionHistoryResponse"];
 export type BreakdownComparison = components["schemas"]["BreakdownComparisonResponse"];
+export type PublicationPreview = components["schemas"]["PublicationPreviewResponse"];
+export type PublicationReport = components["schemas"]["PublicationReportResponse"];
+export type PublicationStatus = components["schemas"]["PublicationStatusResponse"];
 export type Story = components["schemas"]["StoryResponse"];
 export type StorySet = components["schemas"]["StorySetResponse"];
 export type AcceptanceCriterion = components["schemas"]["AcceptanceCriterionPayload"];
@@ -746,6 +752,14 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ expected_version: expectedVersion }),
     }),
+  decideProductImpact: (
+    id: string,
+    input: components["schemas"]["DecideProductImpactRequest"],
+  ) =>
+    request<RequirementAnalysis>(`${requirementPath(id)}/analysis/product-impact/decision`, {
+      method: "PUT",
+      body: JSON.stringify(input),
+    }),
   decideIntentProposal: (
     id: string,
     proposalId: string,
@@ -799,6 +813,17 @@ export const api = {
       `${requirementPath(id)}/revisions/${revision}/export?format=${format}`,
       `requirement-${id}-breakdown-v${revision}.${format}`,
     ),
+  getPublicationPreview: (id: string, revision: number, options?: RequestOptions) =>
+    request<PublicationPreview>(`${requirementPath(id)}/revisions/${revision}/publication`, options),
+  publishBreakdownRevision: (id: string, revision: number, approvalFingerprint: string) =>
+    request<PublicationReport>(`${requirementPath(id)}/revisions/${revision}/publication`, {
+      method: "POST",
+      body: JSON.stringify({ approval_fingerprint: approvalFingerprint }),
+    }),
+  getPublicationStatus: (id: string, options?: RequestOptions) =>
+    request<PublicationStatus>(`${requirementPath(id)}/publication`, options),
+  retryPublication: (id: string) =>
+    request<PublicationReport>(`${requirementPath(id)}/publication/retry`, { method: "POST" }),
   getStories: (id: string, featureId: string, options?: RequestOptions) =>
     optional<StorySet>(storiesPath(id, featureId), options),
   getFeatureStoryQualityAssessment: (id: string, featureId: string, options?: RequestOptions) =>

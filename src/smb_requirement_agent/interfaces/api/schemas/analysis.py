@@ -5,6 +5,11 @@ from typing import Annotated, Literal
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StringConstraints
 
+from smb_requirement_agent.analysis.domain.product_impact import (
+    ProductImpactDecision,
+    ProductImpactStatus,
+    ProductVerdict,
+)
 from smb_requirement_agent.analysis.domain.value_objects import (
     ClarificationKind,
     ClarificationSeverity,
@@ -168,6 +173,120 @@ class ClarificationAnswerRequest(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
+class DecideProductImpactRequest(BaseModel):
+    """Accept the suggested verdict, override it with another, or mark it unknown."""
+
+    decision: ProductImpactDecision
+    # Required to override; ignored otherwise.
+    verdict: ProductVerdict | None = None
+    # Required to override: why the suggested verdict is wrong.
+    rationale: Annotated[NonBlankText | None, Field(max_length=2000)] = None
+    expected_version: Annotated[int, Field(ge=1)]
+    model_config = ConfigDict(frozen=True)
+
+
+class ImpactPathStepResponse(BaseModel):
+    # Text, not a closed list: the knowledge portal may add kinds (an interface, an entity).
+    kind: str
+    id: str
+    label: str
+    model_config = ConfigDict(frozen=True)
+
+
+class CapabilityNeedResponse(BaseModel):
+    concept_id: str
+    label: str
+    path: str
+    covered: bool
+    weak: bool
+    model_config = ConfigDict(frozen=True)
+
+
+class ImpactGapResponse(BaseModel):
+    kind: str
+    concept_id: str
+    label: str
+    reason: str
+    system_id: str | None
+    model_config = ConfigDict(frozen=True)
+
+
+class ImpactSystemResponse(BaseModel):
+    id: str
+    name: str
+    role: str
+    change_type: str
+    paths: list[list[ImpactPathStepResponse]]
+    model_config = ConfigDict(frozen=True)
+
+
+class ImpactOwnerResponse(BaseModel):
+    concept_id: str
+    system_id: str
+    squads: list[str]
+    people: list[str]
+    open_seats: int
+    model_config = ConfigDict(frozen=True)
+
+
+class ImpactQuestionResponse(BaseModel):
+    facet: str
+    question: str
+    options: list[str]
+    model_config = ConfigDict(frozen=True)
+
+
+class DraftComponentResponse(BaseModel):
+    name: str
+    system_ids: list[str]
+    model_config = ConfigDict(frozen=True)
+
+
+class OfferingDraftResponse(BaseModel):
+    """The offering and journey drafted for a new-offering verdict (ontology plan Phase 9)."""
+
+    offering_id: str
+    offering_name: str
+    # The offering it was drafted from, if any.
+    based_on: str | None
+    components: list[DraftComponentResponse]
+    # What it leaves for architecture review.
+    questions: list[str]
+    journey_name: str | None
+    journey_steps: int
+    model_config = ConfigDict(frozen=True)
+
+
+class ProductImpactResponse(BaseModel):
+    """Where the knowledge portal places the requirement, and the decision on it (ADR-0115)."""
+
+    release_id: str
+    suggested_verdict: ProductVerdict | None
+    # False until the live models meet the verdict gate: show the verdict as a suggestion.
+    verdict_validated: bool
+    reason: str
+    assessed_at: datetime
+    offering_id: str | None
+    offering_name: str | None
+    proposal: str | None
+    new_values: list[str]
+    draft: OfferingDraftResponse | None
+    needs: list[CapabilityNeedResponse]
+    gaps: list[ImpactGapResponse]
+    systems: list[ImpactSystemResponse]
+    owners: list[ImpactOwnerResponse]
+    questions: list[ImpactQuestionResponse]
+    uncertainty: str | None
+    model: str | None
+    prompt_version: str | None
+    decision: ProductImpactDecision | None
+    verdict: ProductVerdict | None
+    rationale: str | None
+    decided_by: ActorResponse | None
+    decided_at: datetime | None
+    model_config = ConfigDict(frozen=True)
+
+
 class ConfirmAnalysisRequest(BaseModel):
     expected_version: Annotated[int, Field(ge=1)]
     model_config = ConfigDict(frozen=True)
@@ -212,6 +331,10 @@ class RequirementAnalysisResponse(BaseModel):
     reference_grounding: (
         Literal["grounded", "no_evidence", "not_connected", "unavailable"] | None
     ) = None
+    # Whether this round could ask the knowledge portal for a product impact, and what it
+    # placed the requirement as; null for analyses from before it was recorded.
+    product_impact_status: ProductImpactStatus | None = None
+    product_impact: ProductImpactResponse | None = None
     analysis_context_token: str | None = None
     epic_context_token: str | None = None
 
@@ -264,6 +387,8 @@ class ClarificationQuestionResponse(BaseModel):
     classification_changed_by: ActorResponse | None
     classification_changed_at: datetime | None
     replaces_question_id: str | None
+    # Answers to pick from, for a question the catalogue asks; any answer is allowed.
+    options: list[str] = []
     model_config = ConfigDict(frozen=True)
 
 

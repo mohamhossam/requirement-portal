@@ -22,6 +22,9 @@ from smb_kernel.observability.tracing import TracedTransport
 from smb_kernel.observability.tracing_setup import Tracing
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.application.use_cases.precedent_handoff import (
+    DeliverPrecedents,
+)
 from smb_requirement_agent.governance.application.ports.backlog_export import BacklogExportPort
 from smb_requirement_agent.governance.application.use_cases.knowledge_handoff import (
     DeliverApprovedBacklogs,
@@ -30,9 +33,13 @@ from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.documents.ingestion_loop import IngestionLoop
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
 from smb_requirement_agent.interfaces.api.composition.tracing import identity_client
+from smb_requirement_agent.references.application.ports.architecture_assessment import (
+    ArchitectureAssessmentPort,
+)
 from smb_requirement_agent.references.application.ports.architecture_knowledge import (
     ArchitectureKnowledgePort,
 )
+from smb_requirement_agent.references.application.ports.delivery_closure import DeliveryInboxPort
 from smb_requirement_agent.references.application.ports.historic_corpus import (
     HistoricContentSourcePort,
 )
@@ -43,25 +50,35 @@ from smb_requirement_agent.references.application.ports.knowledge_handoff import
     ChangeRequestInboxPort,
 )
 from smb_requirement_agent.references.application.ports.knowledge_views import KnowledgeViewsPort
+from smb_requirement_agent.references.application.ports.precedent_handoff import (
+    PrecedentInboxPort,
+)
 from smb_requirement_agent.references.application.ports.reference_grounding import (
     ReferenceKnowledgePort,
 )
 from smb_requirement_agent.references.infrastructure.knowledge_client import (
+    FakeArchitectureAssessment,
     FakeArchitectureKnowledge,
     FakeHistoricContent,
     FakeKnowledgeEvents,
     FakeKnowledgeViews,
     FakeReferenceKnowledge,
+    HttpArchitectureAssessment,
     HttpArchitectureKnowledge,
     HttpChangeRequestInbox,
+    HttpDeliveryInbox,
     HttpHistoricContent,
     HttpKnowledgeEvents,
     HttpKnowledgeViews,
+    HttpPrecedentInbox,
     HttpReferenceKnowledge,
 )
 
 # Seconds to wait for a page of a historic requirement's content (≤200 entries).
 HISTORIC_PAGE_TIMEOUT = 60.0
+# Seconds to wait for a requirement's assessment: the knowledge service asks its models
+# to read the requirement and weigh the verdict before it answers.
+ASSESSMENT_TIMEOUT = 120.0
 
 
 @dataclass(frozen=True)
@@ -77,6 +94,14 @@ class KnowledgeService:
     change_requests: ChangeRequestInboxPort | None = None
     # A published historic requirement's content, read a page at a time (ADR-0102).
     historic_content: HistoricContentSourcePort = FakeHistoricContent()
+    # A whole requirement's product impact (ADR-0115); offline nothing is assessed.
+    assessment: ArchitectureAssessmentPort = FakeArchitectureAssessment()
+    # Where decided verdicts are kept as precedents (ontology plan Phase 5); none offline,
+    # so decisions queue nothing.
+    precedents: PrecedentInboxPort | None = None
+    # Where closed and removed Epics are sent (ontology plan Phase 7); none offline, so the
+    # tracker's service hook is not served.
+    deliveries: DeliveryInboxPort | None = None
 
 
 def build_knowledge_service(
@@ -116,6 +141,14 @@ def build_knowledge_service(
         timeout_seconds=HISTORIC_PAGE_TIMEOUT,
         breaker=breaker,
     )
+    assessing = InternalHttpClient(
+        url,
+        token,
+        service="knowledge",
+        http=http,
+        timeout_seconds=ASSESSMENT_TIMEOUT,
+        breaker=breaker,
+    )
     return KnowledgeService(
         HttpReferenceKnowledge(client),
         HttpArchitectureKnowledge(client),
@@ -124,6 +157,9 @@ def build_knowledge_service(
         remote=True,
         change_requests=HttpChangeRequestInbox(client),
         historic_content=HttpHistoricContent(patient),
+        assessment=HttpArchitectureAssessment(assessing),
+        precedents=HttpPrecedentInbox(client),
+        deliveries=HttpDeliveryInbox(client),
     )
 
 
@@ -150,6 +186,32 @@ def _service_token(
             )
         )
     return shared
+
+
+def build_precedent_worker(
+    persistence: PersistenceAdapters,
+    inbox: PrecedentInboxPort,
+    clock: ClockPort,
+    metrics: Metrics,
+    grace_seconds: float,
+) -> IngestionLoop:
+    """The worker sending decided verdicts to the knowledge service (ontology plan Phase 5).
+
+    Each outcome is counted as a job: delivered, retry or failed.
+    """
+    deliver = DeliverPrecedents(
+        persistence.precedent_handoffs,
+        inbox,
+        clock,
+        record=lambda outcome, seconds: metrics.record_job("precedent_handoff", outcome, seconds),
+    )
+    return IngestionLoop(
+        "decided-verdicts",
+        (deliver.deliver_next,),
+        failed=metrics.record_ingestion_failure,
+        shutdown_grace_seconds=grace_seconds,
+        monotonic_seconds=monotonic,
+    )
 
 
 def build_backlog_handoff_worker(

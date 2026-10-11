@@ -15,6 +15,10 @@ from smb_requirement_agent.analysis.domain.entities import (
     QuestionAssignmentChange,
     RequirementAnalysis,
 )
+from smb_requirement_agent.analysis.domain.product_impact import (
+    ProductImpact,
+    ProductImpactStatus,
+)
 from smb_requirement_agent.analysis.domain.value_objects import (
     Ambiguity,
     AnalysisClarificationEvidence,
@@ -73,7 +77,26 @@ def analysis_to_payload(value: RequirementAnalysis) -> JsonObject:
     # Written only when recorded, so analyses from before it was recorded keep their payload.
     if value.reference_grounding is not None:
         payload["reference_grounding"] = value.reference_grounding.value
+    if value.product_impact_status is not None:
+        payload["product_impact_status"] = value.product_impact_status.value
+    if value.product_impact is not None:
+        payload["product_impact"] = product_impact_to_payload(value.product_impact)
     return payload
+
+
+_PRODUCT_IMPACT = TypeAdapter(ProductImpact)
+
+
+def product_impact_to_payload(value: ProductImpact) -> JsonObject:
+    payload: JsonObject = _PRODUCT_IMPACT.dump_python(value, mode="json")
+    payload["decided_by"] = actor_fields_to_payload(value.decided_by) if value.decided_by else None
+    return payload
+
+
+def product_impact_from_payload(data: JsonObject) -> ProductImpact:
+    return _PRODUCT_IMPACT.validate_python(
+        {**data, "decided_by": optional_actor_snapshot(data, "decided_by")}
+    )
 
 
 def _analysis_payload(value: RequirementAnalysis) -> JsonObject:
@@ -403,6 +426,16 @@ def analysis_from_payload(data: JsonObject) -> RequirementAnalysis:
             if data.get("reference_grounding") is not None
             else None
         ),
+        product_impact=(
+            product_impact_from_payload(json_object(data["product_impact"]))
+            if data.get("product_impact") is not None
+            else None
+        ),
+        product_impact_status=(
+            ProductImpactStatus(item_text(data["product_impact_status"]))
+            if data.get("product_impact_status") is not None
+            else None
+        ),
     )
 
 
@@ -445,6 +478,14 @@ def analysis_round_from_payload(data: JsonObject) -> AnalysisRound:
 
 
 def clarification_question_to_payload(value: ClarificationQuestion) -> JsonObject:
+    payload = _question_payload(value)
+    # Written only for a question with options, so older questions keep their payload.
+    if value.options:
+        payload["options"] = list(value.options)
+    return payload
+
+
+def _question_payload(value: ClarificationQuestion) -> JsonObject:
     return {
         "id": value.id.value,
         "requirement_id": value.requirement_id.value,
@@ -529,6 +570,7 @@ def clarification_question_from_payload(data: JsonObject) -> ClarificationQuesti
             if data.get("replaces_question_id") is not None
             else None
         ),
+        options=tuple(item_text(item) for item in optional_json_array(data, "options")),
     )
 
 

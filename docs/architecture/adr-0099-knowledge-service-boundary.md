@@ -52,8 +52,9 @@ adapter and a deterministic fake.
 
 **The knowledge service reads requirement data only through requirement-portal's internal API:**
 - `GET /internal/references/{document}/dependents`;
-- `GET /internal/architecture-mapping/stats`;
-- `GET /internal/actors`.
+- `GET /internal/architecture-mapping/stats`.
+
+It once read `GET /internal/actors` too. That route was removed on purpose (Amendment 2).
 
 **Internal calls carry a service token.** In fake identity mode it is a shared secret. In OIDC mode
 it comes from Keycloak client credentials. nginx never routes `/internal/*`.
@@ -202,3 +203,16 @@ Agreed in session when D was built:
   never goes stale between events.
 - **Overdue is a flag, never a block.** It does not change whether a citation is current
   (`cites`), what retrieval returns, or what an owner may accept or confirm.
+
+## Amendment 2 — no actor directory over the boundary (2026-10-10)
+
+`GET /internal/actors` was removed on purpose when the knowledge code left requirement-portal
+(Stage 4.2b). It is not missing work.
+
+- **knowledge-portal keeps its own actor directory.** It records the knowledge admins who sign
+  in, so a document is handed over only to someone who can use that portal. It never asks
+  requirement-portal who a person is.
+- **People are the identity service's to describe.** Requirement work no longer serves them, and
+  its internal API answers `/internal/actors/{id}` with 404. A test holds that.
+- **Ids still cross.** Reads such as dependents take an `actor_id`, and writes carry the knowledge
+  admin's actor id and name (Amendment 1). Neither service looks the other's people up.

@@ -94,7 +94,8 @@ def test_formally_approved_revision_exports_stable_nested_json(client: TestClien
     )
     assert first.headers["cache-control"] == "private, no-store"
     payload = json.loads(first.content)
-    assert list(payload) == ["schema_version", "manifest", "epic"]
+    assert list(payload) == ["schema_version", "manifest", "epic", "product_impact"]
+    assert payload["product_impact"] is None
     assert list(payload["manifest"]) == [
         "requirement_id",
         "breakdown_revision",
@@ -102,7 +103,7 @@ def test_formally_approved_revision_exports_stable_nested_json(client: TestClien
         "final_approval",
         "counts",
     ]
-    assert payload["schema_version"] == "1.5"
+    assert payload["schema_version"] == "1.6"
     assert payload["manifest"]["breakdown_revision"] == revision
     assert payload["manifest"]["final_approval"]["recorded_by"]["id"] == "fake-owner"
     assert payload["manifest"]["final_approval"]["rationale"] == ("Approved for portable export.")

@@ -8,8 +8,10 @@ The fakes are deterministic stand-ins for running without the knowledge service.
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import re
+from dataclasses import replace
 from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import quote
@@ -18,10 +20,15 @@ from pydantic import TypeAdapter
 from smb_kernel.errors import ServiceResponseError, ServiceUnavailableError
 from smb_kernel.http.client import InternalHttpClient
 
+from smb_requirement_agent.references.application.ports.architecture_assessment import (
+    ArchitectureAssessment,
+    AssessmentQuery,
+)
 from smb_requirement_agent.references.application.ports.architecture_knowledge import (
     ArchitectureKnowledgeMatch,
     ArchitectureQuery,
 )
+from smb_requirement_agent.references.application.ports.delivery_closure import DeliveryReceipt
 from smb_requirement_agent.references.application.ports.historic_corpus import (
     ContentPart,
     HistoricContentGoneError,
@@ -41,6 +48,8 @@ _MATCH = TypeAdapter(ArchitectureKnowledgeMatch)
 _EVIDENCE = TypeAdapter(tuple[ReferenceEvidence, ...])
 _PASSAGE = TypeAdapter(CitedPassage)
 _ARCHITECTURE_EVIDENCE = TypeAdapter(ArchitectureEvidence)
+_ASSESSMENT_QUERY = TypeAdapter(AssessmentQuery)
+_ASSESSMENT = TypeAdapter(ArchitectureAssessment)
 # What the knowledge service answers when a view is absent: not found, or no longer live.
 _ABSENT = frozenset({404, 409})
 
@@ -69,6 +78,46 @@ class HttpArchitectureKnowledge:
             idempotent=True,
         )
         return _decode(_MATCH, body, "architecture matches")
+
+
+class HttpArchitectureAssessment:
+    """A whole requirement's product impact (ontology plan Phase 4).
+
+    A knowledge service released before the assessment answers 404: that is "not
+    offered yet", not a failure, so analysis carries on without a product impact.
+    """
+
+    def __init__(self, client: InternalHttpClient) -> None:
+        self._client = client
+
+    def is_connected(self) -> bool:
+        return True
+
+    def assess(self, query: AssessmentQuery) -> ArchitectureAssessment | None:
+        try:
+            body = self._client.post_json(
+                "/internal/architecture/assess",
+                _ASSESSMENT_QUERY.dump_python(query, mode="json"),
+                idempotent=True,
+            )
+        except ServiceResponseError as refused:
+            if refused.status_code == 404:
+                return None
+            raise
+        return _kept_draft(_decode(_ASSESSMENT, body, "an assessment"), body)
+
+
+def _kept_draft(assessment: ArchitectureAssessment, body: Any) -> ArchitectureAssessment:
+    """The assessment with its drafted offering's document as the service wrote it, to send
+    back unchanged with the approved backlog (ontology plan Phase 9)."""
+    proposal = assessment.proposal
+    if proposal is None or proposal.draft is None:
+        return assessment
+    document = copy.deepcopy(body["proposal"]["draft"])
+    return replace(
+        assessment,
+        proposal=replace(proposal, draft=replace(proposal.draft, document=document)),
+    )
 
 
 class HttpReferenceKnowledge:
@@ -221,6 +270,45 @@ class HttpChangeRequestInbox:
             ) from exc
 
 
+class HttpPrecedentInbox:
+    """Where decided product verdicts are kept as precedents (ontology plan Phase 5)."""
+
+    def __init__(self, client: InternalHttpClient) -> None:
+        self._client = client
+
+    def record(self, precedent: dict[str, Any]) -> bool:
+        # Idempotent by analysis: the same decision delivered twice is kept once (200).
+        body = self._client.post_json(
+            "/internal/architecture/precedents", precedent, idempotent=True
+        )
+        if not isinstance(body, dict) or not isinstance(body.get("recorded"), bool):
+            raise ServiceUnavailableError("The knowledge service returned an unusable receipt.")
+        return bool(body["recorded"])
+
+
+class HttpDeliveryInbox:
+    """Where closed and removed Epics are sent (ontology plan Phase 7)."""
+
+    def __init__(self, client: InternalHttpClient) -> None:
+        self._client = client
+
+    def deliver(self, body: dict[str, Any]) -> DeliveryReceipt:
+        # Idempotent by delivery id: the same closure sent twice is kept once (200).
+        answer = self._client.post_json(
+            "/internal/change-requests/deliveries", body, idempotent=True
+        )
+        if not isinstance(answer, dict):
+            raise ServiceUnavailableError("The knowledge service returned an unusable receipt.")
+        kept, withdrawn = answer.get("change_request_id"), answer.get("withdrawn")
+        if (
+            not (kept is None or isinstance(kept, str))
+            or not isinstance(withdrawn, list)
+            or not all(isinstance(item, str) for item in withdrawn)
+        ):
+            raise ServiceUnavailableError("The knowledge service returned an unusable receipt.")
+        return DeliveryReceipt(kept, tuple(withdrawn))
+
+
 def _whole(value: object) -> int:
     if not isinstance(value, int) or isinstance(value, bool) or value < 1:
         raise TypeError("expected a positive whole number")
@@ -262,6 +350,16 @@ class FakeArchitectureKnowledge:
             # Nothing was inferred: offline there is no model behind the empty answer.
             evidence_classification="legacy_deterministic",
         )
+
+
+class FakeArchitectureAssessment:
+    """Offline there is no catalogue to place a requirement in, so nothing is assessed."""
+
+    def is_connected(self) -> bool:
+        return False
+
+    def assess(self, query: AssessmentQuery) -> ArchitectureAssessment | None:
+        return None
 
 
 class FakeReferenceKnowledge:

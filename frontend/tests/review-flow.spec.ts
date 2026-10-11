@@ -429,7 +429,7 @@ test("submitted Story rejection is revised, resubmitted, and finally approved", 
     schema_version: string;
     epic: { features: Array<{ stories: unknown[] }> };
   };
-  expect(json.schema_version).toBe("1.5");
+  expect(json.schema_version).toBe("1.6");
   expect(json.epic.features[0]!.stories.length).toBeGreaterThan(0);
 
   await page.getByRole("radio", { name: /^Excel workbook/ }).check();

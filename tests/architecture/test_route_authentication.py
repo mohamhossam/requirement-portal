@@ -24,6 +24,9 @@ PUBLIC_OPERATIONS = {
     ("GET", "/identity/config"),
     # A browser reports its own failures, signed in or not (production hardening PR 12).
     ("POST", "/client-errors"),
+    # The work-item tracker signs its service hook with ADO_HOOK_SECRET (ontology plan
+    # Phase 7); the route checks it itself.
+    ("POST", "/integrations/azure-devops/work-items"),
 }
 
 

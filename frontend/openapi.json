@@ -2535,6 +2535,55 @@
         "title": "CancelAiJobRequest",
         "type": "object"
       },
+      "CapabilityNeedResponse": {
+        "properties": {
+          "concept_id": {
+            "title": "Concept Id",
+            "type": "string"
+          },
+          "covered": {
+            "title": "Covered",
+            "type": "boolean"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "weak": {
+            "title": "Weak",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "concept_id",
+          "label",
+          "path",
+          "covered",
+          "weak"
+        ],
+        "title": "CapabilityNeedResponse",
+        "type": "object"
+      },
+      "ChangedFields": {
+        "properties": {
+          "System.State": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FieldChange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "ChangedFields",
+        "type": "object"
+      },
       "CitedPassage": {
         "properties": {
           "block_id": {
@@ -2822,6 +2871,14 @@
           "kind": {
             "$ref": "#/components/schemas/ClarificationKind"
           },
+          "options": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Options",
+            "type": "array"
+          },
           "rationale": {
             "anyOf": [
               {
@@ -2943,7 +3000,8 @@
       "ClarificationSource": {
         "enum": [
           "ai",
-          "human"
+          "human",
+          "catalogue"
         ],
         "title": "ClarificationSource",
         "type": "string"
@@ -3261,6 +3319,48 @@
           "expected_version"
         ],
         "title": "DecideIntentProposalRequest",
+        "type": "object"
+      },
+      "DecideProductImpactRequest": {
+        "description": "Accept the suggested verdict, override it with another, or mark it unknown.",
+        "properties": {
+          "decision": {
+            "$ref": "#/components/schemas/ProductImpactDecision"
+          },
+          "expected_version": {
+            "minimum": 1.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "rationale": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rationale"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "decision",
+          "expected_version"
+        ],
+        "title": "DecideProductImpactRequest",
         "type": "object"
       },
       "DecisionRequest": {
@@ -4182,6 +4282,27 @@
         "title": "DomainSuggestionResponse",
         "type": "object"
       },
+      "DraftComponentResponse": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "system_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "System Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "system_ids"
+        ],
+        "title": "DraftComponentResponse",
+        "type": "object"
+      },
       "DraftSort": {
         "enum": [
           "updated_desc",
@@ -4657,6 +4778,36 @@
         "title": "FeatureStoryQualitySnapshotResponse",
         "type": "object"
       },
+      "FieldChange": {
+        "properties": {
+          "newValue": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Newvalue"
+          },
+          "oldValue": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Oldvalue"
+          }
+        },
+        "title": "FieldChange",
+        "type": "object"
+      },
       "FindingSource": {
         "enum": [
           "deterministic",
@@ -4706,7 +4857,8 @@
           "dependency",
           "architecture",
           "quality",
-          "staleness"
+          "staleness",
+          "product"
         ],
         "title": "FlagCategory",
         "type": "string"
@@ -5081,6 +5233,173 @@
         "title": "ImpactDecisionRequest",
         "type": "object"
       },
+      "ImpactGapResponse": {
+        "properties": {
+          "concept_id": {
+            "title": "Concept Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "system_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Id"
+          }
+        },
+        "required": [
+          "kind",
+          "concept_id",
+          "label",
+          "reason",
+          "system_id"
+        ],
+        "title": "ImpactGapResponse",
+        "type": "object"
+      },
+      "ImpactOwnerResponse": {
+        "properties": {
+          "concept_id": {
+            "title": "Concept Id",
+            "type": "string"
+          },
+          "open_seats": {
+            "title": "Open Seats",
+            "type": "integer"
+          },
+          "people": {
+            "items": {
+              "type": "string"
+            },
+            "title": "People",
+            "type": "array"
+          },
+          "squads": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Squads",
+            "type": "array"
+          },
+          "system_id": {
+            "title": "System Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "concept_id",
+          "system_id",
+          "squads",
+          "people",
+          "open_seats"
+        ],
+        "title": "ImpactOwnerResponse",
+        "type": "object"
+      },
+      "ImpactPathStepResponse": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "label"
+        ],
+        "title": "ImpactPathStepResponse",
+        "type": "object"
+      },
+      "ImpactQuestionResponse": {
+        "properties": {
+          "facet": {
+            "title": "Facet",
+            "type": "string"
+          },
+          "options": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Options",
+            "type": "array"
+          },
+          "question": {
+            "title": "Question",
+            "type": "string"
+          }
+        },
+        "required": [
+          "facet",
+          "question",
+          "options"
+        ],
+        "title": "ImpactQuestionResponse",
+        "type": "object"
+      },
+      "ImpactSystemResponse": {
+        "properties": {
+          "change_type": {
+            "title": "Change Type",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "paths": {
+            "items": {
+              "items": {
+                "$ref": "#/components/schemas/ImpactPathStepResponse"
+              },
+              "type": "array"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "role",
+          "change_type",
+          "paths"
+        ],
+        "title": "ImpactSystemResponse",
+        "type": "object"
+      },
       "IngestionControlRequest": {
         "properties": {
           "expected_version": {
@@ -5298,6 +5617,58 @@
           "testable"
         ],
         "title": "InvestCriterion",
+        "type": "string"
+      },
+      "ItemAction": {
+        "description": "What publishing a plan would do with one item, given what was published before.",
+        "enum": [
+          "create",
+          "update",
+          "unchanged"
+        ],
+        "title": "ItemAction",
+        "type": "string"
+      },
+      "ItemOutcomeResponse": {
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "local_key": {
+            "title": "Local Key",
+            "type": "string"
+          },
+          "result": {
+            "$ref": "#/components/schemas/ItemResult"
+          }
+        },
+        "required": [
+          "local_key",
+          "result",
+          "error"
+        ],
+        "title": "ItemOutcomeResponse",
+        "type": "object"
+      },
+      "ItemResult": {
+        "description": "What one attempt did with one backlog item.",
+        "enum": [
+          "created",
+          "updated",
+          "unchanged",
+          "recovered",
+          "failed",
+          "not_attempted"
+        ],
+        "title": "ItemResult",
         "type": "string"
       },
       "JourneyNeighbourResponse": {
@@ -6005,6 +6376,70 @@
         "title": "NotificationResponse",
         "type": "object"
       },
+      "OfferingDraftResponse": {
+        "description": "The offering and journey drafted for a new-offering verdict (ontology plan Phase 9).",
+        "properties": {
+          "based_on": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Based On"
+          },
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/DraftComponentResponse"
+            },
+            "title": "Components",
+            "type": "array"
+          },
+          "journey_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Journey Name"
+          },
+          "journey_steps": {
+            "title": "Journey Steps",
+            "type": "integer"
+          },
+          "offering_id": {
+            "title": "Offering Id",
+            "type": "string"
+          },
+          "offering_name": {
+            "title": "Offering Name",
+            "type": "string"
+          },
+          "questions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Questions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "offering_id",
+          "offering_name",
+          "based_on",
+          "components",
+          "questions",
+          "journey_name",
+          "journey_steps"
+        ],
+        "title": "OfferingDraftResponse",
+        "type": "object"
+      },
       "OfferingDutyResponse": {
         "properties": {
           "component_id": {
@@ -6254,6 +6689,95 @@
           "count"
         ],
         "title": "OwnerFacetResponse",
+        "type": "object"
+      },
+      "PlannedWorkItemResponse": {
+        "properties": {
+          "acceptance_criteria_count": {
+            "title": "Acceptance Criteria Count",
+            "type": "integer"
+          },
+          "action": {
+            "$ref": "#/components/schemas/ItemAction"
+          },
+          "external_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Id"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/WorkItemKind"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "location": {
+            "title": "Location",
+            "type": "string"
+          },
+          "owning_squad_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owning Squad Name"
+          },
+          "parent_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Key"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "key",
+          "kind",
+          "label",
+          "title",
+          "parent_key",
+          "acceptance_criteria_count",
+          "owning_squad_name",
+          "location",
+          "action",
+          "external_id",
+          "url"
+        ],
+        "title": "PlannedWorkItemResponse",
         "type": "object"
       },
       "PotentialDependencyResponse": {
@@ -6540,6 +7064,266 @@
         "title": "ProductContextResponse",
         "type": "object"
       },
+      "ProductImpactDecision": {
+        "enum": [
+          "accepted",
+          "overridden",
+          "unknown"
+        ],
+        "title": "ProductImpactDecision",
+        "type": "string"
+      },
+      "ProductImpactResponse": {
+        "description": "Where the knowledge portal places the requirement, and the decision on it (ADR-0115).",
+        "properties": {
+          "assessed_at": {
+            "format": "date-time",
+            "title": "Assessed At",
+            "type": "string"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "decided_by": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ActorResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductImpactDecision"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "draft": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OfferingDraftResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "gaps": {
+            "items": {
+              "$ref": "#/components/schemas/ImpactGapResponse"
+            },
+            "title": "Gaps",
+            "type": "array"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "needs": {
+            "items": {
+              "$ref": "#/components/schemas/CapabilityNeedResponse"
+            },
+            "title": "Needs",
+            "type": "array"
+          },
+          "new_values": {
+            "items": {
+              "type": "string"
+            },
+            "title": "New Values",
+            "type": "array"
+          },
+          "offering_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offering Id"
+          },
+          "offering_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offering Name"
+          },
+          "owners": {
+            "items": {
+              "$ref": "#/components/schemas/ImpactOwnerResponse"
+            },
+            "title": "Owners",
+            "type": "array"
+          },
+          "prompt_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Version"
+          },
+          "proposal": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposal"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/ImpactQuestionResponse"
+            },
+            "title": "Questions",
+            "type": "array"
+          },
+          "rationale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rationale"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "release_id": {
+            "title": "Release Id",
+            "type": "string"
+          },
+          "suggested_verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "systems": {
+            "items": {
+              "$ref": "#/components/schemas/ImpactSystemResponse"
+            },
+            "title": "Systems",
+            "type": "array"
+          },
+          "uncertainty": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uncertainty"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "verdict_validated": {
+            "title": "Verdict Validated",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "release_id",
+          "suggested_verdict",
+          "verdict_validated",
+          "reason",
+          "assessed_at",
+          "offering_id",
+          "offering_name",
+          "proposal",
+          "new_values",
+          "draft",
+          "needs",
+          "gaps",
+          "systems",
+          "owners",
+          "questions",
+          "uncertainty",
+          "model",
+          "prompt_version",
+          "decision",
+          "verdict",
+          "rationale",
+          "decided_by",
+          "decided_at"
+        ],
+        "title": "ProductImpactResponse",
+        "type": "object"
+      },
+      "ProductImpactStatus": {
+        "description": "Whether an analysis round could ask the knowledge portal for a product impact.",
+        "enum": [
+          "assessed",
+          "not_connected",
+          "unavailable"
+        ],
+        "title": "ProductImpactStatus",
+        "type": "string"
+      },
+      "ProductVerdict": {
+        "description": "The knowledge portal's four answers to \"is this an existing product or a new one?\".",
+        "enum": [
+          "change_existing_offering",
+          "new_plan",
+          "new_offering_in_family",
+          "new_product_line"
+        ],
+        "title": "ProductVerdict",
+        "type": "string"
+      },
       "PromoteRequirementDraftRequest": {
         "properties": {
           "expected_version": {
@@ -6624,6 +7408,426 @@
           "prompt_version"
         ],
         "title": "ProvenanceResponse",
+        "type": "object"
+      },
+      "PublicationAttemptResponse": {
+        "properties": {
+          "actor_name": {
+            "title": "Actor Name",
+            "type": "string"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ItemOutcomeResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "number": {
+            "title": "Number",
+            "type": "integer"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PublicationOutcome"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "number",
+          "revision",
+          "actor_name",
+          "started_at",
+          "finished_at",
+          "outcome",
+          "items"
+        ],
+        "title": "PublicationAttemptResponse",
+        "type": "object"
+      },
+      "PublicationCountsResponse": {
+        "properties": {
+          "epics": {
+            "title": "Epics",
+            "type": "integer"
+          },
+          "features": {
+            "title": "Features",
+            "type": "integer"
+          },
+          "stories": {
+            "title": "Stories",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "epics",
+          "features",
+          "stories"
+        ],
+        "title": "PublicationCountsResponse",
+        "type": "object"
+      },
+      "PublicationDetailResponse": {
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "value"
+        ],
+        "title": "PublicationDetailResponse",
+        "type": "object"
+      },
+      "PublicationOutcome": {
+        "enum": [
+          "published",
+          "partial",
+          "failed",
+          "interrupted"
+        ],
+        "title": "PublicationOutcome",
+        "type": "string"
+      },
+      "PublicationPreviewResponse": {
+        "properties": {
+          "approval_fingerprint": {
+            "title": "Approval Fingerprint",
+            "type": "string"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/PublicationCountsResponse"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PlannedWorkItemResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "published_revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published Revision"
+          },
+          "removed": {
+            "items": {
+              "$ref": "#/components/schemas/WorkItemMappingResponse"
+            },
+            "title": "Removed",
+            "type": "array"
+          },
+          "requirement_id": {
+            "title": "Requirement Id",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PublicationStatus"
+          },
+          "target": {
+            "$ref": "#/components/schemas/PublicationTargetResponse"
+          }
+        },
+        "required": [
+          "requirement_id",
+          "revision",
+          "approval_fingerprint",
+          "target",
+          "counts",
+          "items",
+          "status",
+          "published_revision",
+          "removed"
+        ],
+        "title": "PublicationPreviewResponse",
+        "type": "object"
+      },
+      "PublicationReportResponse": {
+        "properties": {
+          "outcome": {
+            "$ref": "#/components/schemas/PublicationOutcome"
+          },
+          "project": {
+            "title": "Project",
+            "type": "string"
+          },
+          "requirement_id": {
+            "title": "Requirement Id",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/PublicationStepResponse"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
+          "system": {
+            "title": "System",
+            "type": "string"
+          }
+        },
+        "required": [
+          "requirement_id",
+          "revision",
+          "system",
+          "project",
+          "outcome",
+          "steps"
+        ],
+        "title": "PublicationReportResponse",
+        "type": "object"
+      },
+      "PublicationStatus": {
+        "enum": [
+          "not_published",
+          "in_progress",
+          "published",
+          "incomplete",
+          "outdated"
+        ],
+        "title": "PublicationStatus",
+        "type": "string"
+      },
+      "PublicationStatusResponse": {
+        "properties": {
+          "attempts": {
+            "items": {
+              "$ref": "#/components/schemas/PublicationAttemptResponse"
+            },
+            "title": "Attempts",
+            "type": "array"
+          },
+          "latest_approved_revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Approved Revision"
+          },
+          "mappings": {
+            "items": {
+              "$ref": "#/components/schemas/WorkItemMappingResponse"
+            },
+            "title": "Mappings",
+            "type": "array"
+          },
+          "product_impact_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Impact Version"
+          },
+          "product_verdict": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Verdict"
+          },
+          "published_revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published Revision"
+          },
+          "requirement_id": {
+            "title": "Requirement Id",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PublicationStatus"
+          }
+        },
+        "required": [
+          "requirement_id",
+          "status",
+          "latest_approved_revision",
+          "published_revision",
+          "product_verdict",
+          "product_impact_version",
+          "mappings",
+          "attempts"
+        ],
+        "title": "PublicationStatusResponse",
+        "type": "object"
+      },
+      "PublicationStepResponse": {
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "external_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Id"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/WorkItemKind"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ItemResult"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "key",
+          "kind",
+          "label",
+          "title",
+          "status",
+          "external_id",
+          "url",
+          "error"
+        ],
+        "title": "PublicationStepResponse",
+        "type": "object"
+      },
+      "PublicationTargetResponse": {
+        "properties": {
+          "default_location": {
+            "title": "Default Location",
+            "type": "string"
+          },
+          "details": {
+            "items": {
+              "$ref": "#/components/schemas/PublicationDetailResponse"
+            },
+            "title": "Details",
+            "type": "array"
+          },
+          "project": {
+            "title": "Project",
+            "type": "string"
+          },
+          "system": {
+            "title": "System",
+            "type": "string"
+          }
+        },
+        "required": [
+          "system",
+          "project",
+          "default_location",
+          "details"
+        ],
+        "title": "PublicationTargetResponse",
+        "type": "object"
+      },
+      "PublishBreakdownRequest": {
+        "properties": {
+          "approval_fingerprint": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Approval Fingerprint",
+            "type": "string"
+          }
+        },
+        "required": [
+          "approval_fingerprint"
+        ],
+        "title": "PublishBreakdownRequest",
         "type": "object"
       },
       "PublishedReference": {
@@ -7091,6 +8295,26 @@
             },
             "title": "Potential Dependencies",
             "type": "array"
+          },
+          "product_impact": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductImpactResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "product_impact_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductImpactStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "provenance": {
             "anyOf": [
@@ -9434,6 +10658,17 @@
             "title": "Catalogued",
             "type": "boolean"
           },
+          "change_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change Type"
+          },
           "constraints": {
             "items": {
               "type": "string"
@@ -9455,6 +10690,17 @@
             },
             "title": "Products",
             "type": "array"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
           },
           "squads": {
             "items": {
@@ -9482,6 +10728,65 @@
           "products"
         ],
         "title": "SystemReferenceResponse",
+        "type": "object"
+      },
+      "TrackerEventAnswer": {
+        "properties": {
+          "closure_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closure Id"
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "ignored"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "TrackerEventAnswer",
+        "type": "object"
+      },
+      "TrackerEventBody": {
+        "properties": {
+          "createdDate": {
+            "format": "date-time",
+            "title": "Createddate",
+            "type": "string"
+          },
+          "eventType": {
+            "maxLength": 200,
+            "title": "Eventtype",
+            "type": "string"
+          },
+          "id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "resource": {
+            "$ref": "#/components/schemas/WorkItemUpdate"
+          }
+        },
+        "required": [
+          "id",
+          "eventType",
+          "createdDate",
+          "resource"
+        ],
+        "title": "TrackerEventBody",
         "type": "object"
       },
       "TransferOwnershipRequest": {
@@ -9783,6 +11088,101 @@
           "breakdown_approvals"
         ],
         "title": "WeeklyMetricsResponse",
+        "type": "object"
+      },
+      "WorkItemKind": {
+        "enum": [
+          "epic",
+          "feature",
+          "story"
+        ],
+        "title": "WorkItemKind",
+        "type": "string"
+      },
+      "WorkItemMappingResponse": {
+        "properties": {
+          "external_id": {
+            "title": "External Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "local_key": {
+            "title": "Local Key",
+            "type": "string"
+          },
+          "published_at": {
+            "format": "date-time",
+            "title": "Published At",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "local_key",
+          "kind",
+          "external_id",
+          "url",
+          "revision",
+          "published_at"
+        ],
+        "title": "WorkItemMappingResponse",
+        "type": "object"
+      },
+      "WorkItemRevision": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          }
+        },
+        "title": "WorkItemRevision",
+        "type": "object"
+      },
+      "WorkItemUpdate": {
+        "properties": {
+          "fields": {
+            "$ref": "#/components/schemas/ChangedFields"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorkItemRevision"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "workItemId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workitemid"
+          }
+        },
+        "title": "WorkItemUpdate",
         "type": "object"
       },
       "WorkflowStage": {
@@ -10822,6 +12222,66 @@
         "summary": "Current Actor",
         "tags": [
           "identity"
+        ]
+      }
+    },
+    "/integrations/azure-devops/work-items": {
+      "post": {
+        "description": "Queue a published Epic closed or removed in the tracker; ignore every other event.",
+        "operationId": "receive_work_item_event_integrations_azure_devops_work_items_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrackerEventBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrackerEventAnswer"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Receive Work Item Event",
+        "tags": [
+          "integrations"
         ]
       }
     },
@@ -13126,6 +14586,80 @@
           }
         ],
         "summary": "Confirm Requirement Analysis",
+        "tags": [
+          "analysis"
+        ]
+      }
+    },
+    "/requirements/{requirement_id}/analysis/product-impact/decision": {
+      "put": {
+        "description": "Accept the suggested product impact, override its verdict, or mark it unknown.",
+        "operationId": "decide_product_impact_requirements__requirement_id__analysis_product_impact_decision_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "requirement_id",
+            "required": true,
+            "schema": {
+              "title": "Requirement Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Fake-Actor-Id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fake-Actor-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecideProductImpactRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequirementAnalysisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Decide Product Impact",
         "tags": [
           "analysis"
         ]
@@ -16872,6 +18406,132 @@
         ]
       }
     },
+    "/requirements/{requirement_id}/publication": {
+      "get": {
+        "operationId": "publication_status_requirements__requirement_id__publication_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "requirement_id",
+            "required": true,
+            "schema": {
+              "title": "Requirement Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Fake-Actor-Id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fake-Actor-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicationStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Publication Status",
+        "tags": [
+          "revisions"
+        ]
+      }
+    },
+    "/requirements/{requirement_id}/publication/retry": {
+      "post": {
+        "operationId": "retry_publication_requirements__requirement_id__publication_retry_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "requirement_id",
+            "required": true,
+            "schema": {
+              "title": "Requirement Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Fake-Actor-Id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fake-Actor-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicationReportResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Retry Publication",
+        "tags": [
+          "revisions"
+        ]
+      }
+    },
     "/requirements/{requirement_id}/review-submission": {
       "post": {
         "operationId": "submit_review_requirements__requirement_id__review_submission_post",
@@ -17326,6 +18986,160 @@
           }
         ],
         "summary": "Export Revision",
+        "tags": [
+          "revisions"
+        ]
+      }
+    },
+    "/requirements/{requirement_id}/revisions/{revision_number}/publication": {
+      "get": {
+        "operationId": "preview_publication_requirements__requirement_id__revisions__revision_number__publication_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "requirement_id",
+            "required": true,
+            "schema": {
+              "title": "Requirement Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "revision_number",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "Revision Number",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Fake-Actor-Id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fake-Actor-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicationPreviewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Preview Publication",
+        "tags": [
+          "revisions"
+        ]
+      },
+      "post": {
+        "operationId": "publish_revision_requirements__requirement_id__revisions__revision_number__publication_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "requirement_id",
+            "required": true,
+            "schema": {
+              "title": "Requirement Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "revision_number",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "Revision Number",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Fake-Actor-Id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fake-Actor-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishBreakdownRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicationReportResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Publish Revision",
         "tags": [
           "revisions"
         ]

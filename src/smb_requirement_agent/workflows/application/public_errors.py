@@ -11,6 +11,7 @@ from smb_requirement_agent.analysis.application.errors import (
     ClarificationQuestionNotFoundError,
     DocumentContextTooLargeError,
     IntentProposalNotFoundError,
+    ProductImpactNotFoundError,
     RequirementAnalysisConflictError,
     RequirementAnalysisGenerationError,
     RequirementAnalysisNotFoundError,
@@ -25,6 +26,8 @@ from smb_requirement_agent.analysis.domain.errors import (
     InvalidClarificationTransitionError,
     InvalidIntentProposalDecisionError,
     InvalidIntentProposalTransitionError,
+    InvalidProductImpactDecisionError,
+    ProductImpactDecisionLockedError,
 )
 from smb_requirement_agent.application.errors import (
     ArtifactVersionConflictError,
@@ -82,7 +85,17 @@ from smb_requirement_agent.governance.application.errors import (
     BreakdownReviewNotFoundError,
     BreakdownReviewStaleError,
     BreakdownRevisionNotExportableError,
+    BreakdownRevisionNotPublishableError,
+    PublicationConfirmationError,
+    PublicationRetryNotAllowedError,
+    PublicationTargetChangedError,
+    PublicationTargetError,
+    PublicationUnavailableError,
     ReviewFlagNotFoundError,
+)
+from smb_requirement_agent.governance.domain.publication.errors import (
+    InvalidPublicationError,
+    PublicationInProgressError,
 )
 from smb_requirement_agent.governance.domain.review.errors import (
     FlagResolutionConflictError,
@@ -211,6 +224,18 @@ ERROR_CATALOGUE: tuple[tuple[type[Exception], str, FailureCategory], ...] = (
         FailureCategory.CONFLICT,
     ),
     (BacklogExportFormatError, "backlog_export_format", FailureCategory.INVALID_INPUT),
+    (
+        BreakdownRevisionNotPublishableError,
+        "breakdown_revision_not_publishable",
+        FailureCategory.CONFLICT,
+    ),
+    (PublicationConfirmationError, "publication_confirmation_mismatch", FailureCategory.CONFLICT),
+    (PublicationUnavailableError, "publication_unavailable", FailureCategory.UNAVAILABLE),
+    (PublicationTargetChangedError, "publication_target_changed", FailureCategory.CONFLICT),
+    (PublicationRetryNotAllowedError, "publication_retry_not_allowed", FailureCategory.CONFLICT),
+    (PublicationInProgressError, "publication_in_progress", FailureCategory.CONFLICT),
+    (InvalidPublicationError, "invalid_publication", FailureCategory.INTERNAL),
+    (PublicationTargetError, "publication_target_refused", FailureCategory.PROVIDER),
     (AiJobConflictError, "ai_job_conflict", FailureCategory.CONFLICT),
     (AiJobInputsPrunedError, "ai_job_inputs_pruned", FailureCategory.CONFLICT),
     (InvalidAiJobError, "invalid_ai_job", FailureCategory.INVALID_INPUT),
@@ -281,6 +306,7 @@ ERROR_CATALOGUE: tuple[tuple[type[Exception], str, FailureCategory], ...] = (
         FailureCategory.NOT_FOUND,
     ),
     (IntentProposalNotFoundError, "intent_proposal_not_found", FailureCategory.NOT_FOUND),
+    (ProductImpactNotFoundError, "product_impact_not_found", FailureCategory.NOT_FOUND),
     (KnowledgeFindingNotFoundError, "knowledge_finding_not_found", FailureCategory.NOT_FOUND),
     (AnswerSuggestionNotFoundError, "answer_suggestion_not_found", FailureCategory.NOT_FOUND),
     (KnowledgeFindingConflictError, "knowledge_finding_conflict", FailureCategory.CONFLICT),
@@ -354,6 +380,16 @@ ERROR_CATALOGUE: tuple[tuple[type[Exception], str, FailureCategory], ...] = (
         InvalidIntentProposalDecisionError,
         "invalid_intent_proposal_decision",
         FailureCategory.INVALID_INPUT,
+    ),
+    (
+        InvalidProductImpactDecisionError,
+        "invalid_product_impact_decision",
+        FailureCategory.INVALID_INPUT,
+    ),
+    (
+        ProductImpactDecisionLockedError,
+        "product_impact_decision_locked",
+        FailureCategory.CONFLICT,
     ),
     (AnalysisConfirmationBlockedError, "analysis_confirmation_blocked", FailureCategory.CONFLICT),
     (InvalidAnalysisContentError, "invalid_analysis_content", FailureCategory.PROVIDER),

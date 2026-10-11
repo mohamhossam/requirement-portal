@@ -5,8 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
+from typing import Any
 
-EXPORT_SCHEMA_VERSION = "1.5"
+EXPORT_SCHEMA_VERSION = "1.6"
 
 
 class ExportFormat(StrEnum):
@@ -201,10 +202,25 @@ class ExportEpic:
 
 
 @dataclass(frozen=True)
+class ExportProductImpact:
+    """Added in 1.6: the product verdict a person decided in analysis (ADR-0115)."""
+
+    verdict: str
+    # The offering in question: the one the requirement changes, or the nearest one to a
+    # new offering.
+    offering_id: str | None
+    release_id: str
+    # For a new offering in a family or a new product line, the offering and journey the
+    # knowledge portal drafted, as it wrote them (ontology plan Phase 9).
+    draft: dict[str, Any] | None = None
+
+
+@dataclass(frozen=True)
 class NeutralBacklogExport:
     schema_version: str
     manifest: ExportManifest
     epic: ExportEpic
+    product_impact: ExportProductImpact | None = None
 
 
 @dataclass(frozen=True)

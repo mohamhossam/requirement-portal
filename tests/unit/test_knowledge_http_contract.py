@@ -23,6 +23,23 @@ from smb_kernel.errors import ServiceResponseError, ServiceUnavailableError
 from smb_kernel.http.client import InternalHttpClient
 
 from smb_requirement_agent.breakdown.domain.architecture.entities import ArchitectureImpact
+from smb_requirement_agent.references.application.ports.architecture_assessment import (
+    ArchitectureAssessment,
+    AssessedComponent,
+    AssessedConcept,
+    AssessedCoverage,
+    AssessedFacet,
+    AssessedGap,
+    AssessedOption,
+    AssessedOwners,
+    AssessedPathStep,
+    AssessedProposal,
+    AssessedQuestion,
+    AssessedReference,
+    AssessedSeat,
+    AssessedSystem,
+    AssessmentQuery,
+)
 from smb_requirement_agent.references.application.ports.architecture_knowledge import (
     ArchitectureKnowledgeMatch,
     ArchitectureKnowledgePort,
@@ -58,16 +75,21 @@ from smb_requirement_agent.references.domain.architecture.knowledge import Relat
 from smb_requirement_agent.references.infrastructure.knowledge_client import (
     OFFLINE_RELEASE_ID,
     OFFLINE_RELEASE_NAME,
+    FakeArchitectureAssessment,
     FakeArchitectureKnowledge,
     FakeKnowledgeEvents,
     FakeReferenceKnowledge,
+    HttpArchitectureAssessment,
     HttpArchitectureKnowledge,
     HttpChangeRequestInbox,
+    HttpDeliveryInbox,
     HttpHistoricContent,
     HttpKnowledgeEvents,
+    HttpPrecedentInbox,
     HttpReferenceKnowledge,
 )
 from smb_requirement_agent.shared_kernel.citation import PublishedReference
+from tests.unit.analysis.test_product_impact import DRAFTED_OFFERING
 from tests.unit.workflow_helpers import approve_fake_breakdown
 
 CONTRACT = json.loads(
@@ -667,14 +689,182 @@ def test_an_approved_backlog_is_delivered_as_the_contract_describes(client: Test
     assert "200" in operation["responses"]
 
 
+def test_a_drafted_offering_is_delivered_as_the_contract_describes() -> None:
+    """Export schema 1.6 sends the decided product impact, with the drafted offering back
+    exactly as the assessment answered it (ontology plan Phase 9)."""
+    product = {
+        "verdict": "new_product_line",
+        "offering_id": "offering:fiber",
+        "release_id": "rel-7",
+        "draft": DRAFTED_OFFERING,
+    }
+    schema = SCHEMAS["ApprovedBacklogRequest"]["properties"]["product_impact"]
+
+    assert _violations(product, schema, "product_impact") == []
+
+
 def test_a_refused_or_unusable_delivery_is_an_explicit_failure() -> None:
     refused = HttpChangeRequestInbox(_client(_answering({"detail": "Another subject."}, 409)))
     with pytest.raises(ServiceResponseError) as raised:
-        refused.deliver({"schema_version": "1.5"})
+        refused.deliver({"schema_version": "1.6"})
     assert raised.value.status_code == 409
     for answer in ({"approval_id": "apr-1"}, ["CR-1"], {"change_request_id": 7}):
         with pytest.raises(ServiceUnavailableError):
             HttpChangeRequestInbox(_client(_answering(answer, 201))).deliver({})
+
+
+# --- Decided verdicts kept as precedents (ontology plan Phase 5) ---------------------------
+
+PRECEDENT = {
+    "precedent_id": "ANA-1",
+    "requirement_id": "REQ-1",
+    "version": "ANA-1@4",
+    "release_id": "rel-7",
+    "text": ["Static IP for SMB fibre.", "Customers keep their address."],
+    "decision": "overridden",
+    "decided_at": "2026-10-11T09:00:00+00:00",
+    "suggested_verdict": "change_existing_offering",
+    "verdict": "new_plan",
+    "offering_id": "offering:fiber",
+    "concept_ids": ["cap:ip"],
+    "systems": [{"id": "bcrm", "role": "primary", "change_type": "modify"}],
+}
+
+
+def test_a_decided_verdict_is_delivered_as_the_contract_describes() -> None:
+    receipt = {"precedent_id": "ANA-1", "recorded": True, "dropped_systems": []}
+    seen: list[httpx.Request] = []
+
+    recorded = HttpPrecedentInbox(_client(_answering(receipt, 201), seen)).record(PRECEDENT)
+
+    assert recorded is True
+    (request,) = seen
+    _assert_in_contract(request)
+    assert (request.method, request.url.path) == ("POST", "/internal/architecture/precedents")
+    operation = _operation(request)
+    answer = operation["responses"]["201"]["content"]["application/json"]["schema"]
+    assert _violations(receipt, answer, "answer") == []
+    # The same decision, or a later one, already kept answers 200, not recorded.
+    assert "200" in operation["responses"]
+    kept = {**receipt, "recorded": False}
+    assert HttpPrecedentInbox(_client(_answering(kept))).record(PRECEDENT) is False
+
+
+def test_a_refused_or_unusable_precedent_receipt_is_an_explicit_failure() -> None:
+    refused = HttpPrecedentInbox(_client(_answering({"detail": "No published release."}, 404)))
+    with pytest.raises(ServiceResponseError) as raised:
+        refused.record(PRECEDENT)
+    assert raised.value.status_code == 404
+    for answer in ({"precedent_id": "ANA-1"}, ["ANA-1"], {"recorded": "yes"}):
+        with pytest.raises(ServiceUnavailableError):
+            HttpPrecedentInbox(_client(_answering(answer, 201))).record(PRECEDENT)
+
+
+# --- What a closed Epic delivered (ontology plan Phase 7) ----------------------------------
+
+CLOSURE = {
+    "delivery_id": "REQ-1:4711:evt-1",
+    "state": "closed",
+    "requirement_id": "REQ-1",
+    "breakdown_revision": 2,
+    "approval_id": "APR-9",
+    "epic": {
+        "id": "EP-1",
+        "name": "Static IP quota",
+        "external_id": "4711",
+        "url": "https://dev.azure.com/acme/smb/_workitems/edit/4711",
+    },
+    "occurred_at": "2026-10-20T15:30:00+00:00",
+    "release_id": "rel-7",
+    "impact_version": "ANA-1@7",
+    "decision": "accepted",
+    "suggested_verdict": "change_existing_offering",
+    "verdict": "change_existing_offering",
+    "offering_id": "offering:fiber",
+    "offering_name": "Business Fiber",
+    "predicted_systems": [
+        {"id": "bcrm", "name": "BCRM", "role": "primary", "change_type": "modify"}
+    ],
+    "features": [
+        {
+            "id": "FT-1",
+            "sequence": 1,
+            "name": "Order a static IP",
+            "outcome": None,
+            "external_id": "4712",
+            "state": "Closed",
+            "delivered": True,
+            "systems": [{"id": "bcrm", "name": "BCRM"}, {"id": None, "name": "New portal"}],
+        }
+    ],
+    "changes": [
+        {
+            "op": "realise_concept",
+            "concept_id": "cap:static-ip",
+            "concept_label": "Static IP",
+            "system_id": "bcrm",
+            "system_name": "BCRM",
+            "feature_ids": ["FT-1"],
+        },
+        {
+            "op": "offer_concept",
+            "concept_id": "cap:static-ip",
+            "concept_label": "Static IP",
+            "offering_id": "offering:fiber",
+            "offering_name": "Business Fiber",
+            "feature_ids": ["FT-1"],
+        },
+    ],
+}
+
+
+def test_a_closed_epic_is_delivered_as_the_contract_describes() -> None:
+    receipt = {"change_request_id": "CR-1", "created": True, "withdrawn": []}
+    seen: list[httpx.Request] = []
+
+    kept = HttpDeliveryInbox(_client(_answering(receipt, 201), seen)).deliver(CLOSURE)
+
+    assert (kept.change_request_id, kept.withdrawn) == ("CR-1", ())
+    (request,) = seen
+    _assert_in_contract(request)
+    assert (request.method, request.url.path) == ("POST", "/internal/change-requests/deliveries")
+    operation = _operation(request)
+    answer = operation["responses"]["201"]["content"]["application/json"]["schema"]
+    assert _violations(receipt, answer, "answer") == []
+    # Kept before, or a removal, answers 200 with the same receipt.
+    assert "200" in operation["responses"]
+
+
+def test_a_removed_epic_is_delivered_as_the_contract_describes() -> None:
+    removed = {key: CLOSURE[key] for key in ("requirement_id", "breakdown_revision", "epic")}
+    removed |= {
+        "delivery_id": "REQ-1:4711:evt-2",
+        "state": "removed",
+        "approval_id": "APR-9",
+        "occurred_at": "2026-10-21T08:00:00+00:00",
+    }
+    receipt = {"change_request_id": None, "created": False, "withdrawn": ["CR-1"]}
+    seen: list[httpx.Request] = []
+
+    answer = HttpDeliveryInbox(_client(_answering(receipt), seen)).deliver(removed)
+
+    assert (answer.change_request_id, answer.withdrawn) == (None, ("CR-1",))
+    _assert_in_contract(seen[0])
+
+
+def test_a_refused_or_unusable_delivery_receipt_is_an_explicit_failure() -> None:
+    refused = HttpDeliveryInbox(_client(_answering({"detail": "Another body."}, 409)))
+    with pytest.raises(ServiceResponseError) as raised:
+        refused.deliver(CLOSURE)
+    assert raised.value.status_code == 409
+    for answer in (
+        ["CR-1"],
+        {"change_request_id": 7, "withdrawn": []},
+        {"change_request_id": "CR-1"},
+        {"change_request_id": None, "withdrawn": [1]},
+    ):
+        with pytest.raises(ServiceUnavailableError):
+            HttpDeliveryInbox(_client(_answering(answer, 201))).deliver(CLOSURE)
 
 
 # --- A historic requirement's content, a page at a time (ADR-0102, amendment 1) ------------
@@ -721,4 +911,248 @@ def test_an_unusable_historic_page_is_an_explicit_failure() -> None:
     with pytest.raises(ServiceUnavailableError):
         HttpHistoricContent(_client(_answering({"entries": "no"}))).page(
             "h1", 1, ContentPart.ITEMS, 0, 200
+        )
+
+
+ASSESSMENT = {
+    "knowledge_version": "rel-7",
+    "facets": [
+        {
+            "kind": "need",
+            "text": "Static IP for SMB fibre",
+            "quote": "static IP",
+            "ref_id": None,
+            "concepts": [
+                {"concept_id": "cap:ip", "label": "Static IP", "path": "Net > IP", "weak": False}
+            ],
+        }
+    ],
+    "coverage": [
+        {
+            "concept_id": "cap:ip",
+            "label": "Static IP",
+            "path": "Net > IP",
+            "composed_by": ["c1"],
+            "realised_by": ["bcrm"],
+            "covered": True,
+        }
+    ],
+    "offering_id": "offering:fiber",
+    "verdict": "change_existing_offering",
+    "rule_verdict": "change_existing_offering",
+    "verdict_reason": "Business Fiber covers it.",
+    "proposal": {
+        "summary": "Add a quota.",
+        "offering_id": "offering:fiber",
+        "portfolio_node_id": None,
+        "components": [{"offering_id": "offering:fiber", "component_id": "c1", "name": "IP"}],
+        "journey_ids": [],
+        "new_values": ["Quota"],
+    },
+    "systems": [
+        {
+            "id": "bcrm",
+            "name": "BCRM",
+            "role": "primary",
+            "change_type": "modify",
+            "paths": [[{"kind": "system", "id": "bcrm", "label": "BCRM"}]],
+        }
+    ],
+    "gaps": [
+        {
+            "kind": "staffing",
+            "concept_id": "cap:ip",
+            "label": "Static IP",
+            "reason": "No squad.",
+            "system_id": "bcrm",
+        }
+    ],
+    "questions": [
+        {
+            "facet": "offering",
+            "question": "Which offering?",
+            "options": [{"id": "offering:fiber", "label": "Business Fiber"}],
+        }
+    ],
+    "owners": [
+        {
+            "concept_id": "cap:ip",
+            "system_id": "bcrm",
+            "squads": [{"id": "sales", "name": "Sales"}],
+            "value_streams": [],
+            "seats": [
+                {
+                    "squad_id": "sales",
+                    "role": "lead",
+                    "person_id": "p1",
+                    "person_name": "Mona",
+                    "scoped": True,
+                }
+            ],
+        }
+    ],
+    "citations": [],
+    "uncertainty": None,
+    "model": "reader",
+    "reader_model": "reader",
+    "embedding_model": None,
+    "prompt_version": "assess-v1",
+    "index_revision": None,
+}
+
+EXPECTED_ASSESSMENT = ArchitectureAssessment(
+    knowledge_version="rel-7",
+    facets=(
+        AssessedFacet(
+            "need",
+            "Static IP for SMB fibre",
+            "static IP",
+            concepts=(AssessedConcept("cap:ip", "Static IP", "Net > IP"),),
+        ),
+    ),
+    coverage=(AssessedCoverage("cap:ip", "Static IP", "Net > IP", ("c1",), ("bcrm",), True),),
+    offering_id="offering:fiber",
+    verdict="change_existing_offering",
+    rule_verdict="change_existing_offering",
+    verdict_reason="Business Fiber covers it.",
+    proposal=AssessedProposal(
+        "Add a quota.",
+        "offering:fiber",
+        components=(AssessedComponent("offering:fiber", "c1", "IP"),),
+        new_values=("Quota",),
+    ),
+    systems=(
+        AssessedSystem(
+            "bcrm", "BCRM", "primary", "modify", ((AssessedPathStep("system", "bcrm", "BCRM"),),)
+        ),
+    ),
+    gaps=(AssessedGap("staffing", "cap:ip", "Static IP", "No squad.", "bcrm"),),
+    questions=(
+        AssessedQuestion(
+            "offering", "Which offering?", (AssessedOption("Business Fiber", "offering:fiber"),)
+        ),
+    ),
+    owners=(
+        AssessedOwners(
+            "cap:ip",
+            "bcrm",
+            squads=(AssessedReference("sales", "Sales"),),
+            seats=(AssessedSeat("sales", "lead", "p1", "Mona", True),),
+        ),
+    ),
+    model="reader",
+    reader_model="reader",
+    prompt_version="assess-v1",
+)
+
+
+def test_an_assessment_is_asked_for_and_decoded_as_the_contract_describes() -> None:
+    seen: list[httpx.Request] = []
+
+    assessment = HttpArchitectureAssessment(_client(_answering(ASSESSMENT), seen)).assess(
+        AssessmentQuery(("Static IP for SMB fibre.",), ("BCRM",), "rel-7", "REQ-7")
+    )
+
+    (request,) = seen
+    _assert_in_contract(request)
+    _assert_answer_in_contract(request, ASSESSMENT)
+    assert (request.method, request.url.path) == ("POST", "/internal/architecture/assess")
+    assert json.loads(request.content) == {
+        "text": ["Static IP for SMB fibre."],
+        "declared_systems": ["BCRM"],
+        "release_id": "rel-7",
+        # Its own decided verdict is never shown back to it (ontology plan Phase 5).
+        "requirement_id": "REQ-7",
+    }
+    assert assessment == EXPECTED_ASSESSMENT
+
+
+def test_the_precedents_an_assessment_weighed_are_allowed_and_not_needed() -> None:
+    """Phase 5 adds the precedents and the reranker to the answer; requirement work reads
+    neither yet, and an answer carrying them decodes to the same assessment."""
+    seen: list[httpx.Request] = []
+    later = {
+        **json.loads(json.dumps(ASSESSMENT)),
+        "reranker_model": "lexical-bm25-v1",
+        "precedents": [
+            {
+                "precedent_id": "ANA-1",
+                "requirement_id": "REQ-1",
+                "release_id": "rel-7",
+                "verdict": "new_plan",
+                "decision": "overridden",
+                "offering_id": "offering:fiber",
+                "score": 0.71,
+                "system_ids": ["bcrm"],
+                "shared_concept_ids": ["cap:ip"],
+            }
+        ],
+    }
+
+    assessment = HttpArchitectureAssessment(_client(_answering(later), seen)).assess(
+        AssessmentQuery(("Static IP for SMB fibre.",))
+    )
+
+    _assert_answer_in_contract(seen[0], later)
+    assert assessment == EXPECTED_ASSESSMENT
+
+
+def test_a_drafted_offering_is_decoded_and_kept_as_the_service_wrote_it() -> None:
+    seen: list[httpx.Request] = []
+    drafted = json.loads(json.dumps(ASSESSMENT))
+    drafted["verdict"] = drafted["rule_verdict"] = "new_product_line"
+    drafted["proposal"]["draft"] = DRAFTED_OFFERING
+
+    assessment = HttpArchitectureAssessment(_client(_answering(drafted), seen)).assess(
+        AssessmentQuery(("Cloud video surveillance for shops.",))
+    )
+
+    _assert_answer_in_contract(seen[0], drafted)
+    assert assessment is not None and assessment.proposal is not None
+    draft = assessment.proposal.draft
+    assert draft is not None
+    assert (draft.offering.name, draft.based_on) == (
+        "Cloud video surveillance for shops",
+        "offering:fiber",
+    )
+    assert [
+        (part.name, [duty.system_id for duty in part.responsibilities])
+        for part in draft.offering.components
+    ] == [("Managed access point", ["ecm", "wfms"]), ("Cloud video surveillance", [])]
+    assert [item.text for item in draft.offering.questions] == [
+        "Which system will realise Cloud video surveillance?"
+    ]
+    assert draft.journey is not None and len(draft.journey.activities) == 2
+    assert draft.document == DRAFTED_OFFERING
+
+
+def test_a_role_kind_or_facet_added_later_is_read_as_written() -> None:
+    """Additive contract values (AGENTS.md section 2.1) must not fail an analysis."""
+    later = json.loads(json.dumps(ASSESSMENT))
+    later["systems"][0]["role"] = "owner"
+    later["systems"][0]["paths"][0][0]["kind"] = "interface"
+    later["facets"][0]["kind"] = "interface"
+
+    assessment = HttpArchitectureAssessment(_client(_answering(later))).assess(
+        AssessmentQuery(("text",))
+    )
+
+    assert assessment is not None
+    assert assessment.systems[0].role == "owner"
+    assert assessment.systems[0].paths[0][0].kind == "interface"
+    assert assessment.facets[0].kind == "interface"
+
+
+def test_a_portal_without_the_assessment_offers_none() -> None:
+    older = _client(_answering({"detail": "Not Found"}, status=404))
+
+    assert HttpArchitectureAssessment(older).assess(AssessmentQuery(("text",))) is None
+    assert not FakeArchitectureAssessment().is_connected()
+    assert FakeArchitectureAssessment().assess(AssessmentQuery(("text",))) is None
+
+
+def test_an_unusable_assessment_is_an_explicit_failure() -> None:
+    with pytest.raises(ServiceUnavailableError):
+        HttpArchitectureAssessment(_client(_answering({"verdict": "maybe"}))).assess(
+            AssessmentQuery(("text",))
         )

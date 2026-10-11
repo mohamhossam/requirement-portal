@@ -23,6 +23,7 @@ from smb_requirement_agent.analysis.domain.entities import (
     ClarificationQuestion,
     RequirementAnalysis,
 )
+from smb_requirement_agent.analysis.domain.product_impact import ProductImpactStatus
 from smb_requirement_agent.analysis.domain.value_objects import (
     ClarificationKind,
     ClarificationSeverity,
@@ -128,18 +129,117 @@ def reconcile_round(
         raise RequirementAnalysisGenerationError(
             "Analyzer duplicated a current or protected human clarification question."
         )
+    catalogue = _catalogue_questions(
+        analysis, previous_active, protected_subjects.union(current_subjects)
+    )
     round_questions = [
         *human_questions,
         *(questions_by_key[key] for key in expected_keys),
+        *catalogue.kept,
+        *catalogue.created,
     ]
     return ReconciledRound(
         AnalysisRound(
             analysis,
             tuple(item.id for item in round_questions),
-            tuple(changes),
+            (*changes, *catalogue.changes),
         ),
-        tuple(new_questions),
-        tuple(superseded_questions),
+        (*new_questions, *catalogue.created),
+        (*superseded_questions, *catalogue.retired),
+    )
+
+
+@dataclass(frozen=True)
+class _CatalogueQuestions:
+    kept: tuple[ClarificationQuestion, ...]
+    created: tuple[ClarificationQuestion, ...]
+    retired: tuple[ClarificationQuestion, ...]
+    changes: tuple[AnalysisQuestionChange, ...]
+
+
+def _catalogue_questions(
+    analysis: RequirementAnalysis,
+    previous_active: tuple[ClarificationQuestion, ...],
+    taken: set[str],
+) -> _CatalogueQuestions:
+    """Keep the questions the round's product impact still asks, and only those.
+
+    A round that could not reach the knowledge portal keeps every open one: nothing says
+    it was answered. A question the analysis or a person already asks is not asked twice.
+    """
+    if analysis.id is None:  # pragma: no cover - guarded by caller
+        raise AssertionError("Reconciliation requires an identified analysis.")
+    previous = [item for item in previous_active if item.source is ClarificationSource.CATALOGUE]
+    if analysis.product_impact_status is ProductImpactStatus.UNAVAILABLE:
+        return _CatalogueQuestions(
+            tuple(previous),
+            (),
+            (),
+            tuple(
+                AnalysisQuestionChange(
+                    QuestionChangeAction.RETAINED,
+                    item.id,
+                    "The product impact could not be checked again this round.",
+                )
+                for item in previous
+            ),
+        )
+    asked = analysis.product_impact.questions if analysis.product_impact is not None else ()
+    by_subject = {item.subject.casefold(): item for item in previous}
+    kept: list[ClarificationQuestion] = []
+    created: list[ClarificationQuestion] = []
+    changes: list[AnalysisQuestionChange] = []
+    seen: set[str] = set()
+    for item in asked:
+        subject = item.question.strip()
+        key = subject.casefold()
+        if key in seen or key in taken:
+            continue
+        seen.add(key)
+        if key in by_subject:
+            kept.append(by_subject[key])
+            changes.append(
+                AnalysisQuestionChange(
+                    QuestionChangeAction.RETAINED,
+                    by_subject[key].id,
+                    "The product impact still needs this answer.",
+                )
+            )
+            continue
+        question = ClarificationQuestion(
+            QuestionId(str(uuid.uuid4())),
+            analysis.requirement_id,
+            analysis.id,
+            ClarificationKind.OPEN_QUESTION,
+            subject,
+            f"The knowledge portal needs this to place the requirement ({item.facet}).",
+            ClarificationSeverity.MEDIUM,
+            True,
+            ClarificationSource.CATALOGUE,
+            options=item.options,
+        )
+        created.append(question)
+        changes.append(
+            AnalysisQuestionChange(
+                QuestionChangeAction.CREATED,
+                question.id,
+                "The product impact cannot be decided without this answer.",
+            )
+        )
+    retired = [item for item in previous if item.subject.casefold() not in seen]
+    changes.extend(
+        AnalysisQuestionChange(
+            QuestionChangeAction.RETIRED,
+            item.id,
+            "The product impact no longer needs this answer.",
+        )
+        for item in retired
+    )
+    return _CatalogueQuestions(
+        tuple(kept),
+        tuple(created),
+        tuple(item.supersede() for item in retired),
+        tuple(changes),
     )
 
 

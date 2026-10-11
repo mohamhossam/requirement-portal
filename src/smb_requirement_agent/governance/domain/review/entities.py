@@ -96,6 +96,8 @@ class FlagCategory(StrEnum):
     ARCHITECTURE = "architecture"
     QUALITY = "quality"
     STALENESS = "staleness"
+    # Where the requirement sits in the product portfolio (ADR-0115).
+    PRODUCT = "product"
 
 
 class FlagStatus(StrEnum):

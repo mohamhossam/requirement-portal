@@ -1,13 +1,16 @@
 # Enhancement — Knowledge Center (architecture, requirement and reference knowledge)
 
-> **Status: re-planned 2026-10-06 for the three repositories.**
+> **Status: delivered 2026-10-07; re-planned 2026-10-06 for the three repositories.**
 > - **Decisions:** recorded 2026-09-26, then amended by ADR-0098 (the split), ADR-0099
 >   Amendment 1 (the Knowledge Center across the split) and this re-plan.
 > - **Delivered:** A is mostly delivered by the split itself, and F was delivered early.
-> - **Delivered since:** B1, A′, B2, B3, C and D.
-> - **Next:** E, scheduled 2026-10-06 by an explicit roadmap change (read-only Azure DevOps
->   import, ADR-0102). It is delivered as E1 (knowledge-portal's import and lineage) then E2
->   (this service's historic corpus and prior art).
+> - **Delivered since:** B1, A′, B2, B3, C and D, then E, scheduled 2026-10-06 by an explicit
+>   roadmap change (read-only Azure DevOps import, ADR-0102) and delivered as E1
+>   (knowledge-portal's import and lineage) then E2 (this service's historic corpus and prior
+>   art).
+> - **Still open:** the ADO edition, for the REST adapter; until it is answered E runs against
+>   the fake connector. Prior art stays off in production (`PRIOR_ART_ENABLED`) until an operator
+>   has evaluated the judge.
 >
 > Every sub-slice below names the repository it is built in.
 
@@ -241,7 +244,7 @@ Delivery order: **B1 → A′ → B2 → B3 → C → D → E1 → E2**. F is do
 > - **E1 — delivered 2026-10-06** ([enhancement-knowledge-center-e1-historic-import.md](enhancement-knowledge-center-e1-historic-import.md)):
 >   knowledge-portal's import, fake ADO connector, preview, publish, refresh with a diff and
 >   lineage; this ADR and the roadmap change here.
-> - **E2 — in progress** ([enhancement-knowledge-center-e2-prior-art.md](enhancement-knowledge-center-e2-prior-art.md),
+> - **E2 — delivered 2026-10-07** ([enhancement-knowledge-center-e2-prior-art.md](enhancement-knowledge-center-e2-prior-art.md),
 >   ADR-0102 Amendment 1): this service's projection, historic corpus, prior-art screening with
 >   its own judge, and the Knowledge step's "Similar past requirements"; knowledge-portal's light
 >   event, paged content read and "Cited by" view. The domain below is corrected by the
@@ -442,17 +445,17 @@ Delivery order: **B1 → A′ → B2 → B3 → C → D → E1 → E2**. F is do
 
 ## Acceptance Criteria
 
-- [ ] A new Requirement supplied only as a document is indexed and screened from its attachment content (B1).
-- [ ] The knowledge-portal front page shows inventory, freshness, failures, Requirement-corpus health, review status and imports; only `knowledge_admin` sees it.
-- [ ] Knowledge admins browse the corpus and portfolio findings, nudge owners, retire and reinstate Requirements, and bulk reindex, all audited, without Requirement data leaving requirement-portal.
-- [ ] Knowledge admins reassign or withdraw any library document and bulk retry, all audited; architecture files upload several at a time, with per-file results; any two catalogue versions compare side by side.
-- [ ] Reviews come due after 6 months (configurable); the portal reminds its owners; overdue knowledge is flagged on the front page and in citations.
+- [x] A new Requirement supplied only as a document is indexed and screened from its attachment content (B1).
+- [x] The knowledge-portal front page shows inventory, freshness, failures, Requirement-corpus health, review status and imports; only `knowledge_admin` sees it.
+- [x] Knowledge admins browse the corpus and portfolio findings, nudge owners, retire and reinstate Requirements, and bulk reindex, all audited, without Requirement data leaving requirement-portal.
+- [x] Knowledge admins reassign or withdraw any library document and bulk retry, all audited; architecture files upload several at a time, with per-file results; any two catalogue versions compare side by side.
+- [x] Reviews come due after 6 months (configurable); the portal reminds its owners; overdue knowledge is flagged on the front page and in citations.
 - [x] Old URLs and evidence links still work. requirement-portal redirects them to its Documents page and read-only viewers (`legacyKnowledgeLinks.tsx`, `KnowledgeViews.test.tsx`).
 - [x] Architecture Markdown is read heading-aware, with heading citations (ADR-0090).
 - [x] AI-suggested catalogue changes are reviewable suggestions with citations (F).
-- [ ] (E, when scheduled) Old BRDs import with their ADO breakdown read-only; the lineage BRD → Epic → Feature → Story is viewable, and prior art appears informationally on new Requirements.
-- [ ] Everything runs offline with fake identity, a fake ADO and fake AI, except PostgreSQL-only rebuilds.
-- [ ] All backend and frontend quality gates and CI are green in both repositories.
+- [x] (E) Old BRDs import with their ADO breakdown read-only; the lineage BRD → Epic → Feature → Story is viewable, and prior art appears informationally on new Requirements.
+- [x] Everything runs offline with fake identity, a fake ADO and fake AI, except PostgreSQL-only rebuilds.
+- [x] All backend and frontend quality gates and CI are green in both repositories.
 
 ## Dependencies
 
@@ -484,4 +487,19 @@ version (ADR-0102), so E is built against the fake until it is answered.
 - **2026-10-06, the re-plan:** a read-only survey of requirement-portal `main` (`c465e5b`) and
   knowledge-portal `main` (`633cb59`). The current state and the delivered acceptance criteria
   above cite what was found.
-- **B1 and later sub-slices:** not started.
+- **Delivered sub-slices**, each with its own validation evidence in its slice document. Every
+  pull request below merged with CI green:
+
+  | Sub-slice | requirement-portal | knowledge-portal | Slice document |
+  |---|---|---|---|
+  | B1 | [#39](https://github.com/mohamhossam/requirement-portal/pull/39) | — | `enhancement-knowledge-center-b1-attachment-sources.md` |
+  | A′ | [#41](https://github.com/mohamhossam/requirement-portal/pull/41) | [#40](https://github.com/mohamhossam/knowledge-portal/pull/40) | `enhancement-knowledge-center-a-prime-corpus-summary.md` |
+  | B2 | [#42](https://github.com/mohamhossam/requirement-portal/pull/42) | [#42](https://github.com/mohamhossam/knowledge-portal/pull/42) | `enhancement-knowledge-center-b2-corpus-and-findings.md` |
+  | B3 | [#43](https://github.com/mohamhossam/requirement-portal/pull/43) | [#43](https://github.com/mohamhossam/knowledge-portal/pull/43) | `enhancement-knowledge-center-b3-corpus-actions.md` |
+  | C | [#44](https://github.com/mohamhossam/requirement-portal/pull/44) | [#44](https://github.com/mohamhossam/knowledge-portal/pull/44) | `enhancement-knowledge-center-c-library-curation.md` |
+  | D | [#45](https://github.com/mohamhossam/requirement-portal/pull/45) | [#45](https://github.com/mohamhossam/knowledge-portal/pull/45) | `enhancement-knowledge-center-d-review-cycles.md` |
+  | E1 | [#46](https://github.com/mohamhossam/requirement-portal/pull/46) (ADR-0102) | [#46](https://github.com/mohamhossam/knowledge-portal/pull/46) | `enhancement-knowledge-center-e1-historic-import.md` |
+  | E2 | [#47](https://github.com/mohamhossam/requirement-portal/pull/47) | [#47](https://github.com/mohamhossam/knowledge-portal/pull/47) (E2a), [#48](https://github.com/mohamhossam/knowledge-portal/pull/48) (E2b) | `enhancement-knowledge-center-e2-prior-art.md` |
+
+- **Offline:** E1 and E2 were exercised end to end with `ADO_PROVIDER=fake` and the fake model
+  provider (E2's slice document, "Validation evidence").

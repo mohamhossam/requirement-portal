@@ -10,6 +10,12 @@ from smb_requirement_agent.governance.application.use_cases.export_breakdown imp
     formal_final_approval,
     is_exportable_revision,
 )
+from smb_requirement_agent.governance.application.use_cases.publish_breakdown import (
+    GetPublicationStatus,
+    PreviewPublication,
+    PublishBreakdown,
+    RetryFailedPublication,
+)
 from smb_requirement_agent.governance.application.use_cases.revision_history import (
     CompareBreakdownVersions,
     GetRevisionHistory,
@@ -22,10 +28,23 @@ from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     get_compare_breakdown_versions,
     get_export_breakdown,
+    get_preview_publication,
+    get_publication_status,
+    get_publish_breakdown,
+    get_retry_failed_publication,
     get_revision_history,
     require_authenticated_actor,
 )
 from smb_requirement_agent.interfaces.api.schemas.identity import ActorResponse
+from smb_requirement_agent.interfaces.api.schemas.publication import (
+    PublicationPreviewResponse,
+    PublicationReportResponse,
+    PublicationStatusResponse,
+    PublishBreakdownRequest,
+    preview_response,
+    report_response,
+    status_response,
+)
 from smb_requirement_agent.interfaces.api.schemas.revisions import (
     BreakdownComparisonResponse,
     BreakdownRevisionResponse,
@@ -164,3 +183,58 @@ def export_revision(
             "Cache-Control": "private, no-store",
         },
     )
+
+
+@router.get(
+    "/{requirement_id}/revisions/{revision_number}/publication",
+    response_model=PublicationPreviewResponse,
+)
+def preview_publication(
+    requirement_id: str,
+    revision_number: Annotated[int, Path(ge=1)],
+    actor: CurrentActorDep,
+    use_case: Annotated[PreviewPublication, Depends(get_preview_publication)],
+) -> PublicationPreviewResponse:
+    preview = use_case.execute(
+        RequirementId(requirement_id), RevisionNumber(revision_number), actor
+    )
+    return preview_response(preview)
+
+
+@router.post(
+    "/{requirement_id}/revisions/{revision_number}/publication",
+    response_model=PublicationReportResponse,
+)
+def publish_revision(
+    requirement_id: str,
+    revision_number: Annotated[int, Path(ge=1)],
+    request: PublishBreakdownRequest,
+    actor: CurrentActorDep,
+    use_case: Annotated[PublishBreakdown, Depends(get_publish_breakdown)],
+) -> PublicationReportResponse:
+    report = use_case.execute(
+        RequirementId(requirement_id),
+        RevisionNumber(revision_number),
+        actor,
+        request.approval_fingerprint,
+    )
+    return report_response(report)
+
+
+@router.get("/{requirement_id}/publication", response_model=PublicationStatusResponse)
+def publication_status(
+    requirement_id: str,
+    actor: CurrentActorDep,
+    use_case: Annotated[GetPublicationStatus, Depends(get_publication_status)],
+) -> PublicationStatusResponse:
+    overview = use_case.execute(RequirementId(requirement_id), actor)
+    return status_response(requirement_id, overview)
+
+
+@router.post("/{requirement_id}/publication/retry", response_model=PublicationReportResponse)
+def retry_publication(
+    requirement_id: str,
+    actor: CurrentActorDep,
+    use_case: Annotated[RetryFailedPublication, Depends(get_retry_failed_publication)],
+) -> PublicationReportResponse:
+    return report_response(use_case.execute(RequirementId(requirement_id), actor))

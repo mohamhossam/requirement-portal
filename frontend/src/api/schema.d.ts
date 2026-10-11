@@ -238,6 +238,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/integrations/azure-devops/work-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Receive Work Item Event
+         * @description Queue a published Epic closed or removed in the tracker; ignore every other event.
+         */
+        post: operations["receive_work_item_event_integrations_azure_devops_work_items_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/knowledge/search/unified": {
         parameters: {
             query?: never;
@@ -642,6 +662,26 @@ export interface paths {
         put?: never;
         /** Confirm Requirement Analysis */
         post: operations["confirm_requirement_analysis_requirements__requirement_id__analysis_confirmation_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/requirements/{requirement_id}/analysis/product-impact/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Decide Product Impact
+         * @description Accept the suggested product impact, override its verdict, or mark it unknown.
+         */
+        put: operations["decide_product_impact_requirements__requirement_id__analysis_product_impact_decision_put"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1472,6 +1512,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/requirements/{requirement_id}/publication": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Publication Status */
+        get: operations["publication_status_requirements__requirement_id__publication_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/requirements/{requirement_id}/publication/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry Publication */
+        post: operations["retry_publication_requirements__requirement_id__publication_retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/requirements/{requirement_id}/review-submission": {
         parameters: {
             query?: never;
@@ -1552,6 +1626,24 @@ export interface paths {
         get: operations["export_revision_requirements__requirement_id__revisions__revision_number__export_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/requirements/{requirement_id}/revisions/{revision_number}/publication": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Preview Publication */
+        get: operations["preview_publication_requirements__requirement_id__revisions__revision_number__publication_get"];
+        put?: never;
+        /** Publish Revision */
+        post: operations["publish_revision_requirements__requirement_id__revisions__revision_number__publication_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2564,6 +2656,23 @@ export interface components {
             /** Expected Version */
             expected_version: number;
         };
+        /** CapabilityNeedResponse */
+        CapabilityNeedResponse: {
+            /** Concept Id */
+            concept_id: string;
+            /** Covered */
+            covered: boolean;
+            /** Label */
+            label: string;
+            /** Path */
+            path: string;
+            /** Weak */
+            weak: boolean;
+        };
+        /** ChangedFields */
+        ChangedFields: {
+            "System.State"?: components["schemas"]["FieldChange"] | null;
+        };
         /** CitedPassage */
         CitedPassage: {
             /** Block Id */
@@ -2640,6 +2749,11 @@ export interface components {
             /** Is Blocker */
             is_blocker: boolean;
             kind: components["schemas"]["ClarificationKind"];
+            /**
+             * Options
+             * @default []
+             */
+            options: string[];
             /** Rationale */
             rationale: string | null;
             /** Replaces Question Id */
@@ -2672,7 +2786,7 @@ export interface components {
          * ClarificationSource
          * @enum {string}
          */
-        ClarificationSource: "ai" | "human";
+        ClarificationSource: "ai" | "human" | "catalogue";
         /**
          * ClarificationStatus
          * @enum {string}
@@ -2778,6 +2892,18 @@ export interface components {
             replacement_statement?: string | null;
             /** Success Measures */
             success_measures?: string[] | null;
+        };
+        /**
+         * DecideProductImpactRequest
+         * @description Accept the suggested verdict, override it with another, or mark it unknown.
+         */
+        DecideProductImpactRequest: {
+            decision: components["schemas"]["ProductImpactDecision"];
+            /** Expected Version */
+            expected_version: number;
+            /** Rationale */
+            rationale?: string | null;
+            verdict?: components["schemas"]["ProductVerdict"] | null;
         };
         /** DecisionRequest */
         DecisionRequest: {
@@ -3108,6 +3234,13 @@ export interface components {
             /** System Names */
             system_names?: string[];
         };
+        /** DraftComponentResponse */
+        DraftComponentResponse: {
+            /** Name */
+            name: string;
+            /** System Ids */
+            system_ids: string[];
+        };
         /**
          * DraftSort
          * @enum {string}
@@ -3281,6 +3414,13 @@ export interface components {
             /** Stories */
             stories: components["schemas"]["StoryQualityResponse"][];
         };
+        /** FieldChange */
+        FieldChange: {
+            /** Newvalue */
+            newValue?: string | null;
+            /** Oldvalue */
+            oldValue?: string | null;
+        };
         /**
          * FindingSource
          * @enum {string}
@@ -3299,7 +3439,7 @@ export interface components {
          * FlagCategory
          * @enum {string}
          */
-        FlagCategory: "open_question" | "assumption" | "ambiguity" | "dependency" | "architecture" | "quality" | "staleness";
+        FlagCategory: "open_question" | "assumption" | "ambiguity" | "dependency" | "architecture" | "quality" | "staleness" | "product";
         /**
          * FlagSeverity
          * @enum {string}
@@ -3440,6 +3580,63 @@ export interface components {
             /** Reason */
             reason: string;
         };
+        /** ImpactGapResponse */
+        ImpactGapResponse: {
+            /** Concept Id */
+            concept_id: string;
+            /** Kind */
+            kind: string;
+            /** Label */
+            label: string;
+            /** Reason */
+            reason: string;
+            /** System Id */
+            system_id: string | null;
+        };
+        /** ImpactOwnerResponse */
+        ImpactOwnerResponse: {
+            /** Concept Id */
+            concept_id: string;
+            /** Open Seats */
+            open_seats: number;
+            /** People */
+            people: string[];
+            /** Squads */
+            squads: string[];
+            /** System Id */
+            system_id: string;
+        };
+        /** ImpactPathStepResponse */
+        ImpactPathStepResponse: {
+            /** Id */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Label */
+            label: string;
+        };
+        /** ImpactQuestionResponse */
+        ImpactQuestionResponse: {
+            /** Facet */
+            facet: string;
+            /** Options */
+            options: string[];
+            /** Question */
+            question: string;
+        };
+        /** ImpactSystemResponse */
+        ImpactSystemResponse: {
+            /** Change Type */
+            change_type: string;
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Paths */
+            paths: components["schemas"]["ImpactPathStepResponse"][][];
+            /** Role */
+            role: string;
+        };
         /** IngestionControlRequest */
         IngestionControlRequest: {
             /** Expected Version */
@@ -3520,6 +3717,26 @@ export interface components {
          * @enum {string}
          */
         InvestCriterion: "independent" | "negotiable" | "valuable" | "estimable" | "small" | "testable";
+        /**
+         * ItemAction
+         * @description What publishing a plan would do with one item, given what was published before.
+         * @enum {string}
+         */
+        ItemAction: "create" | "update" | "unchanged";
+        /** ItemOutcomeResponse */
+        ItemOutcomeResponse: {
+            /** Error */
+            error: string | null;
+            /** Local Key */
+            local_key: string;
+            result: components["schemas"]["ItemResult"];
+        };
+        /**
+         * ItemResult
+         * @description What one attempt did with one backlog item.
+         * @enum {string}
+         */
+        ItemResult: "created" | "updated" | "unchanged" | "recovered" | "failed" | "not_attempted";
         /** JourneyNeighbourResponse */
         JourneyNeighbourResponse: {
             /** Name */
@@ -3763,6 +3980,26 @@ export interface components {
             /** Resource Path */
             resource_path: string | null;
         };
+        /**
+         * OfferingDraftResponse
+         * @description The offering and journey drafted for a new-offering verdict (ontology plan Phase 9).
+         */
+        OfferingDraftResponse: {
+            /** Based On */
+            based_on: string | null;
+            /** Components */
+            components: components["schemas"]["DraftComponentResponse"][];
+            /** Journey Name */
+            journey_name: string | null;
+            /** Journey Steps */
+            journey_steps: number;
+            /** Offering Id */
+            offering_id: string;
+            /** Offering Name */
+            offering_name: string;
+            /** Questions */
+            questions: string[];
+        };
         /** OfferingDutyResponse */
         OfferingDutyResponse: {
             /** Component Id */
@@ -3863,6 +4100,29 @@ export interface components {
             actor: components["schemas"]["ActorResponse"];
             /** Count */
             count: number;
+        };
+        /** PlannedWorkItemResponse */
+        PlannedWorkItemResponse: {
+            /** Acceptance Criteria Count */
+            acceptance_criteria_count: number;
+            action: components["schemas"]["ItemAction"];
+            /** External Id */
+            external_id: string | null;
+            /** Key */
+            key: string;
+            kind: components["schemas"]["WorkItemKind"];
+            /** Label */
+            label: string;
+            /** Location */
+            location: string;
+            /** Owning Squad Name */
+            owning_squad_name: string | null;
+            /** Parent Key */
+            parent_key: string | null;
+            /** Title */
+            title: string;
+            /** Url */
+            url: string | null;
         };
         /** PotentialDependencyResponse */
         PotentialDependencyResponse: {
@@ -3981,6 +4241,73 @@ export interface components {
             /** Responsibilities */
             responsibilities?: components["schemas"]["OfferingDutyResponse"][];
         };
+        /**
+         * ProductImpactDecision
+         * @enum {string}
+         */
+        ProductImpactDecision: "accepted" | "overridden" | "unknown";
+        /**
+         * ProductImpactResponse
+         * @description Where the knowledge portal places the requirement, and the decision on it (ADR-0115).
+         */
+        ProductImpactResponse: {
+            /**
+             * Assessed At
+             * Format: date-time
+             */
+            assessed_at: string;
+            /** Decided At */
+            decided_at: string | null;
+            decided_by: components["schemas"]["ActorResponse"] | null;
+            decision: components["schemas"]["ProductImpactDecision"] | null;
+            draft: components["schemas"]["OfferingDraftResponse"] | null;
+            /** Gaps */
+            gaps: components["schemas"]["ImpactGapResponse"][];
+            /** Model */
+            model: string | null;
+            /** Needs */
+            needs: components["schemas"]["CapabilityNeedResponse"][];
+            /** New Values */
+            new_values: string[];
+            /** Offering Id */
+            offering_id: string | null;
+            /** Offering Name */
+            offering_name: string | null;
+            /** Owners */
+            owners: components["schemas"]["ImpactOwnerResponse"][];
+            /** Prompt Version */
+            prompt_version: string | null;
+            /** Proposal */
+            proposal: string | null;
+            /** Questions */
+            questions: components["schemas"]["ImpactQuestionResponse"][];
+            /** Rationale */
+            rationale: string | null;
+            /** Reason */
+            reason: string;
+            /** Release Id */
+            release_id: string;
+            suggested_verdict: components["schemas"]["ProductVerdict"] | null;
+            /** Systems */
+            systems: components["schemas"]["ImpactSystemResponse"][];
+            /** Uncertainty */
+            uncertainty: string | null;
+            verdict: components["schemas"]["ProductVerdict"] | null;
+            /** Verdict Validated */
+            verdict_validated: boolean;
+        };
+        /**
+         * ProductImpactStatus
+         * @description Whether an analysis round could ask the knowledge portal for a product impact.
+         * @enum {string}
+         */
+        ProductImpactStatus: "assessed" | "not_connected" | "unavailable";
+        /**
+         * ProductVerdict
+         * @description The knowledge portal's four answers to "is this an existing product or a new one?".
+         * @enum {string}
+         */
+        ProductVerdict: "change_existing_offering" | "new_plan" | "new_offering_in_family" | "new_product_line";
         /** PromoteRequirementDraftRequest */
         PromoteRequirementDraftRequest: {
             /** Expected Version */
@@ -4016,6 +4343,134 @@ export interface components {
             model: string;
             /** Prompt Version */
             prompt_version: string;
+        };
+        /** PublicationAttemptResponse */
+        PublicationAttemptResponse: {
+            /** Actor Name */
+            actor_name: string;
+            /** Finished At */
+            finished_at: string | null;
+            /** Items */
+            items: components["schemas"]["ItemOutcomeResponse"][];
+            /** Number */
+            number: number;
+            outcome: components["schemas"]["PublicationOutcome"] | null;
+            /** Revision */
+            revision: number;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+        };
+        /** PublicationCountsResponse */
+        PublicationCountsResponse: {
+            /** Epics */
+            epics: number;
+            /** Features */
+            features: number;
+            /** Stories */
+            stories: number;
+        };
+        /** PublicationDetailResponse */
+        PublicationDetailResponse: {
+            /** Label */
+            label: string;
+            /** Value */
+            value: string;
+        };
+        /**
+         * PublicationOutcome
+         * @enum {string}
+         */
+        PublicationOutcome: "published" | "partial" | "failed" | "interrupted";
+        /** PublicationPreviewResponse */
+        PublicationPreviewResponse: {
+            /** Approval Fingerprint */
+            approval_fingerprint: string;
+            counts: components["schemas"]["PublicationCountsResponse"];
+            /** Items */
+            items: components["schemas"]["PlannedWorkItemResponse"][];
+            /** Published Revision */
+            published_revision: number | null;
+            /** Removed */
+            removed: components["schemas"]["WorkItemMappingResponse"][];
+            /** Requirement Id */
+            requirement_id: string;
+            /** Revision */
+            revision: number;
+            status: components["schemas"]["PublicationStatus"];
+            target: components["schemas"]["PublicationTargetResponse"];
+        };
+        /** PublicationReportResponse */
+        PublicationReportResponse: {
+            outcome: components["schemas"]["PublicationOutcome"];
+            /** Project */
+            project: string;
+            /** Requirement Id */
+            requirement_id: string;
+            /** Revision */
+            revision: number;
+            /** Steps */
+            steps: components["schemas"]["PublicationStepResponse"][];
+            /** System */
+            system: string;
+        };
+        /**
+         * PublicationStatus
+         * @enum {string}
+         */
+        PublicationStatus: "not_published" | "in_progress" | "published" | "incomplete" | "outdated";
+        /** PublicationStatusResponse */
+        PublicationStatusResponse: {
+            /** Attempts */
+            attempts: components["schemas"]["PublicationAttemptResponse"][];
+            /** Latest Approved Revision */
+            latest_approved_revision: number | null;
+            /** Mappings */
+            mappings: components["schemas"]["WorkItemMappingResponse"][];
+            /** Product Impact Version */
+            product_impact_version: string | null;
+            /** Product Verdict */
+            product_verdict: string | null;
+            /** Published Revision */
+            published_revision: number | null;
+            /** Requirement Id */
+            requirement_id: string;
+            status: components["schemas"]["PublicationStatus"];
+        };
+        /** PublicationStepResponse */
+        PublicationStepResponse: {
+            /** Error */
+            error: string | null;
+            /** External Id */
+            external_id: string | null;
+            /** Key */
+            key: string;
+            kind: components["schemas"]["WorkItemKind"];
+            /** Label */
+            label: string;
+            status: components["schemas"]["ItemResult"];
+            /** Title */
+            title: string;
+            /** Url */
+            url: string | null;
+        };
+        /** PublicationTargetResponse */
+        PublicationTargetResponse: {
+            /** Default Location */
+            default_location: string;
+            /** Details */
+            details: components["schemas"]["PublicationDetailResponse"][];
+            /** Project */
+            project: string;
+            /** System */
+            system: string;
+        };
+        /** PublishBreakdownRequest */
+        PublishBreakdownRequest: {
+            /** Approval Fingerprint */
+            approval_fingerprint: string;
         };
         /** PublishedReference */
         PublishedReference: {
@@ -4191,6 +4646,8 @@ export interface components {
             };
             /** Potential Dependencies */
             potential_dependencies: components["schemas"]["PotentialDependencyResponse"][];
+            product_impact?: components["schemas"]["ProductImpactResponse"] | null;
+            product_impact_status?: components["schemas"]["ProductImpactStatus"] | null;
             provenance: components["schemas"]["ProvenanceResponse"] | null;
             /** Question Changes */
             question_changes: components["schemas"]["AnalysisQuestionChangeResponse"][];
@@ -5015,6 +5472,8 @@ export interface components {
             capabilities: components["schemas"]["SystemCapabilityResponse"][];
             /** Catalogued */
             catalogued: boolean;
+            /** Change Type */
+            change_type?: string | null;
             /** Constraints */
             constraints: string[];
             /** Id */
@@ -5023,10 +5482,35 @@ export interface components {
             name: string;
             /** Products */
             products: components["schemas"]["OrganisationReferenceResponse"][];
+            /** Role */
+            role?: string | null;
             /** Squads */
             squads: components["schemas"]["OrganisationReferenceResponse"][];
             /** Value Streams */
             value_streams: components["schemas"]["OrganisationReferenceResponse"][];
+        };
+        /** TrackerEventAnswer */
+        TrackerEventAnswer: {
+            /** Closure Id */
+            closure_id?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "queued" | "ignored";
+        };
+        /** TrackerEventBody */
+        TrackerEventBody: {
+            /**
+             * Createddate
+             * Format: date-time
+             */
+            createdDate: string;
+            /** Eventtype */
+            eventType: string;
+            /** Id */
+            id: string;
+            resource: components["schemas"]["WorkItemUpdate"];
         };
         /** TransferOwnershipRequest */
         TransferOwnershipRequest: {
@@ -5118,6 +5602,41 @@ export interface components {
              * Format: date-time
              */
             week_start: string;
+        };
+        /**
+         * WorkItemKind
+         * @enum {string}
+         */
+        WorkItemKind: "epic" | "feature" | "story";
+        /** WorkItemMappingResponse */
+        WorkItemMappingResponse: {
+            /** External Id */
+            external_id: string;
+            /** Kind */
+            kind: string;
+            /** Local Key */
+            local_key: string;
+            /**
+             * Published At
+             * Format: date-time
+             */
+            published_at: string;
+            /** Revision */
+            revision: number;
+            /** Url */
+            url: string;
+        };
+        /** WorkItemRevision */
+        WorkItemRevision: {
+            /** Id */
+            id?: number | null;
+        };
+        /** WorkItemUpdate */
+        WorkItemUpdate: {
+            fields?: components["schemas"]["ChangedFields"];
+            revision?: components["schemas"]["WorkItemRevision"] | null;
+            /** Workitemid */
+            workItemId?: number | null;
         };
         /**
          * WorkflowStage
@@ -5566,6 +6085,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ActorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    receive_work_item_event_integrations_azure_devops_work_items_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TrackerEventBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrackerEventAnswer"];
                 };
             };
             /** @description Validation Error */
@@ -6607,6 +7161,43 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ConfirmAnalysisRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequirementAnalysisResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decide_product_impact_requirements__requirement_id__analysis_product_impact_decision_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Fake-Actor-Id"?: string | null;
+            };
+            path: {
+                requirement_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecideProductImpactRequest"];
             };
         };
         responses: {
@@ -8423,6 +9014,72 @@ export interface operations {
             };
         };
     };
+    publication_status_requirements__requirement_id__publication_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Fake-Actor-Id"?: string | null;
+            };
+            path: {
+                requirement_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicationStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retry_publication_requirements__requirement_id__publication_retry_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Fake-Actor-Id"?: string | null;
+            };
+            path: {
+                requirement_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicationReportResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     submit_review_requirements__requirement_id__review_submission_post: {
         parameters: {
             query?: never;
@@ -8629,6 +9286,78 @@ export interface operations {
                 content: {
                     "application/json": unknown;
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_publication_requirements__requirement_id__revisions__revision_number__publication_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Fake-Actor-Id"?: string | null;
+            };
+            path: {
+                requirement_id: string;
+                revision_number: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicationPreviewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    publish_revision_requirements__requirement_id__revisions__revision_number__publication_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Fake-Actor-Id"?: string | null;
+            };
+            path: {
+                requirement_id: string;
+                revision_number: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishBreakdownRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicationReportResponse"];
                 };
             };
             /** @description Validation Error */

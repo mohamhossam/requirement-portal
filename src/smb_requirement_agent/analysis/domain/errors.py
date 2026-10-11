@@ -39,3 +39,11 @@ class InvalidIntentProposalDecisionError(RequirementAnalysisError):
 
 class InvalidIntentProposalTransitionError(RequirementAnalysisError):
     """Raised when a confirmed analysis proposal is changed."""
+
+
+class InvalidProductImpactDecisionError(RequirementAnalysisError):
+    """Raised when a product impact decision is incomplete or contradicts the suggestion."""
+
+
+class ProductImpactDecisionLockedError(RequirementAnalysisError):
+    """Raised when the product impact of a confirmed analysis is changed."""

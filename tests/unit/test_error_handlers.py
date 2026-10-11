@@ -13,6 +13,7 @@ from smb_requirement_agent.analysis.application.errors import (
     ClarificationQuestionNotFoundError,
     DocumentContextTooLargeError,
     IntentProposalNotFoundError,
+    ProductImpactNotFoundError,
     RequirementAnalysisConflictError,
     RequirementAnalysisGenerationError,
     RequirementAnalysisNotFoundError,
@@ -33,6 +34,8 @@ from smb_requirement_agent.analysis.domain.errors import (
     InvalidClarificationTransitionError,
     InvalidIntentProposalDecisionError,
     InvalidIntentProposalTransitionError,
+    InvalidProductImpactDecisionError,
+    ProductImpactDecisionLockedError,
 )
 from smb_requirement_agent.analysis.domain.value_objects import HumanClarification, IntentProposal
 from smb_requirement_agent.application.errors import (
@@ -91,7 +94,17 @@ from smb_requirement_agent.governance.application.errors import (
     BreakdownReviewNotFoundError,
     BreakdownReviewStaleError,
     BreakdownRevisionNotExportableError,
+    BreakdownRevisionNotPublishableError,
+    PublicationConfirmationError,
+    PublicationRetryNotAllowedError,
+    PublicationTargetChangedError,
+    PublicationTargetError,
+    PublicationUnavailableError,
     ReviewFlagNotFoundError,
+)
+from smb_requirement_agent.governance.domain.publication.errors import (
+    InvalidPublicationError,
+    PublicationInProgressError,
 )
 from smb_requirement_agent.governance.domain.review.errors import (
     FlagResolutionConflictError,
@@ -248,6 +261,14 @@ EXPECTED_STATUS_CODES: dict[type[Exception], int] = {
     InvalidSavedViewError: 422,
     InvalidReportingWindowError: 422,
     BreakdownRevisionNotExportableError: 409,
+    BreakdownRevisionNotPublishableError: 409,
+    PublicationConfirmationError: 409,
+    PublicationUnavailableError: 503,
+    PublicationTargetError: 502,
+    PublicationTargetChangedError: 409,
+    PublicationRetryNotAllowedError: 409,
+    PublicationInProgressError: 409,
+    InvalidPublicationError: 500,
     BacklogExportFormatError: 422,
     AiJobConflictError: 409,
     AiJobInputsPrunedError: 409,
@@ -300,6 +321,9 @@ EXPECTED_STATUS_CODES: dict[type[Exception], int] = {
     AnalysisRoundNotFoundError: 404,
     ClarificationQuestionNotFoundError: 404,
     IntentProposalNotFoundError: 404,
+    ProductImpactNotFoundError: 404,
+    InvalidProductImpactDecisionError: 422,
+    ProductImpactDecisionLockedError: 409,
     RequirementAnalysisConflictError: 409,
     CitationNotCurrentError: 409,
     AnalysisConfirmationRequiredError: 409,

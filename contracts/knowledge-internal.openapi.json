@@ -1,6 +1,848 @@
 {
   "components": {
     "schemas": {
+      "Activity": {
+        "properties": {
+          "channel_entry": {
+            "default": false,
+            "title": "Channel Entry",
+            "type": "boolean"
+          },
+          "channels": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Channels",
+            "type": "array"
+          },
+          "component_ids": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Component Ids",
+            "type": "array"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "customer_visible": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Visible"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "etom": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Etom"
+          },
+          "etom_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Etom Id"
+          },
+          "input": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input"
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "output": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output"
+          },
+          "performer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Performer"
+          },
+          "performing_system_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Performing System Id"
+          },
+          "phase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phase"
+          },
+          "point_of_no_return": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Point Of No Return"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "role_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Id"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "supporting_system_ids": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Supporting System Ids",
+            "type": "array"
+          },
+          "system_function": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Function"
+          },
+          "track": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Track"
+          }
+        },
+        "required": [
+          "number",
+          "name"
+        ],
+        "title": "Activity",
+        "type": "object"
+      },
+      "ActivityIntegration": {
+        "description": "How one activity hands over to another, or calls a system: the interaction,\ninterface and payload.\n\nThe calling and called systems are named when the source names them. A call to a\nsystem that has no step of its own in the journey happens within the activity:\n``to_activity`` is the activity itself and ``to_system_id`` names the system.",
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "correlation_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correlation Key"
+          },
+          "from_activity": {
+            "title": "From Activity",
+            "type": "string"
+          },
+          "from_system_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From System Id"
+          },
+          "interaction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interaction"
+          },
+          "interface": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interface"
+          },
+          "open_api_ids": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Open Api Ids",
+            "type": "array"
+          },
+          "payload": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payload"
+          },
+          "purpose": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purpose"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "style": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Style"
+          },
+          "timing": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timing"
+          },
+          "tmf_equivalent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tmf Equivalent"
+          },
+          "to_activity": {
+            "title": "To Activity",
+            "type": "string"
+          },
+          "to_system_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To System Id"
+          },
+          "via_system_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Via System Id"
+          }
+        },
+        "required": [
+          "from_activity",
+          "to_activity"
+        ],
+        "title": "ActivityIntegration",
+        "type": "object"
+      },
+      "ActivityIntegrationSchema": {
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "correlation_key": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correlation Key"
+          },
+          "from_activity": {
+            "maxLength": 200,
+            "title": "From Activity",
+            "type": "string"
+          },
+          "from_system_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From System Id"
+          },
+          "interaction": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interaction"
+          },
+          "interface": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interface"
+          },
+          "open_api_ids": {
+            "default": [],
+            "items": {
+              "maxLength": 200,
+              "type": "string"
+            },
+            "maxItems": 5000,
+            "title": "Open Api Ids",
+            "type": "array"
+          },
+          "payload": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payload"
+          },
+          "purpose": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purpose"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "style": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Style"
+          },
+          "timing": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timing"
+          },
+          "tmf_equivalent": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tmf Equivalent"
+          },
+          "to_activity": {
+            "maxLength": 200,
+            "title": "To Activity",
+            "type": "string"
+          },
+          "to_system_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To System Id"
+          },
+          "via_system_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Via System Id"
+          }
+        },
+        "required": [
+          "from_activity",
+          "to_activity"
+        ],
+        "title": "ActivityIntegrationSchema",
+        "type": "object"
+      },
+      "ActivitySchema": {
+        "properties": {
+          "channel_entry": {
+            "default": false,
+            "title": "Channel Entry",
+            "type": "boolean"
+          },
+          "channels": {
+            "default": [],
+            "items": {
+              "maxLength": 200,
+              "type": "string"
+            },
+            "maxItems": 5000,
+            "title": "Channels",
+            "type": "array"
+          },
+          "component_ids": {
+            "default": [],
+            "items": {
+              "maxLength": 200,
+              "type": "string"
+            },
+            "maxItems": 5000,
+            "title": "Component Ids",
+            "type": "array"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "customer_visible": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Visible"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "etom": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Etom"
+          },
+          "etom_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Etom Id"
+          },
+          "input": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input"
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode"
+          },
+          "name": {
+            "maxLength": 300,
+            "title": "Name",
+            "type": "string"
+          },
+          "number": {
+            "maxLength": 200,
+            "title": "Number",
+            "type": "string"
+          },
+          "output": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output"
+          },
+          "performer": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Performer"
+          },
+          "performing_system_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Performing System Id"
+          },
+          "phase": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phase"
+          },
+          "point_of_no_return": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Point Of No Return"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "role_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Id"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "supporting_system_ids": {
+            "default": [],
+            "items": {
+              "maxLength": 200,
+              "type": "string"
+            },
+            "maxItems": 5000,
+            "title": "Supporting System Ids",
+            "type": "array"
+          },
+          "system_function": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Function"
+          },
+          "track": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Track"
+          }
+        },
+        "required": [
+          "number",
+          "name"
+        ],
+        "title": "ActivitySchema",
+        "type": "object"
+      },
       "ApprovedBacklogRequest": {
         "description": "requirement-portal's approved-backlog export, schema 1.x, as delivered.",
         "properties": {
@@ -9,6 +851,16 @@
           },
           "manifest": {
             "$ref": "#/components/schemas/ExportManifest"
+          },
+          "product_impact": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExportProductImpact"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "schema_version": {
             "maxLength": 20,
@@ -23,6 +875,220 @@
           "epic"
         ],
         "title": "ApprovedBacklogRequest",
+        "type": "object"
+      },
+      "ArchitectureAssessment": {
+        "properties": {
+          "citations": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ArchitectureCitation"
+            },
+            "title": "Citations",
+            "type": "array"
+          },
+          "coverage": {
+            "items": {
+              "$ref": "#/components/schemas/ConceptCoverage"
+            },
+            "title": "Coverage",
+            "type": "array"
+          },
+          "embedding_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Embedding Model"
+          },
+          "facets": {
+            "items": {
+              "$ref": "#/components/schemas/LinkedFacet"
+            },
+            "title": "Facets",
+            "type": "array"
+          },
+          "gaps": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AssessmentGap"
+            },
+            "title": "Gaps",
+            "type": "array"
+          },
+          "index_revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Index Revision"
+          },
+          "knowledge_version": {
+            "title": "Knowledge Version",
+            "type": "string"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "offering_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offering Id"
+          },
+          "offering_products": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OrganisationReference"
+            },
+            "title": "Offering Products",
+            "type": "array"
+          },
+          "offering_value_streams": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OrganisationReference"
+            },
+            "title": "Offering Value Streams",
+            "type": "array"
+          },
+          "owners": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/CapabilityOwners"
+            },
+            "title": "Owners",
+            "type": "array"
+          },
+          "precedents": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AssessedPrecedent"
+            },
+            "title": "Precedents",
+            "type": "array"
+          },
+          "prompt_version": {
+            "default": "requirement-assessment-v3",
+            "title": "Prompt Version",
+            "type": "string"
+          },
+          "proposal": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AssessmentProposal"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "questions": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AssessmentQuestion"
+            },
+            "title": "Questions",
+            "type": "array"
+          },
+          "reader_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reader Model"
+          },
+          "reranker_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reranker Model"
+          },
+          "rule_verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "systems": {
+            "items": {
+              "$ref": "#/components/schemas/AssessedSystem"
+            },
+            "title": "Systems",
+            "type": "array"
+          },
+          "uncertainty": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uncertainty"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "verdict_reason": {
+            "title": "Verdict Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "knowledge_version",
+          "facets",
+          "coverage",
+          "offering_id",
+          "verdict",
+          "rule_verdict",
+          "verdict_reason",
+          "proposal",
+          "systems"
+        ],
+        "title": "ArchitectureAssessment",
         "type": "object"
       },
       "ArchitectureCitation": {
@@ -46,6 +1112,111 @@
           "quote"
         ],
         "title": "ArchitectureCitation",
+        "type": "object"
+      },
+      "ArchitectureDecision": {
+        "description": "A decision taken for an offering's architecture, and why.",
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "ArchitectureDecision",
+        "type": "object"
+      },
+      "ArchitectureDecisionSchema": {
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "maxLength": 200,
+            "title": "Id",
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "title": {
+            "maxLength": 300,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "ArchitectureDecisionSchema",
         "type": "object"
       },
       "ArchitectureDependency": {
@@ -261,6 +1432,437 @@
         "title": "ArchitectureQuery",
         "type": "object"
       },
+      "AssessedPrecedent": {
+        "description": "A decided requirement like this one, shown to the reasoner as a worked example.",
+        "properties": {
+          "decision": {
+            "$ref": "#/components/schemas/PrecedentDecision"
+          },
+          "offering_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offering Id"
+          },
+          "precedent_id": {
+            "title": "Precedent Id",
+            "type": "string"
+          },
+          "release_id": {
+            "title": "Release Id",
+            "type": "string"
+          },
+          "requirement_id": {
+            "title": "Requirement Id",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "shared_concept_ids": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Shared Concept Ids",
+            "type": "array"
+          },
+          "system_ids": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "System Ids",
+            "type": "array"
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/ProductVerdict"
+          }
+        },
+        "required": [
+          "precedent_id",
+          "requirement_id",
+          "release_id",
+          "verdict",
+          "decision",
+          "offering_id",
+          "score"
+        ],
+        "title": "AssessedPrecedent",
+        "type": "object"
+      },
+      "AssessedSystem": {
+        "properties": {
+          "change_type": {
+            "$ref": "#/components/schemas/ChangeType"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "paths": {
+            "default": [],
+            "items": {
+              "items": {
+                "$ref": "#/components/schemas/PathStep"
+              },
+              "type": "array"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
+          "role": {
+            "$ref": "#/components/schemas/SystemRole"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "role",
+          "change_type"
+        ],
+        "title": "AssessedSystem",
+        "type": "object"
+      },
+      "AssessmentGap": {
+        "properties": {
+          "concept_id": {
+            "title": "Concept Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/GapKind"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "system_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Id"
+          }
+        },
+        "required": [
+          "kind",
+          "concept_id",
+          "label",
+          "reason"
+        ],
+        "title": "AssessmentGap",
+        "type": "object"
+      },
+      "AssessmentProposal": {
+        "description": "What the verdict proposes, for a reviewer and for drafting a catalogue change.",
+        "properties": {
+          "components": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ProposedComponent"
+            },
+            "title": "Components",
+            "type": "array"
+          },
+          "draft": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OfferingDraft"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "journey_ids": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Journey Ids",
+            "type": "array"
+          },
+          "new_values": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "New Values",
+            "type": "array"
+          },
+          "offering_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offering Id"
+          },
+          "portfolio_node_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portfolio Node Id"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "summary"
+        ],
+        "title": "AssessmentProposal",
+        "type": "object"
+      },
+      "AssessmentQuery": {
+        "description": "A requirement as requirement-portal holds it: its text and its analysed facts.",
+        "properties": {
+          "declared_systems": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Declared Systems",
+            "type": "array"
+          },
+          "release_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release Id"
+          },
+          "requirement_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requirement Id"
+          },
+          "text": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Text",
+            "type": "array"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "AssessmentQuery",
+        "type": "object"
+      },
+      "AssessmentQuestion": {
+        "description": "What to ask before a verdict can be given, with answers from the catalogue.",
+        "properties": {
+          "facet": {
+            "$ref": "#/components/schemas/FacetKind"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/QuestionOption"
+            },
+            "title": "Options",
+            "type": "array"
+          },
+          "question": {
+            "title": "Question",
+            "type": "string"
+          }
+        },
+        "required": [
+          "facet",
+          "question",
+          "options"
+        ],
+        "title": "AssessmentQuestion",
+        "type": "object"
+      },
+      "BusinessRule": {
+        "description": "A rule the offering is sold and fulfilled by, such as its mandatory components.\n\n``kind`` groups rules as the source does: composition, eligibility, dependency,\nlifecycle, fulfilment, billing.",
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "statement": {
+            "title": "Statement",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "statement"
+        ],
+        "title": "BusinessRule",
+        "type": "object"
+      },
+      "BusinessRuleSchema": {
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "maxLength": 200,
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "statement": {
+            "maxLength": 10000,
+            "title": "Statement",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "statement"
+        ],
+        "title": "BusinessRuleSchema",
+        "type": "object"
+      },
+      "CapabilityOwners": {
+        "description": "Who owns and staffs one impacted capability on one system (Phase 1b).",
+        "properties": {
+          "concept_id": {
+            "title": "Concept Id",
+            "type": "string"
+          },
+          "seats": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/SeatReference"
+            },
+            "title": "Seats",
+            "type": "array"
+          },
+          "squads": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OrganisationReference"
+            },
+            "title": "Squads",
+            "type": "array"
+          },
+          "system_id": {
+            "title": "System Id",
+            "type": "string"
+          },
+          "value_streams": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OrganisationReference"
+            },
+            "title": "Value Streams",
+            "type": "array"
+          }
+        },
+        "required": [
+          "concept_id",
+          "system_id"
+        ],
+        "title": "CapabilityOwners",
+        "type": "object"
+      },
       "ChangeRequestReceipt": {
         "properties": {
           "approval_id": {
@@ -283,6 +1885,18 @@
         ],
         "title": "ChangeRequestReceipt",
         "type": "object"
+      },
+      "ChangeType": {
+        "description": "What the requirement does to a system: a closed list.",
+        "enum": [
+          "new",
+          "modify",
+          "configure",
+          "retire",
+          "consume_only"
+        ],
+        "title": "ChangeType",
+        "type": "string"
       },
       "CitedPassage": {
         "properties": {
@@ -356,6 +1970,598 @@
         ],
         "title": "CitedPassage",
         "type": "object"
+      },
+      "ComponentResponsibility": {
+        "description": "What one catalogued system does for a component, in which role, for which orders.",
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "order_types": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Order Types",
+            "type": "array"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "role_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Id"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "system_id": {
+            "title": "System Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "system_id",
+          "role",
+          "description"
+        ],
+        "title": "ComponentResponsibility",
+        "type": "object"
+      },
+      "ComponentResponsibilitySchema": {
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "maxLength": 10000,
+            "title": "Description",
+            "type": "string"
+          },
+          "order_types": {
+            "default": [],
+            "items": {
+              "maxLength": 200,
+              "type": "string"
+            },
+            "maxItems": 5000,
+            "title": "Order Types",
+            "type": "array"
+          },
+          "role": {
+            "maxLength": 300,
+            "title": "Role",
+            "type": "string"
+          },
+          "role_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Id"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "system_id": {
+            "maxLength": 200,
+            "title": "System Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "system_id",
+          "role",
+          "description"
+        ],
+        "title": "ComponentResponsibilitySchema",
+        "type": "object"
+      },
+      "ConceptCoverage": {
+        "description": "One needed concept: which offerings compose it, which systems realise it, and whether\nthe offering in question covers it.",
+        "properties": {
+          "composed_by": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Composed By",
+            "type": "array"
+          },
+          "concept_id": {
+            "title": "Concept Id",
+            "type": "string"
+          },
+          "covered": {
+            "title": "Covered",
+            "type": "boolean"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "realised_by": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Realised By",
+            "type": "array"
+          }
+        },
+        "required": [
+          "concept_id",
+          "label",
+          "path",
+          "composed_by",
+          "realised_by",
+          "covered"
+        ],
+        "title": "ConceptCoverage",
+        "type": "object"
+      },
+      "DeliveredChangeBody": {
+        "description": "A catalogue change the decided product impact implies for the delivered Features.",
+        "properties": {
+          "concept_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Concept Id",
+            "type": "string"
+          },
+          "concept_label": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Concept Label",
+            "type": "string"
+          },
+          "feature_ids": {
+            "items": {
+              "maxLength": 200,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 5000,
+            "minItems": 1,
+            "title": "Feature Ids",
+            "type": "array"
+          },
+          "offering_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offering Id"
+          },
+          "offering_name": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offering Name"
+          },
+          "op": {
+            "$ref": "#/components/schemas/DeliveredChangeKind"
+          },
+          "system_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Id"
+          },
+          "system_name": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Name"
+          }
+        },
+        "required": [
+          "op",
+          "concept_id",
+          "concept_label",
+          "feature_ids"
+        ],
+        "title": "DeliveredChangeBody",
+        "type": "object"
+      },
+      "DeliveredChangeKind": {
+        "description": "A change to the catalogue a delivered requirement implies.",
+        "enum": [
+          "realise_concept",
+          "offer_concept"
+        ],
+        "title": "DeliveredChangeKind",
+        "type": "string"
+      },
+      "DeliveredEpicBody": {
+        "properties": {
+          "external_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "External Id",
+            "type": "string"
+          },
+          "id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "external_id"
+        ],
+        "title": "DeliveredEpicBody",
+        "type": "object"
+      },
+      "DeliveredFeatureBody": {
+        "description": "A Feature of the Epic, its state in the tracker, and the systems its mapping names.",
+        "properties": {
+          "delivered": {
+            "title": "Delivered",
+            "type": "boolean"
+          },
+          "external_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Id"
+          },
+          "id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          },
+          "sequence": {
+            "minimum": 0.0,
+            "title": "Sequence",
+            "type": "integer"
+          },
+          "state": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "State",
+            "type": "string"
+          },
+          "systems": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ExportSystem"
+            },
+            "maxItems": 5000,
+            "title": "Systems",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "sequence",
+          "name",
+          "state",
+          "delivered"
+        ],
+        "title": "DeliveredFeatureBody",
+        "type": "object"
+      },
+      "DeliveryReceipt": {
+        "properties": {
+          "change_request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change Request Id"
+          },
+          "created": {
+            "title": "Created",
+            "type": "boolean"
+          },
+          "withdrawn": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Withdrawn",
+            "type": "array"
+          }
+        },
+        "required": [
+          "change_request_id",
+          "created",
+          "withdrawn"
+        ],
+        "title": "DeliveryReceipt",
+        "type": "object"
+      },
+      "DeliveryRequest": {
+        "description": "A published Epic closed or removed in the work-item tracker (ontology plan Phase 7).\n\nA closure carries the decided product impact it is compared with; a removal needs only\nwhich Epic it was.",
+        "properties": {
+          "approval_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Approval Id",
+            "type": "string"
+          },
+          "breakdown_revision": {
+            "minimum": 1.0,
+            "title": "Breakdown Revision",
+            "type": "integer"
+          },
+          "changes": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/DeliveredChangeBody"
+            },
+            "maxItems": 5000,
+            "title": "Changes",
+            "type": "array"
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision"
+          },
+          "delivery_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Delivery Id",
+            "type": "string"
+          },
+          "epic": {
+            "$ref": "#/components/schemas/DeliveredEpicBody"
+          },
+          "features": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/DeliveredFeatureBody"
+            },
+            "maxItems": 5000,
+            "title": "Features",
+            "type": "array"
+          },
+          "impact_version": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Impact Version"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "offering_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offering Id"
+          },
+          "offering_name": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offering Name"
+          },
+          "predicted_systems": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/PredictedSystemBody"
+            },
+            "maxItems": 5000,
+            "title": "Predicted Systems",
+            "type": "array"
+          },
+          "release_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release Id"
+          },
+          "requirement_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Requirement Id",
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/DeliveryState"
+          },
+          "suggested_verdict": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested Verdict"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verdict"
+          }
+        },
+        "required": [
+          "delivery_id",
+          "state",
+          "requirement_id",
+          "breakdown_revision",
+          "approval_id",
+          "epic",
+          "occurred_at"
+        ],
+        "title": "DeliveryRequest",
+        "type": "object"
+      },
+      "DeliveryState": {
+        "enum": [
+          "closed",
+          "removed"
+        ],
+        "title": "DeliveryState",
+        "type": "string"
       },
       "DomainSuggestion": {
         "description": "A capability domain whose wording the item matched when no system was found.\n\nAdvice for a reviewer, never mapped impact: it names the systems that do\nwork in that domain and the catalogue words that matched.",
@@ -674,6 +2880,41 @@
         "title": "ExportManifest",
         "type": "object"
       },
+      "ExportOfferingDraft": {
+        "description": "The offering and journey `POST /internal/architecture/assess` drafted for a new-offering\nverdict, as requirement-portal kept them (ontology plan Phase 9). Each is checked here as\nthe catalogue checks one; whether it fits the draft is the reading's question.",
+        "properties": {
+          "based_on": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Based On"
+          },
+          "journey": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JourneySchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "offering": {
+            "$ref": "#/components/schemas/ProductOfferingSchema"
+          }
+        },
+        "required": [
+          "offering"
+        ],
+        "title": "ExportOfferingDraft",
+        "type": "object"
+      },
       "ExportPerson": {
         "properties": {
           "display_name": {
@@ -746,6 +2987,59 @@
         "title": "ExportProductContext",
         "type": "object"
       },
+      "ExportProductImpact": {
+        "description": "The decided product impact, export schema 1.6 on: only its draft is read here.",
+        "properties": {
+          "draft": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExportOfferingDraft"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "offering_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offering Id"
+          },
+          "release_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release Id"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verdict"
+          }
+        },
+        "title": "ExportProductImpact",
+        "type": "object"
+      },
       "ExportStory": {
         "properties": {
           "architecture": {
@@ -788,6 +3082,318 @@
         ],
         "title": "ExportSystem",
         "type": "object"
+      },
+      "FacetKind": {
+        "description": "One aspect of a requirement, as the review's retrieval design lists them.",
+        "enum": [
+          "need",
+          "offering",
+          "segment",
+          "family",
+          "channel",
+          "order_type",
+          "characteristic",
+          "excluded",
+          "data",
+          "change_type",
+          "interface"
+        ],
+        "title": "FacetKind",
+        "type": "string"
+      },
+      "FalloutCase": {
+        "description": "What makes an order fall out, and how it is handled.",
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "handling": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Handling"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "trigger": {
+            "title": "Trigger",
+            "type": "string"
+          }
+        },
+        "required": [
+          "trigger"
+        ],
+        "title": "FalloutCase",
+        "type": "object"
+      },
+      "FalloutCaseSchema": {
+        "description": "What makes an order fall out, and how it is handled.",
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "handling": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Handling"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "trigger": {
+            "maxLength": 10000,
+            "title": "Trigger",
+            "type": "string"
+          }
+        },
+        "required": [
+          "trigger"
+        ],
+        "title": "FalloutCaseSchema",
+        "type": "object"
+      },
+      "FlowRule": {
+        "description": "A way the flow leaves an activity other than to the next one on the main track.",
+        "properties": {
+          "branch": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Branch"
+          },
+          "condition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Condition"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "from_activity": {
+            "title": "From Activity",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/FlowRuleKind"
+          },
+          "parallel_group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parallel Group"
+          },
+          "rejoin_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejoin At"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "to_activity": {
+            "title": "To Activity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "from_activity",
+          "to_activity"
+        ],
+        "title": "FlowRule",
+        "type": "object"
+      },
+      "FlowRuleKind": {
+        "enum": [
+          "decision",
+          "loop",
+          "parallel"
+        ],
+        "title": "FlowRuleKind",
+        "type": "string"
+      },
+      "FlowRuleSchema": {
+        "properties": {
+          "branch": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Branch"
+          },
+          "condition": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Condition"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "from_activity": {
+            "maxLength": 200,
+            "title": "From Activity",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/FlowRuleKind"
+          },
+          "parallel_group": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parallel Group"
+          },
+          "rejoin_at": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejoin At"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "to_activity": {
+            "maxLength": 200,
+            "title": "To Activity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "from_activity",
+          "to_activity"
+        ],
+        "title": "FlowRuleSchema",
+        "type": "object"
+      },
+      "GapKind": {
+        "enum": [
+          "capability",
+          "staffing"
+        ],
+        "title": "GapKind",
+        "type": "string"
       },
       "HTTPValidationError": {
         "properties": {
@@ -1016,6 +3622,140 @@
         "title": "HistoricPassagesPage",
         "type": "object"
       },
+      "Journey": {
+        "properties": {
+          "activities": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Activity"
+            },
+            "title": "Activities",
+            "type": "array"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "flow_rules": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/FlowRule"
+            },
+            "title": "Flow Rules",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "integrations": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ActivityIntegration"
+            },
+            "title": "Integrations",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "order_type_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Type Code"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "Journey",
+        "type": "object"
+      },
+      "JourneyEdgeResponse": {
+        "properties": {
+          "from_activity": {
+            "maxLength": 200,
+            "title": "From Activity",
+            "type": "string"
+          },
+          "kind": {
+            "maxLength": 200,
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "to_activity": {
+            "maxLength": 200,
+            "title": "To Activity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "from_activity",
+          "to_activity",
+          "kind"
+        ],
+        "title": "JourneyEdgeResponse",
+        "type": "object"
+      },
       "JourneyNeighbour": {
         "description": "An activity just before or after a journey step, and the system that performs it.",
         "properties": {
@@ -1055,6 +3795,121 @@
           "name"
         ],
         "title": "JourneyNeighbour",
+        "type": "object"
+      },
+      "JourneySchema": {
+        "description": "A journey and, read-only, the flow derived from its order and rules (ADR-0096).",
+        "properties": {
+          "activities": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ActivitySchema"
+            },
+            "maxItems": 5000,
+            "title": "Activities",
+            "type": "array"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "edges": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/JourneyEdgeResponse"
+            },
+            "maxItems": 20000,
+            "title": "Edges",
+            "type": "array"
+          },
+          "flow_rules": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/FlowRuleSchema"
+            },
+            "maxItems": 5000,
+            "title": "Flow Rules",
+            "type": "array"
+          },
+          "id": {
+            "maxLength": 200,
+            "title": "Id",
+            "type": "string"
+          },
+          "integrations": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ActivityIntegrationSchema"
+            },
+            "maxItems": 5000,
+            "title": "Integrations",
+            "type": "array"
+          },
+          "name": {
+            "maxLength": 300,
+            "title": "Name",
+            "type": "string"
+          },
+          "order_type_code": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Type Code"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "JourneySchema",
         "type": "object"
       },
       "JourneyStep": {
@@ -1120,6 +3975,882 @@
         "title": "JourneyStep",
         "type": "object"
       },
+      "LifecycleNote": {
+        "description": "A lifecycle topic of an offering, such as \"Up / Downgrade scenario matrix\".",
+        "properties": {
+          "blocks": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/NoteBlock"
+            },
+            "title": "Blocks",
+            "type": "array"
+          },
+          "channels": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Channels",
+            "type": "array"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "order_types": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Order Types",
+            "type": "array"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "LifecycleNote",
+        "type": "object"
+      },
+      "LifecycleNoteSchema": {
+        "description": "What happens to an offering over its life, on one topic, as its sources say.",
+        "properties": {
+          "blocks": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/NoteBlockSchema"
+            },
+            "maxItems": 5000,
+            "title": "Blocks",
+            "type": "array"
+          },
+          "channels": {
+            "default": [],
+            "items": {
+              "maxLength": 200,
+              "type": "string"
+            },
+            "maxItems": 5000,
+            "title": "Channels",
+            "type": "array"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "maxLength": 200,
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "order_types": {
+            "default": [],
+            "items": {
+              "maxLength": 200,
+              "type": "string"
+            },
+            "maxItems": 5000,
+            "title": "Order Types",
+            "type": "array"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "title": {
+            "maxLength": 300,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "LifecycleNoteSchema",
+        "type": "object"
+      },
+      "LinkedConcept": {
+        "properties": {
+          "concept_id": {
+            "title": "Concept Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "weak": {
+            "default": false,
+            "title": "Weak",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "concept_id",
+          "label",
+          "path"
+        ],
+        "title": "LinkedConcept",
+        "type": "object"
+      },
+      "LinkedFacet": {
+        "description": "A facet, with the concepts it links to when it is a need.",
+        "properties": {
+          "concepts": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/LinkedConcept"
+            },
+            "title": "Concepts",
+            "type": "array"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/FacetKind"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "ref_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ref Id"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "text",
+          "quote"
+        ],
+        "title": "LinkedFacet",
+        "type": "object"
+      },
+      "NfrCoverage": {
+        "description": "How far the sources define a non-functional requirement.",
+        "enum": [
+          "defined",
+          "partial",
+          "missing"
+        ],
+        "title": "NfrCoverage",
+        "type": "string"
+      },
+      "NoteBlock": {
+        "description": "One part of a note: a paragraph, a list, or a table with its column heads.",
+        "properties": {
+          "caption": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Caption"
+          },
+          "columns": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Columns",
+            "type": "array"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "items": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/NoteBlockKind"
+          },
+          "rows": {
+            "default": [],
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "to_verify": {
+            "default": false,
+            "title": "To Verify",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "NoteBlock",
+        "type": "object"
+      },
+      "NoteBlockKind": {
+        "enum": [
+          "text",
+          "list",
+          "table"
+        ],
+        "title": "NoteBlockKind",
+        "type": "string"
+      },
+      "NoteBlockSchema": {
+        "description": "One part of a lifecycle note: a paragraph, a list, or a table.",
+        "properties": {
+          "caption": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Caption"
+          },
+          "columns": {
+            "default": [],
+            "items": {
+              "maxLength": 10000,
+              "type": "string"
+            },
+            "maxItems": 5000,
+            "title": "Columns",
+            "type": "array"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "items": {
+            "default": [],
+            "items": {
+              "maxLength": 10000,
+              "type": "string"
+            },
+            "maxItems": 5000,
+            "title": "Items",
+            "type": "array"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/NoteBlockKind"
+          },
+          "rows": {
+            "default": [],
+            "items": {
+              "items": {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              "maxItems": 10,
+              "type": "array"
+            },
+            "maxItems": 5000,
+            "title": "Rows",
+            "type": "array"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "to_verify": {
+            "default": false,
+            "title": "To Verify",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "NoteBlockSchema",
+        "type": "object"
+      },
+      "OfferingComponent": {
+        "description": "A part of an offering, such as its connectivity or its router.",
+        "properties": {
+          "capability_ids": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Capability Ids",
+            "type": "array"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "commercial_spec": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commercial Spec"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "customer_visible": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Visible"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "kind_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind Id"
+          },
+          "mandatory": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mandatory"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "realisation": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Realisation"
+            },
+            "title": "Realisation",
+            "type": "array"
+          },
+          "responsibilities": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ComponentResponsibility"
+            },
+            "title": "Responsibilities",
+            "type": "array"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "technical_details": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Technical Details"
+          },
+          "technical_spec": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Technical Spec"
+          },
+          "unlinked_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unlinked Reason"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "OfferingComponent",
+        "type": "object"
+      },
+      "OfferingComponentSchema": {
+        "properties": {
+          "capability_ids": {
+            "default": [],
+            "items": {
+              "maxLength": 200,
+              "type": "string"
+            },
+            "maxItems": 5000,
+            "title": "Capability Ids",
+            "type": "array"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "commercial_spec": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commercial Spec"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "customer_visible": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Visible"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "id": {
+            "maxLength": 200,
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "kind_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind Id"
+          },
+          "mandatory": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mandatory"
+          },
+          "name": {
+            "maxLength": 300,
+            "title": "Name",
+            "type": "string"
+          },
+          "realisation": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/RealisationSchema"
+            },
+            "maxItems": 5000,
+            "title": "Realisation",
+            "type": "array"
+          },
+          "responsibilities": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ComponentResponsibilitySchema"
+            },
+            "maxItems": 5000,
+            "title": "Responsibilities",
+            "type": "array"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "technical_details": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Technical Details"
+          },
+          "technical_spec": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Technical Spec"
+          },
+          "unlinked_reason": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unlinked Reason"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "OfferingComponentSchema",
+        "type": "object"
+      },
+      "OfferingDraft": {
+        "description": "A drafted offering, the journey that fulfils it, and the offering it starts from.",
+        "properties": {
+          "based_on": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Based On"
+          },
+          "journey": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Journey"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "offering": {
+            "$ref": "#/components/schemas/ProductOffering"
+          }
+        },
+        "required": [
+          "offering"
+        ],
+        "title": "OfferingDraft",
+        "type": "object"
+      },
       "OfferingDuty": {
         "description": "One system's part in delivering one component of a product offering.",
         "properties": {
@@ -1159,6 +4890,778 @@
         "title": "OfferingDuty",
         "type": "object"
       },
+      "OfferingNfr": {
+        "description": "A non-functional requirement of an offering, such as Availability, and what the\nsources say of it; a missing one is kept so the gap is visible.",
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/NfrCoverage"
+          },
+          "quality": {
+            "title": "Quality",
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "statement": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Statement"
+          }
+        },
+        "required": [
+          "quality",
+          "coverage"
+        ],
+        "title": "OfferingNfr",
+        "type": "object"
+      },
+      "OfferingNfrSchema": {
+        "description": "A non-functional requirement of an offering and how far its sources define it.",
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/NfrCoverage"
+          },
+          "quality": {
+            "maxLength": 300,
+            "title": "Quality",
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "statement": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Statement"
+          }
+        },
+        "required": [
+          "quality",
+          "coverage"
+        ],
+        "title": "OfferingNfrSchema",
+        "type": "object"
+      },
+      "OfferingPlan": {
+        "description": "A plan of the offering as its sources describe it.\n\nCharacteristics are named rather than fixed fields, so any product's plans\nfit. What a plan costs is read live from the product catalog (requirement-portal\nADR-0101), never stored here.",
+        "properties": {
+          "characteristics": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/PlanCharacteristic"
+            },
+            "title": "Characteristics",
+            "type": "array"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "OfferingPlan",
+        "type": "object"
+      },
+      "OfferingPlanSchema": {
+        "description": "A plan as its sources describe it; its price is read live from the product catalog.",
+        "properties": {
+          "characteristics": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/PlanCharacteristicSchema"
+            },
+            "maxItems": 5000,
+            "title": "Characteristics",
+            "type": "array"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "name": {
+            "maxLength": 300,
+            "title": "Name",
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "OfferingPlanSchema",
+        "type": "object"
+      },
+      "OfferingPoint": {
+        "description": "One thing an offering gives its customers, or one kind of customer it is for.",
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "OfferingPoint",
+        "type": "object"
+      },
+      "OfferingPointSchema": {
+        "description": "A customer value, or a kind of customer an offering is for.",
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "name": {
+            "maxLength": 300,
+            "title": "Name",
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "OfferingPointSchema",
+        "type": "object"
+      },
+      "OpenQuestion": {
+        "description": "A question an offering's sources leave open, such as \"Is B2B Digital in scope?\".",
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "impact": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Impact"
+          },
+          "order_types": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Order Types",
+            "type": "array"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "text"
+        ],
+        "title": "OpenQuestion",
+        "type": "object"
+      },
+      "OpenQuestionSchema": {
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "maxLength": 200,
+            "title": "Id",
+            "type": "string"
+          },
+          "impact": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Impact"
+          },
+          "order_types": {
+            "default": [],
+            "items": {
+              "maxLength": 200,
+              "type": "string"
+            },
+            "maxItems": 5000,
+            "title": "Order Types",
+            "type": "array"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "text": {
+            "maxLength": 10000,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "text"
+        ],
+        "title": "OpenQuestionSchema",
+        "type": "object"
+      },
+      "OrderTracking": {
+        "description": "How an offering's orders are tracked, for the order types its sources specify.",
+        "properties": {
+          "channels": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/TrackingChannel"
+            },
+            "title": "Channels",
+            "type": "array"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fallout": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/FalloutCase"
+            },
+            "title": "Fallout",
+            "type": "array"
+          },
+          "flows": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/TrackingFlow"
+            },
+            "title": "Flows",
+            "type": "array"
+          },
+          "milestones": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/TrackingEvent"
+            },
+            "title": "Milestones",
+            "type": "array"
+          },
+          "not_applicable_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Not Applicable Note"
+          },
+          "order_types": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Order Types",
+            "type": "array"
+          },
+          "scope_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scope Note"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "statuses": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/TrackingEvent"
+            },
+            "title": "Statuses",
+            "type": "array"
+          }
+        },
+        "title": "OrderTracking",
+        "type": "object"
+      },
+      "OrderTrackingSchema": {
+        "description": "How an offering's orders are tracked once placed (requirement-portal ADR-0101).",
+        "properties": {
+          "channels": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/TrackingChannelSchema"
+            },
+            "maxItems": 5000,
+            "title": "Channels",
+            "type": "array"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fallout": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/FalloutCaseSchema"
+            },
+            "maxItems": 5000,
+            "title": "Fallout",
+            "type": "array"
+          },
+          "flows": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/TrackingFlowSchema"
+            },
+            "maxItems": 5000,
+            "title": "Flows",
+            "type": "array"
+          },
+          "milestones": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/TrackingEventSchema"
+            },
+            "maxItems": 5000,
+            "title": "Milestones",
+            "type": "array"
+          },
+          "not_applicable_note": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Not Applicable Note"
+          },
+          "order_types": {
+            "default": [],
+            "items": {
+              "maxLength": 200,
+              "type": "string"
+            },
+            "maxItems": 5000,
+            "title": "Order Types",
+            "type": "array"
+          },
+          "scope_note": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scope Note"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "statuses": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/TrackingEventSchema"
+            },
+            "maxItems": 5000,
+            "title": "Statuses",
+            "type": "array"
+          }
+        },
+        "title": "OrderTrackingSchema",
+        "type": "object"
+      },
+      "OrderType": {
+        "description": "A way the offering is ordered, such as New Activation; ``code`` is its key.",
+        "properties": {
+          "channels": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Channels",
+            "type": "array"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "enabled": {
+            "default": true,
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ],
+        "title": "OrderType",
+        "type": "object"
+      },
+      "OrderTypeSchema": {
+        "properties": {
+          "channels": {
+            "default": [],
+            "items": {
+              "maxLength": 200,
+              "type": "string"
+            },
+            "maxItems": 5000,
+            "title": "Channels",
+            "type": "array"
+          },
+          "code": {
+            "maxLength": 200,
+            "title": "Code",
+            "type": "string"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "enabled": {
+            "default": true,
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "name": {
+            "maxLength": 300,
+            "title": "Name",
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ],
+        "title": "OrderTypeSchema",
+        "type": "object"
+      },
       "OrganisationReference": {
         "description": "A squad, value stream or product recorded as it was named at mapping time.",
         "properties": {
@@ -1176,6 +5679,315 @@
           "name"
         ],
         "title": "OrganisationReference",
+        "type": "object"
+      },
+      "PathKind": {
+        "enum": [
+          "facet",
+          "concept",
+          "offering",
+          "component",
+          "channel",
+          "system",
+          "entity",
+          "interface",
+          "realisation",
+          "precedent"
+        ],
+        "title": "PathKind",
+        "type": "string"
+      },
+      "PathStep": {
+        "description": "One step of the path that found a system, by release id and its label.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/PathKind"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "label"
+        ],
+        "title": "PathStep",
+        "type": "object"
+      },
+      "PlanCharacteristic": {
+        "description": "One stated fact of a plan, such as \"Download\" \u203a \"200 Mbps\" or \"CPE\" \u203a \"Fortinet 90G\".",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "value"
+        ],
+        "title": "PlanCharacteristic",
+        "type": "object"
+      },
+      "PlanCharacteristicSchema": {
+        "properties": {
+          "name": {
+            "maxLength": 300,
+            "title": "Name",
+            "type": "string"
+          },
+          "value": {
+            "maxLength": 10000,
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "value"
+        ],
+        "title": "PlanCharacteristicSchema",
+        "type": "object"
+      },
+      "PrecedentBody": {
+        "description": "A verdict decision on one requirement analysis.",
+        "properties": {
+          "concept_ids": {
+            "default": [],
+            "items": {
+              "maxLength": 200,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 40,
+            "title": "Concept Ids",
+            "type": "array"
+          },
+          "decided_at": {
+            "format": "date-time",
+            "title": "Decided At",
+            "type": "string"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/PrecedentDecision"
+          },
+          "offering_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offering Id"
+          },
+          "precedent_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Precedent Id",
+            "type": "string"
+          },
+          "release_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Release Id",
+            "type": "string"
+          },
+          "requirement_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Requirement Id",
+            "type": "string"
+          },
+          "suggested_verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "systems": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/PrecedentSystemBody"
+            },
+            "maxItems": 60,
+            "title": "Systems",
+            "type": "array"
+          },
+          "text": {
+            "items": {
+              "maxLength": 10000,
+              "type": "string"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Text",
+            "type": "array"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "version": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "precedent_id",
+          "requirement_id",
+          "version",
+          "release_id",
+          "text",
+          "decision",
+          "decided_at"
+        ],
+        "title": "PrecedentBody",
+        "type": "object"
+      },
+      "PrecedentDecision": {
+        "description": "What the reviewer did with the suggested verdict (requirement-portal ADR-0115).",
+        "enum": [
+          "accepted",
+          "overridden",
+          "unknown"
+        ],
+        "title": "PrecedentDecision",
+        "type": "string"
+      },
+      "PrecedentReceipt": {
+        "properties": {
+          "dropped_systems": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Dropped Systems",
+            "type": "array"
+          },
+          "precedent_id": {
+            "title": "Precedent Id",
+            "type": "string"
+          },
+          "recorded": {
+            "title": "Recorded",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "precedent_id",
+          "recorded"
+        ],
+        "title": "PrecedentReceipt",
+        "type": "object"
+      },
+      "PrecedentSystemBody": {
+        "properties": {
+          "change_type": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change Type"
+          },
+          "id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "PrecedentSystemBody",
+        "type": "object"
+      },
+      "PredictedSystemBody": {
+        "properties": {
+          "change_type": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change Type"
+          },
+          "id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "PredictedSystemBody",
         "type": "object"
       },
       "ProductContext": {
@@ -1222,6 +6034,544 @@
           "matched_terms"
         ],
         "title": "ProductContext",
+        "type": "object"
+      },
+      "ProductOffering": {
+        "properties": {
+          "audiences": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OfferingPoint"
+            },
+            "title": "Audiences",
+            "type": "array"
+          },
+          "boundaries": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Boundaries",
+            "type": "array"
+          },
+          "business_rules": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/BusinessRule"
+            },
+            "title": "Business Rules",
+            "type": "array"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "components": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OfferingComponent"
+            },
+            "title": "Components",
+            "type": "array"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "decisions": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ArchitectureDecision"
+            },
+            "title": "Decisions",
+            "type": "array"
+          },
+          "family": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Family"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "lifecycle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lifecycle"
+          },
+          "lifecycle_notes": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/LifecycleNote"
+            },
+            "title": "Lifecycle Notes",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "nfrs": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OfferingNfr"
+            },
+            "title": "Nfrs",
+            "type": "array"
+          },
+          "not_used": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Not Used",
+            "type": "array"
+          },
+          "order_types": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OrderType"
+            },
+            "title": "Order Types",
+            "type": "array"
+          },
+          "plans": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OfferingPlan"
+            },
+            "title": "Plans",
+            "type": "array"
+          },
+          "portfolio_node_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portfolio Node Id"
+          },
+          "primary_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Source"
+          },
+          "proposition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposition"
+          },
+          "questions": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OpenQuestion"
+            },
+            "title": "Questions",
+            "type": "array"
+          },
+          "rules": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Rules",
+            "type": "array"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "sources": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "tracking": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OrderTracking"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "values": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OfferingPoint"
+            },
+            "title": "Values",
+            "type": "array"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "ProductOffering",
+        "type": "object"
+      },
+      "ProductOfferingSchema": {
+        "description": "A commercial offering, its order types and components, and the systems behind them.",
+        "properties": {
+          "audiences": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OfferingPointSchema"
+            },
+            "maxItems": 5000,
+            "title": "Audiences",
+            "type": "array"
+          },
+          "boundaries": {
+            "default": [],
+            "items": {
+              "maxLength": 10000,
+              "type": "string"
+            },
+            "maxItems": 5000,
+            "title": "Boundaries",
+            "type": "array"
+          },
+          "business_rules": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/BusinessRuleSchema"
+            },
+            "maxItems": 5000,
+            "title": "Business Rules",
+            "type": "array"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "components": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OfferingComponentSchema"
+            },
+            "maxItems": 5000,
+            "title": "Components",
+            "type": "array"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "decisions": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ArchitectureDecisionSchema"
+            },
+            "maxItems": 5000,
+            "title": "Decisions",
+            "type": "array"
+          },
+          "family": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Family"
+          },
+          "id": {
+            "maxLength": 200,
+            "title": "Id",
+            "type": "string"
+          },
+          "lifecycle": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lifecycle"
+          },
+          "lifecycle_notes": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/LifecycleNoteSchema"
+            },
+            "maxItems": 5000,
+            "title": "Lifecycle Notes",
+            "type": "array"
+          },
+          "name": {
+            "maxLength": 300,
+            "title": "Name",
+            "type": "string"
+          },
+          "nfrs": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OfferingNfrSchema"
+            },
+            "maxItems": 5000,
+            "title": "Nfrs",
+            "type": "array"
+          },
+          "not_used": {
+            "default": [],
+            "items": {
+              "maxLength": 300,
+              "type": "string"
+            },
+            "maxItems": 5000,
+            "title": "Not Used",
+            "type": "array"
+          },
+          "order_types": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OrderTypeSchema"
+            },
+            "maxItems": 5000,
+            "title": "Order Types",
+            "type": "array"
+          },
+          "plans": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OfferingPlanSchema"
+            },
+            "maxItems": 5000,
+            "title": "Plans",
+            "type": "array"
+          },
+          "portfolio_node_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portfolio Node Id"
+          },
+          "primary_source": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Source"
+          },
+          "proposition": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposition"
+          },
+          "questions": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OpenQuestionSchema"
+            },
+            "maxItems": 5000,
+            "title": "Questions",
+            "type": "array"
+          },
+          "rules": {
+            "default": [],
+            "items": {
+              "maxLength": 10000,
+              "type": "string"
+            },
+            "maxItems": 5000,
+            "title": "Rules",
+            "type": "array"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "sources": {
+            "default": [],
+            "items": {
+              "maxLength": 200,
+              "type": "string"
+            },
+            "maxItems": 5000,
+            "title": "Sources",
+            "type": "array"
+          },
+          "tracking": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OrderTrackingSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "values": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OfferingPointSchema"
+            },
+            "maxItems": 5000,
+            "title": "Values",
+            "type": "array"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "ProductOfferingSchema",
+        "type": "object"
+      },
+      "ProductVerdict": {
+        "enum": [
+          "change_existing_offering",
+          "new_plan",
+          "new_offering_in_family",
+          "new_product_line"
+        ],
+        "title": "ProductVerdict",
+        "type": "string"
+      },
+      "ProposedComponent": {
+        "properties": {
+          "component_id": {
+            "title": "Component Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "offering_id": {
+            "title": "Offering Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "offering_id",
+          "component_id",
+          "name"
+        ],
+        "title": "ProposedComponent",
         "type": "object"
       },
       "PublishedReference": {
@@ -1310,6 +6660,144 @@
         "title": "PublishedResponse",
         "type": "object"
       },
+      "QuestionOption": {
+        "description": "An answer built from the catalogue; no id for an answer it does not hold yet.",
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "title": "QuestionOption",
+        "type": "object"
+      },
+      "Realisation": {
+        "description": "One thing a component is realised as, in one layer, such as the CFS\n\"CFSS_ONPREM_FIREWALL_HE\" or the resource \"Fortinet HE CPE\".",
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "layer": {
+            "$ref": "#/components/schemas/RealisationLayer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "record_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Record Id"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "required": [
+          "layer",
+          "name"
+        ],
+        "title": "Realisation",
+        "type": "object"
+      },
+      "RealisationLayer": {
+        "description": "Where a part is realised: what the customer is sold, what delivers it, what it runs on.",
+        "enum": [
+          "cfs",
+          "rfs",
+          "resource"
+        ],
+        "title": "RealisationLayer",
+        "type": "string"
+      },
+      "RealisationSchema": {
+        "description": "One thing a component is realised as: its CFS, an RFS behind it, or a resource.",
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "layer": {
+            "$ref": "#/components/schemas/RealisationLayer"
+          },
+          "name": {
+            "maxLength": 10000,
+            "title": "Name",
+            "type": "string"
+          },
+          "record_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Record Id"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "required": [
+          "layer",
+          "name"
+        ],
+        "title": "RealisationSchema",
+        "type": "object"
+      },
       "ReferenceEvidence": {
         "description": "Exact citable passage plus bounded, non-authoritative retrieval context.",
         "properties": {
@@ -1362,6 +6850,61 @@
         ],
         "title": "SearchRequest",
         "type": "object"
+      },
+      "SeatReference": {
+        "properties": {
+          "person_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Person Id"
+          },
+          "person_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Person Name"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "scoped": {
+            "default": false,
+            "title": "Scoped",
+            "type": "boolean"
+          },
+          "squad_id": {
+            "title": "Squad Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "squad_id",
+          "role"
+        ],
+        "title": "SeatReference",
+        "type": "object"
+      },
+      "SourceConfidence": {
+        "description": "How sure the source document says it is of a fact.",
+        "enum": [
+          "confirmed",
+          "inferred",
+          "gap"
+        ],
+        "title": "SourceConfidence",
+        "type": "string"
       },
       "SystemCapability": {
         "properties": {
@@ -1436,6 +6979,16 @@
             "title": "Catalogued",
             "type": "boolean"
           },
+          "change_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChangeType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "constraints": {
             "default": [],
             "items": {
@@ -1452,6 +7005,17 @@
             "title": "Name",
             "type": "string"
           },
+          "paths": {
+            "default": [],
+            "items": {
+              "items": {
+                "$ref": "#/components/schemas/PathStep"
+              },
+              "type": "array"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
           "products": {
             "default": [],
             "items": {
@@ -1459,6 +7023,16 @@
             },
             "title": "Products",
             "type": "array"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SystemRole"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "squads": {
             "default": [],
@@ -1483,6 +7057,464 @@
           "catalogued"
         ],
         "title": "SystemReference",
+        "type": "object"
+      },
+      "SystemRole": {
+        "description": "Why an assessment names a system.",
+        "enum": [
+          "primary",
+          "channel",
+          "named",
+          "supporting",
+          "owner",
+          "consumer"
+        ],
+        "title": "SystemRole",
+        "type": "string"
+      },
+      "TrackingChannel": {
+        "description": "How one channel tracks its orders: the key that ties its order to the fulfilment\norder, the system the customer follows progress in, and the path that system reads.",
+        "properties": {
+          "channel_id": {
+            "title": "Channel Id",
+            "type": "string"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "correlation_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correlation Key"
+          },
+          "read_interface": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Read Interface"
+          },
+          "read_system_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Read System Id"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "story": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Story"
+          },
+          "ui_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ui Note"
+          },
+          "ui_system_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ui System Id"
+          }
+        },
+        "required": [
+          "channel_id"
+        ],
+        "title": "TrackingChannel",
+        "type": "object"
+      },
+      "TrackingChannelSchema": {
+        "description": "How one channel ties its order to the fulfilment order, and where progress is seen.",
+        "properties": {
+          "channel_id": {
+            "maxLength": 200,
+            "title": "Channel Id",
+            "type": "string"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "correlation_key": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correlation Key"
+          },
+          "read_interface": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Read Interface"
+          },
+          "read_system_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Read System Id"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "story": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Story"
+          },
+          "ui_note": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ui Note"
+          },
+          "ui_system_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ui System Id"
+          }
+        },
+        "required": [
+          "channel_id"
+        ],
+        "title": "TrackingChannelSchema",
+        "type": "object"
+      },
+      "TrackingEvent": {
+        "description": "A milestone the customer sees, or an internal status; a milestone may name the\nsystem that raises it.",
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "system_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Id"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "title": "TrackingEvent",
+        "type": "object"
+      },
+      "TrackingEventSchema": {
+        "description": "A milestone the customer sees, or an internal status.",
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "label": {
+            "maxLength": 10000,
+            "title": "Label",
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "system_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Id"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "title": "TrackingEventSchema",
+        "type": "object"
+      },
+      "TrackingFlow": {
+        "description": "Order or milestone events passing from one system to another; to itself, a log.",
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "from_system_id": {
+            "title": "From System Id",
+            "type": "string"
+          },
+          "interface": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interface"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "to_system_id": {
+            "title": "To System Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "from_system_id",
+          "to_system_id",
+          "label"
+        ],
+        "title": "TrackingFlow",
+        "type": "object"
+      },
+      "TrackingFlowSchema": {
+        "description": "Order or milestone events from one system to another; to itself, a log.",
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceConfidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "from_system_id": {
+            "maxLength": 200,
+            "title": "From System Id",
+            "type": "string"
+          },
+          "interface": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interface"
+          },
+          "label": {
+            "maxLength": 10000,
+            "title": "Label",
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "to_system_id": {
+            "maxLength": 200,
+            "title": "To System Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "from_system_id",
+          "to_system_id",
+          "label"
+        ],
+        "title": "TrackingFlowSchema",
         "type": "object"
       },
       "ValidationError": {
@@ -1542,6 +7574,45 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/internal/architecture/assess": {
+      "post": {
+        "description": "A whole requirement's product verdict, systems, gaps and owners (ontology plan Phase 3).\n\nWith no verdict yet, the answer carries the questions to ask instead.",
+        "operationId": "assess_internal_architecture_assess_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssessmentQuery"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArchitectureAssessment"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Assess"
+      }
+    },
     "/internal/architecture/match": {
       "post": {
         "operationId": "match_internal_architecture_match_post",
@@ -1578,6 +7649,48 @@
           }
         },
         "summary": "Match"
+      }
+    },
+    "/internal/architecture/precedents": {
+      "post": {
+        "description": "A Requirement Owner's decision on the suggested verdict (ontology plan Phase 5).\n\nKept once per analysis: a later decision replaces it, and the same one delivered again,\nor an older one arriving late, answers 200 and changes nothing. The release must be\npublished (404 otherwise); systems and concepts it does not hold are left out, and the\nsystems are named in the receipt.",
+        "operationId": "record_precedent_internal_architecture_precedents_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrecedentBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The same decision, or a later one, is already kept."
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrecedentReceipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Record Precedent"
       }
     },
     "/internal/architecture/releases/{release_id}/evidence/{chunk_id}": {
@@ -1669,6 +7782,48 @@
           }
         },
         "summary": "Receive Change Request"
+      }
+    },
+    "/internal/change-requests/deliveries": {
+      "post": {
+        "description": "A published Epic closed or removed in the work-item tracker (ontology plan Phase 7).\n\nA closure is kept once per delivery id as a catalogue change, for a knowledge admin to\nread into a draft; it replaces one of the same Epic still waiting. A removal withdraws\nthe Epic's catalogue changes still waiting and answers 200 with their ids. The same\ndelivery id for another body is a 409.",
+        "operationId": "receive_delivery_internal_change_requests_deliveries_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeliveryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The same closure was delivered before, or the Epic was removed."
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryReceipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Receive Delivery"
       }
     },
     "/internal/events": {

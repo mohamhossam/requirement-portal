@@ -64,6 +64,12 @@ from smb_requirement_agent.governance.application.use_cases.breakdown_review imp
     ResolveFlag,
 )
 from smb_requirement_agent.governance.application.use_cases.export_breakdown import ExportBreakdown
+from smb_requirement_agent.governance.application.use_cases.publish_breakdown import (
+    GetPublicationStatus,
+    PreviewPublication,
+    PublishBreakdown,
+    RetryFailedPublication,
+)
 from smb_requirement_agent.governance.application.use_cases.revision_history import (
     CompareBreakdownVersions,
     GetRevisionHistory,
@@ -433,6 +439,22 @@ def get_compare_breakdown_versions(container: ContainerDep) -> CompareBreakdownV
 
 def get_export_breakdown(container: ContainerDep) -> ExportBreakdown:
     return container.export_breakdown
+
+
+def get_preview_publication(container: ContainerDep) -> PreviewPublication:
+    return container.preview_publication
+
+
+def get_publish_breakdown(container: ContainerDep) -> PublishBreakdown:
+    return container.publish_breakdown
+
+
+def get_retry_failed_publication(container: ContainerDep) -> RetryFailedPublication:
+    return container.retry_failed_publication
+
+
+def get_publication_status(container: ContainerDep) -> GetPublicationStatus:
+    return container.get_publication_status
 
 
 def get_get_knowledge_review(container: ContainerDep) -> GetKnowledgeReview:

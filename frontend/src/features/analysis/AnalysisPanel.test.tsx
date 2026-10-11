@@ -31,6 +31,7 @@ const questionFixture: ClarificationQuestion = {
   classification_changed_by: null,
   classification_changed_at: null,
   replaces_question_id: null,
+  options: [],
 };
 
 const pendingProposal: IntentProposal = {

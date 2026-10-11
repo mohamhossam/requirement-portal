@@ -83,6 +83,24 @@ def evidence_fingerprint(evidence: ReviewEvidence) -> str:
             sort_keys=True,
             separators=(",", ":"),
         )
+    # A decided product impact re-opens review when it changes (ADR-0115); one not yet
+    # decided leaves the fingerprints of existing reviews as they were.
+    impact = evidence.analysis.product_impact
+    if impact is not None and impact.decision is not None:
+        canonical += json.dumps(
+            {
+                "product_impact": {
+                    "release": impact.release_id,
+                    "decision": impact.decision.value,
+                    "verdict": impact.verdict.value if impact.verdict else None,
+                    "offering": impact.decided_offering_id,
+                    "covered": sorted(item.concept_id for item in impact.covered_needs),
+                    "gaps": sorted(item.concept_id for item in impact.capability_gaps),
+                }
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 

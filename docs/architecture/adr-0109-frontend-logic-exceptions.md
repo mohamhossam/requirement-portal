@@ -95,6 +95,13 @@ An exception sets no precedent for the redesign: it changes behaviour, not the l
     was already created. The dashboard reads it through the same helper.
   - **Downloads** (`api/client.ts`). The object URL is revoked 40 seconds after the click,
     not at once, so Firefox and Safari still have the file when they start the download.
+- **Ontology plan Phase 4** (`docs/slices/ontology-phase-4-product-verdict.md`):
+  - **Product impact decision** (`api/client.ts`, `app/requirement/AnalysisView.tsx`).
+    `decideProductImpact` sends the owner's accept, override or unknown to
+    `PUT /requirements/{id}/analysis/product-impact/decision` and refreshes the analysis.
+  - **Confirmation gate** (`features/analysis/AnalysisPanel.tsx`). `confirmBlockedBy` names an
+    undecided product impact, as the server's own refusal does.
+  Tested in `features/analysis/ProductImpactCard.test.tsx`.
 - **OIDC return path through the router** (approved by the owner 2026-10-10):
   - **Callback** (`auth/AuthProvider.tsx`, `auth/authContext.ts`). `AuthProvider` no longer
     rewrites the address with `history.replaceState`, which `BrowserRouter` does not see, so the
@@ -106,6 +113,7 @@ An exception sets no precedent for the redesign: it changes behaviour, not the l
   - **Silent renewal.** `AuthGate` renders nothing on `/auth/silent-callback` inside the
     silent-renew iframe, which used to load the dashboard there.
   - **Routes** (`app/App.tsx`). The `/auth/*` → dashboard route PR 15 added is removed.
+  Tested in `auth/AuthProvider.test.tsx`.
 
 ## Consequences
 

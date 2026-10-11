@@ -9,6 +9,47 @@ Under each heading, list what changed for whoever deploys, then any upgrade step
 contract-step migration (WORKSPACE.md, "Migrations"), because rolling back past one means
 restoring a backup.
 
+## Unreleased
+
+- **Publishing approved backlogs to Azure DevOps (Slice 12, ADR-0112).** Off by default
+  (`ADO_PUBLISHER=none`). To turn it on, set `ADO_PUBLISHER=azure_devops`, `ADO_ORGANIZATION_URL`,
+  `ADO_PROJECT` and `ADO_PERSONAL_ACCESS_TOKEN` (or `_FILE`), a token with Work Items read and
+  write. `ADO_SQUAD_AREA_PATHS` sends each squad's Features to its board. No migration.
+- **Safe republish to Azure DevOps (Slice 13, ADR-0113).** Publishing again updates the items
+  already sent instead of duplicating them, and Retry continues a publication that stopped
+  part-way. Migration `202610101200_backlog_publications` (expand only: a new table).
+
+- **Product impact in analysis (ontology plan Phase 4, ADR-0115, ADR-0116).** With a knowledge
+  portal linked, analysis asks it where the requirement sits (a new offering or a change to one),
+  and the owner accepts, overrides or marks the verdict unknown before confirming. Breakdown
+  follows the decided impact (prompts `feature-v6` and `story-v6`), review flags an undecided
+  verdict, capability gaps and weak links, and publication records the verdict. Needs
+  knowledge-portal v0.3.0 or later; an older one assesses nothing and blocks nothing.
+  `PRODUCT_VERDICT_VALIDATED` (default `false`) stops calling the verdict a suggestion once the
+  live gate has passed. No migration: the impact is stored in the analysis snapshot.
+- **Decided verdicts sent back as precedents (ontology plan Phase 5).** Each accepted,
+  overridden or unknown product impact is queued with the decision and delivered to the knowledge
+  portal's `POST /internal/architecture/precedents`, retried until it answers. Assessments now
+  carry the requirement's id, so its own decision is never its precedent. Needs knowledge-portal
+  v0.4.0 or later; an older one answers 404, which is retried for about two days. Migration
+  `202610111200_precedent_handoffs` (expand only: a new table).
+- **What a closed Epic delivered (ontology plan Phase 7).** When an Epic this service published is
+  closed or removed in Azure DevOps, its service hook
+  (`POST /api/integrations/azure-devops/work-items`) queues it once per event. A worker reads its
+  Features' states and sends what was delivered, what was predicted and the catalogue changes that
+  implies to the knowledge portal's `POST /internal/change-requests/deliveries`, retried until it
+  answers. Off until `ADO_HOOK_SECRET` (24+ characters, or `_FILE`) is set and the subscription is
+  added in Azure DevOps (`docs/operations/deployment.md`, "Azure DevOps service hook"). Needs
+  knowledge-portal v0.5.0 or later. Migration `202610111800_delivery_closures` (expand only: a new
+  table and an index on `backlog_publications`).
+- **A drafted offering for a new offering (ontology plan Phase 9).** When the knowledge portal
+  suggests a new offering in a family or a new product line, it drafts the offering and its
+  journey; the product impact card shows the draft, and the approved backlog sends it back
+  unchanged while the decided verdict is a new offering. Export schema 1.6 adds
+  `product_impact` (the decided verdict, its offering and release, and the draft) to the
+  approved-backlog export and the JSON download; a knowledge portal older than v0.6.0 ignores
+  it. Needs knowledge-portal v0.6.0 for the draft. No migration.
+
 ## v0.1.0
 
 The first published release: the pilot candidate, closing the pilot gate of

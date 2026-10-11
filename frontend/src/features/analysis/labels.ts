@@ -3,6 +3,8 @@ import type {
   ClarificationSeverity,
   IntentProposal,
   IntentProposalStatus,
+  ProductImpactDecision,
+  ProductVerdict,
 } from "../../api/client";
 
 /**
@@ -117,3 +119,20 @@ export function questionStatusLabel(status: string): string {
 export function changeActionLabel(action: string): string {
   return CHANGE_ACTION_LABEL[action] ?? action;
 }
+
+/**
+ * The knowledge portal's four product verdicts (ADR-0114), as a business owner says them.
+ * None of the three "new" cases is ever a change to an existing offering.
+ */
+export const VERDICT_LABEL: Record<ProductVerdict, string> = {
+  change_existing_offering: "Change to an existing offering",
+  new_plan: "New plan of an existing offering",
+  new_offering_in_family: "New offering in an existing family",
+  new_product_line: "New product line",
+};
+
+export const PRODUCT_DECISION_LABEL: Record<ProductImpactDecision, string> = {
+  accepted: "Suggestion accepted",
+  overridden: "Suggestion overridden",
+  unknown: "Marked unknown",
+};

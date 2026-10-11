@@ -27,3 +27,27 @@ class BreakdownRevisionNotExportableError(Exception):
 
 class BacklogExportFormatError(Exception):
     """A neutral export format cannot represent the selected content safely."""
+
+
+class BreakdownRevisionNotPublishableError(Exception):
+    """The selected revision lacks a formal final approval or a complete tree."""
+
+
+class PublicationUnavailableError(Exception):
+    """This deployment has no work-item tracker to publish to."""
+
+
+class PublicationConfirmationError(Exception):
+    """The confirmation does not name the approved content being published."""
+
+
+class PublicationTargetError(Exception):
+    """The work-item tracker refused an item or could not be reached."""
+
+
+class PublicationTargetChangedError(Exception):
+    """The backlog was published to another tracker or project than the one configured now."""
+
+
+class PublicationRetryNotAllowedError(Exception):
+    """There is no incomplete attempt to retry, or a newer approved revision supersedes it."""

@@ -102,6 +102,10 @@ class DependencyProjection:
             content = asdict(analysis)
             for key in ("version", "confirmed_by", "confirmed_at", "is_human_confirmed"):
                 content.pop(key, None)
+            # An analysis with no product impact digests as it did before one was recorded.
+            for key in ("product_impact", "product_impact_status"):
+                if content.get(key) is None:
+                    content.pop(key, None)
             add(
                 "analysis",
                 analysis.id.value if analysis.id else "legacy",

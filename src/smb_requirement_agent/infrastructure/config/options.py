@@ -206,3 +206,16 @@ DEFAULT_AI_JOB_PAYLOAD_RETENTION_DAYS = 90
 
 
 DEFAULT_REQUEST_MAX_BODY_BYTES = 2 * 1024 * 1024
+
+
+class AdoPublisher(Enum):
+    """Where approved backlogs are published (Slice 12)."""
+
+    # Publication is offered nowhere; the preview says it is not set up.
+    NONE = "none"
+    # An in-memory stand-in, for running the flow with no Azure DevOps account.
+    FAKE = "fake"
+    AZURE_DEVOPS = "azure_devops"
+
+
+DEFAULT_ADO_TIMEOUT_SECONDS = 30.0

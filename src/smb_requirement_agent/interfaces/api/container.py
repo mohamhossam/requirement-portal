@@ -94,11 +94,17 @@ from smb_requirement_agent.breakdown.application.use_cases.story_workflow import
 )
 from smb_requirement_agent.governance.application.exports import ExportFormat
 from smb_requirement_agent.governance.application.ports.backlog_export import BacklogExportPort
+from smb_requirement_agent.governance.application.ports.backlog_publisher import (
+    BacklogPublisherPort,
+)
 from smb_requirement_agent.governance.application.ports.breakdown_repository import (
     BreakdownRepositoryPort,
 )
 from smb_requirement_agent.governance.application.ports.breakdown_review_repository import (
     BreakdownReviewRepositoryPort,
+)
+from smb_requirement_agent.governance.application.ports.publication_repository import (
+    PublicationRepositoryPort,
 )
 from smb_requirement_agent.governance.application.use_cases.approval_workflow import (
     AddReviewComment,
@@ -115,7 +121,16 @@ from smb_requirement_agent.governance.application.use_cases.breakdown_review imp
     RecordDecision,
     ResolveFlag,
 )
+from smb_requirement_agent.governance.application.use_cases.delivery_closure import (
+    RecordTrackerEvent,
+)
 from smb_requirement_agent.governance.application.use_cases.export_breakdown import ExportBreakdown
+from smb_requirement_agent.governance.application.use_cases.publish_breakdown import (
+    GetPublicationStatus,
+    PreviewPublication,
+    PublishBreakdown,
+    RetryFailedPublication,
+)
 from smb_requirement_agent.governance.application.use_cases.revision_history import (
     CompareBreakdownVersions,
     GetRevisionHistory,
@@ -143,7 +158,11 @@ from smb_requirement_agent.interfaces.api.composition.breakdown import (
 from smb_requirement_agent.interfaces.api.composition.events import (
     subscribe_domain_event_handlers,
 )
-from smb_requirement_agent.interfaces.api.composition.governance import build_review
+from smb_requirement_agent.interfaces.api.composition.governance import (
+    build_backlog_publisher,
+    build_delivery_worker,
+    build_review,
+)
 from smb_requirement_agent.interfaces.api.composition.identity import build_identity
 from smb_requirement_agent.interfaces.api.composition.jobs import build_ai_jobs
 from smb_requirement_agent.interfaces.api.composition.knowledge import build_requirement_knowledge
@@ -153,6 +172,7 @@ from smb_requirement_agent.interfaces.api.composition.references import (
     KnowledgeService,
     build_backlog_handoff_worker,
     build_knowledge_service,
+    build_precedent_worker,
 )
 from smb_requirement_agent.interfaces.api.composition.reporting import build_reporting
 from smb_requirement_agent.interfaces.api.composition.requirements import (
@@ -160,6 +180,7 @@ from smb_requirement_agent.interfaces.api.composition.requirements import (
     build_requirement_intake,
 )
 from smb_requirement_agent.interfaces.api.composition.tracing import build_tracing
+from smb_requirement_agent.interfaces.api.tracker_hook import TrackerHook
 from smb_requirement_agent.jobs.application.ports.ai_jobs import (
     AiJobBacklogPort,
     AiJobQueuePort,
@@ -218,9 +239,15 @@ from smb_requirement_agent.knowledge.infrastructure.requirement_index_worker imp
 from smb_requirement_agent.references.application.ports.architecture_knowledge import (
     ArchitectureKnowledgePort,
 )
+from smb_requirement_agent.references.application.ports.delivery_closure import (
+    DeliveryClosureOutboxPort,
+)
 from smb_requirement_agent.references.application.ports.historic_corpus import HistoricCorpusPort
 from smb_requirement_agent.references.application.ports.knowledge_handoff import (
     ApprovedBacklogOutboxPort,
+)
+from smb_requirement_agent.references.application.ports.precedent_handoff import (
+    PrecedentOutboxPort,
 )
 from smb_requirement_agent.references.application.use_cases.historic_corpus import (
     IndexHistoricCorpus,
@@ -381,6 +408,10 @@ class Container:
     transaction_manager: TransactionManagerPort
     # Approved backlogs on their way to the knowledge service (ADR-0101 Amendment 2).
     backlog_handoffs: ApprovedBacklogOutboxPort
+    # Decided product verdicts on their way to the knowledge service (ontology Phase 5).
+    precedent_handoffs: PrecedentOutboxPort
+    # Closed and removed Epics on their way to the knowledge service (ontology Phase 7).
+    delivery_closures: DeliveryClosureOutboxPort
     ai_job_repository: AiJobRepositoryPort
     ai_job_queue: AiJobQueuePort
     ai_job_backlog: AiJobBacklogPort
@@ -389,6 +420,9 @@ class Container:
     reporting_reader: ReportingReadPort
     saved_view_repository: SavedViewRepositoryPort
     backlog_exporters: tuple[BacklogExportPort, ...]
+    backlog_publisher: BacklogPublisherPort
+    # The tracker's service hook; None unless ADO_HOOK_SECRET and a knowledge service are set.
+    tracker_hook: TrackerHook | None
     ai_jobs: AiJobs
     execute_ai_job: ExecuteAiJob
     notifications: Notifications
@@ -455,6 +489,11 @@ class Container:
     get_revision_history: GetRevisionHistory
     compare_breakdown_versions: CompareBreakdownVersions
     export_breakdown: ExportBreakdown
+    preview_publication: PreviewPublication
+    publish_breakdown: PublishBreakdown
+    retry_failed_publication: RetryFailedPublication
+    get_publication_status: GetPublicationStatus
+    publication_records: PublicationRepositoryPort
     knowledge_index: RequirementKnowledgeIndexPort
     knowledge_repository: RequirementKnowledgeRepositoryPort
     evidence_fragment_cache: EvidenceFragmentCachePort
@@ -615,7 +654,14 @@ def _build_container(
         defaults.reference_proposer,
         resolved_clock,
         access_service,
+        knowledge_service.assessment,
+        product_verdict_validated=settings.product_verdict_validated,
+        # Decisions queue a precedent only when there is a knowledge service to send it to.
+        precedents=persistence.precedent_handoffs
+        if knowledge_service.precedents is not None
+        else None,
     )
+    backlog_publisher = build_backlog_publisher(settings.ado_publication, resources)
     review = build_review(
         persistence,
         resolved_clock,
@@ -623,6 +669,7 @@ def _build_container(
         knowledge.source_impact,
         backlog_exporters,
         knowledge.current_release,
+        backlog_publisher,
         # Approvals hand their backlog over only when there is an inbox to deliver to.
         persistence.backlog_handoffs if knowledge_service.change_requests is not None else None,
     )
@@ -672,6 +719,31 @@ def _build_container(
     }
     if architecture_jobs.mapping_worker is not None:
         background_workers["architecture_mapping_job_worker"] = architecture_jobs.mapping_worker
+    if knowledge_service.precedents is not None:
+        background_workers["precedent_worker"] = build_precedent_worker(
+            persistence,
+            knowledge_service.precedents,
+            resolved_clock,
+            metrics,
+            settings.ai_job_shutdown_grace_seconds,
+        )
+    tracker_hook: TrackerHook | None = None
+    if knowledge_service.deliveries is not None:
+        background_workers["delivery_worker"] = build_delivery_worker(
+            persistence,
+            backlog_publisher,
+            knowledge_service.deliveries,
+            resolved_clock,
+            metrics,
+            settings.ai_job_shutdown_grace_seconds,
+        )
+        if settings.ado_publication.hook_secret is not None:
+            tracker_hook = TrackerHook(
+                settings.ado_publication.hook_secret,
+                RecordTrackerEvent(
+                    persistence.publication_records, persistence.delivery_closures, resolved_clock
+                ),
+            )
     if knowledge_service.change_requests is not None:
         background_workers["approved_backlog_worker"] = build_backlog_handoff_worker(
             persistence,
@@ -774,6 +846,8 @@ def _build_container(
         breakdown_repository=persistence.revision_repository,
         transaction_manager=persistence.transaction_manager,
         backlog_handoffs=persistence.backlog_handoffs,
+        precedent_handoffs=persistence.precedent_handoffs,
+        delivery_closures=persistence.delivery_closures,
         ai_job_repository=persistence.ai_job_repository,
         ai_job_queue=persistence.ai_job_queue,
         ai_job_backlog=persistence.ai_job_backlog,
@@ -782,6 +856,8 @@ def _build_container(
         reporting_reader=persistence.reporting_reader,
         saved_view_repository=persistence.saved_view_repository,
         backlog_exporters=backlog_exporters,
+        backlog_publisher=backlog_publisher,
+        tracker_hook=tracker_hook,
         story_quality_repository=persistence.story_quality_repository,
         ai_jobs=jobs.ai_jobs,
         execute_ai_job=jobs.execute_ai_job,
@@ -851,6 +927,11 @@ def _build_container(
         get_revision_history=review.get_revision_history,
         compare_breakdown_versions=review.compare_breakdown_versions,
         export_breakdown=review.export_breakdown,
+        preview_publication=review.preview_publication,
+        publish_breakdown=review.publish_breakdown,
+        retry_failed_publication=review.retry_failed_publication,
+        get_publication_status=review.get_publication_status,
+        publication_records=persistence.publication_records,
         knowledge_index=persistence.knowledge_index,
         knowledge_index_generations=persistence.index_generations,
         rebuild_knowledge_index=knowledge.rebuild_index,

@@ -242,9 +242,9 @@ Delete the file after diagnosis, and inspect it before sharing.
 `PERSISTENCE_PROVIDER=memory` keeps offline/test state in process. Set
 `PERSISTENCE_PROVIDER=postgres` and `DATABASE_URL` for durable storage; packaged
 migrations are applied explicitly before API startup with
-`python -m smb_requirement_agent.infrastructure.persistence.migrate`. Variables
-added by later slices:
-`ADO_ORGANIZATION`, `ADO_PROJECT`, `ADO_TOKEN`.
+`python -m smb_requirement_agent.infrastructure.persistence.migrate`. Azure DevOps
+publication (Slice 12) is off until `ADO_PUBLISHER` is set; its `ADO_*` variables are
+documented in `.env.example`.
 
 For local development, `start.ps1` and `start.cmd` orchestrate that explicit
 step: they start the Compose PostgreSQL service only for a local database URL,
@@ -1016,7 +1016,7 @@ The product becomes safer and easier to evolve when the core requirement/backlog
 
 Story assessment includes source facts, confirmed decisions and unresolved evidence. Its cache
 is bound to those inputs as well as Story content. Existing assessments made without that context
-are stale and require explicit reassessment. Feature/Story prompts are `feature-v5` / `story-v5`;
+are stale and require explicit reassessment. Feature/Story prompts are `feature-v6` / `story-v6`;
 the grounded semantic rubric is `story-quality-v3`. Correction tasks distinguish a failed AI draft
 from source requirements, request discovery when Estimable fails, and reject a refused split for
 a sole oversized candidate when the operation allows multiple Stories. Provider schemas require
