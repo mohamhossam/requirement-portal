@@ -22,6 +22,7 @@ when the file is missing or empty.
 | Model profile keys | the profile's `api_key_env`, or that name with `_FILE` | `LLM_PROVIDER=profiles` (`llm-configuration.md`) |
 | Shared service tokens | `REQUIREMENT_SERVICE_TOKEN`, `KNOWLEDGE_SERVICE_TOKEN`, each with `_FILE` | Calls between the portals (ADR-0099) |
 | Service client secret | `REQUIREMENT_SERVICE_CLIENT_SECRET` / `_FILE` | This service's client-credentials grant (ADR-0104) |
+| Azure DevOps service hook | `ADO_HOOK_SECRET` / `ADO_HOOK_SECRET_FILE` | The Basic-auth password the Epic-closed service hook sends (ontology plan Phase 7); 24+ characters |
 
 Compose's own secrets are set in the shell or `deploy/.env`, not `production.env`:
 

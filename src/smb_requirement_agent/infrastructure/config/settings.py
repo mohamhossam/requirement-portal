@@ -231,6 +231,10 @@ def _retention_days(name: str, default: int) -> int:
         raise ConfigurationError(_retention_days_error(name)) from exc
 
 
+# A service hook password a person types once; long enough not to be guessed.
+MIN_HOOK_SECRET = 24
+
+
 @dataclass(frozen=True)
 class AdoPublicationSettings:
     """Where approved backlogs are published (Slice 12, ADR-0112).
@@ -255,8 +259,15 @@ class AdoPublicationSettings:
     # Squad id to its board's area path, so a squad's Features land on its board.
     squad_area_paths: tuple[tuple[str, str], ...] = ()
     timeout_seconds: float = DEFAULT_ADO_TIMEOUT_SECONDS
+    # The password the tracker's service hook sends with Basic auth when a published Epic
+    # is closed or removed (ontology plan Phase 7); unset, the hook route answers 404.
+    hook_secret: str | None = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
+        if self.hook_secret is not None and len(self.hook_secret) < MIN_HOOK_SECRET:
+            raise ConfigurationError(
+                f"ADO_HOOK_SECRET must be at least {MIN_HOOK_SECRET} characters long."
+            )
         if self.publisher is not AdoPublisher.AZURE_DEVOPS:
             return
         missing = [
@@ -326,6 +337,7 @@ class AdoPublicationSettings:
             tags=tuple(tag.strip() for tag in os.getenv("ADO_TAGS", "").split(";") if tag.strip()),
             squad_area_paths=parse_squad_area_paths(os.getenv("ADO_SQUAD_AREA_PATHS", "")),
             timeout_seconds=timeout,
+            hook_secret=_secret("ADO_HOOK_SECRET"),
         )
 
 

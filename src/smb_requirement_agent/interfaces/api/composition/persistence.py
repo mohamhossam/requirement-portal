@@ -246,6 +246,9 @@ from smb_requirement_agent.knowledge.infrastructure.source_dependencies import (
 from smb_requirement_agent.references.application.ports.architecture_knowledge import (
     ArchitectureReleaseStatePort,
 )
+from smb_requirement_agent.references.application.ports.delivery_closure import (
+    DeliveryClosureOutboxPort,
+)
 from smb_requirement_agent.references.application.ports.historic_corpus import HistoricCorpusPort
 from smb_requirement_agent.references.application.ports.knowledge_handoff import (
     ApprovedBacklogOutboxPort,
@@ -263,6 +266,10 @@ from smb_requirement_agent.references.infrastructure.architecture_release_state 
 from smb_requirement_agent.references.infrastructure.backlog_handoffs import (
     InMemoryBacklogHandoffs,
     PostgresBacklogHandoffs,
+)
+from smb_requirement_agent.references.infrastructure.delivery_closures import (
+    InMemoryDeliveryClosures,
+    PostgresDeliveryClosures,
 )
 from smb_requirement_agent.references.infrastructure.historic_corpus import (
     InMemoryHistoricCorpus,
@@ -426,6 +433,7 @@ class PersistenceAdapters:
     backlog_handoffs: ApprovedBacklogOutboxPort
     # Decided product verdicts on their way to the knowledge service (Phase 5).
     precedent_handoffs: PrecedentOutboxPort
+    delivery_closures: DeliveryClosureOutboxPort
     # What each Requirement's backlog became in the work-item tracker (Slice 13).
     publication_records: PublicationRepositoryPort
     revision_repository: BreakdownRepositoryPort
@@ -538,6 +546,7 @@ def _postgres(
     )
     backlog_handoffs: ApprovedBacklogOutboxPort = PostgresBacklogHandoffs(postgres)
     precedent_handoffs: PrecedentOutboxPort = PostgresPrecedentHandoffs(postgres)
+    delivery_closures: DeliveryClosureOutboxPort = PostgresDeliveryClosures(postgres)
     publication_records: PublicationRepositoryPort = PostgresPublicationRecords(postgres)
     analysis_repository = PostgresAnalysisRepository(postgres)
     analysis_audit_repository = PostgresAnalysisAuditRepository(postgres)
@@ -642,6 +651,7 @@ def _postgres(
         attachment_ingestions=attachment_ingestions,
         backlog_handoffs=backlog_handoffs,
         precedent_handoffs=precedent_handoffs,
+        delivery_closures=delivery_closures,
         publication_records=publication_records,
         revision_repository=revision_repository,
         transaction_manager=transaction_manager,
@@ -671,6 +681,7 @@ def _memory(
     attachment_ingestions = memory_attachments
     memory_handoffs = InMemoryBacklogHandoffs(memory_lock)
     memory_precedents = InMemoryPrecedentHandoffs(memory_lock)
+    memory_closures = InMemoryDeliveryClosures(memory_lock)
     memory_publication_records = InMemoryPublicationRecords(memory_lock)
     memory_publications = InMemoryReferencePublications(memory_lock)
     reference_publications = memory_publications
@@ -811,6 +822,7 @@ def _memory(
         memory_attachments,
         memory_handoffs,
         memory_precedents,
+        memory_closures,
         memory_publication_records,
         base_requirements,
         requirement_draft_repository,
@@ -892,6 +904,7 @@ def _memory(
         attachment_ingestions=attachment_ingestions,
         backlog_handoffs=memory_handoffs,
         precedent_handoffs=memory_precedents,
+        delivery_closures=memory_closures,
         publication_records=memory_publication_records,
         revision_repository=revision_repository,
         transaction_manager=transaction_manager,

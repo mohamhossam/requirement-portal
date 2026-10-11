@@ -2568,6 +2568,22 @@
         "title": "CapabilityNeedResponse",
         "type": "object"
       },
+      "ChangedFields": {
+        "properties": {
+          "System.State": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FieldChange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "ChangedFields",
+        "type": "object"
+      },
       "CitedPassage": {
         "properties": {
           "block_id": {
@@ -4739,6 +4755,36 @@
           "fresh"
         ],
         "title": "FeatureStoryQualitySnapshotResponse",
+        "type": "object"
+      },
+      "FieldChange": {
+        "properties": {
+          "newValue": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Newvalue"
+          },
+          "oldValue": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Oldvalue"
+          }
+        },
+        "title": "FieldChange",
         "type": "object"
       },
       "FindingSource": {
@@ -10588,6 +10634,65 @@
         "title": "SystemReferenceResponse",
         "type": "object"
       },
+      "TrackerEventAnswer": {
+        "properties": {
+          "closure_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closure Id"
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "ignored"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "TrackerEventAnswer",
+        "type": "object"
+      },
+      "TrackerEventBody": {
+        "properties": {
+          "createdDate": {
+            "format": "date-time",
+            "title": "Createddate",
+            "type": "string"
+          },
+          "eventType": {
+            "maxLength": 200,
+            "title": "Eventtype",
+            "type": "string"
+          },
+          "id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "resource": {
+            "$ref": "#/components/schemas/WorkItemUpdate"
+          }
+        },
+        "required": [
+          "id",
+          "eventType",
+          "createdDate",
+          "resource"
+        ],
+        "title": "TrackerEventBody",
+        "type": "object"
+      },
       "TransferOwnershipRequest": {
         "properties": {
           "actor_id": {
@@ -10935,6 +11040,53 @@
           "published_at"
         ],
         "title": "WorkItemMappingResponse",
+        "type": "object"
+      },
+      "WorkItemRevision": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          }
+        },
+        "title": "WorkItemRevision",
+        "type": "object"
+      },
+      "WorkItemUpdate": {
+        "properties": {
+          "fields": {
+            "$ref": "#/components/schemas/ChangedFields"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorkItemRevision"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "workItemId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workitemid"
+          }
+        },
+        "title": "WorkItemUpdate",
         "type": "object"
       },
       "WorkflowStage": {
@@ -11974,6 +12126,66 @@
         "summary": "Current Actor",
         "tags": [
           "identity"
+        ]
+      }
+    },
+    "/integrations/azure-devops/work-items": {
+      "post": {
+        "description": "Queue a published Epic closed or removed in the tracker; ignore every other event.",
+        "operationId": "receive_work_item_event_integrations_azure_devops_work_items_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrackerEventBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrackerEventAnswer"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Receive Work Item Event",
+        "tags": [
+          "integrations"
         ]
       }
     },

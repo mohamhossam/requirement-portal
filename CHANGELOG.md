@@ -33,6 +33,15 @@ restoring a backup.
   carry the requirement's id, so its own decision is never its precedent. Needs knowledge-portal
   v0.4.0 or later; an older one answers 404, which is retried for about two days. Migration
   `202610111200_precedent_handoffs` (expand only: a new table).
+- **What a closed Epic delivered (ontology plan Phase 7).** When an Epic this service published is
+  closed or removed in Azure DevOps, its service hook
+  (`POST /api/integrations/azure-devops/work-items`) queues it once per event. A worker reads its
+  Features' states and sends what was delivered, what was predicted and the catalogue changes that
+  implies to the knowledge portal's `POST /internal/change-requests/deliveries`, retried until it
+  answers. Off until `ADO_HOOK_SECRET` (24+ characters, or `_FILE`) is set and the subscription is
+  added in Azure DevOps (`docs/operations/deployment.md`, "Azure DevOps service hook"). Needs
+  knowledge-portal v0.5.0 or later. Migration `202610111800_delivery_closures` (expand only: a new
+  table and an index on `backlog_publications`).
 
 ## v0.1.0
 

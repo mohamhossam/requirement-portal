@@ -238,6 +238,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/integrations/azure-devops/work-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Receive Work Item Event
+         * @description Queue a published Epic closed or removed in the tracker; ignore every other event.
+         */
+        post: operations["receive_work_item_event_integrations_azure_devops_work_items_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/knowledge/search/unified": {
         parameters: {
             query?: never;
@@ -2649,6 +2669,10 @@ export interface components {
             /** Weak */
             weak: boolean;
         };
+        /** ChangedFields */
+        ChangedFields: {
+            "System.State"?: components["schemas"]["FieldChange"] | null;
+        };
         /** CitedPassage */
         CitedPassage: {
             /** Block Id */
@@ -3382,6 +3406,13 @@ export interface components {
             source_fingerprint: string;
             /** Stories */
             stories: components["schemas"]["StoryQualityResponse"][];
+        };
+        /** FieldChange */
+        FieldChange: {
+            /** Newvalue */
+            newValue?: string | null;
+            /** Oldvalue */
+            oldValue?: string | null;
         };
         /**
          * FindingSource
@@ -5430,6 +5461,29 @@ export interface components {
             /** Value Streams */
             value_streams: components["schemas"]["OrganisationReferenceResponse"][];
         };
+        /** TrackerEventAnswer */
+        TrackerEventAnswer: {
+            /** Closure Id */
+            closure_id?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "queued" | "ignored";
+        };
+        /** TrackerEventBody */
+        TrackerEventBody: {
+            /**
+             * Createddate
+             * Format: date-time
+             */
+            createdDate: string;
+            /** Eventtype */
+            eventType: string;
+            /** Id */
+            id: string;
+            resource: components["schemas"]["WorkItemUpdate"];
+        };
         /** TransferOwnershipRequest */
         TransferOwnershipRequest: {
             /** Actor Id */
@@ -5543,6 +5597,18 @@ export interface components {
             revision: number;
             /** Url */
             url: string;
+        };
+        /** WorkItemRevision */
+        WorkItemRevision: {
+            /** Id */
+            id?: number | null;
+        };
+        /** WorkItemUpdate */
+        WorkItemUpdate: {
+            fields?: components["schemas"]["ChangedFields"];
+            revision?: components["schemas"]["WorkItemRevision"] | null;
+            /** Workitemid */
+            workItemId?: number | null;
         };
         /**
          * WorkflowStage
@@ -5991,6 +6057,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ActorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    receive_work_item_event_integrations_azure_devops_work_items_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TrackerEventBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrackerEventAnswer"];
                 };
             };
             /** @description Validation Error */

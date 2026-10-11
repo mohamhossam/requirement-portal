@@ -44,6 +44,20 @@ class InMemoryPublicationRecords:
         with self._lock:
             return self._records.get(requirement_id.value)
 
+    def find_by_work_item(self, kind: str, external_id: str) -> BacklogPublication | None:
+        with self._lock:
+            return next(
+                (
+                    record
+                    for record in self._records.values()
+                    if any(
+                        item.kind == kind and item.external_id == external_id
+                        for item in record.mappings
+                    )
+                ),
+                None,
+            )
+
     def save(self, publication: BacklogPublication) -> None:
         with self._lock:
             stored = self._records.get(publication.requirement_id.value)
@@ -61,6 +75,15 @@ class PostgresPublicationRecords:
             row = connection.execute(
                 "SELECT payload FROM backlog_publications WHERE requirement_id = %s",
                 (requirement_id.value,),
+            ).fetchone()
+        return publication_from_payload(row[0]) if row is not None else None
+
+    def find_by_work_item(self, kind: str, external_id: str) -> BacklogPublication | None:
+        with self._store.connection() as connection:
+            row = connection.execute(
+                "SELECT payload FROM backlog_publications WHERE payload -> 'mappings' @> %s "
+                "ORDER BY requirement_id LIMIT 1",
+                (Jsonb([{"kind": kind, "external_id": external_id}]),),
             ).fetchone()
         return publication_from_payload(row[0]) if row is not None else None
 

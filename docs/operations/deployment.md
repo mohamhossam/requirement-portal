@@ -709,6 +709,32 @@ passages and evidence. The link is optional (ADR-0104), and set in `production.e
   `GET /architecture/active-release`.
 
 
+## Azure DevOps service hook
+
+When a published Epic is closed or removed in Azure DevOps, a service hook tells this service,
+which sends what the Epic delivered to the knowledge portal (ontology plan Phase 7,
+`docs/slices/ontology-phase-7-delivery-closure.md`). It needs publication on
+(`ADO_PUBLISHER=azure_devops`) and the knowledge portal connected, at v0.5.0 or later.
+
+1. Set `ADO_HOOK_SECRET` (or `ADO_HOOK_SECRET_FILE`) to a random value of 24 or more
+   characters, for example `openssl rand -hex 24`, and restart `api` and `worker`. Unset, the
+   hook route answers 404.
+2. In the Azure DevOps project, open **Project settings > Service hooks**, add a **Web Hooks**
+   subscription on **Work item updated**, filtered to the work item type **Epic** and the field
+   **State**.
+3. URL: `https://<this portal's host>/api/integrations/azure-devops/work-items`. Basic
+   authentication: any user name, and `ADO_HOOK_SECRET` as the password. Resource details to
+   send: **All**. Send a test notification: it answers 202 `ignored`.
+
+Each event is queued once by its id, so a redelivered event changes nothing. A Feature counts as
+delivered when its state is Closed or Done; the personal access token already has Work Items
+read for that. Watch `smb_ai_jobs_total{operation="delivery_closure"}`: status `skipped` means
+an Epic with nothing to send (no Feature done, no decided product impact, or published to
+another project), and `failed` one the knowledge portal refused or never answered for about two
+days. To rotate the secret, change it here and in the subscription together; events refused in
+between are retried by Azure DevOps for a while, then dropped.
+
+
 ## Service credentials
 
 With the shared tokens, each service holds the other's secret too. Per-direction credentials

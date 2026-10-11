@@ -82,6 +82,7 @@ from smb_requirement_agent.references.infrastructure.knowledge_client import (
     HttpArchitectureAssessment,
     HttpArchitectureKnowledge,
     HttpChangeRequestInbox,
+    HttpDeliveryInbox,
     HttpHistoricContent,
     HttpKnowledgeEvents,
     HttpPrecedentInbox,
@@ -742,6 +743,113 @@ def test_a_refused_or_unusable_precedent_receipt_is_an_explicit_failure() -> Non
     for answer in ({"precedent_id": "ANA-1"}, ["ANA-1"], {"recorded": "yes"}):
         with pytest.raises(ServiceUnavailableError):
             HttpPrecedentInbox(_client(_answering(answer, 201))).record(PRECEDENT)
+
+
+# --- What a closed Epic delivered (ontology plan Phase 7) ----------------------------------
+
+CLOSURE = {
+    "delivery_id": "REQ-1:4711:evt-1",
+    "state": "closed",
+    "requirement_id": "REQ-1",
+    "breakdown_revision": 2,
+    "approval_id": "APR-9",
+    "epic": {
+        "id": "EP-1",
+        "name": "Static IP quota",
+        "external_id": "4711",
+        "url": "https://dev.azure.com/acme/smb/_workitems/edit/4711",
+    },
+    "occurred_at": "2026-10-20T15:30:00+00:00",
+    "release_id": "rel-7",
+    "impact_version": "ANA-1@7",
+    "decision": "accepted",
+    "suggested_verdict": "change_existing_offering",
+    "verdict": "change_existing_offering",
+    "offering_id": "offering:fiber",
+    "offering_name": "Business Fiber",
+    "predicted_systems": [
+        {"id": "bcrm", "name": "BCRM", "role": "primary", "change_type": "modify"}
+    ],
+    "features": [
+        {
+            "id": "FT-1",
+            "sequence": 1,
+            "name": "Order a static IP",
+            "outcome": None,
+            "external_id": "4712",
+            "state": "Closed",
+            "delivered": True,
+            "systems": [{"id": "bcrm", "name": "BCRM"}, {"id": None, "name": "New portal"}],
+        }
+    ],
+    "changes": [
+        {
+            "op": "realise_concept",
+            "concept_id": "cap:static-ip",
+            "concept_label": "Static IP",
+            "system_id": "bcrm",
+            "system_name": "BCRM",
+            "feature_ids": ["FT-1"],
+        },
+        {
+            "op": "offer_concept",
+            "concept_id": "cap:static-ip",
+            "concept_label": "Static IP",
+            "offering_id": "offering:fiber",
+            "offering_name": "Business Fiber",
+            "feature_ids": ["FT-1"],
+        },
+    ],
+}
+
+
+def test_a_closed_epic_is_delivered_as_the_contract_describes() -> None:
+    receipt = {"change_request_id": "CR-1", "created": True, "withdrawn": []}
+    seen: list[httpx.Request] = []
+
+    kept = HttpDeliveryInbox(_client(_answering(receipt, 201), seen)).deliver(CLOSURE)
+
+    assert (kept.change_request_id, kept.withdrawn) == ("CR-1", ())
+    (request,) = seen
+    _assert_in_contract(request)
+    assert (request.method, request.url.path) == ("POST", "/internal/change-requests/deliveries")
+    operation = _operation(request)
+    answer = operation["responses"]["201"]["content"]["application/json"]["schema"]
+    assert _violations(receipt, answer, "answer") == []
+    # Kept before, or a removal, answers 200 with the same receipt.
+    assert "200" in operation["responses"]
+
+
+def test_a_removed_epic_is_delivered_as_the_contract_describes() -> None:
+    removed = {key: CLOSURE[key] for key in ("requirement_id", "breakdown_revision", "epic")}
+    removed |= {
+        "delivery_id": "REQ-1:4711:evt-2",
+        "state": "removed",
+        "approval_id": "APR-9",
+        "occurred_at": "2026-10-21T08:00:00+00:00",
+    }
+    receipt = {"change_request_id": None, "created": False, "withdrawn": ["CR-1"]}
+    seen: list[httpx.Request] = []
+
+    answer = HttpDeliveryInbox(_client(_answering(receipt), seen)).deliver(removed)
+
+    assert (answer.change_request_id, answer.withdrawn) == (None, ("CR-1",))
+    _assert_in_contract(seen[0])
+
+
+def test_a_refused_or_unusable_delivery_receipt_is_an_explicit_failure() -> None:
+    refused = HttpDeliveryInbox(_client(_answering({"detail": "Another body."}, 409)))
+    with pytest.raises(ServiceResponseError) as raised:
+        refused.deliver(CLOSURE)
+    assert raised.value.status_code == 409
+    for answer in (
+        ["CR-1"],
+        {"change_request_id": 7, "withdrawn": []},
+        {"change_request_id": "CR-1"},
+        {"change_request_id": None, "withdrawn": [1]},
+    ):
+        with pytest.raises(ServiceUnavailableError):
+            HttpDeliveryInbox(_client(_answering(answer, 201))).deliver(CLOSURE)
 
 
 # --- A historic requirement's content, a page at a time (ADR-0102, amendment 1) ------------

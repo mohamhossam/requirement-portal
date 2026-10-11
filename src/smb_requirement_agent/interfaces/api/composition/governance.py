@@ -9,8 +9,10 @@ from __future__ import annotations
 
 from contextlib import ExitStack
 from dataclasses import dataclass
+from time import monotonic
 
 import httpx
+from smb_kernel.observability.metrics import Metrics
 from smb_kernel.time.clock import ClockPort
 
 from smb_requirement_agent.governance.application.ports.backlog_export import BacklogExportPort
@@ -30,6 +32,9 @@ from smb_requirement_agent.governance.application.use_cases.breakdown_review imp
     RecordDecision,
     ResolveFlag,
     ReviewEvidenceLoader,
+)
+from smb_requirement_agent.governance.application.use_cases.delivery_closure import (
+    DeliverClosures,
 )
 from smb_requirement_agent.governance.application.use_cases.export_breakdown import ExportBreakdown
 from smb_requirement_agent.governance.application.use_cases.publish_breakdown import (
@@ -54,11 +59,13 @@ from smb_requirement_agent.governance.infrastructure.publication.unavailable imp
 )
 from smb_requirement_agent.infrastructure.config.options import AdoPublisher
 from smb_requirement_agent.infrastructure.config.settings import AdoPublicationSettings
+from smb_requirement_agent.infrastructure.documents.ingestion_loop import IngestionLoop
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
 from smb_requirement_agent.knowledge.application.use_cases.source_impact import SourceImpactReview
 from smb_requirement_agent.references.application.ports.architecture_knowledge import (
     ActiveArchitectureReleasePort,
 )
+from smb_requirement_agent.references.application.ports.delivery_closure import DeliveryInboxPort
 from smb_requirement_agent.references.application.ports.knowledge_handoff import (
     ApprovedBacklogOutboxPort,
 )
@@ -183,4 +190,32 @@ def build_review(
         publish_breakdown=publish,
         retry_failed_publication=retry,
         get_publication_status=publication_status,
+    )
+
+
+def build_delivery_worker(
+    persistence: PersistenceAdapters,
+    publisher: BacklogPublisherPort,
+    inbox: DeliveryInboxPort,
+    clock: ClockPort,
+    metrics: Metrics,
+    grace_seconds: float,
+) -> IngestionLoop:
+    """The worker telling the knowledge service what closed Epics delivered (ontology plan
+    Phase 7). Each outcome is counted as a job: delivered, retry, skipped or failed."""
+    deliver = DeliverClosures(
+        persistence.delivery_closures,
+        persistence.publication_records,
+        persistence.revision_repository,
+        publisher,
+        inbox,
+        clock,
+        record=lambda outcome, seconds: metrics.record_job("delivery_closure", outcome, seconds),
+    )
+    return IngestionLoop(
+        "delivered-epics",
+        (deliver.deliver_next,),
+        failed=metrics.record_ingestion_failure,
+        shutdown_grace_seconds=grace_seconds,
+        monotonic_seconds=monotonic,
     )

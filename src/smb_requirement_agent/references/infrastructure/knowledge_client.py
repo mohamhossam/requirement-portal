@@ -26,6 +26,7 @@ from smb_requirement_agent.references.application.ports.architecture_knowledge i
     ArchitectureKnowledgeMatch,
     ArchitectureQuery,
 )
+from smb_requirement_agent.references.application.ports.delivery_closure import DeliveryReceipt
 from smb_requirement_agent.references.application.ports.historic_corpus import (
     ContentPart,
     HistoricContentGoneError,
@@ -268,6 +269,29 @@ class HttpPrecedentInbox:
         if not isinstance(body, dict) or not isinstance(body.get("recorded"), bool):
             raise ServiceUnavailableError("The knowledge service returned an unusable receipt.")
         return bool(body["recorded"])
+
+
+class HttpDeliveryInbox:
+    """Where closed and removed Epics are sent (ontology plan Phase 7)."""
+
+    def __init__(self, client: InternalHttpClient) -> None:
+        self._client = client
+
+    def deliver(self, body: dict[str, Any]) -> DeliveryReceipt:
+        # Idempotent by delivery id: the same closure sent twice is kept once (200).
+        answer = self._client.post_json(
+            "/internal/change-requests/deliveries", body, idempotent=True
+        )
+        if not isinstance(answer, dict):
+            raise ServiceUnavailableError("The knowledge service returned an unusable receipt.")
+        kept, withdrawn = answer.get("change_request_id"), answer.get("withdrawn")
+        if (
+            not (kept is None or isinstance(kept, str))
+            or not isinstance(withdrawn, list)
+            or not all(isinstance(item, str) for item in withdrawn)
+        ):
+            raise ServiceUnavailableError("The knowledge service returned an unusable receipt.")
+        return DeliveryReceipt(kept, tuple(withdrawn))
 
 
 def _whole(value: object) -> int:
