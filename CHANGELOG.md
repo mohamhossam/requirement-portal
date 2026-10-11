@@ -27,6 +27,12 @@ restoring a backup.
   knowledge-portal v0.3.0 or later; an older one assesses nothing and blocks nothing.
   `PRODUCT_VERDICT_VALIDATED` (default `false`) stops calling the verdict a suggestion once the
   live gate has passed. No migration: the impact is stored in the analysis snapshot.
+- **Decided verdicts sent back as precedents (ontology plan Phase 5).** Each accepted,
+  overridden or unknown product impact is queued with the decision and delivered to the knowledge
+  portal's `POST /internal/architecture/precedents`, retried until it answers. Assessments now
+  carry the requirement's id, so its own decision is never its precedent. Needs knowledge-portal
+  v0.4.0 or later; an older one answers 404, which is retried for about two days. Migration
+  `202610111200_precedent_handoffs` (expand only: a new table).
 
 ## v0.1.0
 

@@ -168,6 +168,7 @@ from smb_requirement_agent.interfaces.api.composition.references import (
     KnowledgeService,
     build_backlog_handoff_worker,
     build_knowledge_service,
+    build_precedent_worker,
 )
 from smb_requirement_agent.interfaces.api.composition.reporting import build_reporting
 from smb_requirement_agent.interfaces.api.composition.requirements import (
@@ -236,6 +237,9 @@ from smb_requirement_agent.references.application.ports.architecture_knowledge i
 from smb_requirement_agent.references.application.ports.historic_corpus import HistoricCorpusPort
 from smb_requirement_agent.references.application.ports.knowledge_handoff import (
     ApprovedBacklogOutboxPort,
+)
+from smb_requirement_agent.references.application.ports.precedent_handoff import (
+    PrecedentOutboxPort,
 )
 from smb_requirement_agent.references.application.use_cases.historic_corpus import (
     IndexHistoricCorpus,
@@ -396,6 +400,8 @@ class Container:
     transaction_manager: TransactionManagerPort
     # Approved backlogs on their way to the knowledge service (ADR-0101 Amendment 2).
     backlog_handoffs: ApprovedBacklogOutboxPort
+    # Decided product verdicts on their way to the knowledge service (ontology Phase 5).
+    precedent_handoffs: PrecedentOutboxPort
     ai_job_repository: AiJobRepositoryPort
     ai_job_queue: AiJobQueuePort
     ai_job_backlog: AiJobBacklogPort
@@ -638,6 +644,10 @@ def _build_container(
         access_service,
         knowledge_service.assessment,
         product_verdict_validated=settings.product_verdict_validated,
+        # Decisions queue a precedent only when there is a knowledge service to send it to.
+        precedents=persistence.precedent_handoffs
+        if knowledge_service.precedents is not None
+        else None,
     )
     backlog_publisher = build_backlog_publisher(settings.ado_publication, resources)
     review = build_review(
@@ -697,6 +707,14 @@ def _build_container(
     }
     if architecture_jobs.mapping_worker is not None:
         background_workers["architecture_mapping_job_worker"] = architecture_jobs.mapping_worker
+    if knowledge_service.precedents is not None:
+        background_workers["precedent_worker"] = build_precedent_worker(
+            persistence,
+            knowledge_service.precedents,
+            resolved_clock,
+            metrics,
+            settings.ai_job_shutdown_grace_seconds,
+        )
     if knowledge_service.change_requests is not None:
         background_workers["approved_backlog_worker"] = build_backlog_handoff_worker(
             persistence,
@@ -799,6 +817,7 @@ def _build_container(
         breakdown_repository=persistence.revision_repository,
         transaction_manager=persistence.transaction_manager,
         backlog_handoffs=persistence.backlog_handoffs,
+        precedent_handoffs=persistence.precedent_handoffs,
         ai_job_repository=persistence.ai_job_repository,
         ai_job_queue=persistence.ai_job_queue,
         ai_job_backlog=persistence.ai_job_backlog,

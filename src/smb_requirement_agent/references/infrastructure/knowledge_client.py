@@ -254,6 +254,22 @@ class HttpChangeRequestInbox:
             ) from exc
 
 
+class HttpPrecedentInbox:
+    """Where decided product verdicts are kept as precedents (ontology plan Phase 5)."""
+
+    def __init__(self, client: InternalHttpClient) -> None:
+        self._client = client
+
+    def record(self, precedent: dict[str, Any]) -> bool:
+        # Idempotent by analysis: the same decision delivered twice is kept once (200).
+        body = self._client.post_json(
+            "/internal/architecture/precedents", precedent, idempotent=True
+        )
+        if not isinstance(body, dict) or not isinstance(body.get("recorded"), bool):
+            raise ServiceUnavailableError("The knowledge service returned an unusable receipt.")
+        return bool(body["recorded"])
+
+
 def _whole(value: object) -> int:
     if not isinstance(value, int) or isinstance(value, bool) or value < 1:
         raise TypeError("expected a positive whole number")

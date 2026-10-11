@@ -28,7 +28,8 @@ place the requirement, it asks, with the answers it knows as choices.
 
 ## Out of Scope
 
-- Analysis that reads the catalogue's vocabularies and concepts itself (Phase 5).
+- Sending each decided verdict back to the catalogue as a precedent (Phase 5,
+  `ontology-phase-5-decided-verdicts.md`).
 - The Epic-closed hook comparing what was delivered with the verdict (Phase 7).
 - Caching assess by analysis revision: each round asks once, and rounds are already model calls.
 

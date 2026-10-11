@@ -63,6 +63,9 @@ from smb_requirement_agent.interfaces.api.composition.persistence import Persist
 from smb_requirement_agent.references.application.ports.architecture_assessment import (
     ArchitectureAssessmentPort,
 )
+from smb_requirement_agent.references.application.ports.precedent_handoff import (
+    PrecedentOutboxPort,
+)
 from smb_requirement_agent.workflows.application.use_cases.ai_jobs import AnalysisProgressReporter
 from smb_requirement_agent.workflows.application.use_cases.generation_context import (
     GenerationContextTokens,
@@ -146,6 +149,7 @@ def build_analysis_workflow(
     assessment: ArchitectureAssessmentPort,
     *,
     product_verdict_validated: bool = False,
+    precedents: PrecedentOutboxPort | None = None,
 ) -> AnalysisWorkflowWiring:
     contexts = GenerationContextTokens(
         persistence.requirement_repository,
@@ -184,6 +188,7 @@ def build_analysis_workflow(
         reviews=knowledge.reference_currency,
         product_impact=AssessProductImpact(assessment, clock),
         product_verdict_validated=product_verdict_validated,
+        precedents=precedents,
     )
     return AnalysisWorkflowWiring(
         generation_context_tokens=contexts,
