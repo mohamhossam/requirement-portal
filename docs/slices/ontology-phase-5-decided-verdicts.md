@@ -139,5 +139,5 @@ An example, for an override of the Phase 4 example:
 
 Run on 2026-10-11 against this branch:
 
-- `pytest` with PostgreSQL 16 — PASS
+- `pytest` with PostgreSQL 16 — 2195 passed, none skipped
 - `ruff check .`, `ruff format --check .`, `mypy src tests`, `lint-imports` — PASS
