@@ -68,6 +68,53 @@ realm's clients and its token and session lifetimes.
    with its `deploy/keycloak/apply.py` (ADR-0104). This realm file holds only
    requirement work's.
 
+### Production mode on one machine
+
+To try the Docker stack in production mode (`APP_ENV=production`, OIDC sign-in)
+on a workstation, two overlays connect it to this Keycloak. The browser and the
+API must see one issuer, but `localhost` inside a container is the container, so
+Keycloak is served as `https://keycloak.localhost:8443`: browsers send every
+`*.localhost` name to this machine, and `deploy/keycloak/compose.local.yaml`
+gives Keycloak that name on the stack's network. `deploy/compose.local-oidc.yaml`
+makes the API and worker trust the local certificate authority on top of the
+public ones (`SSL_CERT_FILE`), so discovery and JWKS verification stay on.
+
+1. Create a certificate for `keycloak.localhost` (also `localhost` and
+   `127.0.0.1`) as `deploy/keycloak/certs/local.crt` and `local.key`, and
+   trust its authority in the operating system and browser, for example with
+   `mkcert`. Save that authority appended to the public CA bundle as
+   `deploy/keycloak/certs/ca-bundle.crt`:
+
+   ```bash
+   cat "$(python -m certifi)" "$(mkcert -CAROOT)/rootCA.pem" > deploy/keycloak/certs/ca-bundle.crt
+   ```
+
+2. Put the values of step 2 above in `deploy/keycloak/.env`, with
+   `REQUIREMENT_APP_ORIGIN=http://localhost:8080` (the stack's `WEB_PORT`).
+   Without an Entra registration, placeholder Entra values let Keycloak start;
+   set `OIDC_COMPANY_SSO_ENABLED=false` so the page offers no company SSO.
+
+3. In `deploy/production.env`, set `OIDC_ISSUER_URL=https://keycloak.localhost:8443/realms/requirement-ai`
+   and the identity settings of step 4. In `deploy/.env`, set
+   `CSP_IDENTITY_ORIGINS=https://keycloak.localhost:8443`.
+
+4. Start the stack first (Keycloak joins its network), then Keycloak:
+
+   ```bash
+   docker compose -f deploy/compose.production.yaml -f deploy/compose.local-oidc.yaml up -d
+   docker compose -f deploy/keycloak/compose.yaml -f deploy/keycloak/compose.local.yaml up -d
+   ```
+
+   Pass both stack files to every later command for the stack.
+
+5. The realm imports no users. Create one in the admin console at
+   `https://keycloak.localhost:8443/admin/` with a verified email and a
+   temporary password.
+
+`web` publishes the stack on every interface in this mode. This is a trial of
+production sign-in, not a shared deployment: that needs a real hostname, a
+TLS proxy and the checks under "Staging acceptance".
+
 ### Roles
 
 Each role is granted through a group; add a person to the group to grant it.
