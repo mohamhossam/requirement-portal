@@ -1871,6 +1871,7 @@
           "system",
           "entity",
           "interface",
+          "realisation",
           "precedent"
         ],
         "title": "PathKind",
