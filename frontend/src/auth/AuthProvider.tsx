@@ -51,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [sessionExpired, setSessionExpired] = useState(false);
   const [signingInChoice, setSigningInChoice] = useState<string | null>(null);
+  const [callbackReturnPath, setCallbackReturnPath] = useState<string | null>(null);
   const managerRef = useRef<UserManager | null>(null);
   const actorIdRef = useRef<string | null>(null);
   const started = useRef(false);
@@ -119,10 +120,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await manager.signinSilentCallback();
         currentUser = await manager.getUser();
       } else if (window.location.pathname === "/auth/callback") {
-        currentUser = await manager.signinRedirectCallback();
+        // Read the return path before the callback, so a failed one still
+        // knows where the person was going. The router is not mounted around
+        // this provider, so AuthGate does the navigating once auth settles; a
+        // `history.replaceState` here would move the address bar but not the
+        // router, which stayed on the callback path.
         const returnPath = safeAuthReturnPath(sessionStorage.getItem(returnPathKey));
         sessionStorage.removeItem(returnPathKey);
-        window.history.replaceState({}, "", returnPath);
+        setCallbackReturnPath(returnPath);
+        currentUser = await manager.signinRedirectCallback();
       } else {
         currentUser = await manager.getUser();
       }
@@ -174,6 +180,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     error,
     sessionExpired,
     signingInChoice,
+    callbackReturnPath,
     signIn: async (choiceId?: string) => {
       if (signInStarted.current) return;
       signedOut.current = false;
@@ -232,7 +239,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       actorIdRef.current = null;
       await loadActor();
     },
-  }), [actor, config, error, loadActor, loading, queryClient, reconciling, sessionExpired, signingInChoice]);
+  }), [actor, callbackReturnPath, config, error, loadActor, loading, queryClient, reconciling, sessionExpired, signingInChoice]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
@@ -240,6 +247,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function AuthGate({ children }: { children: ReactNode }) {
   const auth = useAuth();
   const location = useLocation();
+  // The hidden silent-renew iframe only hands its answer to the window that
+  // opened it; it has nothing to show and no reason to load a page.
+  if (location.pathname === "/auth/silent-callback" && window.self !== window.top) return null;
   // This one keeps its own <main>: the gate renders BEFORE the app shell, so
   // there is no landmark around it yet.
   if (!auth || auth.loading) {
@@ -249,13 +259,19 @@ export function AuthGate({ children }: { children: ReactNode }) {
       </main>
     );
   }
+  // A callback path is never a page: once auth has settled, the router leaves it
+  // for the page the sign-in started from.
+  const onCallback = location.pathname === "/auth/callback" || location.pathname === "/auth/silent-callback";
+  const requested = onCallback
+    ? auth.callbackReturnPath ?? "/"
+    : safeAuthReturnPath(`${location.pathname}${location.search}${location.hash}`);
   if (auth.error || (!auth.actor && auth.config?.mode === "oidc")) {
     if (location.pathname !== "/login") {
-      const returnPath = safeAuthReturnPath(`${location.pathname}${location.search}${location.hash}`);
-      return <Navigate to={`/login?returnTo=${encodeURIComponent(returnPath)}`} replace />;
+      return <Navigate to={`/login?returnTo=${encodeURIComponent(requested)}`} replace />;
     }
     return <LoginPage />;
   }
+  if (onCallback) return <Navigate to={requested} replace />;
   if (location.pathname === "/login") {
     if (auth.config?.mode === "fake") return <LoginPage />;
     const returnPath = safeAuthReturnPath(new URLSearchParams(location.search).get("returnTo"));

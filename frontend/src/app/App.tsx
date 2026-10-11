@@ -11,8 +11,7 @@ import { RequirementEntryRedirect } from "./RequirementEntryRedirect";
 /**
  * What ships in the first request, and what waits until it is asked for.
  *
- * The dashboard is the landing route and the fallback for anything unmatched, and
- * the entry redirect is what a bare Requirement link lands on, so both stay in
+ * The dashboard is the landing route, and the entry redirect is what a bare Requirement link lands on, so both stay in
  * the initial bundle. Everything else is a destination somebody navigates to: the
  * whole app used to arrive in one 583 kB chunk, which meant every reviewer
  * downloaded Reports, Activity, the intake form and the entire Backlog workspace
@@ -74,11 +73,6 @@ export function App() {
             <Route path="/requirements/:id/breakdown/features/:featureId/stories/:storyId" element={<RequirementPage view="breakdown" />} />
             <Route path="/requirements/:id/revisions" element={<RequirementPage view="revisions" />} />
             <Route path="/requirements/:id/review" element={<RequirementPage view="review" />} />
-            {/* After an OIDC sign-in the address is rewritten outside the router
-                (AuthProvider's `replaceState`), so the router can still be on the
-                callback path. It lands on the dashboard, as it always has, not on
-                "Page not found". */}
-            <Route path="/auth/*" element={<DashboardPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>

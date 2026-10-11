@@ -95,6 +95,17 @@ An exception sets no precedent for the redesign: it changes behaviour, not the l
     was already created. The dashboard reads it through the same helper.
   - **Downloads** (`api/client.ts`). The object URL is revoked 40 seconds after the click,
     not at once, so Firefox and Safari still have the file when they start the download.
+- **OIDC return path through the router** (approved by the owner 2026-10-10):
+  - **Callback** (`auth/AuthProvider.tsx`, `auth/authContext.ts`). `AuthProvider` no longer
+    rewrites the address with `history.replaceState`, which `BrowserRouter` does not see, so the
+    router stayed on `/auth/callback` and the person landed on the dashboard instead of the page
+    they asked for. The provider keeps the saved return path as `callbackReturnPath`, and
+    `AuthGate` leaves the callback with `<Navigate replace>` once auth has settled. A failed
+    callback sends the person to the login page with that path as `returnTo`, so it survives a
+    retry.
+  - **Silent renewal.** `AuthGate` renders nothing on `/auth/silent-callback` inside the
+    silent-renew iframe, which used to load the dashboard there.
+  - **Routes** (`app/App.tsx`). The `/auth/*` → dashboard route PR 15 added is removed.
 
 ## Consequences
 
