@@ -1561,7 +1561,7 @@ def test_approved_revision_exports_after_postgres_restart() -> None:
 
     artifact = use_case.execute(requirement_id, revision.number, ExportFormat.JSON, owner)
 
-    assert artifact.content.startswith(b'{\n  "schema_version": "1.5"')
+    assert artifact.content.startswith(b'{\n  "schema_version": "1.6"')
     assert artifact.filename.endswith(f"breakdown-v{revision.number.value}.json")
 
 

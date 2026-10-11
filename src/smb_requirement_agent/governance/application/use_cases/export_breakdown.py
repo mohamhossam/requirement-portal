@@ -25,6 +25,7 @@ from smb_requirement_agent.governance.application.exports import (
     ExportOfferingDuty,
     ExportOrganisationReference,
     ExportProductContext,
+    ExportProductImpact,
     ExportProvenance,
     ExportStory,
     ExportSystem,
@@ -323,4 +324,20 @@ def _document(revision: BreakdownRevision, approval: Approval) -> NeutralBacklog
             provenance=_provenance(epic.provenance),
             features=features,
         ),
+        product_impact=_product_impact(revision),
+    )
+
+
+def _product_impact(revision: BreakdownRevision) -> ExportProductImpact | None:
+    """The decided product verdict the revision was generated from, with the drafted
+    offering while that verdict is a new offering."""
+    impact = revision.analysis.product_impact if revision.analysis is not None else None
+    if impact is None or impact.verdict is None:
+        return None
+    draft = impact.decided_draft
+    return ExportProductImpact(
+        verdict=impact.verdict.value,
+        offering_id=impact.offering_id,
+        release_id=impact.release_id,
+        draft=dict(draft.document) if draft is not None and draft.document else None,
     )

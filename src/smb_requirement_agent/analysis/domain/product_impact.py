@@ -8,9 +8,10 @@ unknown. Generation and publication read only the decision (ADR-0116).
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from enum import StrEnum
+from typing import Any
 
 from smb_requirement_agent.analysis.domain.errors import InvalidProductImpactDecisionError
 from smb_requirement_agent.shared_kernel.actors import ActorProfile, ActorSnapshot
@@ -113,6 +114,47 @@ class ImpactQuestion:
 
 
 @dataclass(frozen=True)
+class DraftComponent:
+    """A component of a drafted offering, and the systems that would deliver it."""
+
+    name: str
+    system_ids: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class OfferingDraft:
+    """The offering and journey the knowledge portal drafted for a new-offering verdict.
+
+    A proposal for the catalogue's curators, never a decision here (ontology plan Phase 9):
+    `document` is the draft as the knowledge portal wrote it, sent back unchanged with the
+    approved backlog, where a curator edits and accepts it. The other fields are what this
+    application shows of it.
+    """
+
+    offering_id: str
+    offering_name: str
+    components: tuple[DraftComponent, ...] = ()
+    # The questions it leaves for architecture review, such as which system will realise a
+    # capability no system realises yet.
+    questions: tuple[str, ...] = ()
+    journey_name: str | None = None
+    journey_steps: int = 0
+    # The offering it was drafted from, if any.
+    based_on: str | None = None
+    document: dict[str, Any] = field(default_factory=dict, hash=False)
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "offering_id", _text(self.offering_id, "Drafted offering id"))
+        object.__setattr__(
+            self, "offering_name", _text(self.offering_name, "Drafted offering name")
+        )
+        if self.journey_steps < 0:
+            raise InvalidProductImpactDecisionError(
+                "A drafted journey's step count cannot be negative."
+            )
+
+
+@dataclass(frozen=True)
 class ProductImpact:
     """The knowledge portal's suggestion for one analysis round, and a person's decision."""
 
@@ -124,6 +166,8 @@ class ProductImpact:
     offering_name: str | None = None
     proposal: str | None = None
     new_values: tuple[str, ...] = ()
+    # For a new offering in a family or a new product line (ontology plan Phase 9).
+    draft: OfferingDraft | None = None
     needs: tuple[CapabilityNeed, ...] = ()
     gaps: tuple[ImpactGap, ...] = ()
     systems: tuple[ImpactSystem, ...] = ()
@@ -183,6 +227,13 @@ class ProductImpact:
         if self.verdict is None or not self.verdict.names_an_offering:
             return None
         return self.offering_id
+
+    @property
+    def decided_draft(self) -> OfferingDraft | None:
+        """The drafted offering, while the decided verdict is still a new offering."""
+        if self.verdict is None or self.verdict.names_an_offering:
+            return None
+        return self.draft
 
     @property
     def covered_needs(self) -> tuple[CapabilityNeed, ...]:

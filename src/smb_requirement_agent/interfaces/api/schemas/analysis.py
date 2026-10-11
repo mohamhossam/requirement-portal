@@ -236,6 +236,27 @@ class ImpactQuestionResponse(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
+class DraftComponentResponse(BaseModel):
+    name: str
+    system_ids: list[str]
+    model_config = ConfigDict(frozen=True)
+
+
+class OfferingDraftResponse(BaseModel):
+    """The offering and journey drafted for a new-offering verdict (ontology plan Phase 9)."""
+
+    offering_id: str
+    offering_name: str
+    # The offering it was drafted from, if any.
+    based_on: str | None
+    components: list[DraftComponentResponse]
+    # What it leaves for architecture review.
+    questions: list[str]
+    journey_name: str | None
+    journey_steps: int
+    model_config = ConfigDict(frozen=True)
+
+
 class ProductImpactResponse(BaseModel):
     """Where the knowledge portal places the requirement, and the decision on it (ADR-0115)."""
 
@@ -249,6 +270,7 @@ class ProductImpactResponse(BaseModel):
     offering_name: str | None
     proposal: str | None
     new_values: list[str]
+    draft: OfferingDraftResponse | None
     needs: list[CapabilityNeedResponse]
     gaps: list[ImpactGapResponse]
     systems: list[ImpactSystemResponse]

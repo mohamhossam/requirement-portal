@@ -89,6 +89,7 @@ from smb_requirement_agent.references.infrastructure.knowledge_client import (
     HttpReferenceKnowledge,
 )
 from smb_requirement_agent.shared_kernel.citation import PublishedReference
+from tests.unit.analysis.test_product_impact import DRAFTED_OFFERING
 from tests.unit.workflow_helpers import approve_fake_breakdown
 
 CONTRACT = json.loads(
@@ -688,10 +689,24 @@ def test_an_approved_backlog_is_delivered_as_the_contract_describes(client: Test
     assert "200" in operation["responses"]
 
 
+def test_a_drafted_offering_is_delivered_as_the_contract_describes() -> None:
+    """Export schema 1.6 sends the decided product impact, with the drafted offering back
+    exactly as the assessment answered it (ontology plan Phase 9)."""
+    product = {
+        "verdict": "new_product_line",
+        "offering_id": "offering:fiber",
+        "release_id": "rel-7",
+        "draft": DRAFTED_OFFERING,
+    }
+    schema = SCHEMAS["ApprovedBacklogRequest"]["properties"]["product_impact"]
+
+    assert _violations(product, schema, "product_impact") == []
+
+
 def test_a_refused_or_unusable_delivery_is_an_explicit_failure() -> None:
     refused = HttpChangeRequestInbox(_client(_answering({"detail": "Another subject."}, 409)))
     with pytest.raises(ServiceResponseError) as raised:
-        refused.deliver({"schema_version": "1.5"})
+        refused.deliver({"schema_version": "1.6"})
     assert raised.value.status_code == 409
     for answer in ({"approval_id": "apr-1"}, ["CR-1"], {"change_request_id": 7}):
         with pytest.raises(ServiceUnavailableError):
@@ -1080,6 +1095,35 @@ def test_the_precedents_an_assessment_weighed_are_allowed_and_not_needed() -> No
 
     _assert_answer_in_contract(seen[0], later)
     assert assessment == EXPECTED_ASSESSMENT
+
+
+def test_a_drafted_offering_is_decoded_and_kept_as_the_service_wrote_it() -> None:
+    seen: list[httpx.Request] = []
+    drafted = json.loads(json.dumps(ASSESSMENT))
+    drafted["verdict"] = drafted["rule_verdict"] = "new_product_line"
+    drafted["proposal"]["draft"] = DRAFTED_OFFERING
+
+    assessment = HttpArchitectureAssessment(_client(_answering(drafted), seen)).assess(
+        AssessmentQuery(("Cloud video surveillance for shops.",))
+    )
+
+    _assert_answer_in_contract(seen[0], drafted)
+    assert assessment is not None and assessment.proposal is not None
+    draft = assessment.proposal.draft
+    assert draft is not None
+    assert (draft.offering.name, draft.based_on) == (
+        "Cloud video surveillance for shops",
+        "offering:fiber",
+    )
+    assert [
+        (part.name, [duty.system_id for duty in part.responsibilities])
+        for part in draft.offering.components
+    ] == [("Managed access point", ["ecm", "wfms"]), ("Cloud video surveillance", [])]
+    assert [item.text for item in draft.offering.questions] == [
+        "Which system will realise Cloud video surveillance?"
+    ]
+    assert draft.journey is not None and len(draft.journey.activities) == 2
+    assert draft.document == DRAFTED_OFFERING
 
 
 def test_a_role_kind_or_facet_added_later_is_read_as_written() -> None:

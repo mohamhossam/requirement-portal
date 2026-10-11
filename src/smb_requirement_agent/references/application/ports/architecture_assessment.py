@@ -9,8 +9,8 @@ unknown one is shown as written rather than failing the analysis.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Literal, Protocol
+from dataclasses import dataclass, field
+from typing import Any, Literal, Protocol
 
 VerdictValue = Literal[
     "change_existing_offering",
@@ -67,6 +67,60 @@ class AssessedComponent:
 
 
 @dataclass(frozen=True)
+class DraftedResponsibility:
+    system_id: str
+
+
+@dataclass(frozen=True)
+class DraftedComponent:
+    id: str
+    name: str
+    responsibilities: tuple[DraftedResponsibility, ...] = ()
+
+
+@dataclass(frozen=True)
+class DraftedQuestion:
+    id: str
+    text: str
+
+
+@dataclass(frozen=True)
+class DraftedOffering:
+    id: str
+    name: str
+    components: tuple[DraftedComponent, ...] = ()
+    questions: tuple[DraftedQuestion, ...] = ()
+
+
+@dataclass(frozen=True)
+class DraftedActivity:
+    number: str
+    name: str
+
+
+@dataclass(frozen=True)
+class DraftedJourney:
+    id: str
+    name: str
+    activities: tuple[DraftedActivity, ...] = ()
+
+
+@dataclass(frozen=True)
+class AssessedDraft:
+    """The offering and journey drafted for a new-offering verdict (ontology plan Phase 9).
+
+    Only what this application shows is read; `document` is the draft as the knowledge
+    service wrote it, in the catalogue's own shapes, sent back unchanged with the approved
+    backlog.
+    """
+
+    offering: DraftedOffering
+    journey: DraftedJourney | None = None
+    based_on: str | None = None
+    document: dict[str, Any] = field(default_factory=dict, hash=False)
+
+
+@dataclass(frozen=True)
 class AssessedProposal:
     summary: str
     offering_id: str | None = None
@@ -74,6 +128,8 @@ class AssessedProposal:
     components: tuple[AssessedComponent, ...] = ()
     journey_ids: tuple[str, ...] = ()
     new_values: tuple[str, ...] = ()
+    # Added in knowledge-portal 0.6.0, for a new offering in a family or a new product line.
+    draft: AssessedDraft | None = None
 
 
 @dataclass(frozen=True)
