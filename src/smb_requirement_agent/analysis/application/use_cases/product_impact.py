@@ -9,6 +9,7 @@ With no knowledge portal linked (ADR-0104) nothing is asked, and nothing is bloc
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterable
 from datetime import datetime
 
 from smb_kernel.time.clock import ClockPort
@@ -82,23 +83,37 @@ def assessment_query(
     clarifications: tuple[HumanClarification, ...],
 ) -> AssessmentQuery:
     """The requirement as analysed: its own words, its facts, and the answers given."""
-    outcome = requirement.desired_outcome.value if requirement.desired_outcome else None
     return AssessmentQuery(
-        text=tuple(
-            item.strip()
-            for item in (
-                requirement.title.value,
-                requirement.description.value,
-                *((outcome,) if outcome else ()),
-                *candidate["known_facts"],
-                *candidate["constraints"],
-                *candidate["business_rules"],
-                # The answers alone: the questions' own words would read as needs.
-                *(item.answer for item in clarifications),
-            )
-            if item.strip()
+        text=assessed_text(
+            requirement,
+            (*candidate["known_facts"], *candidate["constraints"], *candidate["business_rules"]),
+            clarifications,
         ),
         declared_systems=tuple(item.value for item in requirement.systems),
+        # Its own decided verdict is never shown back to it as an example (Phase 5).
+        requirement_id=requirement.id.value,
+    )
+
+
+def assessed_text(
+    requirement: Requirement,
+    facts: Iterable[str],
+    clarifications: tuple[HumanClarification, ...],
+) -> tuple[str, ...]:
+    """What the knowledge portal reads: the title, description and outcome, the analysed
+    facts, constraints and rules, and the answers alone (the questions' own words would
+    read as needs)."""
+    outcome = requirement.desired_outcome.value if requirement.desired_outcome else None
+    return tuple(
+        item.strip()
+        for item in (
+            requirement.title.value,
+            requirement.description.value,
+            *((outcome,) if outcome else ()),
+            *facts,
+            *(item.answer for item in clarifications),
+        )
+        if item.strip()
     )
 
 

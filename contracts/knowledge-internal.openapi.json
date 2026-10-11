@@ -129,8 +129,16 @@
             "title": "Owners",
             "type": "array"
           },
+          "precedents": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AssessedPrecedent"
+            },
+            "title": "Precedents",
+            "type": "array"
+          },
           "prompt_version": {
-            "default": "requirement-assessment-v1",
+            "default": "requirement-assessment-v3",
             "title": "Prompt Version",
             "type": "string"
           },
@@ -162,6 +170,17 @@
               }
             ],
             "title": "Reader Model"
+          },
+          "reranker_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reranker Model"
           },
           "rule_verdict": {
             "anyOf": [
@@ -456,6 +475,71 @@
         "title": "ArchitectureQuery",
         "type": "object"
       },
+      "AssessedPrecedent": {
+        "description": "A decided requirement like this one, shown to the reasoner as a worked example.",
+        "properties": {
+          "decision": {
+            "$ref": "#/components/schemas/PrecedentDecision"
+          },
+          "offering_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offering Id"
+          },
+          "precedent_id": {
+            "title": "Precedent Id",
+            "type": "string"
+          },
+          "release_id": {
+            "title": "Release Id",
+            "type": "string"
+          },
+          "requirement_id": {
+            "title": "Requirement Id",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "shared_concept_ids": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Shared Concept Ids",
+            "type": "array"
+          },
+          "system_ids": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "System Ids",
+            "type": "array"
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/ProductVerdict"
+          }
+        },
+        "required": [
+          "precedent_id",
+          "requirement_id",
+          "release_id",
+          "verdict",
+          "decision",
+          "offering_id",
+          "score"
+        ],
+        "title": "AssessedPrecedent",
+        "type": "object"
+      },
       "AssessedSystem": {
         "properties": {
           "change_type": {
@@ -612,6 +696,17 @@
               }
             ],
             "title": "Release Id"
+          },
+          "requirement_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requirement Id"
           },
           "text": {
             "items": {
@@ -1293,7 +1388,8 @@
           "characteristic",
           "excluded",
           "data",
-          "change_type"
+          "change_type",
+          "interface"
         ],
         "title": "FacetKind",
         "type": "string"
@@ -1772,7 +1868,10 @@
           "offering",
           "component",
           "channel",
-          "system"
+          "system",
+          "entity",
+          "interface",
+          "precedent"
         ],
         "title": "PathKind",
         "type": "string"
@@ -1798,6 +1897,191 @@
           "label"
         ],
         "title": "PathStep",
+        "type": "object"
+      },
+      "PrecedentBody": {
+        "description": "A verdict decision on one requirement analysis.",
+        "properties": {
+          "concept_ids": {
+            "default": [],
+            "items": {
+              "maxLength": 200,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 40,
+            "title": "Concept Ids",
+            "type": "array"
+          },
+          "decided_at": {
+            "format": "date-time",
+            "title": "Decided At",
+            "type": "string"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/PrecedentDecision"
+          },
+          "offering_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offering Id"
+          },
+          "precedent_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Precedent Id",
+            "type": "string"
+          },
+          "release_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Release Id",
+            "type": "string"
+          },
+          "requirement_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Requirement Id",
+            "type": "string"
+          },
+          "suggested_verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "systems": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/PrecedentSystemBody"
+            },
+            "maxItems": 60,
+            "title": "Systems",
+            "type": "array"
+          },
+          "text": {
+            "items": {
+              "maxLength": 10000,
+              "type": "string"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Text",
+            "type": "array"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "version": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "precedent_id",
+          "requirement_id",
+          "version",
+          "release_id",
+          "text",
+          "decision",
+          "decided_at"
+        ],
+        "title": "PrecedentBody",
+        "type": "object"
+      },
+      "PrecedentDecision": {
+        "description": "What the reviewer did with the suggested verdict (requirement-portal ADR-0115).",
+        "enum": [
+          "accepted",
+          "overridden",
+          "unknown"
+        ],
+        "title": "PrecedentDecision",
+        "type": "string"
+      },
+      "PrecedentReceipt": {
+        "properties": {
+          "dropped_systems": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Dropped Systems",
+            "type": "array"
+          },
+          "precedent_id": {
+            "title": "Precedent Id",
+            "type": "string"
+          },
+          "recorded": {
+            "title": "Recorded",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "precedent_id",
+          "recorded"
+        ],
+        "title": "PrecedentReceipt",
+        "type": "object"
+      },
+      "PrecedentSystemBody": {
+        "properties": {
+          "change_type": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change Type"
+          },
+          "id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "PrecedentSystemBody",
         "type": "object"
       },
       "ProductContext": {
@@ -2247,7 +2531,9 @@
           "primary",
           "channel",
           "named",
-          "supporting"
+          "supporting",
+          "owner",
+          "consumer"
         ],
         "title": "SystemRole",
         "type": "string"
@@ -2384,6 +2670,48 @@
           }
         },
         "summary": "Match"
+      }
+    },
+    "/internal/architecture/precedents": {
+      "post": {
+        "description": "A Requirement Owner's decision on the suggested verdict (ontology plan Phase 5).\n\nKept once per analysis: a later decision replaces it, and the same one delivered again,\nor an older one arriving late, answers 200 and changes nothing. The release must be\npublished (404 otherwise); systems and concepts it does not hold are left out, and the\nsystems are named in the receipt.",
+        "operationId": "record_precedent_internal_architecture_precedents_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrecedentBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The same decision, or a later one, is already kept."
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrecedentReceipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Record Precedent"
       }
     },
     "/internal/architecture/releases/{release_id}/evidence/{chunk_id}": {

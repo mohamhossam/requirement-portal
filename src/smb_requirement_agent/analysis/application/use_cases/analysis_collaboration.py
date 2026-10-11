@@ -48,6 +48,9 @@ from smb_requirement_agent.analysis.application.use_cases.analysis_reconciliatio
 from smb_requirement_agent.analysis.application.use_cases.generation_effects import (
     accepted_generation_effects,
 )
+from smb_requirement_agent.analysis.application.use_cases.precedent_handoff import (
+    precedent_handoff,
+)
 from smb_requirement_agent.analysis.domain.entities import (
     AnalysisDocumentReference,
     AnalysisQuestionChange,
@@ -84,6 +87,9 @@ from smb_requirement_agent.identity.application.ports.requirement_access import 
 )
 from smb_requirement_agent.identity.domain.entities import RequirementAccess
 from smb_requirement_agent.identity.domain.errors import AuthorizationDeniedError
+from smb_requirement_agent.references.application.ports.precedent_handoff import (
+    PrecedentOutboxPort,
+)
 from smb_requirement_agent.references.application.ports.reference_grounding import (
     ReferenceReviewPort,
 )
@@ -158,8 +164,12 @@ class AnalysisCollaboration:
         reviews: ReferenceReviewPort | None = None,
         product_impact: ProductImpactPort | None = None,
         product_verdict_validated: bool = False,
+        precedents: PrecedentOutboxPort | None = None,
     ) -> None:
         self._reviews = reviews
+        # Where decided verdicts are queued for the knowledge service (Phase 5); none
+        # when no knowledge service is linked.
+        self._precedents = precedents
         self._product_impact = product_impact
         self._product_verdict_validated = product_verdict_validated
         self._requirements = requirements
@@ -408,7 +418,7 @@ class AnalysisCollaboration:
         """Accept the suggested product impact, override its verdict, or mark it unknown."""
         with self._transactions.transaction():
             self._transactions.lock_requirement(requirement_id)
-            self._require_requirement(requirement_id)
+            requirement = self._require_requirement(requirement_id)
             analysis = self._require_analysis(requirement_id)
             self._authorization.require(requirement_id, actor, RequirementPermission.OWNER)
             if analysis.product_impact is None:
@@ -424,6 +434,10 @@ class AnalysisCollaboration:
                 rationale=rationale,
             )
             self._analyses.save(updated)
+            if self._precedents is not None:
+                handoff = precedent_handoff(requirement, updated)
+                if handoff is not None:
+                    self._precedents.enqueue(handoff)
             self._knowledge.schedule(requirement_id)
         return self.workspace(requirement_id)
 

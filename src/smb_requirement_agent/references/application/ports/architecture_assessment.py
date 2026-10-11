@@ -27,6 +27,9 @@ class AssessmentQuery:
     text: tuple[str, ...]
     declared_systems: tuple[str, ...] = ()
     release_id: str | None = None
+    # The requirement's own decided verdict is never shown back to it (ontology plan
+    # Phase 5).
+    requirement_id: str | None = None
 
 
 @dataclass(frozen=True)

@@ -84,6 +84,7 @@ from smb_requirement_agent.references.infrastructure.knowledge_client import (
     HttpChangeRequestInbox,
     HttpHistoricContent,
     HttpKnowledgeEvents,
+    HttpPrecedentInbox,
     HttpReferenceKnowledge,
 )
 from smb_requirement_agent.shared_kernel.citation import PublishedReference
@@ -696,6 +697,53 @@ def test_a_refused_or_unusable_delivery_is_an_explicit_failure() -> None:
             HttpChangeRequestInbox(_client(_answering(answer, 201))).deliver({})
 
 
+# --- Decided verdicts kept as precedents (ontology plan Phase 5) ---------------------------
+
+PRECEDENT = {
+    "precedent_id": "ANA-1",
+    "requirement_id": "REQ-1",
+    "version": "ANA-1@4",
+    "release_id": "rel-7",
+    "text": ["Static IP for SMB fibre.", "Customers keep their address."],
+    "decision": "overridden",
+    "decided_at": "2026-10-11T09:00:00+00:00",
+    "suggested_verdict": "change_existing_offering",
+    "verdict": "new_plan",
+    "offering_id": "offering:fiber",
+    "concept_ids": ["cap:ip"],
+    "systems": [{"id": "bcrm", "role": "primary", "change_type": "modify"}],
+}
+
+
+def test_a_decided_verdict_is_delivered_as_the_contract_describes() -> None:
+    receipt = {"precedent_id": "ANA-1", "recorded": True, "dropped_systems": []}
+    seen: list[httpx.Request] = []
+
+    recorded = HttpPrecedentInbox(_client(_answering(receipt, 201), seen)).record(PRECEDENT)
+
+    assert recorded is True
+    (request,) = seen
+    _assert_in_contract(request)
+    assert (request.method, request.url.path) == ("POST", "/internal/architecture/precedents")
+    operation = _operation(request)
+    answer = operation["responses"]["201"]["content"]["application/json"]["schema"]
+    assert _violations(receipt, answer, "answer") == []
+    # The same decision, or a later one, already kept answers 200, not recorded.
+    assert "200" in operation["responses"]
+    kept = {**receipt, "recorded": False}
+    assert HttpPrecedentInbox(_client(_answering(kept))).record(PRECEDENT) is False
+
+
+def test_a_refused_or_unusable_precedent_receipt_is_an_explicit_failure() -> None:
+    refused = HttpPrecedentInbox(_client(_answering({"detail": "No published release."}, 404)))
+    with pytest.raises(ServiceResponseError) as raised:
+        refused.record(PRECEDENT)
+    assert raised.value.status_code == 404
+    for answer in ({"precedent_id": "ANA-1"}, ["ANA-1"], {"recorded": "yes"}):
+        with pytest.raises(ServiceUnavailableError):
+            HttpPrecedentInbox(_client(_answering(answer, 201))).record(PRECEDENT)
+
+
 # --- A historic requirement's content, a page at a time (ADR-0102, amendment 1) ------------
 
 HISTORIC_PAGE = {
@@ -879,7 +927,7 @@ def test_an_assessment_is_asked_for_and_decoded_as_the_contract_describes() -> N
     seen: list[httpx.Request] = []
 
     assessment = HttpArchitectureAssessment(_client(_answering(ASSESSMENT), seen)).assess(
-        AssessmentQuery(("Static IP for SMB fibre.",), ("BCRM",), "rel-7")
+        AssessmentQuery(("Static IP for SMB fibre.",), ("BCRM",), "rel-7", "REQ-7")
     )
 
     (request,) = seen
@@ -890,7 +938,39 @@ def test_an_assessment_is_asked_for_and_decoded_as_the_contract_describes() -> N
         "text": ["Static IP for SMB fibre."],
         "declared_systems": ["BCRM"],
         "release_id": "rel-7",
+        # Its own decided verdict is never shown back to it (ontology plan Phase 5).
+        "requirement_id": "REQ-7",
     }
+    assert assessment == EXPECTED_ASSESSMENT
+
+
+def test_the_precedents_an_assessment_weighed_are_allowed_and_not_needed() -> None:
+    """Phase 5 adds the precedents and the reranker to the answer; requirement work reads
+    neither yet, and an answer carrying them decodes to the same assessment."""
+    seen: list[httpx.Request] = []
+    later = {
+        **json.loads(json.dumps(ASSESSMENT)),
+        "reranker_model": "lexical-bm25-v1",
+        "precedents": [
+            {
+                "precedent_id": "ANA-1",
+                "requirement_id": "REQ-1",
+                "release_id": "rel-7",
+                "verdict": "new_plan",
+                "decision": "overridden",
+                "offering_id": "offering:fiber",
+                "score": 0.71,
+                "system_ids": ["bcrm"],
+                "shared_concept_ids": ["cap:ip"],
+            }
+        ],
+    }
+
+    assessment = HttpArchitectureAssessment(_client(_answering(later), seen)).assess(
+        AssessmentQuery(("Static IP for SMB fibre.",))
+    )
+
+    _assert_answer_in_contract(seen[0], later)
     assert assessment == EXPECTED_ASSESSMENT
 
 

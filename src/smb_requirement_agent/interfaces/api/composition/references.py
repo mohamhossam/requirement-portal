@@ -22,6 +22,9 @@ from smb_kernel.observability.tracing import TracedTransport
 from smb_kernel.observability.tracing_setup import Tracing
 from smb_kernel.time.clock import ClockPort
 
+from smb_requirement_agent.analysis.application.use_cases.precedent_handoff import (
+    DeliverPrecedents,
+)
 from smb_requirement_agent.governance.application.ports.backlog_export import BacklogExportPort
 from smb_requirement_agent.governance.application.use_cases.knowledge_handoff import (
     DeliverApprovedBacklogs,
@@ -46,6 +49,9 @@ from smb_requirement_agent.references.application.ports.knowledge_handoff import
     ChangeRequestInboxPort,
 )
 from smb_requirement_agent.references.application.ports.knowledge_views import KnowledgeViewsPort
+from smb_requirement_agent.references.application.ports.precedent_handoff import (
+    PrecedentInboxPort,
+)
 from smb_requirement_agent.references.application.ports.reference_grounding import (
     ReferenceKnowledgePort,
 )
@@ -62,6 +68,7 @@ from smb_requirement_agent.references.infrastructure.knowledge_client import (
     HttpHistoricContent,
     HttpKnowledgeEvents,
     HttpKnowledgeViews,
+    HttpPrecedentInbox,
     HttpReferenceKnowledge,
 )
 
@@ -87,6 +94,9 @@ class KnowledgeService:
     historic_content: HistoricContentSourcePort = FakeHistoricContent()
     # A whole requirement's product impact (ADR-0115); offline nothing is assessed.
     assessment: ArchitectureAssessmentPort = FakeArchitectureAssessment()
+    # Where decided verdicts are kept as precedents (ontology plan Phase 5); none offline,
+    # so decisions queue nothing.
+    precedents: PrecedentInboxPort | None = None
 
 
 def build_knowledge_service(
@@ -143,6 +153,7 @@ def build_knowledge_service(
         change_requests=HttpChangeRequestInbox(client),
         historic_content=HttpHistoricContent(patient),
         assessment=HttpArchitectureAssessment(assessing),
+        precedents=HttpPrecedentInbox(client),
     )
 
 
@@ -169,6 +180,32 @@ def _service_token(
             )
         )
     return shared
+
+
+def build_precedent_worker(
+    persistence: PersistenceAdapters,
+    inbox: PrecedentInboxPort,
+    clock: ClockPort,
+    metrics: Metrics,
+    grace_seconds: float,
+) -> IngestionLoop:
+    """The worker sending decided verdicts to the knowledge service (ontology plan Phase 5).
+
+    Each outcome is counted as a job: delivered, retry or failed.
+    """
+    deliver = DeliverPrecedents(
+        persistence.precedent_handoffs,
+        inbox,
+        clock,
+        record=lambda outcome, seconds: metrics.record_job("precedent_handoff", outcome, seconds),
+    )
+    return IngestionLoop(
+        "decided-verdicts",
+        (deliver.deliver_next,),
+        failed=metrics.record_ingestion_failure,
+        shutdown_grace_seconds=grace_seconds,
+        monotonic_seconds=monotonic,
+    )
 
 
 def build_backlog_handoff_worker(
