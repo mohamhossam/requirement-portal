@@ -4,6 +4,8 @@ One `POST …/_apis/wit/workitems/${type}` per item, as a JSON Patch document th
 title, description, area and iteration, tags the item with its marker, and links it under its
 parent in the same request. An update (`PATCH …/workitems/{id}`) replaces only the title,
 description and acceptance criteria; a WIQL query finds an item by its marker tag (Slice 13).
+A read of the items' `System.State` says which Features a closed Epic delivered (ontology
+plan Phase 7).
 API version 7.1 is served by Azure DevOps Services and by Azure DevOps Server
 2022 and later, so the organization URL may name either (`https://dev.azure.com/org` or a
 Server collection).
@@ -40,6 +42,9 @@ PARENT_LINK = "System.LinkTypes.Hierarchy-Reverse"
 # Enough of a refusal for a person to act on, without echoing a whole error page.
 MESSAGE_LIMIT = 300
 MARKER = re.compile(r"smb-rp-[0-9a-f]{20}")
+STATE_FIELD = "System.State"
+# The most ids one work-items read takes.
+BATCH = 200
 
 
 @dataclass(frozen=True)
@@ -141,6 +146,51 @@ class AzureDevOpsWorkItemPublisher:
         if not _usable_id(identifier):
             raise PublicationTargetError("Azure DevOps answered without a work item id.")
         return PublishedWorkItem(item.key, str(identifier), self._edit_url(str(identifier)))
+
+    def states(self, external_ids: tuple[str, ...]) -> dict[str, str]:
+        found: dict[str, str] = {}
+        for start in range(0, len(external_ids), BATCH):
+            batch = external_ids[start : start + BATCH]
+            if not all(item.isdigit() for item in batch):
+                raise PublicationTargetError("A work item id is not a number.")
+            # `errorPolicy=omit` leaves out an item that was deleted instead of failing all.
+            response = self._read(
+                f"{self._project_path}/_apis/wit/workitems",
+                {"ids": ",".join(batch), "fields": STATE_FIELD, "errorPolicy": "omit"},
+            )
+            try:
+                body = response.json()
+            except ValueError as exc:
+                raise PublicationTargetError(
+                    "Azure DevOps answered with something other than JSON."
+                ) from exc
+            items = body.get("value") if isinstance(body, dict) else None
+            if not isinstance(items, list):
+                raise PublicationTargetError("Azure DevOps answered without work items.")
+            for item in items:
+                if not isinstance(item, dict):
+                    continue  # an omitted item comes back as null
+                identifier, fields = item.get("id"), item.get("fields")
+                state = fields.get(STATE_FIELD) if isinstance(fields, dict) else None
+                if _usable_id(identifier) and isinstance(state, str) and state.strip():
+                    found[str(identifier)] = state.strip()
+        return found
+
+    def _read(self, url: str, params: dict[str, str]) -> httpx.Response:
+        try:
+            response = self._http.get(
+                url,
+                params={**params, "api-version": API_VERSION},
+                headers={"Authorization": self._authorization, "Accept": "application/json"},
+                timeout=self._config.timeout_seconds,
+            )
+        except httpx.HTTPError as exc:
+            raise PublicationTargetError(
+                f"Azure DevOps could not be reached ({type(exc).__name__})."
+            ) from exc
+        if response.status_code >= 400:
+            raise PublicationTargetError(_refusal(response))
+        return response
 
     def _send(self, method: str, url: str, body: Any, content_type: str) -> httpx.Response:
         try:

@@ -45,6 +45,7 @@ from smb_requirement_agent.interfaces.api.routes.identity import (
 from smb_requirement_agent.interfaces.api.routes.identity import (
     router as identity_router,
 )
+from smb_requirement_agent.interfaces.api.routes.integrations import router as integrations_router
 from smb_requirement_agent.interfaces.api.routes.internal import router as internal_router
 from smb_requirement_agent.interfaces.api.routes.jobs import (
     notification_router,
@@ -321,6 +322,7 @@ def create_app(container_factory: Callable[[], Container] = build_container) -> 
         architecture_router,
         review_router,
         governance_router,
+        integrations_router,
     ):
         application.include_router(router)
     application.include_router(internal_router, include_in_schema=False)

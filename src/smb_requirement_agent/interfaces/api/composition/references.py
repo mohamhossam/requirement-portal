@@ -39,6 +39,7 @@ from smb_requirement_agent.references.application.ports.architecture_assessment 
 from smb_requirement_agent.references.application.ports.architecture_knowledge import (
     ArchitectureKnowledgePort,
 )
+from smb_requirement_agent.references.application.ports.delivery_closure import DeliveryInboxPort
 from smb_requirement_agent.references.application.ports.historic_corpus import (
     HistoricContentSourcePort,
 )
@@ -65,6 +66,7 @@ from smb_requirement_agent.references.infrastructure.knowledge_client import (
     HttpArchitectureAssessment,
     HttpArchitectureKnowledge,
     HttpChangeRequestInbox,
+    HttpDeliveryInbox,
     HttpHistoricContent,
     HttpKnowledgeEvents,
     HttpKnowledgeViews,
@@ -97,6 +99,9 @@ class KnowledgeService:
     # Where decided verdicts are kept as precedents (ontology plan Phase 5); none offline,
     # so decisions queue nothing.
     precedents: PrecedentInboxPort | None = None
+    # Where closed and removed Epics are sent (ontology plan Phase 7); none offline, so the
+    # tracker's service hook is not served.
+    deliveries: DeliveryInboxPort | None = None
 
 
 def build_knowledge_service(
@@ -154,6 +159,7 @@ def build_knowledge_service(
         historic_content=HttpHistoricContent(patient),
         assessment=HttpArchitectureAssessment(assessing),
         precedents=HttpPrecedentInbox(client),
+        deliveries=HttpDeliveryInbox(client),
     )
 
 

@@ -20,6 +20,8 @@ class FakeBacklogPublisher:
         self._lock = Lock()
         self._created: list[tuple[PlannedWorkItem, PublishedWorkItem, str | None]] = []
         self._updated: list[tuple[str, PlannedWorkItem]] = []
+        # States people set in the tracker; an item nobody moved is "New".
+        self._states: dict[str, str] = {}
 
     def target(self) -> PublicationTarget:
         return PublicationTarget(
@@ -54,6 +56,16 @@ class FakeBacklogPublisher:
                 (created for sent, created, _ in self._created if sent.marker == item.marker),
                 None,
             )
+
+    def states(self, external_ids: tuple[str, ...]) -> dict[str, str]:
+        with self._lock:
+            known = {created.external_id for _, created, _ in self._created}
+            return {item: self._states.get(item, "New") for item in external_ids if item in known}
+
+    def set_state(self, external_id: str, state: str) -> None:
+        """Move an item, as a person would in the tracker."""
+        with self._lock:
+            self._states[external_id] = state
 
     @property
     def updated(self) -> tuple[tuple[str, PlannedWorkItem], ...]:

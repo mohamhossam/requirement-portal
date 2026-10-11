@@ -944,6 +944,419 @@
         "title": "ConceptCoverage",
         "type": "object"
       },
+      "DeliveredChangeBody": {
+        "description": "A catalogue change the decided product impact implies for the delivered Features.",
+        "properties": {
+          "concept_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Concept Id",
+            "type": "string"
+          },
+          "concept_label": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Concept Label",
+            "type": "string"
+          },
+          "feature_ids": {
+            "items": {
+              "maxLength": 200,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 5000,
+            "minItems": 1,
+            "title": "Feature Ids",
+            "type": "array"
+          },
+          "offering_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offering Id"
+          },
+          "offering_name": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offering Name"
+          },
+          "op": {
+            "$ref": "#/components/schemas/DeliveredChangeKind"
+          },
+          "system_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Id"
+          },
+          "system_name": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Name"
+          }
+        },
+        "required": [
+          "op",
+          "concept_id",
+          "concept_label",
+          "feature_ids"
+        ],
+        "title": "DeliveredChangeBody",
+        "type": "object"
+      },
+      "DeliveredChangeKind": {
+        "description": "A change to the catalogue a delivered requirement implies.",
+        "enum": [
+          "realise_concept",
+          "offer_concept"
+        ],
+        "title": "DeliveredChangeKind",
+        "type": "string"
+      },
+      "DeliveredEpicBody": {
+        "properties": {
+          "external_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "External Id",
+            "type": "string"
+          },
+          "id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "external_id"
+        ],
+        "title": "DeliveredEpicBody",
+        "type": "object"
+      },
+      "DeliveredFeatureBody": {
+        "description": "A Feature of the Epic, its state in the tracker, and the systems its mapping names.",
+        "properties": {
+          "delivered": {
+            "title": "Delivered",
+            "type": "boolean"
+          },
+          "external_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Id"
+          },
+          "id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          },
+          "sequence": {
+            "minimum": 0.0,
+            "title": "Sequence",
+            "type": "integer"
+          },
+          "state": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "State",
+            "type": "string"
+          },
+          "systems": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ExportSystem"
+            },
+            "maxItems": 5000,
+            "title": "Systems",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "sequence",
+          "name",
+          "state",
+          "delivered"
+        ],
+        "title": "DeliveredFeatureBody",
+        "type": "object"
+      },
+      "DeliveryReceipt": {
+        "properties": {
+          "change_request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change Request Id"
+          },
+          "created": {
+            "title": "Created",
+            "type": "boolean"
+          },
+          "withdrawn": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Withdrawn",
+            "type": "array"
+          }
+        },
+        "required": [
+          "change_request_id",
+          "created",
+          "withdrawn"
+        ],
+        "title": "DeliveryReceipt",
+        "type": "object"
+      },
+      "DeliveryRequest": {
+        "description": "A published Epic closed or removed in the work-item tracker (ontology plan Phase 7).\n\nA closure carries the decided product impact it is compared with; a removal needs only\nwhich Epic it was.",
+        "properties": {
+          "approval_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Approval Id",
+            "type": "string"
+          },
+          "breakdown_revision": {
+            "minimum": 1.0,
+            "title": "Breakdown Revision",
+            "type": "integer"
+          },
+          "changes": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/DeliveredChangeBody"
+            },
+            "maxItems": 5000,
+            "title": "Changes",
+            "type": "array"
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision"
+          },
+          "delivery_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Delivery Id",
+            "type": "string"
+          },
+          "epic": {
+            "$ref": "#/components/schemas/DeliveredEpicBody"
+          },
+          "features": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/DeliveredFeatureBody"
+            },
+            "maxItems": 5000,
+            "title": "Features",
+            "type": "array"
+          },
+          "impact_version": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Impact Version"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "offering_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offering Id"
+          },
+          "offering_name": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offering Name"
+          },
+          "predicted_systems": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/PredictedSystemBody"
+            },
+            "maxItems": 5000,
+            "title": "Predicted Systems",
+            "type": "array"
+          },
+          "release_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release Id"
+          },
+          "requirement_id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Requirement Id",
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/DeliveryState"
+          },
+          "suggested_verdict": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested Verdict"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verdict"
+          }
+        },
+        "required": [
+          "delivery_id",
+          "state",
+          "requirement_id",
+          "breakdown_revision",
+          "approval_id",
+          "epic",
+          "occurred_at"
+        ],
+        "title": "DeliveryRequest",
+        "type": "object"
+      },
+      "DeliveryState": {
+        "enum": [
+          "closed",
+          "removed"
+        ],
+        "title": "DeliveryState",
+        "type": "string"
+      },
       "DomainSuggestion": {
         "description": "A capability domain whose wording the item matched when no system was found.\n\nAdvice for a reviewer, never mapped impact: it names the systems that do\nwork in that domain and the catalogue words that matched.",
         "properties": {
@@ -2085,6 +2498,52 @@
         "title": "PrecedentSystemBody",
         "type": "object"
       },
+      "PredictedSystemBody": {
+        "properties": {
+          "change_type": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change Type"
+          },
+          "id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "PredictedSystemBody",
+        "type": "object"
+      },
       "ProductContext": {
         "description": "A product offering the item's text names, and the systems that deliver it (ADR-0097).\n\nAdvice for a reviewer, never mapped impact: the item named the offering, one\nof its components or both, and these are the catalogue's responsibilities\nfor what it named, for the order type it named when it named one.",
         "properties": {
@@ -2804,6 +3263,48 @@
           }
         },
         "summary": "Receive Change Request"
+      }
+    },
+    "/internal/change-requests/deliveries": {
+      "post": {
+        "description": "A published Epic closed or removed in the work-item tracker (ontology plan Phase 7).\n\nA closure is kept once per delivery id as a catalogue change, for a knowledge admin to\nread into a draft; it replaces one of the same Epic still waiting. A removal withdraws\nthe Epic's catalogue changes still waiting and answers 200 with their ids. The same\ndelivery id for another body is a 409.",
+        "operationId": "receive_delivery_internal_change_requests_deliveries_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeliveryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The same closure was delivered before, or the Epic was removed."
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryReceipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Receive Delivery"
       }
     },
     "/internal/events": {

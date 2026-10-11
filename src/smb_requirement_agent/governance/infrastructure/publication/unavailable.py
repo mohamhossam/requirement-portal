@@ -24,3 +24,6 @@ class UnavailableBacklogPublisher:
 
     def find(self, item: PlannedWorkItem) -> PublishedWorkItem | None:
         raise PublicationUnavailableError(MESSAGE)
+
+    def states(self, external_ids: tuple[str, ...]) -> dict[str, str]:
+        raise PublicationUnavailableError(MESSAGE)

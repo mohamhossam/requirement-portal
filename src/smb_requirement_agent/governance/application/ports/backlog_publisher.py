@@ -39,3 +39,11 @@ class BacklogPublisherPort(Protocol):
         items carry the marker and no one item can be trusted.
         """
         ...
+
+    def states(self, external_ids: tuple[str, ...]) -> dict[str, str]:
+        """Each tracker item's state as the tracker names it ("Closed", "Removed"), by id.
+
+        An id the tracker no longer has is left out. Raises `PublicationTargetError` when
+        the tracker cannot answer (ontology plan Phase 7).
+        """
+        ...

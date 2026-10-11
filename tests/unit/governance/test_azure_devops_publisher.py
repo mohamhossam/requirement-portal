@@ -305,3 +305,69 @@ def test_find_never_sends_a_marker_it_did_not_make() -> None:
     with pytest.raises(PublicationTargetError, match="no marker"):
         publisher.find(tampered)
     assert requests == []
+
+
+# Reading states (ontology plan Phase 7) ---------------------------------------------------
+
+
+def test_states_are_read_in_one_request_leaving_out_a_deleted_item() -> None:
+    publisher, requests = _publisher(
+        lambda _: httpx.Response(
+            200,
+            json={
+                "count": 3,
+                "value": [
+                    {"id": 4712, "fields": {"System.State": "Closed"}},
+                    None,
+                    {"id": 4714, "fields": {"System.State": " Removed "}},
+                    {"id": 4715, "fields": {}},
+                ],
+            },
+        )
+    )
+
+    states = publisher.states(("4712", "4713", "4714", "4715"))
+
+    assert states == {"4712": "Closed", "4714": "Removed"}
+    (request,) = requests
+    assert request.method == "GET"
+    assert request.url.raw_path.split(b"?")[0] == b"/contoso/SMB%20Delivery/_apis/wit/workitems"
+    assert dict(request.url.params) == {
+        "ids": "4712,4713,4714,4715",
+        "fields": "System.State",
+        "errorPolicy": "omit",
+        "api-version": "7.1",
+    }
+    assert request.headers["Authorization"].startswith("Basic ")
+
+
+def test_states_are_read_two_hundred_at_a_time_and_none_asks_nothing() -> None:
+    publisher, requests = _publisher(lambda _: httpx.Response(200, json={"value": []}))
+
+    assert publisher.states(()) == {}
+    assert requests == []
+    publisher.states(tuple(str(number) for number in range(1, 402)))
+    assert [len(request.url.params["ids"].split(",")) for request in requests] == [200, 200, 1]
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        httpx.Response(401, json={"message": "Not authorised."}),
+        httpx.Response(200, text="<html>sign in</html>"),
+        httpx.Response(200, json={"items": []}),
+    ],
+)
+def test_an_unusable_state_answer_is_a_target_error(answer: httpx.Response) -> None:
+    publisher, _ = _publisher(lambda _: answer)
+
+    with pytest.raises(PublicationTargetError):
+        publisher.states(("4712",))
+
+
+def test_a_state_read_refuses_an_id_that_is_not_a_number() -> None:
+    publisher, requests = _publisher(lambda _: httpx.Response(200, json={"value": []}))
+
+    with pytest.raises(PublicationTargetError):
+        publisher.states(("4712&ids=1",))
+    assert requests == []

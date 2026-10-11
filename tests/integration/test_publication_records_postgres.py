@@ -87,3 +87,14 @@ def test_a_record_saved_in_a_failed_transaction_is_not_kept(store: PostgresStore
         raise RuntimeError("The attempt failed.")
 
     assert records.get(REQUIREMENT) is None
+
+
+def test_a_record_is_found_by_a_work_item_it_published(store: PostgresStore) -> None:
+    records = PostgresPublicationRecords(store)
+    publication = _published()
+    records.save(publication)
+
+    assert records.find_by_work_item("epic", "101") == publication
+    # Another kind, or an id it did not publish, finds nothing.
+    assert records.find_by_work_item("feature", "101") is None
+    assert records.find_by_work_item("epic", "102") is None

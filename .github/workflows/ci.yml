@@ -222,7 +222,7 @@ jobs:
       KNOWLEDGE_SERVICE_TOKEN: ci-only-knowledge-service-token-000000
       GRAFANA_ADMIN_PASSWORD: ci-only
       # The knowledge-portal release both its manifest and its images come from.
-      KNOWLEDGE_IMAGE_TAG: v0.4.0
+      KNOWLEDGE_IMAGE_TAG: v0.5.0
       # Each portal's links to the other, through the other's edge.
       KNOWLEDGE_PORTAL_URL: http://127.0.0.1:8090/knowledge/
       REQUIREMENT_PORTAL_URL: http://127.0.0.1:8080/

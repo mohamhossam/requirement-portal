@@ -34,6 +34,8 @@ ADO_VARIABLES = (
     "ADO_TAGS",
     "ADO_TIMEOUT_SECONDS",
     "ADO_STORY_TYPE",
+    "ADO_HOOK_SECRET",
+    "ADO_HOOK_SECRET_FILE",
 )
 
 
@@ -148,3 +150,21 @@ def test_an_empty_type_name_is_refused() -> None:
             personal_access_token="pat",
             epic_type="",
         )
+
+
+def test_the_service_hook_secret_is_read_and_must_be_long(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    assert Settings.from_env().ado_publication.hook_secret is None
+    monkeypatch.setenv("ADO_HOOK_SECRET", "h" * 24)
+    settings = Settings.from_env().ado_publication
+    assert settings.hook_secret == "h" * 24
+    assert "h" * 24 not in repr(settings)
+    monkeypatch.setenv("ADO_HOOK_SECRET", "short")
+    with pytest.raises(ConfigurationError, match="at least 24"):
+        Settings.from_env()
+    secret = tmp_path / "hook"
+    secret.write_text("f" * 30 + "\n", encoding="utf-8")
+    monkeypatch.delenv("ADO_HOOK_SECRET")
+    monkeypatch.setenv("ADO_HOOK_SECRET_FILE", str(secret))
+    assert Settings.from_env().ado_publication.hook_secret == "f" * 30
