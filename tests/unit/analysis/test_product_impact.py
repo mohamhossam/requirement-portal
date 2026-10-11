@@ -9,6 +9,7 @@ from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
+from pydantic import TypeAdapter
 from smb_kernel.time.fixed import FixedClock
 
 from smb_requirement_agent.analysis.application.use_cases.product_impact import (
@@ -17,10 +18,16 @@ from smb_requirement_agent.analysis.application.use_cases.product_impact import 
 )
 from smb_requirement_agent.analysis.domain.errors import InvalidProductImpactDecisionError
 from smb_requirement_agent.analysis.domain.product_impact import (
+    DraftComponent,
+    OfferingDraft,
     ProductImpact,
     ProductImpactDecision,
     ProductImpactStatus,
     ProductVerdict,
+)
+from smb_requirement_agent.analysis.infrastructure.analysis_payloads import (
+    product_impact_from_payload,
+    product_impact_to_payload,
 )
 from smb_requirement_agent.application.errors import ServiceUnavailableError
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
@@ -32,6 +39,7 @@ from smb_requirement_agent.references.application.ports.architecture_assessment 
     ArchitectureAssessment,
     AssessedConcept,
     AssessedCoverage,
+    AssessedDraft,
     AssessedFacet,
     AssessedOption,
     AssessedOwners,
@@ -52,7 +60,11 @@ from smb_requirement_agent.requirements.domain.requirement.value_objects import 
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.job_driver import run_job
 from tests.knowledge_doubles import PublishedLibrary, service_for
-from tests.unit.workflow_helpers import post_analysis, screen_current_knowledge
+from tests.unit.workflow_helpers import (
+    approve_fake_breakdown,
+    post_analysis,
+    screen_current_knowledge,
+)
 
 NOW = datetime(2026, 10, 10, 9, 0, tzinfo=UTC)
 
@@ -114,6 +126,110 @@ ANSWER = ArchitectureAssessment(
     ),
     model="fake-reader",
     prompt_version="assess-v1",
+)
+
+
+# The offering and journey the knowledge portal drafts for a new product line (ontology plan
+# Phase 9), in the catalogue's own shapes, as `POST /internal/architecture/assess` answers.
+DRAFT_SOURCE = "Drafted for requirement REQ-7"
+DRAFTED_OFFERING = {
+    "offering": {
+        "id": "cloud-video-surveillance-for-shops",
+        "name": "Cloud video surveillance for shops",
+        "lifecycle": "Proposed",
+        "confidence": "inferred",
+        "source": DRAFT_SOURCE,
+        "components": [
+            {
+                "id": "managed-access-point",
+                "name": "Managed access point",
+                "description": "Delivers Managed access point.",
+                "confidence": "inferred",
+                "source": DRAFT_SOURCE,
+                "capability_ids": ["cap:ap"],
+                "responsibilities": [
+                    {
+                        "system_id": "ecm",
+                        "role": "DELIVERS",
+                        "description": "Realises Managed access point.",
+                        "confidence": "inferred",
+                        "source": DRAFT_SOURCE,
+                    },
+                    {
+                        "system_id": "wfms",
+                        "role": "DELIVERS",
+                        "description": "Realises Managed access point.",
+                        "confidence": "inferred",
+                        "source": DRAFT_SOURCE,
+                    },
+                ],
+            },
+            {
+                "id": "cloud-video-surveillance",
+                "name": "Cloud video surveillance",
+                "description": "Delivers Cloud video surveillance.",
+                "confidence": "gap",
+                "source": DRAFT_SOURCE,
+                "capability_ids": ["cap:video"],
+            },
+        ],
+        "questions": [
+            {
+                "id": "realise-cloud-video-surveillance",
+                "text": "Which system will realise Cloud video surveillance?",
+                "impact": "No system in the release realises it, so architecture review "
+                "decides before the offering can be delivered.",
+                "confidence": "gap",
+                "source": DRAFT_SOURCE,
+            }
+        ],
+    },
+    "journey": {
+        "id": "cloud-video-surveillance-for-shops-journey",
+        "name": "Fulfilment",
+        "product_id": "cloud-video-surveillance-for-shops",
+        "confidence": "inferred",
+        "source": DRAFT_SOURCE,
+        "activities": [
+            {
+                "number": "10",
+                "name": "Managed access point",
+                "track": "MAIN",
+                "performing_system_id": "ecm",
+                "supporting_system_ids": ["wfms"],
+                "component_ids": ["managed-access-point"],
+                "description": "Delivers Managed access point.",
+                "confidence": "inferred",
+                "source": DRAFT_SOURCE,
+            },
+            {
+                "number": "20",
+                "name": "Cloud video surveillance",
+                "track": "MAIN",
+                "component_ids": ["cloud-video-surveillance"],
+                "description": "No system realises Cloud video surveillance yet; see the "
+                "offering's open question.",
+                "confidence": "gap",
+                "source": DRAFT_SOURCE,
+            },
+        ],
+    },
+    "based_on": "offering:fiber",
+}
+
+NEW_LINE = replace(
+    ANSWER,
+    verdict="new_product_line",
+    rule_verdict="new_product_line",
+    verdict_reason="No offering sells video surveillance.",
+    proposal=AssessedProposal(
+        "A new product line for video surveillance.",
+        "offering:fiber",
+        draft=replace(
+            TypeAdapter(AssessedDraft).validate_python(DRAFTED_OFFERING),
+            document=DRAFTED_OFFERING,
+        ),
+    ),
 )
 
 
@@ -372,6 +488,53 @@ def test_the_owner_decides_and_a_confirmed_analysis_is_locked(portal: Portal) ->
     assert locked.json()["code"] == "product_impact_decision_locked"
 
 
+def test_a_drafted_offering_is_shown_and_sent_with_the_approved_backlog(portal: Portal) -> None:
+    portal.assessment.answer = NEW_LINE
+
+    requirement_id, _, revision = approve_fake_breakdown(portal.client)
+
+    impact = _analysis(portal.client, requirement_id)["product_impact"]
+    assert impact["verdict"] == "new_product_line"
+    assert impact["draft"] == {
+        "offering_id": "cloud-video-surveillance-for-shops",
+        "offering_name": "Cloud video surveillance for shops",
+        "based_on": "offering:fiber",
+        "components": [
+            {"name": "Managed access point", "system_ids": ["ecm", "wfms"]},
+            {"name": "Cloud video surveillance", "system_ids": []},
+        ],
+        "questions": ["Which system will realise Cloud video surveillance?"],
+        "journey_name": "Fulfilment",
+        "journey_steps": 2,
+    }
+    export = portal.client.get(
+        f"/requirements/{requirement_id}/revisions/{revision}/export?format=json"
+    ).json()
+    assert export["schema_version"] == "1.6"
+    # The draft goes back exactly as the knowledge portal wrote it.
+    assert export["product_impact"] == {
+        "verdict": "new_product_line",
+        "offering_id": "offering:fiber",
+        "release_id": "rel-2026-10",
+        "draft": DRAFTED_OFFERING,
+    }
+
+
+def test_a_change_to_an_offering_is_exported_without_a_draft(portal: Portal) -> None:
+    requirement_id, _, revision = approve_fake_breakdown(portal.client)
+
+    export = portal.client.get(
+        f"/requirements/{requirement_id}/revisions/{revision}/export?format=json"
+    ).json()
+
+    assert export["product_impact"] == {
+        "verdict": "change_existing_offering",
+        "offering_id": "offering:fiber",
+        "release_id": "rel-2026-10",
+        "draft": None,
+    }
+
+
 # Mapping the knowledge portal's answer ---------------------------------------------------
 
 
@@ -388,6 +551,53 @@ def test_the_answer_maps_into_requirement_terms() -> None:
     assert owner.open_seats == 1
     (system,) = impact.systems
     assert (system.role, system.change_type) == ("primary", "modify")
+
+
+def test_a_drafted_offering_maps_into_what_is_shown_and_keeps_the_draft_whole() -> None:
+    impact = product_impact(NEW_LINE, NOW)
+
+    assert impact.draft == OfferingDraft(
+        "cloud-video-surveillance-for-shops",
+        "Cloud video surveillance for shops",
+        (
+            DraftComponent("Managed access point", ("ecm", "wfms")),
+            DraftComponent("Cloud video surveillance"),
+        ),
+        ("Which system will realise Cloud video surveillance?",),
+        "Fulfilment",
+        2,
+        "offering:fiber",
+        DRAFTED_OFFERING,
+    )
+    # It is kept with the analysis as it came.
+    decided = impact.decide(ProductImpactDecision.ACCEPTED, FAKE_ACTORS[0], NOW)
+    assert product_impact_from_payload(product_impact_to_payload(decided)) == decided
+    assert product_impact(ANSWER, NOW).draft is None
+
+
+def test_a_draft_is_sent_only_while_the_decided_verdict_is_a_new_offering() -> None:
+    actor = FAKE_ACTORS[0]
+    impact = product_impact(NEW_LINE, NOW)
+
+    assert impact.decided_draft is None
+    assert impact.decide(ProductImpactDecision.ACCEPTED, actor, NOW).decided_draft == impact.draft
+    in_family = impact.decide(
+        ProductImpactDecision.OVERRIDDEN,
+        actor,
+        NOW,
+        verdict=ProductVerdict.NEW_OFFERING_IN_FAMILY,
+        rationale="It belongs with Business Fiber.",
+    )
+    assert in_family.decided_draft == impact.draft
+    changed = impact.decide(
+        ProductImpactDecision.OVERRIDDEN,
+        actor,
+        NOW,
+        verdict=ProductVerdict.CHANGE_EXISTING_OFFERING,
+        rationale="Business Fiber can carry it.",
+    )
+    assert changed.decided_draft is None
+    assert impact.decide(ProductImpactDecision.UNKNOWN, actor, NOW).decided_draft is None
 
 
 def test_a_role_the_portal_adds_later_is_kept_as_written() -> None:

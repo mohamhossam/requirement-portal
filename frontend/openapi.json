@@ -4282,6 +4282,27 @@
         "title": "DomainSuggestionResponse",
         "type": "object"
       },
+      "DraftComponentResponse": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "system_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "System Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "system_ids"
+        ],
+        "title": "DraftComponentResponse",
+        "type": "object"
+      },
       "DraftSort": {
         "enum": [
           "updated_desc",
@@ -6355,6 +6376,70 @@
         "title": "NotificationResponse",
         "type": "object"
       },
+      "OfferingDraftResponse": {
+        "description": "The offering and journey drafted for a new-offering verdict (ontology plan Phase 9).",
+        "properties": {
+          "based_on": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Based On"
+          },
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/DraftComponentResponse"
+            },
+            "title": "Components",
+            "type": "array"
+          },
+          "journey_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Journey Name"
+          },
+          "journey_steps": {
+            "title": "Journey Steps",
+            "type": "integer"
+          },
+          "offering_id": {
+            "title": "Offering Id",
+            "type": "string"
+          },
+          "offering_name": {
+            "title": "Offering Name",
+            "type": "string"
+          },
+          "questions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Questions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "offering_id",
+          "offering_name",
+          "based_on",
+          "components",
+          "questions",
+          "journey_name",
+          "journey_steps"
+        ],
+        "title": "OfferingDraftResponse",
+        "type": "object"
+      },
       "OfferingDutyResponse": {
         "properties": {
           "component_id": {
@@ -7028,6 +7113,16 @@
               }
             ]
           },
+          "draft": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OfferingDraftResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "gaps": {
             "items": {
               "$ref": "#/components/schemas/ImpactGapResponse"
@@ -7190,6 +7285,7 @@
           "offering_name",
           "proposal",
           "new_values",
+          "draft",
           "needs",
           "gaps",
           "systems",

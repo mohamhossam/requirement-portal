@@ -16,6 +16,7 @@ const impact: ProductImpact = {
   offering_name: "Business Fiber",
   proposal: "Add a static IP quota to Business Fiber.",
   new_values: [],
+  draft: null,
   needs: [
     { concept_id: "cap:static-ip", label: "Static IP", path: "Connectivity › Addressing", covered: true, weak: false },
     { concept_id: "cap:quota", label: "Usage quota", path: "Billing › Limits", covered: false, weak: true },
@@ -141,6 +142,57 @@ describe("ProductImpactCard", () => {
     expect(within(card).getByText(/Decided by Owner One/)).toBeVisible();
     expect(screen.getByRole("heading", { name: "Ready to confirm" })).toBeVisible();
     expect(screen.getByRole("button", { name: "Change this decision" })).toBeVisible();
+  });
+
+  it("shows the drafted offering for a new product line, and whether it is sent", () => {
+    const line: ProductImpact = {
+      ...impact,
+      suggested_verdict: "new_product_line",
+      draft: {
+        offering_id: "cloud-video-surveillance-for-shops",
+        offering_name: "Cloud video surveillance for shops",
+        based_on: "offering:business-fiber",
+        components: [
+          { name: "Managed access point", system_ids: ["bcrm", "wfms"] },
+          { name: "Cloud video surveillance", system_ids: [] },
+        ],
+        questions: ["Which system will realise Cloud video surveillance?"],
+        journey_name: "Fulfilment",
+        journey_steps: 2,
+      },
+    };
+    const { rerender } = render(panel({ ...ready, product_impact: line }));
+    const drafted = screen.getByRole("region", { name: "Drafted offering" });
+    expect(drafted).toHaveTextContent(
+      "The knowledge portal drafted Cloud video surveillance for shops from Business Fiber. " +
+        "If the verdict stays a new offering, it goes to the catalogue's curators with the approved backlog.",
+    );
+    const components = within(drafted).getByRole("list", { name: "Its components" });
+    expect(within(components).getAllByRole("listitem").map((item) => item.textContent)).toEqual([
+      "Managed access pointby BCRM, wfms",
+      "Cloud video surveillanceNo system yet",
+    ]);
+    expect(within(drafted).getByText("Its journey, Fulfilment, has 2 steps.")).toBeVisible();
+    expect(within(drafted).getByText("Which system will realise Cloud video surveillance?", { exact: false })).toBeVisible();
+
+    const decided = {
+      decided_by: { id: "owner", display_name: "Owner One", email: null },
+      decided_at: "2026-10-10T11:00:00Z",
+    };
+    rerender(panel({ ...ready, product_impact: { ...line, ...decided, decision: "accepted", verdict: "new_product_line" } }));
+    expect(screen.getByRole("region", { name: "Drafted offering" })).toHaveTextContent(
+      "It goes to the catalogue's curators with the approved backlog, for them to edit and accept.",
+    );
+    rerender(panel({
+      ...ready,
+      product_impact: {
+        ...line, ...decided, decision: "overridden", verdict: "change_existing_offering",
+        rationale: "Business Fiber can carry it.",
+      },
+    }));
+    expect(screen.getByRole("region", { name: "Drafted offering" })).toHaveTextContent(
+      "It is not sent, because the decided verdict is not a new offering.",
+    );
   });
 
   it("shows nothing with no knowledge portal, and a notice when it was unreachable", () => {

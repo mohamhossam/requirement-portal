@@ -20,11 +20,13 @@ from smb_requirement_agent.analysis.application.ports.requirement_analyzer impor
 from smb_requirement_agent.analysis.domain.errors import RequirementAnalysisError
 from smb_requirement_agent.analysis.domain.product_impact import (
     CapabilityNeed,
+    DraftComponent,
     ImpactGap,
     ImpactOwner,
     ImpactPathStep,
     ImpactQuestion,
     ImpactSystem,
+    OfferingDraft,
     ProductImpact,
     ProductImpactStatus,
     ProductVerdict,
@@ -34,6 +36,7 @@ from smb_requirement_agent.application.errors import ServiceResponseError, Servi
 from smb_requirement_agent.references.application.ports.architecture_assessment import (
     ArchitectureAssessment,
     ArchitectureAssessmentPort,
+    AssessedDraft,
     AssessmentQuery,
 )
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
@@ -145,6 +148,7 @@ def product_impact(answer: ArchitectureAssessment, at: datetime) -> ProductImpac
         offering_name=offering_names.get(answer.offering_id or ""),
         proposal=(proposal.summary.strip() or None) if proposal else None,
         new_values=tuple(item for item in (proposal.new_values if proposal else ()) if item),
+        draft=offering_draft(proposal.draft) if proposal and proposal.draft else None,
         needs=tuple(
             CapabilityNeed(
                 item.concept_id, item.label, item.path, item.covered, item.concept_id in weak
@@ -188,4 +192,25 @@ def product_impact(answer: ArchitectureAssessment, at: datetime) -> ProductImpac
         uncertainty=answer.uncertainty,
         model=answer.model,
         prompt_version=answer.prompt_version,
+    )
+
+
+def offering_draft(draft: AssessedDraft) -> OfferingDraft:
+    """What this application shows of a drafted offering, with the draft kept whole."""
+    journey = draft.journey
+    return OfferingDraft(
+        offering_id=draft.offering.id,
+        offering_name=draft.offering.name,
+        components=tuple(
+            DraftComponent(
+                item.name,
+                tuple(dict.fromkeys(duty.system_id for duty in item.responsibilities)),
+            )
+            for item in draft.offering.components
+        ),
+        questions=tuple(item.text for item in draft.offering.questions if item.text.strip()),
+        journey_name=journey.name if journey else None,
+        journey_steps=len(journey.activities) if journey else 0,
+        based_on=draft.based_on,
+        document=draft.document,
     )

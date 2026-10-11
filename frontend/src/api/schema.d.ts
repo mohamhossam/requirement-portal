@@ -3234,6 +3234,13 @@ export interface components {
             /** System Names */
             system_names?: string[];
         };
+        /** DraftComponentResponse */
+        DraftComponentResponse: {
+            /** Name */
+            name: string;
+            /** System Ids */
+            system_ids: string[];
+        };
         /**
          * DraftSort
          * @enum {string}
@@ -3973,6 +3980,26 @@ export interface components {
             /** Resource Path */
             resource_path: string | null;
         };
+        /**
+         * OfferingDraftResponse
+         * @description The offering and journey drafted for a new-offering verdict (ontology plan Phase 9).
+         */
+        OfferingDraftResponse: {
+            /** Based On */
+            based_on: string | null;
+            /** Components */
+            components: components["schemas"]["DraftComponentResponse"][];
+            /** Journey Name */
+            journey_name: string | null;
+            /** Journey Steps */
+            journey_steps: number;
+            /** Offering Id */
+            offering_id: string;
+            /** Offering Name */
+            offering_name: string;
+            /** Questions */
+            questions: string[];
+        };
         /** OfferingDutyResponse */
         OfferingDutyResponse: {
             /** Component Id */
@@ -4233,6 +4260,7 @@ export interface components {
             decided_at: string | null;
             decided_by: components["schemas"]["ActorResponse"] | null;
             decision: components["schemas"]["ProductImpactDecision"] | null;
+            draft: components["schemas"]["OfferingDraftResponse"] | null;
             /** Gaps */
             gaps: components["schemas"]["ImpactGapResponse"][];
             /** Model */

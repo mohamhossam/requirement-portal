@@ -8,8 +8,10 @@ The fakes are deterministic stand-ins for running without the knowledge service.
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import re
+from dataclasses import replace
 from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import quote
@@ -102,7 +104,20 @@ class HttpArchitectureAssessment:
             if refused.status_code == 404:
                 return None
             raise
-        return _decode(_ASSESSMENT, body, "an assessment")
+        return _kept_draft(_decode(_ASSESSMENT, body, "an assessment"), body)
+
+
+def _kept_draft(assessment: ArchitectureAssessment, body: Any) -> ArchitectureAssessment:
+    """The assessment with its drafted offering's document as the service wrote it, to send
+    back unchanged with the approved backlog (ontology plan Phase 9)."""
+    proposal = assessment.proposal
+    if proposal is None or proposal.draft is None:
+        return assessment
+    document = copy.deepcopy(body["proposal"]["draft"])
+    return replace(
+        assessment,
+        proposal=replace(proposal, draft=replace(proposal.draft, document=document)),
+    )
 
 
 class HttpReferenceKnowledge:

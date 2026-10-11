@@ -42,6 +42,13 @@ restoring a backup.
   added in Azure DevOps (`docs/operations/deployment.md`, "Azure DevOps service hook"). Needs
   knowledge-portal v0.5.0 or later. Migration `202610111800_delivery_closures` (expand only: a new
   table and an index on `backlog_publications`).
+- **A drafted offering for a new offering (ontology plan Phase 9).** When the knowledge portal
+  suggests a new offering in a family or a new product line, it drafts the offering and its
+  journey; the product impact card shows the draft, and the approved backlog sends it back
+  unchanged while the decided verdict is a new offering. Export schema 1.6 adds
+  `product_impact` (the decided verdict, its offering and release, and the draft) to the
+  approved-backlog export and the JSON download; a knowledge portal older than v0.6.0 ignores
+  it. Needs knowledge-portal v0.6.0 for the draft. No migration.
 
 ## v0.1.0
 

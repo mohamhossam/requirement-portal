@@ -302,7 +302,7 @@ def _feature(sequence: int, architecture: ExportArchitecture | None) -> ExportFe
 
 def _document(*features: ExportFeature) -> NeutralBacklogExport:
     return NeutralBacklogExport(
-        schema_version="1.5",
+        schema_version="1.6",
         manifest=ExportManifest(
             requirement_id="req-1",
             breakdown_revision=3,

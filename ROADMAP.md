@@ -41,7 +41,8 @@ this ledger.
 | ADO publication and safe republish (12–13) | Slices 12 and 13 implemented (`docs/slices/slice-12-ado-publication.md`, ADR-0112; `docs/slices/slice-13-external-id-mapping-and-safe-republish.md`, ADR-0113) | Merge; the Epic-closed hook is the ontology implementation plan's Phase 7, now implemented |
 | Ontology plan Phase 4: product verdict in analysis (`docs/slices/ontology-phase-4-product-verdict.md`, ADR-0115, ADR-0116) | Done 2026-10-11 (#84) | — |
 | Ontology plan Phase 5: decided verdicts sent back as precedents (`docs/slices/ontology-phase-5-decided-verdicts.md`) | Done 2026-10-11 (#85) | — |
-| Ontology plan Phase 7: what a closed Epic delivered (`docs/slices/ontology-phase-7-delivery-closure.md`) | Implemented; needs knowledge-portal v0.5.0, whose contract is vendored and pinned | Merge; Phase 9 next |
+| Ontology plan Phase 7: what a closed Epic delivered (`docs/slices/ontology-phase-7-delivery-closure.md`) | Done 2026-10-11 (#86) | — |
+| Ontology plan Phase 9: a drafted offering for a new offering (`docs/slices/ontology-phase-9-offering-drafts.md`) | Implemented; needs knowledge-portal v0.6.0, whose contract is vendored and pinned | Merge |
 | Advanced workflow optimization (15) | Planned; evidence-gated | Demonstrate a need and measurable benefit before implementation |
 
 ### Merge and CI evidence

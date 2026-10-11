@@ -24,7 +24,7 @@ from smb_requirement_agent.analysis.domain.entities import (
     ClarificationQuestion,
     RequirementAnalysis,
 )
-from smb_requirement_agent.analysis.domain.product_impact import ProductImpact
+from smb_requirement_agent.analysis.domain.product_impact import OfferingDraft, ProductImpact
 from smb_requirement_agent.analysis.domain.value_objects import (
     AnalysisEvidenceReference,
     AnalysisId,
@@ -66,6 +66,7 @@ from smb_requirement_agent.interfaces.api.schemas.analysis import (
     ConstraintResponse,
     DecideIntentProposalRequest,
     DecideProductImpactRequest,
+    DraftComponentResponse,
     HumanClarificationResponse,
     ImpactGapResponse,
     ImpactOwnerResponse,
@@ -75,6 +76,7 @@ from smb_requirement_agent.interfaces.api.schemas.analysis import (
     IntentProposalDecisionResponse,
     IntentProposalResponse,
     KnownFactResponse,
+    OfferingDraftResponse,
     OpenQuestionResponse,
     PotentialDependencyResponse,
     ProductImpactResponse,
@@ -156,6 +158,21 @@ def question_response(question: ClarificationQuestion) -> ClarificationQuestionR
     )
 
 
+def offering_draft_response(draft: OfferingDraft) -> OfferingDraftResponse:
+    return OfferingDraftResponse(
+        offering_id=draft.offering_id,
+        offering_name=draft.offering_name,
+        based_on=draft.based_on,
+        components=[
+            DraftComponentResponse(name=item.name, system_ids=list(item.system_ids))
+            for item in draft.components
+        ],
+        questions=list(draft.questions),
+        journey_name=draft.journey_name,
+        journey_steps=draft.journey_steps,
+    )
+
+
 def product_impact_response(
     impact: ProductImpact, *, verdict_validated: bool
 ) -> ProductImpactResponse:
@@ -169,6 +186,7 @@ def product_impact_response(
         offering_name=impact.offering_name,
         proposal=impact.proposal,
         new_values=list(impact.new_values),
+        draft=offering_draft_response(impact.draft) if impact.draft else None,
         needs=[
             CapabilityNeedResponse(
                 concept_id=item.concept_id,

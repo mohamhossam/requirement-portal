@@ -16,6 +16,18 @@ export type ProductImpactChoice = {
 };
 
 const VERDICTS = Object.keys(VERDICT_LABEL) as ProductVerdict[];
+const NEW_OFFERINGS: ProductVerdict[] = ["new_offering_in_family", "new_product_line"];
+
+/** Where the drafted offering goes, given the verdict decided so far. */
+function draftFate(impact: NonNullable<RequirementAnalysis["product_impact"]>): string {
+  if (!impact.decision) {
+    return "If the verdict stays a new offering, it goes to the catalogue's curators with the approved backlog.";
+  }
+  if (impact.verdict && NEW_OFFERINGS.includes(impact.verdict)) {
+    return "It goes to the catalogue's curators with the approved backlog, for them to edit and accept.";
+  }
+  return "It is not sent, because the decided verdict is not a new offering.";
+}
 
 /**
  * Where this requirement sits in the product portfolio (ADR-0115).
@@ -63,6 +75,11 @@ export function ProductImpactCard({
   const suggested = impact.suggested_verdict;
   const covered = impact.needs.filter((need) => need.covered).length;
   const owners = new Map(impact.owners.map((owner) => [owner.system_id, owner]));
+  const systemNames = new Map(impact.systems.map((system) => [system.id, system.name]));
+  const draft = impact.draft;
+  const basedOn = draft?.based_on
+    ? draft.based_on === impact.offering_id ? impact.offering_name ?? draft.based_on : draft.based_on
+    : null;
   const otherVerdicts = VERDICTS.filter((item) => item !== suggested);
   const decide = (choice: ProductImpactChoice) => {
     onDecide?.(choice);
@@ -135,6 +152,46 @@ export function ProductImpactCard({
           <dd className="text-ink m-0">{impact.new_values.join(", ")}</dd>
         </>}
       </dl>
+
+      {draft && (
+        <section aria-labelledby="drafted-offering-heading" className="grid gap-1.5">
+          <h4 id="drafted-offering-heading" className="text-label text-ink-muted m-0">Drafted offering</h4>
+          <p className="text-body text-ink-soft m-0 max-w-[68ch]">
+            The knowledge portal drafted <strong className="text-ink">{draft.offering_name}</strong>
+            {basedOn ? <> from {basedOn}</> : null}. {draftFate(impact)}
+          </p>
+          {draft.components.length > 0 && (
+            <ul role="list" aria-label="Its components" className="m-0 grid list-none gap-1 p-0">
+              {draft.components.map((component, index) => (
+                <li key={`${component.name}-${index}`} className="text-body text-ink-soft flex flex-wrap items-center gap-2">
+                  <span className="text-ink">{component.name}</span>
+                  {component.system_ids.length > 0 ? (
+                    <span className="text-meta text-ink-muted">
+                      by {component.system_ids.map((id) => systemNames.get(id) ?? id).join(", ")}
+                    </span>
+                  ) : (
+                    <Badge tone="warning">No system yet</Badge>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="text-meta text-ink-muted m-0">
+            {draft.journey_name
+              ? `Its journey, ${draft.journey_name}, has ${draft.journey_steps} step${draft.journey_steps === 1 ? "" : "s"}.`
+              : "No journey is drafted."}
+          </p>
+          {draft.questions.length > 0 && (
+            <ul aria-label="For architecture review" className="text-body text-ink-soft m-0 grid gap-1 pl-5">
+              {draft.questions.map((question) => (
+                <li key={question}>
+                  <strong className="text-ink">For architecture review:</strong> {question}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
 
       {impact.needs.length > 0 && (
         <section aria-label="Capabilities needed" className="grid gap-1.5">
