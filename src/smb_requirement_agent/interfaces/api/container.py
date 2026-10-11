@@ -636,6 +636,8 @@ def _build_container(
         defaults.reference_proposer,
         resolved_clock,
         access_service,
+        knowledge_service.assessment,
+        product_verdict_validated=settings.product_verdict_validated,
     )
     backlog_publisher = build_backlog_publisher(settings.ado_publication, resources)
     review = build_review(

@@ -64,6 +64,7 @@ export const CATEGORY_LABEL: Record<ReviewFlag["category"], string> = {
   architecture: "Architecture",
   quality: "Story quality",
   staleness: "Out of date",
+  product: "Product impact",
 };
 
 /**

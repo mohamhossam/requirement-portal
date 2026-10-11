@@ -2535,6 +2535,39 @@
         "title": "CancelAiJobRequest",
         "type": "object"
       },
+      "CapabilityNeedResponse": {
+        "properties": {
+          "concept_id": {
+            "title": "Concept Id",
+            "type": "string"
+          },
+          "covered": {
+            "title": "Covered",
+            "type": "boolean"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "weak": {
+            "title": "Weak",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "concept_id",
+          "label",
+          "path",
+          "covered",
+          "weak"
+        ],
+        "title": "CapabilityNeedResponse",
+        "type": "object"
+      },
       "CitedPassage": {
         "properties": {
           "block_id": {
@@ -2822,6 +2855,14 @@
           "kind": {
             "$ref": "#/components/schemas/ClarificationKind"
           },
+          "options": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Options",
+            "type": "array"
+          },
           "rationale": {
             "anyOf": [
               {
@@ -2943,7 +2984,8 @@
       "ClarificationSource": {
         "enum": [
           "ai",
-          "human"
+          "human",
+          "catalogue"
         ],
         "title": "ClarificationSource",
         "type": "string"
@@ -3261,6 +3303,48 @@
           "expected_version"
         ],
         "title": "DecideIntentProposalRequest",
+        "type": "object"
+      },
+      "DecideProductImpactRequest": {
+        "description": "Accept the suggested verdict, override it with another, or mark it unknown.",
+        "properties": {
+          "decision": {
+            "$ref": "#/components/schemas/ProductImpactDecision"
+          },
+          "expected_version": {
+            "minimum": 1.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "rationale": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rationale"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "decision",
+          "expected_version"
+        ],
+        "title": "DecideProductImpactRequest",
         "type": "object"
       },
       "DecisionRequest": {
@@ -4706,7 +4790,8 @@
           "dependency",
           "architecture",
           "quality",
-          "staleness"
+          "staleness",
+          "product"
         ],
         "title": "FlagCategory",
         "type": "string"
@@ -5079,6 +5164,173 @@
           "reason"
         ],
         "title": "ImpactDecisionRequest",
+        "type": "object"
+      },
+      "ImpactGapResponse": {
+        "properties": {
+          "concept_id": {
+            "title": "Concept Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "system_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Id"
+          }
+        },
+        "required": [
+          "kind",
+          "concept_id",
+          "label",
+          "reason",
+          "system_id"
+        ],
+        "title": "ImpactGapResponse",
+        "type": "object"
+      },
+      "ImpactOwnerResponse": {
+        "properties": {
+          "concept_id": {
+            "title": "Concept Id",
+            "type": "string"
+          },
+          "open_seats": {
+            "title": "Open Seats",
+            "type": "integer"
+          },
+          "people": {
+            "items": {
+              "type": "string"
+            },
+            "title": "People",
+            "type": "array"
+          },
+          "squads": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Squads",
+            "type": "array"
+          },
+          "system_id": {
+            "title": "System Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "concept_id",
+          "system_id",
+          "squads",
+          "people",
+          "open_seats"
+        ],
+        "title": "ImpactOwnerResponse",
+        "type": "object"
+      },
+      "ImpactPathStepResponse": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "label"
+        ],
+        "title": "ImpactPathStepResponse",
+        "type": "object"
+      },
+      "ImpactQuestionResponse": {
+        "properties": {
+          "facet": {
+            "title": "Facet",
+            "type": "string"
+          },
+          "options": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Options",
+            "type": "array"
+          },
+          "question": {
+            "title": "Question",
+            "type": "string"
+          }
+        },
+        "required": [
+          "facet",
+          "question",
+          "options"
+        ],
+        "title": "ImpactQuestionResponse",
+        "type": "object"
+      },
+      "ImpactSystemResponse": {
+        "properties": {
+          "change_type": {
+            "title": "Change Type",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "paths": {
+            "items": {
+              "items": {
+                "$ref": "#/components/schemas/ImpactPathStepResponse"
+              },
+              "type": "array"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "role",
+          "change_type",
+          "paths"
+        ],
+        "title": "ImpactSystemResponse",
         "type": "object"
       },
       "IngestionControlRequest": {
@@ -6681,6 +6933,255 @@
         "title": "ProductContextResponse",
         "type": "object"
       },
+      "ProductImpactDecision": {
+        "enum": [
+          "accepted",
+          "overridden",
+          "unknown"
+        ],
+        "title": "ProductImpactDecision",
+        "type": "string"
+      },
+      "ProductImpactResponse": {
+        "description": "Where the knowledge portal places the requirement, and the decision on it (ADR-0115).",
+        "properties": {
+          "assessed_at": {
+            "format": "date-time",
+            "title": "Assessed At",
+            "type": "string"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "decided_by": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ActorResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductImpactDecision"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "gaps": {
+            "items": {
+              "$ref": "#/components/schemas/ImpactGapResponse"
+            },
+            "title": "Gaps",
+            "type": "array"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "needs": {
+            "items": {
+              "$ref": "#/components/schemas/CapabilityNeedResponse"
+            },
+            "title": "Needs",
+            "type": "array"
+          },
+          "new_values": {
+            "items": {
+              "type": "string"
+            },
+            "title": "New Values",
+            "type": "array"
+          },
+          "offering_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offering Id"
+          },
+          "offering_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offering Name"
+          },
+          "owners": {
+            "items": {
+              "$ref": "#/components/schemas/ImpactOwnerResponse"
+            },
+            "title": "Owners",
+            "type": "array"
+          },
+          "prompt_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Version"
+          },
+          "proposal": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposal"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/ImpactQuestionResponse"
+            },
+            "title": "Questions",
+            "type": "array"
+          },
+          "rationale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rationale"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "release_id": {
+            "title": "Release Id",
+            "type": "string"
+          },
+          "suggested_verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "systems": {
+            "items": {
+              "$ref": "#/components/schemas/ImpactSystemResponse"
+            },
+            "title": "Systems",
+            "type": "array"
+          },
+          "uncertainty": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uncertainty"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "verdict_validated": {
+            "title": "Verdict Validated",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "release_id",
+          "suggested_verdict",
+          "verdict_validated",
+          "reason",
+          "assessed_at",
+          "offering_id",
+          "offering_name",
+          "proposal",
+          "new_values",
+          "needs",
+          "gaps",
+          "systems",
+          "owners",
+          "questions",
+          "uncertainty",
+          "model",
+          "prompt_version",
+          "decision",
+          "verdict",
+          "rationale",
+          "decided_by",
+          "decided_at"
+        ],
+        "title": "ProductImpactResponse",
+        "type": "object"
+      },
+      "ProductImpactStatus": {
+        "description": "Whether an analysis round could ask the knowledge portal for a product impact.",
+        "enum": [
+          "assessed",
+          "not_connected",
+          "unavailable"
+        ],
+        "title": "ProductImpactStatus",
+        "type": "string"
+      },
+      "ProductVerdict": {
+        "description": "The knowledge portal's four answers to \"is this an existing product or a new one?\".",
+        "enum": [
+          "change_existing_offering",
+          "new_plan",
+          "new_offering_in_family",
+          "new_product_line"
+        ],
+        "title": "ProductVerdict",
+        "type": "string"
+      },
       "PromoteRequirementDraftRequest": {
         "properties": {
           "expected_version": {
@@ -7652,6 +8153,26 @@
             },
             "title": "Potential Dependencies",
             "type": "array"
+          },
+          "product_impact": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductImpactResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "product_impact_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductImpactStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "provenance": {
             "anyOf": [
@@ -9995,6 +10516,17 @@
             "title": "Catalogued",
             "type": "boolean"
           },
+          "change_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change Type"
+          },
           "constraints": {
             "items": {
               "type": "string"
@@ -10016,6 +10548,17 @@
             },
             "title": "Products",
             "type": "array"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
           },
           "squads": {
             "items": {
@@ -13735,6 +14278,80 @@
           }
         ],
         "summary": "Confirm Requirement Analysis",
+        "tags": [
+          "analysis"
+        ]
+      }
+    },
+    "/requirements/{requirement_id}/analysis/product-impact/decision": {
+      "put": {
+        "description": "Accept the suggested product impact, override its verdict, or mark it unknown.",
+        "operationId": "decide_product_impact_requirements__requirement_id__analysis_product_impact_decision_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "requirement_id",
+            "required": true,
+            "schema": {
+              "title": "Requirement Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Fake-Actor-Id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fake-Actor-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecideProductImpactRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequirementAnalysisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Decide Product Impact",
         "tags": [
           "analysis"
         ]

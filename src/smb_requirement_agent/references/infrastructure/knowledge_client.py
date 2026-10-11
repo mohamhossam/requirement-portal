@@ -18,6 +18,10 @@ from pydantic import TypeAdapter
 from smb_kernel.errors import ServiceResponseError, ServiceUnavailableError
 from smb_kernel.http.client import InternalHttpClient
 
+from smb_requirement_agent.references.application.ports.architecture_assessment import (
+    ArchitectureAssessment,
+    AssessmentQuery,
+)
 from smb_requirement_agent.references.application.ports.architecture_knowledge import (
     ArchitectureKnowledgeMatch,
     ArchitectureQuery,
@@ -41,6 +45,8 @@ _MATCH = TypeAdapter(ArchitectureKnowledgeMatch)
 _EVIDENCE = TypeAdapter(tuple[ReferenceEvidence, ...])
 _PASSAGE = TypeAdapter(CitedPassage)
 _ARCHITECTURE_EVIDENCE = TypeAdapter(ArchitectureEvidence)
+_ASSESSMENT_QUERY = TypeAdapter(AssessmentQuery)
+_ASSESSMENT = TypeAdapter(ArchitectureAssessment)
 # What the knowledge service answers when a view is absent: not found, or no longer live.
 _ABSENT = frozenset({404, 409})
 
@@ -69,6 +75,33 @@ class HttpArchitectureKnowledge:
             idempotent=True,
         )
         return _decode(_MATCH, body, "architecture matches")
+
+
+class HttpArchitectureAssessment:
+    """A whole requirement's product impact (ontology plan Phase 4).
+
+    A knowledge service released before the assessment answers 404: that is "not
+    offered yet", not a failure, so analysis carries on without a product impact.
+    """
+
+    def __init__(self, client: InternalHttpClient) -> None:
+        self._client = client
+
+    def is_connected(self) -> bool:
+        return True
+
+    def assess(self, query: AssessmentQuery) -> ArchitectureAssessment | None:
+        try:
+            body = self._client.post_json(
+                "/internal/architecture/assess",
+                _ASSESSMENT_QUERY.dump_python(query, mode="json"),
+                idempotent=True,
+            )
+        except ServiceResponseError as refused:
+            if refused.status_code == 404:
+                return None
+            raise
+        return _decode(_ASSESSMENT, body, "an assessment")
 
 
 class HttpReferenceKnowledge:
@@ -262,6 +295,16 @@ class FakeArchitectureKnowledge:
             # Nothing was inferred: offline there is no model behind the empty answer.
             evidence_classification="legacy_deterministic",
         )
+
+
+class FakeArchitectureAssessment:
+    """Offline there is no catalogue to place a requirement in, so nothing is assessed."""
+
+    def is_connected(self) -> bool:
+        return False
+
+    def assess(self, query: AssessmentQuery) -> ArchitectureAssessment | None:
+        return None
 
 
 class FakeReferenceKnowledge:

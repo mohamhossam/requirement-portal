@@ -22,6 +22,7 @@ from smb_requirement_agent.breakdown.application.published import story_set_fing
 from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping import (
     MapFeatureArchitecture,
     MapStoryArchitecture,
+    decided_impact,
 )
 from smb_requirement_agent.breakdown.application.use_cases.story_quality import (
     AssessStoryCandidate,
@@ -76,19 +77,27 @@ class GenerationChecks:
         self, requirement: Requirement, analysis: RequirementAnalysis
     ) -> GenerationGuidance:
         self._phase(requirement.id, "preparing", 0)
+        # A decided product impact is what generation follows (ADR-0115, ADR-0116); without
+        # one, a fresh match guides it as before.
+        decided = decided_impact(analysis.product_impact)
         return GenerationGuidance(
-            architecture=self._knowledge.match(
-                ArchitectureQuery(
-                    text=(
-                        requirement.title.value,
-                        requirement.description.value,
-                        *(item.statement for item in analysis.known_facts),
-                        *(item.statement for item in analysis.constraints),
-                        *analysis.accepted_constraints,
-                    ),
-                    declared_systems=tuple(item.value for item in requirement.systems),
+            architecture=(
+                None
+                if decided is not None
+                else self._knowledge.match(
+                    ArchitectureQuery(
+                        text=(
+                            requirement.title.value,
+                            requirement.description.value,
+                            *(item.statement for item in analysis.known_facts),
+                            *(item.statement for item in analysis.constraints),
+                            *analysis.accepted_constraints,
+                        ),
+                        declared_systems=tuple(item.value for item in requirement.systems),
+                    )
                 )
             ),
+            product_impact=decided,
             potential_dependencies=tuple(
                 item.statement for item in analysis.potential_dependencies
             ),
@@ -111,7 +120,9 @@ class GenerationChecks:
                 raise FeatureGenerationError("Provider returned no usable Feature candidates.")
             self._phase(requirement.id, "checking", 2 + attempt * 2)
             candidates = [
-                self._feature_mapper.execute(requirement, item, self._clock.now()).feature
+                self._feature_mapper.execute(
+                    requirement, item, self._clock.now(), decided=guidance.product_impact
+                ).feature
                 for item in candidates
             ]
             critique = self._review.critique_features(requirement, analysis, tuple(candidates))
@@ -156,7 +167,9 @@ class GenerationChecks:
                 )
             self._phase(requirement.id, "checking", 2 + attempt * 2)
             candidates = [
-                self._story_mapper.execute(requirement, feature, item, self._clock.now()).story
+                self._story_mapper.execute(
+                    requirement, feature, item, self._clock.now(), decided=guidance.product_impact
+                ).story
                 for item in candidates
             ]
             siblings = tuple(project(candidates))

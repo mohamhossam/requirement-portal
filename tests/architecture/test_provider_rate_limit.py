@@ -80,6 +80,7 @@ AUTOMATIC_TRIGGERS = {
     ("POST", "/requirements/{requirement_id}/knowledge-screen/ensure"),
     ("POST", "/requirements/{requirement_id}/knowledge-findings/{finding_id}/decisions"),
     ("PATCH", "/requirements/{requirement_id}/analysis/proposals/{proposal_id}"),
+    ("PUT", "/requirements/{requirement_id}/analysis/product-impact/decision"),
     ("POST", "/requirements/{requirement_id}/analysis/questions"),
 }
 

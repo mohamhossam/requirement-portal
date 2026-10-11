@@ -139,6 +139,8 @@ class SystemReferenceResponse(BaseModel):
     squads: list[OrganisationReferenceResponse]
     value_streams: list[OrganisationReferenceResponse]
     products: list[OrganisationReferenceResponse]
+    role: str | None = None
+    change_type: str | None = None
 
 
 def _references(
@@ -174,6 +176,8 @@ def _system(system: SystemReference) -> SystemReferenceResponse:
         squads=_references(system.squads),
         value_streams=_references(system.value_streams),
         products=_references(system.products),
+        role=system.role,
+        change_type=system.change_type,
     )
 
 

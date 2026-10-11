@@ -11,6 +11,13 @@ from smb_requirement_agent.analysis.domain.errors import (
     ClarificationVersionConflictError,
     InvalidAnalysisContentError,
     InvalidClarificationTransitionError,
+    ProductImpactDecisionLockedError,
+)
+from smb_requirement_agent.analysis.domain.product_impact import (
+    ProductImpact,
+    ProductImpactDecision,
+    ProductImpactStatus,
+    ProductVerdict,
 )
 from smb_requirement_agent.analysis.domain.value_objects import (
     Ambiguity,
@@ -90,9 +97,16 @@ class ClarificationQuestion:
     classification_changed_by: ActorSnapshot | None = None
     classification_changed_at: datetime | None = None
     replaces_question_id: QuestionId | None = None
+    # Answers to choose from, for a question the catalogue asks; any answer is still allowed.
+    options: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "subject", _text(self.subject, "Question subject"))
+        object.__setattr__(
+            self,
+            "options",
+            tuple(dict.fromkeys(item.strip() for item in self.options if item.strip())),
+        )
         if self.rationale is not None:
             object.__setattr__(self, "rationale", self.rationale.strip() or None)
         if self.version < 1:
@@ -341,8 +355,18 @@ class RequirementAnalysis:
     # None for analyses generated before grounding was recorded, and for re-analysis rounds
     # that do not consult the reference library.
     reference_grounding: ReferenceGroundingStatus | None = None
+    # Where the knowledge portal places the requirement, and a person's decision on it
+    # (ADR-0115). None for analyses from before it was recorded.
+    product_impact: ProductImpact | None = None
+    product_impact_status: ProductImpactStatus | None = None
 
     def __post_init__(self) -> None:
+        # An unavailable round keeps the earlier round's impact, so its decision still gates.
+        if self.product_impact is not None and self.product_impact_status not in (
+            ProductImpactStatus.ASSESSED,
+            ProductImpactStatus.UNAVAILABLE,
+        ):
+            raise InvalidAnalysisContentError("A product impact is recorded only when assessed.")
         if self.version < 1:
             raise InvalidAnalysisContentError("Analysis version must be positive.")
         if self.confirmed_at is not None:
@@ -486,6 +510,36 @@ class RequirementAnalysis:
             return self
         return replace(self, intent_proposals=updated, version=self.version + 1)
 
+    @property
+    def needs_product_decision(self) -> bool:
+        """A product impact was suggested and no one has decided it yet."""
+        return self.product_impact is not None and not self.product_impact.is_decided
+
+    def decide_product_impact(
+        self,
+        decision: ProductImpactDecision,
+        actor: ActorProfile,
+        at: datetime,
+        expected_version: int,
+        *,
+        verdict: ProductVerdict | None = None,
+        rationale: str | None = None,
+    ) -> RequirementAnalysis:
+        if expected_version != self.version:
+            raise AnalysisClarificationConflictError(
+                "Analysis changed since it was loaded. Refresh and try again."
+            )
+        if self.is_human_confirmed:
+            raise ProductImpactDecisionLockedError(
+                "The product impact cannot change after the analysis is confirmed."
+            )
+        if self.product_impact is None:  # pragma: no cover - the use case checks first
+            raise InvalidAnalysisContentError("This analysis has no product impact to decide.")
+        decided = self.product_impact.decide(
+            decision, actor, at, verdict=verdict, rationale=rationale
+        )
+        return replace(self, product_impact=decided, version=self.version + 1)
+
     def record_question_collection_change(self, expected_version: int) -> RequirementAnalysis:
         """Advance the analysis collection version before inserting a question."""
         if expected_version != self.version:
@@ -515,6 +569,11 @@ class RequirementAnalysis:
         if not has_effective_outcome:
             raise AnalysisConfirmationBlockedError(
                 "A source-authored or owner-confirmed desired outcome is required."
+            )
+        if self.needs_product_decision:
+            raise AnalysisConfirmationBlockedError(
+                "Accept or override the suggested product impact, or mark it unknown, "
+                "before confirming the analysis."
             )
         require_aware(at, "analysis confirmed_at")
         return replace(

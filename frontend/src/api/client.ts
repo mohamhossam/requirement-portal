@@ -28,6 +28,9 @@ export type SplittingPattern = components["schemas"]["SplittingPattern"];
 export type ClarificationKind = components["schemas"]["ClarificationKind"];
 export type ClarificationSeverity = components["schemas"]["ClarificationSeverity"];
 export type ClarificationQuestion = components["schemas"]["ClarificationQuestionResponse"];
+export type ProductImpact = components["schemas"]["ProductImpactResponse"];
+export type ProductVerdict = components["schemas"]["ProductVerdict"];
+export type ProductImpactDecision = components["schemas"]["ProductImpactDecision"];
 export type AnalysisRound = components["schemas"]["AnalysisRoundResponse"];
 export type IntentProposal = components["schemas"]["IntentProposalResponse"];
 export type IntentProposalStatus = components["schemas"]["IntentProposalStatus"];
@@ -748,6 +751,14 @@ export const api = {
     request<RequirementAnalysis>(`${requirementPath(id)}/analysis/confirmation`, {
       method: "POST",
       body: JSON.stringify({ expected_version: expectedVersion }),
+    }),
+  decideProductImpact: (
+    id: string,
+    input: components["schemas"]["DecideProductImpactRequest"],
+  ) =>
+    request<RequirementAnalysis>(`${requirementPath(id)}/analysis/product-impact/decision`, {
+      method: "PUT",
+      body: JSON.stringify(input),
     }),
   decideIntentProposal: (
     id: string,

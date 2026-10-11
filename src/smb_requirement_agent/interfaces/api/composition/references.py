@@ -30,6 +30,9 @@ from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.infrastructure.documents.ingestion_loop import IngestionLoop
 from smb_requirement_agent.interfaces.api.composition.persistence import PersistenceAdapters
 from smb_requirement_agent.interfaces.api.composition.tracing import identity_client
+from smb_requirement_agent.references.application.ports.architecture_assessment import (
+    ArchitectureAssessmentPort,
+)
 from smb_requirement_agent.references.application.ports.architecture_knowledge import (
     ArchitectureKnowledgePort,
 )
@@ -47,11 +50,13 @@ from smb_requirement_agent.references.application.ports.reference_grounding impo
     ReferenceKnowledgePort,
 )
 from smb_requirement_agent.references.infrastructure.knowledge_client import (
+    FakeArchitectureAssessment,
     FakeArchitectureKnowledge,
     FakeHistoricContent,
     FakeKnowledgeEvents,
     FakeKnowledgeViews,
     FakeReferenceKnowledge,
+    HttpArchitectureAssessment,
     HttpArchitectureKnowledge,
     HttpChangeRequestInbox,
     HttpHistoricContent,
@@ -62,6 +67,9 @@ from smb_requirement_agent.references.infrastructure.knowledge_client import (
 
 # Seconds to wait for a page of a historic requirement's content (≤200 entries).
 HISTORIC_PAGE_TIMEOUT = 60.0
+# Seconds to wait for a requirement's assessment: the knowledge service asks its models
+# to read the requirement and weigh the verdict before it answers.
+ASSESSMENT_TIMEOUT = 120.0
 
 
 @dataclass(frozen=True)
@@ -77,6 +85,8 @@ class KnowledgeService:
     change_requests: ChangeRequestInboxPort | None = None
     # A published historic requirement's content, read a page at a time (ADR-0102).
     historic_content: HistoricContentSourcePort = FakeHistoricContent()
+    # A whole requirement's product impact (ADR-0115); offline nothing is assessed.
+    assessment: ArchitectureAssessmentPort = FakeArchitectureAssessment()
 
 
 def build_knowledge_service(
@@ -116,6 +126,14 @@ def build_knowledge_service(
         timeout_seconds=HISTORIC_PAGE_TIMEOUT,
         breaker=breaker,
     )
+    assessing = InternalHttpClient(
+        url,
+        token,
+        service="knowledge",
+        http=http,
+        timeout_seconds=ASSESSMENT_TIMEOUT,
+        breaker=breaker,
+    )
     return KnowledgeService(
         HttpReferenceKnowledge(client),
         HttpArchitectureKnowledge(client),
@@ -124,6 +142,7 @@ def build_knowledge_service(
         remote=True,
         change_requests=HttpChangeRequestInbox(client),
         historic_content=HttpHistoricContent(patient),
+        assessment=HttpArchitectureAssessment(assessing),
     )
 
 

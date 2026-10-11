@@ -11,6 +11,10 @@ from smb_requirement_agent.analysis.domain.entities import (
     RequirementAnalysis,
 )
 from smb_requirement_agent.analysis.domain.lineage import input_lineage
+from smb_requirement_agent.analysis.domain.product_impact import (
+    ProductImpact,
+    ProductImpactStatus,
+)
 from smb_requirement_agent.analysis.domain.value_objects import (
     Ambiguity,
     AnalysisClarificationEvidence,
@@ -67,8 +71,13 @@ def build_analysis(
     has_source_outcome: bool = False,
     source_desired_outcome: str | None = None,
     version: int = 1,
+    previous_impact: ProductImpact | None = None,
 ) -> RequirementAnalysis:
-    """Construct a validated analysis from an analyzer candidate."""
+    """Construct a validated analysis from an analyzer candidate.
+
+    `previous_impact` is the last round's product impact: its decision carries over while
+    the suggestion stands, and it stays whole when this round could not ask again.
+    """
     resolved_subjects = {item.subject.strip() for item in clarifications}
 
     carried = tuple(
@@ -169,4 +178,16 @@ def build_analysis(
         ),
         version=version,
         reference_grounding=candidate.get("reference_grounding"),
+        product_impact=_round_impact(candidate, previous_impact),
+        product_impact_status=candidate.get("product_impact_status"),
     )
+
+
+def _round_impact(
+    candidate: RequirementAnalysisCandidate, previous: ProductImpact | None
+) -> ProductImpact | None:
+    status = candidate.get("product_impact_status")
+    if status is ProductImpactStatus.UNAVAILABLE:
+        return previous
+    impact = candidate.get("product_impact")
+    return impact.carried_from(previous) if impact is not None else None

@@ -41,6 +41,28 @@ describe("ArchitectureImpactPanel", () => {
     expect(screen.getByText("(API call)")).toBeVisible();
   });
 
+  it("shows the role and change a decided product impact gives each system", () => {
+    const [bcrm, ...rest] = architectureFixture.systems;
+    if (!bcrm) throw new Error("The fixture maps BCRM.");
+    render(
+      <ArchitectureImpactPanel
+        impact={{ ...architectureFixture, systems: [{ ...bcrm, role: "primary", change_type: "modify" },
+          { ...(rest[0] ?? bcrm), role: "owner_of_record", change_type: null }] }}
+      />,
+    );
+    expect(screen.getByText("Primary system")).toBeVisible();
+    expect(screen.getByText("Changed")).toBeVisible();
+    // A role the knowledge portal adds later reads as written, not as a failure.
+    expect(screen.getByText("Owner of record")).toBeVisible();
+    expect(screen.getAllByText("Change")).toHaveLength(1);
+  });
+
+  it("shows no role or change without a decided product impact", () => {
+    render(<ArchitectureImpactPanel impact={architectureFixture} />);
+    expect(screen.queryByText("Role")).not.toBeInTheDocument();
+    expect(screen.queryByText("Change")).not.toBeInTheDocument();
+  });
+
   it("names the squads, value stream and products that own a system", () => {
     const [bcrm, ...rest] = architectureFixture.systems;
     if (!bcrm) throw new Error("The fixture maps BCRM.");

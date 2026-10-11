@@ -23,6 +23,23 @@ from smb_kernel.errors import ServiceResponseError, ServiceUnavailableError
 from smb_kernel.http.client import InternalHttpClient
 
 from smb_requirement_agent.breakdown.domain.architecture.entities import ArchitectureImpact
+from smb_requirement_agent.references.application.ports.architecture_assessment import (
+    ArchitectureAssessment,
+    AssessedComponent,
+    AssessedConcept,
+    AssessedCoverage,
+    AssessedFacet,
+    AssessedGap,
+    AssessedOption,
+    AssessedOwners,
+    AssessedPathStep,
+    AssessedProposal,
+    AssessedQuestion,
+    AssessedReference,
+    AssessedSeat,
+    AssessedSystem,
+    AssessmentQuery,
+)
 from smb_requirement_agent.references.application.ports.architecture_knowledge import (
     ArchitectureKnowledgeMatch,
     ArchitectureKnowledgePort,
@@ -58,9 +75,11 @@ from smb_requirement_agent.references.domain.architecture.knowledge import Relat
 from smb_requirement_agent.references.infrastructure.knowledge_client import (
     OFFLINE_RELEASE_ID,
     OFFLINE_RELEASE_NAME,
+    FakeArchitectureAssessment,
     FakeArchitectureKnowledge,
     FakeKnowledgeEvents,
     FakeReferenceKnowledge,
+    HttpArchitectureAssessment,
     HttpArchitectureKnowledge,
     HttpChangeRequestInbox,
     HttpHistoricContent,
@@ -721,4 +740,187 @@ def test_an_unusable_historic_page_is_an_explicit_failure() -> None:
     with pytest.raises(ServiceUnavailableError):
         HttpHistoricContent(_client(_answering({"entries": "no"}))).page(
             "h1", 1, ContentPart.ITEMS, 0, 200
+        )
+
+
+ASSESSMENT = {
+    "knowledge_version": "rel-7",
+    "facets": [
+        {
+            "kind": "need",
+            "text": "Static IP for SMB fibre",
+            "quote": "static IP",
+            "ref_id": None,
+            "concepts": [
+                {"concept_id": "cap:ip", "label": "Static IP", "path": "Net > IP", "weak": False}
+            ],
+        }
+    ],
+    "coverage": [
+        {
+            "concept_id": "cap:ip",
+            "label": "Static IP",
+            "path": "Net > IP",
+            "composed_by": ["c1"],
+            "realised_by": ["bcrm"],
+            "covered": True,
+        }
+    ],
+    "offering_id": "offering:fiber",
+    "verdict": "change_existing_offering",
+    "rule_verdict": "change_existing_offering",
+    "verdict_reason": "Business Fiber covers it.",
+    "proposal": {
+        "summary": "Add a quota.",
+        "offering_id": "offering:fiber",
+        "portfolio_node_id": None,
+        "components": [{"offering_id": "offering:fiber", "component_id": "c1", "name": "IP"}],
+        "journey_ids": [],
+        "new_values": ["Quota"],
+    },
+    "systems": [
+        {
+            "id": "bcrm",
+            "name": "BCRM",
+            "role": "primary",
+            "change_type": "modify",
+            "paths": [[{"kind": "system", "id": "bcrm", "label": "BCRM"}]],
+        }
+    ],
+    "gaps": [
+        {
+            "kind": "staffing",
+            "concept_id": "cap:ip",
+            "label": "Static IP",
+            "reason": "No squad.",
+            "system_id": "bcrm",
+        }
+    ],
+    "questions": [
+        {
+            "facet": "offering",
+            "question": "Which offering?",
+            "options": [{"id": "offering:fiber", "label": "Business Fiber"}],
+        }
+    ],
+    "owners": [
+        {
+            "concept_id": "cap:ip",
+            "system_id": "bcrm",
+            "squads": [{"id": "sales", "name": "Sales"}],
+            "value_streams": [],
+            "seats": [
+                {
+                    "squad_id": "sales",
+                    "role": "lead",
+                    "person_id": "p1",
+                    "person_name": "Mona",
+                    "scoped": True,
+                }
+            ],
+        }
+    ],
+    "citations": [],
+    "uncertainty": None,
+    "model": "reader",
+    "reader_model": "reader",
+    "embedding_model": None,
+    "prompt_version": "assess-v1",
+    "index_revision": None,
+}
+
+EXPECTED_ASSESSMENT = ArchitectureAssessment(
+    knowledge_version="rel-7",
+    facets=(
+        AssessedFacet(
+            "need",
+            "Static IP for SMB fibre",
+            "static IP",
+            concepts=(AssessedConcept("cap:ip", "Static IP", "Net > IP"),),
+        ),
+    ),
+    coverage=(AssessedCoverage("cap:ip", "Static IP", "Net > IP", ("c1",), ("bcrm",), True),),
+    offering_id="offering:fiber",
+    verdict="change_existing_offering",
+    rule_verdict="change_existing_offering",
+    verdict_reason="Business Fiber covers it.",
+    proposal=AssessedProposal(
+        "Add a quota.",
+        "offering:fiber",
+        components=(AssessedComponent("offering:fiber", "c1", "IP"),),
+        new_values=("Quota",),
+    ),
+    systems=(
+        AssessedSystem(
+            "bcrm", "BCRM", "primary", "modify", ((AssessedPathStep("system", "bcrm", "BCRM"),),)
+        ),
+    ),
+    gaps=(AssessedGap("staffing", "cap:ip", "Static IP", "No squad.", "bcrm"),),
+    questions=(
+        AssessedQuestion(
+            "offering", "Which offering?", (AssessedOption("Business Fiber", "offering:fiber"),)
+        ),
+    ),
+    owners=(
+        AssessedOwners(
+            "cap:ip",
+            "bcrm",
+            squads=(AssessedReference("sales", "Sales"),),
+            seats=(AssessedSeat("sales", "lead", "p1", "Mona", True),),
+        ),
+    ),
+    model="reader",
+    reader_model="reader",
+    prompt_version="assess-v1",
+)
+
+
+def test_an_assessment_is_asked_for_and_decoded_as_the_contract_describes() -> None:
+    seen: list[httpx.Request] = []
+
+    assessment = HttpArchitectureAssessment(_client(_answering(ASSESSMENT), seen)).assess(
+        AssessmentQuery(("Static IP for SMB fibre.",), ("BCRM",), "rel-7")
+    )
+
+    (request,) = seen
+    _assert_in_contract(request)
+    _assert_answer_in_contract(request, ASSESSMENT)
+    assert (request.method, request.url.path) == ("POST", "/internal/architecture/assess")
+    assert json.loads(request.content) == {
+        "text": ["Static IP for SMB fibre."],
+        "declared_systems": ["BCRM"],
+        "release_id": "rel-7",
+    }
+    assert assessment == EXPECTED_ASSESSMENT
+
+
+def test_a_role_kind_or_facet_added_later_is_read_as_written() -> None:
+    """Additive contract values (AGENTS.md section 2.1) must not fail an analysis."""
+    later = json.loads(json.dumps(ASSESSMENT))
+    later["systems"][0]["role"] = "owner"
+    later["systems"][0]["paths"][0][0]["kind"] = "interface"
+    later["facets"][0]["kind"] = "interface"
+
+    assessment = HttpArchitectureAssessment(_client(_answering(later))).assess(
+        AssessmentQuery(("text",))
+    )
+
+    assert assessment is not None
+    assert assessment.systems[0].role == "owner"
+    assert assessment.systems[0].paths[0][0].kind == "interface"
+    assert assessment.facets[0].kind == "interface"
+
+
+def test_a_portal_without_the_assessment_offers_none() -> None:
+    older = _client(_answering({"detail": "Not Found"}, status=404))
+
+    assert HttpArchitectureAssessment(older).assess(AssessmentQuery(("text",))) is None
+    assert not FakeArchitectureAssessment().is_connected()
+    assert FakeArchitectureAssessment().assess(AssessmentQuery(("text",))) is None
+
+
+def test_an_unusable_assessment_is_an_explicit_failure() -> None:
+    with pytest.raises(ServiceUnavailableError):
+        HttpArchitectureAssessment(_client(_answering({"verdict": "maybe"}))).assess(
+            AssessmentQuery(("text",))
         )

@@ -6,8 +6,8 @@ with its result per item, so republishing updates what exists instead of duplica
 
 It also keeps the Requirement's accepted product verdict and that verdict's version, so a
 delivery closing in the tracker can be traced to what was promised (the ontology and impact
-implementation plan, Phase 7). Requirement analysis does not decide a verdict yet (Phase 4),
-so both stay empty until it does.
+implementation plan, Phase 7). Both stay empty while the published revision's analysis has no
+decided verdict (ADR-0115).
 """
 
 from __future__ import annotations
@@ -160,6 +160,14 @@ class BacklogPublication:
             raise InvalidPublicationError("Only the latest attempt can still be running.")
         if (self.product_verdict is None) != (self.product_impact_version is None):
             raise InvalidPublicationError("A product verdict is kept with its version.")
+
+    def with_product_impact(
+        self, verdict: str | None, impact_version: str | None
+    ) -> BacklogPublication:
+        """Keep the verdict decided for the revision being published."""
+        if (verdict, impact_version) == (self.product_verdict, self.product_impact_version):
+            return self
+        return replace(self, product_verdict=verdict, product_impact_version=impact_version)
 
     @property
     def latest(self) -> PublicationResult | None:

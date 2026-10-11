@@ -95,6 +95,13 @@ An exception sets no precedent for the redesign: it changes behaviour, not the l
     was already created. The dashboard reads it through the same helper.
   - **Downloads** (`api/client.ts`). The object URL is revoked 40 seconds after the click,
     not at once, so Firefox and Safari still have the file when they start the download.
+- **Ontology plan Phase 4** (`docs/slices/ontology-phase-4-product-verdict.md`):
+  - **Product impact decision** (`api/client.ts`, `app/requirement/AnalysisView.tsx`).
+    `decideProductImpact` sends the owner's accept, override or unknown to
+    `PUT /requirements/{id}/analysis/product-impact/decision` and refreshes the analysis.
+  - **Confirmation gate** (`features/analysis/AnalysisPanel.tsx`). `confirmBlockedBy` names an
+    undecided product impact, as the server's own refusal does.
+  Tested in `features/analysis/ProductImpactCard.test.tsx`.
 
 ## Consequences
 

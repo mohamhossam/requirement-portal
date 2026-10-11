@@ -81,6 +81,10 @@ class PublicationPlan:
     approval_fingerprint: str
     # Parents always come before their children.
     items: tuple[PlannedWorkItem, ...]
+    # The product verdict decided in the revision's analysis, and which decision it was
+    # (ADR-0115): kept on the publication record so a closed Epic traces to its promise.
+    product_verdict: str | None = None
+    product_impact_version: str | None = None
 
     def count(self, kind: WorkItemKind) -> int:
         return sum(item.kind is kind for item in self.items)

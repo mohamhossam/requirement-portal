@@ -25,6 +25,201 @@
         "title": "ApprovedBacklogRequest",
         "type": "object"
       },
+      "ArchitectureAssessment": {
+        "properties": {
+          "citations": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ArchitectureCitation"
+            },
+            "title": "Citations",
+            "type": "array"
+          },
+          "coverage": {
+            "items": {
+              "$ref": "#/components/schemas/ConceptCoverage"
+            },
+            "title": "Coverage",
+            "type": "array"
+          },
+          "embedding_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Embedding Model"
+          },
+          "facets": {
+            "items": {
+              "$ref": "#/components/schemas/LinkedFacet"
+            },
+            "title": "Facets",
+            "type": "array"
+          },
+          "gaps": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AssessmentGap"
+            },
+            "title": "Gaps",
+            "type": "array"
+          },
+          "index_revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Index Revision"
+          },
+          "knowledge_version": {
+            "title": "Knowledge Version",
+            "type": "string"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "offering_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offering Id"
+          },
+          "offering_products": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OrganisationReference"
+            },
+            "title": "Offering Products",
+            "type": "array"
+          },
+          "offering_value_streams": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OrganisationReference"
+            },
+            "title": "Offering Value Streams",
+            "type": "array"
+          },
+          "owners": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/CapabilityOwners"
+            },
+            "title": "Owners",
+            "type": "array"
+          },
+          "prompt_version": {
+            "default": "requirement-assessment-v1",
+            "title": "Prompt Version",
+            "type": "string"
+          },
+          "proposal": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AssessmentProposal"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "questions": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AssessmentQuestion"
+            },
+            "title": "Questions",
+            "type": "array"
+          },
+          "reader_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reader Model"
+          },
+          "rule_verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "systems": {
+            "items": {
+              "$ref": "#/components/schemas/AssessedSystem"
+            },
+            "title": "Systems",
+            "type": "array"
+          },
+          "uncertainty": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uncertainty"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "verdict_reason": {
+            "title": "Verdict Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "knowledge_version",
+          "facets",
+          "coverage",
+          "offering_id",
+          "verdict",
+          "rule_verdict",
+          "verdict_reason",
+          "proposal",
+          "systems"
+        ],
+        "title": "ArchitectureAssessment",
+        "type": "object"
+      },
       "ArchitectureCitation": {
         "properties": {
           "chunk_id": {
@@ -261,6 +456,246 @@
         "title": "ArchitectureQuery",
         "type": "object"
       },
+      "AssessedSystem": {
+        "properties": {
+          "change_type": {
+            "$ref": "#/components/schemas/ChangeType"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "paths": {
+            "default": [],
+            "items": {
+              "items": {
+                "$ref": "#/components/schemas/PathStep"
+              },
+              "type": "array"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
+          "role": {
+            "$ref": "#/components/schemas/SystemRole"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "role",
+          "change_type"
+        ],
+        "title": "AssessedSystem",
+        "type": "object"
+      },
+      "AssessmentGap": {
+        "properties": {
+          "concept_id": {
+            "title": "Concept Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/GapKind"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "system_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Id"
+          }
+        },
+        "required": [
+          "kind",
+          "concept_id",
+          "label",
+          "reason"
+        ],
+        "title": "AssessmentGap",
+        "type": "object"
+      },
+      "AssessmentProposal": {
+        "description": "What the verdict proposes, for a reviewer and for drafting a catalogue change.",
+        "properties": {
+          "components": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ProposedComponent"
+            },
+            "title": "Components",
+            "type": "array"
+          },
+          "journey_ids": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Journey Ids",
+            "type": "array"
+          },
+          "new_values": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "New Values",
+            "type": "array"
+          },
+          "offering_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offering Id"
+          },
+          "portfolio_node_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portfolio Node Id"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "summary"
+        ],
+        "title": "AssessmentProposal",
+        "type": "object"
+      },
+      "AssessmentQuery": {
+        "description": "A requirement as requirement-portal holds it: its text and its analysed facts.",
+        "properties": {
+          "declared_systems": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Declared Systems",
+            "type": "array"
+          },
+          "release_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release Id"
+          },
+          "text": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Text",
+            "type": "array"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "AssessmentQuery",
+        "type": "object"
+      },
+      "AssessmentQuestion": {
+        "description": "What to ask before a verdict can be given, with answers from the catalogue.",
+        "properties": {
+          "facet": {
+            "$ref": "#/components/schemas/FacetKind"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/QuestionOption"
+            },
+            "title": "Options",
+            "type": "array"
+          },
+          "question": {
+            "title": "Question",
+            "type": "string"
+          }
+        },
+        "required": [
+          "facet",
+          "question",
+          "options"
+        ],
+        "title": "AssessmentQuestion",
+        "type": "object"
+      },
+      "CapabilityOwners": {
+        "description": "Who owns and staffs one impacted capability on one system (Phase 1b).",
+        "properties": {
+          "concept_id": {
+            "title": "Concept Id",
+            "type": "string"
+          },
+          "seats": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/SeatReference"
+            },
+            "title": "Seats",
+            "type": "array"
+          },
+          "squads": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OrganisationReference"
+            },
+            "title": "Squads",
+            "type": "array"
+          },
+          "system_id": {
+            "title": "System Id",
+            "type": "string"
+          },
+          "value_streams": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OrganisationReference"
+            },
+            "title": "Value Streams",
+            "type": "array"
+          }
+        },
+        "required": [
+          "concept_id",
+          "system_id"
+        ],
+        "title": "CapabilityOwners",
+        "type": "object"
+      },
       "ChangeRequestReceipt": {
         "properties": {
           "approval_id": {
@@ -283,6 +718,18 @@
         ],
         "title": "ChangeRequestReceipt",
         "type": "object"
+      },
+      "ChangeType": {
+        "description": "What the requirement does to a system: a closed list.",
+        "enum": [
+          "new",
+          "modify",
+          "configure",
+          "retire",
+          "consume_only"
+        ],
+        "title": "ChangeType",
+        "type": "string"
       },
       "CitedPassage": {
         "properties": {
@@ -355,6 +802,51 @@
           "text"
         ],
         "title": "CitedPassage",
+        "type": "object"
+      },
+      "ConceptCoverage": {
+        "description": "One needed concept: which offerings compose it, which systems realise it, and whether\nthe offering in question covers it.",
+        "properties": {
+          "composed_by": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Composed By",
+            "type": "array"
+          },
+          "concept_id": {
+            "title": "Concept Id",
+            "type": "string"
+          },
+          "covered": {
+            "title": "Covered",
+            "type": "boolean"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "realised_by": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Realised By",
+            "type": "array"
+          }
+        },
+        "required": [
+          "concept_id",
+          "label",
+          "path",
+          "composed_by",
+          "realised_by",
+          "covered"
+        ],
+        "title": "ConceptCoverage",
         "type": "object"
       },
       "DomainSuggestion": {
@@ -789,6 +1281,31 @@
         "title": "ExportSystem",
         "type": "object"
       },
+      "FacetKind": {
+        "description": "One aspect of a requirement, as the review's retrieval design lists them.",
+        "enum": [
+          "need",
+          "offering",
+          "segment",
+          "family",
+          "channel",
+          "order_type",
+          "characteristic",
+          "excluded",
+          "data",
+          "change_type"
+        ],
+        "title": "FacetKind",
+        "type": "string"
+      },
+      "GapKind": {
+        "enum": [
+          "capability",
+          "staffing"
+        ],
+        "title": "GapKind",
+        "type": "string"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1120,6 +1637,76 @@
         "title": "JourneyStep",
         "type": "object"
       },
+      "LinkedConcept": {
+        "properties": {
+          "concept_id": {
+            "title": "Concept Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "weak": {
+            "default": false,
+            "title": "Weak",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "concept_id",
+          "label",
+          "path"
+        ],
+        "title": "LinkedConcept",
+        "type": "object"
+      },
+      "LinkedFacet": {
+        "description": "A facet, with the concepts it links to when it is a need.",
+        "properties": {
+          "concepts": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/LinkedConcept"
+            },
+            "title": "Concepts",
+            "type": "array"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/FacetKind"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "ref_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ref Id"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "text",
+          "quote"
+        ],
+        "title": "LinkedFacet",
+        "type": "object"
+      },
       "OfferingDuty": {
         "description": "One system's part in delivering one component of a product offering.",
         "properties": {
@@ -1178,6 +1765,41 @@
         "title": "OrganisationReference",
         "type": "object"
       },
+      "PathKind": {
+        "enum": [
+          "facet",
+          "concept",
+          "offering",
+          "component",
+          "channel",
+          "system"
+        ],
+        "title": "PathKind",
+        "type": "string"
+      },
+      "PathStep": {
+        "description": "One step of the path that found a system, by release id and its label.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/PathKind"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "label"
+        ],
+        "title": "PathStep",
+        "type": "object"
+      },
       "ProductContext": {
         "description": "A product offering the item's text names, and the systems that deliver it (ADR-0097).\n\nAdvice for a reviewer, never mapped impact: the item named the offering, one\nof its components or both, and these are the catalogue's responsibilities\nfor what it named, for the order type it named when it named one.",
         "properties": {
@@ -1222,6 +1844,39 @@
           "matched_terms"
         ],
         "title": "ProductContext",
+        "type": "object"
+      },
+      "ProductVerdict": {
+        "enum": [
+          "change_existing_offering",
+          "new_plan",
+          "new_offering_in_family",
+          "new_product_line"
+        ],
+        "title": "ProductVerdict",
+        "type": "string"
+      },
+      "ProposedComponent": {
+        "properties": {
+          "component_id": {
+            "title": "Component Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "offering_id": {
+            "title": "Offering Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "offering_id",
+          "component_id",
+          "name"
+        ],
+        "title": "ProposedComponent",
         "type": "object"
       },
       "PublishedReference": {
@@ -1310,6 +1965,31 @@
         "title": "PublishedResponse",
         "type": "object"
       },
+      "QuestionOption": {
+        "description": "An answer built from the catalogue; no id for an answer it does not hold yet.",
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "title": "QuestionOption",
+        "type": "object"
+      },
       "ReferenceEvidence": {
         "description": "Exact citable passage plus bounded, non-authoritative retrieval context.",
         "properties": {
@@ -1361,6 +2041,51 @@
           "query"
         ],
         "title": "SearchRequest",
+        "type": "object"
+      },
+      "SeatReference": {
+        "properties": {
+          "person_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Person Id"
+          },
+          "person_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Person Name"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "scoped": {
+            "default": false,
+            "title": "Scoped",
+            "type": "boolean"
+          },
+          "squad_id": {
+            "title": "Squad Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "squad_id",
+          "role"
+        ],
+        "title": "SeatReference",
         "type": "object"
       },
       "SystemCapability": {
@@ -1436,6 +2161,16 @@
             "title": "Catalogued",
             "type": "boolean"
           },
+          "change_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChangeType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "constraints": {
             "default": [],
             "items": {
@@ -1452,6 +2187,17 @@
             "title": "Name",
             "type": "string"
           },
+          "paths": {
+            "default": [],
+            "items": {
+              "items": {
+                "$ref": "#/components/schemas/PathStep"
+              },
+              "type": "array"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
           "products": {
             "default": [],
             "items": {
@@ -1459,6 +2205,16 @@
             },
             "title": "Products",
             "type": "array"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SystemRole"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "squads": {
             "default": [],
@@ -1484,6 +2240,17 @@
         ],
         "title": "SystemReference",
         "type": "object"
+      },
+      "SystemRole": {
+        "description": "Why an assessment names a system.",
+        "enum": [
+          "primary",
+          "channel",
+          "named",
+          "supporting"
+        ],
+        "title": "SystemRole",
+        "type": "string"
       },
       "ValidationError": {
         "properties": {
@@ -1542,6 +2309,45 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/internal/architecture/assess": {
+      "post": {
+        "description": "A whole requirement's product verdict, systems, gaps and owners (ontology plan Phase 3).\n\nWith no verdict yet, the answer carries the questions to ask instead.",
+        "operationId": "assess_internal_architecture_assess_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssessmentQuery"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArchitectureAssessment"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Assess"
+      }
+    },
     "/internal/architecture/match": {
       "post": {
         "operationId": "match_internal_architecture_match_post",

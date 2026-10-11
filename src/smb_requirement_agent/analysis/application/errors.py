@@ -27,6 +27,10 @@ class IntentProposalNotFoundError(RequirementAnalysisError):
     """A requested intent proposal does not exist in the current analysis."""
 
 
+class ProductImpactNotFoundError(RequirementAnalysisError):
+    """The current analysis has no product impact to decide."""
+
+
 class AnalysisConfirmationRequiredError(RequirementAnalysisError):
     """Backlog generation was requested before the analysis was confirmed."""
 
