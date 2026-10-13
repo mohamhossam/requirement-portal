@@ -1,0 +1,24 @@
+# Local overlay: serves Keycloak as https://keycloak.localhost:8443, a name that browsers
+# send to this machine and that the requirement-platform containers resolve on their
+# shared network, so the browser and the API see the same issuer.
+#
+#   docker compose -f deploy/keycloak/compose.yaml -f deploy/keycloak/compose.local.yaml up -d
+#
+# Start the requirement-platform stack first: this joins its network.
+name: keycloak-local
+
+services:
+  postgres:
+    networks: [default]
+  keycloak:
+    environment:
+      KC_HOSTNAME: https://keycloak.localhost:8443
+    networks:
+      default:
+      requirement-platform:
+        aliases: [keycloak.localhost]
+
+networks:
+  requirement-platform:
+    name: requirement-platform_default
+    external: true

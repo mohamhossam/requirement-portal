@@ -49,6 +49,12 @@ restoring a backup.
   `product_impact` (the decided verdict, its offering and release, and the draft) to the
   approved-backlog export and the JSON download; a knowledge portal older than v0.6.0 ignores
   it. Needs knowledge-portal v0.6.0 for the draft. No migration.
+- **Production mode on one machine against the local Keycloak.** Two optional overlays,
+  `deploy/keycloak/compose.local.yaml` and `deploy/compose.local-oidc.yaml`, run the Docker stack
+  with `APP_ENV=production` and OIDC sign-in through `https://keycloak.localhost:8443`
+  (`docs/operations/keycloak-login.md`, "Production mode on one machine"). Not for a shared
+  deployment. `.gitattributes` now checks shell scripts out with LF line endings: on Windows, a
+  CRLF checkout left the web container restarting with "not found". No migration.
 
 ## v0.1.0
 

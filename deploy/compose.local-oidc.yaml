@@ -1,0 +1,17 @@
+# Local overlay for production mode against the local Keycloak
+# (deploy/keycloak/compose.local.yaml): the API and worker trust its local CA on top of
+# the public CAs, so OIDC discovery and JWKS verification stay switched on.
+#
+#   docker compose -f deploy/compose.production.yaml -f deploy/compose.local-oidc.yaml up -d
+
+x-local-ca: &local-ca
+  environment:
+    SSL_CERT_FILE: /etc/ssl/local/ca-bundle.crt
+  volumes:
+    - ./keycloak/certs/ca-bundle.crt:/etc/ssl/local/ca-bundle.crt:ro
+
+services:
+  api: *local-ca
+  worker: *local-ca
+  maintenance: *local-ca
+  migrate: *local-ca
