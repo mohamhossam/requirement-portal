@@ -11,6 +11,11 @@ restoring a backup.
 
 ## Unreleased
 
+- **A figure the owner gave in an answer no longer fails analysis.** The check that refuses
+  numeric targets the model invents (ADR-0025) now also counts the owner's clarification answers
+  and accepted or edited intent decisions as support, not only the requirement and its documents.
+  Resolving a question answered with "1000 max for off-net calls" used to fail with "The service
+  could not complete the request". No migration.
 - **Publishing approved backlogs to Azure DevOps (Slice 12, ADR-0112).** Off by default
   (`ADO_PUBLISHER=none`). To turn it on, set `ADO_PUBLISHER=azure_devops`, `ADO_ORGANIZATION_URL`,
   `ADO_PROJECT` and `ADO_PERSONAL_ACCESS_TOKEN` (or `_FILE`), a token with Work Items read and
