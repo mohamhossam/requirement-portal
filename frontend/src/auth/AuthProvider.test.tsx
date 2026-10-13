@@ -65,7 +65,8 @@ afterEach(() => {
 });
 
 function TestLocation() {
-  return <output aria-label="location">{useLocation().pathname}{useLocation().search}</output>;
+  const { pathname, search, hash } = useLocation();
+  return <output aria-label="location">{pathname}{search}{hash}</output>;
 }
 
 function SignOutButton() {
@@ -187,7 +188,7 @@ it("rejects external and authentication-loop return destinations", () => {
   expect(safeAuthReturnPath("/requirements/abc#review")).toBe("/requirements/abc#review");
 });
 
-it("completes the OIDC callback and restores the saved browser path", async () => {
+it("completes the OIDC callback and routes to the saved return path's page", async () => {
   vi.spyOn(api, "getIdentityConfig").mockResolvedValue(oidcConfig);
   vi.spyOn(api, "getCurrentActor").mockResolvedValue(owner);
   oidc.manager.signinRedirectCallback.mockResolvedValue({ access_token: "token", expired: false });
@@ -198,17 +199,71 @@ it("completes the OIDC callback and restores the saved browser path", async () =
     <QueryClientProvider client={client}>
       <AuthProvider>
         <MemoryRouter initialEntries={["/auth/callback?code=authorization-code"]}>
-          <AuthGate><p>Protected workspace</p></AuthGate>
+          <AuthGate>
+            <Routes>
+              <Route path="/reports" element={<><h1>Reports</h1><TestLocation /></>} />
+              <Route path="*" element={<h1>Somewhere else</h1>} />
+            </Routes>
+          </AuthGate>
         </MemoryRouter>
       </AuthProvider>
     </QueryClientProvider>,
   );
 
-  expect(await screen.findByText("Protected workspace")).toBeInTheDocument();
+  // The router itself moves, not just the address bar.
+  expect(await screen.findByRole("heading", { name: "Reports" })).toBeInTheDocument();
+  expect(screen.queryByRole("heading", { name: "Somewhere else" })).not.toBeInTheDocument();
+  expect(screen.getByLabelText("location")).toHaveTextContent("/reports?weeks=4#blockers");
   expect(oidc.manager.signinRedirectCallback).toHaveBeenCalledOnce();
-  expect(window.location.pathname).toBe("/reports");
-  expect(window.location.hash).toBe("#blockers");
   expect(sessionStorage.getItem("requirement-ai.auth-return-path")).toBeNull();
+});
+
+it("keeps the return path when the OIDC callback fails", async () => {
+  vi.spyOn(api, "getIdentityConfig").mockResolvedValue(oidcConfig);
+  oidc.manager.signinRedirectCallback.mockRejectedValue(new Error("No matching state found in storage."));
+  sessionStorage.setItem("requirement-ai.auth-return-path", "/reports?weeks=4");
+  window.history.replaceState({}, "", "/auth/callback?code=authorization-code");
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(
+    <QueryClientProvider client={client}>
+      <AuthProvider>
+        <MemoryRouter initialEntries={["/auth/callback?code=authorization-code"]}>
+          <AuthGate><p>Protected workspace</p></AuthGate>
+          <TestLocation />
+        </MemoryRouter>
+      </AuthProvider>
+    </QueryClientProvider>,
+  );
+
+  expect(await screen.findByRole("heading", { name: "Welcome back" })).toBeInTheDocument();
+  expect(screen.getByLabelText("location")).toHaveTextContent("/login?returnTo=%2Freports%3Fweeks%3D4");
+});
+
+it("renders nothing in the silent-renew iframe", async () => {
+  vi.spyOn(api, "getIdentityConfig").mockResolvedValue(oidcConfig);
+  vi.spyOn(api, "getCurrentActor").mockResolvedValue(owner);
+  oidc.manager.signinSilentCallback.mockResolvedValue(undefined);
+  oidc.manager.getUser.mockResolvedValue({ access_token: "token", expired: false });
+  vi.spyOn(window, "top", "get").mockReturnValue({} as Window);
+  window.history.replaceState({}, "", "/auth/silent-callback?code=authorization-code");
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(
+    <QueryClientProvider client={client}>
+      <AuthProvider>
+        <MemoryRouter initialEntries={["/auth/silent-callback?code=authorization-code"]}>
+          <AuthGate><p>Protected workspace</p></AuthGate>
+          <TestLocation />
+        </MemoryRouter>
+      </AuthProvider>
+    </QueryClientProvider>,
+  );
+
+  await waitFor(() => expect(oidc.manager.signinSilentCallback).toHaveBeenCalledOnce());
+  await waitFor(() => expect(api.getCurrentActor).toHaveBeenCalled());
+  // Let the provider finish settling, so the gate has had its chance to render.
+  await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+  expect(screen.queryByText("Protected workspace")).not.toBeInTheDocument();
+  expect(screen.getByLabelText("location")).toHaveTextContent("/auth/silent-callback");
 });
 
 it("clears actor-bound query state before provider logout", async () => {

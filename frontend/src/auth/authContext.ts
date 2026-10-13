@@ -10,6 +10,8 @@ export type AuthState = {
   error: string | null;
   sessionExpired: boolean;
   signingInChoice: string | null;
+  /** Where an OIDC redirect sign-in returns to, once it has settled. */
+  callbackReturnPath: string | null;
   signIn: (choiceId?: string) => Promise<void>;
   signOut: () => Promise<void>;
   switchFakeActor: (actorId: string) => Promise<void>;
