@@ -28,6 +28,7 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     ClarificationKind,
     HumanClarification,
     IntentProposal,
+    IntentProposalStatus,
 )
 from smb_requirement_agent.analysis.infrastructure.llm.analysis_mappers import (
     analysis_evidence_subjects,
@@ -124,12 +125,21 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
         active_questions: Sequence[ActiveQuestionContext] = (),
     ) -> RequirementAnalysisCandidate:
         structured_context = format_structured_context(requirement)
+        # Everything a person supplied supports a figure in a proposal: the
+        # source, its documents, their answers and the intent they confirmed.
         source_text = "\n".join(
             (
                 requirement.title.value,
                 requirement.description.value,
                 structured_context,
                 *(item["extracted_text"] for item in documents),
+                *(item.answer for item in clarifications),
+                *(
+                    text
+                    for item in intent_decisions
+                    if item.status in (IntentProposalStatus.ACCEPTED, IntentProposalStatus.EDITED)
+                    for text in (item.effective_statement or "", *item.effective_success_measures)
+                ),
             )
         )
         user_prompt = build_user_prompt(

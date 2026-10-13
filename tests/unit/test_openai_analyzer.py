@@ -440,6 +440,76 @@ def test_invented_numeric_target_in_intent_proposal_is_rejected(
     assert "numeric target" in str(raised.value.__cause__)
 
 
+def _limit_rule_analysis() -> RequirementAnalysisSchema:
+    return RequirementAnalysisSchema(
+        known_facts=["Calls are capped."],
+        business_rule_proposals=[
+            IntentStatementProposalSchema(
+                statement="Off-net calls are capped at 1000 per month.",
+                rationale="The owner stated the off-net limit.",
+            ),
+        ],
+    )
+
+
+def _limit_decision(status: IntentProposalStatus) -> IntentProposal:
+    return IntentProposal(
+        IntentProposalId("owner-limit"),
+        IntentProposalKind.CONSTRAINT,
+        "Off-net calls are limited to 1000.",
+        "The owner named the limit.",
+    ).decide(status, ActorSnapshot(ActorId("owner"), "Owner"), TEST_NOW, 1)
+
+
+@patch("smb_requirement_agent.analysis.infrastructure.llm.openai_adapters.OpenAI")
+def test_numeric_target_from_a_human_answer_is_supported(
+    mock_openai_class: MagicMock, requirement_with_outcome: Requirement
+) -> None:
+    client = _client_returning(_limit_rule_analysis())
+    answer = HumanClarification(
+        ClarificationKind.OPEN_QUESTION,
+        "What is the off-net limit?",
+        "No limit on-net, 1000 max for off-net calls.",
+    )
+
+    result = OpenAIRequirementAnalyzer(
+        client, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
+    ).analyze(requirement_with_outcome, (answer,))
+
+    assert [item["statement"] for item in result["intent_proposals"]] == [
+        "Off-net calls are capped at 1000 per month."
+    ]
+
+
+@pytest.mark.parametrize(
+    ("status", "supported"),
+    [
+        (IntentProposalStatus.ACCEPTED, True),
+        (IntentProposalStatus.REJECTED, False),
+    ],
+)
+@patch("smb_requirement_agent.analysis.infrastructure.llm.openai_adapters.OpenAI")
+def test_numeric_target_is_supported_only_by_confirmed_intent(
+    mock_openai_class: MagicMock,
+    requirement_with_outcome: Requirement,
+    status: IntentProposalStatus,
+    supported: bool,
+) -> None:
+    client = _client_returning(_limit_rule_analysis())
+    analyzer = OpenAIRequirementAnalyzer(
+        client, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
+    )
+
+    def analyze() -> object:
+        return analyzer.analyze(requirement_with_outcome, (), (), (_limit_decision(status),))
+
+    if supported:
+        analyze()
+    else:
+        with pytest.raises(RequirementAnalysisGenerationError):
+            analyze()
+
+
 def test_attachment_only_packet_prompt_preserves_source_and_application_association() -> None:
     from smb_requirement_agent.analysis.infrastructure.llm.prompts.analysis_prompt import (
         REQUIREMENT_ANALYSIS_SYSTEM_PROMPT,
