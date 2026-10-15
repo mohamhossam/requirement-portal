@@ -11,6 +11,15 @@ restoring a backup.
 
 ## Unreleased
 
+- **Breakdown prompts align with the published SAFe guidance** (`epic-v4`, `feature-v7`,
+  `story-v7`). Epic generation now receives the decided product impact and unconfirmed
+  evidence (dependencies, ambiguities) the Feature/Story prompts already saw, and asks for a
+  SAFe-style value statement; the Feature prompt frames the outcome as a benefit hypothesis,
+  prefers customer-recognizable splits over `component_system`, orders MVP drops first, and
+  its schema rejects an empty Feature set; the Story prompt adds the simple/complex and
+  defer-performance splitting patterns and requires observable acceptance `then` clauses that
+  cover evidence-supported failure behavior. Artifacts generated under the old prompt
+  versions keep their recorded provenance; no migration.
 - **Every attachment upload is malware-scanned.** The synchronous attachment routes
   (`POST …/attachments` and `…/attachments/{id}/versions`, for Requirements and drafts) now run
   the same fail-closed scan as background ingestion; previously only ingestion scanned. A flagged

@@ -14,17 +14,20 @@ from smb_requirement_agent.breakdown.infrastructure.llm.prompts.generation_guida
     render_guidance,
 )
 
-PROMPT_VERSION = "feature-v6"
+PROMPT_VERSION = "feature-v7"
 
 FEATURE_SYSTEM_PROMPT = """You are an expert Agile Consultant (SAFe-aligned) supporting a
 Telecom SMB value stream.
 
 Your task is to split ONE approved Epic into Features.
 
-A Feature is one customer-recognizable capability with one measurable outcome, sized to
-fit a single Program Increment. It is owned by a Product Manager, not a squad.
+A Feature is one customer-recognizable capability with one measurable outcome - its benefit
+hypothesis, the one proposed measurable business or customer benefit - sized to fit a single
+Program Increment. It is owned by a Product Manager, not a squad.
 
-SPLITTING STRATEGIES - use one per Feature and name which you used:
+SPLITTING STRATEGIES - use one per Feature and name which you used. Prefer splits a customer
+recognizes (journey_stage, business_variant, mvp_vs_later, channel); use component_system only
+when a system boundary genuinely forces separate delivery:
 - component_system: each backend system boundary (billing, provisioning/OM, device/CPE,
   channel) is a natural Feature boundary.
 - journey_stage: Lead-to-Order, Order-to-Delivery, Use/Support, Retention/Cessation.
@@ -55,6 +58,16 @@ GUARDRAILS (do not violate):
 11. Human-provided clarifications are confirmed context supplied by the reviewer.
     They are distinct from facts extracted from the original requirement, but may
     be used as settled input.
+12. Order the features array in intended delivery sequence: MVP Features before later drops.
+
+EXAMPLE FEATURE (shape only - never copy its content):
+  name: "Bundle ordering in the B2B Portal"
+  outcome: "SMB customers order the bundle themselves in the B2B Portal, reducing assisted
+  ordering for bundles."
+  delivery_drop: "mvp", splitting_pattern: "channel",
+  splitting_rationale: "The requirement names the B2B Portal and the SMB App as separate
+  ordering channels with separate journeys."
+  REJECTED: "As an SMB customer, I want to order a bundle ..." (user-story voice).
 
 Return the result strictly conforming to the requested JSON schema.
 """

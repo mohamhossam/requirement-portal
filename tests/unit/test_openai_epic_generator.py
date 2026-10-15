@@ -189,6 +189,46 @@ def test_unconfirmed_analysis_is_labelled_in_the_prompt(
 
 
 @patch("smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters.OpenAI")
+def test_decided_product_impact_is_rendered_into_the_prompt(
+    mock_openai: MagicMock, requirement: Requirement, analysis: RequirementAnalysis
+) -> None:
+    from smb_requirement_agent.analysis.application.use_cases.product_impact import product_impact
+    from smb_requirement_agent.analysis.domain.product_impact import ProductImpactDecision
+    from smb_requirement_agent.breakdown.application.ports.generation_guidance import (
+        GenerationGuidance,
+    )
+    from tests.unit.analysis.test_product_impact import ANSWER
+
+    client = _client_returning(_parsed())
+    mock_openai.return_value = client
+    decided = product_impact(ANSWER, datetime(2026, 10, 10, 9, 0, tzinfo=UTC)).decide(
+        ProductImpactDecision.ACCEPTED, FAKE_ACTORS[0], datetime(2026, 10, 10, 9, 5, tzinfo=UTC)
+    )
+
+    OpenAIEpicGenerator(
+        mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
+    ).generate(requirement, analysis, guidance=GenerationGuidance(product_impact=decided))
+
+    user_prompt = client.chat.completions.parse.call_args.kwargs["messages"][1]["content"]
+    assert "DECIDED PRODUCT IMPACT" in user_prompt
+
+
+@patch("smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters.OpenAI")
+def test_default_guidance_adds_no_decided_impact_block(
+    mock_openai: MagicMock, requirement: Requirement, analysis: RequirementAnalysis
+) -> None:
+    client = _client_returning(_parsed())
+    mock_openai.return_value = client
+
+    OpenAIEpicGenerator(
+        mock_openai.return_value, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
+    ).generate(requirement, analysis)
+
+    user_prompt = client.chat.completions.parse.call_args.kwargs["messages"][1]["content"]
+    assert "DECIDED PRODUCT IMPACT" not in user_prompt
+
+
+@patch("smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters.OpenAI")
 def test_prompt_includes_only_owner_confirmed_intent_proposals(
     mock_openai: MagicMock, requirement: Requirement, analysis: RequirementAnalysis
 ) -> None:

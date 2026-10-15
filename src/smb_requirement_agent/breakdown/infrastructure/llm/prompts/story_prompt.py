@@ -12,7 +12,7 @@ from smb_requirement_agent.breakdown.infrastructure.llm.prompts.generation_guida
     render_guidance,
 )
 
-PROMPT_VERSION = "story-v6"
+PROMPT_VERSION = "story-v7"
 
 SPLIT_OPERATION = """\
 Split the one source Story into TWO OR MORE distinct, smaller Stories.
@@ -43,7 +43,8 @@ RULES:
 1. Every Story traces only to the supplied Feature and fits one 2-3 week sprint.
 2. The rendered voice must be: As a [role], I want [action], so that [value].
 3. Split by workflow step, business rule, CRUD operation, data variation, channel variation,
-   happy path versus edge case, or a time-boxed spike when needed.
+   happy path versus edge case, simple case versus complex variations, deferring a stated
+   performance or NFR target to its own Story, or a time-boxed spike when needed.
 4. Ship the happy path first. Sequence edge cases and NFRs; never silently drop them.
 5. Do not invent systems, channels, eligibility rules, or business behavior absent from the input.
 6. Assumptions and open questions are unconfirmed; human clarifications are confirmed context.
@@ -61,6 +62,10 @@ RULES:
     Keep an unknown time box explicit for team agreement; do not invent an approved duration.
     Do not use "the system complies with protocols" as if it were a defined acceptance policy.
 13. Use a beneficiary role supported by the context. Security/risk reduction is business value.
+14. Every `then` states an observable outcome a tester can check; never "works correctly" or
+    "complies". When a SUPPORTED business rule or constraint defines failure or boundary
+    behavior for this Story's action, cover it with a criterion; do not invent failure
+    behavior the evidence does not define.
 Return only content conforming to the requested JSON schema.
 """
 
@@ -106,10 +111,11 @@ Name: {feature_name}
 Outcome: {feature_outcome}
 Parent Epic: {epic_name} — {epic_outcome}
 
-BUSINESS REQUIREMENT
+--- BUSINESS REQUIREMENT CONTENT START ---
 Title: {title}
 Description: {description}
 Confirmed desired outcome: {desired_outcome or "(not supplied)"}
+--- BUSINESS REQUIREMENT CONTENT END ---
 
 SUPPORTED ANALYSIS
 Known facts:

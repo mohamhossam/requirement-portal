@@ -18,6 +18,15 @@ from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration
 from smb_requirement_agent.analysis.application.use_cases.analyze_requirement import (
     AnalyzeRequirement,
 )
+from smb_requirement_agent.analysis.application.use_cases.product_impact import product_impact
+from smb_requirement_agent.analysis.domain.product_impact import (
+    ProductImpactDecision,
+    ProductImpactStatus,
+)
+from smb_requirement_agent.analysis.domain.value_objects import (
+    Ambiguity,
+    PotentialDependency,
+)
 from smb_requirement_agent.analysis.infrastructure.in_memory_analysis_audit_repository import (
     InMemoryAnalysisAuditRepository,
 )
@@ -93,6 +102,7 @@ from tests.conftest import (
 )
 from tests.reference_helpers import EmptyReferences
 from tests.unit.access_service import access_service_for
+from tests.unit.analysis.test_product_impact import ANSWER
 from tests.unit.owned_requirement_creator import OwnedRequirementCreator
 from tests.unit.transaction_stub import NoOpTransactionManager
 
@@ -262,6 +272,46 @@ class TestGenerateEpic:
         assert epic.provenance.generated_at == GENERATED_AT
         assert epic.provenance.model == FAKE_MODEL
         assert epic.provenance.prompt_version == FAKE_PROMPT_VERSION
+
+    def test_generator_receives_decided_impact_and_unconfirmed_evidence(
+        self, world: World
+    ) -> None:
+        """Epic guidance carries the reviewer's decision and unconfirmed evidence,
+        but never the architecture catalogue (implementation-level advice)."""
+        requirement = world.analysed_requirement()
+        stored = world.analyses.get_by_requirement_id(requirement.id)
+        assert stored is not None
+        decided = product_impact(ANSWER, GENERATED_AT).decide(
+            ProductImpactDecision.ACCEPTED, FAKE_ACTORS[0], GENERATED_AT
+        )
+        world.analyses.save(
+            replace(
+                stored,
+                version=stored.version + 1,
+                product_impact=decided,
+                product_impact_status=ProductImpactStatus.ASSESSED,
+                ambiguities=(Ambiguity(statement="'in channel'", reason="Undefined"),),
+                potential_dependencies=(PotentialDependency("Provisioning"),),
+            )
+        )
+
+        world.generate.execute(FAKE_ACTORS[0], requirement.id)
+
+        guidance = world.generator.last_guidance
+        assert guidance is not None
+        assert guidance.product_impact == decided
+        assert guidance.ambiguities == ("'in channel'",)
+        assert guidance.potential_dependencies == ("Provisioning",)
+        assert guidance.architecture is None
+
+    def test_an_undecided_impact_is_not_passed_to_the_generator(self, world: World) -> None:
+        requirement = world.analysed_requirement()
+
+        world.generate.execute(FAKE_ACTORS[0], requirement.id)
+
+        guidance = world.generator.last_guidance
+        assert guidance is not None
+        assert guidance.product_impact is None
 
     def test_unanalysed_requirement_cannot_produce_an_epic(self, world: World) -> None:
         """The analysis is a required input, not optional enrichment."""

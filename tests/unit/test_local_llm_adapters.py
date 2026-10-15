@@ -1800,6 +1800,14 @@ def test_local_features_drop_blank_items_and_preserve_provenance(
     assert result[0]["model"] == "local-model"
 
 
+def test_feature_set_schema_rejects_an_empty_set() -> None:
+    """The provider-facing JSON schema itself demands at least one Feature."""
+    import pydantic
+
+    with pytest.raises(pydantic.ValidationError):
+        FeatureSetSchema(features=[])
+
+
 @patch(
     "smb_requirement_agent.breakdown.infrastructure.llm.local_feature_generator.LocalStructuredOutputClient"
 )
@@ -1809,7 +1817,9 @@ def test_local_features_reject_empty_result(
     analysis: RequirementAnalysis,
     epic: Epic,
 ) -> None:
-    client_type.return_value.parse.return_value = FeatureSetSchema()
+    # Bypass validation: the schema itself now rejects an empty set (min_length=1),
+    # but the mapper must still guard against a provider handing one back.
+    client_type.return_value.parse.return_value = FeatureSetSchema.model_construct(features=[])
     generator = LocalFeatureGenerator(
         base_url="http://127.0.0.1:1234/v1",
         http_client=httpx.Client(),
