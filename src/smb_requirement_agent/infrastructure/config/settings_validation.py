@@ -94,12 +94,13 @@ def validate_settings(settings: Settings) -> None:
         raise ConfigurationError("OTEL_TRACES_SAMPLER_ARG must be a number from 0 to 1.")
     if settings.library_scan_mode not in {"clamav", "offline"}:
         raise ConfigurationError("ATTACHMENT_SCAN_MODE must be clamav or offline.")
-    if settings.library_scan_mode == "offline" and (
-        settings.persistence_provider is not PersistenceProvider.MEMORY
-        or settings.identity_provider is not IdentityProvider.FAKE
+    if (
+        settings.library_scan_mode == "offline"
+        and settings.identity_provider is not IdentityProvider.FAKE
     ):
         raise ConfigurationError(
-            "ATTACHMENT_SCAN_MODE=offline requires memory persistence and fake identity."
+            "ATTACHMENT_SCAN_MODE=offline requires fake identity: it is a deterministic "
+            "development adapter, not malware protection."
         )
     if not settings.library_scanner_host.strip() or not 1 <= settings.library_scanner_port <= 65535:
         raise ConfigurationError("ATTACHMENT_SCANNER_HOST and ATTACHMENT_SCANNER_PORT are invalid.")
@@ -308,3 +309,8 @@ def _validate_production_operation(settings: Settings) -> None:
         )
     if settings.log_format is not LogFormat.JSON:
         raise ConfigurationError("APP_ENV=production requires LOG_FORMAT=json.")
+    if settings.provider_daily_token_budget < 1:
+        raise ConfigurationError(
+            "APP_ENV=production requires PROVIDER_DAILY_TOKEN_BUDGET: a day's AI spending "
+            "stops at this many tokens instead of running unmetered (0 records only)."
+        )

@@ -77,6 +77,7 @@ def test_attachment_writes_mark_the_requirement_and_reach_the_index(isolated_url
     container = build_container(
         Settings(
             llm_provider=LLMProvider.FAKE,
+            library_scan_mode="offline",
             persistence_provider=PersistenceProvider.POSTGRES,
             database_url=isolated_url,
         )
@@ -132,6 +133,7 @@ def test_a_draft_attachment_joins_the_index_when_its_draft_is_promoted(isolated_
     container = build_container(
         Settings(
             llm_provider=LLMProvider.FAKE,
+            library_scan_mode="offline",
             persistence_provider=PersistenceProvider.POSTGRES,
             database_url=isolated_url,
         )

@@ -11,6 +11,22 @@ restoring a backup.
 
 ## Unreleased
 
+- **Every attachment upload is malware-scanned.** The synchronous attachment routes
+  (`POST …/attachments` and `…/attachments/{id}/versions`, for Requirements and drafts) now run
+  the same fail-closed scan as background ingestion; previously only ingestion scanned. A flagged
+  file answers 422, and an unreachable scanner refuses the upload instead of accepting it.
+  `ATTACHMENT_SCAN_MODE=offline` now requires only fake identity (it previously also demanded
+  memory persistence); production still refuses it through OIDC. No migration.
+- **The backend image fails closed.** `deploy/api/Dockerfile` sets `APP_ENV=production`, so the
+  image deployed with no environment demands production configuration (OIDC, PostgreSQL, a real
+  model provider) instead of booting with the fake development identity. Development and demo
+  manifests already override `APP_ENV`. In production the API now also answers 404 on
+  `/openapi.json`, `/docs` and `/redoc` itself, instead of relying on the bundled edge to hide
+  them. No migration.
+- **Production requires a daily AI spend ceiling.** `APP_ENV=production` refuses to start with
+  `PROVIDER_DAILY_TOKEN_BUDGET` unset or 0 (record-only). Upgrade step: set it in
+  `deploy/production.env` to the organization's daily token budget and keep the
+  `DailyTokenBudgetExceeded` alert threshold in step. No migration.
 - **A figure the owner gave in an answer no longer fails analysis.** The check that refuses
   numeric targets the model invents (ADR-0025) now also counts the owner's clarification answers
   and accepted or edited intent decisions as support, not only the requirement and its documents.

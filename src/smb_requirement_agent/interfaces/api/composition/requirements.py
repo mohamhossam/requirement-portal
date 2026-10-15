@@ -194,6 +194,7 @@ def build_documents(
     upload = UploadDocument(
         persistence.document_repository,
         persistence.document_storage,
+        scanner,
         extractor,
         persistence.requirement_repository,
         persistence.requirement_draft_repository,

@@ -18,6 +18,7 @@ from smb_requirement_agent.application.errors import (
 from smb_requirement_agent.identity.infrastructure.fake_identity import FAKE_ACTORS
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.interfaces.api.container import Container, build_container
+from smb_requirement_agent.interfaces.api.main import create_app
 from smb_requirement_agent.requirements.application.use_cases.create_requirement import (
     CreateRequirementInput,
 )
@@ -363,3 +364,53 @@ def test_word_attachment_prose_has_neutral_review_locations(client: TestClient) 
     assert version["evidence_blocks"][1]["label"] == "Paragraph 2"
     assert version["evidence_blocks"][1]["section_path"] == ["Heading at paragraph 1"]
     assert version["evidence_blocks"][1]["text"] == "Private paragraph XGPON التغطية مطلوبة."
+
+
+# The offline scanner's deterministic detection marker (smb_kernel OfflineDocumentScanner).
+_FLAGGED = b"Policy A EICAR-STANDARD-ANTIVIRUS-TEST-FILE"
+
+
+def test_synchronous_attachment_upload_is_scanned_and_rejected(client: TestClient) -> None:
+    requirement_id = _create_requirement(client)
+    response = client.post(
+        f"/requirements/{requirement_id}/attachments",
+        files={"file": ("policy.txt", _FLAGGED, "text/plain")},
+    )
+    assert response.status_code == 422
+    assert response.json()["code"] == "unsupported_document"
+    assert client.get(f"/requirements/{requirement_id}/attachments").json() == []
+
+
+def test_synchronous_version_upload_is_scanned_and_rejected(client: TestClient) -> None:
+    requirement_id = _create_requirement(client)
+    uploaded = _upload_txt(client, requirement_id)
+    response = client.post(
+        f"/requirements/{requirement_id}/attachments/{uploaded['id']}/versions",
+        files={"file": ("policy.txt", _FLAGGED, "text/plain")},
+        data={"expected_version": str(uploaded["version"])},
+    )
+    assert response.status_code == 422
+    assert response.json()["code"] == "unsupported_document"
+    document = client.get(f"/documents/{uploaded['id']}").json()
+    assert len(document["versions"]) == 1
+
+
+def test_synchronous_upload_fails_closed_when_the_scanner_is_unreachable() -> None:
+    # ClamAV mode against a port nothing listens on: no verdict means no upload.
+    container = build_container(
+        replace(
+            FAKE_PROVIDER_SETTINGS,
+            library_scan_mode="clamav",
+            library_scanner_host="127.0.0.1",
+            library_scanner_port=9,
+        )
+    )
+    with TestClient(create_app(lambda: container)) as unscanned_client:
+        requirement_id = _create_requirement(unscanned_client)
+        response = unscanned_client.post(
+            f"/requirements/{requirement_id}/attachments",
+            files={"file": ("policy.txt", b"Policy A", "text/plain")},
+        )
+        assert response.status_code == 422
+        assert response.json()["code"] == "document_extraction"
+        assert unscanned_client.get(f"/requirements/{requirement_id}/attachments").json() == []

@@ -10,6 +10,7 @@ from pathlib import PurePosixPath, PureWindowsPath
 
 from smb_kernel.documents.ports import (
     DocumentExtractorPort,
+    DocumentScannerPort,
     DocumentStoragePort,
     ExtractedDocument,
 )
@@ -133,6 +134,7 @@ class UploadDocument:
         self,
         documents: DocumentRepositoryPort,
         storage: DocumentStoragePort,
+        scanner: DocumentScannerPort,
         extractor: DocumentExtractorPort,
         requirements: RequirementRepositoryPort,
         drafts: RequirementDraftRepositoryPort,
@@ -144,6 +146,7 @@ class UploadDocument:
     ) -> None:
         self._documents = documents
         self._storage = storage
+        self._scanner = scanner
         self._extractor = extractor
         self._requirements = requirements
         self._drafts = drafts
@@ -207,6 +210,11 @@ class UploadDocument:
         prepared: ExtractedDocument | None,
     ) -> SourceDocument:
         filename, mime_type = self._validate(data)
+        # A synchronous upload is scanned here, before extraction or storage; an
+        # ingested one arrives with `prepared` after the background scan. A scanner
+        # with no verdict raises, so an unreachable scanner fails the upload closed.
+        if prepared is None and not self._scanner.scan(data.content):
+            raise UnsupportedDocumentError("Malware scan rejected this upload.")
         preflight = self._documents.get(document_id) if document_id is not None else None
         if document_id is not None and preflight is None:
             raise DocumentNotFoundError(f"Document {document_id.value!r} not found.")

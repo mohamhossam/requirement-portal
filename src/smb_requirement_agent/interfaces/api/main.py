@@ -134,6 +134,37 @@ class InternalAccess:
         return self._guard
 
 
+class DocumentationAccess:
+    """Interactive API documentation is a development convenience, not production surface.
+
+    The bundled edge already answers 404 for /api/docs and /api/openapi.json; this
+    keeps that promise when the API container is reached directly or deployed
+    behind another proxy: in production the app itself answers 404.
+    """
+
+    def __init__(self, app: ASGIApp) -> None:
+        self._app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        path: str = scope.get("path", "")
+        documentation = path in {"/openapi.json", "/redoc", "/docs"} or path.startswith("/docs/")
+        if (
+            scope["type"] == "http"
+            and documentation
+            and scope["app"].state.container.settings.app_environment == "production"
+        ):
+            await send(
+                {
+                    "type": "http.response.start",
+                    "status": 404,
+                    "headers": [(b"content-type", b"application/json")],
+                }
+            )
+            await send({"type": "http.response.body", "body": b'{"detail":"Not Found"}'})
+            return
+        await self._app(scope, receive, send)
+
+
 def _body_limits(scope: Scope) -> BodyLimits:
     """The request and per-file ceilings, read from this app's settings per request."""
     settings = scope["app"].state.container.settings
@@ -192,6 +223,7 @@ def create_app(container_factory: Callable[[], Container] = build_container) -> 
     # body still gets a correlation ID, a log line and a metric.
     application.add_middleware(RequestBodyLimit, limits=_body_limits)
     application.add_middleware(InternalAccess)
+    application.add_middleware(DocumentationAccess)
 
     @application.middleware("http")
     async def trace_request(request: Request, call_next: RequestResponseEndpoint) -> Response:

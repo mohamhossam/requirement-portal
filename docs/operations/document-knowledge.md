@@ -14,7 +14,7 @@ this runbook or an enabled endpoint as production qualification.
   application's upload limits. Set `ATTACHMENT_SCAN_MODE=clamav`, `ATTACHMENT_SCANNER_HOST` and
   `ATTACHMENT_SCANNER_PORT`. An outage fails ingestion closed; it never supplies a clean verdict.
 - `ATTACHMENT_SCAN_MODE=offline` is ONLY a deterministic development adapter. Startup rejects it
-  with durable persistence or OIDC identity. It is not malware protection.
+  with OIDC identity. It is not malware protection.
 - Install the `document-ocr` optional extra, Tesseract, and its `eng` and `ara` trained data. Package
   Docling model assets beforehand and set `ATTACHMENT_OCR_ARTIFACTS_PATH`. Do not rely on first-upload
   downloads. Pin the qualified runtime/model bundle in the deployment image and record its hashes.

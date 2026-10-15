@@ -351,6 +351,7 @@ jobs:
             -e OIDC_CLIENT_ID=requirement-spa
             -e LLM_PROVIDER=openai
             -e OPENAI_API_KEY=ci-only
+            -e PROVIDER_DAILY_TOKEN_BUDGET=5000000
         run: |
           $PROD run --rm --no-deps $PRODUCTION_SETTINGS api \
             python -m smb_requirement_agent.interfaces.deployment_preflight

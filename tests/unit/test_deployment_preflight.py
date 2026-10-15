@@ -36,6 +36,7 @@ def test_the_command_exits_2_with_the_reason(
 
 PUBLIC = replace(
     FAKE_PROVIDER_SETTINGS,
+    library_scan_mode="clamav",
     identity_provider=IdentityProvider.OIDC,
     oidc_issuer_url="https://identity.example/tenant",
     oidc_audience="api://smb",
