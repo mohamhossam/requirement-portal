@@ -86,6 +86,52 @@ jobs:
       - name: lint-imports
         run: lint-imports
 
+  postgres-architecture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17@sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f
+        env:
+          POSTGRES_DB: smb_test
+          POSTGRES_USER: smb_test
+          POSTGRES_PASSWORD: smb_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U smb_test -d smb_test"
+          --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      TEST_DATABASE_URL: postgresql://smb_test:smb_test@localhost:5432/smb_test
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Read access to platform-kernel
+        # The kernel is a private git dependency (ADR-0100). The token is a
+        # fine-grained, read-only token for that one repository.
+        env:
+          KERNEL_READ_TOKEN: ${{ secrets.KERNEL_READ_TOKEN }}
+        run: |
+          test -n "$KERNEL_READ_TOKEN" || { echo "KERNEL_READ_TOKEN secret is not set"; exit 1; }
+          kernel="github.com/mohamhossam/platform-kernel"
+          git config --global "url.https://x-access-token:${KERNEL_READ_TOKEN}@${kernel}.insteadOf" "https://${kernel}"
+
+      - name: Install locked project
+        run: |
+          uv sync --locked --extra dev
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+      - name: PostgreSQL and pgvector integration
+        run: >-
+          pytest tests/integration/test_postgres_persistence.py
+          tests/integration/test_postgres_architecture_jobs.py
+          tests/integration/test_requirement_mapping_jobs.py
+          tests/integration/test_architecture_mapping_stats_postgres.py
+          tests/integration/test_reference_publication_state.py
+
   frontend:
     runs-on: ubuntu-latest
     timeout-minutes: 15
