@@ -1,8 +1,11 @@
 # UX Plan — Requirement AI
 
-**Status:** source of truth for the UI/UX redesign, per the UI Redesign Rules in [`CLAUDE.md`](../CLAUDE.md). Produced by reading the shipped frontend. No code was changed to produce it.
+**Status:** the redesign this plan governed **shipped** — Phases 0–10 are implemented and merged (`docs/slices/redesign-phase-*.md`; `ROADMAP.md` has the phase ledger; ADR-0117 records the shell that replaced ADRs 0045, 0047 and 0050). Read this document accordingly:
 
-**Companion:** [`docs/design-system.md`](design-system.md) governs mechanics (contrast, z-index, table construction). [`DESIGN.md`](../DESIGN.md) currently records the *shipped* identity — see §0; it becomes an output of this redesign rather than an input.
+- **§1–§3 are the pre-redesign baseline**, written by reading the frontend as it was *before* the redesign. Component names, stylesheet inventories and defect counts there describe code that no longer exists. They are kept as the record of what the redesign was answering.
+- **§0 and §4 onward are the decisions the shipped code implements** and remain binding on UI work, per the UI Rules in [`CLAUDE.md`](../CLAUDE.md).
+
+**Companion:** [`docs/design-system.md`](design-system.md) governs mechanics (contrast, z-index, table construction). [`DESIGN.md`](../DESIGN.md) records the shipped identity, rewritten from the finished redesign as §0 required.
 
 ---
 

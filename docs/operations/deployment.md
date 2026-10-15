@@ -257,13 +257,15 @@ two images again with the same Trivy rules (run it by hand from the Actions tab 
   names the package. Cut a patch release (`vX.Y.Z+1`), whose fresh build picks up the fixed
   package, and upgrade to it. GitHub emails the repository's owner when a scheduled run fails.
 
-Run a release by naming it in `deploy/.env`:
+Run a release by naming its tag in `deploy/.env` (no release has been tagged
+yet: until the first one is published, build locally instead — the manifest's
+default images build from this checkout):
 
 ```bash
 # deploy/.env
 REQUIREMENT_API_IMAGE=ghcr.io/mohamhossam/requirement-api
 REQUIREMENT_WEB_IMAGE=ghcr.io/mohamhossam/requirement-web-production
-IMAGE_TAG=v0.1.0
+IMAGE_TAG=vX.Y.Z   # the published release tag
 ```
 
 Optionally verify the signature first:
@@ -684,10 +686,10 @@ passages and evidence. The link is optional (ADR-0104), and set in `production.e
   On separate hosts, skip the overlay and point `KNOWLEDGE_API_BASE_URL` at a private address
   that reaches the knowledge API directly, never its edge.
 - **Links.** `KNOWLEDGE_PORTAL_URL` in `deploy/.env` is the knowledge portal's address, ending
-  in `/` (for example `https://knowledge.example.com/knowledge/`). It is built into the web
-  image for the links to it, and read when `web` starts to redirect old `/knowledge/`
-  bookmarks there, keeping the rest of the path. Unset, the links are hidden and `/knowledge/`
-  answers 404. Rebuild `web` when it changes.
+  in `/` (for example `https://knowledge.example.com/knowledge/`). The `web` container reads it
+  when it starts — writing it into the page for the links to it, and redirecting old
+  `/knowledge/` bookmarks there, keeping the rest of the path. Unset, the links are hidden and
+  `/knowledge/` answers 404. Restart `web` when it changes; no rebuild is needed.
 - **Or a client of its own** in place of the token: see "Service credentials".
 - **Tracing.** With tracing on, every call to the knowledge portal carries `traceparent`, so a
   request's trace continues there ("Tracing").

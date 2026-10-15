@@ -139,7 +139,7 @@ resolve_node_tools() {
         fi
     fi
 
-    [[ -n "$node_path" && -n "$npm_path" ]] || fail "Node.js 22 and npm were not found. Install Node.js 22, then rerun the command."
+    [[ -n "$node_path" && -n "$npm_path" ]] || fail "Node.js 24 and npm were not found. Install Node.js 24, then rerun the command."
 
     NODE_PATH_BIN="$node_path"
     NPM_PATH_BIN="$npm_path"

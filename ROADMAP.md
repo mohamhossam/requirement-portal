@@ -1,6 +1,6 @@
 # ROADMAP.md — SMB AI Requirement Breakdown Agent
 
-## Delivery status — verified 2026-09-28; platform rows 2026-10-05
+## Delivery status — verified 2026-10-15
 
 This is the current status ledger. Slice specifications keep their dated implementation and
 validation history; older statements such as "CI pending push" in those records do not override
@@ -36,13 +36,13 @@ this ledger.
 | Three-repository platform split (ADR-0098, ADR-0099, ADR-0100; plan `docs/slices/enhancement-platform-split.md`) | **Done 2026-10-05.** Stages 0–5: `platform-kernel` v1.0.2, the untangling and seams here, knowledge-portal v0.1.0, the cutover, and the guarded drop of the moved tables ([#31](https://github.com/mohamhossam/requirement-portal/pull/31)) with the run guides ([#32](https://github.com/mohamhossam/requirement-portal/pull/32)). No data is moved while the platform is in development. The acceptance criteria are checked in the plan, with their evidence: CI proves a withdrawal reaching requirement work, and runs the platform in a browser, on the combined stack | Branch protection on `main` (an owner setting) |
 | The Product Architecture Explorer on the knowledge catalogue (ADR-0101, with Amendments 1 and 2) | **Done 2026-10-05.** Built in [knowledge-portal](https://github.com/mohamhossam/knowledge-portal) (its #22–#36). Here: the ADR, and step 7's handoff of approved backlogs to the catalogue's change-request inbox ([#35](https://github.com/mohamhossam/requirement-portal/pull/35), `docs/slices/enhancement-change-requests-from-requirement-ai.md`) | A handoff status on the approval screen (deferred by decision) |
 | Knowledge Center (`docs/slices/enhancement-knowledge-center.md`, ADR-0099 Amendment 1, ADR-0102) | **Re-planned 2026-10-06 for the three repositories.** A is mostly delivered by the split, and F early. B1, A′, B2, B3, C and D are delivered (each built where its data lives). **E is scheduled 2026-10-06** (ADR-0102): E1, knowledge-portal's read-only ADO import and lineage, is delivered; E2, the historic corpus and prior art here, is delivered (merged as #47) | The ADO edition, for the REST adapter |
-| Bounded-context restructure toward Domain-Driven Design (ADR-0103; `docs/slices/refactor-bounded-contexts.md`) | **Delivered 2026-10-08** (ADR-0103 accepted and scheduled 2026-10-07; Amendment 2 records the implementation). PRs 1–16 and 11b: characterisation tests, the shared kernel, in-process domain events, governance rules in the domain, and the `identity`, `jobs`, `requirements`, `analysis`, `breakdown`, `governance`, `reporting`, `workflows`, `references` and `knowledge` packages. Each context owns its errors, and `lint-imports` enforces the dependency order with no exemptions (0 pairs against it). The context map and ubiquitous language are in `docs/architecture/` | Merge. The four follow-ups were delivered on the same branch (ADR-0103 Amendment 3) |
+| Bounded-context restructure toward Domain-Driven Design (ADR-0103; `docs/slices/refactor-bounded-contexts.md`) | **Delivered and merged 2026-10-08** (ADR-0103 accepted and scheduled 2026-10-07; Amendment 2 records the implementation). PRs 1–16 and 11b: characterisation tests, the shared kernel, in-process domain events, governance rules in the domain, and the `identity`, `jobs`, `requirements`, `analysis`, `breakdown`, `governance`, `reporting`, `workflows`, `references` and `knowledge` packages. Each context owns its errors, and `lint-imports` enforces the dependency order with no exemptions (0 pairs against it). The context map and ubiquitous language are in `docs/architecture/` | — (merged; the four follow-ups were delivered on the same branch, ADR-0103 Amendment 3) |
 | Independent portals with optional links (ADR-0104; `docs/slices/enhancement-independent-portals.md`) | **Scheduled 2026-10-09.** Phases 1 and 2 done (#52): the decision, and starting in production without the knowledge portal. Phase 3 done in knowledge-portal. Phase 4 done: architecture mapping checks this repository's own roles, knowledge-portal defines its sign-in, each service can hold only its own credential (platform-kernel 1.1.0), and the knowledge portal's writes are recorded against its service | Phases 6–7 and the cutover, mostly in knowledge-portal |
-| ADO publication and safe republish (12–13) | Slices 12 and 13 implemented (`docs/slices/slice-12-ado-publication.md`, ADR-0112; `docs/slices/slice-13-external-id-mapping-and-safe-republish.md`, ADR-0113) | Merge; the Epic-closed hook is the ontology implementation plan's Phase 7, now implemented |
+| ADO publication and safe republish (12–13) | **Delivered** (`docs/slices/slice-12-ado-publication.md`, ADR-0112; `docs/slices/slice-13-external-id-mapping-and-safe-republish.md`, ADR-0113), merged as #80–#82; off by default (`ADO_PUBLISHER=none`). The Epic-closed hook (ontology Phase 7) is merged as #86 | Live acceptance against a real ADO organization |
 | Ontology plan Phase 4: product verdict in analysis (`docs/slices/ontology-phase-4-product-verdict.md`, ADR-0115, ADR-0116) | Done 2026-10-11 (#84) | — |
 | Ontology plan Phase 5: decided verdicts sent back as precedents (`docs/slices/ontology-phase-5-decided-verdicts.md`) | Done 2026-10-11 (#85) | — |
 | Ontology plan Phase 7: what a closed Epic delivered (`docs/slices/ontology-phase-7-delivery-closure.md`) | Done 2026-10-11 (#86) | — |
-| Ontology plan Phase 9: a drafted offering for a new offering (`docs/slices/ontology-phase-9-offering-drafts.md`) | Implemented; needs knowledge-portal v0.6.0, whose contract is vendored and pinned | Merge |
+| Ontology plan Phase 9: a drafted offering for a new offering (`docs/slices/ontology-phase-9-offering-drafts.md`) | Done 2026-10-13 (#87); needs knowledge-portal v0.6.0, whose contract is vendored and pinned | — |
 | Advanced workflow optimization (15) | Planned; evidence-gated | Demonstrate a need and measurable benefit before implementation |
 
 ### Merge and CI evidence
@@ -77,13 +77,12 @@ this ledger.
     grouped or held, and jsdom 30 breaks a test double;
   - #21, #23, #24 and #26, superseded by the grouped #36.
 - Each PR's hosted run is on its page; verify a revision's own run rather than inferring from
-  an earlier one. CI has eight jobs: quality gates, PostgreSQL architecture, frontend, supply
-  chain, deployment, recovery, smoke, and PostgreSQL lineage browser.
-- Unmerged remote branches:
-  - `claude/fix-analysis-citations-and-proxy`: one commit (`0d42039`) beyond #65, the
-    human-answer citation salvage above;
-  - `single-master-docker-compose` (local-environment compose files). It is not a product
-    slice, and it overlaps the `deploy/` manifests added since.
+  an earlier one. CI has eight jobs (`.github/workflows/ci.yml`): quality gates, PostgreSQL
+  architecture, frontend, supply chain, secrets, deployment, recovery and smoke;
+  CodeQL, release and the weekly rescan are separate workflows.
+- The PR links above that point at `smb-ai-requirement-agent` are the predecessor
+  repository's history; this repository's own PRs start at #1 on GitHub. The
+  human-answer citation salvage (`0d42039`) is part of this repository's import.
 
 ### Release work still open
 
@@ -1929,15 +1928,12 @@ approved future-slice sequence:
    (ADR-0102): E1 in knowledge-portal, then E2 here. Its ADO access is read-only; publication
    stays Slices 12–13 below.
 0c. **Bounded-context restructure** (ADR-0103, `docs/slices/refactor-bounded-contexts.md`),
-   delivered 2026-10-08 (PRs 1–16 and 11b, each behaviour-preserving). The remaining step is the
-   merge. Its follow-ups are scheduled when a slice next touches their area.
-1. Merge the pending human-answer citation salvage (`0d42039`) from
-   `claude/fix-analysis-citations-and-proxy`.
-2. Close production release qualification: complete the environment, quality and capacity
-   gates listed in the delivery ledger above. The qualification tools are merged (PR #39).
-3. Slice 12 — ADO Publication.
-4. Slice 13 — External ID Mapping and Safe Republish.
-5. Slice 15 — Agent Workflow Optimization, only when justified by evidence.
+   delivered and merged 2026-10-08 (PRs 1–16 and 11b, each behaviour-preserving). Its
+   follow-ups are scheduled when a slice next touches their area.
+1. Close production release qualification: complete the environment, quality and capacity
+   gates listed in the delivery ledger above. The qualification tools are merged (PR #39);
+   the citation salvage (`0d42039`) and Slices 12–13 are delivered.
+2. Slice 15 — Agent Workflow Optimization, only when justified by evidence.
 
 ### Specified, awaiting a position in this order
 
@@ -1973,7 +1969,7 @@ Do not reorder just because an external integration is exciting. The ADO adapter
 | R4 Governance | 9, 10, 10A | Approval + revisions + activity/reporting | Merged into `main` |
 | R5 Portability | 11 | Neutral export | Merged into `main` |
 | R5A Requirement Knowledge | 11A–11B.1 | Duplicate/conflict screening + lazy restart-safe screening + automatic dual-source clarification suggestions | Merged into `main` |
-| R6 ADO | 12–13 | Safe ADO publication/update | Implemented; merge pending |
+| R6 ADO | 12–13 | Safe ADO publication/update | Merged into `main`; off by default, live ADO acceptance open |
 | R7 Knowledge | 14 | Maintainable architecture knowledge | Merged into `main`; deployment-specific local-model qualification open |
 | R8 Advanced AI | 15 | Evidence-driven orchestration optimization | Planned; evidence-gated |
 | R9 Enterprise identity, administration and operations | 8A.2, Graylog, administration portal, Knowledge Center | AD sign-in, centralized logs, admin portal, one home for knowledge | Specified; not scheduled |
@@ -1986,7 +1982,8 @@ operational qualification status is tracked in the delivery ledger at the top of
 
 # Exported Wireframe Coverage
 
-This matrix is the scope ledger for `RE Wireframes.dc.html`. “Implemented” means
+This matrix is the scope ledger for the exported wireframes (`RE Wireframes.dc.html`,
+held outside this repository). “Implemented” means
 the capability is merged into `main` and must not be reimplemented; release gates remain separate. “Planned” names
 the only slice authorized to add it.
 

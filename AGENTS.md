@@ -489,11 +489,11 @@ Unless an approved architecture decision changes it:
 - python-dotenv for local `.env` loading (read only by the settings module)
 
 ### Frontend
-Introduce the frontend when a UI slice requires it.
-Preferred default:
 - TypeScript
-- React
-- Vite
+- React 19 + Vite, Tailwind 4 in a named layer (ADR-0048)
+- Vitest with coverage thresholds, Playwright for browser journeys
+- The shipped design system governs UI work (`CLAUDE.md`, `docs/ux-plan.md` §0
+  and §4 onward, `docs/design-system.md`, ADR-0117)
 
 Do not couple frontend state directly to LLM provider payloads. Consume stable application/API schemas.
 
@@ -705,27 +705,20 @@ A task is complete only when:
 
 ## 19. Outstanding Architectural Debt
 
-Known and deliberately deferred as of Slice 04. The first entry was not a
-deliberate deferral at all, which is why §15.1 now exists. Do not build on top of these
-without reading the note; several get materially harder in later slices.
+Known and deliberately deferred debt, kept current as slices retire entries (the
+retired record follows the table). The register began at Slice 04, whose first
+entry was not a deliberate deferral at all — which is why §15.1 now exists. Do
+not build on top of these without reading the note; several get materially
+harder in later slices.
 
 | Debt | Why it matters | Address by |
 |---|---|---|
 | The maintained Requirement template/example library originally grouped into Slice 5D was not part of the approved Source Documents implementation plan. | Authors have secure evidence upload but no curated reusable starting-point catalogue. | Slice 5D.1 after explicit roadmap scheduling. |
-| Existing DOCX extraction revisions can contain copied table headers or merged-anchor wording. | ADR-0056 fixes new extractions; immutable legacy rows can still retain wording from a separately excluded row. Rebuilding old extracted text does not repair it. | Affected owners inspect/withdraw and upload, review and publish a new version before relying on row exclusions; see the document-knowledge runbook. |
-| Existing TXT/Markdown extraction revisions can retain heading wording in descendant section paths. | ADR-0059 fixes new uploads; excluding/correcting an old heading does not remove its original wording from metadata. Rebuilding old text retains those paths. | Owners inspect/withdraw affected publications and upload/review/publish a new version; see the document-knowledge runbook. |
-| Existing Word prose extraction can retain original paragraph/list labels and copied heading paths. | ADR-0060 fixes new uploads; old correction/exclusion decisions do not remove this wording from stored metadata. | Owners inspect/withdraw affected publications and upload/review/publish a new version; see the document-knowledge runbook. |
-| Existing XLSX revisions can retain worksheet names in row labels, paths and warnings after heading exclusion/correction. | ADR-0061 fixes new uploads; stored extraction rebuilds retain old metadata. | Owners inspect/withdraw affected publications and upload/review/publish a new version; see the document-knowledge runbook. |
-| Legacy Docling OCR revisions can retain original heading wording in descendant metadata. | ADR-0065 introduces neutral heading positions for new OCR results; rebuilding old stored extraction retains the original paths. | Owners inspect/withdraw affected publications and upload/review/publish a new version before relying on heading exclusions. |
+| Legacy shared-library extraction revisions (DOCX table headers — ADR-0056; TXT/Markdown and CSV/TSV heading or first-record wording — ADR-0057/0059; Word prose labels — ADR-0060; XLSX worksheet names — ADR-0061; Docling OCR heading paths — ADR-0065) can retain wording that newer extraction versions exclude. | The ADRs fix new uploads only; immutable legacy publication rows keep the old metadata, and rebuilding stored text does not repair it. | **Owned by `knowledge-portal` since the library moved there (ADR-0104).** Owners inspect/withdraw affected publications and upload/review/publish a new version; see that repository's document-knowledge runbook. Tracked here only until its own register carries it. |
 | Requirement index embedding follows every knowledge-corpus edit, including edits through routes that are not rate-limited (saving a draft answer, assigning a question). | Those edits spend embedding calls outside the per-actor limit. The spend is bounded to the changed chunks and by the input limits (ADR-0074, amended by the third review remediation). | Charge index work to the editing actor if embedding spend becomes material. |
 | `ai_jobs` rows are kept forever, because they are the activity feed's record of AI work (ADR-0079). Finished jobs' inputs are cleared after `AI_JOB_PAYLOAD_RETENTION_DAYS` (ADR-0079 amendment). | The table still grows with use, by a small row per job, though reads are bounded and polling cost does not grow. | Archive finished jobs past a horizon into a cold table the activity projection can still read, if the table's size starts to matter. |
-| Frontend review-remediation items that need frontend logic changes, deferred on 2026-09-24 because CLAUDE.md limits frontend changes to presentation during the UI redesign. (a) `frontend/src/review/rules.ts` still restates the review rules instead of reading the API's `actions` fields (ADR-0073). (b) The knowledge API types in `frontend/src/api/knowledge.ts` are hand-written, not generated from OpenAPI. | (a) The rules now exist on the server, but the browser can still drift from them until it switches over. (b) Hand-written types can silently disagree with the contract; since the third review remediation `src/api/contract.test.ts` checks every client call's method and path against `openapi.json`, but not the payload types. | The UI redesign (`docs/ux-plan.md`), which rebuilds these screens: read `actions`, delete `rules.ts`, and use generated knowledge types. Either may instead be taken earlier as a recorded frontend logic exception (ADR-0109), once the owner approves it. Retired: the 1,790-line `AnalysisPanel.tsx`, split presentationally into seven files (third review remediation, Phase 6.2); identity-dependent queries on the Architecture knowledge page running before identity loaded (fourth review remediation, Phase 5.1); the Clarify panel showing "No analysis yet" after its job finished, because invalidation joined a still-loading read (PR #41: `invalidateWorkspaceKeys` cancels in-flight reads first). These are Phase 6.1 (frontend half), 6.2 and 6.3 of `docs/slices/enhancement-review-remediation.md`. |
+| Frontend logic debt the UI redesign (Phases 0–10, now shipped) did not take: (a) `frontend/src/review/rules.ts` still restates the review rules instead of reading the API's `actions` fields (ADR-0073); (b) request-body types in `frontend/src/api/client.ts` and the `PassageCitation` shape in `frontend/src/api/knowledge.ts` are hand-written rather than schema-derived (`knowledge.ts` response types are generated since the knowledge split). | (a) The rules exist on the server, but the browser can still drift from them until it switches over. (b) Hand-written shapes can silently disagree with the contract; `src/api/contract.test.ts` checks every client call's method and path against `openapi.json`, but not the payload types. | A recorded frontend logic change under `CLAUDE.md`'s UI Rules (an ADR-0109 exception where one is still required), once the owner approves it: read `actions`, delete `rules.ts`, derive the request types from `components["schemas"]`. Retired: the 1,790-line `AnalysisPanel.tsx`, split presentationally into seven files (third review remediation, Phase 6.2); identity-dependent queries on the Architecture knowledge page running before identity loaded (fourth review remediation, Phase 5.1); the Clarify panel showing "No analysis yet" after its job finished (PR #41: `invalidateWorkspaceKeys` cancels in-flight reads first). |
 
-
-Legacy CSV/TSV extraction can retain first-record wording copied into later rows. ADR-0057 fixes
-new uploads only; owners must inspect affected publications, withdraw unintended text, and upload/
-review a new version. Rebuilding an old extraction cannot apply the fix. Track owner cleanup before
-production qualification; immutable publication history must not be silently rewritten.
 
 Retired by Slice 03: `UpdateRequirement`'s optional collaborator, replaced by
 the required `InvalidateDerivedArtifacts` (ADR-0004), and missing provenance on
@@ -790,6 +783,10 @@ and rejection actions; and analysis confirmation plus immutable rounds is the
 analysis review lifecycle rather than a duplicate approval concept. Durable,
 content-bound artifact and final approvals are governed by ADR-0021.
 
+Retired by ADR-0066: document dependencies now use a transactionally maintained, access-filtered
+reverse index. Explicit maintenance backfills recorded history; user requests do not scan it.
+Portfolio load qualification and legacy unrecorded origins remain explicit limits.
+
 Retired by the second review remediation: token-blind provider metrics, now
 `smb_provider_tokens_total` (ADR-0074 amended); the several Requirement
 authorization styles, now one service (ADR-0078); and invalidation's two writes, which now
@@ -818,7 +815,3 @@ Use a concise final report:
 - ...
 
 Do not provide inflated claims or hide failed checks.
-
-Retired by ADR-0066: document dependencies now use a transactionally maintained, access-filtered
-reverse index. Explicit maintenance backfills recorded history; user requests do not scan it.
-Portfolio load qualification and legacy unrecorded origins remain explicit limits.

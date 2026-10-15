@@ -16,9 +16,11 @@ import { AppTopBar } from "./AppTopBar";
  * application". Now there is a header, a sidebar and a main column, and a route
  * decides what goes inside main and nothing else.
  *
- * Mobile first, in the literal sense: the base layout is the 375px one — fixed
+ * The CSS is authored narrow-first: the base layout is the 375px one — fixed
  * 56px bar, no rail, navigation behind a drawer — and `md` adds the rail beside
  * the content. Nothing is written as a max-width override of a desktop layout.
+ * That is an authoring order, not a product priority: the product stays
+ * desktop-first (ux-plan §0 and §4 — no flow is designed for a phone).
  *
  * `--nav-width` is the one piece of arithmetic the frame does: the rail's own
  * width, collapsed or not, which main pads itself by at `md` and above. Keeping

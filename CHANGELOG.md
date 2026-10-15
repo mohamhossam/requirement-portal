@@ -27,6 +27,14 @@ restoring a backup.
   `PROVIDER_DAILY_TOKEN_BUDGET` unset or 0 (record-only). Upgrade step: set it in
   `deploy/production.env` to the organization's daily token budget and keep the
   `DailyTokenBudgetExceeded` alert threshold in step. No migration.
+- **Documentation brought in line with the shipped code.** README, PRODUCT.md, ROADMAP.md,
+  WORKSPACE.md, AGENTS.md §19 and CLAUDE.md no longer describe Azure DevOps publication, the
+  repository split, the bounded-context layout or the UI redesign as pending — all are shipped.
+  ADR-0117 records the redesigned application shell and formally supersedes ADRs 0045, 0047 and
+  0050; the ADR index gains its missing rows and the note that ADR-0107 was skipped. SECURITY.md
+  and the deployment runbook now say no release has been tagged yet. `.python-version` (3.12) and
+  `frontend/.nvmrc` (24) pin local runtimes to CI's, and the launchers ask for Node.js 24. No
+  migration.
 - **A figure the owner gave in an answer no longer fails analysis.** The check that refuses
   numeric targets the model invents (ADR-0025) now also counts the owner's clarification answers
   and accepted or edited intent decisions as support, not only the requirement and its documents.
@@ -79,7 +87,9 @@ restoring a backup.
 
 ## v0.1.0
 
-The first published release: the pilot candidate, closing the pilot gate of
+Prepared as the first release, but its tag was never pushed, so no `v0.1.0`
+images exist; the release that ships this content will be cut from a later
+version. It was the pilot candidate, closing the pilot gate of
 `docs/slices/production-hardening.md`, with its shared provider limits and platform-kernel 1.3.0.
 
 - **Production configuration fails closed.**

@@ -1,6 +1,7 @@
 # ADR-0047 — Persistent journey stepper
 
-Status: Accepted
+Status: Superseded by ADR-0117 (the five-step horizontal stepper; the one-model
+principle and navigable blocked steps live on in the six-step stage rail)
 Date: 2026-09-18
 
 Amends ADR-0045 on one point. Everything else in 0045 stands.

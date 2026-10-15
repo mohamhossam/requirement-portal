@@ -91,7 +91,7 @@ if "!PYTHON_PATH!"=="" (
 :: Step 2: Handle Frontend Tools Detection
 call :ResolveNodeTools
 if "!NODE_PATH!"=="" (
-    echo [ERROR] Node.js 22 and npm were not found. Install Node.js 22, then rerun.
+    echo [ERROR] Node.js 24 and npm were not found. Install Node.js 24, then rerun.
     popd & exit /b 1
 )
 
