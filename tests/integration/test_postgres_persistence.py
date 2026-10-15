@@ -1436,6 +1436,12 @@ def test_saved_requirement_view_survives_adapter_restart() -> None:
 
     assert restarted.get(view.id) == view
     assert restarted.list_for_actor(view.actor_id) == [view]
+    # The duplicate-name check, with and without an excluded view. The None case
+    # once sent an untyped NULL that PostgreSQL could not place in `%s IS NULL`
+    # (42P18), which only the browser journey caught: keep it covered here.
+    assert restarted.name_exists(view.actor_id, "MY BLOCKING QUESTIONS")
+    assert not restarted.name_exists(view.actor_id, "My blocking questions", excluding_id=view.id)
+    assert not restarted.name_exists(view.actor_id, "Another name")
 
 
 def test_postgres_activity_projection_reads_immutable_history_in_bulk() -> None:
