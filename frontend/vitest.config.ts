@@ -18,10 +18,10 @@ export default defineConfig({
       reporter: ["text-summary", "html"],
       include: ["src/**/*.{ts,tsx}"],
       exclude: ["src/**/*.test.{ts,tsx}", "src/test/**", "src/api/schema.d.ts", "src/main.tsx"],
-      // Measured 2026-09-29 (`npm run test:coverage`): 80.56 / 73.7 / 71.24 / 83.56.
+      // Measured 2026-10-15 (`npm run test:coverage`): 82.85 / 76.19 / 74.55 / 85.91.
       // Floors sit just below so a real drop fails CI. Raise them as coverage
       // improves; never lower them.
-      thresholds: { statements: 80, branches: 73, functions: 70, lines: 83 },
+      thresholds: { statements: 82, branches: 75, functions: 73, lines: 85 },
     },
   },
 });

@@ -27,6 +27,14 @@ restoring a backup.
   `PROVIDER_DAILY_TOKEN_BUDGET` unset or 0 (record-only). Upgrade step: set it in
   `deploy/production.env` to the organization's daily token budget and keep the
   `DailyTokenBudgetExceeded` alert threshold in step. No migration.
+- **Test coverage for the measured gaps.** New unit tests cover the auth module
+  (`safeAuthReturnPath` open-redirect refusals, the sign-in page's fake and OIDC flows, the
+  knowledge-admin role check), the `TagInput` primitive (previously 0%), the in-memory reverse
+  lineage index (membership, filters, retirement, citation counts, decision versioning) and the
+  LLM CLI's refusal paths. The frontend coverage floors rise to 82/75/73/85 (statements/branches/
+  functions/lines), re-measured 2026-10-15; the review's other suspected gaps (story workflow,
+  activity projection, revision tracking) measured 85–100% covered and needed nothing. No
+  migration.
 - **The browser follows the server's review rules.** `frontend/src/review/rules.ts` is deleted:
   approval, generation and regeneration availability now come from the API's `actions` fields
   (ADR-0073), so the gate texts are the server's and cannot drift. The request-body types and

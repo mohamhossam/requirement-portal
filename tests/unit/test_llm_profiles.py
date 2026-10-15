@@ -606,3 +606,41 @@ def test_google_embeddings_require_normalization() -> None:
             model="test",
             normalize=False,
         )
+
+
+def test_cli_refusals_name_the_missing_piece_and_exit_1(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Each misuse of the LLM CLI answers exit 1 with the remedy, never a traceback."""
+    monkeypatch.setattr(
+        "smb_requirement_agent.infrastructure.config.settings.load_dotenv", lambda: None
+    )
+    monkeypatch.setenv("GEMINI_API_KEY", "private-key")
+    monkeypatch.setenv("PERSISTENCE_PROVIDER", "memory")
+    monkeypatch.setenv("LLM_PROVIDER", "fake")
+    monkeypatch.delenv("LLM_CONFIG_PATH", raising=False)
+
+    # A profile-requiring command without a config says what to set.
+    assert main(["smoke"]) == 1
+    assert "requires LLM_CONFIG_PATH" in capsys.readouterr().err
+
+    config = str(write_config(tmp_path, profile_data()))
+
+    # The launcher's conflicting explicit provider is refused (exit path of main).
+    assert main(["check", "--config", config, "--explicit-provider", "fake"]) == 1
+    assert "conflicts" in capsys.readouterr().err
+
+    # qualify-tokens needs fixtures…
+    assert main(["qualify-tokens", "--config", config]) == 1
+    assert "--samples" in capsys.readouterr().err
+
+    # …of the documented shape.
+    malformed = tmp_path / "samples.json"
+    malformed.write_text(json.dumps({"case": "only one object"}), encoding="utf-8")
+    assert main(["qualify-tokens", "--config", config, "--samples", str(malformed)]) == 1
+    assert "array of {case, text}" in capsys.readouterr().err
+
+    # Persistent index commands refuse the in-memory store.
+    for command in ("indexes", "rebuild", "activate"):
+        assert main([command, "--config", config]) == 1
+        assert "PostgreSQL" in capsys.readouterr().err
