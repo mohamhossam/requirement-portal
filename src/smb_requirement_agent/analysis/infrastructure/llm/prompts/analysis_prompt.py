@@ -329,7 +329,13 @@ inside it.
 Return only the requested structured result.
 """
 
+# Organized by the ISO/IEC/IEEE 29148 vague-language categories; seeded from the
+# 29148, INCOSE and NASA ARM weak-word lists. Detection is deliberately a trigger
+# for one focused review when the model claims zero uncertainty, never a hard
+# gate: the literature reports low precision for weak-word matching, and a false
+# positive here only costs one extra focused call.
 _VAGUE_TERM_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
+    # Undefined qualifiers.
     ("valid", re.compile(r"\bvalid(?:ated|ation)?\b", re.IGNORECASE)),
     ("eligible", re.compile(r"\beligib(?:le|ility)\b", re.IGNORECASE)),
     ("appropriate", re.compile(r"\bappropriate\b", re.IGNORECASE)),
@@ -339,6 +345,23 @@ _VAGUE_TERM_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("fraud", re.compile(r"\bfraud\b", re.IGNORECASE)),
     ("AML", re.compile(r"\baml\b", re.IGNORECASE)),
     ("etc.", re.compile(r"\betc\.?", re.IGNORECASE)),
+    ("adequate", re.compile(r"\badequate(?:ly)?\b", re.IGNORECASE)),
+    ("properly", re.compile(r"\bproper(?:ly)?\b", re.IGNORECASE)),
+    ("user-friendly", re.compile(r"\buser[- ]friendly\b", re.IGNORECASE)),
+    (
+        "TBD",
+        re.compile(r"\b(?:tbd|to be (?:discussed|decided|defined|determined))\b", re.IGNORECASE),
+    ),
+    # Loopholes and escape clauses.
+    ("if possible/necessary", re.compile(r"\bif (?:possible|necessary)\b", re.IGNORECASE)),
+    ("as required", re.compile(r"\bas required\b", re.IGNORECASE)),
+    ("where applicable", re.compile(r"\bwhere applicable\b", re.IGNORECASE)),
+    # Vague quantifiers.
+    ("several/many", re.compile(r"\b(?:several|many|approximately)\b", re.IGNORECASE)),
+    # Unbounded time or improvement words.
+    ("immediately", re.compile(r"\bimmediate(?:ly)?\b", re.IGNORECASE)),
+    ("as soon as possible", re.compile(r"\b(?:as soon as possible|asap)\b", re.IGNORECASE)),
+    ("minimize/maximize", re.compile(r"\b(?:minimi[sz]e[sd]?|maximi[sz]e[sd]?)\b", re.IGNORECASE)),
 )
 
 
@@ -375,8 +398,21 @@ def build_clarification_review_prompt(
     title: str,
     description: str,
     terms: tuple[str, ...],
+    documents: Sequence[AnalysisDocumentContext] = (),
 ) -> str:
-    """Build the compact clarification-only prompt."""
+    """Build the compact clarification-only prompt.
+
+    Attachments can be the entire source (a blank typed description is valid),
+    so the review sees their text too; questions about vague terms that occur
+    only in an attachment are impossible without it.
+    """
+    document_text = (
+        "\n\n--- SELECTED SUPPORTING DOCUMENT TEXT START ---\n"
+        + "\n\n".join(_format_document(item) for item in documents)
+        + "\n--- SELECTED SUPPORTING DOCUMENT TEXT END ---\n"
+        if documents
+        else ""
+    )
     return f"""Identify missing definitions in this requirement.
 
 Undefined terms detected: {", ".join(terms)}
@@ -385,7 +421,7 @@ Undefined terms detected: {", ".join(terms)}
 Title: {title}
 Description: {description}
 --- BUSINESS REQUIREMENT CONTENT END ---
-"""
+{document_text}"""
 
 
 def build_user_prompt(

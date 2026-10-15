@@ -305,7 +305,9 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
             source_text,
             candidate,
         )
-        return self._add_focused_questions(requirement, clarifications, active_questions, candidate)
+        return self._add_focused_questions(
+            requirement, clarifications, active_questions, documents, candidate
+        )
 
     def _discard_unsuppliable_citations(
         self,
@@ -688,6 +690,7 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
         requirement: Requirement,
         clarifications: Sequence[HumanClarification],
         active_questions: Sequence[ActiveQuestionContext],
+        documents: Sequence[AnalysisDocumentContext],
         candidate: RequirementAnalysisCandidate,
     ) -> RequirementAnalysisCandidate:
         unresolved = (
@@ -696,7 +699,17 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
             candidate["ambiguities"],
             candidate["potential_dependencies"],
         )
-        terms = vague_terms(requirement.description.value)
+        # Attachments can be the entire source (a blank typed description is
+        # valid), so the vague-term backstop must read them too.
+        terms = vague_terms(
+            "\n".join(
+                (
+                    requirement.title.value,
+                    requirement.description.value,
+                    *(item["extracted_text"] for item in documents),
+                )
+            )
+        )
         if clarifications or active_questions or any(unresolved) or not terms:
             return candidate
 
@@ -712,6 +725,7 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
                     requirement.title.value,
                     requirement.description.value,
                     terms,
+                    documents,
                 ),
                 schema_type=ClarificationReviewSchema,
             )
