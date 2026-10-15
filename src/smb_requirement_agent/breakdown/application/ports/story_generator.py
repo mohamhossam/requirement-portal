@@ -26,6 +26,7 @@ class StoryCandidate(TypedDict):
     action: str
     value: str
     acceptance_criteria: list[AcceptanceCriterionCandidate]
+    kind: str
     model: str
     prompt_version: str
 

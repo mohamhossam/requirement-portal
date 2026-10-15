@@ -146,6 +146,7 @@ Bounded contexts: [context map](context-map.md) and [ubiquitous language](ubiqui
 - [ADR-0115: A requirement-level product verdict, decided in analysis](adr-0115-product-verdict-in-requirement-analysis.md) — Accepted 2026-10-10 (ontology plan, Phase 0)
 - [ADR-0116: The decided product impact reaches generation](adr-0116-capability-concepts-reach-generation.md) — Accepted 2026-10-10 (ontology plan, Phase 0)
 - [ADR-0117: One application shell for every route](adr-0117-one-application-shell.md) — Accepted 2026-10-15; supersedes 0045, 0047 and 0050
+- [ADR-0118: Feature-level acceptance criteria and business/enabler work kinds](adr-0118-feature-acceptance-criteria-and-enabler-kinds.md) — Accepted 2026-10-15
 
 There is no ADR-0107: that number was skipped, and the decision it would have
 held was recorded as an amendment to ADR-0020 instead

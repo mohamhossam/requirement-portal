@@ -1777,6 +1777,8 @@ def test_local_features_drop_blank_items_and_preserve_provenance(
                 delivery_drop="mvp",
                 splitting_pattern="journey_stage",
                 splitting_rationale="Ignored",
+                acceptance_criteria=["Ignored"],
+                kind="business",
             ),
             FeatureItemSchema(
                 name=" Ordering ",
@@ -1784,6 +1786,8 @@ def test_local_features_drop_blank_items_and_preserve_provenance(
                 delivery_drop="mvp",
                 splitting_pattern="journey_stage",
                 splitting_rationale="Separate journey step",
+                acceptance_criteria=[" Bundles can be ordered. "],
+                kind="business",
             ),
         ]
     )

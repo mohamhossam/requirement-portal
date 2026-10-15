@@ -21,6 +21,8 @@ const copyStory = (story: Story): StoryInput => ({
   action: story.action,
   value: story.value,
   acceptance_criteria: story.acceptance_criteria.map((item) => ({ ...item })),
+  // A manual split or merge keeps the source's business/enabler typing.
+  kind: story.kind,
 });
 
 const blankCriterion = (): AcceptanceCriterion => ({ given: "", when: "", then: "" });
@@ -100,6 +102,7 @@ export function ManualStoryChangeDialog({
         when: criterion.when.trim(),
         then: criterion.then.trim(),
       })),
+      kind: draft.kind,
     }));
     if (cleaned.some((draft) => !draft.role || !draft.action || !draft.value)) {
       setValidation("Every replacement Story needs a role, action and value.");

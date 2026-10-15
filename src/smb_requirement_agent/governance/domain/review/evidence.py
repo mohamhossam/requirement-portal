@@ -115,7 +115,7 @@ def _generation_evidence(item: Epic | Feature | UserStory) -> dict[str, object]:
 
 
 def _feature_evidence(item: Feature) -> dict[str, object]:
-    return {
+    evidence = {
         **_generation_evidence(item),
         "name": item.name.value,
         "outcome": item.outcome.value,
@@ -123,6 +123,13 @@ def _feature_evidence(item: Feature) -> dict[str, object]:
         "splitting_pattern": item.splitting_pattern.value,
         "splitting_rationale": item.splitting_rationale.value,
     }
+    # Defaults left out so evidence fingerprints recorded before the fields
+    # existed stay current for unchanged content.
+    if item.acceptance_criteria:
+        evidence["acceptance_criteria"] = [entry.value for entry in item.acceptance_criteria]
+    if item.kind.is_enabler:
+        evidence["work_kind"] = item.kind.value
+    return evidence
 
 
 def _epic_evidence(item: Epic) -> dict[str, object]:
@@ -135,12 +142,15 @@ def _epic_evidence(item: Epic) -> dict[str, object]:
 
 
 def _story_evidence(item: UserStory) -> dict[str, object]:
-    return {
+    evidence = {
         **_generation_evidence(item),
         "feature_id": item.feature_id.value,
         "voice": item.voice,
         "criteria": [[entry.given, entry.when, entry.then] for entry in item.acceptance_criteria],
     }
+    if item.kind.is_enabler:
+        evidence["work_kind"] = item.kind.value
+    return evidence
 
 
 def _architecture_evidence(value: ArchitectureImpact | None) -> object:

@@ -45,12 +45,14 @@ from smb_requirement_agent.breakdown.domain.feature.errors import (
 from smb_requirement_agent.breakdown.domain.feature.events import FeaturesReplaced
 from smb_requirement_agent.breakdown.domain.feature.value_objects import (
     DeliveryDrop,
+    FeatureAcceptanceCriterion,
     FeatureId,
     FeatureName,
     FeatureOutcome,
     SplittingPattern,
     SplittingRationale,
 )
+from smb_requirement_agent.breakdown.domain.kinds import WorkKind
 from smb_requirement_agent.identity.application.ports.requirement_access import (
     RequirementAccessPort,
     RequirementPermission,
@@ -248,6 +250,10 @@ class GenerateFeatures:
                 SplittingPattern, candidate["splitting_pattern"], "splitting pattern"
             ),
             splitting_rationale=SplittingRationale(candidate["splitting_rationale"]),
+            acceptance_criteria=tuple(
+                FeatureAcceptanceCriterion(item) for item in candidate["acceptance_criteria"]
+            ),
+            kind=_parse(WorkKind, candidate["kind"], "work kind"),
             status=EpicStatus.GENERATED,
             provenance=Provenance(
                 generated_at=self._clock.now(),

@@ -28,6 +28,27 @@ class FeatureItemSchema(BaseModel):
     splitting_rationale: str = Field(
         description="Why this is a separate Feature rather than part of another."
     )
+    acceptance_criteria: list[str] = Field(
+        min_length=1,
+        description=(
+            "Feature-level conditions of satisfaction: plain checkable conditions Product "
+            "Management confirms the Feature by, grounded in the supplied evidence. Not "
+            "Given/When/Then Story criteria."
+        ),
+    )
+    kind: Literal[
+        "business",
+        "exploration",
+        "architecture",
+        "infrastructure",
+        "compliance",
+    ] = Field(
+        description=(
+            "business for direct customer value; otherwise the SAFe enabler kind this "
+            "Feature builds: exploration (discovery), architecture, infrastructure, or "
+            "compliance."
+        )
+    )
 
 
 class FeatureSetSchema(BaseModel):

@@ -3264,9 +3264,13 @@ export interface components {
         };
         /** EditFeatureRequest */
         EditFeatureRequest: {
+            /** Acceptance Criteria */
+            acceptance_criteria?: string[];
             delivery_drop: components["schemas"]["DeliveryDrop"];
             /** Expected Version */
             expected_version: number;
+            /** @default business */
+            kind: components["schemas"]["WorkKind"];
             /** Name */
             name: string;
             /** Outcome */
@@ -3357,6 +3361,8 @@ export interface components {
          * @description One Feature and everything a reviewer needs to judge it.
          */
         FeatureResponse: {
+            /** Acceptance Criteria */
+            acceptance_criteria: string[];
             actions: components["schemas"]["FeatureActionsResponse"];
             /** Approval History */
             approval_history: components["schemas"]["ApprovalResponse"][];
@@ -3369,6 +3375,7 @@ export interface components {
             epic_id: string;
             /** Id */
             id: string;
+            kind: components["schemas"]["WorkKind"];
             /** Name */
             name: string;
             /** Outcome */
@@ -5311,6 +5318,8 @@ export interface components {
             acceptance_criteria: components["schemas"]["AcceptanceCriterionPayload"][];
             /** Action */
             action: string;
+            /** @default business */
+            kind: components["schemas"]["WorkKind"];
             /** Role */
             role: string;
             /**
@@ -5329,6 +5338,8 @@ export interface components {
             action: string;
             /** Expected Version */
             expected_version: number;
+            /** @default business */
+            kind: components["schemas"]["WorkKind"];
             /** Role */
             role: string;
             /**
@@ -5346,6 +5357,7 @@ export interface components {
             /** Action */
             action: string;
             architecture?: components["schemas"]["ArchitectureImpactResponse"] | null;
+            kind: components["schemas"]["WorkKind"];
             provenance: components["schemas"]["ProvenanceResponse"];
             quality?: components["schemas"]["StoryQualityResponse"] | null;
             /** Role */
@@ -5408,6 +5420,7 @@ export interface components {
             feature_id: string;
             /** Id */
             id: string;
+            kind: components["schemas"]["WorkKind"];
             provenance: components["schemas"]["ProvenanceResponse"];
             /** Role */
             role: string;
@@ -5638,6 +5651,11 @@ export interface components {
             /** Workitemid */
             workItemId?: number | null;
         };
+        /**
+         * WorkKind
+         * @enum {string}
+         */
+        WorkKind: "business" | "exploration" | "architecture" | "infrastructure" | "compliance";
         /**
          * WorkflowStage
          * @enum {string}

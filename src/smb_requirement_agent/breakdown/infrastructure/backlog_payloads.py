@@ -19,12 +19,14 @@ from smb_requirement_agent.breakdown.domain.epic.value_objects import (
 from smb_requirement_agent.breakdown.domain.feature.entities import Feature
 from smb_requirement_agent.breakdown.domain.feature.value_objects import (
     DeliveryDrop,
+    FeatureAcceptanceCriterion,
     FeatureId,
     FeatureName,
     FeatureOutcome,
     SplittingPattern,
     SplittingRationale,
 )
+from smb_requirement_agent.breakdown.domain.kinds import WorkKind
 from smb_requirement_agent.breakdown.domain.story.entities import (
     StoryChangeOperation,
     StoryChangeProposal,
@@ -99,7 +101,7 @@ def epic_from_payload(data: JsonObject) -> Epic:
 
 
 def feature_to_payload(value: Feature) -> JsonObject:
-    return {
+    payload: JsonObject = {
         "source_lineage": TypeAdapter(tuple[SourceLineage, ...]).dump_python(
             value.source_lineage, mode="json"
         ),
@@ -114,6 +116,13 @@ def feature_to_payload(value: Feature) -> JsonObject:
         "version": value.version,
         **generation_to_payload(value.status, value.provenance, value.staleness, value.approvals),
     }
+    # Defaults are left out so a row written before the fields existed re-encodes
+    # unchanged (the golden payload contract).
+    if value.acceptance_criteria:
+        payload["acceptance_criteria"] = [item.value for item in value.acceptance_criteria]
+    if value.kind is not WorkKind.BUSINESS:
+        payload["work_kind"] = value.kind.value
+    return payload
 
 
 def feature_from_payload(data: JsonObject) -> Feature:
@@ -129,6 +138,12 @@ def feature_from_payload(data: JsonObject) -> Feature:
         delivery_drop=DeliveryDrop(required_text(data, "delivery_drop")),
         splitting_pattern=SplittingPattern(required_text(data, "splitting_pattern")),
         splitting_rationale=SplittingRationale(required_text(data, "splitting_rationale")),
+        # Both default for rows persisted before the fields existed.
+        acceptance_criteria=tuple(
+            FeatureAcceptanceCriterion(item_text(item))
+            for item in optional_json_array(data, "acceptance_criteria")
+        ),
+        kind=WorkKind(nullable_text(data, "work_kind") or WorkKind.BUSINESS.value),
         architecture=architecture_from_payload(data.get("architecture")),
         status=status,
         provenance=provenance,
@@ -139,7 +154,7 @@ def feature_from_payload(data: JsonObject) -> Feature:
 
 
 def story_to_payload(value: UserStory) -> JsonObject:
-    return {
+    payload: JsonObject = {
         "source_lineage": TypeAdapter(tuple[SourceLineage, ...]).dump_python(
             value.source_lineage, mode="json"
         ),
@@ -156,6 +171,9 @@ def story_to_payload(value: UserStory) -> JsonObject:
         "version": value.version,
         **generation_to_payload(value.status, value.provenance, value.staleness, value.approvals),
     }
+    if value.kind is not WorkKind.BUSINESS:
+        payload["work_kind"] = value.kind.value
+    return payload
 
 
 def story_from_payload(data: JsonObject) -> UserStory:
@@ -177,6 +195,7 @@ def story_from_payload(data: JsonObject) -> UserStory:
             )
             for item in json_array(data, "acceptance_criteria")
         ),
+        kind=WorkKind(nullable_text(data, "work_kind") or WorkKind.BUSINESS.value),
         architecture=architecture_from_payload(data.get("architecture")),
         status=status,
         provenance=provenance,
@@ -209,6 +228,11 @@ def story_proposal_to_payload(value: StoryChangeProposal) -> JsonObject:
                     {"given": item.given, "when": item.when, "then": item.then}
                     for item in candidate.acceptance_criteria
                 ],
+                **(
+                    {"work_kind": candidate.kind.value}
+                    if candidate.kind is not WorkKind.BUSINESS
+                    else {}
+                ),
                 "provenance": None
                 if candidate.provenance is None
                 else {
@@ -270,5 +294,6 @@ def _story_draft_from_payload(data: JsonObject) -> StoryDraft:
             )
             for item in json_array(data, "acceptance_criteria")
         ),
-        provenance,
+        kind=WorkKind(nullable_text(data, "work_kind") or WorkKind.BUSINESS.value),
+        provenance=provenance,
     )

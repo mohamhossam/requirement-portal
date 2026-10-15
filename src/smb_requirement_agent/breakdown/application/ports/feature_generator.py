@@ -32,6 +32,8 @@ class FeatureCandidate(TypedDict):
     delivery_drop: str
     splitting_pattern: str
     splitting_rationale: str
+    acceptance_criteria: list[str]
+    kind: str
     model: str
     prompt_version: str
 

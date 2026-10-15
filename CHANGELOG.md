@@ -11,6 +11,15 @@ restoring a backup.
 
 ## Unreleased
 
+- **Features carry acceptance criteria, and every Feature and Story a business/enabler
+  kind** (ADR-0118; prompts `feature-v8`, `story-v8`). Generation supplies feature-level
+  conditions of satisfaction and types each item as business work or a SAFe enabler
+  (exploration, architecture, infrastructure, compliance); both are editable, exported
+  (schema 1.6 → 1.7, new XLSX columns), published to ADO as description rows and shown in
+  the UI. Rows persisted and approvals recorded before this change are untouched: the new
+  payload and fingerprint fields are written only at non-default values, so nothing is
+  rewritten and no approval lapses. Story generation-context tokens are invalidated once;
+  open clients recover by reloading the Story set. No migration.
 - **Breakdown prompts align with the published SAFe guidance** (`epic-v4`, `feature-v7`,
   `story-v7`). Epic generation now receives the decided product impact and unconfirmed
   evidence (dependencies, ambiguities) the Feature/Story prompts already saw, and asks for a

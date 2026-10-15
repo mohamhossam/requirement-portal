@@ -74,6 +74,7 @@ def candidate(action: str) -> StoryCandidate:
                 "then": "the supported outcome is observable",
             }
         ],
+        kind="business",
         model="scripted",
         prompt_version="scripted-v1",
     )
@@ -428,6 +429,7 @@ def test_generation_rejects_concurrent_story_edit_without_overwriting_it() -> No
             original.action,
             BusinessValue("Concurrent human value"),
             original.acceptance_criteria,
+            original.kind,
         )
 
         def concurrent_edit() -> None:

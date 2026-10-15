@@ -83,6 +83,8 @@ def _item(
     rationale: str = "Journey stage",
     drop: str = "mvp",
     pattern: str = "journey_stage",
+    criteria: list[str] | None = None,
+    kind: str = "business",
 ) -> MagicMock:
     item = MagicMock()
     item.name = name
@@ -90,6 +92,8 @@ def _item(
     item.delivery_drop = drop
     item.splitting_pattern = pattern
     item.splitting_rationale = rationale
+    item.acceptance_criteria = ["An order completes in channel."] if criteria is None else criteria
+    item.kind = kind
     return item
 
 

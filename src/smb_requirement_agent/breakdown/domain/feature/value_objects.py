@@ -15,6 +15,7 @@ FeatureProvenance = Provenance
 
 __all__ = [
     "DeliveryDrop",
+    "FeatureAcceptanceCriterion",
     "FeatureId",
     "FeatureName",
     "FeatureOutcome",
@@ -64,6 +65,20 @@ class FeatureOutcome:
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "value", _normalised(self.value, "outcome"))
+
+
+@dataclass(frozen=True)
+class FeatureAcceptanceCriterion:
+    """One Feature-level condition of satisfaction (SAFe).
+
+    A plain checkable condition Product Management confirms the Feature by,
+    not a Given/When/Then Story criterion.
+    """
+
+    value: str
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "value", _normalised(self.value, "acceptance criterion"))
 
 
 @dataclass(frozen=True)

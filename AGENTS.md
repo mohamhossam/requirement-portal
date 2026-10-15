@@ -315,8 +315,13 @@ glossary in the same change when a term is introduced or its meaning changes.
 The original business reference defines the following hierarchy:
 
 - **Epic**: portfolio/LPM-level business outcome or bundled offer; may span multiple PIs.
-- **Feature**: one customer-recognizable capability with one measurable outcome; intended to fit roughly one PI.
+- **Feature**: one customer-recognizable capability with one measurable outcome (its benefit
+  hypothesis) and feature-level acceptance criteria — plain checkable conditions, not
+  Given/When/Then; intended to fit roughly one PI.
 - **User Story**: one small, testable slice of a Feature; intended to fit one sprint.
+
+Every Feature and Story carries a work kind (ADR-0118): `business`, or a SAFe enabler kind
+(`exploration`, `architecture`, `infrastructure`, `compliance`).
 
 ### Feature splitting candidates
 

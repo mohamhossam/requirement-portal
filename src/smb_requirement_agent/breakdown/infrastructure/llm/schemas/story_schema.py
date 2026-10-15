@@ -1,5 +1,7 @@
 """Structured-output schemas for User Story operations."""
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -14,6 +16,19 @@ class StoryItemSchema(BaseModel):
     action: str = Field(description="What the actor wants to do, without 'I want'.")
     value: str = Field(description="Why the action matters, without 'so that'.")
     acceptance_criteria: list[AcceptanceCriterionSchema] = Field(min_length=1)
+    kind: Literal[
+        "business",
+        "exploration",
+        "architecture",
+        "infrastructure",
+        "compliance",
+    ] = Field(
+        description=(
+            "business for direct user value; exploration for a discovery Story or "
+            "time-boxed spike; architecture, infrastructure, or compliance for that "
+            "enabler work."
+        )
+    )
 
 
 class StorySetSchema(BaseModel):

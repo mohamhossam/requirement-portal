@@ -7,6 +7,7 @@ from enum import Enum
 
 from smb_requirement_agent.breakdown.domain.architecture.entities import ArchitectureImpact
 from smb_requirement_agent.breakdown.domain.feature.value_objects import FeatureId
+from smb_requirement_agent.breakdown.domain.kinds import WorkKind
 from smb_requirement_agent.breakdown.domain.story.errors import InvalidStoryContentError
 from smb_requirement_agent.breakdown.domain.story.quality import InvestAssessment
 from smb_requirement_agent.breakdown.domain.story.value_objects import (
@@ -35,6 +36,7 @@ class UserStory(ReviewableGeneration):
     action: DesiredAction
     value: BusinessValue
     acceptance_criteria: tuple[AcceptanceCriterion, ...]
+    kind: WorkKind = WorkKind.BUSINESS
     architecture: ArchitectureImpact | None = None
 
     review_label = "Story"
@@ -54,6 +56,7 @@ class UserStory(ReviewableGeneration):
         action: DesiredAction,
         value: BusinessValue,
         acceptance_criteria: tuple[AcceptanceCriterion, ...],
+        kind: WorkKind,
         *,
         source_reconciled: bool = False,
     ) -> UserStory:
@@ -64,6 +67,7 @@ class UserStory(ReviewableGeneration):
             action=action,
             value=value,
             acceptance_criteria=acceptance_criteria,
+            kind=kind,
             architecture=None,
             source_reconciled=source_reconciled,
         )
@@ -104,6 +108,7 @@ class StoryDraft:
     action: DesiredAction
     value: BusinessValue
     acceptance_criteria: tuple[AcceptanceCriterion, ...]
+    kind: WorkKind = WorkKind.BUSINESS
     provenance: Provenance | None = None
 
     def __post_init__(self) -> None:
@@ -135,7 +140,12 @@ class StoryChangeProposal:
                 )
             drafts = tuple(
                 StoryDraft(
-                    item.role, item.action, item.value, item.acceptance_criteria, item.provenance
+                    item.role,
+                    item.action,
+                    item.value,
+                    item.acceptance_criteria,
+                    kind=item.kind,
+                    provenance=item.provenance,
                 )
                 for item in self.prepared_candidates
             )

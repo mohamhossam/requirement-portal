@@ -60,3 +60,15 @@ export function signature(item: BacklogItem): string | null {
 }
 
 export const DROP_LABEL = { mvp: "First release", later: "Later release" } as const;
+
+/**
+ * SAFe business-versus-enabler typing. Business is the default register and
+ * gets no badge; an enabler kind is the exception worth a label.
+ */
+export const KIND_LABEL = {
+  business: "Business",
+  exploration: "Enabler · Discovery",
+  architecture: "Enabler · Architecture",
+  infrastructure: "Enabler · Infrastructure",
+  compliance: "Enabler · Compliance",
+} as const;

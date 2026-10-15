@@ -265,6 +265,8 @@ def _document(revision: BreakdownRevision, approval: Approval) -> NeutralBacklog
             status=feature.status.value,
             provenance=_provenance(feature.provenance),
             architecture=_architecture(feature.architecture),
+            acceptance_criteria=tuple(item.value for item in feature.acceptance_criteria),
+            work_kind=feature.kind.value,
             stories=tuple(
                 ExportStory(
                     sequence=story_sequence,
@@ -283,6 +285,7 @@ def _document(revision: BreakdownRevision, approval: Approval) -> NeutralBacklog
                         for index, criterion in enumerate(story.acceptance_criteria, start=1)
                     ),
                     architecture=_architecture(story.architecture),
+                    work_kind=story.kind.value,
                 )
                 for story_sequence, story in enumerate(stories_by_feature[feature.id], start=1)
             ),

@@ -24,6 +24,7 @@ STORY_INPUT = {
     "acceptance_criteria": [
         {"given": "an eligible customer", "when": "I submit", "then": "the order is accepted"}
     ],
+    "kind": "exploration",
 }
 
 
@@ -140,12 +141,13 @@ def test_edit_and_guarded_individual_regeneration_preserve_identity_and_siblings
     requirement_id, feature_id, stories = _generated(client)
     first_id, sibling_id = stories[0]["id"], stories[1]["id"]
     path = f"/requirements/{requirement_id}/features/{feature_id}/stories/{first_id}"
-    assert (
-        client.put(path, json={**STORY_INPUT, "expected_version": stories[0]["version"]}).json()[
-            "status"
-        ]
-        == "edited"
-    )
+    edited = client.put(
+        path, json={**STORY_INPUT, "expected_version": stories[0]["version"]}
+    ).json()
+    assert edited["status"] == "edited"
+    # The generated set defaults to business work; the edit chose an enabler kind.
+    assert stories[0]["kind"] == "business"
+    assert edited["kind"] == "exploration"
     current = client.get(f"/requirements/{requirement_id}/features/{feature_id}/stories").json()
     token = next(item for item in current["stories"] if item["id"] == first_id)[
         "story_context_token"

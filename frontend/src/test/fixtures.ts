@@ -161,6 +161,8 @@ export const featureSetFixture: FeatureSet = {
       delivery_drop: "mvp",
       splitting_pattern: "journey_stage",
       splitting_rationale: "Ordering is a distinct journey stage.",
+      kind: "business",
+      acceptance_criteria: ["A customer can complete an eligible order in channel."],
       status: "generated",
       provenance: {
         generated_at: "2026-01-01T12:00:00Z",
@@ -183,6 +185,8 @@ export const featureSetFixture: FeatureSet = {
       delivery_drop: "later",
       splitting_pattern: "component_system",
       splitting_rationale: "Fulfilment is a separate system boundary.",
+      kind: "infrastructure",
+      acceptance_criteria: ["A placed order is provisioned and activated."],
       status: "approved",
       provenance: {
         generated_at: "2026-01-01T12:00:00Z",
@@ -208,6 +212,8 @@ export const approvedFeatureFixture: Feature = {
   delivery_drop: "mvp",
   splitting_pattern: "journey_stage",
   splitting_rationale: "Ordering is a distinct journey stage.",
+  kind: "business",
+  acceptance_criteria: ["A customer can complete an eligible order in channel."],
   status: "approved",
   provenance: {
     generated_at: "2026-01-01T12:00:00Z",
@@ -245,6 +251,7 @@ export const storyFixture: Story = {
       then: "I see that I qualify",
     },
   ],
+  kind: "business",
   status: "generated",
   provenance: storyProvenance,
   stale: null,
@@ -278,6 +285,7 @@ export const storySetFixture: StorySet = {
           then: "the order is accepted",
         },
       ],
+      kind: "business",
       status: "generated",
       provenance: storyProvenance,
       stale: null,
@@ -325,6 +333,7 @@ export const splitProposalFixture: StoryProposal = {
       acceptance_criteria: [
         { given: "a valid address", when: "I submit it", then: "the premises is located" },
       ],
+      kind: "business",
       provenance: storyProvenance,
     },
     {
@@ -335,6 +344,7 @@ export const splitProposalFixture: StoryProposal = {
       acceptance_criteria: [
         { given: "a located premises", when: "the check runs", then: "I see a clear result" },
       ],
+      kind: "business",
       provenance: storyProvenance,
     },
   ],

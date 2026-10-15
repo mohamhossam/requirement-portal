@@ -12,7 +12,7 @@ from smb_requirement_agent.breakdown.infrastructure.llm.prompts.generation_guida
     render_guidance,
 )
 
-PROMPT_VERSION = "story-v7"
+PROMPT_VERSION = "story-v8"
 
 SPLIT_OPERATION = """\
 Split the one source Story into TWO OR MORE distinct, smaller Stories.
@@ -66,6 +66,9 @@ RULES:
     "complies". When a SUPPORTED business rule or constraint defines failure or boundary
     behavior for this Story's action, cover it with a criterion; do not invent failure
     behavior the evidence does not define.
+15. Type each Story's kind: "business" for direct user value; "exploration" for every
+    discovery Story or time-boxed spike; "architecture", "infrastructure", or "compliance"
+    for that enabler work. Default to "business" when unsure.
 Return only content conforming to the requested JSON schema.
 """
 

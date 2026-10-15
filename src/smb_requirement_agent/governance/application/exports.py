@@ -7,7 +7,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
-EXPORT_SCHEMA_VERSION = "1.6"
+EXPORT_SCHEMA_VERSION = "1.7"
 
 
 class ExportFormat(StrEnum):
@@ -171,6 +171,8 @@ class ExportStory:
     provenance: ExportProvenance
     acceptance_criteria: tuple[ExportAcceptanceCriterion, ...]
     architecture: ExportArchitecture | None
+    # Added in 1.7: business, or the SAFe enabler kind.
+    work_kind: str = "business"
 
 
 @dataclass(frozen=True)
@@ -187,6 +189,9 @@ class ExportFeature:
     provenance: ExportProvenance
     architecture: ExportArchitecture | None
     stories: tuple[ExportStory, ...]
+    # Added in 1.7: feature-level conditions of satisfaction, and the SAFe kind.
+    acceptance_criteria: tuple[str, ...] = ()
+    work_kind: str = "business"
 
 
 @dataclass(frozen=True)

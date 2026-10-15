@@ -7,6 +7,7 @@ for one aggregate and not the other, both suites should notice.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -19,12 +20,18 @@ from smb_requirement_agent.breakdown.domain.feature.errors import (
 )
 from smb_requirement_agent.breakdown.domain.feature.value_objects import (
     DeliveryDrop,
+    FeatureAcceptanceCriterion,
     FeatureId,
     FeatureName,
     FeatureOutcome,
     FeatureStatus,
     SplittingPattern,
     SplittingRationale,
+)
+from smb_requirement_agent.breakdown.domain.kinds import WorkKind
+from smb_requirement_agent.breakdown.infrastructure.backlog_payloads import (
+    feature_from_payload,
+    feature_to_payload,
 )
 from smb_requirement_agent.shared_kernel.generation import Provenance
 from smb_requirement_agent.shared_kernel.staleness import StaleReason
@@ -55,6 +62,8 @@ def apply_edit(feature: Feature, *, source_reconciled: bool = False) -> Feature:
         delivery_drop=DeliveryDrop.LATER,
         splitting_pattern=SplittingPattern.JOURNEY_STAGE,
         splitting_rationale=SplittingRationale("Reconsidered as a journey stage"),
+        acceptance_criteria=(FeatureAcceptanceCriterion("The journey completes end to end."),),
+        kind=WorkKind.BUSINESS,
         source_reconciled=source_reconciled,
     )
 
@@ -62,7 +71,8 @@ def apply_edit(feature: Feature, *, source_reconciled: bool = False) -> Feature:
 class TestValueObjects:
     @pytest.mark.parametrize("blank", ["", "   ", "\n\t"])
     @pytest.mark.parametrize(
-        "factory", [FeatureId, FeatureName, FeatureOutcome, SplittingRationale]
+        "factory",
+        [FeatureId, FeatureName, FeatureOutcome, SplittingRationale, FeatureAcceptanceCriterion],
     )
     def test_blank_content_is_rejected(self, factory: type, blank: str) -> None:
         with pytest.raises(InvalidFeatureContentError):
@@ -70,6 +80,21 @@ class TestValueObjects:
 
     def test_surrounding_whitespace_is_normalised(self) -> None:
         assert FeatureName("  Ordering  ").value == "Ordering"
+
+
+def test_payload_round_trips_enabler_kind_and_acceptance_criteria() -> None:
+    """Non-default kind and criteria survive persistence; defaults stay off-disk (goldens)."""
+    feature = replace(
+        make_feature(),
+        kind=WorkKind.COMPLIANCE,
+        acceptance_criteria=(FeatureAcceptanceCriterion("Evidence is archived."),),
+    )
+
+    payload = feature_to_payload(feature)
+
+    assert payload["work_kind"] == "compliance"
+    assert payload["acceptance_criteria"] == ["Evidence is archived."]
+    assert feature_from_payload(payload) == feature
 
 
 class TestLifecycle:

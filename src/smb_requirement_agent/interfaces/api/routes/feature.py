@@ -65,6 +65,8 @@ def _to_response(feature: Feature, story_context_token: str | None = None) -> Fe
         delivery_drop=feature.delivery_drop,
         splitting_pattern=feature.splitting_pattern,
         splitting_rationale=feature.splitting_rationale.value,
+        acceptance_criteria=[item.value for item in feature.acceptance_criteria],
+        kind=feature.kind,
         status=feature.status,
         provenance=ProvenanceResponse(
             generated_at=feature.provenance.generated_at,
@@ -139,6 +141,8 @@ def edit_feature(
         delivery_drop=body.delivery_drop.value,
         splitting_pattern=body.splitting_pattern.value,
         splitting_rationale=body.splitting_rationale,
+        acceptance_criteria=tuple(body.acceptance_criteria),
+        kind=body.kind.value,
         source_reconciled=body.source_reconciled,
         expected_version=body.expected_version,
     )

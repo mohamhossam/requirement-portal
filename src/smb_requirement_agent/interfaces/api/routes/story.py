@@ -97,6 +97,7 @@ def _input(value: StoryContentRequest) -> StoryInput:
             AcceptanceCriterionInput(item.given, item.when, item.then)
             for item in value.acceptance_criteria
         ),
+        kind=value.kind,
         source_reconciled=value.source_reconciled,
         expected_version=(value.expected_version if isinstance(value, StoryDraftRequest) else 1),
     )
@@ -117,6 +118,7 @@ def _story_response(story: UserStory, context_token: str | None = None) -> Story
             AcceptanceCriterionPayload(given=item.given, when=item.when, then=item.then)
             for item in story.acceptance_criteria
         ],
+        kind=story.kind,
         status=story.status,
         provenance=ProvenanceResponse(
             generated_at=story.provenance.generated_at,
@@ -175,6 +177,7 @@ def _candidate_response(candidate: StoryDraft) -> StoryProposalCandidateResponse
             AcceptanceCriterionPayload(given=item.given, when=item.when, then=item.then)
             for item in candidate.acceptance_criteria
         ],
+        kind=candidate.kind,
         provenance=ProvenanceResponse(
             generated_at=candidate.provenance.generated_at,
             model=candidate.provenance.model,

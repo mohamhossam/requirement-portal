@@ -179,6 +179,23 @@ def publication_plan(document: NeutralBacklogExport) -> PublicationPlan:
                     ("Outcome", feature.outcome),
                     ("Delivery drop", feature.delivery_drop),
                     ("Split by", f"{feature.splitting_pattern}: {feature.splitting_rationale}"),
+                    # Only present on post-1.7 exports, so republishing an older
+                    # handoff renders the same card it always did.
+                    *(
+                        [("Kind", f"Enabler ({feature.work_kind})")]
+                        if feature.work_kind != "business"
+                        else []
+                    ),
+                    *(
+                        [
+                            (
+                                "Acceptance criteria",
+                                "\n".join(f"- {item}" for item in feature.acceptance_criteria),
+                            )
+                        ]
+                        if feature.acceptance_criteria
+                        else []
+                    ),
                 ),
                 acceptance_criteria=(),
                 parent_key=epic.id,
@@ -194,7 +211,14 @@ def publication_plan(document: NeutralBacklogExport) -> PublicationPlan:
                     kind=WorkItemKind.STORY,
                     label=f"Story {feature.sequence}.{story.sequence}",
                     title=_title(f"As a {story.role}, I want {story.action}"),
-                    description=(("Story", story.voice),),
+                    description=(
+                        ("Story", story.voice),
+                        *(
+                            [("Kind", f"Enabler ({story.work_kind})")]
+                            if story.work_kind != "business"
+                            else []
+                        ),
+                    ),
                     acceptance_criteria=tuple(
                         AcceptanceCriterionText(item.given, item.when, item.then)
                         for item in story.acceptance_criteria

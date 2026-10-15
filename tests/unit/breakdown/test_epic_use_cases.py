@@ -273,9 +273,7 @@ class TestGenerateEpic:
         assert epic.provenance.model == FAKE_MODEL
         assert epic.provenance.prompt_version == FAKE_PROMPT_VERSION
 
-    def test_generator_receives_decided_impact_and_unconfirmed_evidence(
-        self, world: World
-    ) -> None:
+    def test_generator_receives_decided_impact_and_unconfirmed_evidence(self, world: World) -> None:
         """Epic guidance carries the reviewer's decision and unconfirmed evidence,
         but never the architecture catalogue (implementation-level advice)."""
         requirement = world.analysed_requirement()

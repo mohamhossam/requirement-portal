@@ -15,6 +15,7 @@ import { ArchitectureImpactPanel } from "../architecture/ArchitectureImpactPanel
 import { StoryEditForm } from "./StoryEditForm";
 import { StoryQualityPanel } from "./StoryQualityPanel";
 import { BacklogStatus } from "../breakdown/BacklogStatus";
+import { KindBadge } from "../breakdown/KindBadge";
 import { useEditFocus } from "../breakdown/useEditFocus";
 
 /**
@@ -118,6 +119,7 @@ export function StoryCard({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <BacklogStatus item={story} level="story" />
+            <KindBadge kind={story.kind} />
             {focused && quality && (
               <span className="text-ink-muted text-meta">
                 {quality.status === "passes"

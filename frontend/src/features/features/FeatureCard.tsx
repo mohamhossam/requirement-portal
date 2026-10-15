@@ -9,6 +9,7 @@ import { Disclosure } from "../../components/Disclosure";
 import { Badge, Button, Card, CardHeader } from "../../components/ui";
 import { ArchitectureImpactPanel } from "../architecture/ArchitectureImpactPanel";
 import { StoryList } from "../stories/StoryList";
+import { KindBadge } from "../breakdown/KindBadge";
 import { DropBadge } from "./DropBadge";
 import { PATTERN_LABEL } from "./splittingPatterns";
 import { FeatureEditForm } from "./FeatureEditForm";
@@ -90,6 +91,7 @@ export function FeatureCard({
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <BacklogStatus item={feature} level="feature" />
           <DropBadge drop={feature.delivery_drop} />
+          <KindBadge kind={feature.kind} />
         </div>
         {/* Which systems this touches, on the card: the architect's first
             question was two collapsed disclosures deep. */}
@@ -128,6 +130,20 @@ export function FeatureCard({
           {feature.outcome}
         </p>
       </div>
+
+      {/* Features generated before the field existed carry none; rendering an
+          empty heading would imply missing work on content nobody can add to
+          without editing. */}
+      {feature.acceptance_criteria.length > 0 && (
+        <div className="mt-5 grid gap-1">
+          <span className="text-label text-ink-muted">Acceptance criteria</span>
+          <ul className="border-line text-document font-document text-ink-soft m-0 grid list-none gap-2 border-0 border-l border-solid p-0 pl-4 max-w-[var(--measure-document)]">
+            {feature.acceptance_criteria.map((criterion, index) => (
+              <li key={index}>{criterion}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {focused ? (
         <>
