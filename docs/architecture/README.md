@@ -139,7 +139,7 @@ Bounded contexts: [context map](context-map.md) and [ubiquitous language](ubiqui
 - [ADR-0108: Signed releases deployed by tag, backups, and expand/contract migrations](adr-0108-releases-backups-and-migrations.md) — Accepted; implemented 2026-10-09 (production hardening PR 6)
 - [ADR-0109: Frontend logic changes during the UI redesign are recorded exceptions](adr-0109-frontend-logic-exceptions.md) — Accepted; recorded 2026-10-09 (production hardening PR 5)
 - [ADR-0110: Optional tracing: requests, jobs, SQL and calls, with trace context only for peers](adr-0110-optional-tracing.md) — Accepted; implemented 2026-10-10 (production hardening PR 14)
-- [ADR-0111: Accepted risks](adr-0111-accepted-risks.md) — Accepted 2026-10-10 (production hardening PR 16)
+- [ADR-0111: Accepted risks](adr-0111-accepted-risks.md) — Accepted 2026-10-10 (production hardening PR 16); Amendment 1 (2026-10-15) adds prompt-injection, spend-ceiling and operator-owned-infrastructure risks
 - [ADR-0112: Azure DevOps publication through a REST adapter](adr-0112-ado-publication-adapter.md) — Accepted 2026-10-10 (Slice 12)
 - [ADR-0113: A publication record and marker-based recovery](adr-0113-publication-record-and-safe-republish.md) — Accepted 2026-10-10 (Slice 13)
 - [ADR-0114: Curated capability concepts may select systems](adr-0114-capability-concepts-select-systems.md) — Accepted 2026-10-10 (ontology plan, Phase 0; built in knowledge-portal)

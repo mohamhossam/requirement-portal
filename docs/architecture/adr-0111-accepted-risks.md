@@ -83,6 +83,64 @@ limits it, and what would make it worth revisiting.
 - **Revisit when:** a deployment's users need another language, ideally after the redesign
   settles the screens.
 
+## Amendment 1 (2026-10-15): three risks the record was missing, and two changes of fact
+
+The repository security review found accepted risks that were real but written down
+nowhere, and this record is where they belong. It also closed two gaps that were
+*not* decisions: the synchronous attachment routes now run the same fail-closed
+malware scan as ingestion, and `APP_ENV=production` now requires a positive
+`PROVIDER_DAILY_TOKEN_BUDGET`. Risk 4's justification ("the UI redesign is still
+under way") is dated: the redesign shipped (ADR-0117); English-only remains
+accepted on the pilot's grounds alone.
+
+### 5. Prompt injection is mitigated by instruction and review, not isolation
+
+- **What.** Text from requirements, attached documents and references reaches the
+  model labelled as untrusted data, but there is no content isolation (no
+  delimiter escaping, no instruction detection), and images go to vision models
+  unfiltered. A document can try to steer generation.
+- **Why accepted.** Output is schema-constrained, sanitized and citation-checked,
+  and nothing generated becomes business truth without human confirmation and
+  content-bound approval — the human gate is the real control, and it is the
+  product's own design (PRODUCT.md, "The human decides; the AI drafts").
+- **What limits it.** Structured outputs with validation; prompts that label
+  untrusted content; approval bound to exact content; publication only from an
+  explicitly approved revision.
+- **Revisit when:** any generated content gains an effect that does not pass a
+  human (automatic publication, automatic re-analysis acting on its own output).
+
+### 6. The AI spend ceiling is global, not per actor
+
+- **What.** `PROVIDER_DAILY_TOKEN_BUDGET` (required in production since this
+  amendment) stops job claims once the day's tokens are spent, for everyone
+  together; one actor at the 30-operations-per-minute limit can consume a large
+  share of it, and jobs already running may overshoot the ceiling.
+- **Why accepted.** The budget bounds the organization's worst-case daily spend,
+  which is the cost that matters; per-actor fairness inside it is a product
+  decision not yet needed for one organization's pilot.
+- **What limits it.** The per-actor per-minute rate limit (ADR-0106), spend
+  metrics and the `DailyTokenBudgetExceeded` alert, and jobs that wait rather
+  than fail when the budget is spent.
+- **Revisit when:** more than a handful of actors share a deployment, or a real
+  budget overrun is traced to one actor.
+
+### 7. TLS, the identity provider and backup custody are the operator's
+
+- **What.** The stack terminates no TLS (`web` binds loopback by default and
+  expects a TLS proxy in front), ships a development Keycloak only
+  (`deploy/keycloak` is not a production IdP), and writes backups unencrypted to
+  a local volume with scheduling and off-host copies left to the operator.
+- **Why accepted.** Each is deployment infrastructure the product cannot own
+  without owning the deployment; the runbooks say exactly what the operator must
+  provide (`docs/operations/deployment.md`, `secrets.md`).
+- **What limits it.** The edge refuses to claim HTTPS it does not see (HSTS only
+  over HTTPS, `TRUSTED_PROXY_CIDR` default trusts no one), production refuses
+  fake identity, and CI rehearses backup and restore so the mechanism is known
+  good.
+- **Revisit when:** a deployment is operated by someone other than the owner, or
+  a qualification gate (docs/slices/production-readiness-qualification.md) turns
+  one of these into a verified, recorded setup instead of an instruction.
+
 ## Consequences
 
 - **Kept up to date.** A reviewer can find each accepted risk and its limits in one place.

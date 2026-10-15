@@ -109,7 +109,17 @@ def test_the_fake_publisher_needs_no_account(monkeypatch: pytest.MonkeyPatch) ->
                 "ADO_PROJECT": "SMB",
                 "ADO_PERSONAL_ACCESS_TOKEN": "pat",
             },
-            "ADO_ORGANIZATION_URL must be an http",
+            "ADO_ORGANIZATION_URL must be an HTTPS",
+        ),
+        (
+            {
+                "ADO_PUBLISHER": "azure_devops",
+                # Plain HTTP would send the personal access token in cleartext.
+                "ADO_ORGANIZATION_URL": "http://tfs.example.local/org",
+                "ADO_PROJECT": "SMB",
+                "ADO_PERSONAL_ACCESS_TOKEN": "pat",
+            },
+            "ADO_ORGANIZATION_URL must be an HTTPS",
         ),
         (
             {

@@ -5,6 +5,6 @@
 useDefault = true
 
 [[allowlists]]
-description = "CI-only credentials: the throwaway stack in ci.yml's deployment job uses them, and nothing else accepts them."
-regexTarget = "line"
-regexes = ['''ci-only''']
+description = "CI-only credentials: the throwaway stack in ci.yml's deployment job uses them, and nothing else accepts them. Anchored to the detected secret itself, so a real secret on a line that merely mentions ci-only is still reported."
+regexTarget = "secret"
+regexes = ['''^['"]?ci-only[a-z0-9-]*['"]?$''']

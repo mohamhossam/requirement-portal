@@ -70,6 +70,8 @@ x-backend: &backend
   cpus: 1.0
   pids_limit: 256
   read_only: true
+  # The processes run as uid 10001 from the start and need no capabilities.
+  cap_drop: [ALL]
   tmpfs:
     - /tmp
   # Files the settings name by path, mounted read-only. Relative host paths
@@ -243,9 +245,13 @@ services:
       TRUSTED_PROXY_CIDR: ${TRUSTED_PROXY_CIDR:-127.0.0.1/32}
       EDGE_RATE_PER_SECOND: ${EDGE_RATE_PER_SECOND:-50}
       EDGE_BURST: ${EDGE_BURST:-100}
-    # WEB_PORT moves it off 8080, e.g. beside the earlier deployment.
+    # WEB_PORT moves it off 8080, e.g. beside the earlier deployment. The edge
+    # serves plain HTTP, so by default it binds to loopback, where only a TLS
+    # proxy on the same host reaches it. Set WEB_BIND=0.0.0.0 only when a
+    # firewall limits who can reach the port, or TLS terminates elsewhere
+    # (docs/operations/deployment.md, "TLS").
     ports:
-      - "${WEB_PORT:-8080}:8080"
+      - "${WEB_BIND:-127.0.0.1}:${WEB_PORT:-8080}:8080"
     restart: unless-stopped
     logging: *logging
     mem_limit: 256m
@@ -260,6 +266,8 @@ services:
       - /run/web:uid=101,gid=101
     security_opt:
       - no-new-privileges:true
+    # nginx-unprivileged binds 8080 as uid 101 and needs no capabilities.
+    cap_drop: [ALL]
     # Busybox wget, in the nginx-unprivileged image: nginx answers and serves the app.
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/"]

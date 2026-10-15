@@ -27,6 +27,16 @@ restoring a backup.
   `PROVIDER_DAILY_TOKEN_BUDGET` unset or 0 (record-only). Upgrade step: set it in
   `deploy/production.env` to the organization's daily token budget and keep the
   `DailyTokenBudgetExceeded` alert threshold in step. No migration.
+- **Edge and deployment hardening.** The `web` port now binds to `127.0.0.1` by default —
+  upgrade step: deployments that expose the edge directly set `WEB_BIND=0.0.0.0` in `deploy/.env`
+  (and a firewall or TLS proxy in front remains required). `/api/` responses carry
+  `Content-Security-Policy: default-src 'none'; sandbox`, so a directly opened attachment or
+  image is inert; the app reads them with fetch and is unaffected. The api, worker, migrate and
+  web containers drop all Linux capabilities (`cap_drop: [ALL]`). `ADO_ORGANIZATION_URL` must be
+  HTTPS — plain HTTP sent the personal access token in cleartext. The postgres-exporter prefers
+  TLS to the database. The gitleaks allowlist is anchored to the exact `ci-only…` values instead
+  of any line containing them. ADR-0111 Amendment 1 records the prompt-injection, spend-ceiling
+  and operator-owned-infrastructure risks. No migration.
 - **Documentation brought in line with the shipped code.** README, PRODUCT.md, ROADMAP.md,
   WORKSPACE.md, AGENTS.md §19 and CLAUDE.md no longer describe Azure DevOps publication, the
   repository split, the bounded-context layout or the UI redesign as pending — all are shipped.

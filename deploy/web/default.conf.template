@@ -122,6 +122,12 @@ server {
 
     location /api/ {
         include /etc/nginx/snippets/security-headers.conf;
+        # API responses are data, never documents: a second CSP header makes a
+        # directly opened response (an attachment blob, an extracted image) inert
+        # even if a content type ever slipped past re-encoding. The app itself is
+        # unaffected: it reads these responses with fetch and object URLs. The
+        # nested locations declare no add_header, so they inherit this.
+        add_header Content-Security-Policy "default-src 'none'; sandbox" always;
         # A variable in proxy_pass makes nginx resolve the host per request.
         proxy_pass ${API_UPSTREAM}$api_request_uri;
         proxy_http_version 1.1;

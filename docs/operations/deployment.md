@@ -45,7 +45,10 @@ image installs dependencies from `uv.lock` (`uv sync --locked --no-dev`).
   non-zero when a worker stops being healthy, and the restart policy replaces it.
 - **Migrate.** Runs to completion before the API and worker start. Migrations
   never run on application boot.
-- **Web.** The only published port (8080, or `WEB_PORT`).
+- **Web.** The only published port (8080, or `WEB_PORT`), bound to `127.0.0.1` by
+  default: the edge speaks plain HTTP, so out of the box only a TLS proxy on the
+  same host reaches it. Set `WEB_BIND=0.0.0.0` only when TLS terminates on
+  another machine and a firewall limits who can reach the port.
   - Put TLS termination in front of it.
   - The API, worker, PostgreSQL, ClamAV and metrics ports stay on the private
     network.
@@ -644,8 +647,11 @@ the client. Set `TRUSTED_PROXY_CIDR` to the proxy's address or range, and have t
 `X-Forwarded-For`. Otherwise every request counts as the proxy's address and the limit applies
 to everyone together.
 
-The default, `127.0.0.1/32`, trusts no one. People behind one corporate NAT share an address:
-raise the limit if a whole office reaches it.
+The default, `127.0.0.1/32`, trusts no one — including, usually, a proxy on the same host: a
+host process reaching the published port arrives from the Docker bridge gateway (commonly
+`172.17.0.1` or the compose network's gateway, not `127.0.0.1`), so set `TRUSTED_PROXY_CIDR`
+to the address the edge actually logs for the proxy. `docker compose logs web` shows it.
+People behind one corporate NAT share an address: raise the limit if a whole office reaches it.
 
 ## Internal API
 
