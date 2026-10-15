@@ -14,7 +14,6 @@ import { ChevronLeft } from "lucide-react";
 
 import { Badge, Button, ButtonLink, Card, Checkbox, cx } from "../../components/ui";
 import { HOVER_GROUND_SOFT, TRANSITION } from "../../components/ui/recipes";
-import { canGenerateStories } from "../../review/rules";
 import { useRequirementJobs } from "../jobs/useRequirementJobs";
 import { ManualStoryChangeDialog } from "./ManualStoryChangeDialog";
 import { StoryCard } from "./StoryCard";
@@ -219,7 +218,8 @@ export function StoryList({ requirementId, feature, canManage, focused = false, 
   const proposalBusy = applyProposal.isPending || discardProposal.isPending;
   const proposalError = applyProposal.error ?? discardProposal.error ?? propose.error;
   const manualError = manualSplit.error ?? manualMerge.error;
-  const generation = canGenerateStories(feature);
+  // The server's own availability (ADR-0073), not a client restatement.
+  const generation = feature.actions.generate_stories;
   /**
    * How many INVEST checks a Story failed, or null when the assessment is
    * stale or absent. The Story list used to show provenance alone, so two
@@ -244,7 +244,7 @@ export function StoryList({ requirementId, feature, canManage, focused = false, 
   /** Why a Story action is unavailable, in the person's own words. */
   const blocked = !canManage
     ? "You do not have permission to change this Requirement."
-    : generation.ok ? null : generation.reason;
+    : generation.allowed ? null : generation.reason;
 
   if (stories.isError && !stories.data) return <div hidden={focused && !visible}><ErrorNotice message={errorMessage(stories.error)} reference={errorReference(stories.error)} /></div>;
 
@@ -267,16 +267,16 @@ export function StoryList({ requirementId, feature, canManage, focused = false, 
         <EmptyState
           title="No Stories yet"
           message={
-            generation.ok
+            generation.allowed
               ? "Break this approved Feature into sprint-sized, testable User Stories."
-              : generation.reason
+              : (generation.reason ?? "The Feature is not ready for Stories yet.")
           }
           action={
             <Button
               variant="primary"
               loading={storiesGenerating}
               loadingLabel="Generating…"
-              disabled={!canManage || !generation.ok}
+              disabled={!canManage || !generation.allowed}
               onClick={() => generate.mutate()}
             >
               Generate Stories
@@ -434,7 +434,7 @@ export function StoryList({ requirementId, feature, canManage, focused = false, 
         <StoryProposalPanel
           key={proposal.id}
           proposal={proposal}
-          busy={!canManage || proposalBusy || !generation.ok}
+          busy={!canManage || proposalBusy || !generation.allowed}
           error={null}
           onApply={() => applyProposal.mutate(proposal)}
           onDiscard={() => discardProposal.mutate(proposal)}
@@ -452,7 +452,7 @@ export function StoryList({ requirementId, feature, canManage, focused = false, 
                     // Starts with the visible label (WCAG 2.5.3), then says which Story.
                     aria-label={`Select to merge: ${storyGist(story.voice)}`}
                     checked={selected.includes(story.id)}
-                    disabled={!canManage || !generation.ok}
+                    disabled={!canManage || !generation.allowed}
                     onChange={() => toggleSelect(story.id)}
                   />
                 </div>

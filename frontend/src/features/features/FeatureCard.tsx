@@ -7,7 +7,6 @@ import { ProvenanceDetails } from "../../components/ProvenanceDetails";
 import { StalenessNotice } from "../../components/StalenessNotice";
 import { Disclosure } from "../../components/Disclosure";
 import { Badge, Button, Card, CardHeader } from "../../components/ui";
-import { canApprove } from "../../review/rules";
 import { ArchitectureImpactPanel } from "../architecture/ArchitectureImpactPanel";
 import { StoryList } from "../stories/StoryList";
 import { DropBadge } from "./DropBadge";
@@ -49,14 +48,15 @@ export function FeatureCard({
   onApprove: () => void;
 }) {
   const [editing, setEditing] = useState<Feature | null>(null);
-  const approval = canApprove(feature);
+  // The server's own availability (ADR-0073), not a client restatement.
+  const approval = feature.actions.approve;
   const { trigger, form } = useEditFocus(Boolean(editing));
 
   if (editing) {
     return <div ref={form}><EditorConflictNotice baselineVersion={editing.version} currentVersion={feature.version} currentContent={[feature.name, feature.outcome, feature.splitting_rationale].join("\n\n")} onReconcile={() => setEditing(feature)} /><FeatureEditForm feature={editing} busy={busy} error={error} onCancel={() => setEditing(null)} onSave={async (input) => { try { await onEdit(input, editing.version); setEditing(null); } catch { /* Mutation error remains visible with the draft. */ } }} /></div>;
   }
 
-  const approveReason = !approval.ok ? approval.reason : undefined;
+  const approveReason = approval.allowed ? undefined : (approval.reason ?? undefined);
   const impact = feature.architecture;
 
   return (
@@ -107,7 +107,7 @@ export function FeatureCard({
             <span>Systems not mapped yet</span>
           )}
         </p>
-        {canManage && approval.ok && (
+        {canManage && approval.allowed && (
           <p className="text-meta text-ink-muted m-0 max-w-[var(--measure-document)]">
             Approving signs off this Feature as it reads now, so its Stories can be generated. Any later edit needs a new approval; Stories are approved on Review &amp; approve.
           </p>

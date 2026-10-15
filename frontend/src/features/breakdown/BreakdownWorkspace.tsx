@@ -10,7 +10,7 @@ import { Skeleton } from "../../components/Skeleton";
 import { WorkspaceDrawer } from "../../components/WorkspaceDrawer";
 import { Button, ButtonLink, Card, CardHeader, cx } from "../../components/ui";
 import { HOVER_GROUND_SOFT, TRANSITION } from "../../components/ui/recipes";
-import { canDecompose, canGenerateEpic } from "../../review/rules";
+import type { ActionAvailability } from "../../api/client";
 import { DropBadge } from "../features/DropBadge";
 import { EpicCard } from "../epic/EpicCard";
 import { FeatureCard } from "../features/FeatureCard";
@@ -68,7 +68,20 @@ export function BreakdownWorkspace(props: Props) {
   const items = useMemo(() => features?.features ?? [], [features]);
   const selected = items.find((item) => item.id === featureId);
   const base = `/requirements/${requirementId}/breakdown`;
-  const generation = canGenerateEpic(analysis), decomposition = canDecompose(analysis, epic);
+  // The server's own availabilities (ADR-0073). Missing analysis or Epic are
+  // loading/absence states no response can carry, so those messages stay here.
+  const generation: ActionAvailability = analysis?.actions.generate_epic ?? {
+    allowed: false,
+    reason: "Analyse the current requirement before generating an Epic.",
+    confirmation: null,
+  };
+  const decomposition: ActionAvailability = epic
+    ? epic.actions.generate_features
+    : {
+        allowed: false,
+        reason: analysis ? "Generate and approve an Epic first." : "Analyse the current requirement first.",
+        confirmation: null,
+      };
   const owed = items.filter(needsApproval);
   const nextOwed = owed[0];
   /**
@@ -81,8 +94,8 @@ export function BreakdownWorkspace(props: Props) {
   const confirmedOn = analysis?.confirmed_at
     ? new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(analysis.confirmed_at))
     : null;
-  const epicEmptyMessage = !generation.ok
-    ? generation.reason
+  const epicEmptyMessage = !generation.allowed
+    ? (generation.reason ?? "Analysis is not ready for an Epic yet.")
     : confirmedOn
       ? `Generate an Epic from the analysis confirmed on ${confirmedOn}.`
       : "Generate an Epic from the confirmed analysis.";
@@ -189,7 +202,7 @@ export function BreakdownWorkspace(props: Props) {
                     variant="primary"
                     loading={props.epicBusy}
                     loadingLabel="Generating…"
-                    disabled={!canManage || !generation.ok}
+                    disabled={!canManage || !generation.allowed}
                     onClick={() => props.onGenerateEpic(false)}
                   >
                     Generate Epic
@@ -236,13 +249,13 @@ export function BreakdownWorkspace(props: Props) {
               ) : (
                 <EmptyState
                   title="No Features yet"
-                  message={decomposition.ok ? "Generate the capabilities that deliver this Epic." : decomposition.reason}
+                  message={decomposition.allowed ? "Generate the capabilities that deliver this Epic." : (decomposition.reason ?? "The Epic is not ready to decompose yet.")}
                   action={
                     <Button
                       variant="primary"
                       loading={props.featureBusy}
                       loadingLabel="Generating…"
-                      disabled={!canManage || !decomposition.ok}
+                      disabled={!canManage || !decomposition.allowed}
                       onClick={props.onGenerateFeatures}
                     >
                       Decompose into Features

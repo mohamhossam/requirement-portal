@@ -27,6 +27,13 @@ restoring a backup.
   `PROVIDER_DAILY_TOKEN_BUDGET` unset or 0 (record-only). Upgrade step: set it in
   `deploy/production.env` to the organization's daily token budget and keep the
   `DailyTokenBudgetExceeded` alert threshold in step. No migration.
+- **The browser follows the server's review rules.** `frontend/src/review/rules.ts` is deleted:
+  approval, generation and regeneration availability now come from the API's `actions` fields
+  (ADR-0073), so the gate texts are the server's and cannot drift. The request-body types and
+  the passage-citation shape are derived from the generated contract types instead of being
+  hand-written (AGENTS.md §19 debt, paid as an owner-approved ADR-0109 exception). No API or
+  migration change; the visible difference is slightly different wording on blocked
+  Approve/Generate buttons.
 - **CI robustness.** Every workflow job has a `timeout-minutes` ceiling instead of GitHub's
   6-hour default. The redundant `postgres-architecture` job is gone (quality gates already runs
   the whole test tree against PostgreSQL). The browser smoke job now runs against PostgreSQL with

@@ -33,7 +33,7 @@ test("selects deep links, preserves drafts and reads only requested Stories", as
   // Still above the fold, with the shared frame's header and page title above it
   // now rather than the Backlog's own compact header.
   expect((await detail.getByRole("heading", { name: epicFixture.name }).boundingBox())!.y).toBeLessThan(600);
-  await expect(page.getByText("This version is already approved. Regenerate or edit it before approving again.")).toHaveCount(0);
+  await expect(page.getByText(/version is already approved/)).toHaveCount(0);
   await page.screenshot({ path: testInfo.outputPath("epic-desktop.png") });
   await detail.getByRole("button", { name: "Edit", exact: true }).click();
   await page.getByLabel("Epic name").fill("Unsaved Epic draft");

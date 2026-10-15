@@ -10,9 +10,12 @@ import type {
   StoryQuality,
 } from "../api/client";
 
-const allowedAction = { allowed: true, reason: null, confirmation: null };
+export const allowedAction = { allowed: true, reason: null, confirmation: null };
 
-const generatedFeatureActions = {
+/** A blocked action exactly as the server reports it. */
+export const blockedAction = (reason: string) => ({ allowed: false, reason, confirmation: null });
+
+export const generatedFeatureActions = {
   approve: allowedAction,
   generate_stories: {
     allowed: false,
@@ -21,7 +24,7 @@ const generatedFeatureActions = {
   },
 };
 
-const approvedFeatureActions = {
+export const approvedFeatureActions = {
   approve: {
     allowed: false,
     reason: "This Feature version is already approved. Edit or regenerate it before approving again.",

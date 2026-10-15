@@ -14,14 +14,12 @@ export type ActiveRelease = Schemas["ActiveRelease"];
 export type ArchitectureEvidence = Schemas["ArchitectureEvidence"];
 export type CitedPassage = Schemas["CitedPassage"];
 
-/** Which exact published passage a citation names. */
-export interface PassageCitation {
-  document_id: string;
-  publication_id: string;
-  version_id: string;
-  revision_id: string;
-  block_id: string;
-}
+/**
+ * Which exact published passage a citation names: the passage route's own query
+ * parameters, derived from the contract rather than restated (AGENTS.md §19).
+ */
+export type PassageCitation =
+  import("./schema").operations["cited_passage_references_passage_get"]["parameters"]["query"];
 
 /**
  * Where knowledge administrators curate the library and the catalogues, or null when this

@@ -717,7 +717,7 @@ harder in later slices.
 | Legacy shared-library extraction revisions (DOCX table headers — ADR-0056; TXT/Markdown and CSV/TSV heading or first-record wording — ADR-0057/0059; Word prose labels — ADR-0060; XLSX worksheet names — ADR-0061; Docling OCR heading paths — ADR-0065) can retain wording that newer extraction versions exclude. | The ADRs fix new uploads only; immutable legacy publication rows keep the old metadata, and rebuilding stored text does not repair it. | **Owned by `knowledge-portal` since the library moved there (ADR-0104).** Owners inspect/withdraw affected publications and upload/review/publish a new version; see that repository's document-knowledge runbook. Tracked here only until its own register carries it. |
 | Requirement index embedding follows every knowledge-corpus edit, including edits through routes that are not rate-limited (saving a draft answer, assigning a question). | Those edits spend embedding calls outside the per-actor limit. The spend is bounded to the changed chunks and by the input limits (ADR-0074, amended by the third review remediation). | Charge index work to the editing actor if embedding spend becomes material. |
 | `ai_jobs` rows are kept forever, because they are the activity feed's record of AI work (ADR-0079). Finished jobs' inputs are cleared after `AI_JOB_PAYLOAD_RETENTION_DAYS` (ADR-0079 amendment). | The table still grows with use, by a small row per job, though reads are bounded and polling cost does not grow. | Archive finished jobs past a horizon into a cold table the activity projection can still read, if the table's size starts to matter. |
-| Frontend logic debt the UI redesign (Phases 0–10, now shipped) did not take: (a) `frontend/src/review/rules.ts` still restates the review rules instead of reading the API's `actions` fields (ADR-0073); (b) request-body types in `frontend/src/api/client.ts` and the `PassageCitation` shape in `frontend/src/api/knowledge.ts` are hand-written rather than schema-derived (`knowledge.ts` response types are generated since the knowledge split). | (a) The rules exist on the server, but the browser can still drift from them until it switches over. (b) Hand-written shapes can silently disagree with the contract; `src/api/contract.test.ts` checks every client call's method and path against `openapi.json`, but not the payload types. | A recorded frontend logic change under `CLAUDE.md`'s UI Rules (an ADR-0109 exception where one is still required), once the owner approves it: read `actions`, delete `rules.ts`, derive the request types from `components["schemas"]`. Retired: the 1,790-line `AnalysisPanel.tsx`, split presentationally into seven files (third review remediation, Phase 6.2); identity-dependent queries on the Architecture knowledge page running before identity loaded (fourth review remediation, Phase 5.1); the Clarify panel showing "No analysis yet" after its job finished (PR #41: `invalidateWorkspaceKeys` cancels in-flight reads first). |
+| `src/api/contract.test.ts` checks every client call's method and path against `openapi.json`, but not that the body it sends matches that operation's request schema. | The request types are schema-derived since the frontend contract debt was paid, so drift fails the type check — but a client function could still send a derived type on the wrong operation. An `openapi-fetch`-style binding of path to parameter and body types would close this. | When contract drift actually slips past the derived types; weigh the binding's churn against what it adds then. |
 
 
 Retired by Slice 03: `UpdateRequirement`'s optional collaborator, replaced by
@@ -782,6 +782,18 @@ reconciliation before clearing staleness; Stories now have attributed approval
 and rejection actions; and analysis confirmation plus immutable rounds is the
 analysis review lifecycle rather than a duplicate approval concept. Durable,
 content-bound artifact and final approvals are governed by ADR-0021.
+
+Retired by the frontend contract-debt payment (owner-approved, ADR-0109 recorded exception;
+ADR-0073): `frontend/src/review/rules.ts` is deleted — the browser reads the API's `actions`
+availabilities (`EpicActionsResponse`, `FeatureActionsResponse`, `AnalysisActionsResponse`,
+`StoryActionsResponse`) instead of restating the rules — and the request-body types in
+`frontend/src/api/client.ts` plus `PassageCitation` in `frontend/src/api/knowledge.ts` are
+derived from the generated contract types rather than hand-written. Also retired earlier: the
+1,790-line `AnalysisPanel.tsx`, split presentationally into seven files (third review
+remediation, Phase 6.2); identity-dependent queries on the Architecture knowledge page running
+before identity loaded (fourth review remediation, Phase 5.1); the Clarify panel showing "No
+analysis yet" after its job finished (PR #41: `invalidateWorkspaceKeys` cancels in-flight
+reads first).
 
 Retired by ADR-0066: document dependencies now use a transactionally maintained, access-filtered
 reverse index. Explicit maintenance backfills recorded history; user requests do not scan it.

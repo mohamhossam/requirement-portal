@@ -31,7 +31,7 @@ describe("FeatureTree", () => {
     expect(screen.getByRole("button", { name: "Approved" })).toHaveAttribute("aria-disabled", "true");
     expect(
       screen.getByText(
-        "This version is already approved. Regenerate or edit it before approving again.",
+        "This Feature version is already approved. Edit or regenerate it before approving again.",
       ),
     ).toBeInTheDocument();
   });

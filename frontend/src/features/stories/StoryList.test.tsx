@@ -6,6 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "../../api/client";
 import {
   approvedFeatureFixture,
+  blockedAction,
+  generatedFeatureActions,
   splitProposalFixture,
   storyQualityFixture,
   storySetFixture,
@@ -35,10 +37,10 @@ describe("StoryList", () => {
       generation_context_token: "story-set-context-1",
     });
     renderWithJobs(
-      <StoryList requirementId="req-1" feature={{ ...approvedFeatureFixture, status: "generated" }} canManage />,
+      <StoryList requirementId="req-1" feature={{ ...approvedFeatureFixture, status: "generated", actions: generatedFeatureActions }} canManage />,
     );
     expect(
-      await screen.findByText("Approve the Feature before generating its Stories."),
+      await screen.findByText("Approve the Feature before generating or changing its Stories."),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Generate Stories" })).toBeDisabled();
   });
@@ -214,6 +216,12 @@ describe("StoryList", () => {
         feature={{
           ...approvedFeatureFixture,
           stale: { reason: "requirement_changed", since: "2026-01-01T13:00:00Z" },
+          actions: {
+            ...approvedFeatureFixture.actions,
+            generate_stories: blockedAction(
+              "Reconcile the stale Feature before generating or changing its Stories.",
+            ),
+          },
         }}
         canManage
       />,
@@ -228,6 +236,6 @@ describe("StoryList", () => {
     // `--danger` and right-aligned it. A stale Feature is not an error — it is
     // a gate that explains itself — so it reads as muted meta beside the
     // controls it governs. The assertion is on the sentence, not the class.
-    expect(screen.getByText(/source requirement changed/i)).toBeInTheDocument();
+    expect(screen.getByText(/Reconcile the stale Feature before generating or changing its Stories/i)).toBeInTheDocument();
   });
 });
