@@ -57,8 +57,7 @@ restoring a backup.
   `Content-Security-Policy: default-src 'none'; sandbox`, so a directly opened attachment or
   image is inert; the app reads them with fetch and is unaffected. The api, worker, migrate and
   web containers drop all Linux capabilities (`cap_drop: [ALL]`). `ADO_ORGANIZATION_URL` must be
-  HTTPS — plain HTTP sent the personal access token in cleartext. The postgres-exporter prefers
-  TLS to the database. The gitleaks allowlist is anchored to the exact `ci-only…` values instead
+  HTTPS — plain HTTP sent the personal access token in cleartext. The gitleaks allowlist is anchored to the exact `ci-only…` values instead
   of any line containing them. ADR-0111 Amendment 1 records the prompt-injection, spend-ceiling
   and operator-owned-infrastructure risks. No migration.
 - **Documentation brought in line with the shipped code.** README, PRODUCT.md, ROADMAP.md,

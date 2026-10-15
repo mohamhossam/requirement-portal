@@ -70,7 +70,11 @@ services:
   postgres-exporter:
     image: prometheuscommunity/postgres-exporter:v0.20.1@sha256:ac5ec343104fae0e2d84a27bb8d69b38430a11910c5382cad85d478d2bab713e
     environment:
-      DATA_SOURCE_URI: postgres:5432/smb_requirements?sslmode=prefer
+      # sslmode=disable on purpose: the exporter's lib/pq driver has no
+      # opportunistic "prefer" (CI proved it cannot connect with it), and the
+      # bundled PostgreSQL serves no TLS. The connection stays on the private
+      # compose network; a managed database would need require/verify-full here.
+      DATA_SOURCE_URI: postgres:5432/smb_requirements?sslmode=disable
       DATA_SOURCE_USER: smb
       DATA_SOURCE_PASS: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
     restart: unless-stopped
