@@ -615,6 +615,12 @@ def _deduplicate_proposals(
 _NUMBER_PATTERN = re.compile(r"\d+(?:[.,]\d+)?%?")
 
 
+# Known limitation, accepted: this guard covers invented NUMBERS only. An invented
+# named entity (a regulation such as "GDPR", a system, a channel) has no
+# deterministic guard - the prompt's anti-invention rule holds alone when no
+# evidence blocks are supplied, and the citation pass catches it when they are.
+# A keyword-based entity guard was considered and rejected as too easy to
+# over-trigger on legitimate source vocabulary.
 def _reject_invented_numeric_targets(
     proposals: list[IntentProposalCandidate], source_text: str
 ) -> None:

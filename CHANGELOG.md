@@ -11,6 +11,18 @@ restoring a backup.
 
 ## Unreleased
 
+- **The requirement-analysis prompt is sectioned and assembled per request**
+  (`analysis-v25-sectioned-conditional`). The question-lifecycle, evidence-citation and
+  attachment rules are sent only when the request supplies active AI questions, evidence
+  blocks or documents, freeing context for the evidence itself; the vague-language and
+  completeness rules are aligned with ISO/IEC/IEEE 29148 (weak-word categories, domain-
+  relevant completeness dimensions); extracted statements must be singular, unambiguous
+  and verifiable; rule/constraint proposals state condition and behavior explicitly. The
+  vague-term backstop that triggers a focused review now also reads attachment text (a
+  blank description with a vague BRD previously never triggered it) and recognizes the
+  standard weak words (TBD, "if necessary", "as soon as possible", …). Stored analyses
+  keep their recorded provenance; reverting to `analysis-v24` is one git revert of the
+  prompt commit plus a redeploy. No migration.
 - **Features carry acceptance criteria, and every Feature and Story a business/enabler
   kind** (ADR-0118; prompts `feature-v8`, `story-v8`). Generation supplies feature-level
   conditions of satisfaction and types each item as business work or a SAFe enabler
