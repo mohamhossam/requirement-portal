@@ -77,9 +77,10 @@ this ledger.
     grouped or held, and jsdom 30 breaks a test double;
   - #21, #23, #24 and #26, superseded by the grouped #36.
 - Each PR's hosted run is on its page; verify a revision's own run rather than inferring from
-  an earlier one. CI has eight jobs (`.github/workflows/ci.yml`): quality gates, PostgreSQL
-  architecture, frontend, supply chain, secrets, deployment, recovery and smoke;
-  CodeQL, release and the weekly rescan are separate workflows.
+  an earlier one. CI has seven jobs (`.github/workflows/ci.yml`): quality gates, frontend,
+  supply chain, secrets, deployment, recovery and smoke (quality gates runs the
+  whole test tree against PostgreSQL, integration included); CodeQL, release and
+  the weekly rescan are separate workflows.
 - The PR links above that point at `smb-ai-requirement-agent` are the predecessor
   repository's history; this repository's own PRs start at #1 on GitHub. The
   human-answer citation salvage (`0d42039`) is part of this repository's import.

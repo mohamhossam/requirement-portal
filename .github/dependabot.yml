@@ -11,11 +11,25 @@
 #   deliberately, with the code and data migration they need.
 # - At most three open PRs per ecosystem, so a backlog cannot flood the queue.
 version: 2
+
+# platform-kernel is a private git dependency (ADR-0100). Dependabot resolves the
+# uv lock file, so it needs read access too: KERNEL_READ_TOKEN must also exist as
+# a *Dependabot* secret (Settings → Secrets and variables → Dependabot) — action
+# secrets are not visible to Dependabot. Without it the uv updates fail to resolve.
+registries:
+  platform-kernel:
+    type: git
+    url: https://github.com
+    username: x-access-token
+    password: ${{ secrets.KERNEL_READ_TOKEN }}
+
 updates:
   - package-ecosystem: uv
     directory: /
     schedule: { interval: weekly }
     open-pull-requests-limit: 3
+    registries:
+      - platform-kernel
     groups:
       python-minor-and-patch:
         update-types: [minor, patch]

@@ -27,6 +27,15 @@ restoring a backup.
   `PROVIDER_DAILY_TOKEN_BUDGET` unset or 0 (record-only). Upgrade step: set it in
   `deploy/production.env` to the organization's daily token budget and keep the
   `DailyTokenBudgetExceeded` alert threshold in step. No migration.
+- **CI robustness.** Every workflow job has a `timeout-minutes` ceiling instead of GitHub's
+  6-hour default. The redundant `postgres-architecture` job is gone (quality gates already runs
+  the whole test tree against PostgreSQL). The browser smoke job now runs against PostgreSQL with
+  migrations applied — the durable mode a deployment uses — instead of the in-memory store, and
+  uploads Playwright traces on failure, as does the deployment job's platform browser step; the
+  backend coverage XML is kept as an artifact. Dependabot gets a `registries` entry for the
+  private platform-kernel — the owner must also store `KERNEL_READ_TOKEN` as a Dependabot secret
+  or uv update PRs cannot resolve. `pytest-timeout` (300s per test) guards against hangs, and the
+  polling-worker tests join their threads so none outlives the run. No migration.
 - **Edge and deployment hardening.** The `web` port now binds to `127.0.0.1` by default —
   upgrade step: deployments that expose the edge directly set `WEB_BIND=0.0.0.0` in `deploy/.env`
   (and a firewall or TLS proxy in front remains required). `/api/` responses carry

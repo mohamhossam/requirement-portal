@@ -7,6 +7,10 @@ export default defineConfig({
   test: {
     include: ["src/**/*.test.{ts,tsx}"],
     environment: "jsdom",
+    // Not pool: "vmThreads": it would cut the ~40% of the run spent creating
+    // jsdom environments, but its VM context lacks WritableStream (breaking
+    // msw) and makes window.top/location non-configurable (breaking the spies
+    // in AuthProvider.test.tsx and ErrorBoundary.test.tsx).
     setupFiles: ["./src/test/setup.ts"],
     css: true,
     coverage: {
