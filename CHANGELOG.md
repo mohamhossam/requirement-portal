@@ -73,10 +73,10 @@ restoring a backup.
   migration change; the visible difference is slightly different wording on blocked
   Approve/Generate buttons.
 - **CI robustness.** Every workflow job has a `timeout-minutes` ceiling instead of GitHub's
-  6-hour default. The `postgres-architecture` job is redundant (quality gates already runs
-  the whole test tree against PostgreSQL) but stays until the `main` branch-protection rule
-  stops requiring a check by that name; remove it from the rule's required status checks,
-  then delete the job. The browser smoke job now runs against PostgreSQL with
+  6-hour default. The redundant `postgres-architecture` job (quality gates already runs
+  the whole test tree against PostgreSQL) is deleted, now that the `main` branch-protection
+  rule no longer requires a check by that name. The browser smoke job now runs against
+  PostgreSQL with
   migrations applied — the durable mode a deployment uses — instead of the in-memory store, and
   uploads Playwright traces on failure, as does the deployment job's platform browser step; the
   backend coverage XML is kept as an artifact. Dependabot gets a `registries` entry for the
