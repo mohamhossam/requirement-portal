@@ -283,11 +283,21 @@ class PostgresAiJobStore:
 
     @staticmethod
     def _insert(connection: DbConnection, record: AiJobRecord) -> None:
-        # Lock the Requirement row first, as the revision capture at commit does. Otherwise
-        # the job's foreign key share-locks it, the lease insert waits on another transaction's
-        # new lease row, and that transaction's capture waits on the share lock: a deadlock.
+        # Lock the Requirement's lease row first. Every transaction that takes both the
+        # lease row and the Requirement row must take the lease first: the claim and
+        # attempt paths start from the lease, and the revision capture locks the
+        # Requirement row at commit. Locking the Requirement row here instead deadlocked
+        # with a completing attempt — the lease insert waited on the attempt's lease lock
+        # while the attempt's capture waited on the Requirement row this transaction held.
         connection.execute(
-            "SELECT 1 FROM requirements WHERE requirement_id = %s FOR UPDATE",
+            """
+            INSERT INTO requirement_ai_job_leases (requirement_id)
+            VALUES (%s) ON CONFLICT (requirement_id) DO NOTHING
+            """,
+            (record.job.requirement_id.value,),
+        )
+        connection.execute(
+            "SELECT 1 FROM requirement_ai_job_leases WHERE requirement_id = %s FOR UPDATE",
             (record.job.requirement_id.value,),
         )
         try:
@@ -318,13 +328,6 @@ class PostgresAiJobStore:
                     record.job.id.value,
                     record.job.command_fingerprint,
                 ),
-            )
-            connection.execute(
-                """
-                INSERT INTO requirement_ai_job_leases (requirement_id)
-                VALUES (%s) ON CONFLICT (requirement_id) DO NOTHING
-                """,
-                (record.job.requirement_id.value,),
             )
         except errors.UniqueViolation as exc:
             raise AiJobConflictError(

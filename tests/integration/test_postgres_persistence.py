@@ -776,10 +776,11 @@ def test_postgres_automatic_reservation_is_concurrent_and_attempt_idempotent() -
 
 
 def test_concurrent_jobs_for_one_requirement_queue_instead_of_deadlocking() -> None:
-    """Two transactions adding jobs for one Requirement take its row lock in the same order.
+    """Two transactions adding jobs for one Requirement take its lease row lock in the same order.
 
-    The first inserts the Requirement's lease row and, at commit, captures the revision under
-    the Requirement row lock. The second waits for that lock before touching either row.
+    The first inserts and locks the Requirement's lease row, then captures the revision at
+    commit under the Requirement row lock. The second waits on the lease row before touching
+    anything else.
     """
     assert DATABASE_URL is not None
     requirement_id = RequirementId(str(uuid.uuid4()))
@@ -836,6 +837,79 @@ def test_concurrent_jobs_for_one_requirement_queue_instead_of_deadlocking() -> N
             "SELECT count(*) FROM ai_jobs WHERE requirement_id = %s", (requirement_id.value,)
         ).fetchone()
     assert row == (2,)
+
+
+def test_adding_a_job_does_not_deadlock_with_a_completing_attempt() -> None:
+    """A job insert and an attempt completion lock the lease row before the Requirement row.
+
+    The completion holds the lease row from its first statement and locks the Requirement row
+    only at commit, capturing the revision. An insert that took the Requirement row first
+    deadlocked with it: the insert waited on the completion's lease row while the completion's
+    capture waited on the Requirement row the insert held.
+    """
+    assert DATABASE_URL is not None
+    run_migrations(DATABASE_URL)
+    requirement_id = RequirementId(str(uuid.uuid4()))
+    # Year-2000 timestamps give this test's jobs deterministic claim priority.
+    now = datetime(2000, 1, 1, tzinfo=UTC)
+    PostgresStore(DATABASE_URL).add(
+        Requirement(
+            requirement_id,
+            RequirementTitle("Completion versus insert"),
+            RequirementDescription("A user starts a job while a worker completes one."),
+            RequirementStatus.DRAFT,
+        )
+    )
+
+    def record() -> AiJobRecord:
+        fingerprint = hashlib.sha256(str(uuid.uuid4()).encode()).hexdigest()
+        return AiJobRecord(
+            AiJob(
+                AiJobId(str(uuid.uuid4())),
+                requirement_id,
+                AiJobOperation.SCREEN_REQUIREMENT_KNOWLEDGE,
+                AiJobStatus.QUEUED,
+                ActorSnapshot(ActorId("automatic-system"), "Automatic system"),
+                now,
+                now,
+                str(uuid.uuid4()),
+                fingerprint,
+                origin=AiJobOrigin.AUTOMATIC,
+            ),
+            AiJobCommand({"knowledge_fingerprint": fingerprint}),
+        )
+
+    queue = PostgresAiJobStore(PostgresStore(DATABASE_URL))
+    first = record()
+    queue.add(first)
+    claimed = queue.claim_next("worker-a", now, now + timedelta(seconds=30))
+    assert claimed is not None and claimed.attempt_token is not None
+    assert claimed.job.id == first.job.id
+    second = record()
+    completion_holds_the_lease = Event()
+
+    def complete() -> None:
+        store = PostgresStore(DATABASE_URL)
+        with store.transaction():
+            assert claimed is not None and claimed.attempt_token is not None
+            assert PostgresAiJobStore(store).save_fenced(
+                claimed.job.succeed((), now), "worker-a", claimed.attempt_token, now
+            )
+            completion_holds_the_lease.set()
+            _wait_for_a_blocked_session()
+
+    def add_while_completing() -> None:
+        completion_holds_the_lease.wait(5)
+        PostgresAiJobStore(PostgresStore(DATABASE_URL)).add(second)
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        futures = [executor.submit(complete), executor.submit(add_while_completing)]
+        for future in futures:
+            future.result(timeout=30)
+
+    persisted = queue.get(second.job.id)
+    assert persisted is not None and persisted.job.status is AiJobStatus.QUEUED
+    queue.save(persisted.job.request_cancellation(now))
 
 
 def _wait_for_a_blocked_session() -> None:

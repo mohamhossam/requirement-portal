@@ -11,6 +11,11 @@ restoring a backup.
 
 ## Unreleased
 
+- **Starting an AI job no longer deadlocks with a finishing one.** Inserting a job locked the
+  Requirement row and then its job-lease row, while a completing attempt held the lease row and
+  locked the Requirement row at commit (capturing the revision) — under load PostgreSQL aborted
+  one of the two (deadlock detected, seen as transient CI noise). Every transaction that takes
+  both rows now takes the lease row first, so the two queue instead. No migration.
 - **The requirement-analysis prompt is sectioned and assembled per request**
   (`analysis-v25-sectioned-conditional`). The question-lifecycle, evidence-citation and
   attachment rules are sent only when the request supplies active AI questions, evidence
