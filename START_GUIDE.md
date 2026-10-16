@@ -371,7 +371,7 @@ issuer changes, update `deploy/.env` and run `build` and `up -d` again.
 Install:
 
 - Python 3.12 or newer
-- Node.js 22 with npm
+- Node.js 24 with npm
 - Windows: PowerShell 5.1 or PowerShell 7 (for `start.ps1`) or Command Prompt
   (for `start.cmd`)
 - macOS/Linux: Bash and `curl` (for `start.sh`)
@@ -878,7 +878,7 @@ Run the setup option: `.\start.ps1 -Setup`, `start.cmd -Setup` or
 
 #### Node.js cannot be found
 
-Install Node.js 22, then close and reopen the terminal so `PATH` refreshes.
+Install Node.js 24, then close and reopen the terminal so `PATH` refreshes.
 Confirm `node --version` and `npm --version` work.
 
 #### A provider reports a missing key or model

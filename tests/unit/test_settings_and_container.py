@@ -1030,6 +1030,7 @@ PRODUCTION: dict[str, object] = {
     "oidc_audience": "api://smb",
     "oidc_client_id": "browser",
     "log_format": LogFormat.JSON,
+    "provider_daily_token_budget": 5_000_000,
 }
 
 
@@ -1040,6 +1041,7 @@ PRODUCTION: dict[str, object] = {
         ({"llm_provider": LLMProvider.FAKE, "openai_api_key": None}, "LLM_PROVIDER=fake"),
         ({"debug_trace_enabled": True}, "DEBUG_TRACE_ENABLED=true"),
         ({"log_format": LogFormat.TEXT}, "LOG_FORMAT=json"),
+        ({"provider_daily_token_budget": 0}, "PROVIDER_DAILY_TOKEN_BUDGET"),
     ],
 )
 def test_production_refuses_development_conveniences(

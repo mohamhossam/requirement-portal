@@ -201,6 +201,9 @@ def test_a_heartbeat_that_fails_while_the_lease_lasts_is_tried_again() -> None:
     finally:
         executor.finish.set()
         worker.stop()
+        # Join without a timeout so no daemon thread outlives the test and logs
+        # into pytest's already-closed streams.
+        worker.wait_until_stopped()
 
 
 def test_a_lease_about_to_lapse_stops_renewing_but_lets_the_attempt_finish() -> None:
@@ -219,6 +222,9 @@ def test_a_lease_about_to_lapse_stops_renewing_but_lets_the_attempt_finish() -> 
     finally:
         executor.finish.set()
         worker.stop()
+        # Join without a timeout so no daemon thread outlives the test and logs
+        # into pytest's already-closed streams.
+        worker.wait_until_stopped()
     assert queue.released == 1
 
 
@@ -235,3 +241,6 @@ def test_a_lease_another_worker_took_back_stops_renewing_at_once() -> None:
     finally:
         executor.finish.set()
         worker.stop()
+        # Join without a timeout so no daemon thread outlives the test and logs
+        # into pytest's already-closed streams.
+        worker.wait_until_stopped()

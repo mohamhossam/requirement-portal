@@ -209,7 +209,12 @@ class StoryChangeProposals(StoryWorkflow):
             source_fingerprint=source_stories_fingerprint(sources),
             candidates=tuple(
                 StoryDraft(
-                    item.role, item.action, item.value, item.acceptance_criteria, item.provenance
+                    item.role,
+                    item.action,
+                    item.value,
+                    item.acceptance_criteria,
+                    kind=item.kind,
+                    provenance=item.provenance,
                 )
                 for item in replacements
             ),

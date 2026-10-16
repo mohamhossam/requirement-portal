@@ -1,6 +1,7 @@
 # ADR-0045 — Focused Breakdown workspace
 
-Status: Accepted
+Status: Superseded by ADR-0117 (the shell; its route-selected detail, mounted
+editors and query-enabling rules live on in the Backlog route)
 Date: 2026-09-18
 
 ## Context

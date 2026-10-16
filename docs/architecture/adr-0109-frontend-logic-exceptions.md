@@ -114,6 +114,15 @@ An exception sets no precedent for the redesign: it changes behaviour, not the l
     silent-renew iframe, which used to load the dashboard there.
   - **Routes** (`app/App.tsx`). The `/auth/*` → dashboard route PR 15 added is removed.
   Tested in `auth/AuthProvider.test.tsx`.
+- **Frontend contract debt** (approved by the owner 2026-10-15; AGENTS.md §19, contract drift):
+  - **Server rules, not restated rules.** `review/rules.ts` and its test are deleted; the
+    approve, generate and regenerate gates in `EpicCard.tsx`, `FeatureCard.tsx`, `StoryCard.tsx`,
+    `StoryList.tsx` and `BreakdownWorkspace.tsx` read the API's `actions` availabilities
+    (ADR-0073). Only the messages for a missing analysis or Epic stay client-side.
+  - **Derived request types** (`api/client.ts`, `api/knowledge.ts`). The six input types and
+    `PassageCitation` are derived from the generated contract types instead of hand-written.
+  Tested in `EpicCard.test.tsx`, `FeatureTree.test.tsx`, `StoryCard.test.tsx`,
+  `StoryList.test.tsx`, whose scenarios now carry the server's `actions`.
 
 ## Consequences
 

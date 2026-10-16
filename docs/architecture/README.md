@@ -68,10 +68,16 @@ Bounded contexts: [context map](context-map.md) and [ubiquitous language](ubiqui
 | [0038](adr-0038-derived-activity-and-knowledge-projections.md) | Derived activity and knowledge projections | Accepted; unverified implementation |
 | [0039](adr-0039-postgresql-session-and-composition-ownership.md) | PostgreSQL session and composition ownership | Accepted; unverified implementation |
 | [0040](adr-0040-keycloak-login-broker.md) | Keycloak login broker for password and company SSO | Accepted |
+| [0041](adr-0041-generation-time-quality.md) | Generation-time quality and remaining concerns | Accepted |
 | [0042](adr-0042-business-need-attachments.md) | Business need attachments as prompt sources | Accepted |
 | [0043](adr-0043-configured-llm-transports.md) | Configured LLM transports and isolated embedding generations | Accepted |
 | [0044](adr-0044-human-answer-analysis-citations.md) | Human answer support in structured analysis | Accepted |
-| [0045](adr-0045-focused-breakdown-workspace.md) | Focused Breakdown workspace | Accepted |
+| [0045](adr-0045-focused-breakdown-workspace.md) | Focused Breakdown workspace | Superseded by ADR-0117 |
+| [0046](adr-0046-single-modal-primitive.md) | Single modal primitive | Accepted |
+| [0047](adr-0047-persistent-journey-stepper.md) | Persistent journey stepper | Superseded by ADR-0117 |
+| [0048](adr-0048-tailwind-utilities-in-a-named-layer.md) | Tailwind utilities in a named layer | Accepted |
+| [0049](adr-0049-three-breakpoints.md) | Three breakpoints, named once | Accepted |
+| [0050](adr-0050-header-navigation-row.md) | The header's navigation gets its own row | Superseded by ADR-0117 |
 | [0051](adr-0051-reviewed-document-knowledge.md) | Reviewed document knowledge | Accepted; implementation in progress |
 | [0052](adr-0052-reference-applicability-proposals.md) | Reference applicability remains an owner decision | Accepted |
 | [0053](adr-0053-bounded-reference-context.md) | Exact child citations with bounded retrieval context | Accepted |
@@ -84,7 +90,7 @@ Bounded contexts: [context map](context-map.md) and [ubiquitous language](ubiqui
 | [0060](adr-0060-word-prose-evidence.md) | Word prose corrections do not retain original metadata wording | Accepted |
 | [0061](adr-0061-worksheet-name-evidence.md) | Worksheet names remain independently reviewed evidence | Accepted |
 
-- [ADR-0062: Dedicated Requirement indexing and measured chunk qualification](0062-requirement-indexing-and-chunk-qualification.md)
+- [ADR-0062: Dedicated Requirement indexing and measured chunk qualification](adr-0062-requirement-indexing-and-chunk-qualification.md)
 - [ADR-0063: Library ownership and dependency visibility](adr-0063-library-ownership-and-dependencies.md)
 
 - [ADR-0065: Scoped ingestion warnings, source previews and async attachments](adr-0065-document-ingestion-completion.md)
@@ -133,9 +139,15 @@ Bounded contexts: [context map](context-map.md) and [ubiquitous language](ubiqui
 - [ADR-0108: Signed releases deployed by tag, backups, and expand/contract migrations](adr-0108-releases-backups-and-migrations.md) — Accepted; implemented 2026-10-09 (production hardening PR 6)
 - [ADR-0109: Frontend logic changes during the UI redesign are recorded exceptions](adr-0109-frontend-logic-exceptions.md) — Accepted; recorded 2026-10-09 (production hardening PR 5)
 - [ADR-0110: Optional tracing: requests, jobs, SQL and calls, with trace context only for peers](adr-0110-optional-tracing.md) — Accepted; implemented 2026-10-10 (production hardening PR 14)
-- [ADR-0111: Accepted risks](adr-0111-accepted-risks.md) — Accepted 2026-10-10 (production hardening PR 16)
+- [ADR-0111: Accepted risks](adr-0111-accepted-risks.md) — Accepted 2026-10-10 (production hardening PR 16); Amendment 1 (2026-10-15) adds prompt-injection, spend-ceiling and operator-owned-infrastructure risks
 - [ADR-0112: Azure DevOps publication through a REST adapter](adr-0112-ado-publication-adapter.md) — Accepted 2026-10-10 (Slice 12)
 - [ADR-0113: A publication record and marker-based recovery](adr-0113-publication-record-and-safe-republish.md) — Accepted 2026-10-10 (Slice 13)
 - [ADR-0114: Curated capability concepts may select systems](adr-0114-capability-concepts-select-systems.md) — Accepted 2026-10-10 (ontology plan, Phase 0; built in knowledge-portal)
 - [ADR-0115: A requirement-level product verdict, decided in analysis](adr-0115-product-verdict-in-requirement-analysis.md) — Accepted 2026-10-10 (ontology plan, Phase 0)
 - [ADR-0116: The decided product impact reaches generation](adr-0116-capability-concepts-reach-generation.md) — Accepted 2026-10-10 (ontology plan, Phase 0)
+- [ADR-0117: One application shell for every route](adr-0117-one-application-shell.md) — Accepted 2026-10-15; supersedes 0045, 0047 and 0050
+- [ADR-0118: Feature-level acceptance criteria and business/enabler work kinds](adr-0118-feature-acceptance-criteria-and-enabler-kinds.md) — Accepted 2026-10-15
+
+There is no ADR-0107: that number was skipped, and the decision it would have
+held was recorded as an amendment to ADR-0020 instead
+(`docs/slices/production-hardening.md`).

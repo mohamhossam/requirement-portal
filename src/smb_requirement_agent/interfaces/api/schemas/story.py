@@ -6,6 +6,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from smb_requirement_agent.breakdown.domain.kinds import WorkKind
 from smb_requirement_agent.breakdown.domain.story.entities import StoryChangeOperation
 from smb_requirement_agent.breakdown.domain.story.quality import (
     FindingSource,
@@ -39,6 +40,7 @@ class StoryContentRequest(BaseModel):
     acceptance_criteria: list[AcceptanceCriterionPayload] = Field(
         min_length=1, max_length=MAX_ITEMS
     )
+    kind: WorkKind = WorkKind.BUSINESS
     source_reconciled: bool = False
 
 
@@ -72,6 +74,7 @@ class StoryResponse(BaseModel):
     value: str
     voice: str
     acceptance_criteria: list[AcceptanceCriterionPayload]
+    kind: WorkKind
     status: GenerationStatus
     provenance: ProvenanceResponse
     stale: StalenessResponse | None
@@ -100,6 +103,7 @@ class StoryProposalCandidateResponse(BaseModel):
     value: str
     voice: str
     acceptance_criteria: list[AcceptanceCriterionPayload]
+    kind: WorkKind
     provenance: ProvenanceResponse
 
 

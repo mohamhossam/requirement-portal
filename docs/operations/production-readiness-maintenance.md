@@ -53,6 +53,11 @@ audit.
 
 ## This implementation session
 
+A historical rehearsal record: the migration catalogue has grown well past the 21
+migrations named below (the packaged catalogue is authoritative), and CI's
+`deployment` and `recovery` jobs now rehearse migration, backup and restore on
+every run. The target-environment steps it calls open remain open.
+
 On 2026-09-08 the migration, blob-import, and projection-maintenance commands were rehearsed against
 a fresh disposable PostgreSQL 16/pgvector database. All 21 migrations were recorded, the empty
 legacy manifest imported zero blobs, and projection maintenance rebuilt zero Requirements twice,

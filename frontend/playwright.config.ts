@@ -4,6 +4,11 @@ import path from "node:path";
 const localPython = path.resolve(import.meta.dirname, "..", ".venv", "Scripts", "python.exe");
 const smokePython = process.env.SMOKE_PYTHON ?? (process.platform === "win32" ? localPython : "python");
 const apiPort = process.env.SMOKE_API_PORT ?? "8000";
+// CI runs the smoke journey against PostgreSQL (SMOKE_PERSISTENCE_PROVIDER=postgres
+// with SMOKE_DATABASE_URL, migrations applied first); locally it defaults to the
+// in-memory store so no database is needed.
+const persistenceProvider = process.env.SMOKE_PERSISTENCE_PROVIDER ?? "memory";
+const databaseUrl = process.env.SMOKE_DATABASE_URL ?? "";
 const uiPort = process.env.SMOKE_UI_PORT ?? "4173";
 const apiUrl = `http://127.0.0.1:${apiPort}`;
 const uiUrl = `http://127.0.0.1:${uiPort}`;
@@ -36,7 +41,7 @@ export default defineConfig({
       cwd: path.resolve(import.meta.dirname, ".."),
       url: `${apiUrl}/health`,
       reuseExistingServer: !process.env.CI,
-      env: { ...process.env, PROVIDER_RATE_LIMIT_PER_MINUTE: "0", LLM_PROVIDER: "fake", PERSISTENCE_PROVIDER: "memory", IDENTITY_PROVIDER: "fake", ATTACHMENT_SCAN_MODE: "offline" },
+      env: { ...process.env, PROVIDER_RATE_LIMIT_PER_MINUTE: "0", LLM_PROVIDER: "fake", PERSISTENCE_PROVIDER: persistenceProvider, DATABASE_URL: databaseUrl, IDENTITY_PROVIDER: "fake", ATTACHMENT_SCAN_MODE: "offline" },
       timeout: 120_000,
     },
     {

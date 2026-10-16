@@ -13,6 +13,10 @@ from smb_kernel.llm.structured_output import (
 from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
 from smb_requirement_agent.breakdown.application.errors import EpicGenerationError
 from smb_requirement_agent.breakdown.application.ports.epic_generator import EpicCandidate
+from smb_requirement_agent.breakdown.application.ports.generation_guidance import (
+    EMPTY_GENERATION_GUIDANCE,
+    GenerationGuidance,
+)
 from smb_requirement_agent.breakdown.infrastructure.llm.backlog_mappers import to_epic_candidate
 from smb_requirement_agent.breakdown.infrastructure.llm.prompts.epic_prompt import (
     EPIC_SYSTEM_PROMPT,
@@ -30,7 +34,13 @@ class StructuredEpicGeneratorAdapter:
         self._client = client
         self._provider_name = provider_name
 
-    def generate(self, requirement: Requirement, analysis: RequirementAnalysis) -> EpicCandidate:
+    def generate(
+        self,
+        requirement: Requirement,
+        analysis: RequirementAnalysis,
+        *,
+        guidance: GenerationGuidance = EMPTY_GENERATION_GUIDANCE,
+    ) -> EpicCandidate:
         try:
             parsed = self._client.parse(
                 system_prompt=EPIC_SYSTEM_PROMPT,
@@ -48,6 +58,7 @@ class StructuredEpicGeneratorAdapter:
                         f"{item.subject}: {item.answer}" for item in analysis.clarifications
                     ],
                     desired_outcome=analysis.effective_desired_outcome(),
+                    guidance=guidance,
                 ),
                 schema_type=EpicSchema,
             )

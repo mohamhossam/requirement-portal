@@ -33,7 +33,7 @@ test("selects deep links, preserves drafts and reads only requested Stories", as
   // Still above the fold, with the shared frame's header and page title above it
   // now rather than the Backlog's own compact header.
   expect((await detail.getByRole("heading", { name: epicFixture.name }).boundingBox())!.y).toBeLessThan(600);
-  await expect(page.getByText("This version is already approved. Regenerate or edit it before approving again.")).toHaveCount(0);
+  await expect(page.getByText(/version is already approved/)).toHaveCount(0);
   await page.screenshot({ path: testInfo.outputPath("epic-desktop.png") });
   await detail.getByRole("button", { name: "Edit", exact: true }).click();
   await page.getByLabel("Epic name").fill("Unsaved Epic draft");
@@ -176,7 +176,9 @@ test("shows loading and real failures, keeps stale Stories readable, and returns
   await page.reload();
   await expect(page.getByText(/Backlog temporarily unavailable/)).toBeVisible();
   await page.unroute(`**${base}/features`);
-  await page.route(`**${base}/features`, (route) => route.fulfill({ json: { ...featureSetFixture, features: [{ ...approvedFeatureFixture, stale: { reason: "requirement_changed", since: "2026-09-18T10:00:00Z" } }] } }));
+  // The mock mirrors the server: a stale Feature's story actions are blocked
+  // (the browser reads `actions`, not `stale`, since ADR-0073 took effect).
+  await page.route(`**${base}/features`, (route) => route.fulfill({ json: { ...featureSetFixture, features: [{ ...approvedFeatureFixture, stale: { reason: "requirement_changed", since: "2026-09-18T10:00:00Z" }, actions: { ...approvedFeatureFixture.actions, generate_stories: { allowed: false, reason: "Reconcile the stale Feature before generating or changing its Stories.", confirmation: null } } }] } }));
   let items = storySetFixture.stories;
   await page.route(`**${base}/features/feature-1/stories`, (route) => route.fulfill({ json: { ...storySetFixture, stories: items } }));
   await page.goto(`${base}/breakdown/features/feature-1/stories/${items[0]!.id}`);

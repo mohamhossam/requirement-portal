@@ -110,7 +110,7 @@ class PostgresSavedViewRepository:
             row = connection.execute(
                 """
                 SELECT 1 FROM saved_requirement_views
-                WHERE actor_id=%s AND lower(name)=lower(%s) AND (%s IS NULL OR view_id<>%s)
+                WHERE actor_id=%s AND lower(name)=lower(%s) AND (%s::text IS NULL OR view_id<>%s)
                 """,
                 (actor_id.value, name.strip(), excluding_id, excluding_id),
             ).fetchone()

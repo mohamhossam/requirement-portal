@@ -22,6 +22,8 @@ permissions:
 jobs:
   quality-gates:
     runs-on: ubuntu-latest
+    # A hung step fails the job, not six hours of runner time.
+    timeout-minutes: 25
     services:
       postgres:
         image: pgvector/pgvector:pg17@sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f
@@ -63,7 +65,14 @@ jobs:
 
       - name: pytest with coverage
         # The floor lives in pyproject.toml ([tool.coverage.report] fail_under).
-        run: pytest --cov --cov-report=term
+        run: pytest --cov --cov-report=term --cov-report=xml
+
+      - name: Keep the coverage report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: backend-coverage
+          path: coverage.xml
 
       - name: ruff check
         run: ruff check .
@@ -79,6 +88,7 @@ jobs:
 
   postgres-architecture:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     services:
       postgres:
         image: pgvector/pgvector:pg17@sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f
@@ -124,6 +134,7 @@ jobs:
 
   frontend:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: frontend
@@ -160,6 +171,7 @@ jobs:
     # image ships (no dev tools); npm audits everything, since its dev tooling
     # runs in CI and builds the served bundle.
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -192,6 +204,7 @@ jobs:
     # .gitleaks.toml keeps gitleaks' default rules and allows one thing: the
     # CI-only credentials of the deployment job's throwaway stack.
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     env:
       GITLEAKS: ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f
     steps:
@@ -213,6 +226,7 @@ jobs:
     # and joined on the peer network (ADR-0104), so a broken Dockerfile, nginx
     # template, entrypoint or service wiring fails here, not in a deploy.
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     permissions:
       contents: read
     env:
@@ -351,6 +365,7 @@ jobs:
             -e OIDC_CLIENT_ID=requirement-spa
             -e LLM_PROVIDER=openai
             -e OPENAI_API_KEY=ci-only
+            -e PROVIDER_DAILY_TOKEN_BUDGET=5000000
         run: |
           $PROD run --rm --no-deps $PRODUCTION_SETTINGS api \
             python -m smb_requirement_agent.interfaces.deployment_preflight
@@ -439,6 +454,13 @@ jobs:
           npm ci
           npx playwright install --with-deps chromium
           npx playwright test -c playwright.platform.config.ts
+
+      - name: Keep the failing platform browser traces
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: failure()
+        with:
+          name: platform-playwright
+          path: frontend/test-results/
 
       - name: Model files are mounted read-only
         run: |
@@ -542,6 +564,7 @@ jobs:
     # then verify checksums, history, access, search and maintenance. Same pinned
     # PostgreSQL image as everywhere else (tests/architecture/test_image_pins.py).
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     services:
       postgres:
         image: pgvector/pgvector:pg17@sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f
@@ -604,6 +627,23 @@ jobs:
   smoke:
     needs: frontend
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+    # The browser journey runs against PostgreSQL, the durable mode a deployment
+    # uses; the unit tiers already cover the in-memory twin adapters.
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17@sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: smoke
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d smoke"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -643,8 +683,23 @@ jobs:
         working-directory: frontend
         run: npx playwright install --with-deps chromium
 
+      - name: Apply migrations to the smoke database
+        env:
+          PERSISTENCE_PROVIDER: postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/smoke
+        run: python -m smb_requirement_agent.infrastructure.persistence.migrate
+
       - name: Browser smoke test
         working-directory: frontend
         env:
           LLM_PROVIDER: fake
+          SMOKE_PERSISTENCE_PROVIDER: postgres
+          SMOKE_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/smoke
         run: npm run test:smoke
+
+      - name: Keep the failing run's traces
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: failure()
+        with:
+          name: smoke-playwright
+          path: frontend/test-results/

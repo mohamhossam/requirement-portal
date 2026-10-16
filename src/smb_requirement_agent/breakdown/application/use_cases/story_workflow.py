@@ -44,6 +44,7 @@ from smb_requirement_agent.breakdown.application.use_cases.generation_checks imp
 from smb_requirement_agent.breakdown.domain.epic.entities import Epic
 from smb_requirement_agent.breakdown.domain.feature.entities import Feature
 from smb_requirement_agent.breakdown.domain.feature.value_objects import FeatureId
+from smb_requirement_agent.breakdown.domain.kinds import WorkKind
 from smb_requirement_agent.breakdown.domain.story.entities import (
     StoryDraft,
     UserStory,
@@ -94,6 +95,7 @@ class StoryInput:
     action: str
     value: str
     acceptance_criteria: tuple[AcceptanceCriterionInput, ...]
+    kind: WorkKind = WorkKind.BUSINESS
     source_reconciled: bool = False
     expected_version: int = 1
 
@@ -354,6 +356,7 @@ class EditStory(StoryWorkflow):
             draft.action,
             draft.value,
             draft.acceptance_criteria,
+            draft.kind,
             source_reconciled=data.source_reconciled,
         )
         self._stories.save(edited)
@@ -685,6 +688,7 @@ def _draft_from_input(data: StoryInput) -> StoryDraft:
         DesiredAction(data.action),
         BusinessValue(data.value),
         _criteria(data.acceptance_criteria),
+        kind=data.kind,
     )
 
 
@@ -694,8 +698,17 @@ def _draft_from_candidate(candidate: StoryCandidate, clock: ClockPort) -> StoryD
         DesiredAction(candidate["action"]),
         BusinessValue(candidate["value"]),
         tuple(AcceptanceCriterion(**item) for item in candidate["acceptance_criteria"]),
-        Provenance(clock.now(), candidate["model"], candidate["prompt_version"]),
+        kind=parse_work_kind(candidate["kind"]),
+        provenance=Provenance(clock.now(), candidate["model"], candidate["prompt_version"]),
     )
+
+
+def parse_work_kind(raw: str) -> WorkKind:
+    """Map a provider string onto the work kind; an unknown value is a generation failure."""
+    try:
+        return WorkKind(raw)
+    except ValueError as exc:
+        raise StoryGenerationError(f"Provider returned unsupported work kind {raw!r}.") from exc
 
 
 def story_from_candidate(
@@ -726,6 +739,7 @@ def generated_story(feature_id: FeatureId, story_id: StoryId, draft: StoryDraft)
         action=draft.action,
         value=draft.value,
         acceptance_criteria=draft.acceptance_criteria,
+        kind=draft.kind,
         status=GenerationStatus.GENERATED,
         provenance=draft.provenance,
     )
@@ -746,6 +760,7 @@ def _manual_story(
         action=draft.action,
         value=draft.value,
         acceptance_criteria=draft.acceptance_criteria,
+        kind=draft.kind,
         status=GenerationStatus.EDITED,
         provenance=provenance,
         source_lineage=lineage,

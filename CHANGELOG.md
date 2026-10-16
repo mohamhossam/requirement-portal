@@ -11,6 +11,95 @@ restoring a backup.
 
 ## Unreleased
 
+- **The requirement-analysis prompt is sectioned and assembled per request**
+  (`analysis-v25-sectioned-conditional`). The question-lifecycle, evidence-citation and
+  attachment rules are sent only when the request supplies active AI questions, evidence
+  blocks or documents, freeing context for the evidence itself; the vague-language and
+  completeness rules are aligned with ISO/IEC/IEEE 29148 (weak-word categories, domain-
+  relevant completeness dimensions); extracted statements must be singular, unambiguous
+  and verifiable; rule/constraint proposals state condition and behavior explicitly. The
+  vague-term backstop that triggers a focused review now also reads attachment text (a
+  blank description with a vague BRD previously never triggered it) and recognizes the
+  standard weak words (TBD, "if necessary", "as soon as possible", …). Stored analyses
+  keep their recorded provenance; reverting to `analysis-v24` is one git revert of the
+  prompt commit plus a redeploy. No migration.
+- **Features carry acceptance criteria, and every Feature and Story a business/enabler
+  kind** (ADR-0118; prompts `feature-v8`, `story-v8`). Generation supplies feature-level
+  conditions of satisfaction and types each item as business work or a SAFe enabler
+  (exploration, architecture, infrastructure, compliance); both are editable, exported
+  (schema 1.6 → 1.7, new XLSX columns), published to ADO as description rows and shown in
+  the UI. Rows persisted and approvals recorded before this change are untouched: the new
+  payload and fingerprint fields are written only at non-default values, so nothing is
+  rewritten and no approval lapses. Story generation-context tokens are invalidated once;
+  open clients recover by reloading the Story set. No migration.
+- **Breakdown prompts align with the published SAFe guidance** (`epic-v4`, `feature-v7`,
+  `story-v7`). Epic generation now receives the decided product impact and unconfirmed
+  evidence (dependencies, ambiguities) the Feature/Story prompts already saw, and asks for a
+  SAFe-style value statement; the Feature prompt frames the outcome as a benefit hypothesis,
+  prefers customer-recognizable splits over `component_system`, orders MVP drops first, and
+  its schema rejects an empty Feature set; the Story prompt adds the simple/complex and
+  defer-performance splitting patterns and requires observable acceptance `then` clauses that
+  cover evidence-supported failure behavior. Artifacts generated under the old prompt
+  versions keep their recorded provenance; no migration.
+- **Every attachment upload is malware-scanned.** The synchronous attachment routes
+  (`POST …/attachments` and `…/attachments/{id}/versions`, for Requirements and drafts) now run
+  the same fail-closed scan as background ingestion; previously only ingestion scanned. A flagged
+  file answers 422, and an unreachable scanner refuses the upload instead of accepting it.
+  `ATTACHMENT_SCAN_MODE=offline` now requires only fake identity (it previously also demanded
+  memory persistence); production still refuses it through OIDC. No migration.
+- **The backend image fails closed.** `deploy/api/Dockerfile` sets `APP_ENV=production`, so the
+  image deployed with no environment demands production configuration (OIDC, PostgreSQL, a real
+  model provider) instead of booting with the fake development identity. Development and demo
+  manifests already override `APP_ENV`. In production the API now also answers 404 on
+  `/openapi.json`, `/docs` and `/redoc` itself, instead of relying on the bundled edge to hide
+  them. No migration.
+- **Production requires a daily AI spend ceiling.** `APP_ENV=production` refuses to start with
+  `PROVIDER_DAILY_TOKEN_BUDGET` unset or 0 (record-only). Upgrade step: set it in
+  `deploy/production.env` to the organization's daily token budget and keep the
+  `DailyTokenBudgetExceeded` alert threshold in step. No migration.
+- **Test coverage for the measured gaps.** New unit tests cover the auth module
+  (`safeAuthReturnPath` open-redirect refusals, the sign-in page's fake and OIDC flows, the
+  knowledge-admin role check), the `TagInput` primitive (previously 0%), the in-memory reverse
+  lineage index (membership, filters, retirement, citation counts, decision versioning) and the
+  LLM CLI's refusal paths. The frontend coverage floors rise to 82/75/73/85 (statements/branches/
+  functions/lines), re-measured 2026-10-15; the review's other suspected gaps (story workflow,
+  activity projection, revision tracking) measured 85–100% covered and needed nothing. No
+  migration.
+- **The browser follows the server's review rules.** `frontend/src/review/rules.ts` is deleted:
+  approval, generation and regeneration availability now come from the API's `actions` fields
+  (ADR-0073), so the gate texts are the server's and cannot drift. The request-body types and
+  the passage-citation shape are derived from the generated contract types instead of being
+  hand-written (AGENTS.md §19 debt, paid as an owner-approved ADR-0109 exception). No API or
+  migration change; the visible difference is slightly different wording on blocked
+  Approve/Generate buttons.
+- **CI robustness.** Every workflow job has a `timeout-minutes` ceiling instead of GitHub's
+  6-hour default. The `postgres-architecture` job is redundant (quality gates already runs
+  the whole test tree against PostgreSQL) but stays until the `main` branch-protection rule
+  stops requiring a check by that name; remove it from the rule's required status checks,
+  then delete the job. The browser smoke job now runs against PostgreSQL with
+  migrations applied — the durable mode a deployment uses — instead of the in-memory store, and
+  uploads Playwright traces on failure, as does the deployment job's platform browser step; the
+  backend coverage XML is kept as an artifact. Dependabot gets a `registries` entry for the
+  private platform-kernel — the owner must also store `KERNEL_READ_TOKEN` as a Dependabot secret
+  or uv update PRs cannot resolve. `pytest-timeout` (300s per test) guards against hangs, and the
+  polling-worker tests join their threads so none outlives the run. No migration.
+- **Edge and deployment hardening.** The `web` port now binds to `127.0.0.1` by default —
+  upgrade step: deployments that expose the edge directly set `WEB_BIND=0.0.0.0` in `deploy/.env`
+  (and a firewall or TLS proxy in front remains required). `/api/` responses carry
+  `Content-Security-Policy: default-src 'none'; sandbox`, so a directly opened attachment or
+  image is inert; the app reads them with fetch and is unaffected. The api, worker, migrate and
+  web containers drop all Linux capabilities (`cap_drop: [ALL]`). `ADO_ORGANIZATION_URL` must be
+  HTTPS — plain HTTP sent the personal access token in cleartext. The gitleaks allowlist is anchored to the exact `ci-only…` values instead
+  of any line containing them. ADR-0111 Amendment 1 records the prompt-injection, spend-ceiling
+  and operator-owned-infrastructure risks. No migration.
+- **Documentation brought in line with the shipped code.** README, PRODUCT.md, ROADMAP.md,
+  WORKSPACE.md, AGENTS.md §19 and CLAUDE.md no longer describe Azure DevOps publication, the
+  repository split, the bounded-context layout or the UI redesign as pending — all are shipped.
+  ADR-0117 records the redesigned application shell and formally supersedes ADRs 0045, 0047 and
+  0050; the ADR index gains its missing rows and the note that ADR-0107 was skipped. SECURITY.md
+  and the deployment runbook now say no release has been tagged yet. `.python-version` (3.12) and
+  `frontend/.nvmrc` (24) pin local runtimes to CI's, and the launchers ask for Node.js 24. No
+  migration.
 - **A figure the owner gave in an answer no longer fails analysis.** The check that refuses
   numeric targets the model invents (ADR-0025) now also counts the owner's clarification answers
   and accepted or edited intent decisions as support, not only the requirement and its documents.
@@ -63,7 +152,9 @@ restoring a backup.
 
 ## v0.1.0
 
-The first published release: the pilot candidate, closing the pilot gate of
+Prepared as the first release, but its tag was never pushed, so no `v0.1.0`
+images exist; the release that ships this content will be cut from a later
+version. It was the pilot candidate, closing the pilot gate of
 `docs/slices/production-hardening.md`, with its shared provider limits and platform-kernel 1.3.0.
 
 - **Production configuration fails closed.**

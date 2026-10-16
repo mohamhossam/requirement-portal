@@ -69,7 +69,8 @@ from tests.unit.transaction_stub import NoOpTransactionManager
 os.environ.setdefault("LLM_PROVIDER", LLMProvider.FAKE.value)
 os.environ.setdefault("PERSISTENCE_PROVIDER", "memory")
 
-FAKE_PROVIDER_SETTINGS = Settings(llm_provider=LLMProvider.FAKE)
+# Offline scanning keeps the suite deterministic; every upload path still scans.
+FAKE_PROVIDER_SETTINGS = Settings(llm_provider=LLMProvider.FAKE, library_scan_mode="offline")
 
 
 @pytest.fixture

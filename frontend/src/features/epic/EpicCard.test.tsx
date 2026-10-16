@@ -2,11 +2,11 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { analysisFixture, epicFixture, featureSetFixture } from "../../test/fixtures";
+import { allowedAction, analysisFixture, blockedAction, epicFixture, featureSetFixture } from "../../test/fixtures";
 import { EpicCard } from "./EpicCard";
 
 const baseProps = {
-  analysis: { ...analysisFixture, human_confirmed: true },
+  analysis: { ...analysisFixture, human_confirmed: true, actions: { generate_epic: allowedAction } },
   features: featureSetFixture,
   busy: false,
   error: null,
@@ -18,18 +18,18 @@ const baseProps = {
 
 describe("EpicCard", () => {
   it("disables approval and explains stale state", () => {
-    render(<EpicCard {...baseProps} epic={{ ...epicFixture, stale: { reason: "requirement_changed", since: "2026-01-01T13:00:00Z" } }} />);
+    render(<EpicCard {...baseProps} epic={{ ...epicFixture, stale: { reason: "requirement_changed", since: "2026-01-01T13:00:00Z" }, actions: { ...epicFixture.actions, approve: blockedAction("Reconcile this Epic: its source requirement changed.") } }} />);
     // Gated, not disabled: it keeps its tab stop and says why.
     expect(screen.getByRole("button", { name: "Approve" })).toHaveAttribute("aria-disabled", "true");
-    expect(screen.getByText("Reconcile this item because its source requirement changed.")).toBeInTheDocument();
+    expect(screen.getByText("Reconcile this Epic: its source requirement changed.")).toBeInTheDocument();
   });
 
   it("disables repeat approval for an approved Epic", () => {
-    render(<EpicCard {...baseProps} epic={{ ...epicFixture, status: "approved" }} />);
+    render(<EpicCard {...baseProps} epic={{ ...epicFixture, status: "approved", actions: { ...epicFixture.actions, approve: blockedAction("This Epic version is already approved. Edit or regenerate it before approving again.") } }} />);
     expect(screen.getByRole("button", { name: "Approved" })).toHaveAttribute("aria-disabled", "true");
     expect(
       screen.getByText(
-        "This version is already approved. Regenerate or edit it before approving again.",
+        "This Epic version is already approved. Edit or regenerate it before approving again.",
       ),
     ).toBeInTheDocument();
   });
@@ -44,7 +44,7 @@ describe("EpicCard", () => {
 
   it("names human-owned loss and sends force only after confirmation", async () => {
     const onRegenerate = vi.fn();
-    render(<EpicCard {...baseProps} epic={{ ...epicFixture, status: "approved" }} onRegenerate={onRegenerate} />);
+    render(<EpicCard {...baseProps} epic={{ ...epicFixture, status: "approved", actions: { ...epicFixture.actions, regenerate: { allowed: true, reason: null, confirmation: "This Epic has been approved. Regenerating replaces its content and human review state." } } }} onRegenerate={onRegenerate} />);
     await userEvent.click(screen.getByRole("button", { name: "Regenerate" }));
     expect(screen.getByRole("dialog", { name: "Replace this Epic?" })).toHaveTextContent("mark 2 Features out of date");
     expect(onRegenerate).not.toHaveBeenCalled();
@@ -82,6 +82,12 @@ it("shows who approved the Epic, and what approving covers before it is signed",
       epic={{
         ...epicFixture,
         status: "approved",
+        actions: {
+          ...epicFixture.actions,
+          approve: blockedAction(
+            "This Epic version is already approved. Edit or regenerate it before approving again.",
+          ),
+        },
         current_approval: {
           id: "approval-1",
           decision: "approved",

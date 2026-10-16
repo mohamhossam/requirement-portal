@@ -89,15 +89,16 @@ Do not create folders for every future concept before the slice requires them.
 ## 3. Prerequisites
 
 Recommended:
-- Python 3.12+
+- Python 3.12 (`.python-version`; CI pins it)
 - Git
-- a Python virtual environment
-- Node.js only when the frontend slice begins
+- a Python virtual environment (or `uv sync --locked --extra dev`, which matches CI)
+- Node.js 24 with npm (`frontend/.nvmrc`; `frontend/package.json` declares `engines: >=24`)
 
-Optional external systems are not required for early slices:
-- no live LLM required for unit tests,
-- no PostgreSQL until persistence slice,
-- no ADO until ADO slices.
+Optional external systems, never required for the default workflow:
+- no live LLM for any test (the fake adapters cover every port),
+- no PostgreSQL in memory mode (`PERSISTENCE_PROVIDER=memory`); integration tests
+  skip without `TEST_DATABASE_URL`,
+- no Azure DevOps unless `ADO_PUBLISHER` is set.
 
 ---
 
@@ -142,7 +143,9 @@ After activation, all standard quality gate commands (`pytest`, `ruff`, `mypy`,
 ### The platform kernel
 
 `smb-platform-kernel` (ADR-0100) is a git dependency, pinned by tag in
-`pyproject.toml`. The repository is public, so pip and uv fetch it without credentials.
+`pyproject.toml` and by commit in `uv.lock`. CI and the Docker build fetch it with a
+read token (`KERNEL_READ_TOKEN`); if an unauthenticated install cannot fetch it,
+configure a GitHub token with read access to the kernel repository.
 
 To work on the kernel and this application together, install your local checkout over
 the pinned one. Never commit that change:
@@ -613,13 +616,14 @@ For each new slice:
 8. Mark the slice spec with completion evidence.
 9. Do not implement the next slice in the same task unless explicitly requested.
 
-Suggested branch naming:
+Suggested branch naming (in practice, agent sessions push `claude/<session-name>`
+branches; what matters is one branch per task, merged through a PR):
 
 ```text
-slice/01-requirement-intake
-slice/02-requirement-analysis
+slice/<nn>-<short-description>
 fix/<short-description>
 refactor/<short-description>
+claude/<session-name>
 ```
 
 ---
@@ -791,10 +795,11 @@ DELETE /saved-views/{view_id}
 
 POST   /breakdowns/{id}/export
 
-POST   /breakdowns/{id}/publish/ado
+POST   /requirements/{id}/publication        # and /publication/retry (Slices 12-13)
 ```
 
-Endpoint naming may evolve as the resource model becomes clearer.
+This sketch predates the implementation; `frontend/openapi.json` is the real,
+committed contract, and the README's API overview groups the shipped routes.
 
 ---
 
@@ -844,7 +849,8 @@ UI principles:
 
 ## 14. LLM Adapter Workspace
 
-When Slice 2 begins, create an adapter structure only then, for example:
+The shipped layout (per bounded context since ADR-0103, e.g.
+`analysis/infrastructure/llm/`):
 
 ```text
 infrastructure/
@@ -921,12 +927,11 @@ documented in knowledge-portal.
 
 ## 16. Persistence Workspace
 
-Before Slice 10:
-- prefer in-memory adapters unless durable state is truly required.
-
-At Slice 10:
-- introduce PostgreSQL and migration tooling behind repository adapters.
-- preserve domain/application tests that do not require the database.
+Both persistence modes are first-class (ADR-0039): every Postgres adapter has an
+in-memory twin, chosen in one place (`interfaces/api/composition/persistence.py`).
+Unit tests run in memory; integration tests need `TEST_DATABASE_URL`. Migrations
+are expand/contract and applied by the explicit migration command, never at API
+startup. Domain and application tests must not require the database.
 
 ### Clarification suggestion scheduling
 
@@ -941,26 +946,24 @@ for retry or changed evidence.
 
 ## 17. ADO Workspace
 
-Do not add ADO dependencies before Slice 12.
+Azure DevOps publication is shipped (Slices 12-13, ADR-0112/0113) and off by
+default (`ADO_PUBLISHER=none`). The adapter lives at
+`governance/infrastructure/publication/azure_devops.py`, behind the publication
+port; the application sees only the port and neutral result models.
 
-Expected location later:
-
-```text
-infrastructure/
-└── azure_devops/
-    ├── client.py
-    ├── mapper.py
-    ├── publisher.py
-    └── config.py
-```
-
-Application sees only the publication port and neutral result models.
-
-ADO writes must support explicit preview/approval flow.
+ADO writes support the explicit preview/approval flow: nothing is published
+except an explicitly approved revision, and republish updates items instead of
+duplicating them.
 
 ---
 
 ## 18. Coding Agent Usage
+
+### Claude Code
+Reads `CLAUDE.md` at repository root, which layers UI rules on top of
+`AGENTS.md`. Skills and hooks live in `.claude/`. Scope tasks the same way as
+below: the slice or fix, the files involved, acceptance criteria, and the gates
+to run.
 
 ### Codex
 Keep `AGENTS.md` at repository root. Give Codex tasks scoped like a good issue:
@@ -994,21 +997,11 @@ The root `AGENTS.md` remains the shared engineering constitution.
 
 ---
 
-## 19. Recommended First Coding Task
+## 19. Picking Up Work
 
-Start with:
-
-```text
-Slice 0 — Clean Architecture Workspace
-```
-
-Then:
-
-```text
-Slice 1 — Requirement Intake
-```
-
-Do not start directly with the big AI prompt or ADO integration.
+`ROADMAP.md` holds the delivery order; do not start unscheduled work (§9). A new
+task begins from the roadmap's "Recommended Delivery Order" or an explicitly
+scheduled slice spec in `docs/slices/`, never from an exciting integration.
 
 The product becomes safer and easier to evolve when the core requirement/backlog model is proven before external integrations are added.
 
@@ -1016,8 +1009,11 @@ The product becomes safer and easier to evolve when the core requirement/backlog
 
 Story assessment includes source facts, confirmed decisions and unresolved evidence. Its cache
 is bound to those inputs as well as Story content. Existing assessments made without that context
-are stale and require explicit reassessment. Feature/Story prompts are `feature-v6` / `story-v6`;
-the grounded semantic rubric is `story-quality-v3`. Correction tasks distinguish a failed AI draft
+are stale and require explicit reassessment. Breakdown prompts are `epic-v4` / `feature-v8` /
+`story-v8`; the grounded semantic rubric is `story-quality-v3`. Epic generation receives a
+reduced guidance (decided product impact and unconfirmed evidence, no architecture catalogue).
+Features carry feature-level acceptance criteria, and Features and Stories a business/enabler
+work kind (ADR-0118), persisted and fingerprinted only at non-default values. Correction tasks distinguish a failed AI draft
 from source requirements, request discovery when Estimable fails, and reject a refused split for
 a sole oversized candidate when the operation allows multiple Stories. Provider schemas require
 at least one complete acceptance criterion per Story.

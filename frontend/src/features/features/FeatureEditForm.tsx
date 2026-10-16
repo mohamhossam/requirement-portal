@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 
 import type { Feature, FeatureInput } from "../../api/client";
+import { KIND_LABEL } from "../breakdown/labels";
 import { PATTERN_LABEL } from "./splittingPatterns";
 import { ErrorNotice } from "../../components/ErrorNotice";
 import { useUnsavedGuard } from "../../app/useUnsavedChanges";
@@ -11,6 +12,10 @@ import { Select } from "../../components/ui/Select";
 
 const patterns: FeatureInput["splitting_pattern"][] = [
   "component_system", "journey_stage", "mvp_vs_later", "channel", "business_variant",
+];
+
+const kinds: Feature["kind"][] = [
+  "business", "exploration", "architecture", "infrastructure", "compliance",
 ];
 
 export function FeatureEditForm({ feature, busy, error, onSave, onCancel }: {
@@ -25,7 +30,9 @@ export function FeatureEditForm({ feature, busy, error, onSave, onCancel }: {
   const [drop, setDrop] = useState(feature.delivery_drop);
   const [pattern, setPattern] = useState(feature.splitting_pattern);
   const [rationale, setRationale] = useState(feature.splitting_rationale);
-  useUnsavedGuard({ name, outcome, drop, pattern, rationale });
+  const [kind, setKind] = useState(feature.kind);
+  const [criteria, setCriteria] = useState(feature.acceptance_criteria.join("\n"));
+  useUnsavedGuard({ name, outcome, drop, pattern, rationale, kind, criteria });
   const [validation, setValidation] = useState<string | null>(null);
   const [reconciledVersion, setReconciledVersion] = useState<number | null>(null);
   const sourceReconciled = reconciledVersion === feature.version;
@@ -40,7 +47,19 @@ export function FeatureEditForm({ feature, busy, error, onSave, onCancel }: {
       setValidation("Acknowledge that this edit reconciles the current source before saving.");
       return;
     }
-    onSave({ name: name.trim(), outcome: outcome.trim(), delivery_drop: drop, splitting_pattern: pattern, splitting_rationale: rationale.trim(), source_reconciled: sourceReconciled });
+    onSave({
+      name: name.trim(),
+      outcome: outcome.trim(),
+      delivery_drop: drop,
+      splitting_pattern: pattern,
+      splitting_rationale: rationale.trim(),
+      kind,
+      acceptance_criteria: criteria
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean),
+      source_reconciled: sourceReconciled,
+    });
   };
 
   return (
@@ -56,7 +75,16 @@ export function FeatureEditForm({ feature, busy, error, onSave, onCancel }: {
           {patterns.map((value) => <option key={value} value={value}>{PATTERN_LABEL[value]}</option>)}
         </Select>
       </div>
+      <Select label="Kind" onChange={(event) => setKind(event.target.value as Feature["kind"])} value={kind}>
+        {kinds.map((value) => <option key={value} value={value}>{KIND_LABEL[value]}</option>)}
+      </Select>
       <Textarea label="Splitting rationale" onChange={(event) => setRationale(event.target.value)} rows={3} value={rationale} />
+      <Textarea
+        label="Acceptance criteria (one per line)"
+        onChange={(event) => setCriteria(event.target.value)}
+        rows={3}
+        value={criteria}
+      />
       {feature.stale && (
         <Checkbox
           checked={sourceReconciled}

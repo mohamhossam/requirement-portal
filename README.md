@@ -4,12 +4,14 @@
 > [`knowledge-portal`](https://github.com/mohamhossam/knowledge-portal) and
 > [`platform-kernel`](https://github.com/mohamhossam/platform-kernel). Imported fresh from
 > [`smb-ai-requirement-agent@d5cfb57`](https://github.com/mohamhossam/smb-ai-requirement-agent/commit/d5cfb57),
-> which stays maintained in parallel; see `UPSTREAM.md`. The split is in progress: until it
-> completes, this repository still contains the library and catalogue code it inherited.
+> which stays maintained in parallel; see `UPSTREAM.md`. The split is complete: the shared
+> library and catalogue live in `knowledge-portal` (ADR-0104), and the tables this repository
+> inherited from them have been dropped.
 
 > Production-readiness remediation is merged into `main`; target-environment release qualification
-> is still open (see `ROADMAP.md`). Follow `docs/slices/production-readiness-remediation.md` and
-> `docs/operations/production-readiness-maintenance.md` before operating migrations `013`–`015`.
+> is still open (`docs/slices/production-readiness-qualification.md`, summarized in `ROADMAP.md`).
+> Operate deployments by `docs/operations/deployment.md` and
+> `docs/operations/production-readiness-maintenance.md`.
 
 An AI-assisted Requirement Engineering and backlog-decomposition application
 for a Telecom SMB value stream. It turns raw business requirements into
@@ -30,10 +32,11 @@ troubleshooting.
 
 `ROADMAP.md` holds the verified status ledger. Slices 0–11 (including 4A, 5A–5D, 8A–8C
 and 10A), Slice 14 (architecture knowledge administration), the listed enhancements,
-the reviewed document library, and production-readiness remediation are implemented and
-merged into `main`. The review UI has been redesigned in phases 0–6 (`docs/ux-plan.md`,
-`docs/design-system.md`, `DESIGN.md`). Target-environment release qualification remains
-open. The running application currently supports:
+the reviewed document library, Azure DevOps publication with safe republish (Slices 12–13),
+and production-readiness remediation are implemented and merged into `main`. The review UI
+has been fully redesigned in phases 0–10 (`docs/ux-plan.md`, `docs/design-system.md`,
+`DESIGN.md`, ADR-0117). Target-environment release qualification remains open. The running
+application currently supports:
 
 - a Requirements worklist with workflow counters, search, sort, saved views and a
   **Needs attention** entry point, plus Activity and operational Reports pages;
@@ -52,6 +55,8 @@ open. The running application currently supports:
 - submission, per-Story review decisions and final approval;
 - immutable revision history with comparison, and deterministic JSON and Excel
   export of exactly the approved revision;
+- optional publication of an approved revision to Azure DevOps with safe
+  republish, off by default (`ADO_PUBLISHER=none`);
 - a governed shared knowledge library and architecture-knowledge releases feeding
   unified, cited search;
 - durable model-backed background jobs, notifications and activity history;
@@ -61,20 +66,21 @@ open. The running application currently supports:
 - in-memory or durable PostgreSQL + pgvector storage, and fake or OIDC
   (Keycloak/Entra) identity.
 
-Azure DevOps publication and external work-item mapping (Slices 12–13) remain planned.
-Generated content is always a review candidate; it is never automatically published.
+Generated content is always a review candidate; it is never automatically published, and
+external publication is allowed only from an explicitly approved revision.
 
 ## Prerequisites
 
 - Python 3.12 or newer
-- Node.js 22 with npm
+- Node.js 24 with npm (`frontend/package.json` declares `engines: >=24`)
 - one of the launcher shells: PowerShell 5.1/7 (`start.ps1`), Command Prompt
   (`start.cmd`), or Bash with `curl` on macOS, Linux or WSL (`start.sh`)
 - an OpenAI, OpenRouter or Gemini API key only when using that provider
 - an OpenAI-compatible local model server only when using the local provider
 - Docker Desktop (or Docker Engine) only when using durable PostgreSQL mode or
   running the whole stack in containers
-- ClamAV only when uploading to the shared knowledge library
+- ClamAV when uploading Requirement attachments with real scanning; the offline
+  trial sets `ATTACHMENT_SCAN_MODE=offline` instead (fake identity only)
 
 The application needs no database, provider account or `.env` file in the
 default memory/fake mode. Set `PERSISTENCE_PROVIDER=postgres` for durable state.
@@ -199,6 +205,12 @@ Use the manual development commands below when backend reload is preferred.
 
 ## Manual setup and startup
 
+CI and the Docker image resolve dependencies with `uv sync --locked` against
+`uv.lock`. For an environment identical to CI's, use
+[uv](https://docs.astral.sh/uv/): `uv sync --locked --extra dev`. The
+pip-based setup below also works, but resolves versions independently of the
+lock file.
+
 ### PowerShell
 
 Create the backend environment:
@@ -314,14 +326,14 @@ cp .env.example .env
 | `IDENTITY_PROVIDER` | No | `fake` (default; switchable development personas) or `oidc` with the `OIDC_*` variables. See `docs/operations/keycloak-login.md`. |
 | `ATTACHMENT_SCAN_MODE` | No | `clamav` (default) scans shared-library uploads at `ATTACHMENT_SCANNER_HOST`:`ATTACHMENT_SCANNER_PORT`. `offline` is a development-only adapter allowed only with memory persistence and fake identity. |
 | `API_BACKGROUND_WORKERS` | No | `true` (default) runs background AI jobs inside the API. `false` requires PostgreSQL and a separate `python -m smb_requirement_agent.interfaces.worker`. |
-| `APP_ENV` | No | `development` (default), `test`, or `production`. Production requires PostgreSQL and refuses fake identity and fake knowledge. |
+| `APP_ENV` | No | `development` (default from source; the Docker image defaults to `production`), `test`, or `production`. Production requires PostgreSQL, OIDC, a real model provider and a daily token budget, and refuses the development conveniences. |
 | `VITE_API_BASE` | No | Browser API prefix. Defaults to `/api`; change it only for a different deployment topology. An absolute URL's origin is added to the built app's Content-Security-Policy `connect-src`. |
 | `CSP_IDENTITY_ORIGINS` | OIDC builds only | Build-time, space-separated OIDC issuer origins (for example `https://login.example.com`). The built app's Content-Security-Policy admits them for token calls, silent-renewal frames and sign-in forms. Leave unset for fake identity. |
 
 `.env.example` documents the remaining settings: document extraction limits,
-the PostgreSQL pool, background-job timing, provider rate limiting, knowledge
-embeddings, logging and metrics. Azure DevOps variables remain future
-placeholders until their roadmap slice.
+the PostgreSQL pool, background-job timing, provider rate and spend limiting,
+knowledge embeddings, Azure DevOps publication (`ADO_*`, off unless
+`ADO_PUBLISHER` is set), logging and metrics.
 
 Environment variables are resolved centrally by
 `infrastructure/config/settings.py`. Domain objects, use cases, routes, and
@@ -415,12 +427,17 @@ The HTTP surface is grouped by resource:
 | Architecture | `/requirements/{id}/architecture-mapping`, `.../architecture-mapping/jobs/{job_id}`, `/architecture/active-release` |
 | Review and approval | `/requirements/{id}/breakdown-review/...`, `.../review-submission`, `.../approval-workflow`, `.../breakdown-approval`, `.../impact-preview` |
 | Revisions and export | `/requirements/{id}/revisions`, `.../revisions/compare`, `.../revisions/{revision_number}/export` |
+| Azure DevOps publication (off unless `ADO_PUBLISHER` is set) | `/requirements/{id}/publication`, `.../publication/retry`, `.../revisions/{revision_number}/publication`, `/integrations/azure-devops/work-items` |
+| Prior art | `/requirements/{id}/prior-art` |
+| Knowledge administration | `/knowledge/corpus`, `/knowledge/findings/...`, `/knowledge/historic/...`, `/knowledge/reindex`, `/knowledge/requirements/{id}/retirement` and `/reinstatement` |
 | Cited sources (read-only; curated in the knowledge portal) | `/requirements/{id}/source-impact/...`, `/references/passage`, `/architecture-evidence/{release_id}/{chunk_id}` |
 | Background jobs | `/requirements/{id}/ai-jobs/...` |
 | Portfolio | `/activity`, `/reports/operational`, `/saved-views`, `/notifications` |
+| Operational | `POST /client-errors` (browser error reports); `/internal/*` (service-to-service, 404 unless configured) |
 
-Use `http://127.0.0.1:8000/docs` for request schemas and interactive calls, or
-the committed contract in `frontend/openapi.json`. Application and domain errors
+Use `http://127.0.0.1:8000/docs` for request schemas and interactive calls in
+development (production answers 404 on the documentation routes), or the
+committed contract in `frontend/openapi.json`. Application and domain errors
 are translated centrally to stable HTTP responses; route handlers do not contain
 business rules.
 
@@ -432,11 +449,19 @@ The code follows inward Clean Architecture dependency direction:
 Interfaces / Infrastructure → Application → Domain
 ```
 
-- `domain/` contains entities, value objects, invariants, and deterministic
-  business behavior without frameworks or external systems.
-- `application/` contains use cases, orchestration, and outbound ports.
-- `infrastructure/` contains configuration and concrete provider/repository
-  adapters.
+The backend is organized as bounded contexts (ADR-0103) — `requirements`,
+`analysis`, `knowledge`, `references`, `breakdown`, `governance`, `reporting`,
+`workflows`, `identity`, `jobs` and a `shared_kernel` — each with its own
+`domain/`, `application/` and `infrastructure/` layers. There is no layer-first
+top-level `domain/`; `AGENTS.md` §4 records the layout and `.importlinter`
+enforces the dependency direction and the context order.
+
+- Each context's `domain/` contains entities, value objects, invariants, and
+  deterministic business behavior without frameworks or external systems.
+- Each context's `application/` contains use cases, orchestration, and outbound
+  ports.
+- `infrastructure/` (shared and per context) contains configuration and
+  concrete provider/repository adapters.
 - `interfaces/api/` contains FastAPI delivery schemas, routes, dependency
   providers, centralized error translation, and the composition root.
 - `frontend/` consumes the stable HTTP/OpenAPI contract and never calls an LLM
@@ -460,9 +485,12 @@ provider can be changed without changing use cases, routes, or the browser.
 ├── .env.example               # Every configuration variable, documented
 ├── config/llm.yaml            # Optional YAML model profiles
 ├── src/smb_requirement_agent/
-│   ├── domain/                # Business model and invariants
-│   ├── application/           # Use cases and ports
-│   ├── infrastructure/        # Configuration, persistence and provider adapters
+│   ├── requirements/, analysis/, knowledge/, references/, breakdown/,
+│   │   governance/, reporting/, workflows/, identity/, jobs/
+│   │                          # Bounded contexts, each with domain/application/infrastructure
+│   ├── shared_kernel/         # Identifiers and actor profiles shared by every context
+│   ├── application/           # Shared errors, events and technical ports
+│   ├── infrastructure/        # Configuration, persistence machinery, LLM transports
 │   └── interfaces/            # FastAPI API, CLI, worker and maintenance entry points
 ├── frontend/
 │   ├── src/api/               # Typed API client and generated contract
@@ -470,17 +498,21 @@ provider can be changed without changing use cases, routes, or the browser.
 │   ├── src/features/          # Requirement, analysis, backlog and review UI
 │   ├── src/components/        # App shell and shared UI components
 │   └── tests/                 # Playwright browser smoke tests
-├── tests/                     # Backend unit, API, and architecture tests
+├── tests/                     # Backend unit, API, integration and architecture tests
 ├── scripts/                   # OpenAPI dump, launcher helpers, Ollama setup, evaluations
+├── contracts/                 # Vendored internal API contracts (knowledge portal)
 ├── deploy/                    # Images, Compose reference deployment and monitoring add-on
+├── .github/                   # CI, release, rescan and CodeQL workflows; Dependabot
 ├── docs/architecture/         # Accepted architecture decisions
 ├── docs/slices/               # Slice specs and validation evidence
 ├── docs/operations/           # Deployment and operations runbooks
-├── docs/ux-plan.md            # UI redesign plan
+├── docs/ux-plan.md            # UI redesign plan (shipped; §4 onward governs)
 ├── docs/design-system.md      # UI design system
 ├── AGENTS.md                  # Engineering constitution
 ├── PRODUCT.md, DESIGN.md      # Product context and shipped design system
 ├── ROADMAP.md                 # Delivery status and approved sequence
+├── CHANGELOG.md               # Release notes; SECURITY.md has the reporting policy
+├── UPSTREAM.md                # Porting procedure from the predecessor repository
 └── WORKSPACE.md               # Detailed developer workflow
 ```
 
@@ -516,8 +548,11 @@ Install the browser once if Playwright requests it:
 npx playwright install chromium
 ```
 
-The GitHub Actions workflow runs backend gates, frontend gates, and browser
-smoke testing on pushes and pull requests.
+Four GitHub Actions workflows guard the repository: `ci.yml` runs the backend
+gates, frontend gates, supply-chain audits, secret scanning, a full deployed-stack
+check and browser smoke testing on pushes and pull requests; `codeql.yml` scans
+Python, JS/TS and the workflows; `release.yml` builds, scans, signs and publishes
+tagged images; `rescan.yml` re-scans the latest release's images weekly.
 
 ## OpenAPI and frontend type synchronization
 

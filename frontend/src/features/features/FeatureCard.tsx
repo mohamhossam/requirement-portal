@@ -7,9 +7,9 @@ import { ProvenanceDetails } from "../../components/ProvenanceDetails";
 import { StalenessNotice } from "../../components/StalenessNotice";
 import { Disclosure } from "../../components/Disclosure";
 import { Badge, Button, Card, CardHeader } from "../../components/ui";
-import { canApprove } from "../../review/rules";
 import { ArchitectureImpactPanel } from "../architecture/ArchitectureImpactPanel";
 import { StoryList } from "../stories/StoryList";
+import { KindBadge } from "../breakdown/KindBadge";
 import { DropBadge } from "./DropBadge";
 import { PATTERN_LABEL } from "./splittingPatterns";
 import { FeatureEditForm } from "./FeatureEditForm";
@@ -49,14 +49,15 @@ export function FeatureCard({
   onApprove: () => void;
 }) {
   const [editing, setEditing] = useState<Feature | null>(null);
-  const approval = canApprove(feature);
+  // The server's own availability (ADR-0073), not a client restatement.
+  const approval = feature.actions.approve;
   const { trigger, form } = useEditFocus(Boolean(editing));
 
   if (editing) {
     return <div ref={form}><EditorConflictNotice baselineVersion={editing.version} currentVersion={feature.version} currentContent={[feature.name, feature.outcome, feature.splitting_rationale].join("\n\n")} onReconcile={() => setEditing(feature)} /><FeatureEditForm feature={editing} busy={busy} error={error} onCancel={() => setEditing(null)} onSave={async (input) => { try { await onEdit(input, editing.version); setEditing(null); } catch { /* Mutation error remains visible with the draft. */ } }} /></div>;
   }
 
-  const approveReason = !approval.ok ? approval.reason : undefined;
+  const approveReason = approval.allowed ? undefined : (approval.reason ?? undefined);
   const impact = feature.architecture;
 
   return (
@@ -90,6 +91,7 @@ export function FeatureCard({
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <BacklogStatus item={feature} level="feature" />
           <DropBadge drop={feature.delivery_drop} />
+          <KindBadge kind={feature.kind} />
         </div>
         {/* Which systems this touches, on the card: the architect's first
             question was two collapsed disclosures deep. */}
@@ -107,7 +109,7 @@ export function FeatureCard({
             <span>Systems not mapped yet</span>
           )}
         </p>
-        {canManage && approval.ok && (
+        {canManage && approval.allowed && (
           <p className="text-meta text-ink-muted m-0 max-w-[var(--measure-document)]">
             Approving signs off this Feature as it reads now, so its Stories can be generated. Any later edit needs a new approval; Stories are approved on Review &amp; approve.
           </p>
@@ -128,6 +130,20 @@ export function FeatureCard({
           {feature.outcome}
         </p>
       </div>
+
+      {/* Features generated before the field existed carry none; rendering an
+          empty heading would imply missing work on content nobody can add to
+          without editing. */}
+      {feature.acceptance_criteria.length > 0 && (
+        <div className="mt-5 grid gap-1">
+          <span className="text-label text-ink-muted">Acceptance criteria</span>
+          <ul className="border-line text-document font-document text-ink-soft m-0 grid list-none gap-2 border-0 border-l border-solid p-0 pl-4 max-w-[var(--measure-document)]">
+            {feature.acceptance_criteria.map((criterion, index) => (
+              <li key={index}>{criterion}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {focused ? (
         <>

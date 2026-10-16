@@ -28,12 +28,14 @@ from smb_requirement_agent.breakdown.domain.feature.errors import (
 from smb_requirement_agent.breakdown.domain.feature.events import FeatureChanged
 from smb_requirement_agent.breakdown.domain.feature.value_objects import (
     DeliveryDrop,
+    FeatureAcceptanceCriterion,
     FeatureId,
     FeatureName,
     FeatureOutcome,
     SplittingPattern,
     SplittingRationale,
 )
+from smb_requirement_agent.breakdown.domain.kinds import WorkKind
 from smb_requirement_agent.identity.application.ports.requirement_access import (
     RequirementAccessPort,
     RequirementPermission,
@@ -55,6 +57,8 @@ class EditFeatureInput:
     delivery_drop: str
     splitting_pattern: str
     splitting_rationale: str
+    acceptance_criteria: tuple[str, ...] = ()
+    kind: str = WorkKind.BUSINESS.value
     source_reconciled: bool = False
     expected_version: int = 1
 
@@ -124,6 +128,10 @@ class EditFeature(FeatureLookup):
                 delivery_drop=_parse_drop(data.delivery_drop),
                 splitting_pattern=_parse_pattern(data.splitting_pattern),
                 splitting_rationale=SplittingRationale(data.splitting_rationale),
+                acceptance_criteria=tuple(
+                    FeatureAcceptanceCriterion(item) for item in data.acceptance_criteria
+                ),
+                kind=_parse_choice(WorkKind, data.kind, "work kind"),
                 source_reconciled=data.source_reconciled,
             )
             self._features.save(edited)

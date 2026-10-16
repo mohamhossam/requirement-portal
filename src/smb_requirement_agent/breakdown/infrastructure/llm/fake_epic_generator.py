@@ -5,6 +5,10 @@ from __future__ import annotations
 from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
 from smb_requirement_agent.breakdown.application.errors import EpicGenerationError
 from smb_requirement_agent.breakdown.application.ports.epic_generator import EpicCandidate
+from smb_requirement_agent.breakdown.application.ports.generation_guidance import (
+    EMPTY_GENERATION_GUIDANCE,
+    GenerationGuidance,
+)
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 
 FAKE_MODEL = "fake"
@@ -16,8 +20,16 @@ class FakeEpicGenerator:
 
     def __init__(self) -> None:
         self.should_fail = False
+        self.last_guidance: GenerationGuidance | None = None
 
-    def generate(self, requirement: Requirement, analysis: RequirementAnalysis) -> EpicCandidate:
+    def generate(
+        self,
+        requirement: Requirement,
+        analysis: RequirementAnalysis,
+        *,
+        guidance: GenerationGuidance = EMPTY_GENERATION_GUIDANCE,
+    ) -> EpicCandidate:
+        self.last_guidance = guidance
         if self.should_fail:
             raise EpicGenerationError("Fake generation error")
         return EpicCandidate(

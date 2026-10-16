@@ -66,6 +66,7 @@ def client(schema_url: str) -> Iterator[TestClient]:
     container = build_container(
         Settings(
             llm_provider=LLMProvider.FAKE,
+            library_scan_mode="offline",
             persistence_provider=PersistenceProvider.POSTGRES,
             database_url=schema_url,
         )

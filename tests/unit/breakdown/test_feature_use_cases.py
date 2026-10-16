@@ -59,6 +59,7 @@ from smb_requirement_agent.breakdown.domain.feature.value_objects import (
     FeatureStatus,
     SplittingPattern,
 )
+from smb_requirement_agent.breakdown.domain.kinds import WorkKind
 from smb_requirement_agent.breakdown.infrastructure.in_memory_epic_repository import (
     InMemoryEpicRepository,
 )
@@ -489,6 +490,63 @@ class TestFeatureReview:
                     delivery_drop="mvp",
                     splitting_pattern="astrology",
                     splitting_rationale="r",
+                ),
+            )
+
+    def test_generation_maps_work_kind_and_acceptance_criteria(self, world: World) -> None:
+        requirement = world.decomposed()
+        first, second = world.get.execute(requirement.id)
+
+        assert first.kind is WorkKind.BUSINESS
+        assert [item.value for item in first.acceptance_criteria] == [
+            "A customer can complete an order in channel."
+        ]
+        assert second.kind is WorkKind.INFRASTRUCTURE
+
+    def test_edit_changes_kind_and_criteria_and_moves_the_fingerprint(self, world: World) -> None:
+        """The new fields are approvable content: changing them lapses an approval."""
+        requirement = world.decomposed()
+        first = world.get.execute(requirement.id)[0]
+        before = artifact_fingerprint(first)
+
+        world.edit.execute(
+            FAKE_ACTORS[0],
+            requirement.id,
+            first.id,
+            EditFeatureInput(
+                name="Human name",
+                outcome="Human outcome",
+                delivery_drop="later",
+                splitting_pattern="channel",
+                splitting_rationale="Human rationale",
+                acceptance_criteria=("Compliance evidence is archived.",),
+                kind="compliance",
+            ),
+        )
+
+        edited = world.get.execute(requirement.id)[0]
+        assert edited.kind is WorkKind.COMPLIANCE
+        assert [item.value for item in edited.acceptance_criteria] == [
+            "Compliance evidence is archived."
+        ]
+        assert artifact_fingerprint(edited) != before
+
+    def test_unsupported_work_kind_from_a_caller_is_a_content_error(self, world: World) -> None:
+        requirement = world.decomposed()
+        first = world.get.execute(requirement.id)[0]
+
+        with pytest.raises(InvalidFeatureContentError, match="work kind"):
+            world.edit.execute(
+                FAKE_ACTORS[0],
+                requirement.id,
+                first.id,
+                EditFeatureInput(
+                    name="n",
+                    outcome="o",
+                    delivery_drop="mvp",
+                    splitting_pattern="channel",
+                    splitting_rationale="r",
+                    kind="astrology",
                 ),
             )
 

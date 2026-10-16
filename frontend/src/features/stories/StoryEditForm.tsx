@@ -6,7 +6,13 @@ import { useUnsavedGuard } from "../../app/useUnsavedChanges";
 import { Button } from "../../components/ui/Button";
 import { Checkbox } from "../../components/ui/Checkbox";
 import { Input } from "../../components/ui/Input";
+import { Select } from "../../components/ui/Select";
+import { KIND_LABEL } from "../breakdown/labels";
 import { CriteriaFields } from "./CriteriaFields";
+
+const kinds: Story["kind"][] = [
+  "business", "exploration", "architecture", "infrastructure", "compliance",
+];
 
 const blankCriterion = (): AcceptanceCriterion => ({ given: "", when: "", then: "" });
 
@@ -29,7 +35,8 @@ export function StoryEditForm({
   const [criteria, setCriteria] = useState<AcceptanceCriterion[]>(
     story.acceptance_criteria.map((item) => ({ ...item })),
   );
-  useUnsavedGuard({ role, action, value, criteria });
+  const [kind, setKind] = useState(story.kind);
+  useUnsavedGuard({ role, action, value, criteria, kind });
   const [validation, setValidation] = useState<string | null>(null);
   const [reconciledVersion, setReconciledVersion] = useState<number | null>(null);
   const sourceReconciled = reconciledVersion === story.version;
@@ -70,6 +77,7 @@ export function StoryEditForm({
       action: action.trim(),
       value: value.trim(),
       acceptance_criteria: cleaned,
+      kind,
       source_reconciled: sourceReconciled,
     });
   };
@@ -81,6 +89,9 @@ export function StoryEditForm({
         <Input label="I want" onChange={(event) => setAction(event.target.value)} value={action} />
       </div>
       <Input label="So that" onChange={(event) => setValue(event.target.value)} value={value} />
+      <Select label="Kind" onChange={(event) => setKind(event.target.value as Story["kind"])} value={kind}>
+        {kinds.map((item) => <option key={item} value={item}>{KIND_LABEL[item]}</option>)}
+      </Select>
       <CriteriaFields
         criteria={criteria}
         onAdd={addCriterion}

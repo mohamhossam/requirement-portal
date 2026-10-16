@@ -39,14 +39,14 @@ Two commitments a neighboring "AI writes your user stories" tool could not truth
 - **Reviewing is a multi-session, multi-person activity.** Work is picked up from a worklist with saved views and an attention strip, resumed across days, handed between owner and reviewers, and audited — there is an activity feed and reporting over it.
 - **Architecture knowledge is part of the judgement.** Features and stories are tagged with the likely owning system(s)/squad(s) so cross-system work gets split and the right squads get looped in early. The reference landscape is a Telecom SMB value stream (`docs/source/SMB_AI_Story_Breakdown_Prompt_Template_requirement_1.md`): digital channels, CRM systems, order fulfilment/COM, the Netcracker transformation platform, middleware, and shared enabling services.
 - **Daily speed for the BA and the Product Owner drives priority.** Worklist → Clarify → Review/Approve is the path walked many times a day and is the one that has to be fast. The business owner's intake screen and the portfolio screens are used less often and come after it (`docs/ux-plan.md` §0).
-- **The far end is an external backlog tool.** Azure DevOps publication is a later roadmap slice; today the workflow ends in deterministic JSON and Excel export of an exactly approved revision.
+- **The far end is an external backlog tool.** The workflow ends in deterministic JSON and Excel export of an exactly approved revision, and — where an operator turns it on (`ADO_PUBLISHER`, off by default) — publication of that same approved revision to Azure DevOps, with safe republish (Slices 12–13, ADR-0112/0113).
 - **Desktop is the real usage scene.** This work happens at a desk on a wide screen. Narrow layouts must not break, but no flow is designed for a phone.
 
 ## Capabilities and Constraints
 
-**Confirmed capabilities.** Requirement capture and editing; analysis of known facts, constraints, business rules, assumptions, open questions, ambiguities and dependencies; an iterative human answer → re-analysis loop ending in explicit Requirement Owner confirmation; knowledge screening and grounded suggestions; Epic generation, editing, regeneration and approval; decomposition into Features approved independently; User Stories with Given/When/Then acceptance criteria and quality findings; quality, architecture, dependency, risk and final-approval reviews; provenance, ownership, review status and downstream staleness; immutable revision history with in-browser comparison; source documents with immutable versions and attachments; durable, leased, resumable AI jobs with notifications; a worklist with saved views, an activity feed and reports; deterministic JSON and Excel export of an approved revision.
+**Confirmed capabilities.** Requirement capture and editing; analysis of known facts, constraints, business rules, assumptions, open questions, ambiguities and dependencies; an iterative human answer → re-analysis loop ending in explicit Requirement Owner confirmation; knowledge screening and grounded suggestions; Epic generation, editing, regeneration and approval; decomposition into Features approved independently; User Stories with Given/When/Then acceptance criteria and quality findings; quality, architecture, dependency, risk and final-approval reviews; provenance, ownership, review status and downstream staleness; immutable revision history with in-browser comparison; source documents with immutable versions and attachments; durable, leased, resumable AI jobs with notifications; a worklist with saved views, an activity feed and reports; deterministic JSON and Excel export of an approved revision; optional publication of an approved revision to Azure DevOps with safe republish.
 
-**The journey has five steps, one route each:** Capture → Analyse → Knowledge → Confirm → Breakdown (`frontend/src/app/requirement/journey.ts`). Analyse and Clarify are one screen. Blocked steps stay navigable; each destination explains itself.
+**The journey has six steps, one route each:** Source → Clarify → Knowledge → Confirm → Backlog → Review & approve (`frontend/src/app/requirement/journey.ts`). Analyse and Clarify are one screen; Review is a first-class step and History is a panel, not a step. Blocked steps stay navigable; each destination explains itself.
 
 **Durable constraints.**
 
@@ -57,7 +57,7 @@ Two commitments a neighboring "AI writes your user stories" tool could not truth
 - Clean Architecture dependency direction is enforced by import-linter; AI and external systems stay behind ports. Delivery is vertical-slice, and a slice's UI has the same standing as its API.
 - Runtime baseline: Python 3.12 / FastAPI backend, PostgreSQL (or in-memory/fake mode), React 19 + Vite + Tailwind 4 review UI, Keycloak-brokered login with a fake-actor persona switcher in development. Deterministic offline operation through the fake LLM adapter is a supported first-class mode, as is a private local OpenAI-compatible model server.
 - One information architecture serves every role. Role-scoped navigation, role-filtered menus and role-based dashboards are excluded by decision, not by omission.
-- Three breakpoints, a single modal primitive, a persistent journey stepper, and Tailwind utilities confined to a named layer are accepted architecture decisions (ADRs 0045–0050), not preferences to relitigate casually.
+- Three breakpoints, a single modal primitive, Tailwind utilities confined to a named layer, and one application shell with a six-step stage rail are accepted architecture decisions (ADRs 0046, 0048, 0049 and 0117), not preferences to relitigate casually.
 
 **Settled scope.**
 
@@ -66,7 +66,7 @@ Two commitments a neighboring "AI writes your user stories" tool could not truth
 
 **Open product decisions.**
 
-- The active production-readiness remediation is implemented for review but unverified and undeployed; migrations `013`–`015` have documented operating procedures that precede any deployment claim.
+- The production-readiness work is implemented and gated in CI, but nothing has been verified on a real target environment: the qualification gates in `docs/slices/production-readiness-qualification.md` (target-environment migrations and restore, a labelled grounding evaluation, a load test, staging identity and live-provider acceptance) remain open and precede any deployment claim.
 
 ## Brand Commitments
 

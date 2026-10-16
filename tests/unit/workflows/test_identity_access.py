@@ -372,6 +372,7 @@ class _UnavailableIdentity:
 def test_oidc_mode_requires_bearer_and_rejects_fake_actor_header() -> None:
     settings = replace(
         FAKE_PROVIDER_SETTINGS,
+        library_scan_mode="clamav",
         identity_provider=IdentityProvider.OIDC,
         oidc_issuer_url="https://identity.example.test",
         oidc_audience="requirement-api",
@@ -402,6 +403,7 @@ def test_oidc_mode_requires_bearer_and_rejects_fake_actor_header() -> None:
 def test_identity_provider_unavailability_maps_to_503() -> None:
     settings = replace(
         FAKE_PROVIDER_SETTINGS,
+        library_scan_mode="clamav",
         identity_provider=IdentityProvider.OIDC,
         oidc_issuer_url="https://identity.example.test",
         oidc_audience="requirement-api",

@@ -285,9 +285,10 @@ class AdoPublicationSettings:
                 "ADO_PUBLISHER=none."
             )
         parts = urlsplit(self.organization_url)
-        if parts.scheme not in {"https", "http"} or not parts.netloc:
+        if parts.scheme != "https" or not parts.netloc:
             raise ConfigurationError(
-                "ADO_ORGANIZATION_URL must be an http(s) URL, such as https://dev.azure.com/org."
+                "ADO_ORGANIZATION_URL must be an HTTPS URL, such as https://dev.azure.com/org: "
+                "the personal access token travels with every request."
             )
         if self.timeout_seconds <= 0:
             raise ConfigurationError("ADO_TIMEOUT_SECONDS must be a positive number.")

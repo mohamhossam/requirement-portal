@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 import pytest
 
 from smb_requirement_agent.breakdown.domain.feature.value_objects import FeatureId
+from smb_requirement_agent.breakdown.domain.kinds import WorkKind
 from smb_requirement_agent.breakdown.domain.story.entities import UserStory
 from smb_requirement_agent.breakdown.domain.story.errors import InvalidStoryContentError
 from smb_requirement_agent.breakdown.domain.story.value_objects import (
@@ -95,6 +96,7 @@ def test_edit_marks_human_owned_and_requires_explicit_reconciliation() -> None:
         DesiredAction("check customer eligibility"),
         BusinessValue("the order is valid"),
         (AcceptanceCriterion("a customer", "I check", "I see eligibility"),),
+        WorkKind.BUSINESS,
     )
     assert edited.status is GenerationStatus.EDITED
     assert edited.is_human_owned
@@ -105,6 +107,7 @@ def test_edit_marks_human_owned_and_requires_explicit_reconciliation() -> None:
         DesiredAction("check customer eligibility"),
         BusinessValue("the order is valid"),
         (AcceptanceCriterion("a customer", "I check", "I see eligibility"),),
+        WorkKind.BUSINESS,
         source_reconciled=True,
     )
     assert reconciled.staleness is None

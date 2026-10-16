@@ -58,7 +58,7 @@ describe("StoryCard", () => {
 
   it("requires explicit confirmation before regenerating edited content", async () => {
     const onRegenerate = vi.fn();
-    render(<StoryCard {...baseProps} story={{ ...storyFixture, status: "edited" }} onRegenerate={onRegenerate} />);
+    render(<StoryCard {...baseProps} story={{ ...storyFixture, status: "edited", actions: { ...storyFixture.actions, regenerate: { allowed: true, reason: null, confirmation: "This Story has been edited. Regenerating replaces its content and human review state." } } }} onRegenerate={onRegenerate} />);
     await userEvent.click(screen.getByRole("button", { name: "Regenerate" }));
     expect(screen.getByRole("dialog", { name: "Replace this Story?" })).toBeInTheDocument();
     expect(onRegenerate).not.toHaveBeenCalled();

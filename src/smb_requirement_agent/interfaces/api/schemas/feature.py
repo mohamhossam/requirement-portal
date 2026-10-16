@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from smb_requirement_agent.breakdown.domain.feature.value_objects import (
     DeliveryDrop,
     SplittingPattern,
 )
+from smb_requirement_agent.breakdown.domain.kinds import WorkKind
 from smb_requirement_agent.interfaces.api.schemas.architecture import ArchitectureImpactResponse
 from smb_requirement_agent.interfaces.api.schemas.bounds import (
+    MAX_ITEMS,
     Name,
     Text,
 )
@@ -25,6 +27,9 @@ class EditFeatureRequest(BaseModel):
     delivery_drop: DeliveryDrop
     splitting_pattern: SplittingPattern
     splitting_rationale: Text
+    # Optional while Features persisted before the fields existed are edited.
+    acceptance_criteria: list[Text] = Field(default_factory=list, max_length=MAX_ITEMS)
+    kind: WorkKind = WorkKind.BUSINESS
     source_reconciled: bool = False
     expected_version: int
 
@@ -47,6 +52,8 @@ class FeatureResponse(BaseModel):
     delivery_drop: DeliveryDrop
     splitting_pattern: SplittingPattern
     splitting_rationale: str
+    acceptance_criteria: list[str]
+    kind: WorkKind
     status: GenerationStatus
     provenance: ProvenanceResponse
     stale: StalenessResponse | None

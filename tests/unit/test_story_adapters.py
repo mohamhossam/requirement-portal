@@ -49,12 +49,14 @@ def _story(
     action: str = "order the bundle",
     value: str = "I can use the service",
     criteria: list[AcceptanceCriterionSchema] | None = None,
+    kind: str = "business",
 ) -> StoryItemSchema:
     return StoryItemSchema(
         role=role,
         action=action,
         value=value,
         acceptance_criteria=[_criterion()] if criteria is None else criteria,
+        kind=kind,  # type: ignore[arg-type]
     )
 
 

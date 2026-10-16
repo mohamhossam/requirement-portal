@@ -1,6 +1,7 @@
 # ADR-0050 — The header's navigation gets its own row
 
-Status: Accepted
+Status: Superseded by ADR-0117 (the top bar carries no navigation; the sidebar
+is the only navigation)
 Date: 2026-09-19
 
 Amends ADR-0049 on the one thing it left open. Everything else in 0049 stands.

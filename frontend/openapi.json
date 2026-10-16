@@ -4351,12 +4351,25 @@
       },
       "EditFeatureRequest": {
         "properties": {
+          "acceptance_criteria": {
+            "items": {
+              "maxLength": 10000,
+              "type": "string"
+            },
+            "maxItems": 50,
+            "title": "Acceptance Criteria",
+            "type": "array"
+          },
           "delivery_drop": {
             "$ref": "#/components/schemas/DeliveryDrop"
           },
           "expected_version": {
             "title": "Expected Version",
             "type": "integer"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/WorkKind",
+            "default": "business"
           },
           "name": {
             "maxLength": 300,
@@ -4596,6 +4609,13 @@
       "FeatureResponse": {
         "description": "One Feature and everything a reviewer needs to judge it.",
         "properties": {
+          "acceptance_criteria": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Acceptance Criteria",
+            "type": "array"
+          },
           "actions": {
             "$ref": "#/components/schemas/FeatureActionsResponse"
           },
@@ -4640,6 +4660,9 @@
           "id": {
             "title": "Id",
             "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/WorkKind"
           },
           "name": {
             "title": "Name",
@@ -4697,6 +4720,8 @@
           "delivery_drop",
           "splitting_pattern",
           "splitting_rationale",
+          "acceptance_criteria",
+          "kind",
           "status",
           "provenance",
           "stale",
@@ -10170,6 +10195,10 @@
             "title": "Action",
             "type": "string"
           },
+          "kind": {
+            "$ref": "#/components/schemas/WorkKind",
+            "default": "business"
+          },
           "role": {
             "maxLength": 300,
             "title": "Role",
@@ -10214,6 +10243,10 @@
           "expected_version": {
             "title": "Expected Version",
             "type": "integer"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/WorkKind",
+            "default": "business"
           },
           "role": {
             "maxLength": 300,
@@ -10264,6 +10297,9 @@
               }
             ]
           },
+          "kind": {
+            "$ref": "#/components/schemas/WorkKind"
+          },
           "provenance": {
             "$ref": "#/components/schemas/ProvenanceResponse"
           },
@@ -10296,6 +10332,7 @@
           "value",
           "voice",
           "acceptance_criteria",
+          "kind",
           "provenance"
         ],
         "title": "StoryProposalCandidateResponse",
@@ -10461,6 +10498,9 @@
             "title": "Id",
             "type": "string"
           },
+          "kind": {
+            "$ref": "#/components/schemas/WorkKind"
+          },
           "provenance": {
             "$ref": "#/components/schemas/ProvenanceResponse"
           },
@@ -10514,6 +10554,7 @@
           "value",
           "voice",
           "acceptance_criteria",
+          "kind",
           "status",
           "provenance",
           "stale",
@@ -11184,6 +11225,17 @@
         },
         "title": "WorkItemUpdate",
         "type": "object"
+      },
+      "WorkKind": {
+        "enum": [
+          "business",
+          "exploration",
+          "architecture",
+          "infrastructure",
+          "compliance"
+        ],
+        "title": "WorkKind",
+        "type": "string"
       },
       "WorkflowStage": {
         "enum": [

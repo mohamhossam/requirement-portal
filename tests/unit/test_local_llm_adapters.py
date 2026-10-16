@@ -581,7 +581,7 @@ def test_local_analysis_cleans_schema_valid_blanks(
     assert result["known_facts"] == ["Supported fact"]
     assert result["open_questions"] == [{"question": "Real question", "rationale": "Rationale"}]
     assert result["model"] == "local-model"
-    assert result["prompt_version"] == "analysis-v24-citation-business-context"
+    assert result["prompt_version"] == "analysis-v25-sectioned-conditional"
 
 
 @patch(
@@ -1295,6 +1295,82 @@ def test_local_analysis_runs_focused_review_for_undefined_terms(
     assert client.parse.call_args.kwargs["schema_type"] is ClarificationReviewSchema
 
 
+def test_vague_terms_cover_the_standard_weak_word_categories() -> None:
+    """The backstop recognises the ISO 29148 / INCOSE / ARM weak-word categories."""
+    from smb_requirement_agent.analysis.infrastructure.llm.prompts.analysis_prompt import (
+        vague_terms,
+    )
+
+    assert vague_terms("Steps are To be Discussed.") == ("TBD",)
+    assert vague_terms("Notify the customer if necessary.") == ("if possible/necessary",)
+    assert vague_terms("Activate the line as soon as possible.") == ("as soon as possible",)
+    assert vague_terms("Support several channels.") == ("several/many",)
+    assert vague_terms("Minimize fallout.") == ("minimize/maximize",)
+    assert vague_terms("Respond immediately.") == ("immediately",)
+    assert vague_terms("Provide adequate capacity.") == ("adequate",)
+    assert vague_terms("Orders ship to the named address on the stated date.") == ()
+
+
+@patch(
+    "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
+)
+def test_local_analysis_runs_focused_review_for_vague_attachment_text(
+    client_type: MagicMock,
+) -> None:
+    """Attachments can be the entire source, so the vague-term backstop reads them too."""
+    client = client_type.return_value
+    client.model = "local-model"
+    client.parse.side_effect = [
+        RequirementAnalysisSchema(known_facts=["BUC9 covers upgrade and downgrade."]),
+        ClarificationReviewSchema(
+            open_questions=[
+                OpenQuestionSchema(
+                    question="What are the steps of the BUC9 upgrade/downgrade process?",
+                    rationale="The attachment marks the steps as still to be discussed.",
+                )
+            ]
+        ),
+    ]
+    document = AnalysisDocumentContext(
+        document_id="document-1",
+        version_id="version-1",
+        filename="brd.docx",
+        checksum_sha256="a" * 64,
+        extracted_text="BUC9 Upgrade/Downgrade. Steps are To be Discussed.",
+        evidence_blocks=[],
+    )
+    requirement = Requirement(
+        id=RequirementId("req-attachment-vague"),
+        title=RequirementTitle("Upgrade flow"),
+        description=RequirementDescription("Per the attached BRD."),
+        status=RequirementStatus.DRAFT,
+        desired_outcome=RequirementContext("Customers can change plans."),
+    )
+    analyzer = LocalRequirementAnalyzer(
+        base_url="http://127.0.0.1:1234/v1",
+        http_client=httpx.Client(),
+        model="local-model",
+        timeout_seconds=90,
+        reasoning_effort=None,
+        vision_enabled=False,
+    )
+
+    result = analyzer.analyze(requirement, (), documents=(document,))
+
+    assert result["open_questions"] == [
+        {
+            "question": "What are the steps of the BUC9 upgrade/downgrade process?",
+            "rationale": "The attachment marks the steps as still to be discussed.",
+        }
+    ]
+    assert client.parse.call_count == 2
+    review_call = client.parse.call_args
+    assert review_call.kwargs["schema_type"] is ClarificationReviewSchema
+    # The focused review sees the attachment text it is asking about.
+    assert "To be Discussed" in review_call.kwargs["user_prompt"]
+    assert "brd.docx" in review_call.kwargs["user_prompt"]
+
+
 @patch(
     "smb_requirement_agent.analysis.infrastructure.llm.local_requirement_analyzer.LocalStructuredOutputClient"
 )
@@ -1777,6 +1853,8 @@ def test_local_features_drop_blank_items_and_preserve_provenance(
                 delivery_drop="mvp",
                 splitting_pattern="journey_stage",
                 splitting_rationale="Ignored",
+                acceptance_criteria=["Ignored"],
+                kind="business",
             ),
             FeatureItemSchema(
                 name=" Ordering ",
@@ -1784,6 +1862,8 @@ def test_local_features_drop_blank_items_and_preserve_provenance(
                 delivery_drop="mvp",
                 splitting_pattern="journey_stage",
                 splitting_rationale="Separate journey step",
+                acceptance_criteria=[" Bundles can be ordered. "],
+                kind="business",
             ),
         ]
     )
@@ -1800,6 +1880,14 @@ def test_local_features_drop_blank_items_and_preserve_provenance(
     assert result[0]["model"] == "local-model"
 
 
+def test_feature_set_schema_rejects_an_empty_set() -> None:
+    """The provider-facing JSON schema itself demands at least one Feature."""
+    import pydantic
+
+    with pytest.raises(pydantic.ValidationError):
+        FeatureSetSchema(features=[])
+
+
 @patch(
     "smb_requirement_agent.breakdown.infrastructure.llm.local_feature_generator.LocalStructuredOutputClient"
 )
@@ -1809,7 +1897,9 @@ def test_local_features_reject_empty_result(
     analysis: RequirementAnalysis,
     epic: Epic,
 ) -> None:
-    client_type.return_value.parse.return_value = FeatureSetSchema()
+    # Bypass validation: the schema itself now rejects an empty set (min_length=1),
+    # but the mapper must still guard against a provider handing one back.
+    client_type.return_value.parse.return_value = FeatureSetSchema.model_construct(features=[])
     generator = LocalFeatureGenerator(
         base_url="http://127.0.0.1:1234/v1",
         http_client=httpx.Client(),

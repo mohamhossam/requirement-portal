@@ -73,7 +73,8 @@ def _to_feature_candidate(
     name = item.name.strip()
     outcome = item.outcome.strip()
     rationale = item.splitting_rationale.strip()
-    if not (name and outcome and rationale):
+    criteria = [text for raw in item.acceptance_criteria if (text := raw.strip())]
+    if not (name and outcome and rationale and criteria):
         return None
     return FeatureCandidate(
         name=name,
@@ -81,6 +82,8 @@ def _to_feature_candidate(
         delivery_drop=item.delivery_drop,
         splitting_pattern=item.splitting_pattern,
         splitting_rationale=rationale,
+        acceptance_criteria=criteria,
+        kind=item.kind,
         model=model,
         prompt_version=prompt_version,
     )
@@ -118,6 +121,7 @@ def to_story_candidates(
                 action=action,
                 value=value,
                 acceptance_criteria=criteria,
+                kind=item.kind,
                 model=model,
                 prompt_version=prompt_version,
             )

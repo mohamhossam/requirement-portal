@@ -20,14 +20,12 @@ published, with credit if you want it, once a fixed release is available.
 
 ## Supported versions
 
-| Version | Supported |
-|---|---|
-| The latest release (`v0.1.x`) | Yes |
-| `main` | Yes, ahead of the next release |
-| Anything older | No: upgrade to the latest release |
+No release has been tagged yet: `main` is the only supported version. Once releases are
+published, the latest release and `main` are supported and anything older is not.
 
 Releases are signed images published by tag (`docs/operations/deployment.md`, "Releases and
-upgrades"). A new vulnerability in a released image's packages is found by the weekly rescan.
+upgrades"). A new vulnerability in a released image's packages is found by the weekly rescan,
+which starts scanning once the first release exists.
 
 ## What is in scope
 

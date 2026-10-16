@@ -69,6 +69,9 @@ def fixture_container(
     require_test_database(database_url)
     settings = Settings(
         llm_provider=LLMProvider.FAKE,
+        # The rehearsal seeds attachments through the synchronous upload, which
+        # scans; the recovery job runs no ClamAV, so it uses the offline scanner.
+        library_scan_mode="offline",
         persistence_provider=PersistenceProvider.POSTGRES,
         database_url=database_url,
     )

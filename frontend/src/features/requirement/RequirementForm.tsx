@@ -6,7 +6,10 @@ import { Disclosure } from "../../components/Disclosure";
 import { ErrorNotice } from "../../components/ErrorNotice";
 import { Button, cx, Input, Textarea } from "../../components/ui";
 
-type FormValue = RequirementDraftInput;
+// The contract leaves the list fields optional; the form always holds them, so
+// its state requires what `emptyValue` initialises.
+type FormValue = RequirementDraftInput &
+  Required<Pick<RequirementDraftInput, "channels" | "systems" | "business_rules" | "constraints">>;
 
 type Props = {
   initial?: Partial<RequirementInput>;

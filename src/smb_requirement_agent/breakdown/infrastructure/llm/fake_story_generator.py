@@ -30,6 +30,7 @@ def _candidate(action: str, value: str) -> StoryCandidate:
                 "then": value,
             }
         ],
+        kind="business",
         model=FAKE_MODEL,
         prompt_version=FAKE_PROMPT_VERSION,
     )

@@ -47,8 +47,8 @@ from smb_requirement_agent.analysis.infrastructure.llm.prompts.analysis_prompt i
     DESIRED_OUTCOME_REVIEW_SYSTEM_PROMPT,
     PROMPT_VERSION,
     QUESTION_RECONCILIATION_RECOVERY_SYSTEM_PROMPT,
-    REQUIREMENT_ANALYSIS_SYSTEM_PROMPT,
     UNCERTAINTY_RATIONALE_RECOVERY_SYSTEM_PROMPT,
+    build_analysis_system_prompt,
     build_citation_recovery_prompt,
     build_clarification_review_prompt,
     build_desired_outcome_review_prompt,
@@ -157,6 +157,13 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
             ],
             active_questions=active_questions,
         )
+        has_structured_evidence = any(item.get("evidence_blocks") for item in documents)
+        has_active_ai_questions = any(item["source"].value == "ai" for item in active_questions)
+        system_prompt = build_analysis_system_prompt(
+            has_active_ai_questions=has_active_ai_questions,
+            has_evidence_blocks=has_structured_evidence,
+            has_documents=bool(documents),
+        )
         try:
             images = tuple(
                 (asset["mime_type"], asset["content"])
@@ -166,7 +173,7 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
             if images and not self._vision_enabled:
                 raise RequirementAnalysisGenerationError(self._vision_error)
             parsed = self._client.parse(
-                system_prompt=REQUIREMENT_ANALYSIS_SYSTEM_PROMPT,
+                system_prompt=system_prompt,
                 user_prompt=user_prompt,
                 schema_type=RequirementAnalysisSchema,
                 images=images,
@@ -176,14 +183,12 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
                 f"{self._provider_name} analysis failed: {exc}"
             ) from exc
 
-        has_structured_evidence = any(item.get("evidence_blocks") for item in documents)
         parsed = normalize_analysis_intent(
             parsed,
             intent_decisions,
             has_source_outcome=requirement.desired_outcome is not None,
             debug_trace=self._debug_trace,
         )
-        has_active_ai_questions = any(item["source"].value == "ai" for item in active_questions)
         if not has_active_ai_questions and parsed.active_question_reviews:
             self._debug_trace.record(
                 "analysis.question_reviews_discarded",
@@ -242,6 +247,7 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
                     self._client.model,
                 )
                 candidate = self._retry_complete_analysis(
+                    system_prompt,
                     user_prompt,
                     source_text,
                     active_questions,
@@ -299,7 +305,9 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
             source_text,
             candidate,
         )
-        return self._add_focused_questions(requirement, clarifications, active_questions, candidate)
+        return self._add_focused_questions(
+            requirement, clarifications, active_questions, documents, candidate
+        )
 
     def _discard_unsuppliable_citations(
         self,
@@ -682,6 +690,7 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
         requirement: Requirement,
         clarifications: Sequence[HumanClarification],
         active_questions: Sequence[ActiveQuestionContext],
+        documents: Sequence[AnalysisDocumentContext],
         candidate: RequirementAnalysisCandidate,
     ) -> RequirementAnalysisCandidate:
         unresolved = (
@@ -690,7 +699,17 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
             candidate["ambiguities"],
             candidate["potential_dependencies"],
         )
-        terms = vague_terms(requirement.description.value)
+        # Attachments can be the entire source (a blank typed description is
+        # valid), so the vague-term backstop must read them too.
+        terms = vague_terms(
+            "\n".join(
+                (
+                    requirement.title.value,
+                    requirement.description.value,
+                    *(item["extracted_text"] for item in documents),
+                )
+            )
+        )
         if clarifications or active_questions or any(unresolved) or not terms:
             return candidate
 
@@ -706,6 +725,7 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
                     requirement.title.value,
                     requirement.description.value,
                     terms,
+                    documents,
                 ),
                 schema_type=ClarificationReviewSchema,
             )
@@ -726,6 +746,7 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
 
     def _retry_complete_analysis(
         self,
+        system_prompt: str,
         user_prompt: str,
         source_text: str,
         active_questions: Sequence[ActiveQuestionContext],
@@ -735,9 +756,7 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
     ) -> RequirementAnalysisCandidate:
         try:
             parsed = self._client.parse(
-                system_prompt=(
-                    REQUIREMENT_ANALYSIS_SYSTEM_PROMPT + "\n" + COMPLETE_ANALYSIS_RETRY_INSTRUCTION
-                ),
+                system_prompt=system_prompt + "\n" + COMPLETE_ANALYSIS_RETRY_INSTRUCTION,
                 user_prompt=user_prompt,
                 schema_type=RequirementAnalysisSchema,
             )

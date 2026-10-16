@@ -11,6 +11,10 @@ from __future__ import annotations
 from typing import Protocol, TypedDict
 
 from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
+from smb_requirement_agent.breakdown.application.ports.generation_guidance import (
+    EMPTY_GENERATION_GUIDANCE,
+    GenerationGuidance,
+)
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 
 
@@ -31,7 +35,13 @@ class EpicCandidate(TypedDict):
 class EpicGeneratorPort(Protocol):
     """Outbound port for generating an Epic candidate from analysed input."""
 
-    def generate(self, requirement: Requirement, analysis: RequirementAnalysis) -> EpicCandidate:
+    def generate(
+        self,
+        requirement: Requirement,
+        analysis: RequirementAnalysis,
+        *,
+        guidance: GenerationGuidance = EMPTY_GENERATION_GUIDANCE,
+    ) -> EpicCandidate:
         """Generate an Epic candidate.
 
         Raises EpicGenerationError on failure or unusable output.

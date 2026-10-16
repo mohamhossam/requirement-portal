@@ -22,6 +22,10 @@ from smb_requirement_agent.application.ports.transaction_manager import Transact
 from smb_requirement_agent.breakdown.application.ports.breakdown_context import BreakdownContextPort
 from smb_requirement_agent.breakdown.application.ports.epic_generator import EpicGeneratorPort
 from smb_requirement_agent.breakdown.application.ports.epic_repository import EpicRepositoryPort
+from smb_requirement_agent.breakdown.application.ports.generation_guidance import GenerationGuidance
+from smb_requirement_agent.breakdown.application.use_cases.architecture_mapping import (
+    decided_impact,
+)
 from smb_requirement_agent.breakdown.domain.epic.entities import Epic
 from smb_requirement_agent.breakdown.domain.epic.errors import EpicRegenerationConflictError
 from smb_requirement_agent.breakdown.domain.epic.events import EpicChanged
@@ -130,8 +134,18 @@ class GenerateEpic:
 
     def _execute(self, requirement_id: RequirementId, *, force: bool = False) -> GenerateEpicResult:
         requirement, analysis, existing = self.require_can_generate(requirement_id, force=force)
+        # A reduced guidance compared with Feature/Story generation: the decided product
+        # impact and unconfirmed evidence inform the Epic's outcome and business case, but
+        # the architecture catalogue is implementation-level advice an Epic must not follow.
+        guidance = GenerationGuidance(
+            product_impact=decided_impact(analysis.product_impact),
+            potential_dependencies=tuple(
+                item.statement for item in analysis.potential_dependencies
+            ),
+            ambiguities=tuple(item.statement for item in analysis.ambiguities),
+        )
         with self._transactions.external_call():
-            candidate = self._generator.generate(requirement, analysis)
+            candidate = self._generator.generate(requirement, analysis, guidance=guidance)
 
         epic = Epic(
             source_lineage=generation_lineage(analysis),

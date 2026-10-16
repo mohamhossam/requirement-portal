@@ -9,12 +9,14 @@ from smb_requirement_agent.breakdown.domain.epic.value_objects import EpicId
 from smb_requirement_agent.breakdown.domain.feature.errors import StaleFeatureApprovalError
 from smb_requirement_agent.breakdown.domain.feature.value_objects import (
     DeliveryDrop,
+    FeatureAcceptanceCriterion,
     FeatureId,
     FeatureName,
     FeatureOutcome,
     SplittingPattern,
     SplittingRationale,
 )
+from smb_requirement_agent.breakdown.domain.kinds import WorkKind
 from smb_requirement_agent.shared_kernel.actions import ActionAvailability
 from smb_requirement_agent.shared_kernel.approval import (
     Approval,
@@ -44,6 +46,10 @@ class Feature(ReviewableGeneration):
     delivery_drop: DeliveryDrop
     splitting_pattern: SplittingPattern
     splitting_rationale: SplittingRationale
+    # SAFe: the conditions Product Management confirms the Feature by. Empty only
+    # on Features persisted before the field existed; generation supplies them.
+    acceptance_criteria: tuple[FeatureAcceptanceCriterion, ...] = ()
+    kind: WorkKind = WorkKind.BUSINESS
 
     review_label = "Feature"
 
@@ -68,6 +74,8 @@ class Feature(ReviewableGeneration):
         delivery_drop: DeliveryDrop,
         splitting_pattern: SplittingPattern,
         splitting_rationale: SplittingRationale,
+        acceptance_criteria: tuple[FeatureAcceptanceCriterion, ...],
+        kind: WorkKind,
         *,
         source_reconciled: bool = False,
     ) -> Feature:
@@ -78,6 +86,8 @@ class Feature(ReviewableGeneration):
             delivery_drop=delivery_drop,
             splitting_pattern=splitting_pattern,
             splitting_rationale=splitting_rationale,
+            acceptance_criteria=acceptance_criteria,
+            kind=kind,
             architecture=None,
             source_reconciled=source_reconciled,
         )

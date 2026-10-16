@@ -113,7 +113,7 @@ function Resolve-NodeTools {
     }
 
     if ($null -eq $nodePath -or $null -eq $npmPath) {
-        throw "Node.js 22 and npm were not found. Install Node.js 22, then rerun the command."
+        throw "Node.js 24 and npm were not found. Install Node.js 24, then rerun the command."
     }
 
     return @{

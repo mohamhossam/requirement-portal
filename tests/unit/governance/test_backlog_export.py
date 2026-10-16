@@ -103,7 +103,7 @@ def test_formally_approved_revision_exports_stable_nested_json(client: TestClien
         "final_approval",
         "counts",
     ]
-    assert payload["schema_version"] == "1.6"
+    assert payload["schema_version"] == "1.7"
     assert payload["manifest"]["breakdown_revision"] == revision
     assert payload["manifest"]["final_approval"]["recorded_by"]["id"] == "fake-owner"
     assert payload["manifest"]["final_approval"]["rationale"] == ("Approved for portable export.")
@@ -150,6 +150,8 @@ def test_xlsx_download_preserves_hierarchy_and_given_when_then(client: TestClien
         "delivery_drop",
         "splitting_pattern",
         "splitting_rationale",
+        "work_kind",
+        "acceptance_criteria",
         "status",
         "generated_at",
         "model",

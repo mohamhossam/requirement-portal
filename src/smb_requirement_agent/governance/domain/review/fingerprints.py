@@ -89,6 +89,12 @@ def artifact_fingerprint(item: Epic | Feature | UserStory) -> str:
             "splitting_rationale": item.splitting_rationale.value,
             "architecture": _architecture(item.architecture),
         }
+        # Added with their defaults left out, so artifacts approved before the
+        # fields existed keep the fingerprint their approval recorded.
+        if item.acceptance_criteria:
+            payload["acceptance_criteria"] = [entry.value for entry in item.acceptance_criteria]
+        if item.kind.is_enabler:
+            payload["work_kind"] = item.kind.value
     else:
         payload = {
             **common,
@@ -102,6 +108,8 @@ def artifact_fingerprint(item: Epic | Feature | UserStory) -> str:
             ],
             "architecture": _architecture(item.architecture),
         }
+        if item.kind.is_enabler:
+            payload["work_kind"] = item.kind.value
     return _digest(payload)
 
 

@@ -18,6 +18,7 @@ export type RequirementWorklistItem = components["schemas"]["RequirementWorklist
 export type WorkflowStatus = components["schemas"]["WorkflowStatus"];
 export type WorklistSort = components["schemas"]["WorklistSort"];
 export type RequirementAnalysis = components["schemas"]["RequirementAnalysisResponse"];
+export type ActionAvailability = components["schemas"]["ActionAvailabilityResponse"];
 export type Epic = components["schemas"]["EpicResponse"];
 export type Feature = components["schemas"]["FeatureResponse"];
 export type FeatureSet = components["schemas"]["FeatureSetResponse"];
@@ -112,56 +113,31 @@ export type AiJobStartInput =
   | components["schemas"]["ScreenRequirementKnowledgeJobRequest"]
   | components["schemas"]["SuggestClarificationAnswersJobRequest"];
 
-export type RequirementInput = {
-  title: string;
-  description: string;
-  desired_outcome?: string | null;
-  customer_context?: string | null;
-  channels?: string[];
-  systems?: string[];
-  business_rules?: string[];
-  constraints?: string[];
-  expected_version?: number;
-  impact_acknowledged?: boolean;
-};
-export type RequirementDraftInput = {
-  title: string;
-  description: string;
-  desired_outcome: string;
-  customer_context: string;
-  channels: string[];
-  systems: string[];
-  business_rules: string[];
-  constraints: string[];
-};
-export type ClarificationAnswerInput = {
-  kind: ClarificationKind;
-  subject: string;
-  answer: string;
-};
+// Request bodies, derived from the contract so a field added or renamed on the
+// server fails the type check here instead of drifting silently (AGENTS.md §19).
+// Where one client type serves both a create and an update call, it is the
+// create schema plus the update-only fields as optional; where the schema
+// carries `expected_version` and `source_reconciled` that the call sites pass
+// separately or on demand, those are peeled off the same schema type.
+type Requests = components["schemas"];
+
+export type RequirementInput = Requests["CreateRequirementRequest"] &
+  Partial<
+    Pick<Requests["UpdateRequirementRequest"], "expected_version" | "impact_acknowledged">
+  >;
+export type RequirementDraftInput = Requests["RequirementDraftRequest"];
+export type ClarificationAnswerInput = Requests["ClarificationAnswerRequest"];
 export type ClarificationResolutionInput =
   components["schemas"]["ClarificationResolutionRequest"];
-export type EpicInput = {
-  name: string;
-  outcome: string;
-  business_case: string;
-  source_reconciled?: boolean;
-};
-export type StoryInput = {
-  role: string;
-  action: string;
-  value: string;
-  acceptance_criteria: AcceptanceCriterion[];
-  source_reconciled?: boolean;
-};
-export type FeatureInput = {
-  name: string;
-  outcome: string;
-  delivery_drop: DeliveryDrop;
-  splitting_pattern: SplittingPattern;
-  splitting_rationale: string;
-  source_reconciled?: boolean;
-};
+export type EpicInput = Omit<Requests["EditEpicRequest"], "expected_version" | "source_reconciled"> &
+  Partial<Pick<Requests["EditEpicRequest"], "source_reconciled">>;
+export type StoryInput = Omit<Requests["StoryDraftRequest"], "expected_version" | "source_reconciled"> &
+  Partial<Pick<Requests["StoryDraftRequest"], "source_reconciled">>;
+export type FeatureInput = Omit<
+  Requests["EditFeatureRequest"],
+  "expected_version" | "source_reconciled"
+> &
+  Partial<Pick<Requests["EditFeatureRequest"], "source_reconciled">>;
 
 export type RequirementListParams = {
   q?: string;

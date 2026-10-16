@@ -38,9 +38,14 @@ RUN apt-get update \
 RUN groupadd --system --gid 10001 app \
     && useradd --system --uid 10001 --gid app --home-dir /app --no-create-home app
 COPY --from=build --chown=app:app /app/.venv /app/.venv
+# The image fails closed: deployed with no environment at all it demands
+# production configuration (OIDC identity, PostgreSQL, a real model provider)
+# instead of booting with the fake development identity. Development and demo
+# manifests override APP_ENV explicitly (deploy/compose.demo.yaml).
 ENV PATH=/app/.venv/bin:$PATH \
     PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+    PYTHONDONTWRITEBYTECODE=1 \
+    APP_ENV=production
 WORKDIR /app
 USER app
 EXPOSE 8000 9464
