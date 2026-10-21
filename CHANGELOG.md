@@ -16,7 +16,9 @@ restoring a backup.
   disclosure in the JPEG, GIF, TIFF and PDF code), fixed only in 13.0.0; certifi 2026.7.22
   still trusted emSign roots with compromised intermediate keys (GHSA-6q48-6c7w-9gw2); pypdf
   6.19.0 has CVE-2026-113793 to 113795, fixed by 6.20.1. The image now installs the fixed
-  versions. platform-kernel v1.3.0 and docling still ask for Pillow below 13, so a
+  versions. The frontend's build tool moves to vite 8.3.5: 8.3.0 to 8.3.2 bundle a
+  launch-editor with three high advisories (GHSA-r825-w8mm-5pxw and two more; development
+  server only, never in the served image). platform-kernel v1.3.0 and docling still ask for Pillow below 13, so a
   temporary `[tool.uv]` override allows 13 until they do. No upgrade step.
 
 - **Starting an AI job no longer deadlocks with a finishing one.** Inserting a job locked the
