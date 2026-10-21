@@ -11,6 +11,9 @@ restoring a backup.
 
 ## Unreleased
 
+- **platform-kernel v1.3.1** (was v1.3.0): it allows Pillow 13, so only the docling family still
+  needs the temporary `[tool.uv]` Pillow override. No code change, no upgrade step.
+
 - **Pillow 13, certifi 2026.10.19 and pypdf 6.21 (security).** Every Pillow 12.x carries the
   October 2026 advisories (CVE-2026-112395 and others: denial of service and information
   disclosure in the JPEG, GIF, TIFF and PDF code), fixed only in 13.0.0; certifi 2026.7.22

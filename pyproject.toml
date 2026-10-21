@@ -9,7 +9,7 @@ description = "SMB AI Requirement Breakdown Agent"
 requires-python = ">=3.12"
 dependencies = [
     # Shared mechanisms (ADR-0100), pinned by release tag; pip and uv both read this.
-    "smb-platform-kernel[tracing] @ git+https://github.com/mohamhossam/platform-kernel@v1.3.0",
+    "smb-platform-kernel[tracing] @ git+https://github.com/mohamhossam/platform-kernel@v1.3.1",
     "fastapi>=0.115,<1",
     "httpx>=0.27,<1",
     "openpyxl>=3.1,<4",
@@ -48,9 +48,9 @@ where = ["src"]
 "smb_requirement_agent.infrastructure.persistence" = ["migrations/*.sql"]
 
 [tool.uv]
-# Temporary: platform-kernel v1.3.0 and the docling family pin Pillow<13, but every
-# 12.x carries the October 2026 Pillow CVEs (fixed only in 13.0.0). Drop this
-# override once the kernel pin (v1.3.1 allows 13) and docling both allow Pillow 13.
+# Temporary: the docling family (docling-core, docling-parse, docling-ibm-models) pins
+# Pillow<13, but every 12.x carries the October 2026 Pillow CVEs (fixed only in 13.0.0).
+# platform-kernel allows 13 since v1.3.1. Drop this override once docling allows Pillow 13.
 override-dependencies = ["Pillow>=13,<14"]
 
 [tool.pytest.ini_options]
