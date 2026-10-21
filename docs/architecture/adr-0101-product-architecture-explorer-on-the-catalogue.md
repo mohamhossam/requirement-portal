@@ -163,3 +163,20 @@ requirement-portal hands it over itself.
   without a person accepting it.
 - **Not changed.** requirement-portal's screens and the export's schema. The pinned
   `contracts/knowledge-internal.openapi.json` gains the route, additively.
+
+## Amendment 3 — change history is content; the plans lookup is rate-limited (2026-10-21)
+
+The product owner decided that the explorer keeps the version's change history.
+
+- **Change history is content.** knowledge-portal's `GET /explorer/release` includes the
+  change requests applied to the version in service: what each changed, its requester and its
+  approver's display name, as Amendment 2 already shows them in the Solution Architecture
+  document. It still never returns a draft, documents, the index or who curated, and never the
+  history of earlier versions.
+- **The third reader route.** `GET /explorer/offerings/{offering_id}/plans` (an offering's plans
+  and prices from the product catalogue) is open to the same signed-in readers as the two routes
+  of Amendment 1, and is the third operation on knowledge-portal's list of routes open without
+  the role.
+- **It is rate-limited.** Each lookup can call the external product catalogue, so it is counted
+  per reader against the provider-call limit (`PROVIDER_RATE_LIMIT_PER_MINUTE`), separately from
+  admins' AI calls. Past the limit the reader gets 429 with `Retry-After`.
