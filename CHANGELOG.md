@@ -11,6 +11,14 @@ restoring a backup.
 
 ## Unreleased
 
+- **Pillow 13, certifi 2026.10.19 and pypdf 6.21 (security).** Every Pillow 12.x carries the
+  October 2026 advisories (CVE-2026-112395 and others: denial of service and information
+  disclosure in the JPEG, GIF, TIFF and PDF code), fixed only in 13.0.0; certifi 2026.7.22
+  still trusted emSign roots with compromised intermediate keys (GHSA-6q48-6c7w-9gw2); pypdf
+  6.19.0 has CVE-2026-113793 to 113795, fixed by 6.20.1. The image now installs the fixed
+  versions. platform-kernel v1.3.0 and docling still ask for Pillow below 13, so a
+  temporary `[tool.uv]` override allows 13 until they do. No upgrade step.
+
 - **Starting an AI job no longer deadlocks with a finishing one.** Inserting a job locked the
   Requirement row and then its job-lease row, while a completing attempt held the lease row and
   locked the Requirement row at commit (capturing the revision) — under load PostgreSQL aborted
