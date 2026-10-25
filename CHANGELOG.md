@@ -11,6 +11,16 @@ restoring a backup.
 
 ## Unreleased
 
+- **Large analyses no longer fail at the last step.** Combining the findings from each
+  document section used a fixed 60,000-character budget whatever the model, and failed when a
+  round could not shrink them ("could not be consolidated within the provider context budget").
+  Combining now uses the analysis model's context window, from its model profile, the local
+  model's settings or the new `OPENROUTER_CONTEXT_TOKENS` (for example `400000` for
+  `openai/gpt-5.1`). Section packets keep their size. If combining still cannot shrink, the
+  validated section findings are merged and kept, open AI questions are retained, and the worker
+  logs a warning. Upgrade step (optional): set `OPENROUTER_CONTEXT_TOKENS` in `production.env`
+  to your OpenRouter model's window. No migration (ADR-0029, amended).
+
 - **One bad item no longer fails the whole analysis.** When the model marks one of its findings
   unsupported, or proposes a figure the sources lack, that item is set aside and the rest of the
   analysis is saved; before, every valid finding was discarded with "Analysing requirement

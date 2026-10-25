@@ -93,6 +93,7 @@ def build_requirement_analyzer(
     evidence_analyzer = cast(RequirementEvidenceAnalyzerPort, llm.analyzer)
     citation_validator = ValidateAnalysisCitations()
     packet_planner = PlanEvidencePackets(_evidence_budget(settings))
+    consolidation_planner = PlanEvidencePackets(_consolidation_budget(settings))
     packet_analyzer = AnalyzeEvidencePacket(
         evidence_analyzer,
         citation_validator,
@@ -104,7 +105,7 @@ def build_requirement_analyzer(
         AssembleRequirementEvidence(),
         packet_planner,
         packet_analyzer,
-        ConsolidateEvidenceAnalysis(packet_planner, packet_analyzer),
+        ConsolidateEvidenceAnalysis(consolidation_planner, packet_analyzer),
         citation_validator,
         clock,
         AnalysisProgressReporter(persistence.ai_job_repository, clock),
@@ -125,6 +126,38 @@ def _evidence_budget(settings: Settings) -> int:
             * _CHARACTERS_PER_TOKEN,
         )
     return available_characters
+
+
+def _consolidation_budget(settings: Settings) -> int:
+    """Consolidation may use the model's whole window, never less than a section packet.
+
+    Section packets keep their budget: their findings grow with their input, and a model
+    with a large window but a small output limit would truncate a whole document. The
+    consolidation pass reads findings already extracted, so it can take far more of the
+    window, and one pass sees every finding together (ADR-0029, 2026-10-25).
+    """
+    window = _model_window_characters(settings)
+    section = _evidence_budget(settings)
+    return section if window is None else max(section, window)
+
+
+def _model_window_characters(settings: Settings) -> int | None:
+    """Characters the analysis model can read beside its output, when its window is known."""
+    if settings.llm_profiles:
+        profile = settings.llm_profiles.for_task("analysis")
+        return (profile.context_tokens - profile.output_tokens) * _CHARACTERS_PER_TOKEN
+    if settings.llm_provider is LLMProvider.LOCAL:
+        return (
+            settings.local_llm_context_window_tokens - settings.local_llm_max_output_tokens
+        ) * _CHARACTERS_PER_TOKEN
+    if (
+        settings.llm_provider is LLMProvider.OPENROUTER
+        and settings.openrouter_context_tokens is not None
+    ):
+        return (
+            settings.openrouter_context_tokens - settings.openrouter_max_output_tokens
+        ) * _CHARACTERS_PER_TOKEN
+    return None
 
 
 @dataclass(frozen=True)

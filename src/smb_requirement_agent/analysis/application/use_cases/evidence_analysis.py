@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import re
 from collections.abc import Callable, Mapping, Sequence
 from copy import deepcopy
@@ -14,12 +15,14 @@ from smb_kernel.time.clock import ClockPort
 from smb_requirement_agent.analysis.application.errors import RequirementAnalysisGenerationError
 from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     ActiveQuestionContext,
+    AmbiguityCandidate,
     AnalysisDocumentContext,
     AnalysisEvidenceBlock,
     AnalysisEvidenceReferenceCandidate,
     AnalysisImageAsset,
     AnalysisStageProvenanceCandidate,
     IntentProposalCandidate,
+    OpenQuestionCandidate,
     QuestionReviewCandidate,
     RequirementAnalysisCandidate,
     RequirementAnalyzerPort,
@@ -46,6 +49,8 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     QuestionChangeAction,
 )
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+
+_log = logging.getLogger(__name__)
 
 PACKET_PROMPT_RESERVE_CHARACTERS = 12_000
 MAX_PACKET_IMAGES = 3
@@ -176,7 +181,8 @@ class ValidateAnalysisCitations:
         evidence = candidate.get("evidence_references", {})
         human_evidence = candidate.get("clarification_references", {})
         requirement_evidence = set(candidate.get("requirement_references", []))
-        expected = _candidate_keys(candidate)
+        # A question carried by the consolidation fallback keeps its earlier support.
+        expected = _candidate_keys(candidate) - set(candidate.get("carried_questions", []))
         if set(evidence) | set(human_evidence) | requirement_evidence != expected:
             raise RequirementAnalysisGenerationError(
                 "Structured analysis did not cite every generated item."
@@ -362,13 +368,16 @@ class ConsolidateEvidenceAnalysis:
             if final_round:
                 return next_round[0], provenance, pending_cache_entries
             if len(next_round) >= len(current):
-                raise RequirementAnalysisGenerationError(
-                    "Evidence findings could not be consolidated within the provider "
-                    "context budget."
+                return (
+                    _merged_fallback(next_round, active_questions, "no smaller round"),
+                    provenance,
+                    pending_cache_entries,
                 )
             current = next_round
-        raise RequirementAnalysisGenerationError(
-            "Evidence consolidation exceeded the supported hierarchy depth."
+        return (
+            _merged_fallback(current, active_questions, "hierarchy depth"),
+            provenance,
+            pending_cache_entries,
         )
 
     @staticmethod
@@ -531,6 +540,113 @@ class StructuredRequirementAnalyzer(RequirementAnalyzerPort):
         result["stage_provenance"] = stages
         stage_generation_effect(lambda: self._packet_analyzer.commit(pending_cache_entries))
         return result
+
+
+def _merged_fallback(
+    fragments: Sequence[RequirementAnalysisCandidate],
+    active_questions: Sequence[ActiveQuestionContext],
+    reason: str,
+) -> RequirementAnalysisCandidate:
+    """Merge validated findings when the model cannot consolidate them (ADR-0029, 2026-10-25).
+
+    Every fragment already passed citation validation against real sources, so the merge
+    keeps exact-duplicate findings once and their references. No model reviews the active
+    questions here: each AI question is retained, and one no finding repeats is carried
+    without a new citation. A finding that repeats a human question is dropped.
+    """
+    _log.warning(
+        "Evidence consolidation could not finish (%s); keeping %d validated fragment(s) merged.",
+        reason,
+        len(fragments),
+    )
+    result = ConsolidateEvidenceAnalysis._merge(fragments, active_questions)
+    human = {
+        (item["kind"], item["subject"].strip().casefold())
+        for item in active_questions
+        if item["source"] is ClarificationSource.HUMAN
+    }
+    retained = [item for item in active_questions if item["source"] is ClarificationSource.AI]
+    _remove_uncertainties(result, human)
+    present = {
+        (item["kind"], item["subject"].strip().casefold()) for item in _uncertainties(result)
+    }
+    carried: list[str] = []
+    for item in retained:
+        identity = item["kind"], item["subject"].strip().casefold()
+        if identity in present:
+            continue
+        _append_uncertainty(result, item["kind"], item["subject"].strip(), item["rationale"])
+        carried.append(analysis_evidence_key(item["kind"].value, item["subject"].strip()))
+    if carried:
+        result["carried_questions"] = carried
+    retained_keys = {(item["kind"], item["subject"].strip().casefold()) for item in retained}
+    result["new_uncertainties"] = [
+        item
+        for item in _uncertainties(result)
+        if (item["kind"], item["subject"].strip().casefold()) not in retained_keys
+    ]
+    return result
+
+
+def _remove_uncertainties(
+    candidate: RequirementAnalysisCandidate,
+    identities: set[tuple[ClarificationKind, str]],
+) -> None:
+    if not identities:
+        return
+    removed: set[str] = set()
+
+    def keep(kind: ClarificationKind, subject: str) -> bool:
+        if (kind, subject.strip().casefold()) not in identities:
+            return True
+        removed.add(analysis_evidence_key(kind.value, subject))
+        return False
+
+    candidate["assumptions"] = [
+        item for item in candidate["assumptions"] if keep(ClarificationKind.ASSUMPTION, item)
+    ]
+    candidate["open_questions"] = [
+        item
+        for item in candidate["open_questions"]
+        if keep(ClarificationKind.OPEN_QUESTION, item["question"])
+    ]
+    candidate["ambiguities"] = [
+        item
+        for item in candidate["ambiguities"]
+        if keep(ClarificationKind.AMBIGUITY, item["statement"])
+    ]
+    candidate["potential_dependencies"] = [
+        item
+        for item in candidate["potential_dependencies"]
+        if keep(ClarificationKind.POTENTIAL_DEPENDENCY, item)
+    ]
+    for key in removed:
+        candidate.get("evidence_references", {}).pop(key, None)
+        candidate.get("clarification_references", {}).pop(key, None)
+    if "requirement_references" in candidate:
+        candidate["requirement_references"] = [
+            key for key in candidate["requirement_references"] if key not in removed
+        ]
+
+
+def _append_uncertainty(
+    candidate: RequirementAnalysisCandidate,
+    kind: ClarificationKind,
+    subject: str,
+    rationale: str | None,
+) -> None:
+    if kind is ClarificationKind.ASSUMPTION:
+        candidate["assumptions"].append(subject)
+    elif kind is ClarificationKind.OPEN_QUESTION:
+        candidate["open_questions"].append(
+            OpenQuestionCandidate(question=subject, rationale=rationale or "")
+        )
+    elif kind is ClarificationKind.AMBIGUITY:
+        candidate["ambiguities"].append(
+            AmbiguityCandidate(statement=subject, reason=rationale or "")
+        )
+    else:
+        candidate["potential_dependencies"].append(subject)
 
 
 def _figure_support(
