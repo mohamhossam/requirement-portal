@@ -196,6 +196,103 @@ def test_consolidation_gets_the_evidence_behind_packet_findings_as_figure_suppor
     assert "At most 1000 off-net minutes" in consolidation
 
 
+class RequirementCitingEvidenceAnalyzer(RecordingEvidenceAnalyzer):
+    """Adds one finding that only the requirement itself supports to each packet."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.consolidation_blocks: list[str] = []
+
+    def analyze_evidence(
+        self,
+        requirement: Requirement,
+        clarifications: Sequence[HumanClarification],
+        documents: Sequence[AnalysisDocumentContext],
+        intent_decisions: Sequence[IntentProposal],
+        active_questions: Sequence[ActiveQuestionContext],
+        *,
+        figure_support: Sequence[str] = (),
+    ) -> RequirementAnalysisCandidate:
+        candidate = super().analyze_evidence(
+            requirement,
+            clarifications,
+            documents,
+            intent_decisions,
+            active_questions,
+            figure_support=figure_support,
+        )
+        if documents[0]["document_id"] == "evidence-consolidation":
+            self.consolidation_blocks = [
+                block.get("text") or "" for block in documents[0]["evidence_blocks"]
+            ]
+            return candidate
+        statement = "Consent applies to every plan."
+        key = analysis_evidence_key("known_fact", statement)
+        candidate["known_facts"].append(statement)
+        candidate["evidence_references"][key] = []
+        candidate["requirement_references"] = [key]
+        return candidate
+
+
+def test_requirement_supported_finding_survives_consolidation_without_a_document() -> None:
+    provider = RequirementCitingEvidenceAnalyzer()
+    validator = ValidateAnalysisCitations()
+    planner = PlanEvidencePackets(100_000)
+    packet_analyzer = AnalyzeEvidencePacket(
+        provider, validator, InMemoryEvidenceFragmentCache(), FixedClock(NOW)
+    )
+    analyzer = StructuredRequirementAnalyzer(
+        NoOpFallback(),
+        AssembleRequirementEvidence(),
+        planner,
+        packet_analyzer,
+        ConsolidateEvidenceAnalysis(planner, packet_analyzer),
+        validator,
+        FixedClock(NOW),
+        RecordingProgress(),
+    )
+    requirement = Requirement(
+        RequirementId("requirement-1"),
+        RequirementTitle("Bundle"),
+        RequirementDescription("Consent applies to every plan."),
+        RequirementStatus.DRAFT,
+    )
+
+    result = _accepted_analyze(analyzer, requirement, (), (_document(),))
+
+    # Consolidation sees the finding as a requirement block, the only one it cites here.
+    assert provider.consolidation_blocks[0] == (
+        "Validated requirement-supported finding: Consent applies to every plan."
+    )
+    (statement,) = result["known_facts"]
+    key = analysis_evidence_key("known_fact", statement)
+    assert result["requirement_references"] == [key]
+    assert result["evidence_references"][key] == []
+
+
+def test_citation_validation_requires_requirement_support_to_be_declared() -> None:
+    statement = "Consent applies to every plan."
+    key = analysis_evidence_key("known_fact", statement)
+    candidate = RequirementAnalysisCandidate(
+        known_facts=[statement],
+        constraints=[],
+        business_rules=[],
+        assumptions=[],
+        open_questions=[],
+        ambiguities=[],
+        potential_dependencies=[],
+        intent_proposals=[],
+        model="m",
+        prompt_version="p",
+        evidence_references={key: []},
+    )
+    with pytest.raises(RequirementAnalysisGenerationError, match="blank or out-of-packet"):
+        ValidateAnalysisCitations().execute(candidate, (_document(),))
+
+    candidate["requirement_references"] = [key]
+    ValidateAnalysisCitations().execute(candidate, (_document(),))
+
+
 def test_consolidation_restores_human_support_without_document_identity() -> None:
     provider = RecordingEvidenceAnalyzer()
     validator = ValidateAnalysisCitations()

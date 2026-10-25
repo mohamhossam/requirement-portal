@@ -11,6 +11,19 @@ restoring a backup.
 
 ## Unreleased
 
+- **One bad item no longer fails the whole analysis.** When the model marks one of its findings
+  unsupported, or proposes a figure the sources lack, that item is set aside and the rest of the
+  analysis is saved; before, every valid finding was discarded with "Analysing requirement
+  failed". The worker logs how many items were set aside and why, never their text. The analysis
+  still fails when nothing is left, or when the unsupported item is a question kept from an
+  earlier round (ADR-0032, amended; ADR-0025).
+- **The requirement itself can back a finding.** When the documents are analysed section by
+  section, a finding taken from the requirement's description, structured fields or decided
+  intent can now cite the requirement. Before, it could cite only the section's passages or an
+  answer, so such findings were unsupportable. They show no document under "Where this came
+  from", as in an analysis without documents. Prompt version `analysis-v26-requirement-citations`
+  re-runs cached section analyses once. No migration.
+
 - **Analysis no longer fails when consolidation repeats a figure from a document.** With
   structured documents, the last step reads only the earlier findings' statements, so the check
   that refuses invented figures in intent proposals (ADR-0025) treated a figure the first pass

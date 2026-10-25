@@ -20,7 +20,7 @@ from smb_requirement_agent.analysis.application.ports.requirement_analyzer impor
 )
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 
-PROMPT_VERSION = "analysis-v25-sectioned-conditional"
+PROMPT_VERSION = "analysis-v26-requirement-citations"
 
 _CORE_SYSTEM_PROMPT = """You are an expert Agile Business Analyst.
 Your task is to analyze a raw business requirement and extract structured information.
@@ -152,7 +152,12 @@ EVIDENCE CITATION RULES (evidence blocks are supplied):
 - Human answers are separate evidence: cite their supplied one-based numbers in
   clarification_numbers. A human-only finding has empty block_ids and nonempty
   clarification_numbers; never fabricate a document citation for a human answer.
-- Every output needs at least one valid document block or human answer reference.
+- The business requirement content (its description and structured context) and
+  owner-decided business intent are a third source: set requirement_source=true for an
+  output they support. A finding the requirement alone supports has empty block_ids
+  and clarification_numbers. Never use it for content that only a document states.
+- Every output needs at least one valid document block, human answer or requirement
+  source.
 """
 
 _ATTACHMENT_SECTION = """
@@ -256,8 +261,11 @@ TASK:
 - Human answers are also supporting evidence. Use clarification_numbers for their
   supplied one-based numbers, separately from block_numbers. Human-only support
   requires no document block.
-- Set supported=false only when neither the documents nor the supplied answers support
-  the complete output.
+- The REQUIREMENT CONTENT section is also supporting evidence. Set
+  requirement_source=true when it supports the output; requirement-only support needs
+  no block or answer number.
+- Set supported=false only when neither the documents, the supplied answers nor the
+  requirement content support the complete output.
 
 FACTS, RULES, CONSTRAINTS:
 - Direct support is required for every clause of the statement.
@@ -296,15 +304,15 @@ QUESTIONS, AMBIGUITIES, DEPENDENCIES, PROPOSALS:
   unsupported.
 
 BUSINESS CONTEXT AND RATIONALES:
-- Use REQUIREMENT-WIDE BUSINESS CONTEXT and each supplied clarification rationale only
-  to judge the relevance of a question about a documented operation. This context is
-  not a new numbered evidence source and does not prove a fact, rule, constraint or
-  proposed answer. For example, confirmed intent requiring accurate financial
+- REQUIREMENT CONTENT supports an output only through what it states or what the owner
+  decided; it does not prove a fact, rule, constraint or proposed answer it does not
+  contain. Also use it to judge the relevance of a question about a documented
+  operation. For example, confirmed intent requiring accurate financial
   reporting makes a question about financial/billing implications of a documented
   account shift relevant: cite the block describing the shift; do not require that
   block to state an unspecified fee or billing answer.
-- A rationale is generated explanation, not proof: verify its operation and relevance
-  against the supplied inputs.
+- Each supplied clarification rationale is generated explanation, not proof: verify its
+  operation and relevance against the supplied inputs.
 
 NEVER:
 - Never fabricate document support for an answer or interpret an answer as approval of
@@ -578,13 +586,13 @@ supports it. An evidence block may support multiple different outputs.
 {output_text}
 --- FROZEN ANALYSIS OUTPUTS END ---
 
---- REQUIREMENT-WIDE BUSINESS CONTEXT - RELEVANCE ONLY, NOT NUMBERED EVIDENCE ---
+--- REQUIREMENT CONTENT - CITE WITH requirement_source=true ---
 {business_context or "(none supplied)"}
---- REQUIREMENT-WIDE BUSINESS CONTEXT END ---
+--- REQUIREMENT CONTENT END ---
 
-Use this context to interpret the scope of questions about supplied operations. It is not
-a document block or human answer number. Never fabricate a reference for it, cite it as
-document evidence, or use it alone to assert facts or answer missing decisions.
+Set requirement_source=true for an output this content supports. It is not a document block
+or human answer number: never cite it as one, and never use it to answer a missing decision
+it does not state.
 
 --- NUMBERED EVIDENCE BLOCKS START ---
 {chr(10).join(block_lines)}

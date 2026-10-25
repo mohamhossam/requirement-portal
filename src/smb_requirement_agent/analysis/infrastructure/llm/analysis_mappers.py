@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable, Sequence
+from typing import Literal
 
 from smb_kernel.diagnostics import DebugTrace
 
@@ -22,6 +23,7 @@ from smb_requirement_agent.analysis.application.ports.requirement_analyzer impor
     OpenQuestionCandidate,
     QuestionReviewCandidate,
     RequirementAnalysisCandidate,
+    SetAsideCandidate,
     UncertaintyCandidate,
 )
 from smb_requirement_agent.analysis.domain.value_objects import (
@@ -213,7 +215,8 @@ def to_analysis_content_candidate(
         )
     )
     proposals = _deduplicate_proposals(proposals, business_rules, constraints)
-    _reject_invented_numeric_targets(proposals, source_text)
+    invented = _invented_numeric_targets(proposals, source_text)
+    proposals = [item for item in proposals if item not in invented]
 
     require_any_content(
         known_facts,
@@ -246,6 +249,14 @@ def to_analysis_content_candidate(
         question_reviews=question_reviews,
         new_uncertainties=new_uncertainties,
     )
+    if invented:
+        result["set_aside"] = [
+            SetAsideCandidate(
+                key=evidence_key("intent_proposal", item["statement"]),
+                reason="invented_figure",
+            )
+            for item in invented
+        ]
     if debug_trace is not None:
         debug_trace.record("analysis_mapper.normalized_candidate", candidate=result)
     return result
@@ -352,10 +363,14 @@ def _validated_evidence(
         )
     citations: dict[str, list[AnalysisEvidenceReferenceCandidate]] = {}
     clarification_references: dict[str, list[int]] = {}
+    requirement_references: list[str] = []
+    set_aside = {item["key"] for item in candidate.get("set_aside", [])}
     for citation in citations_input:
         kind = citation.kind.strip()
         subject = citation.subject.strip()
         key = f"{kind}:{' '.join(subject.casefold().split())}"
+        if key in set_aside:
+            continue
         if not kind or not subject or key not in expected:
             raise RequirementAnalysisGenerationError(
                 "Provider returned a blank, unknown, or stale evidence citation."
@@ -381,12 +396,14 @@ def _validated_evidence(
             raise RequirementAnalysisGenerationError(
                 "Provider returned duplicate or unknown human clarification references."
             )
-        if not references and not numbers:
+        if not references and not numbers and not citation.requirement_source:
             raise RequirementAnalysisGenerationError(
-                "Provider returned an analysis item without document or human support."
+                "Provider returned an analysis item without document, human or requirement support."
             )
         if numbers:
             clarification_references[key] = list(numbers)
+        if citation.requirement_source:
+            requirement_references.append(key)
         citations[key] = references
     if structured and set(citations) != expected:
         raise RequirementAnalysisGenerationError(
@@ -394,6 +411,8 @@ def _validated_evidence(
         )
     if clarification_references:
         candidate["clarification_references"] = clarification_references
+    if requirement_references:
+        candidate["requirement_references"] = requirement_references
     return citations
 
 
@@ -414,11 +433,95 @@ def analysis_evidence_subjects(
     return tuple(values)
 
 
+def evidence_key(kind: str, subject: str) -> str:
+    return f"{kind}:{' '.join(subject.casefold().split())}"
+
+
 def _candidate_evidence_keys(candidate: RequirementAnalysisCandidate) -> set[str]:
-    return {
-        f"{kind}:{' '.join(subject.casefold().split())}"
+    return {evidence_key(kind, subject) for kind, subject in analysis_evidence_subjects(candidate)}
+
+
+def new_output_keys(candidate: RequirementAnalysisCandidate) -> set[str]:
+    """Keys of outputs this response introduced, as opposed to reviewed active questions.
+
+    Only these can be set aside: a retained or replacing question answers a review the
+    round must keep, so removing it would leave that review without its question.
+    """
+    uncertainty_keys = {
+        evidence_key(kind, subject)
         for kind, subject in analysis_evidence_subjects(candidate)
+        if kind in _UNCERTAINTY_EVIDENCE_KINDS.values()
     }
+    introduced = (
+        {
+            evidence_key(_UNCERTAINTY_EVIDENCE_KINDS[item["kind"]], item["subject"])
+            for item in candidate["new_uncertainties"]
+        }
+        if "new_uncertainties" in candidate
+        else uncertainty_keys
+    )
+    return (_candidate_evidence_keys(candidate) - uncertainty_keys) | (
+        uncertainty_keys & introduced
+    )
+
+
+def set_aside_outputs(
+    candidate: RequirementAnalysisCandidate,
+    keys: Iterable[str],
+    reason: Literal["unsupported", "invented_figure"],
+) -> None:
+    """Remove generated outputs from a candidate and record why (ADR-0032, 2026-10-25)."""
+    removed = set(keys)
+    if not removed:
+        return
+
+    def kept(kind: str, subject: str) -> bool:
+        return evidence_key(kind, subject) not in removed
+
+    candidate["known_facts"] = [i for i in candidate["known_facts"] if kept("known_fact", i)]
+    candidate["constraints"] = [i for i in candidate["constraints"] if kept("constraint", i)]
+    candidate["business_rules"] = [
+        i for i in candidate["business_rules"] if kept("business_rule", i)
+    ]
+    candidate["assumptions"] = [i for i in candidate["assumptions"] if kept("assumption", i)]
+    candidate["open_questions"] = [
+        i for i in candidate["open_questions"] if kept("open_question", i["question"])
+    ]
+    candidate["ambiguities"] = [
+        i for i in candidate["ambiguities"] if kept("ambiguity", i["statement"])
+    ]
+    candidate["potential_dependencies"] = [
+        i for i in candidate["potential_dependencies"] if kept("potential_dependency", i)
+    ]
+    candidate["intent_proposals"] = [
+        i for i in candidate["intent_proposals"] if kept("intent_proposal", i["statement"])
+    ]
+    if "new_uncertainties" in candidate:
+        candidate["new_uncertainties"] = [
+            i
+            for i in candidate["new_uncertainties"]
+            if kept(_UNCERTAINTY_EVIDENCE_KINDS[i["kind"]], i["subject"])
+        ]
+    for field in ("evidence_references", "clarification_references"):
+        references = candidate.get(field)
+        if isinstance(references, dict):
+            for key in removed:
+                references.pop(key, None)
+    if "requirement_references" in candidate:
+        candidate["requirement_references"] = [
+            key for key in candidate["requirement_references"] if key not in removed
+        ]
+    candidate.setdefault("set_aside", []).extend(
+        SetAsideCandidate(key=key, reason=reason) for key in sorted(removed)
+    )
+
+
+_UNCERTAINTY_EVIDENCE_KINDS: dict[ClarificationKind, AnalysisEvidenceKind] = {
+    ClarificationKind.ASSUMPTION: "assumption",
+    ClarificationKind.OPEN_QUESTION: "open_question",
+    ClarificationKind.AMBIGUITY: "ambiguity",
+    ClarificationKind.POTENTIAL_DEPENDENCY: "potential_dependency",
+}
 
 
 def _reconcile_uncertainties(
@@ -621,19 +724,23 @@ _NUMBER_PATTERN = re.compile(r"\d+(?:[.,]\d+)?%?")
 # evidence blocks are supplied, and the citation pass catches it when they are.
 # A keyword-based entity guard was considered and rejected as too easy to
 # over-trigger on legitimate source vocabulary.
-def _reject_invented_numeric_targets(
+def _invented_numeric_targets(
     proposals: list[IntentProposalCandidate], source_text: str
-) -> None:
+) -> list[IntentProposalCandidate]:
+    """Proposals naming a figure the supplied sources lack; they are set aside, not shown."""
     supported = set(_NUMBER_PATTERN.findall(source_text))
-    for proposal in proposals:
-        content = " ".join(
-            (proposal["statement"], proposal["rationale"], *proposal["success_measures"])
-        )
-        invented = set(_NUMBER_PATTERN.findall(content)) - supported
-        if invented:
-            raise RequirementAnalysisGenerationError(
-                "Provider invented a numeric target in an AI intent proposal."
+    return [
+        proposal
+        for proposal in proposals
+        if set(
+            _NUMBER_PATTERN.findall(
+                " ".join(
+                    (proposal["statement"], proposal["rationale"], *proposal["success_measures"])
+                )
             )
+        )
+        - supported
+    ]
 
 
 def to_desired_outcome_review(
@@ -641,7 +748,10 @@ def to_desired_outcome_review(
     *,
     source_text: str,
 ) -> tuple[IntentProposalCandidate | None, OpenQuestionCandidate | None]:
-    """Normalize exactly one focused outcome proposal or blocker question."""
+    """Normalize one focused outcome proposal or blocker question.
+
+    A proposal naming an invented figure is set aside, so neither is returned.
+    """
     if parsed.can_infer:
         statement = parsed.statement.strip()
         rationale = parsed.rationale.strip()
@@ -655,7 +765,8 @@ def to_desired_outcome_review(
             rationale=rationale,
             success_measures=clean_statements(parsed.success_measures),
         )
-        _reject_invented_numeric_targets([proposal], source_text)
+        if _invented_numeric_targets([proposal], source_text):
+            return None, None
         return proposal, None
 
     question = parsed.blocker_question.strip()

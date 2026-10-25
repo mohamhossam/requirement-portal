@@ -175,8 +175,9 @@ class ValidateAnalysisCitations:
         }
         evidence = candidate.get("evidence_references", {})
         human_evidence = candidate.get("clarification_references", {})
+        requirement_evidence = set(candidate.get("requirement_references", []))
         expected = _candidate_keys(candidate)
-        if set(evidence) | set(human_evidence) != expected:
+        if set(evidence) | set(human_evidence) | requirement_evidence != expected:
             raise RequirementAnalysisGenerationError(
                 "Structured analysis did not cite every generated item."
             )
@@ -193,7 +194,7 @@ class ValidateAnalysisCitations:
                 raise RequirementAnalysisGenerationError(
                     "Structured analysis returned invalid human answer citations."
                 )
-            if not references and not numbers:
+            if not references and not numbers and key not in requirement_evidence:
                 raise RequirementAnalysisGenerationError(
                     "Structured analysis returned blank or out-of-packet citations."
                 )
@@ -331,7 +332,9 @@ class ConsolidateEvidenceAnalysis:
         pending_cache_entries: list[PendingEvidenceFragment] = []
         for _round in range(6):
             merged = self._merge(current, ())
-            documents, source_references, human_sources = _consolidation_documents(merged)
+            documents, source_references, human_sources, requirement_sources = (
+                _consolidation_documents(merged)
+            )
             packets = self._planner.execute(documents)
             if not packets:
                 raise RequirementAnalysisGenerationError(
@@ -349,7 +352,9 @@ class ConsolidateEvidenceAnalysis:
                     "evidence_consolidation",
                     figure_support,
                 )
-                _restore_source_references(candidate, source_references, human_sources)
+                _restore_source_references(
+                    candidate, source_references, human_sources, requirement_sources
+                )
                 next_round.append(candidate)
                 provenance.append(stage)
                 if pending is not None:
@@ -411,6 +416,17 @@ class ConsolidateEvidenceAnalysis:
                     human_evidence[key] = sorted(set((*human_evidence.get(key, []), *numbers)))
         if human_evidence:
             result["clarification_references"] = human_evidence
+        result_keys = _candidate_keys(result)
+        requirement_evidence = sorted(
+            {
+                key
+                for fragment in fragments
+                for key in fragment.get("requirement_references", [])
+                if key in result_keys
+            }
+        )
+        if requirement_evidence:
+            result["requirement_references"] = requirement_evidence
         result["question_reviews"] = [
             QuestionReviewCandidate(
                 question_id=item["question_id"],
@@ -553,12 +569,29 @@ def _consolidation_documents(
     tuple[AnalysisDocumentContext, ...],
     dict[str, AnalysisEvidenceReferenceCandidate],
     dict[str, list[int]],
+    set[str],
 ]:
     statements = _statements_by_evidence_key(candidate)
     blocks: dict[str, AnalysisEvidenceBlock] = {}
     source_references: dict[str, AnalysisEvidenceReferenceCandidate] = {}
     source_checksums: set[str] = set()
     human_sources: dict[str, list[int]] = {}
+    requirement_sources: set[str] = set()
+    for key in candidate.get("requirement_references", []):
+        statement = statements.get(key)
+        if statement is None:
+            continue
+        synthetic_id = "requirement-" + hashlib.sha256(key.encode()).hexdigest()[:24]
+        requirement_sources.add(synthetic_id)
+        blocks[synthetic_id] = AnalysisEvidenceBlock(
+            block_id=synthetic_id,
+            kind="paragraph",
+            section_path=["Requirement"],
+            label="Requirement evidence",
+            text=f"Validated requirement-supported finding: {statement}",
+            asset_id=None,
+        )
+        source_checksums.add(hashlib.sha256(("requirement:" + key).encode()).hexdigest())
     for key, numbers in candidate.get("clarification_references", {}).items():
         statement = statements.get(key)
         if statement is None:
@@ -616,17 +649,23 @@ def _consolidation_documents(
             image_assets=[],
         ),
     )
-    return documents, source_references, human_sources
+    return documents, source_references, human_sources, requirement_sources
 
 
 def _restore_source_references(
     candidate: RequirementAnalysisCandidate,
     source_references: Mapping[str, AnalysisEvidenceReferenceCandidate],
     human_sources: Mapping[str, list[int]],
+    requirement_sources: set[str],
 ) -> None:
     for key, references in candidate.get("evidence_references", {}).items():
         restored: list[AnalysisEvidenceReferenceCandidate] = []
         for reference in references:
+            if reference["block_id"] in requirement_sources:
+                supported = candidate.setdefault("requirement_references", [])
+                if key not in supported:
+                    supported.append(key)
+                continue
             numbers = human_sources.get(reference["block_id"])
             if numbers is not None:
                 human = candidate.setdefault("clarification_references", {}).setdefault(key, [])

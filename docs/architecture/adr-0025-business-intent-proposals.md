@@ -47,6 +47,9 @@ cannot leak into Epic, Feature, or Story prompts.
 The Requirement Owner must resolve every proposal and every blocker before
 confirmation. Adapter normalization must reject unsupported numeric targets and
 unusable structured output rather than presenting it for approval.
+Since 2026-10-25 a proposal with an unsupported numeric target is set aside on its own and the
+rest of the analysis is kept; it is still never presented
+([ADR-0032](adr-0032-focused-local-citation-recovery.md), last section).
 
 ## Alternatives Considered
 

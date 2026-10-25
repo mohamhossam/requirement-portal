@@ -2,7 +2,9 @@
 
 import logging
 import time
+from collections import Counter
 from collections.abc import Sequence
+from copy import deepcopy
 
 import httpx
 from pydantic import ValidationError
@@ -33,8 +35,11 @@ from smb_requirement_agent.analysis.domain.value_objects import (
 from smb_requirement_agent.analysis.infrastructure.llm.analysis_mappers import (
     analysis_evidence_subjects,
     attach_analysis_evidence,
+    evidence_key,
+    new_output_keys,
     normalize_analysis_intent,
     salvage_human_citations,
+    set_aside_outputs,
     to_analysis_candidate,
     to_analysis_content_candidate,
     to_clarification_questions,
@@ -132,6 +137,38 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
         active_questions: Sequence[ActiveQuestionContext] = (),
         *,
         figure_support: Sequence[str] = (),
+    ) -> RequirementAnalysisCandidate:
+        candidate = self._analyze(
+            requirement,
+            clarifications,
+            documents,
+            intent_decisions,
+            active_questions,
+            figure_support=figure_support,
+        )
+        set_aside = candidate.get("set_aside", [])
+        if set_aside:
+            reasons = Counter(item["reason"] for item in set_aside)
+            # Counts only: operational logs never carry requirement text.
+            logger.warning(
+                "%s model %s: %d generated item(s) set aside (%s).",
+                self._provider_name,
+                self._client.model,
+                len(set_aside),
+                ", ".join(f"{reason}={count}" for reason, count in sorted(reasons.items())),
+            )
+            self._debug_trace.record("analysis.items_set_aside", set_aside=set_aside)
+        return candidate
+
+    def _analyze(
+        self,
+        requirement: Requirement,
+        clarifications: Sequence[HumanClarification],
+        documents: Sequence[AnalysisDocumentContext],
+        intent_decisions: Sequence[IntentProposal],
+        active_questions: Sequence[ActiveQuestionContext],
+        *,
+        figure_support: Sequence[str],
     ) -> RequirementAnalysisCandidate:
         structured_context = format_structured_context(requirement)
         # Everything a person supplied supports a figure in a proposal: the
@@ -403,6 +440,13 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
             raise RequirementAnalysisGenerationError(
                 f"{self._provider_name} desired-outcome review failed: {exc}"
             ) from exc
+        if proposal is None and blocker is None:
+            candidate.setdefault("set_aside", []).append(
+                {
+                    "key": evidence_key("intent_proposal", parsed.statement.strip()),
+                    "reason": "invented_figure",
+                }
+            )
         if proposal is not None:
             candidate["intent_proposals"].append(proposal)
         if blocker is not None:
@@ -579,20 +623,14 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
                     schema_type=schema,
                     images=images,
                 )
-                unsupported_numbers = sorted(
-                    item.output_number for item in focused.decisions if not item.supported
-                )
-                if unsupported_numbers:
-                    self._debug_trace.record(
-                        "analysis.citation_repair_unsupported",
-                        unsupported_output_numbers=unsupported_numbers,
-                    )
-                    raise StructuredResponseValidationError(
-                        "The model reported unsupported analysis content.", unsupported=True
-                    )
-                # Revalidate clients/fakes that return a base schema instance.
+                # Revalidate clients/fakes that return a base schema instance. An
+                # unsupported decision's numbers are moot: it is set aside or terminal.
+                dumped = focused.model_dump()
+                for decision in dumped["decisions"]:
+                    if not decision["supported"]:
+                        decision.update(block_numbers=[], clarification_numbers=[])
                 try:
-                    focused = schema.model_validate(focused.model_dump(), strict=True)
+                    focused = schema.model_validate(dumped, strict=True)
                 except ValidationError as exc:
                     raise response_validation_error(exc, focused.model_dump_json()) from exc
                 decision_numbers = [item.output_number for item in focused.decisions]
@@ -604,19 +642,43 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
                         "do not repeat or omit output numbers."
                     )
                 decisions = {item.output_number: item for item in focused.decisions}
+                unsupported_numbers = sorted(
+                    item.output_number for item in focused.decisions if not item.supported
+                )
+                unsupported_keys = {
+                    evidence_key(*outputs[number - 1]) for number in unsupported_numbers
+                }
+                if unsupported_numbers:
+                    self._debug_trace.record(
+                        "analysis.citation_repair_unsupported",
+                        unsupported_output_numbers=unsupported_numbers,
+                    )
+                    # A new item nothing supports is set aside; the rest of the analysis
+                    # stands. A reviewed active question cannot be dropped, and an
+                    # analysis with nothing left is no analysis (ADR-0032, 2026-10-25).
+                    if len(unsupported_numbers) == len(outputs) or not unsupported_keys <= (
+                        new_output_keys(candidate)
+                    ):
+                        raise StructuredResponseValidationError(
+                            "The model reported unsupported analysis content.", unsupported=True
+                        )
                 repaired_citations: list[AnalysisEvidenceCitationSchema] = []
                 for number, (kind, subject) in enumerate(outputs, start=1):
+                    if number in unsupported_numbers:
+                        continue
                     block_numbers = decisions[number].block_numbers
                     answer_numbers = decisions[number].clarification_numbers
+                    from_requirement = decisions[number].requirement_source
                     if (
-                        (not block_numbers and not answer_numbers)
+                        (not block_numbers and not answer_numbers and not from_requirement)
                         or len(block_numbers) != len(set(block_numbers))
                         or len(answer_numbers) != len(set(answer_numbers))
                     ):
                         raise StructuredResponseValidationError(
                             f"Output {number} requires unique supporting document block numbers "
-                            f"within 1–{len(blocks)} or human answer numbers within "
-                            f"1–{len(clarifications)}; at least one source is required."
+                            f"within 1–{len(blocks)}, human answer numbers within "
+                            f"1–{len(clarifications)} or requirement_source; at least one "
+                            "source is required."
                         )
                     repaired_citations.append(
                         AnalysisEvidenceCitationSchema(
@@ -624,12 +686,15 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
                             subject=subject,
                             block_ids=[blocks[index - 1]["block_id"] for index in block_numbers],
                             clarification_numbers=answer_numbers,
+                            requirement_source=from_requirement,
                         )
                     )
                 repaired = parsed.model_copy(update={"evidence_citations": repaired_citations})
+                working = deepcopy(candidate)
+                set_aside_outputs(working, unsupported_keys, "unsupported")
                 result = attach_analysis_evidence(
                     repaired,
-                    candidate,
+                    working,
                     documents=documents,
                     debug_trace=self._debug_trace,
                     clarification_count=len(clarifications),
