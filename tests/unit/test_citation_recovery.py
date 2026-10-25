@@ -909,3 +909,27 @@ def test_unknown_human_answer_never_bypasses_evidence_validation(
         analyze(provider, [analysis(), repaired, repaired], requests, tmp_path)
     assert describe_public_error(failure.value).code == "model_invalid_citations"
     assert len(requests) == 3
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+def test_repeated_items_are_cited_once_instead_of_failing_as_duplicates(
+    provider: str, tmp_path: Path
+) -> None:
+    response = analysis()
+    first_fact = response["known_facts"][0]
+    # The same fact again in other case and spacing, and one statement proposed twice.
+    response["known_facts"].append("  " + first_fact.upper().replace(" ", "  "))
+    statement = "Plans require consent before activation."
+    response["business_rule_proposals"] = [{"statement": statement, "rationale": "Source rule."}]
+    response["constraint_proposals"] = [
+        {"statement": statement.lower(), "rationale": "Source boundary."}
+    ]
+    recovery = mapping()
+    recovery["decisions"].append({"output_number": 25, "supported": True, "block_numbers": [1]})
+    requests: list[dict[str, Any]] = []
+
+    result = analyze(provider, [response, recovery], requests, tmp_path)
+
+    assert result["known_facts"] == analysis()["known_facts"]
+    assert [item["statement"] for item in result["intent_proposals"]] == [statement]
+    assert len(requests) == 2

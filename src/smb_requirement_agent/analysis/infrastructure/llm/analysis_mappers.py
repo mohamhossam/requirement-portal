@@ -165,9 +165,9 @@ def to_analysis_content_candidate(
     debug_trace: DebugTrace | None = None,
 ) -> RequirementAnalysisCandidate:
     """Clean analysis content without interpreting provider evidence citations."""
-    known_facts = clean_statements(parsed.known_facts)
-    constraints = clean_statements(parsed.constraints)
-    business_rules = clean_statements(parsed.business_rules)
+    known_facts = _distinct(clean_statements(parsed.known_facts))
+    constraints = _distinct(clean_statements(parsed.constraints))
+    business_rules = _distinct(clean_statements(parsed.business_rules))
     uncertainties, question_reviews, new_uncertainties = _reconcile_uncertainties(
         parsed, tuple(active_questions)
     )
@@ -434,7 +434,7 @@ def analysis_evidence_subjects(
 
 
 def evidence_key(kind: str, subject: str) -> str:
-    return f"{kind}:{' '.join(subject.casefold().split())}"
+    return f"{kind}:{_normalized(subject)}"
 
 
 def _candidate_evidence_keys(candidate: RequirementAnalysisCandidate) -> set[str]:
@@ -701,17 +701,40 @@ def _deduplicate_proposals(
     business_rules: list[str],
     constraints: list[str],
 ) -> list[IntentProposalCandidate]:
-    source = {(IntentProposalKind.BUSINESS_RULE, item.casefold()) for item in business_rules} | {
-        (IntentProposalKind.CONSTRAINT, item.casefold()) for item in constraints
+    source = {(IntentProposalKind.BUSINESS_RULE, _normalized(item)) for item in business_rules} | {
+        (IntentProposalKind.CONSTRAINT, _normalized(item)) for item in constraints
     }
-    seen: set[tuple[IntentProposalKind, str]] = set()
+    # Every proposal is cited as "intent_proposal", whatever its kind, so one statement
+    # proposed as both a rule and a constraint would be two outputs with one citation key.
+    seen: set[str] = set()
     result: list[IntentProposalCandidate] = []
     for proposal in proposals:
-        key = proposal["kind"], proposal["statement"].casefold()
-        if key in source or key in seen:
+        statement = _normalized(proposal["statement"])
+        if (proposal["kind"], statement) in source or statement in seen:
             continue
-        seen.add(key)
+        seen.add(statement)
         result.append(proposal)
+    return result
+
+
+def _normalized(value: str) -> str:
+    """The comparison form of a statement, as its citation key uses it."""
+    return " ".join(value.casefold().split())
+
+
+def _distinct(values: list[str]) -> list[str]:
+    """Keep the first of statements that differ only in case or spacing.
+
+    Two such statements share one citation key, so keeping both would make the citation
+    checks reject the whole response as a duplicate.
+    """
+    seen: set[str] = set()
+    result: list[str] = []
+    for value in values:
+        key = _normalized(value)
+        if key not in seen:
+            seen.add(key)
+            result.append(value)
     return result
 
 

@@ -903,9 +903,10 @@ def _merge_statements(
     evidence: dict[str, list[AnalysisEvidenceReferenceCandidate]],
 ) -> None:
     for value in source_values:
-        if value.casefold() not in {item.casefold() for item in target_values}:
+        key = analysis_evidence_key(kind, value)
+        if key not in {analysis_evidence_key(kind, item) for item in target_values}:
             target_values.append(value)
-        _merge_evidence(evidence, source, analysis_evidence_key(kind, value))
+        _merge_evidence(evidence, source, key)
 
 
 def _merge_objects[Finding](
@@ -917,10 +918,10 @@ def _merge_objects[Finding](
     evidence: dict[str, list[AnalysisEvidenceReferenceCandidate]],
 ) -> None:
     for value in source_values:
-        subject = subject_of(value)
-        if subject.casefold() not in {subject_of(item).casefold() for item in target_values}:
+        key = analysis_evidence_key(kind, subject_of(value))
+        if key not in {analysis_evidence_key(kind, subject_of(item)) for item in target_values}:
             target_values.append(value)
-        _merge_evidence(evidence, source, analysis_evidence_key(kind, subject))
+        _merge_evidence(evidence, source, key)
 
 
 def _merge_proposals(
@@ -934,13 +935,13 @@ def _merge_proposals(
             item["kind"] is IntentProposalKind.DESIRED_OUTCOME for item in values
         ):
             continue
-        if (value["kind"], value["statement"].casefold()) not in {
-            (item["kind"], item["statement"].casefold()) for item in values
+        # Proposals share one citation kind, so one statement is one proposal.
+        key = analysis_evidence_key("intent_proposal", value["statement"])
+        if key not in {
+            analysis_evidence_key("intent_proposal", item["statement"]) for item in values
         }:
             values.append(value)
-        _merge_evidence(
-            evidence, source, analysis_evidence_key("intent_proposal", value["statement"])
-        )
+        _merge_evidence(evidence, source, key)
 
 
 def _merge_evidence(

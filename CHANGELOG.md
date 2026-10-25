@@ -11,6 +11,13 @@ restoring a backup.
 
 ## Unreleased
 
+- **A repeated item no longer fails the analysis.** When the model listed the same fact,
+  constraint or rule twice (even in other case or spacing), or proposed one statement as both a
+  rule and a constraint, both copies shared one citation, and the citation checks rejected the
+  whole response as "duplicate evidence citation records". The first copy is now kept and later
+  ones dropped before any citation check; combining section findings compares them the same way.
+  No migration.
+
 - **Large analyses no longer fail at the last step.** Combining the findings from each
   document section used a fixed 60,000-character budget whatever the model, and failed when a
   round could not shrink them ("could not be consolidated within the provider context budget").

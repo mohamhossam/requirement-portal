@@ -135,3 +135,21 @@ def test_fallback_retains_active_questions_and_drops_human_duplicates() -> None:
     assert result["new_uncertainties"] == []
     assert analysis_evidence_key("open_question", human) not in result["evidence_references"]
     ValidateAnalysisCitations().execute(result, documents)
+
+
+def test_merge_keeps_one_of_findings_that_differ_only_in_case_or_spacing() -> None:
+    fragments, _ = _fragments()
+    statement = fragments[0]["known_facts"][0]
+    second = deepcopy(fragments[1])
+    second["known_facts"] = ["  " + statement.upper().replace(" ", "  ")]
+    second["evidence_references"] = {
+        analysis_evidence_key("known_fact", second["known_facts"][0]): next(
+            iter(fragments[1]["evidence_references"].values())
+        )
+    }
+
+    merged = ConsolidateEvidenceAnalysis._merge([fragments[0], second], ())
+
+    assert merged["known_facts"] == [statement]
+    references = merged["evidence_references"][analysis_evidence_key("known_fact", statement)]
+    assert sorted(item["block_id"] for item in references) == ["block-1", "block-2"]
