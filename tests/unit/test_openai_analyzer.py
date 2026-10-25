@@ -510,6 +510,30 @@ def test_numeric_target_is_supported_only_by_confirmed_intent(
             analyze()
 
 
+@pytest.mark.parametrize("supported", [True, False])
+@patch("smb_requirement_agent.analysis.infrastructure.llm.openai_adapters.OpenAI")
+def test_numeric_target_is_supported_by_consolidation_figure_support(
+    mock_openai_class: MagicMock, requirement_with_outcome: Requirement, supported: bool
+) -> None:
+    # Consolidation sees only finding statements; the figure lives in the evidence.
+    client = _client_returning(_limit_rule_analysis())
+    analyzer = OpenAIRequirementAnalyzer(
+        client, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
+    )
+    figure_support = ("Off-net calls: 1000 max per month.",) if supported else ()
+
+    def analyze() -> object:
+        return analyzer.analyze_evidence(
+            requirement_with_outcome, (), (), (), (), figure_support=figure_support
+        )
+
+    if supported:
+        analyze()
+    else:
+        with pytest.raises(RequirementAnalysisGenerationError):
+            analyze()
+
+
 def test_attachment_only_packet_prompt_preserves_source_and_application_association() -> None:
     from smb_requirement_agent.analysis.infrastructure.llm.prompts.analysis_prompt import (
         build_analysis_system_prompt,

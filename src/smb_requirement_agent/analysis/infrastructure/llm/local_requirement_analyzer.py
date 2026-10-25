@@ -111,9 +111,16 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
         documents: Sequence[AnalysisDocumentContext],
         intent_decisions: Sequence[IntentProposal],
         active_questions: Sequence[ActiveQuestionContext],
+        *,
+        figure_support: Sequence[str] = (),
     ) -> RequirementAnalysisCandidate:
         return self.analyze(
-            requirement, clarifications, documents, intent_decisions, active_questions
+            requirement,
+            clarifications,
+            documents,
+            intent_decisions,
+            active_questions,
+            figure_support=figure_support,
         )
 
     def analyze(
@@ -123,10 +130,13 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
         documents: Sequence[AnalysisDocumentContext] = (),
         intent_decisions: Sequence[IntentProposal] = (),
         active_questions: Sequence[ActiveQuestionContext] = (),
+        *,
+        figure_support: Sequence[str] = (),
     ) -> RequirementAnalysisCandidate:
         structured_context = format_structured_context(requirement)
         # Everything a person supplied supports a figure in a proposal: the
-        # source, its documents, their answers and the intent they confirmed.
+        # source, its documents, their answers and the intent they confirmed,
+        # and, in consolidation, the evidence behind the earlier findings.
         source_text = "\n".join(
             (
                 requirement.title.value,
@@ -140,6 +150,7 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
                     if item.status in (IntentProposalStatus.ACCEPTED, IntentProposalStatus.EDITED)
                     for text in (item.effective_statement or "", *item.effective_success_measures)
                 ),
+                *figure_support,
             )
         )
         user_prompt = build_user_prompt(

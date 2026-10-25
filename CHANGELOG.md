@@ -11,6 +11,14 @@ restoring a backup.
 
 ## Unreleased
 
+- **Analysis no longer fails when consolidation repeats a figure from a document.** With
+  structured documents, the last step reads only the earlier findings' statements, so the check
+  that refuses invented figures in intent proposals (ADR-0025) treated a figure the first pass
+  had taken from a document, or kept in a proposal's rationale or success measures, as invented.
+  The whole analysis then failed with "Analysing requirement failed". That step now also counts
+  the documents' text and the earlier proposals' rationale and success measures as support. The
+  model is not shown them, and the fragment cache is unchanged. No migration.
+
 - **platform-kernel v1.3.1** (was v1.3.0): it allows Pillow 13, so only the docling family still
   needs the temporary `[tool.uv]` Pillow override. No code change, no upgrade step.
 

@@ -13,6 +13,7 @@ from smb_requirement_agent.analysis.application.errors import RequirementAnalysi
 from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     ActiveQuestionContext,
     AnalysisDocumentContext,
+    IntentProposalCandidate,
     RequirementAnalysisCandidate,
 )
 from smb_requirement_agent.analysis.application.use_cases.analysis_mapping import (
@@ -33,6 +34,7 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     ClarificationKind,
     HumanClarification,
     IntentProposal,
+    IntentProposalKind,
 )
 from smb_requirement_agent.analysis.infrastructure.in_memory_evidence_fragment_cache import (
     InMemoryEvidenceFragmentCache,
@@ -54,6 +56,7 @@ class RecordingEvidenceAnalyzer:
 
     def __init__(self) -> None:
         self.calls = 0
+        self.figure_support: list[tuple[str, ...]] = []
 
     def analyze_evidence(
         self,
@@ -62,8 +65,11 @@ class RecordingEvidenceAnalyzer:
         documents: Sequence[AnalysisDocumentContext],
         intent_decisions: Sequence[IntentProposal],
         active_questions: Sequence[ActiveQuestionContext],
+        *,
+        figure_support: Sequence[str] = (),
     ) -> RequirementAnalysisCandidate:
         del requirement, clarifications, intent_decisions, active_questions
+        self.figure_support.append(tuple(figure_support))
         self.calls += 1
         document = documents[0]
         block = document["evidence_blocks"][0]
@@ -101,6 +107,8 @@ class FailOnceOnSecondEvidenceAnalyzer(RecordingEvidenceAnalyzer):
         documents: Sequence[AnalysisDocumentContext],
         intent_decisions: Sequence[IntentProposal],
         active_questions: Sequence[ActiveQuestionContext],
+        *,
+        figure_support: Sequence[str] = (),
     ) -> RequirementAnalysisCandidate:
         if self.calls == 1:
             self.calls += 1
@@ -111,7 +119,81 @@ class FailOnceOnSecondEvidenceAnalyzer(RecordingEvidenceAnalyzer):
             documents,
             intent_decisions,
             active_questions,
+            figure_support=figure_support,
         )
+
+
+class ProposingEvidenceAnalyzer(RecordingEvidenceAnalyzer):
+    """Adds a figure-bearing proposal, cited like the known fact, to every fragment."""
+
+    def analyze_evidence(
+        self,
+        requirement: Requirement,
+        clarifications: Sequence[HumanClarification],
+        documents: Sequence[AnalysisDocumentContext],
+        intent_decisions: Sequence[IntentProposal],
+        active_questions: Sequence[ActiveQuestionContext],
+        *,
+        figure_support: Sequence[str] = (),
+    ) -> RequirementAnalysisCandidate:
+        candidate = super().analyze_evidence(
+            requirement,
+            clarifications,
+            documents,
+            intent_decisions,
+            active_questions,
+            figure_support=figure_support,
+        )
+        statement = "Bundles are capped per month."
+        candidate["intent_proposals"] = [
+            IntentProposalCandidate(
+                kind=IntentProposalKind.BUSINESS_RULE,
+                statement=statement,
+                rationale="Table 1 caps a bundle at 40 lines.",
+                success_measures=["At most 1000 off-net minutes"],
+            )
+        ]
+        references = candidate["evidence_references"]
+        references[analysis_evidence_key("intent_proposal", statement)] = list(
+            next(iter(references.values()))
+        )
+        return candidate
+
+
+def test_consolidation_gets_the_evidence_behind_packet_findings_as_figure_support() -> None:
+    provider = ProposingEvidenceAnalyzer()
+    validator = ValidateAnalysisCitations()
+    planner = PlanEvidencePackets(100_000)
+    packet_analyzer = AnalyzeEvidencePacket(
+        provider, validator, InMemoryEvidenceFragmentCache(), FixedClock(NOW)
+    )
+    analyzer = StructuredRequirementAnalyzer(
+        NoOpFallback(),
+        AssembleRequirementEvidence(),
+        planner,
+        packet_analyzer,
+        ConsolidateEvidenceAnalysis(planner, packet_analyzer),
+        validator,
+        FixedClock(NOW),
+        RecordingProgress(),
+    )
+    requirement = Requirement(
+        RequirementId("requirement-1"),
+        RequirementTitle("Bundle"),
+        RequirementDescription("Analyze the BRD"),
+        RequirementStatus.DRAFT,
+    )
+    document = _document()
+    document["extracted_text"] = "Up to 40 lines per bundle."
+
+    _accepted_analyze(analyzer, requirement, (), (document,))
+
+    packet_call, consolidation = provider.figure_support
+    assert packet_call == ()
+    assert "Up to 40 lines per bundle." in consolidation
+    assert "Alpha" * 50 in consolidation
+    assert "Table 1 caps a bundle at 40 lines." in consolidation
+    assert "At most 1000 off-net minutes" in consolidation
 
 
 def test_consolidation_restores_human_support_without_document_identity() -> None:

@@ -237,6 +237,7 @@ class AnalyzeEvidencePacket:
         intent_decisions: Sequence[IntentProposal],
         active_questions: Sequence[ActiveQuestionContext] = (),
         stage: str = "evidence_packet",
+        figure_support: Sequence[str] = (),
     ) -> tuple[
         RequirementAnalysisCandidate,
         AnalysisStageProvenanceCandidate,
@@ -263,11 +264,18 @@ class AnalyzeEvidencePacket:
                 json.dumps(cache_input, sort_keys=True, separators=(",", ":"), default=str).encode()
             ).hexdigest()
         )
+        # figure_support stays out of the key: it only widens what the figure check
+        # accepts, and a cached fragment has already passed that check.
         cached = self._cache.get(cache_key)
         pending: PendingEvidenceFragment | None = None
         if cached is None:
             candidate = self._analyzer.analyze_evidence(
-                requirement, clarifications, packet, intent_decisions, active_questions
+                requirement,
+                clarifications,
+                packet,
+                intent_decisions,
+                active_questions,
+                figure_support=figure_support,
             )
             self._validator.execute(candidate, packet, clarifications)
             cached = EvidenceFragmentCacheEntry(deepcopy(candidate), self._clock.now())
@@ -310,6 +318,7 @@ class ConsolidateEvidenceAnalysis:
         fragments: Sequence[RequirementAnalysisCandidate],
         intent_decisions: Sequence[IntentProposal],
         active_questions: Sequence[ActiveQuestionContext],
+        figure_support: Sequence[str] = (),
     ) -> tuple[
         RequirementAnalysisCandidate,
         list[AnalysisStageProvenanceCandidate],
@@ -338,6 +347,7 @@ class ConsolidateEvidenceAnalysis:
                     intent_decisions,
                     active_questions if final_round else (),
                     "evidence_consolidation",
+                    figure_support,
                 )
                 _restore_source_references(candidate, source_references, human_sources)
                 next_round.append(candidate)
@@ -490,6 +500,7 @@ class StructuredRequirementAnalyzer(RequirementAnalyzerPort):
             fragments,
             intent_decisions,
             active_questions,
+            _figure_support(evidence_documents, fragments),
         )
         stages.extend(consolidation_stages)
         pending_cache_entries.extend(consolidation_pending)
@@ -504,6 +515,36 @@ class StructuredRequirementAnalyzer(RequirementAnalyzerPort):
         result["stage_provenance"] = stages
         stage_generation_effect(lambda: self._packet_analyzer.commit(pending_cache_entries))
         return result
+
+
+def _figure_support(
+    documents: Sequence[AnalysisDocumentContext],
+    fragments: Sequence[RequirementAnalysisCandidate],
+) -> tuple[str, ...]:
+    """The evidence behind packet findings, for the figures consolidation repeats.
+
+    Consolidation reads finding statements only, so a figure a packet took from its
+    document, or kept in a proposal's rationale or success measures, would otherwise
+    look invented.
+    """
+    return (
+        *(document["extracted_text"] for document in documents),
+        *(
+            block.get("text") or ""
+            for document in documents
+            for block in document.get("evidence_blocks", [])
+        ),
+        *(
+            text
+            for fragment in fragments
+            for proposal in fragment["intent_proposals"]
+            for text in (
+                proposal["statement"],
+                proposal["rationale"],
+                *proposal["success_measures"],
+            )
+        ),
+    )
 
 
 def _consolidation_documents(
