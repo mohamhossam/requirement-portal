@@ -11,6 +11,14 @@ restoring a backup.
 
 ## Unreleased
 
+- **Product impact is assessed for large analyses.** Requirement work sent the knowledge
+  portal one text item per fact, rule, constraint and answer, and the portal accepts at most 50
+  items of 10,000 characters: an analysis with about 200 findings was refused with 422 and shown
+  as "Product impact was not assessed". Over 50 items, consecutive items are now joined with
+  newlines into fewer, larger ones, which is how the portal reads them anyway, so it sees the
+  same text. An item over 10,000 characters is split at a space; past 500,000 characters in
+  all, the end is left out with a warning. No migration.
+
 - **A repeated item no longer fails the analysis.** When the model listed the same fact,
   constraint or rule twice (even in other case or spacing), or proposed one statement as both a
   rule and a constraint, both copies shared one citation, and the citation checks rejected the
