@@ -101,6 +101,7 @@ class TestSettings:
             ({"openrouter_base_url": "http://openrouter.example.test/v1"}, "HTTPS"),
             ({"openrouter_timeout_seconds": 0}, "OPENROUTER_TIMEOUT_SECONDS"),
             ({"openrouter_max_output_tokens": 0}, "OPENROUTER_MAX_OUTPUT_TOKENS"),
+            ({"openrouter_context_tokens": 8192}, "OPENROUTER_CONTEXT_TOKENS"),
             ({"openrouter_model": " "}, "OPENROUTER_MODEL"),
             ({"openrouter_embedding_model": " "}, "OPENROUTER_EMBEDDING_MODEL"),
             ({"openrouter_data_collection": "allow"}, "OPENROUTER_DATA_COLLECTION"),
@@ -406,6 +407,7 @@ class TestSettings:
         monkeypatch.setenv("OPENROUTER_BASE_URL", "https://router.example.test/api/v1")
         monkeypatch.setenv("OPENROUTER_TIMEOUT_SECONDS", "45.5")
         monkeypatch.setenv("OPENROUTER_MAX_OUTPUT_TOKENS", "4096")
+        monkeypatch.setenv("OPENROUTER_CONTEXT_TOKENS", "400000")
         monkeypatch.setenv("OPENROUTER_DATA_COLLECTION", "deny")
 
         settings = Settings.from_env()
@@ -417,6 +419,7 @@ class TestSettings:
         assert settings.openrouter_base_url == "https://router.example.test/api/v1"
         assert settings.openrouter_timeout_seconds == 45.5
         assert settings.openrouter_max_output_tokens == 4096
+        assert settings.openrouter_context_tokens == 400_000
         assert settings.openrouter_data_collection == "deny"
 
     def test_non_openrouter_provider_ignores_invalid_openrouter_numbers(
@@ -437,6 +440,7 @@ class TestSettings:
         [
             ("OPENROUTER_TIMEOUT_SECONDS", "slow", "must be a number"),
             ("OPENROUTER_MAX_OUTPUT_TOKENS", "many", "must be an integer"),
+            ("OPENROUTER_CONTEXT_TOKENS", "large", "must be an integer"),
         ],
     )
     def test_openrouter_rejects_non_numeric_limits_from_environment(

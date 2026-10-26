@@ -131,6 +131,11 @@ def validate_settings(settings: Settings) -> None:
             raise ConfigurationError("OPENROUTER_TIMEOUT_SECONDS must be greater than zero.")
         if settings.openrouter_max_output_tokens < 1:
             raise ConfigurationError("OPENROUTER_MAX_OUTPUT_TOKENS must be positive.")
+        context = settings.openrouter_context_tokens
+        if context is not None and context <= settings.openrouter_max_output_tokens:
+            raise ConfigurationError(
+                "OPENROUTER_CONTEXT_TOKENS must be larger than OPENROUTER_MAX_OUTPUT_TOKENS."
+            )
         if settings.openrouter_data_collection not in SUPPORTED_OPENROUTER_DATA_COLLECTION:
             supported = ", ".join(sorted(SUPPORTED_OPENROUTER_DATA_COLLECTION))
             raise ConfigurationError(f"OPENROUTER_DATA_COLLECTION must be one of: {supported}.")

@@ -11,6 +11,63 @@ restoring a backup.
 
 ## Unreleased
 
+- **filelock 4.2.4, OpenTelemetry 1.45.1 and setuptools 84.2.1 (security).** filelock 4.0.8
+  carries CVE-2026-112940 (high: arbitrary file overwrite), CVE-2026-112913 and CVE-2026-112907,
+  fixed in 4.2.1; opentelemetry-api 1.45.0 carries CVE-2026-114603, fixed in 1.45.1; setuptools
+  84.0.0 carries GHSA-xmj3-9gf7-h52w, fixed in 84.1.0. The OpenTelemetry SDK and instrumentation
+  packages move with the API to their matching patch releases. No code change, no upgrade step.
+- **Frontend: zod 4.6.7, undici 7.30.1 and vitest 5.0.5 (security).** zod below 4.6.6 can
+  exhaust memory validating oversized constrained collections (GHSA-mrhx-c7xc-m3w5, high);
+  undici 7.30.0 has three advisories (GHSA-4qv8-2p9j-2685, GHSA-f72v-6w45-q472,
+  GHSA-xjj6-f33q-929c, high); vitest 5.0.2 has two moderate ones in its mock registration
+  (test tooling only, never in the served image). No code change, no upgrade step.
+
+- **Product impact is assessed for large analyses.** Requirement work sent the knowledge
+  portal one text item per fact, rule, constraint and answer, and the portal accepts at most 50
+  items of 10,000 characters: an analysis with about 200 findings was refused with 422 and shown
+  as "Product impact was not assessed". Over 50 items, consecutive items are now joined with
+  newlines into fewer, larger ones, which is how the portal reads them anyway, so it sees the
+  same text. An item over 10,000 characters is split at a space; past 500,000 characters in
+  all, the end is left out with a warning. No migration.
+
+- **A repeated item no longer fails the analysis.** When the model listed the same fact,
+  constraint or rule twice (even in other case or spacing), or proposed one statement as both a
+  rule and a constraint, both copies shared one citation, and the citation checks rejected the
+  whole response as "duplicate evidence citation records". The first copy is now kept and later
+  ones dropped before any citation check; combining section findings compares them the same way.
+  No migration.
+
+- **Large analyses no longer fail at the last step.** Combining the findings from each
+  document section used a fixed 60,000-character budget whatever the model, and failed when a
+  round could not shrink them ("could not be consolidated within the provider context budget").
+  Combining now uses the analysis model's context window, from its model profile, the local
+  model's settings or the new `OPENROUTER_CONTEXT_TOKENS` (for example `400000` for
+  `openai/gpt-5.1`). Section packets keep their size. If combining still cannot shrink, the
+  validated section findings are merged and kept, open AI questions are retained, and the worker
+  logs a warning. Upgrade step (optional): set `OPENROUTER_CONTEXT_TOKENS` in `production.env`
+  to your OpenRouter model's window. No migration (ADR-0029, amended).
+
+- **One bad item no longer fails the whole analysis.** When the model marks one of its findings
+  unsupported, or proposes a figure the sources lack, that item is set aside and the rest of the
+  analysis is saved; before, every valid finding was discarded with "Analysing requirement
+  failed". The worker logs how many items were set aside and why, never their text. The analysis
+  still fails when nothing is left, or when the unsupported item is a question kept from an
+  earlier round (ADR-0032, amended; ADR-0025).
+- **The requirement itself can back a finding.** When the documents are analysed section by
+  section, a finding taken from the requirement's description, structured fields or decided
+  intent can now cite the requirement. Before, it could cite only the section's passages or an
+  answer, so such findings were unsupportable. They show no document under "Where this came
+  from", as in an analysis without documents. Prompt version `analysis-v26-requirement-citations`
+  re-runs cached section analyses once. No migration.
+
+- **Analysis no longer fails when consolidation repeats a figure from a document.** With
+  structured documents, the last step reads only the earlier findings' statements, so the check
+  that refuses invented figures in intent proposals (ADR-0025) treated a figure the first pass
+  had taken from a document, or kept in a proposal's rationale or success measures, as invented.
+  The whole analysis then failed with "Analysing requirement failed". That step now also counts
+  the documents' text and the earlier proposals' rationale and success measures as support. The
+  model is not shown them, and the fragment cache is unchanged. No migration.
+
 - **platform-kernel v1.3.1** (was v1.3.0): it allows Pillow 13, so only the docling family still
   needs the temporary `[tool.uv]` Pillow override. No code change, no upgrade step.
 

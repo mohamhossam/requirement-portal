@@ -378,6 +378,8 @@ class Settings:
     openrouter_base_url: str = DEFAULT_OPENROUTER_BASE_URL
     openrouter_timeout_seconds: float = DEFAULT_OPENROUTER_TIMEOUT_SECONDS
     openrouter_max_output_tokens: int = DEFAULT_OPENROUTER_MAX_OUTPUT_TOKENS
+    # The chat model's context window, when known; sizes evidence consolidation.
+    openrouter_context_tokens: int | None = None
     openrouter_data_collection: str = DEFAULT_OPENROUTER_DATA_COLLECTION
     local_llm_base_url: str = DEFAULT_LOCAL_LLM_BASE_URL
     local_llm_model: str = ""
@@ -550,6 +552,7 @@ class Settings:
         )
         raw_openrouter_timeout = os.getenv("OPENROUTER_TIMEOUT_SECONDS", "").strip()
         raw_openrouter_max_output = os.getenv("OPENROUTER_MAX_OUTPUT_TOKENS", "").strip()
+        raw_openrouter_context = os.getenv("OPENROUTER_CONTEXT_TOKENS", "").strip()
         raw_openai_max_output = os.getenv("OPENAI_MAX_OUTPUT_TOKENS", "").strip()
         openrouter_data_collection = (
             os.getenv("OPENROUTER_DATA_COLLECTION", "").strip().lower()
@@ -702,6 +705,12 @@ class Settings:
                 raise ConfigurationError(
                     "OPENROUTER_MAX_OUTPUT_TOKENS must be an integer."
                 ) from exc
+        openrouter_context: int | None = None
+        if provider is LLMProvider.OPENROUTER and raw_openrouter_context:
+            try:
+                openrouter_context = int(raw_openrouter_context)
+            except ValueError as exc:
+                raise ConfigurationError("OPENROUTER_CONTEXT_TOKENS must be an integer.") from exc
         openai_max_output = DEFAULT_OPENAI_MAX_OUTPUT_TOKENS
         if provider is LLMProvider.OPENAI and raw_openai_max_output:
             try:
@@ -803,6 +812,7 @@ class Settings:
             openrouter_base_url=openrouter_base_url,
             openrouter_timeout_seconds=openrouter_timeout,
             openrouter_max_output_tokens=openrouter_max_output,
+            openrouter_context_tokens=openrouter_context,
             openrouter_data_collection=openrouter_data_collection,
             local_llm_base_url=local_base_url,
             local_llm_model=local_model,

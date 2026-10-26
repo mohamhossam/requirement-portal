@@ -33,7 +33,15 @@ class RequirementEvidenceAnalyzerPort(Protocol):
         documents: Sequence[AnalysisDocumentContext],
         intent_decisions: Sequence[IntentProposal],
         active_questions: Sequence[ActiveQuestionContext],
-    ) -> RequirementAnalysisCandidate: ...
+        *,
+        figure_support: Sequence[str] = (),
+    ) -> RequirementAnalysisCandidate:
+        """``figure_support`` is further text whose figures a proposal may use.
+
+        Consolidation sees only earlier findings, so it passes the evidence those
+        findings came from; it is never shown to the model.
+        """
+        ...
 
 
 @dataclass(frozen=True)

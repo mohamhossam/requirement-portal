@@ -87,6 +87,7 @@ from smb_requirement_agent.references.infrastructure.knowledge_client import (
     HttpKnowledgeEvents,
     HttpPrecedentInbox,
     HttpReferenceKnowledge,
+    assessment_text,
 )
 from smb_requirement_agent.shared_kernel.citation import PublishedReference
 from tests.unit.analysis.test_product_impact import DRAFTED_OFFERING
@@ -1065,6 +1066,54 @@ def test_an_assessment_is_asked_for_and_decoded_as_the_contract_describes() -> N
         "requirement_id": "REQ-7",
     }
     assert assessment == EXPECTED_ASSESSMENT
+
+
+def test_a_large_analysis_is_sent_within_the_service_bounds_reading_the_same() -> None:
+    """The service accepts 50 items of 10,000 characters and joins them with newlines."""
+    seen: list[httpx.Request] = []
+    facts = tuple(
+        f"Fact {number}: bundles of plan {number} carry consent." for number in range(200)
+    )
+
+    HttpArchitectureAssessment(_client(_answering(ASSESSMENT), seen)).assess(
+        AssessmentQuery(("Voice bundle", "  ", *facts), ("BCRM",), "rel-7", "REQ-7")
+    )
+
+    (request,) = seen
+    _assert_in_contract(request)
+    sent = json.loads(request.content)["text"]
+    assert len(sent) <= 50
+    assert all(len(item) <= 10_000 for item in sent)
+    assert "\n".join(sent) == "\n".join(("Voice bundle", *facts))
+
+
+def test_text_within_the_bounds_is_sent_as_it_is() -> None:
+    items = tuple(f"Item {number}" for number in range(50))
+
+    assert assessment_text(items) == items
+
+
+def test_an_item_longer_than_the_service_accepts_is_split_at_a_space() -> None:
+    long_item = " ".join(["consent"] * 3000)
+
+    parts = assessment_text((long_item,))
+
+    assert len(parts) == 3
+    assert all(len(part) <= 10_000 for part in parts)
+    assert " ".join(parts) == long_item
+
+
+def test_text_past_the_service_total_is_cut_with_a_warning(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    items = tuple("x" * 9_000 for _ in range(60))
+
+    with caplog.at_level("WARNING"):
+        sent = assessment_text(items)
+
+    assert len(sent) == 50
+    assert sent == items[:50]
+    assert "90000 characters left out" in caplog.text
 
 
 def test_the_precedents_an_assessment_weighed_are_allowed_and_not_needed() -> None:

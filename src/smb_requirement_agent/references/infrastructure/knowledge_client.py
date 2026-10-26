@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import logging
 import re
 from dataclasses import replace
 from datetime import UTC, datetime
@@ -52,6 +53,12 @@ _ASSESSMENT_QUERY = TypeAdapter(AssessmentQuery)
 _ASSESSMENT = TypeAdapter(ArchitectureAssessment)
 # What the knowledge service answers when a view is absent: not found, or no longer live.
 _ABSENT = frozenset({404, 409})
+# The knowledge service's bounds on an assessment's text (its schemas/bounds.py:
+# MAX_ITEMS and MAX_TEXT_CHARACTERS). The pinned contract does not publish them.
+_MAX_TEXT_ITEMS = 50
+_MAX_TEXT_CHARACTERS = 10_000
+
+_log = logging.getLogger(__name__)
 
 
 def _decode[T](adapter: TypeAdapter[T], body: Any, what: str) -> T:
@@ -97,7 +104,9 @@ class HttpArchitectureAssessment:
         try:
             body = self._client.post_json(
                 "/internal/architecture/assess",
-                _ASSESSMENT_QUERY.dump_python(query, mode="json"),
+                _ASSESSMENT_QUERY.dump_python(
+                    replace(query, text=assessment_text(query.text)), mode="json"
+                ),
                 idempotent=True,
             )
         except ServiceResponseError as refused:
@@ -105,6 +114,47 @@ class HttpArchitectureAssessment:
                 return None
             raise
         return _kept_draft(_decode(_ASSESSMENT, body, "an assessment"), body)
+
+
+def assessment_text(items: tuple[str, ...]) -> tuple[str, ...]:
+    """The text packed within the knowledge service's bounds, reading the same.
+
+    The service joins the items with newlines before it reads them, so consecutive
+    items joined the same way are what it would have read. Items are packed only when
+    there are more than it accepts; one longer than an item may be is split at a space.
+    Past the total it accepts, the end is left out, and a warning says how much.
+    """
+    pieces = [piece for item in items for piece in _within_item_limit(item.strip()) if piece]
+    if len(pieces) <= _MAX_TEXT_ITEMS:
+        return tuple(pieces)
+    packed: list[str] = []
+    for piece in pieces:
+        if packed and len(packed[-1]) + 1 + len(piece) <= _MAX_TEXT_CHARACTERS:
+            packed[-1] = f"{packed[-1]}\n{piece}"
+        else:
+            packed.append(piece)
+    if len(packed) > _MAX_TEXT_ITEMS:
+        left_out = sum(len(piece) for piece in packed[_MAX_TEXT_ITEMS:])
+        # Counts only: operational logs never carry requirement text.
+        _log.warning(
+            "Assessment text exceeds the knowledge service's bounds; %d characters left out.",
+            left_out,
+        )
+        packed = packed[:_MAX_TEXT_ITEMS]
+    return tuple(packed)
+
+
+def _within_item_limit(text: str) -> list[str]:
+    """One item as parts no longer than the service accepts, split at spaces when it can."""
+    parts: list[str] = []
+    while len(text) > _MAX_TEXT_CHARACTERS:
+        cut = text.rfind(" ", 0, _MAX_TEXT_CHARACTERS + 1)
+        if cut <= 0:
+            cut = _MAX_TEXT_CHARACTERS
+        parts.append(text[:cut].rstrip())
+        text = text[cut:].lstrip()
+    parts.append(text)
+    return parts
 
 
 def _kept_draft(assessment: ArchitectureAssessment, body: Any) -> ArchitectureAssessment:

@@ -2,7 +2,7 @@
 
 from collections.abc import Sequence
 from datetime import datetime
-from typing import NotRequired, Protocol, TypedDict
+from typing import Literal, NotRequired, Protocol, TypedDict
 
 from smb_requirement_agent.analysis.domain.product_impact import (
     ProductImpact,
@@ -106,6 +106,13 @@ class IntentProposalCandidate(TypedDict):
     reference_provenance: NotRequired[Provenance]
 
 
+class SetAsideCandidate(TypedDict):
+    """A generated item removed instead of failing the whole analysis (ADR-0032)."""
+
+    key: str
+    reason: Literal["unsupported", "invented_figure"]
+
+
 class RequirementAnalysisCandidate(TypedDict):
     """A provider-independent structured representation of an analysis result."""
 
@@ -123,6 +130,13 @@ class RequirementAnalysisCandidate(TypedDict):
     new_uncertainties: NotRequired[list[UncertaintyCandidate]]
     evidence_references: NotRequired[dict[str, list[AnalysisEvidenceReferenceCandidate]]]
     clarification_references: NotRequired[dict[str, list[int]]]
+    # Evidence keys the requirement itself supports: its title, description,
+    # structured context or owner-confirmed intent. They carry no document reference.
+    requirement_references: NotRequired[list[str]]
+    set_aside: NotRequired[list[SetAsideCandidate]]
+    # Keys of active AI questions the consolidation fallback retained without a new
+    # citation: no model reviewed them this round, and they keep their earlier support.
+    carried_questions: NotRequired[list[str]]
     stage_provenance: NotRequired[list[AnalysisStageProvenanceCandidate]]
     reference_grounding: NotRequired[ReferenceGroundingStatus]
     product_impact: NotRequired[ProductImpact]

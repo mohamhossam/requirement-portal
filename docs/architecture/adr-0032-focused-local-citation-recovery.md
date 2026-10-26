@@ -4,7 +4,8 @@
 
 Accepted. The document-only support requirement is superseded by
 [ADR-0044](adr-0044-human-answer-analysis-citations.md); bounded recovery and atomic publication
-remain in force.
+remain in force. Amended 2026-10-25: the requirement content is a citable source, and an
+unsupported new item is set aside instead of failing the analysis (see the last section).
 
 ## Context
 
@@ -205,3 +206,47 @@ publication remain unchanged. Version `analysis-v24-citation-business-context` i
 fragments. This fixes a concrete input-wiring omission without a new domain/API provenance type,
 provider configuration, migration or automatic failed-job retry. Live semantic compliance remains
 unverified after the change; deterministic transport fixtures cannot establish it.
+
+### Requirement content as a source, and setting aside unsupported items — 2026-10-25
+
+Three analyses of one requirement failed in a row on 2026-10-25, each on a different model and
+for a different single item. In the last, GPT-5.1 analysed the first section of the documents,
+then reported one of its own findings unsupported during citation repair, and the analysis was
+discarded with every valid finding in it. Two causes were general, not tied to that model:
+
+- A section pass shows the model the requirement description, structured context and
+  owner-decided intent, but an output could cite only that section's blocks or a human answer.
+  Recovery labelled the requirement "relevance only, not numbered evidence". A correct finding
+  drawn from the requirement itself could never be supported in a section pass.
+- One unsupported item, or one proposal with an invented figure (ADR-0025), failed the whole
+  analysis. A stronger model makes this rarer, not impossible.
+
+Decision:
+
+- **The requirement is a third source.** Citations and recovery decisions carry
+  `requirement_source`. The analysis prompt's citation rules and the recovery request present
+  the requirement content (description, structured context and owner-decided intent) as
+  citable for what it states or decides. It still cannot answer a decision it does not state or
+  stand in for document content. The candidate records these keys in `requirement_references`;
+  the item keeps empty document references, as analyses without documents already do, so there
+  is no new domain or API provenance type and no migration. Consolidation carries the keys as
+  synthetic "Requirement" blocks, as it carries human answers, and restores them afterwards.
+- **An unsupported new item is set aside, not fatal.** When recovery marks outputs
+  `supported=false`, those outputs are removed from that response and the rest is attached and
+  validated as before. The same applies to a proposal whose statement, rationale or success
+  measures name a figure the sources lack: it is removed in normalization rather than failing
+  the response. Each removal is recorded in the candidate's `set_aside` (key and reason,
+  `unsupported` or `invented_figure`) and logged as counts by reason, never text. Nothing
+  without support is ever presented, so the safety goal of this ADR and ADR-0025 is unchanged.
+- **What still fails.** A response where every output is unsupported; an unsupported question
+  that a review retained or replaced (the round must keep the question that review accounts
+  for); and any malformed mapping, which keeps its one structural correction. An unsupported
+  decision's own block and answer numbers are ignored before validation, since they no longer
+  matter.
+
+Version `analysis-v26-requirement-citations` invalidates earlier fragments. Not done here: the
+browser does not yet say how many items were set aside or label requirement-supported items
+("Where this came from" shows nothing for them, as for an analysis without documents). Turning
+a set-aside proposal into an open question, splitting a packet when output is truncated, and a
+second recovery attempt with feedback are separate follow-ups. Deterministic fixtures cover the
+behaviour; whether live models use `requirement_source` well remains unverified.

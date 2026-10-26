@@ -25,6 +25,7 @@ from smb_kernel.llm.structured_output import StructuredOutputClient
 
 from smb_requirement_agent.analysis.application.errors import RequirementAnalysisGenerationError
 from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
+    ActiveQuestionContext,
     AnalysisDocumentContext,
     RequirementAnalysisCandidate,
 )
@@ -34,6 +35,7 @@ from smb_requirement_agent.analysis.application.use_cases.evidence_analysis impo
 )
 from smb_requirement_agent.analysis.domain.value_objects import (
     ClarificationKind,
+    ClarificationSource,
     HumanClarification,
     IntentProposal,
     IntentProposalId,
@@ -136,6 +138,7 @@ def analyze(
     documents: tuple[AnalysisDocumentContext, ...] | None = None,
     intent_decisions: tuple[IntentProposal, ...] = (),
     source_outcome: str | None = None,
+    active_questions: tuple[ActiveQuestionContext, ...] = (),
 ) -> dict[str, Any]:
     evidence = documents if documents is not None else (document(),)
 
@@ -218,7 +221,7 @@ def analyze(
         )
         try:
             candidate = adapter.analyze_evidence(
-                requirement, clarifications, evidence, intent_decisions, ()
+                requirement, clarifications, evidence, intent_decisions, active_questions
             )
             ValidateAnalysisCitations().execute(candidate, evidence, clarifications)
             return dict(candidate)
@@ -353,7 +356,7 @@ def test_section_analysis_does_not_reprove_governed_outcome(
 
 
 @pytest.mark.parametrize("provider", PROVIDERS)
-def test_new_unsupported_outcome_is_not_excluded_as_governed_intent(
+def test_new_unsupported_outcome_is_set_aside_not_excluded_as_governed_intent(
     provider: str, tmp_path: Path
 ) -> None:
     response = analysis()
@@ -364,9 +367,12 @@ def test_new_unsupported_outcome_is_not_excluded_as_governed_intent(
     recovery = mapping()
     recovery["decisions"].append({"output_number": 25, "supported": False})
     requests: list[dict[str, Any]] = []
-    with pytest.raises(RequirementAnalysisGenerationError) as failure:
-        analyze(provider, [response, recovery], requests, tmp_path)
-    assert describe_public_error(failure.value).code == "model_invalid_citations"
+    result = analyze(provider, [response, recovery], requests, tmp_path)
+    assert result["intent_proposals"] == []
+    assert result["known_facts"] == analysis()["known_facts"]
+    assert result["set_aside"] == [
+        {"key": "intent_proposal:provide unrelated financial reporting.", "reason": "unsupported"}
+    ]
     assert len(requests) == 2
 
 
@@ -413,7 +419,7 @@ def test_gap_questions_cite_operation_context_without_becoming_facts(
 @pytest.mark.parametrize("provider", PROVIDERS)
 @pytest.mark.parametrize("correction", [False, True])
 @pytest.mark.parametrize("claim", [False, True])
-def test_recovery_retains_business_context_and_rationale_without_creating_evidence(
+def test_recovery_retains_business_context_and_rationale_without_creating_document_evidence(
     provider: str, correction: bool, claim: bool, tmp_path: Path
 ) -> None:
     flow = "An account may shift to a new location after network eligibility checks."
@@ -453,16 +459,19 @@ def test_recovery_retains_business_context_and_rationale_without_creating_eviden
     responses: list[object] = [response, invalid, recovery] if correction else [response, recovery]
     requests: list[dict[str, Any]] = []
     if claim:
-        with pytest.raises(RequirementAnalysisGenerationError) as failure:
-            analyze(
-                provider,
-                responses,
-                requests,
-                tmp_path,
-                documents=(evidence,),
-                intent_decisions=(decision,),
-            )
-        assert describe_public_error(failure.value).code == "model_invalid_citations"
+        result = analyze(
+            provider,
+            responses,
+            requests,
+            tmp_path,
+            documents=(evidence,),
+            intent_decisions=(decision,),
+        )
+        assert result["known_facts"] == [flow]
+        assert result["set_aside"] == [
+            {"key": "known_fact:" + fact.casefold(), "reason": "unsupported"}
+        ]
+        assert "requirement_references" not in result
     else:
         result = analyze(
             provider,
@@ -485,7 +494,7 @@ def test_recovery_retains_business_context_and_rationale_without_creating_eviden
         text = content[0]["text"] if isinstance(content, list) else content
         prompts.append(text)
         assert "Owner-confirmed desired_outcome: " + outcome in text
-        assert "RELEVANCE ONLY, NOT NUMBERED EVIDENCE" in text
+        assert "REQUIREMENT CONTENT - CITE WITH requirement_source=true" in text
         if not claim:
             assert "Clarification rationale: " + rationale in text
     if correction:
@@ -540,7 +549,7 @@ def test_invalid_analysis_shape_has_safe_provider_error_without_retry(
 
 @pytest.mark.parametrize("provider", PROVIDERS)
 @pytest.mark.parametrize("invented_exception", [False, True])
-def test_mandatory_phone_rule_preserved_and_unsupported_exception_rejected(
+def test_mandatory_phone_rule_preserved_and_unsupported_exception_set_aside(
     provider: str, invented_exception: bool, tmp_path: Path
 ) -> None:
     source = "IP Phone shall be mandatory for each user line."
@@ -561,18 +570,19 @@ def test_mandatory_phone_rule_preserved_and_unsupported_exception_rejected(
         ]
     }
     requests: list[dict[str, Any]] = []
+    result = analyze(provider, [response, recovery], requests, tmp_path, documents=(evidence,))
+    assert result["known_facts"] == [supported_fact]
+    refs = result["evidence_references"]["known_fact:" + supported_fact.casefold()]
+    assert [ref["block_id"] for ref in refs] == ["block-1"]
     if invented_exception:
-        with pytest.raises(RequirementAnalysisGenerationError) as failure:
-            analyze(provider, [response, recovery], requests, tmp_path, documents=(evidence,))
-        assert describe_public_error(failure.value).code == "model_invalid_citations"
+        assert result["set_aside"] == [
+            {"key": "known_fact:" + unsupported_fact.casefold(), "reason": "unsupported"}
+        ]
         events = [json.loads(line) for line in (tmp_path / "trace.jsonl").read_text().splitlines()]
         rejected = next(e for e in events if e["event"] == "analysis.citation_repair_unsupported")
         assert rejected["details"]["unsupported_output_numbers"] == [2]
     else:
-        result = analyze(provider, [response, recovery], requests, tmp_path, documents=(evidence,))
-        assert result["known_facts"] == [supported_fact]
-        refs = result["evidence_references"]["known_fact:" + supported_fact.casefold()]
-        assert [ref["block_id"] for ref in refs] == ["block-1"]
+        assert "set_aside" not in result
     assert len(requests) == 2
 
 
@@ -596,16 +606,109 @@ def test_second_invalid_mapping_fails_with_safe_message(provider: str, tmp_path:
 
 
 @pytest.mark.parametrize("provider", PROVIDERS)
-@pytest.mark.parametrize("malformed", [False, True])
-def test_unsupported_content_is_terminal_even_with_malformed_numbers(
-    provider: str, malformed: bool, tmp_path: Path
-) -> None:
+def test_unsupported_content_is_set_aside_and_the_rest_kept(provider: str, tmp_path: Path) -> None:
     requests: list[dict[str, Any]] = []
     unsupported = mapping()
-    unsupported["decisions"][12].update(supported=False, block_numbers=[13] if malformed else [])
+    unsupported["decisions"][12].update(supported=False, block_numbers=[])
+    result = analyze(provider, [analysis(), unsupported], requests, tmp_path)
+    # Output 13 is the first constraint.
+    assert result["known_facts"] == analysis()["known_facts"]
+    assert result["constraints"] == analysis()["constraints"][1:]
+    assert result["set_aside"] == [
+        {"key": "constraint:plan 1 requires consent.", "reason": "unsupported"}
+    ]
+    assert len(requests) == 2
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+def test_unsupported_decision_with_out_of_range_numbers_still_fails(
+    provider: str, tmp_path: Path
+) -> None:
+    # The provider clients refuse the whole response against the packet schema, so
+    # a malformed mapping is never mistaken for a clean set-aside.
+    requests: list[dict[str, Any]] = []
+    unsupported = mapping()
+    unsupported["decisions"][12].update(supported=False, block_numbers=[13])
     with pytest.raises(RequirementAnalysisGenerationError, match="1 focused attempt"):
         analyze(provider, [analysis(), unsupported], requests, tmp_path)
     assert len(requests) == 2
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+def test_analysis_with_nothing_supported_still_fails(provider: str, tmp_path: Path) -> None:
+    requests: list[dict[str, Any]] = []
+    unsupported = mapping()
+    for decision in unsupported["decisions"]:
+        decision.update(supported=False, block_numbers=[])
+    with pytest.raises(RequirementAnalysisGenerationError, match="1 focused attempt") as failure:
+        analyze(provider, [analysis(), unsupported], requests, tmp_path)
+    assert describe_public_error(failure.value).code == "model_invalid_citations"
+    assert len(requests) == 2
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+def test_unsupported_retained_question_is_never_set_aside(provider: str, tmp_path: Path) -> None:
+    question = "Which plans allow consent by proxy?"
+    active = ActiveQuestionContext(
+        question_id="question-1",
+        kind=ClarificationKind.OPEN_QUESTION,
+        subject=question,
+        rationale="Consent rules differ by plan.",
+        source=ClarificationSource.AI,
+    )
+    response = analysis()
+    response["active_question_reviews"] = [
+        {"question_id": "question-1", "action": "retain", "rationale": "Still open."}
+    ]
+    recovery = mapping()
+    recovery["decisions"].append({"output_number": 25, "supported": False})
+    requests: list[dict[str, Any]] = []
+    # The round must keep a question its review retained, so it cannot be dropped.
+    with pytest.raises(RequirementAnalysisGenerationError, match="1 focused attempt"):
+        analyze(provider, [response, recovery], requests, tmp_path, active_questions=(active,))
+    assert len(requests) == 2
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+@pytest.mark.parametrize("needs_repair", [False, True])
+def test_requirement_content_supports_a_finding_without_document_evidence(
+    provider: str, needs_repair: bool, tmp_path: Path
+) -> None:
+    requirement_fact = "Consent applies to every plan."
+    response = analysis()
+    response["known_facts"] = [*response["known_facts"], requirement_fact]
+    citations: list[dict[str, Any]] = [
+        {"kind": "known_fact", "subject": fact, "block_ids": [f"block-{i}"]}
+        for i, fact in enumerate(analysis()["known_facts"], start=1)
+    ] + [
+        {"kind": "constraint", "subject": constraint, "block_ids": [f"block-{i}"]}
+        for i, constraint in enumerate(analysis()["constraints"], start=1)
+    ]
+    if not needs_repair:
+        citations.append(
+            {"kind": "known_fact", "subject": requirement_fact, "requirement_source": True}
+        )
+    response["evidence_citations"] = citations
+    recovery = {
+        "decisions": [
+            {"output_number": i, "supported": True, "block_numbers": [(i - 1) % 12 + 1]}
+            for i in range(1, 13)
+        ]
+        + [{"output_number": 13, "supported": True, "requirement_source": True}]
+        + [
+            {"output_number": i, "supported": True, "block_numbers": [(i - 2) % 12 + 1]}
+            for i in range(14, 26)
+        ]
+    }
+    requests: list[dict[str, Any]] = []
+    result = analyze(
+        provider, [response, recovery] if needs_repair else [response], requests, tmp_path
+    )
+    key = "known_fact:" + requirement_fact.casefold()
+    assert result["requirement_references"] == [key]
+    assert result["evidence_references"][key] == []
+    assert "set_aside" not in result
+    assert len(requests) == (2 if needs_repair else 1)
 
 
 @pytest.mark.parametrize("provider", PROVIDERS)
@@ -806,3 +909,27 @@ def test_unknown_human_answer_never_bypasses_evidence_validation(
         analyze(provider, [analysis(), repaired, repaired], requests, tmp_path)
     assert describe_public_error(failure.value).code == "model_invalid_citations"
     assert len(requests) == 3
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+def test_repeated_items_are_cited_once_instead_of_failing_as_duplicates(
+    provider: str, tmp_path: Path
+) -> None:
+    response = analysis()
+    first_fact = response["known_facts"][0]
+    # The same fact again in other case and spacing, and one statement proposed twice.
+    response["known_facts"].append("  " + first_fact.upper().replace(" ", "  "))
+    statement = "Plans require consent before activation."
+    response["business_rule_proposals"] = [{"statement": statement, "rationale": "Source rule."}]
+    response["constraint_proposals"] = [
+        {"statement": statement.lower(), "rationale": "Source boundary."}
+    ]
+    recovery = mapping()
+    recovery["decisions"].append({"output_number": 25, "supported": True, "block_numbers": [1]})
+    requests: list[dict[str, Any]] = []
+
+    result = analyze(provider, [response, recovery], requests, tmp_path)
+
+    assert result["known_facts"] == analysis()["known_facts"]
+    assert [item["statement"] for item in result["intent_proposals"]] == [statement]
+    assert len(requests) == 2

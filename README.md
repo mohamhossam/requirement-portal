@@ -311,6 +311,7 @@ cp .env.example .env
 | `OPENROUTER_BASE_URL` | No | HTTPS OpenRouter API root. Defaults to `https://openrouter.ai/api/v1`. |
 | `OPENROUTER_TIMEOUT_SECONDS` | No | Positive request timeout. Defaults to `120`. |
 | `OPENROUTER_MAX_OUTPUT_TOKENS` | No | Positive chat output limit. Defaults to `8192`. |
+| `OPENROUTER_CONTEXT_TOKENS` | No | The chat model's context window in tokens, larger than the output limit. When set, analysis consolidates document findings in passes this large instead of 60,000 characters. |
 | `OPENROUTER_DATA_COLLECTION` | No | Provider-routing privacy policy. Defaults to and should remain `deny`. |
 | `LOCAL_LLM_MODEL` | Local only | Model identifier loaded by the local server. For Ollama, run `scripts\setup-local-ollama-model.cmd` and use `smb-qwen3-vl:8b-16k`. |
 | `DEBUG_TRACE_ENABLED` | No | `true` writes an opt-in, sensitive JSONL diagnostic trace. Defaults to `false`. |

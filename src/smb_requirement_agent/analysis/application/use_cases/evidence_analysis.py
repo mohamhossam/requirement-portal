@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import re
 from collections.abc import Callable, Mapping, Sequence
 from copy import deepcopy
@@ -14,12 +15,14 @@ from smb_kernel.time.clock import ClockPort
 from smb_requirement_agent.analysis.application.errors import RequirementAnalysisGenerationError
 from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     ActiveQuestionContext,
+    AmbiguityCandidate,
     AnalysisDocumentContext,
     AnalysisEvidenceBlock,
     AnalysisEvidenceReferenceCandidate,
     AnalysisImageAsset,
     AnalysisStageProvenanceCandidate,
     IntentProposalCandidate,
+    OpenQuestionCandidate,
     QuestionReviewCandidate,
     RequirementAnalysisCandidate,
     RequirementAnalyzerPort,
@@ -46,6 +49,8 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     QuestionChangeAction,
 )
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
+
+_log = logging.getLogger(__name__)
 
 PACKET_PROMPT_RESERVE_CHARACTERS = 12_000
 MAX_PACKET_IMAGES = 3
@@ -175,8 +180,10 @@ class ValidateAnalysisCitations:
         }
         evidence = candidate.get("evidence_references", {})
         human_evidence = candidate.get("clarification_references", {})
-        expected = _candidate_keys(candidate)
-        if set(evidence) | set(human_evidence) != expected:
+        requirement_evidence = set(candidate.get("requirement_references", []))
+        # A question carried by the consolidation fallback keeps its earlier support.
+        expected = _candidate_keys(candidate) - set(candidate.get("carried_questions", []))
+        if set(evidence) | set(human_evidence) | requirement_evidence != expected:
             raise RequirementAnalysisGenerationError(
                 "Structured analysis did not cite every generated item."
             )
@@ -193,7 +200,7 @@ class ValidateAnalysisCitations:
                 raise RequirementAnalysisGenerationError(
                     "Structured analysis returned invalid human answer citations."
                 )
-            if not references and not numbers:
+            if not references and not numbers and key not in requirement_evidence:
                 raise RequirementAnalysisGenerationError(
                     "Structured analysis returned blank or out-of-packet citations."
                 )
@@ -237,6 +244,7 @@ class AnalyzeEvidencePacket:
         intent_decisions: Sequence[IntentProposal],
         active_questions: Sequence[ActiveQuestionContext] = (),
         stage: str = "evidence_packet",
+        figure_support: Sequence[str] = (),
     ) -> tuple[
         RequirementAnalysisCandidate,
         AnalysisStageProvenanceCandidate,
@@ -263,11 +271,18 @@ class AnalyzeEvidencePacket:
                 json.dumps(cache_input, sort_keys=True, separators=(",", ":"), default=str).encode()
             ).hexdigest()
         )
+        # figure_support stays out of the key: it only widens what the figure check
+        # accepts, and a cached fragment has already passed that check.
         cached = self._cache.get(cache_key)
         pending: PendingEvidenceFragment | None = None
         if cached is None:
             candidate = self._analyzer.analyze_evidence(
-                requirement, clarifications, packet, intent_decisions, active_questions
+                requirement,
+                clarifications,
+                packet,
+                intent_decisions,
+                active_questions,
+                figure_support=figure_support,
             )
             self._validator.execute(candidate, packet, clarifications)
             cached = EvidenceFragmentCacheEntry(deepcopy(candidate), self._clock.now())
@@ -310,6 +325,7 @@ class ConsolidateEvidenceAnalysis:
         fragments: Sequence[RequirementAnalysisCandidate],
         intent_decisions: Sequence[IntentProposal],
         active_questions: Sequence[ActiveQuestionContext],
+        figure_support: Sequence[str] = (),
     ) -> tuple[
         RequirementAnalysisCandidate,
         list[AnalysisStageProvenanceCandidate],
@@ -322,7 +338,9 @@ class ConsolidateEvidenceAnalysis:
         pending_cache_entries: list[PendingEvidenceFragment] = []
         for _round in range(6):
             merged = self._merge(current, ())
-            documents, source_references, human_sources = _consolidation_documents(merged)
+            documents, source_references, human_sources, requirement_sources = (
+                _consolidation_documents(merged)
+            )
             packets = self._planner.execute(documents)
             if not packets:
                 raise RequirementAnalysisGenerationError(
@@ -338,8 +356,11 @@ class ConsolidateEvidenceAnalysis:
                     intent_decisions,
                     active_questions if final_round else (),
                     "evidence_consolidation",
+                    figure_support,
                 )
-                _restore_source_references(candidate, source_references, human_sources)
+                _restore_source_references(
+                    candidate, source_references, human_sources, requirement_sources
+                )
                 next_round.append(candidate)
                 provenance.append(stage)
                 if pending is not None:
@@ -347,13 +368,16 @@ class ConsolidateEvidenceAnalysis:
             if final_round:
                 return next_round[0], provenance, pending_cache_entries
             if len(next_round) >= len(current):
-                raise RequirementAnalysisGenerationError(
-                    "Evidence findings could not be consolidated within the provider "
-                    "context budget."
+                return (
+                    _merged_fallback(next_round, active_questions, "no smaller round"),
+                    provenance,
+                    pending_cache_entries,
                 )
             current = next_round
-        raise RequirementAnalysisGenerationError(
-            "Evidence consolidation exceeded the supported hierarchy depth."
+        return (
+            _merged_fallback(current, active_questions, "hierarchy depth"),
+            provenance,
+            pending_cache_entries,
         )
 
     @staticmethod
@@ -401,6 +425,17 @@ class ConsolidateEvidenceAnalysis:
                     human_evidence[key] = sorted(set((*human_evidence.get(key, []), *numbers)))
         if human_evidence:
             result["clarification_references"] = human_evidence
+        result_keys = _candidate_keys(result)
+        requirement_evidence = sorted(
+            {
+                key
+                for fragment in fragments
+                for key in fragment.get("requirement_references", [])
+                if key in result_keys
+            }
+        )
+        if requirement_evidence:
+            result["requirement_references"] = requirement_evidence
         result["question_reviews"] = [
             QuestionReviewCandidate(
                 question_id=item["question_id"],
@@ -490,6 +525,7 @@ class StructuredRequirementAnalyzer(RequirementAnalyzerPort):
             fragments,
             intent_decisions,
             active_questions,
+            _figure_support(evidence_documents, fragments),
         )
         stages.extend(consolidation_stages)
         pending_cache_entries.extend(consolidation_pending)
@@ -506,18 +542,172 @@ class StructuredRequirementAnalyzer(RequirementAnalyzerPort):
         return result
 
 
+def _merged_fallback(
+    fragments: Sequence[RequirementAnalysisCandidate],
+    active_questions: Sequence[ActiveQuestionContext],
+    reason: str,
+) -> RequirementAnalysisCandidate:
+    """Merge validated findings when the model cannot consolidate them (ADR-0029, 2026-10-25).
+
+    Every fragment already passed citation validation against real sources, so the merge
+    keeps exact-duplicate findings once and their references. No model reviews the active
+    questions here: each AI question is retained, and one no finding repeats is carried
+    without a new citation. A finding that repeats a human question is dropped.
+    """
+    _log.warning(
+        "Evidence consolidation could not finish (%s); keeping %d validated fragment(s) merged.",
+        reason,
+        len(fragments),
+    )
+    result = ConsolidateEvidenceAnalysis._merge(fragments, active_questions)
+    human = {
+        (item["kind"], item["subject"].strip().casefold())
+        for item in active_questions
+        if item["source"] is ClarificationSource.HUMAN
+    }
+    retained = [item for item in active_questions if item["source"] is ClarificationSource.AI]
+    _remove_uncertainties(result, human)
+    present = {
+        (item["kind"], item["subject"].strip().casefold()) for item in _uncertainties(result)
+    }
+    carried: list[str] = []
+    for item in retained:
+        identity = item["kind"], item["subject"].strip().casefold()
+        if identity in present:
+            continue
+        _append_uncertainty(result, item["kind"], item["subject"].strip(), item["rationale"])
+        carried.append(analysis_evidence_key(item["kind"].value, item["subject"].strip()))
+    if carried:
+        result["carried_questions"] = carried
+    retained_keys = {(item["kind"], item["subject"].strip().casefold()) for item in retained}
+    result["new_uncertainties"] = [
+        item
+        for item in _uncertainties(result)
+        if (item["kind"], item["subject"].strip().casefold()) not in retained_keys
+    ]
+    return result
+
+
+def _remove_uncertainties(
+    candidate: RequirementAnalysisCandidate,
+    identities: set[tuple[ClarificationKind, str]],
+) -> None:
+    if not identities:
+        return
+    removed: set[str] = set()
+
+    def keep(kind: ClarificationKind, subject: str) -> bool:
+        if (kind, subject.strip().casefold()) not in identities:
+            return True
+        removed.add(analysis_evidence_key(kind.value, subject))
+        return False
+
+    candidate["assumptions"] = [
+        item for item in candidate["assumptions"] if keep(ClarificationKind.ASSUMPTION, item)
+    ]
+    candidate["open_questions"] = [
+        item
+        for item in candidate["open_questions"]
+        if keep(ClarificationKind.OPEN_QUESTION, item["question"])
+    ]
+    candidate["ambiguities"] = [
+        item
+        for item in candidate["ambiguities"]
+        if keep(ClarificationKind.AMBIGUITY, item["statement"])
+    ]
+    candidate["potential_dependencies"] = [
+        item
+        for item in candidate["potential_dependencies"]
+        if keep(ClarificationKind.POTENTIAL_DEPENDENCY, item)
+    ]
+    for key in removed:
+        candidate.get("evidence_references", {}).pop(key, None)
+        candidate.get("clarification_references", {}).pop(key, None)
+    if "requirement_references" in candidate:
+        candidate["requirement_references"] = [
+            key for key in candidate["requirement_references"] if key not in removed
+        ]
+
+
+def _append_uncertainty(
+    candidate: RequirementAnalysisCandidate,
+    kind: ClarificationKind,
+    subject: str,
+    rationale: str | None,
+) -> None:
+    if kind is ClarificationKind.ASSUMPTION:
+        candidate["assumptions"].append(subject)
+    elif kind is ClarificationKind.OPEN_QUESTION:
+        candidate["open_questions"].append(
+            OpenQuestionCandidate(question=subject, rationale=rationale or "")
+        )
+    elif kind is ClarificationKind.AMBIGUITY:
+        candidate["ambiguities"].append(
+            AmbiguityCandidate(statement=subject, reason=rationale or "")
+        )
+    else:
+        candidate["potential_dependencies"].append(subject)
+
+
+def _figure_support(
+    documents: Sequence[AnalysisDocumentContext],
+    fragments: Sequence[RequirementAnalysisCandidate],
+) -> tuple[str, ...]:
+    """The evidence behind packet findings, for the figures consolidation repeats.
+
+    Consolidation reads finding statements only, so a figure a packet took from its
+    document, or kept in a proposal's rationale or success measures, would otherwise
+    look invented.
+    """
+    return (
+        *(document["extracted_text"] for document in documents),
+        *(
+            block.get("text") or ""
+            for document in documents
+            for block in document.get("evidence_blocks", [])
+        ),
+        *(
+            text
+            for fragment in fragments
+            for proposal in fragment["intent_proposals"]
+            for text in (
+                proposal["statement"],
+                proposal["rationale"],
+                *proposal["success_measures"],
+            )
+        ),
+    )
+
+
 def _consolidation_documents(
     candidate: RequirementAnalysisCandidate,
 ) -> tuple[
     tuple[AnalysisDocumentContext, ...],
     dict[str, AnalysisEvidenceReferenceCandidate],
     dict[str, list[int]],
+    set[str],
 ]:
     statements = _statements_by_evidence_key(candidate)
     blocks: dict[str, AnalysisEvidenceBlock] = {}
     source_references: dict[str, AnalysisEvidenceReferenceCandidate] = {}
     source_checksums: set[str] = set()
     human_sources: dict[str, list[int]] = {}
+    requirement_sources: set[str] = set()
+    for key in candidate.get("requirement_references", []):
+        statement = statements.get(key)
+        if statement is None:
+            continue
+        synthetic_id = "requirement-" + hashlib.sha256(key.encode()).hexdigest()[:24]
+        requirement_sources.add(synthetic_id)
+        blocks[synthetic_id] = AnalysisEvidenceBlock(
+            block_id=synthetic_id,
+            kind="paragraph",
+            section_path=["Requirement"],
+            label="Requirement evidence",
+            text=f"Validated requirement-supported finding: {statement}",
+            asset_id=None,
+        )
+        source_checksums.add(hashlib.sha256(("requirement:" + key).encode()).hexdigest())
     for key, numbers in candidate.get("clarification_references", {}).items():
         statement = statements.get(key)
         if statement is None:
@@ -575,17 +765,23 @@ def _consolidation_documents(
             image_assets=[],
         ),
     )
-    return documents, source_references, human_sources
+    return documents, source_references, human_sources, requirement_sources
 
 
 def _restore_source_references(
     candidate: RequirementAnalysisCandidate,
     source_references: Mapping[str, AnalysisEvidenceReferenceCandidate],
     human_sources: Mapping[str, list[int]],
+    requirement_sources: set[str],
 ) -> None:
     for key, references in candidate.get("evidence_references", {}).items():
         restored: list[AnalysisEvidenceReferenceCandidate] = []
         for reference in references:
+            if reference["block_id"] in requirement_sources:
+                supported = candidate.setdefault("requirement_references", [])
+                if key not in supported:
+                    supported.append(key)
+                continue
             numbers = human_sources.get(reference["block_id"])
             if numbers is not None:
                 human = candidate.setdefault("clarification_references", {}).setdefault(key, [])
@@ -707,9 +903,10 @@ def _merge_statements(
     evidence: dict[str, list[AnalysisEvidenceReferenceCandidate]],
 ) -> None:
     for value in source_values:
-        if value.casefold() not in {item.casefold() for item in target_values}:
+        key = analysis_evidence_key(kind, value)
+        if key not in {analysis_evidence_key(kind, item) for item in target_values}:
             target_values.append(value)
-        _merge_evidence(evidence, source, analysis_evidence_key(kind, value))
+        _merge_evidence(evidence, source, key)
 
 
 def _merge_objects[Finding](
@@ -721,10 +918,10 @@ def _merge_objects[Finding](
     evidence: dict[str, list[AnalysisEvidenceReferenceCandidate]],
 ) -> None:
     for value in source_values:
-        subject = subject_of(value)
-        if subject.casefold() not in {subject_of(item).casefold() for item in target_values}:
+        key = analysis_evidence_key(kind, subject_of(value))
+        if key not in {analysis_evidence_key(kind, subject_of(item)) for item in target_values}:
             target_values.append(value)
-        _merge_evidence(evidence, source, analysis_evidence_key(kind, subject))
+        _merge_evidence(evidence, source, key)
 
 
 def _merge_proposals(
@@ -738,13 +935,13 @@ def _merge_proposals(
             item["kind"] is IntentProposalKind.DESIRED_OUTCOME for item in values
         ):
             continue
-        if (value["kind"], value["statement"].casefold()) not in {
-            (item["kind"], item["statement"].casefold()) for item in values
+        # Proposals share one citation kind, so one statement is one proposal.
+        key = analysis_evidence_key("intent_proposal", value["statement"])
+        if key not in {
+            analysis_evidence_key("intent_proposal", item["statement"]) for item in values
         }:
             values.append(value)
-        _merge_evidence(
-            evidence, source, analysis_evidence_key("intent_proposal", value["statement"])
-        )
+        _merge_evidence(evidence, source, key)
 
 
 def _merge_evidence(

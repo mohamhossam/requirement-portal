@@ -581,7 +581,7 @@ def test_local_analysis_cleans_schema_valid_blanks(
     assert result["known_facts"] == ["Supported fact"]
     assert result["open_questions"] == [{"question": "Real question", "rationale": "Rationale"}]
     assert result["model"] == "local-model"
-    assert result["prompt_version"] == "analysis-v25-sectioned-conditional"
+    assert result["prompt_version"] == "analysis-v26-requirement-citations"
 
 
 @patch(

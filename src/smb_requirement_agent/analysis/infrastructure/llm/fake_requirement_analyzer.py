@@ -168,7 +168,10 @@ class FakeRequirementAnalyzer(RequirementAnalyzerPort):
         documents: Sequence[AnalysisDocumentContext],
         intent_decisions: Sequence[IntentProposal],
         active_questions: Sequence[ActiveQuestionContext],
+        *,
+        figure_support: Sequence[str] = (),
     ) -> RequirementAnalysisCandidate:
+        del figure_support
         candidate = self.analyze(
             requirement, clarifications, documents, intent_decisions, active_questions
         )

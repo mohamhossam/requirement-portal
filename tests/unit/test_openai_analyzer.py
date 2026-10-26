@@ -9,6 +9,7 @@ import pytest
 from smb_requirement_agent.analysis.application.errors import RequirementAnalysisGenerationError
 from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
     AnalysisDocumentContext,
+    RequirementAnalysisCandidate,
 )
 from smb_requirement_agent.analysis.domain.value_objects import (
     ClarificationKind,
@@ -215,7 +216,7 @@ def test_openai_analyzer_success(
     assert candidate["assumptions"] == ["Assumption 1"]
     assert candidate["open_questions"][0]["question"] == "Q1"
     assert candidate["model"] == "gpt-4o"
-    assert candidate["prompt_version"] == "analysis-v25-sectioned-conditional"
+    assert candidate["prompt_version"] == "analysis-v26-requirement-citations"
 
     # Verify prompt safety properties
     mock_client.chat.completions.parse.assert_called_once()
@@ -416,30 +417,6 @@ def test_intent_proposals_are_cleaned_deduplicated_and_labelled(
     assert result["intent_proposals"][0]["success_measures"] == ["Completion is observable."]
 
 
-@patch("smb_requirement_agent.analysis.infrastructure.llm.openai_adapters.OpenAI")
-def test_invented_numeric_target_in_intent_proposal_is_rejected(
-    mock_openai_class: MagicMock, dummy_requirement: Requirement
-) -> None:
-    parsed = RequirementAnalysisSchema(
-        known_facts=["Customers need self-service."],
-        desired_outcome_proposal=DesiredOutcomeProposalSchema(
-            statement="Increase completion by 25%.",
-            rationale="A measurable target would be useful.",
-        ),
-    )
-    client = _client_returning(parsed)
-    mock_openai_class.return_value = client
-
-    # The shared analyzer asks once more for a complete analysis, then refuses.
-    with pytest.raises(RequirementAnalysisGenerationError) as raised:
-        OpenAIRequirementAnalyzer(
-            client, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
-        ).analyze(dummy_requirement, ())
-
-    assert client.chat.completions.parse.call_count == 2
-    assert "numeric target" in str(raised.value.__cause__)
-
-
 def _limit_rule_analysis() -> RequirementAnalysisSchema:
     return RequirementAnalysisSchema(
         known_facts=["Calls are capped."],
@@ -450,6 +427,38 @@ def _limit_rule_analysis() -> RequirementAnalysisSchema:
             ),
         ],
     )
+
+
+def _limit_rule_kept(result: RequirementAnalysisCandidate) -> bool:
+    """True when the 1000 rule is proposed; False when it was set aside, not failed."""
+    statements = [item["statement"] for item in result["intent_proposals"]]
+    if statements == ["Off-net calls are capped at 1000 per month."]:
+        assert "set_aside" not in result
+        return True
+    assert statements == []
+    assert result["known_facts"] == ["Calls are capped."]
+    assert result.get("set_aside") == [
+        {
+            "key": "intent_proposal:off-net calls are capped at 1000 per month.",
+            "reason": "invented_figure",
+        }
+    ]
+    return False
+
+
+@patch("smb_requirement_agent.analysis.infrastructure.llm.openai_adapters.OpenAI")
+def test_invented_numeric_target_sets_aside_only_that_proposal(
+    mock_openai_class: MagicMock, requirement_with_outcome: Requirement
+) -> None:
+    client = _client_returning(_limit_rule_analysis())
+
+    result = OpenAIRequirementAnalyzer(
+        client, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
+    ).analyze(requirement_with_outcome, ())
+
+    # One call: the rest of the analysis stands, with no retry and no failure.
+    assert client.chat.completions.parse.call_count == 1
+    assert _limit_rule_kept(result) is False
 
 
 def _limit_decision(status: IntentProposalStatus) -> IntentProposal:
@@ -500,14 +509,28 @@ def test_numeric_target_is_supported_only_by_confirmed_intent(
         client, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
     )
 
-    def analyze() -> object:
-        return analyzer.analyze(requirement_with_outcome, (), (), (_limit_decision(status),))
+    result = analyzer.analyze(requirement_with_outcome, (), (), (_limit_decision(status),))
 
-    if supported:
-        analyze()
-    else:
-        with pytest.raises(RequirementAnalysisGenerationError):
-            analyze()
+    assert _limit_rule_kept(result) is supported
+
+
+@pytest.mark.parametrize("supported", [True, False])
+@patch("smb_requirement_agent.analysis.infrastructure.llm.openai_adapters.OpenAI")
+def test_numeric_target_is_supported_by_consolidation_figure_support(
+    mock_openai_class: MagicMock, requirement_with_outcome: Requirement, supported: bool
+) -> None:
+    # Consolidation sees only finding statements; the figure lives in the evidence.
+    client = _client_returning(_limit_rule_analysis())
+    analyzer = OpenAIRequirementAnalyzer(
+        client, model="gpt-4o", timeout_seconds=60.0, max_output_tokens=8192
+    )
+    figure_support = ("Off-net calls: 1000 max per month.",) if supported else ()
+
+    result = analyzer.analyze_evidence(
+        requirement_with_outcome, (), (), (), (), figure_support=figure_support
+    )
+
+    assert _limit_rule_kept(result) is supported
 
 
 def test_attachment_only_packet_prompt_preserves_source_and_application_association() -> None:

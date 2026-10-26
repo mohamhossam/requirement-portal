@@ -122,6 +122,13 @@ class AnalysisEvidenceCitationSchema(BaseModel):
         default_factory=list,
         description="One-based supplied human answer numbers supporting this output.",
     )
+    requirement_source: bool = Field(
+        default=False,
+        description=(
+            "True when the business requirement content itself (title, description, "
+            "structured context or owner-decided intent) supports this output."
+        ),
+    )
 
 
 class IndexedAnalysisEvidenceDecisionSchema(BaseModel):
@@ -129,6 +136,10 @@ class IndexedAnalysisEvidenceDecisionSchema(BaseModel):
 
     output_number: int = Field(ge=1)
     supported: bool
+    requirement_source: bool = Field(
+        default=False,
+        description="True when the REQUIREMENT CONTENT section supports the output.",
+    )
     clarification_numbers: list[int] = Field(default_factory=list)
     block_numbers: list[int] = Field(
         default_factory=list,
