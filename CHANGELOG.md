@@ -16,6 +16,11 @@ restoring a backup.
   fixed in 4.2.1; opentelemetry-api 1.45.0 carries CVE-2026-114603, fixed in 1.45.1; setuptools
   84.0.0 carries GHSA-xmj3-9gf7-h52w, fixed in 84.1.0. The OpenTelemetry SDK and instrumentation
   packages move with the API to their matching patch releases. No code change, no upgrade step.
+- **Frontend: zod 4.6.7, undici 7.30.1 and vitest 5.0.5 (security).** zod below 4.6.6 can
+  exhaust memory validating oversized constrained collections (GHSA-mrhx-c7xc-m3w5, high);
+  undici 7.30.0 has three advisories (GHSA-4qv8-2p9j-2685, GHSA-f72v-6w45-q472,
+  GHSA-xjj6-f33q-929c, high); vitest 5.0.2 has two moderate ones in its mock registration
+  (test tooling only, never in the served image). No code change, no upgrade step.
 
 - **Product impact is assessed for large analyses.** Requirement work sent the knowledge
   portal one text item per fact, rule, constraint and answer, and the portal accepts at most 50
