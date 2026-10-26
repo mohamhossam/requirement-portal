@@ -11,11 +11,11 @@ restoring a backup.
 
 ## Unreleased
 
-- **filelock 4.2.4 and OpenTelemetry 1.45.1 (security).** filelock 4.0.8 carries
-  CVE-2026-112940 (high: arbitrary file overwrite), CVE-2026-112913 and CVE-2026-112907, fixed
-  in 4.2.1; opentelemetry-api 1.45.0 carries CVE-2026-114603, fixed in 1.45.1. The SDK and
-  instrumentation packages move with the API to their matching patch releases. No code change,
-  no upgrade step.
+- **filelock 4.2.4, OpenTelemetry 1.45.1 and setuptools 84.2.1 (security).** filelock 4.0.8
+  carries CVE-2026-112940 (high: arbitrary file overwrite), CVE-2026-112913 and CVE-2026-112907,
+  fixed in 4.2.1; opentelemetry-api 1.45.0 carries CVE-2026-114603, fixed in 1.45.1; setuptools
+  84.0.0 carries GHSA-xmj3-9gf7-h52w, fixed in 84.1.0. The OpenTelemetry SDK and instrumentation
+  packages move with the API to their matching patch releases. No code change, no upgrade step.
 
 - **Product impact is assessed for large analyses.** Requirement work sent the knowledge
   portal one text item per fact, rule, constraint and answer, and the portal accepts at most 50
