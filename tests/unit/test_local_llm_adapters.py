@@ -870,7 +870,7 @@ def test_local_structured_analysis_repairs_missing_citations_without_rewriting_c
 
 
 @pytest.mark.parametrize(
-    ("recovery", "message"),
+    ("recovery", "message", "calls"),
     [
         (
             IndexedAnalysisEvidenceRecoverySchema(
@@ -882,6 +882,7 @@ def test_local_structured_analysis_repairs_missing_citations_without_rewriting_c
                 ]
             ),
             "remained unusable",
+            2,
         ),
         (
             IndexedAnalysisEvidenceRecoverySchema(
@@ -894,6 +895,7 @@ def test_local_structured_analysis_repairs_missing_citations_without_rewriting_c
                 ]
             ),
             "remained unusable",
+            2,
         ),
         (
             IndexedAnalysisEvidenceRecoverySchema(
@@ -911,6 +913,7 @@ def test_local_structured_analysis_repairs_missing_citations_without_rewriting_c
                 ]
             ),
             "remained unusable",
+            3,
         ),
     ],
 )
@@ -921,6 +924,7 @@ def test_local_structured_analysis_rejects_unusable_citation_repair(
     client_type: MagicMock,
     recovery: IndexedAnalysisEvidenceRecoverySchema,
     message: str,
+    calls: int,
     requirement: Requirement,
 ) -> None:
     client = client_type.return_value
@@ -948,9 +952,8 @@ def test_local_structured_analysis_rejects_unusable_citation_repair(
             (),
         )
 
-    assert client.parse.call_count == (
-        2 if any(not item.supported for item in recovery.decisions) else 3
-    )
+    # A number outside the packet cites nothing, so its output is unsupported at once.
+    assert client.parse.call_count == calls
 
 
 @patch(

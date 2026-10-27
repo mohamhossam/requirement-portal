@@ -72,6 +72,7 @@ from smb_requirement_agent.analysis.infrastructure.llm.schemas.analysis_schema i
     IndexedUncertaintyRationaleRecoverySchema,
     RequirementAnalysisSchema,
     citation_recovery_schema,
+    within_packet,
 )
 from smb_requirement_agent.application.errors import ModelTransportError
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
@@ -633,6 +634,15 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
                     focused = schema.model_validate(dumped, strict=True)
                 except ValidationError as exc:
                     raise response_validation_error(exc, focused.model_dump_json()) from exc
+                focused, dropped = within_packet(
+                    focused, len(outputs), len(blocks), len(clarifications)
+                )
+                if dropped:
+                    self._debug_trace.record(
+                        "analysis.citation_repair_out_of_range_dropped",
+                        attempt=attempt,
+                        number_count=dropped,
+                    )
                 decision_numbers = [item.output_number for item in focused.decisions]
                 if len(decision_numbers) != len(set(decision_numbers)) or set(
                     decision_numbers
