@@ -276,3 +276,48 @@ def test_local_answer_suggester_rejects_an_out_of_range_evidence_number(
 
     with pytest.raises(KnowledgeGenerationError, match="outside the supplied candidates"):
         _adapter().suggest(_requirement(), _question(), (current,), ())
+
+
+@patch(
+    "smb_requirement_agent.knowledge.infrastructure.llm.requirement_knowledge_adapters."
+    "LocalStructuredOutputClient"
+)
+def test_local_answer_suggester_trims_answers_and_citations_past_the_limits(
+    client_type: MagicMock,
+) -> None:
+    schema = AnswerSuggestionListSchema.model_json_schema()
+    item_schema = schema["$defs"]["AnswerSuggestionSchema"]["properties"]
+    assert schema["properties"]["suggestions"]["maxItems"] == 3
+    assert item_schema["cited_evidence_numbers"]["maxItems"] == 5
+    # The transport validates the model's JSON strictly; past the limits it must still pass.
+    client_type.return_value.parse.return_value = AnswerSuggestionListSchema.model_validate_json(
+        json.dumps(
+            {
+                "suggestions": [
+                    {
+                        "answer": f"Answer {index}.",
+                        "rationale": "Supported by evidence.",
+                        "cited_evidence_numbers": [1, 2, 3, 4, 5, 6],
+                    }
+                    for index in range(4)
+                ]
+            }
+        ),
+        strict=True,
+    )
+    chunks = tuple(
+        _chunk(
+            f"{index:064x}",
+            "subject-requirement",
+            KnowledgeSourceKind.CURRENT_ANALYSIS,
+            f"Evidence {index}.",
+        )
+        for index in range(6)
+    )
+
+    result = _adapter().suggest(_requirement(), _question(), chunks, ())
+
+    assert [item.answer for item in result] == ["Answer 0.", "Answer 1.", "Answer 2."]
+    assert all(
+        item.cited_chunk_ids == tuple(chunk.id.value for chunk in chunks[:5]) for item in result
+    )

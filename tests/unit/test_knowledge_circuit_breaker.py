@@ -18,6 +18,9 @@ from smb_kernel.observability.tracing_setup import NO_TRACING
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.interfaces.api.composition.references import build_knowledge_service
+from smb_requirement_agent.references.application.ports.architecture_assessment import (
+    AssessmentQuery,
+)
 from smb_requirement_agent.references.application.ports.historic_corpus import ContentPart
 
 
@@ -48,3 +51,30 @@ def test_failures_through_one_client_pause_the_other(monkeypatch: pytest.MonkeyP
             service.historic_content.page("h-1", 1, ContentPart.PASSAGES, 0, 10)
 
     assert len(sent) == 5
+
+
+def test_an_assessment_the_service_could_not_give_is_asked_for_once(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sent: list[str] = []
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        sent.append(request.url.path)
+        # The knowledge service answers 502 when its models' verdict fails a check.
+        return httpx.Response(502, json={"detail": "invented a quote"})
+
+    def transport(**_options: Any) -> httpx.BaseTransport:
+        return httpx.MockTransport(handle)
+
+    monkeypatch.setattr(httpx, "HTTPTransport", transport)
+    settings = Settings(
+        llm_provider=LLMProvider.FAKE,
+        knowledge_api_base_url="http://knowledge",
+        requirement_service_token="r" * 40,
+    )
+    with ExitStack() as resources:
+        service = build_knowledge_service(settings, resources, Metrics(), NO_TRACING)
+        with pytest.raises(ServiceUnavailableError):
+            service.assessment.assess(AssessmentQuery(("Static IP for SMB fibre.",)))
+
+    assert sent == ["/internal/architecture/assess"]
