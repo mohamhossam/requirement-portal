@@ -11,6 +11,15 @@ restoring a backup.
 
 ## Unreleased
 
+- **Generate Features waits for an architecture match, and corrects one bad field value.**
+  Each Feature is checked against the architecture catalogue by the knowledge portal's model,
+  which can take longer than the everyday knowledge client's 10 seconds: a slow match was
+  abandoned, retried, and the attempt failed with "The service could not complete the request".
+  Architecture matches now have their own client that waits 60 seconds. Separately, a Feature
+  set with a value outside a field's list (`delivery_drop`, `splitting_pattern` or `kind`) failed
+  with "The model returned invalid, empty, refused or truncated structured output"; such an
+  answer is now asked for once more with the allowed values named, and fails only if the
+  correction is malformed too. No upgrade step.
 - **An analysis of answered questions no longer fails on one out-of-range citation.** When the
   model's citation mapping cited a block, human answer or output number past what it was given,
   the whole mapping was refused, and after one correction the analysis failed with "The model
