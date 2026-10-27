@@ -17,9 +17,15 @@ from smb_kernel.observability.tracing_setup import NO_TRACING
 
 from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
-from smb_requirement_agent.interfaces.api.composition.references import build_knowledge_service
+from smb_requirement_agent.interfaces.api.composition.references import (
+    MATCH_TIMEOUT,
+    build_knowledge_service,
+)
 from smb_requirement_agent.references.application.ports.architecture_assessment import (
     AssessmentQuery,
+)
+from smb_requirement_agent.references.application.ports.architecture_knowledge import (
+    ArchitectureQuery,
 )
 from smb_requirement_agent.references.application.ports.historic_corpus import ContentPart
 
@@ -78,3 +84,33 @@ def test_an_assessment_the_service_could_not_give_is_asked_for_once(
             service.assessment.assess(AssessmentQuery(("Static IP for SMB fibre.",)))
 
     assert sent == ["/internal/architecture/assess"]
+
+
+def test_an_architecture_match_waits_for_the_service_s_model(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    waited: dict[str, float] = {}
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        waited[request.url.path] = request.extensions["timeout"]["read"]
+        return httpx.Response(503, json={"detail": "down"})
+
+    def transport(**_options: Any) -> httpx.BaseTransport:
+        return httpx.MockTransport(handle)
+
+    monkeypatch.setattr(httpx, "HTTPTransport", transport)
+    settings = Settings(
+        llm_provider=LLMProvider.FAKE,
+        knowledge_api_base_url="http://knowledge",
+        requirement_service_token="r" * 40,
+    )
+    with ExitStack() as resources:
+        service = build_knowledge_service(settings, resources, Metrics(), NO_TRACING)
+        with pytest.raises(ServiceUnavailableError):
+            service.architecture.match(ArchitectureQuery(("Static IP for SMB fibre.",)))
+        with pytest.raises(ServiceUnavailableError):
+            service.references.has_published()
+
+    # A match runs the knowledge service's model; everyday calls keep the short wait.
+    assert waited["/internal/architecture/match"] == MATCH_TIMEOUT == 60.0
+    assert waited["/internal/library/published"] == 10.0

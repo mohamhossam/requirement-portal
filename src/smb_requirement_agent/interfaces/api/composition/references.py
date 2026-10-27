@@ -76,6 +76,9 @@ from smb_requirement_agent.references.infrastructure.knowledge_client import (
 
 # Seconds to wait for a page of a historic requirement's content (≤200 entries).
 HISTORIC_PAGE_TIMEOUT = 60.0
+# Seconds to wait for an architecture match: the knowledge service asks its model to select
+# the systems before it answers, which can take longer than the everyday client waits.
+MATCH_TIMEOUT = 60.0
 # Seconds to wait for a requirement's assessment: the knowledge service asks its models
 # to read the requirement and weigh the verdict before it answers.
 ASSESSMENT_TIMEOUT = 120.0
@@ -144,6 +147,14 @@ def build_knowledge_service(
         timeout_seconds=HISTORIC_PAGE_TIMEOUT,
         breaker=breaker,
     )
+    matching = InternalHttpClient(
+        url,
+        token,
+        service="knowledge",
+        http=http,
+        timeout_seconds=MATCH_TIMEOUT,
+        breaker=breaker,
+    )
     assessing = InternalHttpClient(
         url,
         token,
@@ -155,7 +166,7 @@ def build_knowledge_service(
     )
     return KnowledgeService(
         HttpReferenceKnowledge(client),
-        HttpArchitectureKnowledge(client),
+        HttpArchitectureKnowledge(matching),
         HttpKnowledgeEvents(client),
         HttpKnowledgeViews(client),
         remote=True,
