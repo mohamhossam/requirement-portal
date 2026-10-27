@@ -5,7 +5,8 @@
 Accepted. The document-only support requirement is superseded by
 [ADR-0044](adr-0044-human-answer-analysis-citations.md); bounded recovery and atomic publication
 remain in force. Amended 2026-10-25: the requirement content is a citable source, and an
-unsupported new item is set aside instead of failing the analysis (see the last section).
+unsupported new item is set aside instead of failing the analysis. Amended 2026-10-27: a number
+outside the packet is dropped instead of refusing the mapping (see the last two sections).
 
 ## Context
 
@@ -250,3 +251,35 @@ browser does not yet say how many items were set aside or label requirement-supp
 a set-aside proposal into an open question, splitting a packet when output is truncated, and a
 second recovery attempt with feedback are separate follow-ups. Deterministic fixtures cover the
 behaviour; whether live models use `requirement_source` well remains unverified.
+
+### Dropping numbers outside the packet — 2026-10-27
+
+Three analyses of one requirement's eleven human answers failed in a row on 2026-10-27, each
+after five or six minutes, with "The model could not provide valid source citations". In each,
+GPT-5.1's citation mapping cited numbers past the packet's range (`less_than_equal`, at least
+eight times), and the one structural correction did the same. Block numbers have their own
+feedback and did not appear, so the numbers were output or human-answer numbers. Every valid
+finding was discarded with them.
+
+Decision:
+
+- **The packet ranges are shown, not enforced.** `citation_recovery_schema` still gives the
+  model every range and count (`minimum`, `maximum`, `maxItems`: the JSON schema it sees is
+  unchanged), but validation no longer refuses a number outside them. Only the decision count's
+  lower bound stays enforced, so a missing output keeps its correction.
+- **A number outside the packet cites nothing, so it is dropped** (`within_packet`). A decision
+  for an output that does not exist goes with its number. A block or answer number past its
+  range, or below 1, is removed from its decision. The drop is traced as a count
+  (`analysis.citation_repair_out_of_range_dropped`), never text.
+- **A supported item left with no source is unsupported.** It then follows the 2026-10-25 rule:
+  a new item is set aside, a question a review retained or replaced fails the round, and a
+  response with nothing supported fails. An item that kept any in-range source stays supported
+  on that source alone.
+- **What still fails, unchanged.** Duplicate or missing output numbers, duplicate block or answer
+  numbers, and a supported decision that named no source at all keep their one structural
+  correction; a second malformed mapping fails as before.
+
+The safety goal is unchanged: nothing is presented on the strength of a citation to evidence
+that was not supplied. No prompt version changes, since neither the prompt nor the schema the
+model sees changed. Not done here: telling the model which field it got wrong, which needs the
+platform kernel's correction feedback to name the field.

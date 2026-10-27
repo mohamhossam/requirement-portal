@@ -232,7 +232,7 @@ def analyze(
 @pytest.mark.parametrize("provider", PROVIDERS)
 @pytest.mark.parametrize(
     "defect",
-    ["range", "duplicate_output", "missing_output", "duplicate_block", "empty_support", "json"],
+    ["duplicate_output", "missing_output", "duplicate_block", "empty_support", "json"],
 )
 def test_one_correction_recovers_only_the_mapping(
     provider: str, defect: str, tmp_path: Path
@@ -452,8 +452,8 @@ def test_recovery_retains_business_context_and_rationale_without_creating_docume
     }
     invalid = {
         "decisions": [
-            {"output_number": 1, "supported": True, "block_numbers": [2]},
-            {"output_number": 2, "supported": True, "block_numbers": [1]},
+            {"output_number": 1, "supported": True, "block_numbers": [1]},
+            {"output_number": 1, "supported": True, "block_numbers": [1]},
         ]
     }
     responses: list[object] = [response, invalid, recovery] if correction else [response, recovery]
@@ -592,7 +592,7 @@ def test_second_invalid_mapping_fails_with_safe_message(provider: str, tmp_path:
     with pytest.raises(RequirementAnalysisGenerationError, match="2 focused attempt") as failure:
         analyze(
             provider,
-            [analysis(), invalid_mapping("range"), invalid_mapping("range")],
+            [analysis(), invalid_mapping("duplicate_output"), invalid_mapping("duplicate_output")],
             requests,
             tmp_path,
         )
@@ -621,16 +621,57 @@ def test_unsupported_content_is_set_aside_and_the_rest_kept(provider: str, tmp_p
 
 
 @pytest.mark.parametrize("provider", PROVIDERS)
-def test_unsupported_decision_with_out_of_range_numbers_still_fails(
+def test_an_out_of_range_number_is_dropped_and_its_unsourced_item_set_aside(
     provider: str, tmp_path: Path
 ) -> None:
-    # The provider clients refuse the whole response against the packet schema, so
-    # a malformed mapping is never mistaken for a clean set-aside.
+    # Output 13, the first constraint, cites only block 13 of 12: a citation to nothing.
+    requests: list[dict[str, Any]] = []
+    result = analyze(provider, [analysis(), invalid_mapping("range")], requests, tmp_path)
+    assert result["known_facts"] == analysis()["known_facts"]
+    assert result["constraints"] == analysis()["constraints"][1:]
+    assert result["set_aside"] == [
+        {"key": "constraint:plan 1 requires consent.", "reason": "unsupported"}
+    ]
+    assert len(requests) == 2
+    events = [json.loads(line) for line in (tmp_path / "trace.jsonl").read_text().splitlines()]
+    dropped = next(
+        event
+        for event in events
+        if event["event"] == "analysis.citation_repair_out_of_range_dropped"
+    )
+    assert dropped["details"]["number_count"] == 1
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+def test_an_out_of_range_number_beside_a_real_one_leaves_the_item_supported(
+    provider: str, tmp_path: Path
+) -> None:
+    requests: list[dict[str, Any]] = []
+    recovery = mapping()
+    recovery["decisions"][12]["block_numbers"] = [1, 13, 0]
+    # A decision for an output that does not exist goes with its number.
+    recovery["decisions"].append({"output_number": 25, "supported": True, "block_numbers": [1]})
+    result = analyze(provider, [analysis(), recovery], requests, tmp_path)
+    assert result["constraints"] == analysis()["constraints"]
+    assert "set_aside" not in result or result["set_aside"] == []
+    refs = result["evidence_references"]["constraint:plan 1 requires consent."]
+    assert [ref["block_id"] for ref in refs] == ["block-1"]
+    assert len(requests) == 2
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+def test_unsupported_decision_with_out_of_range_numbers_is_set_aside(
+    provider: str, tmp_path: Path
+) -> None:
+    # An unsupported decision's numbers are moot, in range or not.
     requests: list[dict[str, Any]] = []
     unsupported = mapping()
     unsupported["decisions"][12].update(supported=False, block_numbers=[13])
-    with pytest.raises(RequirementAnalysisGenerationError, match="1 focused attempt"):
-        analyze(provider, [analysis(), unsupported], requests, tmp_path)
+    result = analyze(provider, [analysis(), unsupported], requests, tmp_path)
+    assert result["constraints"] == analysis()["constraints"][1:]
+    assert result["set_aside"] == [
+        {"key": "constraint:plan 1 requires consent.", "reason": "unsupported"}
+    ]
     assert len(requests) == 2
 
 
@@ -752,19 +793,21 @@ def test_transport_and_refusal_failures_never_start_correction(
     assert "citation_repair_correction_started" not in (tmp_path / "trace.jsonl").read_text()
 
 
-def test_packet_schema_enforces_counts_and_independent_ranges() -> None:
-    schema = citation_recovery_schema(24, 12)
+def test_packet_schema_enforces_counts_and_shows_independent_ranges() -> None:
+    schema = citation_recovery_schema(24, 12, 2)
     schema.model_validate(mapping())
-    for defect in ["range", "missing_output"]:
-        with pytest.raises(ValidationError):
-            schema.model_validate(invalid_mapping(defect))
+    with pytest.raises(ValidationError):
+        schema.model_validate(invalid_mapping("missing_output"))
+    # Out of range is shown to the model but left to `within_packet`, not refused.
+    schema.model_validate(invalid_mapping("range"))
     wrong_output = mapping()
     wrong_output["decisions"][0]["output_number"] = 25
-    with pytest.raises(ValidationError):
-        schema.model_validate(wrong_output)
+    schema.model_validate(wrong_output)
     decision = schema.model_json_schema()["$defs"]["PacketAnalysisEvidenceDecision"]
     assert decision["properties"]["output_number"]["maximum"] == 24
     assert decision["properties"]["block_numbers"]["items"]["maximum"] == 12
+    assert decision["properties"]["clarification_numbers"]["items"]["maximum"] == 2
+    assert decision["properties"]["clarification_numbers"]["maxItems"] == 2
     nine = mapping()
     nine["decisions"][0]["block_numbers"] = list(range(1, 10))
     schema.model_validate(nine)
@@ -797,7 +840,11 @@ def test_timeout_on_correction_does_not_start_a_third_mapping_call(
     ):
         analyze(
             provider,
-            [analysis(), invalid_mapping("range"), httpx.ReadTimeout("Request timed out")],
+            [
+                analysis(),
+                invalid_mapping("duplicate_output"),
+                httpx.ReadTimeout("Request timed out"),
+            ],
             requests,
             tmp_path,
         )
@@ -902,13 +949,37 @@ def test_empty_document_citation_reaches_focused_recovery(provider: str, tmp_pat
 def test_unknown_human_answer_never_bypasses_evidence_validation(
     provider: str, tmp_path: Path
 ) -> None:
+    # No answers were supplied, so answer 1 supports nothing: the fact it alone cited
+    # is set aside, never kept on the strength of an answer that does not exist.
     repaired = mapping()
     repaired["decisions"][11].update(block_numbers=[], clarification_numbers=[1])
     requests: list[dict[str, Any]] = []
-    with pytest.raises(RequirementAnalysisGenerationError) as failure:
-        analyze(provider, [analysis(), repaired, repaired], requests, tmp_path)
-    assert describe_public_error(failure.value).code == "model_invalid_citations"
-    assert len(requests) == 3
+    result = analyze(provider, [analysis(), repaired], requests, tmp_path)
+    assert result["known_facts"] == analysis()["known_facts"][:11]
+    assert result["set_aside"] == [
+        {"key": "known_fact:service line 12 uses its selected plan.", "reason": "unsupported"}
+    ]
+    assert result.get("clarification_references", {}) == {}
+    assert len(requests) == 2
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+def test_an_answer_number_past_the_supplied_answers_is_dropped(
+    provider: str, tmp_path: Path
+) -> None:
+    answer = HumanClarification(
+        ClarificationKind.OPEN_QUESTION,
+        "Which plans need consent?",
+        "Every plan needs consent.",
+        QuestionId("question-1"),
+    )
+    repaired = mapping()
+    # One answer was supplied; the model cites it and a second that does not exist.
+    repaired["decisions"][12].update(block_numbers=[], clarification_numbers=[1, 2])
+    requests: list[dict[str, Any]] = []
+    result = analyze(provider, [analysis(), repaired], requests, tmp_path, clarifications=(answer,))
+    assert result["constraints"] == analysis()["constraints"]
+    assert len(requests) == 2
 
 
 @pytest.mark.parametrize("provider", PROVIDERS)

@@ -161,20 +161,29 @@ class IndexedAnalysisEvidenceRecoverySchema(BaseModel):
 def citation_recovery_schema(
     output_count: int, block_count: int, clarification_count: int = 0
 ) -> type[IndexedAnalysisEvidenceRecoverySchema]:
-    """Constrain both independent number spaces to this packet, without global state."""
+    """Show the model both independent number spaces of this packet, without global state.
+
+    The ranges are shown, not enforced: a number outside them cites nothing, so the
+    analyzer drops it rather than refusing the whole mapping (`within_packet`).
+    """
     if output_count < 1 or block_count < 1:
         raise ValueError("Citation recovery requires nonempty outputs and evidence.")
     decision = create_model(
         "PacketAnalysisEvidenceDecision",
         __base__=IndexedAnalysisEvidenceDecisionSchema,
-        output_number=(int, Field(ge=1, le=output_count)),
+        output_number=(int, Field(json_schema_extra={"minimum": 1, "maximum": output_count})),
         block_numbers=(
-            list[Annotated[int, Field(ge=1, le=block_count)]],
-            Field(default_factory=list, max_length=block_count),
+            list[Annotated[int, Field(json_schema_extra={"minimum": 1, "maximum": block_count})]],
+            Field(default_factory=list, json_schema_extra={"maxItems": block_count}),
         ),
         clarification_numbers=(
-            list[Annotated[int, Field(ge=1, le=max(1, clarification_count))]],
-            Field(default_factory=list, max_length=clarification_count),
+            list[
+                Annotated[
+                    int,
+                    Field(json_schema_extra={"minimum": 1, "maximum": max(1, clarification_count)}),
+                ]
+            ],
+            Field(default_factory=list, json_schema_extra={"maxItems": clarification_count}),
         ),
     )
     return create_model(
@@ -182,9 +191,48 @@ def citation_recovery_schema(
         __base__=IndexedAnalysisEvidenceRecoverySchema,
         decisions=(
             GenericAlias(list, decision),
-            Field(min_length=output_count, max_length=output_count),
+            Field(min_length=output_count, json_schema_extra={"maxItems": output_count}),
         ),
     )
+
+
+def within_packet(
+    recovery: IndexedAnalysisEvidenceRecoverySchema,
+    output_count: int,
+    block_count: int,
+    clarification_count: int,
+) -> tuple[IndexedAnalysisEvidenceRecoverySchema, int]:
+    """Drop every number outside the packet, and say how many went.
+
+    A decision for an output that does not exist goes with its number. A supported
+    decision whose only sources were out of range is left unsupported: a citation to
+    nothing supports nothing, so it is set aside or refused like any unsupported one.
+    """
+    dropped = 0
+    decisions: list[IndexedAnalysisEvidenceDecisionSchema] = []
+    for item in recovery.decisions:
+        if not 1 <= item.output_number <= output_count:
+            dropped += 1
+            continue
+        blocks = [number for number in item.block_numbers if 1 <= number <= block_count]
+        answers = [
+            number for number in item.clarification_numbers if 1 <= number <= clarification_count
+        ]
+        removed = (
+            len(item.block_numbers) - len(blocks) + len(item.clarification_numbers) - len(answers)
+        )
+        dropped += removed
+        orphaned = removed > 0 and not blocks and not answers and not item.requirement_source
+        decisions.append(
+            item.model_copy(
+                update={
+                    "block_numbers": blocks,
+                    "clarification_numbers": answers,
+                    "supported": item.supported and not orphaned,
+                }
+            )
+        )
+    return recovery.model_copy(update={"decisions": decisions}), dropped
 
 
 class RequirementAnalysisSchema(BaseModel):

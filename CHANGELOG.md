@@ -11,6 +11,12 @@ restoring a backup.
 
 ## Unreleased
 
+- **An analysis of answered questions no longer fails on one out-of-range citation.** When the
+  model's citation mapping cited a block, human answer or output number past what it was given,
+  the whole mapping was refused, and after one correction the analysis failed with "The model
+  could not provide valid source citations. Analysis was not saved.", five or six minutes in.
+  Such a number now cites nothing and is dropped; an item it alone supported is set aside like
+  any unsupported item (ADR-0032, amended 2026-10-27). No upgrade step.
 - **Grounded answer suggestions no longer fail on a long answer list.** The model is asked for
   at most three answers of at most five citations each, but was held to it: a fourth answer or
   a sixth citation failed the job with "The model returned invalid, empty, refused or truncated
