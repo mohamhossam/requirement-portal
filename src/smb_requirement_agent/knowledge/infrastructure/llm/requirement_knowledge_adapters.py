@@ -46,6 +46,8 @@ from smb_requirement_agent.knowledge.infrastructure.llm.prompts.prior_art_prompt
     prior_art_prompt,
 )
 from smb_requirement_agent.knowledge.infrastructure.llm.schemas.knowledge_schema import (
+    SUGGESTION_CITATION_LIMIT,
+    SUGGESTION_LIMIT,
     AnswerSuggestionListSchema,
     RelationshipScreenSchema,
 )
@@ -402,10 +404,11 @@ def _suggestions(
     )
     values: list[AnswerSuggestionCandidate] = []
     seen: set[str] = set()
-    for item in result.suggestions:
+    # The prompt ranks answers best first; past the limits, answers and citations are dropped.
+    for item in result.suggestions[:SUGGESTION_LIMIT]:
         answer = item.answer.strip()
         rationale = item.rationale.strip()
-        citation_numbers = tuple(item.cited_evidence_numbers)
+        citation_numbers = tuple(item.cited_evidence_numbers[:SUGGESTION_CITATION_LIMIT])
         if any(number < 1 or number > len(evidence_ids) for number in citation_numbers):
             raise KnowledgeGenerationError(
                 "Answer suggester cited evidence outside the supplied candidates."

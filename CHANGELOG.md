@@ -11,6 +11,16 @@ restoring a backup.
 
 ## Unreleased
 
+- **Grounded answer suggestions no longer fail on a long answer list.** The model is asked for
+  at most three answers of at most five citations each, but was held to it: a fourth answer or
+  a sixth citation failed the job with "The model returned invalid, empty, refused or truncated
+  structured output". The best three answers and each one's first five citations are now kept.
+  No upgrade step.
+- **A failed product-impact assessment is asked for once.** The knowledge portal answers 502
+  when its models' verdict fails a check, and requirement work retried it twice, at a minute
+  or two each, before finishing the analysis without product impact. The assessment is no
+  longer retried, which took about two minutes off the analysis that showed it.
+  No upgrade step.
 - **filelock 4.2.4, OpenTelemetry 1.45.1 and setuptools 84.2.1 (security).** filelock 4.0.8
   carries CVE-2026-112940 (high: arbitrary file overwrite), CVE-2026-112913 and CVE-2026-112907,
   fixed in 4.2.1; opentelemetry-api 1.45.0 carries CVE-2026-114603, fixed in 1.45.1; setuptools

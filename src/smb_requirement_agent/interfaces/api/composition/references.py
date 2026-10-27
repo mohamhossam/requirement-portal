@@ -79,6 +79,9 @@ HISTORIC_PAGE_TIMEOUT = 60.0
 # Seconds to wait for a requirement's assessment: the knowledge service asks its models
 # to read the requirement and weigh the verdict before it answers.
 ASSESSMENT_TIMEOUT = 120.0
+# An assessment is not retried: its 502 is usually the models' answer failing a check, which
+# asking again repeats a minute or two at a time, and the analysis completes without it.
+ASSESSMENT_RETRIES = 0
 
 
 @dataclass(frozen=True)
@@ -147,6 +150,7 @@ def build_knowledge_service(
         service="knowledge",
         http=http,
         timeout_seconds=ASSESSMENT_TIMEOUT,
+        retries=ASSESSMENT_RETRIES,
         breaker=breaker,
     )
     return KnowledgeService(
