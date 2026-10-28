@@ -1,7 +1,7 @@
 """LLM schema definitions for requirement analysis."""
 
 from types import GenericAlias
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, Field, create_model
 
@@ -159,19 +159,33 @@ class IndexedAnalysisEvidenceRecoverySchema(BaseModel):
 
 
 def citation_recovery_schema(
-    output_count: int, block_count: int, clarification_count: int = 0
+    output_count: int,
+    block_count: int,
+    clarification_count: int = 0,
+    *,
+    bound_blocks: bool = True,
 ) -> type[IndexedAnalysisEvidenceRecoverySchema]:
-    """Constrain both independent number spaces to this packet, without global state."""
+    """Constrain both independent number spaces to this packet, without global state.
+
+    Without `bound_blocks`, block numbers are left for the adapter to check, so that a
+    corrected mapping citing a block outside the packet can set that output aside rather
+    than be refused whole (ADR-0032, 2026-10-28).
+    """
     if output_count < 1 or block_count < 1:
         raise ValueError("Citation recovery requires nonempty outputs and evidence.")
+    block_numbers: tuple[Any, Any] = (
+        (
+            list[Annotated[int, Field(ge=1, le=block_count)]],
+            Field(default_factory=list, max_length=block_count),
+        )
+        if bound_blocks
+        else (list[int], Field(default_factory=list))
+    )
     decision = create_model(
         "PacketAnalysisEvidenceDecision",
         __base__=IndexedAnalysisEvidenceDecisionSchema,
         output_number=(int, Field(ge=1, le=output_count)),
-        block_numbers=(
-            list[Annotated[int, Field(ge=1, le=block_count)]],
-            Field(default_factory=list, max_length=block_count),
-        ),
+        block_numbers=block_numbers,
         clarification_numbers=(
             list[Annotated[int, Field(ge=1, le=max(1, clarification_count))]],
             Field(default_factory=list, max_length=clarification_count),
