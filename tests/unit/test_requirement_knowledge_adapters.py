@@ -25,7 +25,11 @@ from smb_requirement_agent.knowledge.domain.entities import (
     KnowledgeMatch,
     KnowledgeSourceKind,
 )
+from smb_requirement_agent.knowledge.infrastructure.llm.fake_requirement_knowledge import (
+    FakeClarificationAnswerSuggester,
+)
 from smb_requirement_agent.knowledge.infrastructure.llm.prompts.knowledge_prompt import (
+    SUGGESTION_PROMPT_VERSION,
     SUGGESTION_SYSTEM_PROMPT,
     suggestion_prompt,
 )
@@ -169,6 +173,37 @@ def test_local_knowledge_adapters_reserve_a_bounded_output_budget(
     )
 
     assert client_type.call_args.kwargs["max_output_tokens"] == 2048
+
+
+def test_suggestions_are_asked_for_in_business_language() -> None:
+    http_client = MagicMock(spec=httpx.Client)
+    http_client.post.return_value.json.return_value = {
+        "choices": [{"finish_reason": "stop", "message": {"content": '{"suggestions":[]}'}}]
+    }
+    adapter = LocalClarificationAnswerSuggester(
+        base_url="http://127.0.0.1:1234/v1",
+        http_client=cast(httpx.Client, http_client),
+        model="local-model",
+        timeout_seconds=90,
+        reasoning_effort=None,
+        context_window_tokens=16384,
+        max_output_tokens=8192,
+    )
+
+    adapter.suggest(_requirement(), _question(), (), ())
+
+    system = http_client.post.call_args.kwargs["json"]["messages"][0]["content"]
+    for rule in (
+        "plain business language",
+        "spell out any other abbreviation",
+        "system names, internal codes",
+        "one to three sentences",
+        "return no suggestion for it",
+    ):
+        assert rule in system
+    # Suggestions made under these rules are told apart from earlier ones.
+    assert adapter.prompt_version == SUGGESTION_PROMPT_VERSION == "clarification-suggestions-v5"
+    assert FakeClarificationAnswerSuggester.prompt_version == SUGGESTION_PROMPT_VERSION
 
 
 def test_local_suggester_accepts_ranked_evidence_that_needs_more_than_half_of_16k_context() -> None:

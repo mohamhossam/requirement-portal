@@ -11,6 +11,13 @@ restoring a backup.
 
 ## Unreleased
 
+- **Suggested answers are written in business language.** They repeated the wording of the
+  material they cite: unexplained abbreviations, document codes, accounting and system terms, long
+  numbered lists, and "this is not yet defined" offered as an answer. They are now asked for one
+  to three sentences a business owner can accept as written, keeping the requirement's own
+  product names and spelling out other abbreviations, and no suggestion is made where the
+  evidence only shows a decision is still open. New suggestions record prompt version
+  `clarification-suggestions-v5`. No upgrade step (ADR-0027, amended).
 - **One bad finding no longer fails the knowledge screen.** Screening asks the model which
   other requirements may duplicate or contradict this one. A single finding with a blank field,
   a second finding for the same requirement, or a citation of a passage it was not given failed

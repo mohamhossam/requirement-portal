@@ -10,7 +10,7 @@ from smb_requirement_agent.references.application.ports.reference_grounding impo
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 
 SCREEN_PROMPT_VERSION = "knowledge-screen-v1"
-SUGGESTION_PROMPT_VERSION = "clarification-suggestions-v4"
+SUGGESTION_PROMPT_VERSION = "clarification-suggestions-v5"
 
 RELATIONSHIP_SYSTEM_PROMPT = """You compare one proposed business requirement with trusted
 existing requirement evidence. Return a finding only when the supplied evidence supports a
@@ -30,7 +30,14 @@ answers; surrounding context aids interpretation but is not separately citable.
 Rank the best answers across all sources and
 return at most three materially different answers. Return an empty suggestions list when no
 reliable answer is supported. Never fill gaps with general knowledge and never cite the question,
-an assumption, an ambiguity, or a potential dependency as an answer."""
+an assumption, an ambiguity, or a potential dependency as an answer.
+Write each answer and its rationale for a business owner, in plain business language: what the
+customer, the business or the process will do or decide. Keep the product and service names the
+requirement itself uses, but spell out any other abbreviation the first time it appears. Do not
+mention system names, internal codes, document identifiers, field names or technical
+implementation unless the question asks for them. Keep each answer to one to three sentences.
+When the evidence shows only that something is not yet decided or defined, that is not an
+answer: return no suggestion for it."""
 
 
 def relationship_prompt(

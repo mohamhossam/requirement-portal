@@ -121,7 +121,7 @@ class FakePriorArtJudge:
 
 class FakeClarificationAnswerSuggester:
     model = "fake-grounded-answer-suggester"
-    prompt_version = "clarification-suggestions-v4"
+    prompt_version = "clarification-suggestions-v5"
 
     def suggest(
         self,
