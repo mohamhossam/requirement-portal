@@ -77,8 +77,9 @@ from smb_requirement_agent.references.infrastructure.knowledge_client import (
 # Seconds to wait for a page of a historic requirement's content (≤200 entries).
 HISTORIC_PAGE_TIMEOUT = 60.0
 # Seconds to wait for a requirement's assessment: the knowledge service asks its models
-# to read the requirement and weigh the verdict before it answers.
-ASSESSMENT_TIMEOUT = 120.0
+# to read the requirement and weigh the verdict before it answers. One with many needs
+# took 131 s (2026-10-28), so 120 s gave up on an answer that was about to come.
+ASSESSMENT_TIMEOUT = 240.0
 # An assessment is not retried: its 502 is usually the models' answer failing a check, which
 # asking again repeats a minute or two at a time, and the analysis completes without it.
 ASSESSMENT_RETRIES = 0

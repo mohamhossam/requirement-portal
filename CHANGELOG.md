@@ -11,6 +11,11 @@ restoring a backup.
 
 ## Unreleased
 
+- **A slow product assessment is no longer given up on.** Analysis waited 120 s for the
+  knowledge service's assessment. A requirement with many needs took 131 s, so the analysis was
+  saved with "Product impact was not assessed" (logged as "The knowledge service could not be
+  reached") while the knowledge service went on to answer. It now waits 240 s. It still does not
+  retry. No upgrade step.
 - **Resolving a question no longer fails on a question the model kept.** With structured
   documents, the last step of an analysis combines the section findings and reviews the open AI
   questions. A question it kept that no finding repeated had nothing to cite, and the job failed
