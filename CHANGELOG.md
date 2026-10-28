@@ -11,6 +11,20 @@ restoring a backup.
 
 ## Unreleased
 
+- **Resolving a question no longer fails on a question the model kept.** With structured
+  documents, the last step of an analysis combines the section findings and reviews the open AI
+  questions. A question it kept that no finding repeated had nothing to cite, and the job failed
+  with "The model could not provide valid source citations. Analysis was not saved." The kept
+  question is now carried with its earlier support, as it already was when combining fell back
+  to a merge. A reworded (replaced) question still needs support. No upgrade step (ADR-0032,
+  amended).
+- **One malformed model response no longer fails the analysis.** OpenRouter does not enforce
+  the response format, and GPT-5.1 occasionally returns analysis JSON with fields run together
+  or cut short; the job then failed with "The model returned invalid, empty, refused or
+  truncated structured output" and lost every section analysed so far. Such a response is now
+  asked for once more and discarded. A second malformed response, a refusal or a truncated
+  response still fails. No upgrade step (ADR-0032, amended).
+
 - **Grounded answer suggestions no longer fail on a long answer list.** The model is asked for
   at most three answers of at most five citations each, but was held to it: a fourth answer or
   a sixth citation failed the job with "The model returned invalid, empty, refused or truncated
