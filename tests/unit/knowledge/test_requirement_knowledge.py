@@ -883,3 +883,71 @@ def test_unknown_classifier_citation_and_wrong_embedding_dimension_fail_atomical
     chunk = corpus.chunks(subject)[0]
     with pytest.raises(KnowledgeGenerationError, match="768"):
         store.replace(subject.id, "fingerprint", (chunk,), ((0.0,),))
+
+
+def test_a_bad_classifier_finding_is_set_aside_and_the_good_one_kept(
+    container: Container,
+) -> None:
+    canonical = _create(container, "Canonical", "Customers order through BCRM.")
+    subject = _create(container, "Candidate", "Customers order through BCRM.")
+    corpus = RequirementKnowledgeCorpus(
+        container.requirement_repository,
+        container.analysis_repository,
+        container.analysis_audit_repository,
+        container.access_repository,
+        container.knowledge_repository,
+        container.document_repository,
+    )
+
+    class PartlyInvalidClassifier:
+        model = "partly-invalid"
+        prompt_version = "partly-invalid-v1"
+
+        def classify(
+            self,
+            requirement: Requirement,
+            subject_text: str,
+            matches: tuple[KnowledgeMatch, ...],
+            references: object = (),
+        ) -> tuple[RelationshipCandidate, ...]:
+            del requirement, subject_text
+            passage = next(
+                item.chunk for item in matches if item.chunk.requirement_id == canonical.id
+            )
+            good = RelationshipCandidate(
+                canonical.id,
+                KnowledgeRelationshipKind.POSSIBLE_DUPLICATE,
+                "Same ordering need.",
+                (passage.id.value,),
+            )
+            return (
+                RelationshipCandidate(
+                    canonical.id,
+                    KnowledgeRelationshipKind.POSSIBLE_CONTRADICTION,
+                    "Unsupported citation",
+                    ("not-supplied",),
+                ),
+                good,
+                replace(good, kind=KnowledgeRelationshipKind.POSSIBLE_CONTRADICTION),
+            )
+
+    use_case = ScreenRequirementKnowledge(
+        container.requirement_repository,
+        corpus,
+        container.knowledge_index,
+        container.knowledge_repository,
+        FakeKnowledgeEmbedding(),
+        PartlyInvalidClassifier(),
+        container.clock,
+        container.transaction_manager,
+        authorization=access_service_for(
+            container.requirement_repository, container.access_repository
+        ),
+    )
+    drain_requirement_index(container)
+
+    review = use_case.execute(FAKE_ACTORS[0], subject.id, corpus.fingerprint(subject.id))
+
+    assert [(item.related_requirement_id, item.kind) for item in review.findings] == [
+        (canonical.id, KnowledgeRelationshipKind.POSSIBLE_DUPLICATE)
+    ]

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import math
 
 import httpx
@@ -57,6 +58,8 @@ from smb_requirement_agent.knowledge.infrastructure.llm.schemas.prior_art_schema
 from smb_requirement_agent.references.application.ports.reference_grounding import ReferenceEvidence
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
+
+_log = logging.getLogger(__name__)
 
 EMBEDDING_DIMENSIONS = 768
 LOCAL_KNOWLEDGE_MAX_OUTPUT_TOKENS = 2048
@@ -370,16 +373,22 @@ class LocalClarificationAnswerSuggester(StructuredClarificationAnswerSuggesterAd
 
 
 def _relationships(result: RelationshipScreenSchema) -> tuple[RelationshipCandidate, ...]:
+    """Keep each usable finding; one incomplete or repeated finding no longer costs the rest.
+
+    A finding with a blank requirement, rationale or citation list is set aside, as is a
+    later finding for a requirement already found (a pair has one finding). A passage cited
+    twice is kept once. A screen whose every finding is set aside still fails.
+    """
     values: list[RelationshipCandidate] = []
     seen: set[str] = set()
     for item in result.findings:
         requirement_id = item.related_requirement_id.strip()
         rationale = item.rationale.strip()
-        citations = tuple(value.strip() for value in item.cited_chunk_ids if value.strip())
+        citations = tuple(
+            dict.fromkeys(value.strip() for value in item.cited_chunk_ids if value.strip())
+        )
         if not requirement_id or not rationale or not citations or requirement_id in seen:
-            raise KnowledgeGenerationError("Knowledge classifier returned incomplete findings.")
-        if len(citations) != len(set(citations)):
-            raise KnowledgeGenerationError("Knowledge classifier returned duplicate citations.")
+            continue
         seen.add(requirement_id)
         values.append(
             RelationshipCandidate(
@@ -388,6 +397,15 @@ def _relationships(result: RelationshipScreenSchema) -> tuple[RelationshipCandid
                 rationale,
                 citations,
             )
+        )
+    if result.findings and not values:
+        raise KnowledgeGenerationError("Knowledge classifier returned incomplete findings.")
+    if len(values) < len(result.findings):
+        # Counts only: operational logs never carry requirement text.
+        _log.warning(
+            "Knowledge classifier: %d of %d finding(s) set aside as incomplete or repeated.",
+            len(result.findings) - len(values),
+            len(result.findings),
         )
     return tuple(values)
 

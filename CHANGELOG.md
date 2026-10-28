@@ -11,6 +11,12 @@ restoring a backup.
 
 ## Unreleased
 
+- **One bad finding no longer fails the knowledge screen.** Screening asks the model which
+  other requirements may duplicate or contradict this one. A single finding with a blank field,
+  a second finding for the same requirement, or a citation of a passage it was not given failed
+  the whole screen ("Knowledge classifier returned incomplete findings") and lost the valid
+  findings. That finding is now set aside and logged as a count; a screen with no usable finding
+  at all still fails. No upgrade step (ADR-0027, amended).
 - **A slow product assessment is no longer given up on.** Analysis waited 120 s for the
   knowledge service's assessment. A requirement with many needs took 131 s, so the analysis was
   saved with "Product impact was not assessed" (logged as "The knowledge service could not be

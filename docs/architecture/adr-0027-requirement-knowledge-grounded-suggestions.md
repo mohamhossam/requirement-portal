@@ -3,7 +3,8 @@
 ## Status
 
 Accepted; suggestion timing/evidence-source portion superseded by ADR-0028 and startup-backfill/
-automatic-retry portion superseded by ADR-0030
+automatic-retry portion superseded by ADR-0030. Amended 2026-10-28: an unusable relationship
+finding is set aside instead of failing the screen (see the last section).
 
 ## Context
 
@@ -63,3 +64,21 @@ analysis confirmation.
   semantic advice and ownership remains human.
 - Let either owner resolve a contradiction alone: rejected because the statement governs two
   independently owned Requirement records.
+
+## Amendment — setting aside an unusable relationship finding (2026-10-28)
+
+An automatic screen of a large requirement failed with "Knowledge classifier returned
+incomplete findings" (OpenRouter, GPT-5.1). Any one finding with a blank requirement, rationale
+or citation list, a second finding for a requirement already found, a passage cited twice, a
+citation outside the supplied candidates, evidence mixed from two requirements, or an invalid
+related requirement failed the whole screen, and every valid finding with it. A requirement
+both duplicating and contradicting another invites the second finding for one pair.
+
+Decision: **an unusable finding is set aside; the rest of the screen stands.** The adapter drops
+an incomplete finding and any later finding for a requirement already found, and keeps a passage
+cited twice once. The use case drops a finding that cites outside the candidates, mixes evidence,
+or names an invalid related requirement, and a repeat of a pair. Each is logged as a count, never
+text. A screen whose every finding is unusable still fails, with the first reason, so a broken
+response never reads as "no related requirements". An empty finding list remains a valid screen.
+Nothing set aside is shown or recorded as a finding, and the advisory, human-decided nature of
+findings is unchanged. No migration, prompt or API change.
