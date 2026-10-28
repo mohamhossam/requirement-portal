@@ -17,6 +17,14 @@ restoring a backup.
   the whole screen ("Knowledge classifier returned incomplete findings") and lost the valid
   findings. That finding is now set aside and logged as a count; a screen with no usable finding
   at all still fails. No upgrade step (ADR-0027, amended).
+- **A citation repair that names a block outside its section no longer fails the analysis.**
+  Resolving a question failed with "The model could not provide valid source citations.
+  Analysis was not saved." when a section's citation repair cited evidence block 173 of a
+  smaller section. The one correction meant for that never ran, because other outputs in the
+  same repair were marked unsupported, which used to be final. Now a malformed repair always gets
+  its correction. If the corrected repair still cites a block the section does not have, that
+  output is set aside, or carried if it is a question the review kept, and the rest of the
+  analysis stands (ADR-0032, amended). No upgrade step.
 - **A slow product assessment is no longer given up on.** Analysis waited 120 s for the
   knowledge service's assessment. A requirement with many needs took 131 s, so the analysis was
   saved with "Product impact was not assessed" (logged as "The knowledge service could not be

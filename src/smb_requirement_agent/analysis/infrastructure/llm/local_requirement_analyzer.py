@@ -624,6 +624,10 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
         )
         try:
             schema = citation_recovery_schema(len(outputs), len(blocks), len(clarifications))
+            # The correction leaves block numbers to be checked here (ADR-0032, 2026-10-28).
+            correction_schema = citation_recovery_schema(
+                len(outputs), len(blocks), len(clarifications), bound_blocks=False
+            )
         except ValueError as exc:
             raise RequirementAnalysisGenerationError(
                 "Citation recovery cannot represent the supplied packet."
@@ -653,21 +657,43 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
         )
         for attempt in (1, 2):
             attempt_started = time.monotonic()
+            attempt_schema = schema if attempt == 1 else correction_schema
+            # Set once the mapping is well formed. Only then is an "unsupported" error
+            # this adapter's verdict; before, it is the provider client noticing that
+            # some decision says supported=false, which no longer ends recovery.
+            mapped = False
             try:
                 focused = self._client.parse(
                     system_prompt=CITATION_RECOVERY_SYSTEM_PROMPT,
                     user_prompt=prompt,
-                    schema_type=schema,
+                    schema_type=attempt_schema,
                     images=images,
                 )
                 # Revalidate clients/fakes that return a base schema instance. An
                 # unsupported decision's numbers are moot: it is set aside or terminal.
                 dumped = focused.model_dump()
+                invented: list[int] = []
                 for decision in dumped["decisions"]:
+                    # A corrected decision citing a block outside the packet names no
+                    # supplied evidence, so its output is unsupported, as if it said so.
+                    if (
+                        attempt_schema is correction_schema
+                        and decision["supported"]
+                        and any(
+                            not 1 <= number <= len(blocks) for number in decision["block_numbers"]
+                        )
+                    ):
+                        decision["supported"] = False
+                        invented.append(decision["output_number"])
                     if not decision["supported"]:
                         decision.update(block_numbers=[], clarification_numbers=[])
+                if invented:
+                    self._debug_trace.record(
+                        "analysis.citation_repair_invented_blocks",
+                        output_numbers=sorted(invented),
+                    )
                 try:
-                    focused = schema.model_validate(dumped, strict=True)
+                    focused = attempt_schema.model_validate(dumped, strict=True)
                 except ValidationError as exc:
                     raise response_validation_error(exc, focused.model_dump_json()) from exc
                 decision_numbers = [item.output_number for item in focused.decisions]
@@ -678,6 +704,7 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
                         "Return exactly one decision for every supplied output number; "
                         "do not repeat or omit output numbers."
                     )
+                mapped = True
                 decisions = {item.output_number: item for item in focused.decisions}
                 unsupported_numbers = sorted(
                     item.output_number for item in focused.decisions if not item.supported
@@ -752,7 +779,8 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
                 )
                 malformed = isinstance(validation, StructuredResponseValidationError)
                 unsupported = (
-                    isinstance(validation, StructuredResponseValidationError)
+                    mapped
+                    and isinstance(validation, StructuredResponseValidationError)
                     and validation.unsupported
                 )
                 category = (
