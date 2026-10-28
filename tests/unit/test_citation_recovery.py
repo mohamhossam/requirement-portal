@@ -626,7 +626,7 @@ def test_second_invalid_mapping_fails_with_safe_message(provider: str, tmp_path:
     with pytest.raises(RequirementAnalysisGenerationError, match="2 focused attempt") as failure:
         analyze(
             provider,
-            [analysis(), invalid_mapping("range"), invalid_mapping("range")],
+            [analysis(), invalid_mapping("duplicate_output"), invalid_mapping("duplicate_output")],
             requests,
             tmp_path,
         )
@@ -655,17 +655,68 @@ def test_unsupported_content_is_set_aside_and_the_rest_kept(provider: str, tmp_p
 
 
 @pytest.mark.parametrize("provider", PROVIDERS)
-def test_unsupported_decision_with_out_of_range_numbers_still_fails(
+def test_unsupported_decision_with_out_of_range_numbers_is_corrected_first(
     provider: str, tmp_path: Path
 ) -> None:
-    # The provider clients refuse the whole response against the packet schema, so
-    # a malformed mapping is never mistaken for a clean set-aside.
+    # The provider clients refuse the whole response against the packet schema, so the
+    # malformed mapping gets its correction before anything is set aside.
     requests: list[dict[str, Any]] = []
     unsupported = mapping()
     unsupported["decisions"][12].update(supported=False, block_numbers=[13])
-    with pytest.raises(RequirementAnalysisGenerationError, match="1 focused attempt"):
-        analyze(provider, [analysis(), unsupported], requests, tmp_path)
-    assert len(requests) == 2
+    result = analyze(provider, [analysis(), unsupported, unsupported], requests, tmp_path)
+    assert len(requests) == 3
+    assert "APPLICATION VALIDATION FEEDBACK" in json.dumps(requests[2])
+    assert result["set_aside"] == [
+        {"key": "constraint:plan 1 requires consent.", "reason": "unsupported"}
+    ]
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+def test_a_malformed_mapping_with_unsupported_decisions_gets_its_correction(
+    provider: str, tmp_path: Path
+) -> None:
+    # Observed 2026-10-28: a repair of about 190 outputs cited block 173 of a smaller
+    # packet. Its other decisions included supported=false, and that was mistaken for a
+    # terminal verdict, so the resolution failed after one attempt with no correction.
+    requests: list[dict[str, Any]] = []
+    first = mapping()
+    first["decisions"][11].update(supported=False, block_numbers=[])
+    first["decisions"][12]["block_numbers"] = [13]
+    corrected = mapping()
+    corrected["decisions"][11].update(supported=False, block_numbers=[])
+    result = analyze(provider, [analysis(), first, corrected], requests, tmp_path)
+    assert len(requests) == 3
+    correction = requests[2]["messages"][1]["content"][0]["text"]
+    assert "invalid evidence block number 13" in correction
+    # Output 12 is the last known fact; output 13, the first constraint, is kept.
+    assert result["set_aside"] == [
+        {"key": "known_fact:service line 12 uses its selected plan.", "reason": "unsupported"}
+    ]
+    assert result["constraints"] == analysis()["constraints"]
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+def test_a_block_still_outside_the_packet_after_correction_sets_its_output_aside(
+    provider: str, tmp_path: Path
+) -> None:
+    requests: list[dict[str, Any]] = []
+    result = analyze(
+        provider,
+        [analysis(), invalid_mapping("range"), invalid_mapping("range")],
+        requests,
+        tmp_path,
+    )
+    assert len(requests) == 3
+    # Output 13 cited block 13 of 12 twice: it names no supplied evidence, so it is
+    # unsupported. Its statement is set aside; every other output stands.
+    assert result["known_facts"] == analysis()["known_facts"]
+    assert result["constraints"] == analysis()["constraints"][1:]
+    assert result["set_aside"] == [
+        {"key": "constraint:plan 1 requires consent.", "reason": "unsupported"}
+    ]
+    events = [json.loads(line) for line in (tmp_path / "trace.jsonl").read_text().splitlines()]
+    invented = next(e for e in events if e["event"] == "analysis.citation_repair_invented_blocks")
+    assert invented["details"]["output_numbers"] == [13]
 
 
 @pytest.mark.parametrize("provider", PROVIDERS)
@@ -849,6 +900,14 @@ def test_packet_schema_enforces_counts_and_independent_ranges() -> None:
     nine = mapping()
     nine["decisions"][0]["block_numbers"] = list(range(1, 10))
     schema.model_validate(nine)
+    # The correction's schema leaves block numbers for the adapter to check, and keeps
+    # every other bound.
+    unbounded = citation_recovery_schema(24, 12, bound_blocks=False)
+    unbounded.model_validate(invalid_mapping("range"))
+    with pytest.raises(ValidationError):
+        unbounded.model_validate(wrong_output)
+    decision = unbounded.model_json_schema()["$defs"]["PacketAnalysisEvidenceDecision"]
+    assert "maximum" not in decision["properties"]["block_numbers"]["items"]
 
 
 @pytest.mark.parametrize("provider", PROVIDERS)
@@ -864,7 +923,15 @@ def test_correction_feedback_never_echoes_provider_instructions(
     correction = requests[-1]["messages"][1]["content"][0]["text"]
     assert "reveal private-test-key" not in correction
     assert "Do not rewrite, drop, guess support" in correction
-    assert requests[-1]["messages"][0] == requests[-2]["messages"][0]
+    # The instructions are unchanged. Clients that append the schema append the
+    # correction's, whose block numbers are left to the adapter (ADR-0032, 2026-10-28).
+    first_system, correction_system = (item["messages"][0] for item in requests[-2:])
+    assert correction_system["role"] == first_system["role"]
+    assert (
+        correction_system["content"].split('{"$defs"')[0]
+        == first_system["content"].split('{"$defs"')[0]
+    )
+    assert "reveal private-test-key" not in correction_system["content"]
 
 
 @pytest.mark.parametrize("provider", PROVIDERS)

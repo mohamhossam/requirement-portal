@@ -6,8 +6,10 @@ Accepted. The document-only support requirement is superseded by
 [ADR-0044](adr-0044-human-answer-analysis-citations.md); bounded recovery and atomic publication
 remain in force. Amended 2026-10-25: the requirement content is a citable source, and an
 unsupported new item is set aside instead of failing the analysis. Amended 2026-10-28: a
-retained question recovery cannot support is carried instead of failing, and a malformed
-first analysis response is asked for once more (see the last three sections).
+retained question recovery cannot support is carried instead of failing, a malformed
+first analysis response is asked for once more, and a malformed mapping keeps its correction
+whatever its other decisions say, after which a block outside the packet sets its output aside
+(see the last four sections).
 
 ## Context
 
@@ -302,3 +304,38 @@ change; the retry instruction is used only on that second call, so the prompt ve
 unchanged. Whether the earlier `literal_error`s had the same cause is not known, as tracing
 was off for that run. Moving OpenRouter to enforced `json_schema` output belongs to the
 shared kernel and is not done here.
+
+### Correcting a mapping beside unsupported decisions, and a block outside the packet — 2026-10-28
+
+After the two fixes above, resolving one question failed again on GPT-5.1, after about five
+minutes. A section's citation repair mapped about 190 outputs, and decision 189 cited evidence
+block 173, which the packet did not have. The provider client refused the whole response against
+the packet schema, as the bounded structural correction intends. The correction never ran: the
+analysis failed "after 1 focused attempt(s)". The kernel's `response_validation_error` marks a
+refused mapping `unsupported` when any of its decisions says `supported=false`. That rule dates
+from when an unsupported decision was terminal, and this adapter still treated the mark as final.
+A mapping of 190 outputs very likely has some unsupported decisions, and since 2026-10-25 those
+are set aside, not fatal. As with the decisions above, the cause was inferred from the worker log
+and code, since tracing was off for the failed job.
+
+Decision:
+
+- **A malformed mapping keeps its one correction, whatever its other decisions say.** Only an
+  `unsupported` error raised after the mapping is well formed, which is this adapter's own verdict
+  (every output unsupported, or an unsupported replacement), ends recovery. Before that point the
+  mark is ignored, and the error is a structural defect like any other.
+- **After the correction, a block outside the packet sets its output aside.** The correction call
+  uses the same packet schema without block-number bounds, and the adapter checks them. A
+  corrected decision that still cites a block outside the packet names no supplied evidence, so
+  its output is treated as unsupported, as if the decision said so. It is set aside if new and
+  carried if a retained question, and a replacement or an all-unsupported mapping still fails, as
+  above. The output's other cited blocks are not kept for it: the model was asked for every block
+  the statement needs, so what remains may not support it. The outputs are traced as
+  `analysis.citation_repair_invented_blocks`, as numbers only.
+
+Unchanged: the first mapping call still carries the bounded schema, and an out-of-range number
+there gets the correction with its feedback. Output and human-answer numbers stay bounded in
+both calls. Duplicates, missing outputs and empty support still fail after the correction. The
+correction's system message differs only in the appended schema. No prompt, migration or API
+change, and no prompt-version bump. The kernel's mark is left as it is; whether it still earns
+its place belongs to platform-kernel.
