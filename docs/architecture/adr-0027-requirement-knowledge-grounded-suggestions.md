@@ -4,7 +4,8 @@
 
 Accepted; suggestion timing/evidence-source portion superseded by ADR-0028 and startup-backfill/
 automatic-retry portion superseded by ADR-0030. Amended 2026-10-28: an unusable relationship
-finding is set aside instead of failing the screen (see the last section).
+finding is set aside instead of failing the screen, and suggested answers are written in business
+language (see the last two sections).
 
 ## Context
 
@@ -82,3 +83,23 @@ text. A screen whose every finding is unusable still fails, with the first reaso
 response never reads as "no related requirements". An empty finding list remains a valid screen.
 Nothing set aside is shown or recorded as a finding, and the advisory, human-decided nature of
 findings is unchanged. No migration, prompt or API change.
+
+## Amendment — suggested answers in business language (2026-10-28)
+
+Suggested answers are read and accepted by a business owner, but the suggestion prompt said
+nothing about language, so answers repeated their evidence's wording. On one requirement they
+read like "The exact GL-code strategy for DEL/PABX revenue and exit-charge recognition is not yet
+defined…" and "No scope is currently defined for … UP/DG of BFM bundles", with unexplained
+abbreviations, document codes, numbered technical lists, and "not defined" offered as an answer.
+
+Decision: **the suggestion prompt asks for plain business language.** Each answer and rationale
+says what the customer, the business or the process will do or decide; keeps the product and
+service names the requirement uses and spells out other abbreviations; leaves out system names,
+internal codes, document identifiers, field names and technical implementation unless the
+question asks for them; and is one to three sentences. Evidence that shows only that something
+is undecided is not an answer, so no suggestion is returned for it.
+
+The prompt version moves to `clarification-suggestions-v5`, recorded on each suggestion set, so
+earlier suggestions stay attributed to the rules that produced them. Grounding, citation and
+ranking rules are unchanged. A prompt rule makes business wording likely, not certain; the
+citations stay attached, so a reviewer can still read the source wording.
