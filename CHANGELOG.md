@@ -11,6 +11,12 @@ restoring a backup.
 
 ## Unreleased
 
+- **One bad finding no longer fails the knowledge screen.** Screening asks the model which
+  other requirements may duplicate or contradict this one. A single finding with a blank field,
+  a second finding for the same requirement, or a citation of a passage it was not given failed
+  the whole screen ("Knowledge classifier returned incomplete findings") and lost the valid
+  findings. That finding is now set aside and logged as a count; a screen with no usable finding
+  at all still fails. No upgrade step (ADR-0027, amended).
 - **A citation repair that names a block outside its section no longer fails the analysis.**
   Resolving a question failed with "The model could not provide valid source citations.
   Analysis was not saved." when a section's citation repair cited evidence block 173 of a

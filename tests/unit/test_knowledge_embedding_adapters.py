@@ -222,6 +222,27 @@ def test_the_classifier_maps_cited_findings() -> None:
     assert candidate.cited_chunk_ids == ("c1",)
 
 
+def test_the_classifier_keeps_good_findings_beside_incomplete_or_repeated_ones() -> None:
+    result = RelationshipScreenSchema(
+        findings=[
+            _finding(cited=("c1", " c1 ", "c2")),
+            _finding(related="  "),
+            _finding(related="other", rationale="  "),
+            _finding(rationale="Also overlaps.", cited=("c3",)),
+            _finding(related="third", cited=("c4",)),
+        ]
+    )
+
+    kept = cast(tuple[Any, ...], _classify(result))
+
+    assert [item.related_requirement_id for item in kept] == [
+        RequirementId("related"),
+        RequirementId("third"),
+    ]
+    assert kept[0].cited_chunk_ids == ("c1", "c2")
+    assert kept[0].rationale == "Opposing rule."
+
+
 @pytest.mark.parametrize(
     ("result", "message"),
     [
@@ -230,20 +251,21 @@ def test_the_classifier_maps_cited_findings() -> None:
             RelationshipScreenSchema(findings=[_finding(rationale="  ")]), "incomplete", id="blank"
         ),
         pytest.param(
-            RelationshipScreenSchema(findings=[_finding(), _finding()]), "incomplete", id="repeat"
-        ),
-        pytest.param(
-            RelationshipScreenSchema(findings=[_finding(cited=("c1", "c1"))]),
-            "duplicate citations",
-            id="citations",
+            RelationshipScreenSchema(findings=[_finding(related=" "), _finding(cited=(" ",))]),
+            "incomplete",
+            id="none-usable",
         ),
     ],
 )
-def test_the_classifier_rejects_unsupported_findings(
+def test_the_classifier_rejects_a_screen_with_no_usable_finding(
     result: BaseModel | Exception, message: str
 ) -> None:
     with pytest.raises(KnowledgeGenerationError, match=message):
         _classify(result)
+
+
+def test_the_classifier_accepts_an_empty_screen() -> None:
+    assert _classify(RelationshipScreenSchema(findings=[])) == ()
 
 
 def test_the_suggester_rejects_a_suggestion_citing_one_passage_twice() -> None:

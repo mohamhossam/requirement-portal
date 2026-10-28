@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import uuid
 from dataclasses import asdict
 from typing import Any
@@ -88,6 +89,8 @@ from smb_requirement_agent.shared_kernel.lineage import (
     SourceLineage,
     merge_lineage,
 )
+
+_log = logging.getLogger(__name__)
 
 
 class RequirementKnowledgeCorpus:
@@ -447,28 +450,33 @@ class ScreenRequirementKnowledge:
         screen_id = KnowledgeScreenId(str(uuid.uuid4()))
         findings: list[KnowledgeFinding] = []
         seen_requirements: set[RequirementId] = set()
+        # One unusable finding is set aside rather than costing the screen; a screen whose
+        # every finding is unusable fails with the first reason.
+        rejections: list[str] = []
         for candidate in candidates:
             if candidate.related_requirement_id in seen_requirements:
-                raise KnowledgeGenerationError(
+                rejections.append(
                     "Knowledge classifier returned multiple findings for one Requirement."
                 )
+                continue
             cited = [chunks.get(item) for item in candidate.cited_chunk_ids]
             if not cited or any(item is None for item in cited):
-                raise KnowledgeGenerationError(
+                rejections.append(
                     "Knowledge classifier cited evidence outside the supplied candidates."
                 )
+                continue
             resolved_chunks = tuple(item for item in cited if item is not None)
             if any(
                 item.requirement_id != candidate.related_requirement_id for item in resolved_chunks
             ):
-                raise KnowledgeGenerationError(
+                rejections.append(
                     "Knowledge classifier mixed evidence from different Requirements."
                 )
+                continue
             related = self._requirements.get(candidate.related_requirement_id)
             if related is None or related.status is RequirementStatus.DUPLICATE:
-                raise KnowledgeGenerationError(
-                    "Knowledge classifier returned an invalid related Requirement."
-                )
+                rejections.append("Knowledge classifier returned an invalid related Requirement.")
+                continue
             if self._corpus.retirement(related.id) is not None:
                 # Retired while this screen ran; its passages are on their way out of the index.
                 continue
@@ -487,6 +495,15 @@ class ScreenRequirementKnowledge:
                     candidate.rationale,
                     tuple(relationship_evidence(item) for item in resolved_chunks),
                 )
+            )
+        if candidates and len(rejections) == len(candidates):
+            raise KnowledgeGenerationError(rejections[0])
+        if rejections:
+            # Counts only: operational logs never carry requirement text.
+            _log.warning(
+                "Knowledge screen set aside %d of %d classifier finding(s).",
+                len(rejections),
+                len(candidates),
             )
         now = self._clock.now()
         screen = KnowledgeScreen(
