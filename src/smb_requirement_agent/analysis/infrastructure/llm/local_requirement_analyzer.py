@@ -38,6 +38,7 @@ from smb_requirement_agent.analysis.infrastructure.llm.analysis_mappers import (
     evidence_key,
     new_output_keys,
     normalize_analysis_intent,
+    retained_question_keys,
     salvage_human_citations,
     set_aside_outputs,
     to_analysis_candidate,
@@ -50,6 +51,7 @@ from smb_requirement_agent.analysis.infrastructure.llm.prompts.analysis_prompt i
     CLARIFICATION_REVIEW_SYSTEM_PROMPT,
     COMPLETE_ANALYSIS_RETRY_INSTRUCTION,
     DESIRED_OUTCOME_REVIEW_SYSTEM_PROMPT,
+    MALFORMED_ANALYSIS_RETRY_INSTRUCTION,
     PROMPT_VERSION,
     QUESTION_RECONCILIATION_RECOVERY_SYSTEM_PROMPT,
     UNCERTAINTY_RATIONALE_RECOVERY_SYSTEM_PROMPT,
@@ -220,12 +222,7 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
             )
             if images and not self._vision_enabled:
                 raise RequirementAnalysisGenerationError(self._vision_error)
-            parsed = self._client.parse(
-                system_prompt=system_prompt,
-                user_prompt=user_prompt,
-                schema_type=RequirementAnalysisSchema,
-                images=images,
-            )
+            parsed = self._parse_analysis(system_prompt, user_prompt, images)
         except (StructuredOutputError, ModelTransportError) as exc:
             raise RequirementAnalysisGenerationError(
                 f"{self._provider_name} analysis failed: {exc}"
@@ -571,6 +568,46 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
         )
         return parsed.model_copy(update={"new_uncertainties": repaired_items})
 
+    def _parse_analysis(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        images: Sequence[tuple[str, bytes]],
+    ) -> RequirementAnalysisSchema:
+        """Ask once more when the response does not match the schema (ADR-0032, 2026-10-28).
+
+        A structured analysis keeps none of its sections unless every call succeeds, so one
+        corrupted response would discard them all. Transport errors, refusals and truncation
+        are not malformed responses and are never asked for again.
+        """
+        try:
+            return self._client.parse(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                schema_type=RequirementAnalysisSchema,
+                images=images,
+            )
+        except (StructuredOutputError, ModelTransportError) as exc:
+            validation = (
+                exc if isinstance(exc, StructuredResponseValidationError) else exc.__cause__
+            )
+            if not isinstance(validation, StructuredResponseValidationError):
+                raise
+            logger.warning(
+                "%s model %s returned a malformed analysis; asking once more.",
+                self._provider_name,
+                self._client.model,
+            )
+            self._debug_trace.record(
+                "analysis.malformed_response_retry", initial_error=str(validation)
+            )
+        return self._client.parse(
+            system_prompt=system_prompt + "\n" + MALFORMED_ANALYSIS_RETRY_INSTRUCTION,
+            user_prompt=user_prompt,
+            schema_type=RequirementAnalysisSchema,
+            images=images,
+        )
+
     def _recover_evidence_citations(
         self,
         parsed: RequirementAnalysisSchema,
@@ -648,17 +685,21 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
                 unsupported_keys = {
                     evidence_key(*outputs[number - 1]) for number in unsupported_numbers
                 }
+                carried_keys = unsupported_keys & retained_question_keys(candidate)
                 if unsupported_numbers:
                     self._debug_trace.record(
                         "analysis.citation_repair_unsupported",
                         unsupported_output_numbers=unsupported_numbers,
+                        carried_question_count=len(carried_keys),
                     )
                     # A new item nothing supports is set aside; the rest of the analysis
-                    # stands. A reviewed active question cannot be dropped, and an
-                    # analysis with nothing left is no analysis (ADR-0032, 2026-10-25).
-                    if len(unsupported_numbers) == len(outputs) or not unsupported_keys <= (
-                        new_output_keys(candidate)
-                    ):
+                    # stands. A retained question cannot be dropped, so it is carried with
+                    # its earlier support: consolidation cites only earlier findings, which
+                    # need not repeat it. A replacement cannot be dropped or carried, and an
+                    # analysis with nothing left is no analysis (ADR-0032, 2026-10-28).
+                    if len(unsupported_numbers) == len(outputs) or not (
+                        unsupported_keys - carried_keys
+                    ) <= new_output_keys(candidate):
                         raise StructuredResponseValidationError(
                             "The model reported unsupported analysis content.", unsupported=True
                         )
@@ -691,7 +732,9 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
                     )
                 repaired = parsed.model_copy(update={"evidence_citations": repaired_citations})
                 working = deepcopy(candidate)
-                set_aside_outputs(working, unsupported_keys, "unsupported")
+                set_aside_outputs(working, unsupported_keys - carried_keys, "unsupported")
+                if carried_keys:
+                    working["carried_questions"] = sorted(carried_keys)
                 result = attach_analysis_evidence(
                     repaired,
                     working,

@@ -534,16 +534,50 @@ def test_source_content_is_not_truncated_by_list_or_recovery_limits(
 
 
 @pytest.mark.parametrize("provider", PROVIDERS)
-def test_invalid_analysis_shape_has_safe_provider_error_without_retry(
+def test_invalid_analysis_shape_is_asked_for_once_more_then_fails_safely(
     provider: str, tmp_path: Path
 ) -> None:
     requests: list[dict[str, Any]] = []
+    malformed = {"known_facts": "provider-private-text"}
     with pytest.raises(RequirementAnalysisGenerationError) as failure:
-        analyze(provider, [{"known_facts": "provider-private-text"}], requests, tmp_path)
+        analyze(provider, [malformed, malformed], requests, tmp_path)
     public = describe_public_error(failure.value)
     assert public.code == "model_invalid_output"
     assert "structured output" in public.message
     assert "provider-private-text" not in public.message
+    assert len(requests) == 2
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+def test_one_malformed_analysis_is_asked_for_again(provider: str, tmp_path: Path) -> None:
+    # Observed 2026-10-28: GPT-5.1 ran later fields into the uncertainty list as text.
+    corrupted = {
+        "known_facts": analysis()["known_facts"],
+        "new_uncertainties": [
+            {"kind": "open_question", "subject": "Which plans?", "rationale": "Unstated."},
+            'desired_outcome_proposal":{"statement":"provider-private-text',
+        ],
+    }
+    requests: list[dict[str, Any]] = []
+    result = analyze(provider, [corrupted, analysis(), mapping()], requests, tmp_path)
+    assert result["known_facts"] == analysis()["known_facts"]
+    assert len(requests) == 3
+    retry_prompt = json.dumps(requests[1])
+    assert "previous response did not match" in retry_prompt
+    assert "provider-private-text" not in retry_prompt
+    events = [json.loads(line) for line in (tmp_path / "trace.jsonl").read_text().splitlines()]
+    assert any(event["event"] == "analysis.malformed_response_retry" for event in events)
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+@pytest.mark.parametrize("finish_reason", ["length", "content_filter"])
+def test_truncated_or_filtered_analysis_is_not_asked_for_again(
+    provider: str, finish_reason: str, tmp_path: Path
+) -> None:
+    content = {"choices": [{"finish_reason": finish_reason, "message": {"content": "{}"}}]}
+    requests: list[dict[str, Any]] = []
+    with pytest.raises(RequirementAnalysisGenerationError):
+        analyze(provider, [content], requests, tmp_path)
     assert len(requests) == 1
 
 
@@ -646,16 +680,23 @@ def test_analysis_with_nothing_supported_still_fails(provider: str, tmp_path: Pa
     assert len(requests) == 2
 
 
-@pytest.mark.parametrize("provider", PROVIDERS)
-def test_unsupported_retained_question_is_never_set_aside(provider: str, tmp_path: Path) -> None:
-    question = "Which plans allow consent by proxy?"
-    active = ActiveQuestionContext(
+def _active_question(subject: str) -> ActiveQuestionContext:
+    return ActiveQuestionContext(
         question_id="question-1",
         kind=ClarificationKind.OPEN_QUESTION,
-        subject=question,
+        subject=subject,
         rationale="Consent rules differ by plan.",
         source=ClarificationSource.AI,
     )
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+def test_unsupported_retained_question_is_carried_not_set_aside(
+    provider: str, tmp_path: Path
+) -> None:
+    # Consolidation cites only the earlier findings: a retained question none of them
+    # repeats has nothing to cite, and the round must still keep it (ADR-0032).
+    question = "Which plans allow consent by proxy?"
     response = analysis()
     response["active_question_reviews"] = [
         {"question_id": "question-1", "action": "retain", "rationale": "Still open."}
@@ -663,9 +704,49 @@ def test_unsupported_retained_question_is_never_set_aside(provider: str, tmp_pat
     recovery = mapping()
     recovery["decisions"].append({"output_number": 25, "supported": False})
     requests: list[dict[str, Any]] = []
-    # The round must keep a question its review retained, so it cannot be dropped.
+    result = analyze(
+        provider,
+        [response, recovery],
+        requests,
+        tmp_path,
+        active_questions=(_active_question(question),),
+    )
+    key = "open_question:which plans allow consent by proxy?"
+    assert [item["question"] for item in result["open_questions"]] == [question]
+    assert result["carried_questions"] == [key]
+    assert key not in result["evidence_references"]
+    assert "set_aside" not in result
+    assert result["known_facts"] == analysis()["known_facts"]
+    assert len(requests) == 2
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+def test_unsupported_replacement_question_still_fails(provider: str, tmp_path: Path) -> None:
+    response = analysis()
+    response["active_question_reviews"] = [
+        {
+            "question_id": "question-1",
+            "action": "replace",
+            "rationale": "Narrowed to business lines.",
+            "replacement": {
+                "kind": "open_question",
+                "subject": "Which business plans allow consent by proxy?",
+                "rationale": "Consent rules differ by plan.",
+            },
+        }
+    ]
+    recovery = mapping()
+    recovery["decisions"].append({"output_number": 25, "supported": False})
+    requests: list[dict[str, Any]] = []
+    # A replacement is new wording with no earlier support to keep.
     with pytest.raises(RequirementAnalysisGenerationError, match="1 focused attempt"):
-        analyze(provider, [response, recovery], requests, tmp_path, active_questions=(active,))
+        analyze(
+            provider,
+            [response, recovery],
+            requests,
+            tmp_path,
+            active_questions=(_active_question("Which plans allow consent by proxy?"),),
+        )
     assert len(requests) == 2
 
 

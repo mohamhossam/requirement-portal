@@ -346,7 +346,8 @@ def _validated_evidence(
         if not citations_input:
             return {}
 
-    expected = _candidate_evidence_keys(candidate)
+    # A carried question keeps its earlier support and has no citation this round.
+    expected = _candidate_evidence_keys(candidate) - set(candidate.get("carried_questions", []))
     returned = {
         f"{citation.kind.strip()}:{' '.join(citation.subject.strip().casefold().split())}"
         for citation in citations_input
@@ -463,6 +464,23 @@ def new_output_keys(candidate: RequirementAnalysisCandidate) -> set[str]:
     return (_candidate_evidence_keys(candidate) - uncertainty_keys) | (
         uncertainty_keys & introduced
     )
+
+
+def retained_question_keys(candidate: RequirementAnalysisCandidate) -> set[str]:
+    """Keys of active questions this response's reviews kept unchanged.
+
+    A retained question keeps the support it was raised with, so it can be carried
+    without a new citation. A replacement is new wording and is not among these.
+    """
+    replacements = {
+        evidence_key(
+            _UNCERTAINTY_EVIDENCE_KINDS[review["replacement"]["kind"]],
+            review["replacement"]["subject"],
+        )
+        for review in candidate.get("question_reviews", [])
+        if review["replacement"] is not None
+    }
+    return _candidate_evidence_keys(candidate) - new_output_keys(candidate) - replacements
 
 
 def set_aside_outputs(

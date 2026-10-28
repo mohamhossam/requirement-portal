@@ -181,7 +181,7 @@ class ValidateAnalysisCitations:
         evidence = candidate.get("evidence_references", {})
         human_evidence = candidate.get("clarification_references", {})
         requirement_evidence = set(candidate.get("requirement_references", []))
-        # A question carried by the consolidation fallback keeps its earlier support.
+        # A carried question keeps its earlier support.
         expected = _candidate_keys(candidate) - set(candidate.get("carried_questions", []))
         if set(evidence) | set(human_evidence) | requirement_evidence != expected:
             raise RequirementAnalysisGenerationError(

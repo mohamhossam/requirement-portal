@@ -134,8 +134,9 @@ class RequirementAnalysisCandidate(TypedDict):
     # structured context or owner-confirmed intent. They carry no document reference.
     requirement_references: NotRequired[list[str]]
     set_aside: NotRequired[list[SetAsideCandidate]]
-    # Keys of active AI questions the consolidation fallback retained without a new
-    # citation: no model reviewed them this round, and they keep their earlier support.
+    # Keys of active AI questions retained without a new citation: by the consolidation
+    # fallback, which no model reviews, or by a review whose round had nothing to cite
+    # for them (consolidation cites only earlier findings). They keep their earlier support.
     carried_questions: NotRequired[list[str]]
     stage_provenance: NotRequired[list[AnalysisStageProvenanceCandidate]]
     reference_grounding: NotRequired[ReferenceGroundingStatus]

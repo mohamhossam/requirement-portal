@@ -5,7 +5,9 @@
 Accepted. The document-only support requirement is superseded by
 [ADR-0044](adr-0044-human-answer-analysis-citations.md); bounded recovery and atomic publication
 remain in force. Amended 2026-10-25: the requirement content is a citable source, and an
-unsupported new item is set aside instead of failing the analysis (see the last section).
+unsupported new item is set aside instead of failing the analysis. Amended 2026-10-28: a
+retained question recovery cannot support is carried instead of failing, and a malformed
+first analysis response is asked for once more (see the last three sections).
 
 ## Context
 
@@ -250,3 +252,53 @@ browser does not yet say how many items were set aside or label requirement-supp
 a set-aside proposal into an open question, splitting a packet when output is truncated, and a
 second recovery attempt with feedback are separate follow-ups. Deterministic fixtures cover the
 behaviour; whether live models use `requirement_source` well remains unverified.
+
+### Carrying a retained question recovery cannot support — 2026-10-28
+
+Resolving one question of a structured-document requirement failed on 2026-10-28 with "The
+model could not provide valid source citations" after about eleven minutes on GPT-5.1. Every
+section had been analysed; the final consolidation round then failed citation repair with
+"unsupported analysis content". Active questions reach the model only in that round
+(ADR-0029), and its evidence is the earlier section findings restated as blocks. A question
+the review retained that no finding repeats has nothing there to cite, so recovery honestly
+marked it unsupported, and the rule above made that fatal.
+
+Decision: **a retained question that recovery marks unsupported is carried, not fatal.** It
+stays in the round with no new citation and its key is recorded in `carried_questions`, as
+the consolidation fallback (ADR-0029, 2026-10-25) already does for the same question. Its
+identity and history are reconciled as before; it keeps the support it was raised with. The
+citation checks in the adapter and the application exempt carried keys and nothing else.
+
+Unchanged: an unsupported new item is set aside; an unsupported replacement still fails, since
+it is new wording with no earlier support; a response with every output unsupported still
+fails; a malformed mapping keeps its one correction. No prompt, schema, migration or API
+change, and no prompt-version bump: cached fragments were all fully cited. Debug traces record
+the carried count on `analysis.citation_repair_unsupported`. The cause was inferred from the
+worker log and code, since tracing was off for the failed job; deterministic fixtures cover
+the behaviour.
+
+### Asking once more for a malformed analysis response — 2026-10-28
+
+With that fixed, two retries of the same resolution failed earlier, each on one analysis call
+whose response did not match `RequirementAnalysisSchema`: first eight `literal_error`s in
+consolidation, then, with tracing on, a section response in which GPT-5.1 ran
+`desired_outcome_proposal` and the start of `evidence_citations` into the `new_uncertainties`
+list as two strings and closed the object early (`finish_reason=stop`, 1,472 output tokens).
+OpenRouter is called in `json_object` mode, which does not enforce the schema. The decision
+above makes a valid first response a one-call path, and newly analysed sections are kept only
+when every call succeeds, so one corrupted response among a dozen calls discarded all of them.
+
+Decision: **when the analysis response does not match the schema, it is asked for once more.**
+The same request is repeated with an instruction that the previous response was not used and
+must be returned whole and valid. Nothing from the malformed response is kept, merged or
+repaired, and the instruction never echoes it. A second malformed response fails as before,
+with the same safe `model_invalid_output` error. Only schema mismatches qualify: transport
+errors, refusals, filtered and truncated responses keep their terminal behaviour, and citation
+recovery keeps its own bounded correction. The retry is logged as a warning and traced as
+`analysis.malformed_response_retry`.
+
+It costs one further call only when a response is malformed. No schema, migration or API
+change; the retry instruction is used only on that second call, so the prompt version is
+unchanged. Whether the earlier `literal_error`s had the same cause is not known, as tracing
+was off for that run. Moving OpenRouter to enforced `json_schema` output belongs to the
+shared kernel and is not done here.

@@ -208,6 +208,13 @@ facts, constraints, and business rules even when the human clarifications resolv
 uncertainties. Do not return an empty replacement analysis.
 """
 
+MALFORMED_ANALYSIS_RETRY_INSTRUCTION = """
+Your previous response did not match the required JSON schema, so none of it was used.
+Return one complete analysis for the same request as a single valid JSON object: every
+field at the top level, every list item of its documented type, and every documented limit
+respected.
+"""
+
 DESIRED_OUTCOME_REVIEW_SYSTEM_PROMPT = """You are performing one focused business-intent
 decision. Determine whether the supplied business need supports one observable customer or
 business outcome without inventing a number, policy, regulation, deadline, system constraint,
