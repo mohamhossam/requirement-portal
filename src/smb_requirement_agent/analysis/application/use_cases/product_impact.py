@@ -155,6 +155,9 @@ def product_impact(answer: ArchitectureAssessment, at: datetime) -> ProductImpac
             )
             for item in answer.coverage
         ),
+        need_texts=tuple(
+            item.text.strip() for item in answer.facets if item.kind == "need" and item.text.strip()
+        ),
         gaps=tuple(
             ImpactGap(item.kind, item.concept_id, item.label, item.reason, item.system_id)
             for item in answer.gaps

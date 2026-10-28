@@ -553,6 +553,27 @@ def test_the_answer_maps_into_requirement_terms() -> None:
     assert (system.role, system.change_type) == ("primary", "modify")
 
 
+def test_the_assessed_need_phrases_are_kept_in_order() -> None:
+    answer = replace(
+        ANSWER,
+        facets=(
+            AssessedFacet("segment", "SMB", "SMB", ref_id="segment:smb"),
+            AssessedFacet("need", "  Static IP for SMB fibre ", "static IP"),
+            AssessedFacet("need", "   ", "static IP"),
+            AssessedFacet("need", "Usage quota per line", "quota"),
+        ),
+    )
+
+    impact = product_impact(answer, NOW)
+
+    assert impact.need_texts == ("Static IP for SMB fibre", "Usage quota per line")
+    assert product_impact_from_payload(product_impact_to_payload(impact)) == impact
+    # An impact saved before need phrases were kept reads back with none.
+    earlier = product_impact_to_payload(impact)
+    del earlier["need_texts"]
+    assert product_impact_from_payload(earlier).need_texts == ()
+
+
 def test_a_drafted_offering_maps_into_what_is_shown_and_keeps_the_draft_whole() -> None:
     impact = product_impact(NEW_LINE, NOW)
 

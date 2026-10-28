@@ -2,8 +2,9 @@
 
 A Requirement Owner's decision on the suggested product impact is rendered, in the
 decision's own transaction, as the precedent `POST /internal/architecture/precedents`
-takes: the requirement's text as it was assessed, the capabilities it needed, the
-offering, the systems, the suggested verdict and what the owner decided. The worker
+takes: the requirement's text as it was assessed, the need phrases it was assessed with,
+the capabilities it needed, the offering, the systems, the suggested verdict and what the
+owner decided. The worker
 delivers it. The knowledge service keeps the later decision on an analysis, so delivering
 one again whose answer was lost changes nothing. A service that is not there yet (404),
 throttles or cannot be reached is retried with a growing pause; one that refuses the
@@ -43,6 +44,8 @@ MAX_TEXT_PARTS = 50
 MAX_TEXT_PART = 10_000
 MAX_CONCEPTS = 40
 MAX_SYSTEMS = 60
+MAX_NEEDS = 24
+MAX_NEED = 1_000
 
 _log = logging.getLogger(__name__)
 
@@ -73,6 +76,9 @@ def precedent_handoff(
         "version": f"{analysis_id}@{analysis.version}",
         "release_id": impact.release_id,
         "text": [item[:MAX_TEXT_PART] for item in text[:MAX_TEXT_PARTS]],
+        # What later requirements are compared by (knowledge contract 1.2.0); a service
+        # before it ignores the field.
+        "needs": [item[:MAX_NEED] for item in impact.need_texts[:MAX_NEEDS]],
         "decision": impact.decision.value,
         "decided_at": impact.decided_at.isoformat(),
         "suggested_verdict": impact.suggested_verdict.value if impact.suggested_verdict else None,

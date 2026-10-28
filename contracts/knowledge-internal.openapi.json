@@ -1,6 +1,183 @@
 {
   "components": {
     "schemas": {
+      "AcceptedCitation": {
+        "description": "Where an accepted suggestion was read, kept with the fact it produced.\n\n``location`` is where in the source the passage is, as the reading named it (\"\u00a74.1 \u203a\nTable 2, row 3\"), and ``quote`` its words. For a document reading, ``document_version_id``\nand ``document`` name the uploaded version and its title, so the passage can be found\nagain after the suggestion itself is gone; a suggestion read from the catalogue or from\na change request names none.",
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document"
+          },
+          "document_version_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Version Id"
+          },
+          "location": {
+            "title": "Location",
+            "type": "string"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          }
+        },
+        "required": [
+          "location",
+          "quote"
+        ],
+        "title": "AcceptedCitation",
+        "type": "object"
+      },
+      "AcceptedCitationSchema": {
+        "description": "Where an accepted suggestion was read: the place and its words, and the document\nversion and title when it came from one of the draft's documents.",
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document"
+          },
+          "document_version_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Version Id"
+          },
+          "location": {
+            "maxLength": 10000,
+            "title": "Location",
+            "type": "string"
+          },
+          "quote": {
+            "maxLength": 10000,
+            "title": "Quote",
+            "type": "string"
+          }
+        },
+        "required": [
+          "location",
+          "quote"
+        ],
+        "title": "AcceptedCitationSchema",
+        "type": "object"
+      },
+      "AcceptedFrom": {
+        "description": "One accepted suggestion that created or extended an entity.\n\nIt records that the suggestion contributed, not which fields it touched, and where the\nsuggestion was read (its first citations), so the fact still leads to its passage once\nthe draft's suggestions are replaced by a later reading (review recommendation 6).",
+        "properties": {
+          "candidate_id": {
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "citations": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AcceptedCitation"
+            },
+            "title": "Citations",
+            "type": "array"
+          },
+          "decided_at": {
+            "format": "date-time",
+            "title": "Decided At",
+            "type": "string"
+          },
+          "decided_by": {
+            "title": "Decided By",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "prompt_version": {
+            "title": "Prompt Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "model",
+          "prompt_version",
+          "decided_by",
+          "decided_at"
+        ],
+        "title": "AcceptedFrom",
+        "type": "object"
+      },
+      "AcceptedFromSchema": {
+        "description": "An accepted suggestion recorded on what it produced: the model and prompt that\nsuggested it, who accepted it when (ADR-0120), and where it was read.",
+        "properties": {
+          "candidate_id": {
+            "maxLength": 200,
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "citations": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AcceptedCitationSchema"
+            },
+            "maxItems": 3,
+            "title": "Citations",
+            "type": "array"
+          },
+          "decided_at": {
+            "format": "date-time",
+            "title": "Decided At",
+            "type": "string"
+          },
+          "decided_by": {
+            "maxLength": 200,
+            "title": "Decided By",
+            "type": "string"
+          },
+          "model": {
+            "maxLength": 300,
+            "title": "Model",
+            "type": "string"
+          },
+          "prompt_version": {
+            "maxLength": 300,
+            "title": "Prompt Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "model",
+          "prompt_version",
+          "decided_by",
+          "decided_at"
+        ],
+        "title": "AcceptedFromSchema",
+        "type": "object"
+      },
       "Activity": {
         "properties": {
           "channel_entry": {
@@ -100,6 +277,17 @@
             ],
             "title": "Mode"
           },
+          "mode_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode Id"
+          },
           "name": {
             "title": "Name",
             "type": "string"
@@ -151,6 +339,17 @@
               }
             ],
             "title": "Phase"
+          },
+          "phase_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phase Id"
           },
           "point_of_no_return": {
             "anyOf": [
@@ -295,6 +494,17 @@
             ],
             "title": "Interface"
           },
+          "interface_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interface Id"
+          },
           "open_api_ids": {
             "default": [],
             "items": {
@@ -350,13 +560,12 @@
           "timing": {
             "anyOf": [
               {
-                "type": "string"
+                "$ref": "#/components/schemas/CallTiming"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Timing"
+            ]
           },
           "tmf_equivalent": {
             "anyOf": [
@@ -468,6 +677,18 @@
             ],
             "title": "Interface"
           },
+          "interface_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interface Id"
+          },
           "open_api_ids": {
             "default": [],
             "items": {
@@ -529,14 +750,12 @@
           "timing": {
             "anyOf": [
               {
-                "maxLength": 300,
-                "type": "string"
+                "$ref": "#/components/schemas/CallTiming"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Timing"
+            ]
           },
           "tmf_equivalent": {
             "anyOf": [
@@ -683,6 +902,11 @@
             ],
             "title": "Input"
           },
+          "main_track": {
+            "default": false,
+            "title": "Main Track",
+            "type": "boolean"
+          },
           "mode": {
             "anyOf": [
               {
@@ -694,6 +918,18 @@
               }
             ],
             "title": "Mode"
+          },
+          "mode_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode Id"
           },
           "name": {
             "maxLength": 300,
@@ -752,6 +988,18 @@
               }
             ],
             "title": "Phase"
+          },
+          "phase_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phase Id"
           },
           "point_of_no_return": {
             "anyOf": [
@@ -1402,14 +1650,17 @@
           "declared_systems": {
             "default": [],
             "items": {
+              "maxLength": 200,
               "type": "string"
             },
+            "maxItems": 50,
             "title": "Declared Systems",
             "type": "array"
           },
           "release_id": {
             "anyOf": [
               {
+                "maxLength": 200,
                 "type": "string"
               },
               {
@@ -1420,8 +1671,10 @@
           },
           "text": {
             "items": {
+              "maxLength": 10000,
               "type": "string"
             },
+            "maxItems": 50,
             "title": "Text",
             "type": "array"
           }
@@ -1648,14 +1901,17 @@
           "declared_systems": {
             "default": [],
             "items": {
+              "maxLength": 200,
               "type": "string"
             },
+            "maxItems": 50,
             "title": "Declared Systems",
             "type": "array"
           },
           "release_id": {
             "anyOf": [
               {
+                "maxLength": 200,
                 "type": "string"
               },
               {
@@ -1667,6 +1923,7 @@
           "requirement_id": {
             "anyOf": [
               {
+                "maxLength": 200,
                 "type": "string"
               },
               {
@@ -1677,8 +1934,10 @@
           },
           "text": {
             "items": {
+              "maxLength": 10000,
               "type": "string"
             },
+            "maxItems": 50,
             "title": "Text",
             "type": "array"
           }
@@ -1743,6 +2002,17 @@
             ],
             "title": "Kind"
           },
+          "kind_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind Id"
+          },
           "source": {
             "anyOf": [
               {
@@ -1795,6 +2065,18 @@
             ],
             "title": "Kind"
           },
+          "kind_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind Id"
+          },
           "source": {
             "anyOf": [
               {
@@ -1819,6 +2101,15 @@
         ],
         "title": "BusinessRuleSchema",
         "type": "object"
+      },
+      "CallTiming": {
+        "description": "Whether a call waits for its answer.",
+        "enum": [
+          "Sync",
+          "Async"
+        ],
+        "title": "CallTiming",
+        "type": "string"
       },
       "CapabilityOwners": {
         "description": "Who owns and staffs one impacted capability on one system (Phase 1b).",
@@ -2149,6 +2440,17 @@
         ],
         "title": "ConceptCoverage",
         "type": "object"
+      },
+      "CustomerStage": {
+        "description": "Where an order type sits in the customer's life with the offering.",
+        "enum": [
+          "join",
+          "change",
+          "support",
+          "leave"
+        ],
+        "title": "CustomerStage",
+        "type": "string"
       },
       "DeliveredChangeBody": {
         "description": "A catalogue change the decided product impact implies for the delivered Features.",
@@ -3136,6 +3438,17 @@
             ],
             "title": "Source"
           },
+          "system_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Id"
+          },
           "trigger": {
             "title": "Trigger",
             "type": "string"
@@ -3184,6 +3497,18 @@
             ],
             "title": "Source"
           },
+          "system_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Id"
+          },
           "trigger": {
             "maxLength": 10000,
             "title": "Trigger",
@@ -3209,6 +3534,17 @@
               }
             ],
             "title": "Branch"
+          },
+          "channel_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel Id"
           },
           "condition": {
             "anyOf": [
@@ -3306,6 +3642,18 @@
               }
             ],
             "title": "Branch"
+          },
+          "channel_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel Id"
           },
           "condition": {
             "anyOf": [
@@ -3624,6 +3972,14 @@
       },
       "Journey": {
         "properties": {
+          "accepted": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AcceptedFrom"
+            },
+            "title": "Accepted",
+            "type": "array"
+          },
           "activities": {
             "default": [],
             "items": {
@@ -3659,6 +4015,14 @@
               "$ref": "#/components/schemas/FlowRule"
             },
             "title": "Flow Rules",
+            "type": "array"
+          },
+          "former_ids": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Former Ids",
             "type": "array"
           },
           "id": {
@@ -3716,6 +4080,30 @@
           "name"
         ],
         "title": "Journey",
+        "type": "object"
+      },
+      "JourneyChannelFlowResponse": {
+        "description": "The flow one channel sees: its own steps and those that name no channel.",
+        "properties": {
+          "channel_id": {
+            "maxLength": 200,
+            "title": "Channel Id",
+            "type": "string"
+          },
+          "edges": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/JourneyEdgeResponse"
+            },
+            "maxItems": 20000,
+            "title": "Edges",
+            "type": "array"
+          }
+        },
+        "required": [
+          "channel_id"
+        ],
+        "title": "JourneyChannelFlowResponse",
         "type": "object"
       },
       "JourneyEdgeResponse": {
@@ -3800,6 +4188,15 @@
       "JourneySchema": {
         "description": "A journey and, read-only, the flow derived from its order and rules (ADR-0096).",
         "properties": {
+          "accepted": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AcceptedFromSchema"
+            },
+            "maxItems": 5000,
+            "title": "Accepted",
+            "type": "array"
+          },
           "activities": {
             "default": [],
             "items": {
@@ -3807,6 +4204,15 @@
             },
             "maxItems": 5000,
             "title": "Activities",
+            "type": "array"
+          },
+          "channel_edges": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/JourneyChannelFlowResponse"
+            },
+            "maxItems": 5000,
+            "title": "Channel Edges",
             "type": "array"
           },
           "confidence": {
@@ -3847,6 +4253,16 @@
             },
             "maxItems": 5000,
             "title": "Flow Rules",
+            "type": "array"
+          },
+          "former_ids": {
+            "default": [],
+            "items": {
+              "maxLength": 200,
+              "type": "string"
+            },
+            "maxItems": 5000,
+            "title": "Former Ids",
             "type": "array"
           },
           "id": {
@@ -3891,6 +4307,15 @@
               }
             ],
             "title": "Product Id"
+          },
+          "shared_edges": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/JourneyEdgeResponse"
+            },
+            "maxItems": 20000,
+            "title": "Shared Edges",
+            "type": "array"
           },
           "source": {
             "anyOf": [
@@ -4520,6 +4945,11 @@
             ],
             "title": "Description"
           },
+          "hub": {
+            "default": false,
+            "title": "Hub",
+            "type": "boolean"
+          },
           "id": {
             "title": "Id",
             "type": "string"
@@ -4697,6 +5127,11 @@
               }
             ],
             "title": "Description"
+          },
+          "hub": {
+            "default": false,
+            "title": "Hub",
+            "type": "boolean"
           },
           "id": {
             "maxLength": 200,
@@ -4910,6 +5345,17 @@
             "title": "Quality",
             "type": "string"
           },
+          "quality_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quality Id"
+          },
           "source": {
             "anyOf": [
               {
@@ -4960,6 +5406,18 @@
             "maxLength": 300,
             "title": "Quality",
             "type": "string"
+          },
+          "quality_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quality Id"
           },
           "source": {
             "anyOf": [
@@ -5250,6 +5708,17 @@
           "text": {
             "title": "Text",
             "type": "string"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
           }
         },
         "required": [
@@ -5314,6 +5783,18 @@
             "maxLength": 10000,
             "title": "Text",
             "type": "string"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
           }
         },
         "required": [
@@ -5554,6 +6035,17 @@
               }
             ]
           },
+          "delivery_drop": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Drop"
+          },
           "description": {
             "anyOf": [
               {
@@ -5584,6 +6076,16 @@
               }
             ],
             "title": "Source"
+          },
+          "stage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CustomerStage"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -5620,6 +6122,18 @@
               }
             ]
           },
+          "delivery_drop": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Drop"
+          },
           "description": {
             "anyOf": [
               {
@@ -5653,6 +6167,16 @@
               }
             ],
             "title": "Source"
+          },
+          "stage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CustomerStage"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -5721,11 +6245,33 @@
         "type": "object"
       },
       "PlanCharacteristic": {
-        "description": "One stated fact of a plan, such as \"Download\" \u203a \"200 Mbps\" or \"CPE\" \u203a \"Fortinet 90G\".",
+        "description": "One stated fact of a plan, such as \"Download\" \u203a \"200 Mbps\" or \"CPE\" \u203a \"Fortinet 90G\".\n\nA value written as a number and a unit is also held as its amount and unit (\"200\",\n\"Mbps\"), so plans compare without reading the words. Both are read from the value, never\nstated beside it, so every catalogue file, which holds the value alone, keeps them.",
         "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
           },
           "value": {
             "title": "Value",
@@ -5741,10 +6287,34 @@
       },
       "PlanCharacteristicSchema": {
         "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
           "name": {
             "maxLength": 300,
             "title": "Name",
             "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
           },
           "value": {
             "maxLength": 10000,
@@ -5780,6 +6350,16 @@
           },
           "decision": {
             "$ref": "#/components/schemas/PrecedentDecision"
+          },
+          "needs": {
+            "default": [],
+            "items": {
+              "maxLength": 1000,
+              "type": "string"
+            },
+            "maxItems": 24,
+            "title": "Needs",
+            "type": "array"
           },
           "offering_id": {
             "anyOf": [
@@ -6038,6 +6618,14 @@
       },
       "ProductOffering": {
         "properties": {
+          "accepted": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AcceptedFrom"
+            },
+            "title": "Accepted",
+            "type": "array"
+          },
           "audiences": {
             "default": [],
             "items": {
@@ -6099,6 +6687,11 @@
             "title": "Decisions",
             "type": "array"
           },
+          "deprecated": {
+            "default": false,
+            "title": "Deprecated",
+            "type": "boolean"
+          },
           "family": {
             "anyOf": [
               {
@@ -6109,6 +6702,25 @@
               }
             ],
             "title": "Family"
+          },
+          "family_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Family Id"
+          },
+          "former_ids": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Former Ids",
+            "type": "array"
           },
           "id": {
             "title": "Id",
@@ -6124,6 +6736,17 @@
               }
             ],
             "title": "Lifecycle"
+          },
+          "lifecycle_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lifecycle Id"
           },
           "lifecycle_notes": {
             "default": [],
@@ -6202,6 +6825,17 @@
             ],
             "title": "Proposition"
           },
+          "purpose": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purpose"
+          },
           "questions": {
             "default": [],
             "items": {
@@ -6209,6 +6843,17 @@
             },
             "title": "Questions",
             "type": "array"
+          },
+          "replaced_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replaced By"
           },
           "rules": {
             "default": [],
@@ -6277,6 +6922,15 @@
       "ProductOfferingSchema": {
         "description": "A commercial offering, its order types and components, and the systems behind them.",
         "properties": {
+          "accepted": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AcceptedFromSchema"
+            },
+            "maxItems": 5000,
+            "title": "Accepted",
+            "type": "array"
+          },
           "audiences": {
             "default": [],
             "items": {
@@ -6345,6 +6999,11 @@
             "title": "Decisions",
             "type": "array"
           },
+          "deprecated": {
+            "default": false,
+            "title": "Deprecated",
+            "type": "boolean"
+          },
           "family": {
             "anyOf": [
               {
@@ -6356,6 +7015,28 @@
               }
             ],
             "title": "Family"
+          },
+          "family_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Family Id"
+          },
+          "former_ids": {
+            "default": [],
+            "items": {
+              "maxLength": 200,
+              "type": "string"
+            },
+            "maxItems": 5000,
+            "title": "Former Ids",
+            "type": "array"
           },
           "id": {
             "maxLength": 200,
@@ -6373,6 +7054,18 @@
               }
             ],
             "title": "Lifecycle"
+          },
+          "lifecycle_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lifecycle Id"
           },
           "lifecycle_notes": {
             "default": [],
@@ -6461,6 +7154,18 @@
             ],
             "title": "Proposition"
           },
+          "purpose": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purpose"
+          },
           "questions": {
             "default": [],
             "items": {
@@ -6469,6 +7174,18 @@
             "maxItems": 5000,
             "title": "Questions",
             "type": "array"
+          },
+          "replaced_by": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replaced By"
           },
           "rules": {
             "default": [],
@@ -7428,6 +8145,17 @@
             ],
             "title": "Interface"
           },
+          "interface_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interface Id"
+          },
           "label": {
             "title": "Label",
             "type": "string"
@@ -7485,6 +8213,18 @@
               }
             ],
             "title": "Interface"
+          },
+          "interface_id": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interface Id"
           },
           "label": {
             "maxLength": 10000,
@@ -7570,7 +8310,7 @@
   },
   "info": {
     "title": "Knowledge service internal API",
-    "version": "0.1.0"
+    "version": "1.2.0"
   },
   "openapi": "3.1.0",
   "paths": {

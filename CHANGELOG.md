@@ -11,6 +11,13 @@ restoring a backup.
 
 ## Unreleased
 
+- **A decided product verdict carries the needs it was assessed with.** The knowledge portal
+  compared a new requirement with earlier decided ones by their first 4,000 characters, so a
+  long requirement matched by its opening alone. The assessment's need phrases are now kept
+  with the product impact and sent with each decided verdict (at most 24, each up to 1,000
+  characters), for knowledge portals from contract 1.2.0 to compare by. An older knowledge
+  portal ignores them; analyses decided before keep none. The pinned knowledge contract moves
+  to 1.2.0. No migration, no upgrade step (ADR-0115, amended).
 - **A slow product assessment is no longer given up on.** Analysis waited 120 s for the
   knowledge service's assessment. A requirement with many needs took 131 s, so the analysis was
   saved with "Product impact was not assessed" (logged as "The knowledge service could not be

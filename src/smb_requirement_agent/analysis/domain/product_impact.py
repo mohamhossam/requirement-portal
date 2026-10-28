@@ -169,6 +169,9 @@ class ProductImpact:
     # For a new offering in a family or a new product line (ontology plan Phase 9).
     draft: OfferingDraft | None = None
     needs: tuple[CapabilityNeed, ...] = ()
+    # The need phrases the portal read in the requirement, which a decided precedent is
+    # compared by; none for an impact assessed before they were kept.
+    need_texts: tuple[str, ...] = ()
     gaps: tuple[ImpactGap, ...] = ()
     systems: tuple[ImpactSystem, ...] = ()
     owners: tuple[ImpactOwner, ...] = ()

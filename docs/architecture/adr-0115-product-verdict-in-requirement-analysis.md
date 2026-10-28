@@ -88,3 +88,23 @@ Slice 13's publication record already has room for an accepted verdict and its v
 - **The review ruleset version is unchanged.** Bumping it would change every approval's
   fingerprint; the decided impact joins the evidence fingerprint instead, and only once decided.
 
+## Amendment 2 — need phrases kept and sent with a decided precedent (2026-10-28)
+
+knowledge-portal compared a new requirement with decided precedents by each one's first 4,000
+characters, so a long requirement matched by its opening alone (knowledge-portal #159).
+knowledge-portal #160 (contract 1.2.0, its ADR-0129) compares them by the need phrases each
+was assessed with, when a precedent carries them.
+
+- **The impact keeps its need phrases.** `ProductImpact.need_texts` holds the `text` of each
+  assessed facet whose kind is `need`, stripped, blanks left out, in the answer's order. It is
+  kept with the analysis in its JSON payload; an impact saved before reads back with none, so
+  there is no migration.
+- **A decided precedent sends them.** The handoff adds `needs`: at most 24, each cut at 1,000
+  characters (the contract's limits). An impact without phrases sends an empty list, which the
+  knowledge service treats as a precedent compared by its text. A service before 1.2.0 ignores
+  the field.
+- **The pinned contract moves to 1.2.0.** `contracts/knowledge-internal.openapi.json` is
+  re-pinned from knowledge-portal's exported contract, which also brings in the changes since
+  the previous pin; every test that reads the contract passes against it.
+- Nothing is shown in the browser and nothing about the decision changes.
+

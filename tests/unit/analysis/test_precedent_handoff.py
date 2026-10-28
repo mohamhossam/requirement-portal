@@ -14,6 +14,8 @@ from fastapi.testclient import TestClient
 
 from smb_requirement_agent.analysis.application.use_cases.precedent_handoff import (
     MAX_ATTEMPTS,
+    MAX_NEED,
+    MAX_NEEDS,
     DeliverPrecedents,
 )
 from smb_requirement_agent.application.errors import (
@@ -25,6 +27,9 @@ from smb_requirement_agent.infrastructure.config.options import LLMProvider
 from smb_requirement_agent.infrastructure.config.settings import Settings
 from smb_requirement_agent.interfaces.api.container import Container, build_container
 from smb_requirement_agent.interfaces.api.main import create_app
+from smb_requirement_agent.references.application.ports.architecture_assessment import (
+    AssessedFacet,
+)
 from smb_requirement_agent.references.application.ports.knowledge_handoff import HandoffStatus
 from smb_requirement_agent.references.application.ports.precedent_handoff import (
     PrecedentHandoff,
@@ -34,7 +39,12 @@ from smb_requirement_agent.references.infrastructure.precedent_handoffs import (
     InMemoryPrecedentHandoffs,
 )
 from tests.knowledge_doubles import PublishedLibrary, service_for
-from tests.unit.analysis.test_product_impact import StubAssessment, _decide, _requirement
+from tests.unit.analysis.test_product_impact import (
+    ANSWER,
+    StubAssessment,
+    _decide,
+    _requirement,
+)
 from tests.unit.test_knowledge_http_contract import _assert_in_contract, _client
 from tests.unit.workflow_helpers import post_analysis
 
@@ -163,6 +173,28 @@ def test_each_decision_queues_one_precedent_the_contract_allows(
     assert payload["concept_ids"] == ["cap:static-ip"]
     assert payload["systems"] == [{"id": "bcrm", "role": "primary", "change_type": "modify"}]
     assert "Static IP quota" in payload["text"][0]
+    # The needs it was assessed with, which precedents are compared by.
+    assert payload["needs"] == ["Static IP for SMB fibre"]
+
+
+def test_the_needs_sent_keep_to_the_contract_limits(portal: Portal) -> None:
+    long_need = "Static IP " + "x" * 1_500
+    portal.assessment.answer = replace(
+        ANSWER,
+        facets=(
+            AssessedFacet("need", long_need, "static IP"),
+            *(AssessedFacet("need", f"Need {index}", "static IP") for index in range(30)),
+        ),
+    )
+    _decided(portal, decision="accepted")
+
+    (handoff,) = _queued(portal)
+
+    needs = handoff.payload["needs"]
+    _sent_as_the_contract_describes(handoff.payload)
+    assert len(needs) == MAX_NEEDS == 24
+    assert needs[0] == long_need[:MAX_NEED] and len(needs[0]) == 1_000
+    assert needs[1:3] == ["Need 0", "Need 1"]
 
 
 def test_the_assessment_names_the_requirement_so_its_own_precedent_is_left_out(
