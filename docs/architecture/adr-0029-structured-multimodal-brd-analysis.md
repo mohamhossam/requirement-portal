@@ -70,3 +70,37 @@ stopped with every valid finding discarded.
 
 The fallback does not reconcile contradictions between sections, which the focused pass above
 exists for, so it is a last resort rather than a substitute. No migration, prompt or API change.
+
+## Amendment — one pass when the model holds the document (2026-10-29)
+
+Section packets were sized for local and small-output models, and every document went through
+them, so a hosted model with a large window paid for at least three calls, each with its own
+citation repairs. With OpenRouter's GPT-5.1, analysing a 41,000-character BRD with 5 images
+(two packets: the images exceed three per packet) took 641 s of model time over 7 calls: two
+section calls, one citation repair, consolidation, a question-reconciliation recovery and two
+citation repairs. Time is set by output: the model writes about 100 tokens a second, and
+consolidation alone wrote 26,656. The same BRD in one call took 345 s over 2 calls (the call and
+one citation repair), wrote half the tokens, kept every open question and ambiguity, and found
+three contradictions between sections that consolidation had missed. A second run, of the
+shipped code, took 435 s over 4 calls: its first answer was malformed and was asked for once
+more, as a section packet's would be.
+
+- **One pass when both limits allow it.** `PlanSinglePass` sends every source block and the
+  active questions in one call when the evidence fits the consolidation budget (the model's
+  window less the prompt reserve) and the model's output limit can write three times the
+  evidence's characters. GPT-5.1 wrote about 2.65 times its evidence for that BRD. The output
+  limit comes from the analysis profile, the local model, `OPENROUTER_MAX_OUTPUT_TOKENS` or
+  `OPENAI_MAX_OUTPUT_TOKENS`; with none known (the offline fake), the section packets stay.
+- **Small-output models keep their packets.** Gemini Flash-Lite's 8,192-token limit allows one
+  pass only for evidence under about 11,000 characters, so the reason section packets keep their
+  budget, above, still holds for it.
+- **At most ten images in one pass.** A section packet holds three; one pass bounds its single
+  request at ten, and a document with more keeps its section packets.
+- **What one pass records.** One stage, `evidence_single_pass`, cached like a packet and
+  committed only with an accepted analysis. Progress reports planning, analysing and validating;
+  there is no consolidation phase. Figure support is not needed: the call reads the figures in
+  the source itself.
+
+A single call is one larger request: an output limit too small for it would truncate the whole
+analysis, which is why the output limit, not only the window, decides. No migration, prompt or
+API change.

@@ -42,6 +42,7 @@ from smb_requirement_agent.analysis.application.use_cases.evidence_analysis impo
     AssembleRequirementEvidence,
     ConsolidateEvidenceAnalysis,
     PlanEvidencePackets,
+    PlanSinglePass,
     StructuredRequirementAnalyzer,
     ValidateAnalysisCitations,
 )
@@ -104,6 +105,8 @@ def build_requirement_analyzer(
         llm.analyzer,
         AssembleRequirementEvidence(),
         packet_planner,
+        # One pass reads as much as consolidation may, bounded by what the model can write.
+        PlanSinglePass(_consolidation_budget(settings), _output_characters(settings)),
         packet_analyzer,
         ConsolidateEvidenceAnalysis(consolidation_planner, packet_analyzer),
         citation_validator,
@@ -158,6 +161,21 @@ def _model_window_characters(settings: Settings) -> int | None:
             settings.openrouter_context_tokens - settings.openrouter_max_output_tokens
         ) * _CHARACTERS_PER_TOKEN
     return None
+
+
+def _output_characters(settings: Settings) -> int:
+    """Characters the analysis model may write, or 0 when its output limit is unknown."""
+    if settings.llm_profiles:
+        output_tokens = settings.llm_profiles.for_task("analysis").output_tokens
+    elif settings.llm_provider is LLMProvider.LOCAL:
+        output_tokens = settings.local_llm_max_output_tokens
+    elif settings.llm_provider is LLMProvider.OPENROUTER:
+        output_tokens = settings.openrouter_max_output_tokens
+    elif settings.llm_provider is LLMProvider.OPENAI:
+        output_tokens = settings.openai_max_output_tokens
+    else:
+        return 0
+    return output_tokens * _CHARACTERS_PER_TOKEN
 
 
 @dataclass(frozen=True)
