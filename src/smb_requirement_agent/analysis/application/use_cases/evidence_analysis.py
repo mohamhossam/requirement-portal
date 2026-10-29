@@ -54,6 +54,11 @@ _log = logging.getLogger(__name__)
 
 PACKET_PROMPT_RESERVE_CHARACTERS = 12_000
 MAX_PACKET_IMAGES = 3
+# One pass reads every image at once; a document with more keeps its section packets.
+MAX_SINGLE_PASS_IMAGES = 10
+# An analysis writes up to about three times the characters of the evidence it reads: GPT-5.1
+# wrote 27,348 tokens for a 41,289-character BRD (2026-10-29, ADR-0029).
+OUTPUT_PER_EVIDENCE_CHARACTER = 3
 _BUSINESS_USE_CASE_HEADING = re.compile(r"^\[?BUC\s*\d+\]?\b", re.IGNORECASE)
 
 
@@ -97,7 +102,7 @@ class PlanEvidencePackets:
                     packets.append((self._context(document, current, image_by_block),))
                     current, current_size, current_images = [], 0, 0
                 inside_business_use_cases = inside_business_use_cases or business_use_case
-                size = len(block.get("text") or "") + len(block["label"]) + 100
+                size = _block_size(block)
                 is_image = block["kind"] == "image"
                 if current and (
                     current_size + size > self._block_budget
@@ -114,7 +119,7 @@ class PlanEvidencePackets:
 
     def _bounded_blocks(self, block: AnalysisEvidenceBlock) -> tuple[AnalysisEvidenceBlock, ...]:
         text = block.get("text") or ""
-        if len(text) + len(block["label"]) + 100 <= self._block_budget:
+        if _block_size(block) <= self._block_budget:
             return (block,)
         # Reserve room for the generated "part N of M" suffix as well as packet markup.
         overhead = len(block["label"]) + 140
@@ -159,6 +164,34 @@ class PlanEvidencePackets:
                 item for block_id, item in image_by_block.items() if block_id in block_ids
             ],
         )
+
+
+class PlanSinglePass:
+    """Decide whether one model pass can read every source block and write the whole analysis.
+
+    A model whose window and output limit both hold the document analyses it in one call, with
+    the active questions, instead of section packets and a consolidation pass (ADR-0029,
+    2026-10-29). Its output limit bounds the evidence too, so a small-output model keeps its
+    section packets rather than truncating a whole document's analysis.
+    """
+
+    def __init__(self, max_input_characters: int, max_output_characters: int) -> None:
+        self._evidence_budget = min(
+            max_input_characters - PACKET_PROMPT_RESERVE_CHARACTERS,
+            max_output_characters // OUTPUT_PER_EVIDENCE_CHARACTER,
+        )
+
+    def holds(self, documents: Sequence[AnalysisDocumentContext]) -> bool:
+        blocks = [block for document in documents for block in document.get("evidence_blocks", [])]
+        images = sum(block["kind"] == "image" for block in blocks)
+        return (
+            sum(_block_size(block) for block in blocks) <= self._evidence_budget
+            and images <= MAX_SINGLE_PASS_IMAGES
+        )
+
+
+def _block_size(block: AnalysisEvidenceBlock) -> int:
+    return len(block.get("text") or "") + len(block["label"]) + 100
 
 
 class ValidateAnalysisCitations:
@@ -458,6 +491,7 @@ class StructuredRequirementAnalyzer(RequirementAnalyzerPort):
         fallback: RequirementAnalyzerPort,
         assembler: AssembleRequirementEvidence,
         planner: PlanEvidencePackets,
+        single_pass: PlanSinglePass,
         packet_analyzer: AnalyzeEvidencePacket,
         consolidator: ConsolidateEvidenceAnalysis,
         validator: ValidateAnalysisCitations,
@@ -467,6 +501,7 @@ class StructuredRequirementAnalyzer(RequirementAnalyzerPort):
         self._fallback = fallback
         self._assembler = assembler
         self._planner = planner
+        self._single_pass = single_pass
         self._packet_analyzer = packet_analyzer
         self._consolidator = consolidator
         self._validator = validator
@@ -489,6 +524,10 @@ class StructuredRequirementAnalyzer(RequirementAnalyzerPort):
                 documents,
                 intent_decisions,
                 active_questions,
+            )
+        if self._single_pass.holds(evidence_documents):
+            return self._analyze_in_one_pass(
+                requirement, clarifications, evidence_documents, intent_decisions, active_questions
             )
         packets = self._planner.execute(evidence_documents)
         fragments: list[RequirementAnalysisCandidate] = []
@@ -538,6 +577,31 @@ class StructuredRequirementAnalyzer(RequirementAnalyzerPort):
             None,
         )
         result["stage_provenance"] = stages
+        stage_generation_effect(lambda: self._packet_analyzer.commit(pending_cache_entries))
+        return result
+
+    def _analyze_in_one_pass(
+        self,
+        requirement: Requirement,
+        clarifications: Sequence[HumanClarification],
+        evidence_documents: tuple[AnalysisDocumentContext, ...],
+        intent_decisions: Sequence[IntentProposal],
+        active_questions: Sequence[ActiveQuestionContext],
+    ) -> RequirementAnalysisCandidate:
+        """Read every source block and review the active questions in one model call."""
+        self._progress.report(requirement.id, "planning_evidence", 1, 3, None)
+        self._progress.report(requirement.id, "analyzing_evidence", 2, 3, None)
+        result, provenance, pending = self._packet_analyzer.execute(
+            requirement,
+            clarifications,
+            evidence_documents,
+            intent_decisions,
+            active_questions,
+            "evidence_single_pass",
+        )
+        self._progress.report(requirement.id, "validating_evidence_references", 3, 3, None)
+        result["stage_provenance"] = [provenance]
+        pending_cache_entries = [] if pending is None else [pending]
         stage_generation_effect(lambda: self._packet_analyzer.commit(pending_cache_entries))
         return result
 

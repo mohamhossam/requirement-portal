@@ -20,10 +20,12 @@ from smb_requirement_agent.analysis.application.use_cases.analysis_mapping impor
     analysis_evidence_key,
 )
 from smb_requirement_agent.analysis.application.use_cases.evidence_analysis import (
+    MAX_SINGLE_PASS_IMAGES,
     AnalyzeEvidencePacket,
     AssembleRequirementEvidence,
     ConsolidateEvidenceAnalysis,
     PlanEvidencePackets,
+    PlanSinglePass,
     StructuredRequirementAnalyzer,
     ValidateAnalysisCitations,
 )
@@ -32,6 +34,7 @@ from smb_requirement_agent.analysis.application.use_cases.generation_effects imp
 )
 from smb_requirement_agent.analysis.domain.value_objects import (
     ClarificationKind,
+    ClarificationSource,
     HumanClarification,
     IntentProposal,
     IntentProposalKind,
@@ -48,6 +51,8 @@ from smb_requirement_agent.requirements.domain.requirement.value_objects import 
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 
 NOW = datetime(2026, 9, 7, tzinfo=UTC)
+# Never holds a document, so these tests analyse section packets and consolidate them.
+SECTIONS_ONLY = PlanSinglePass(max_input_characters=0, max_output_characters=0)
 
 
 class RecordingEvidenceAnalyzer:
@@ -171,6 +176,7 @@ def test_consolidation_gets_the_evidence_behind_packet_findings_as_figure_suppor
         NoOpFallback(),
         AssembleRequirementEvidence(),
         planner,
+        SECTIONS_ONLY,
         packet_analyzer,
         ConsolidateEvidenceAnalysis(planner, packet_analyzer),
         validator,
@@ -245,6 +251,7 @@ def test_requirement_supported_finding_survives_consolidation_without_a_document
         NoOpFallback(),
         AssembleRequirementEvidence(),
         planner,
+        SECTIONS_ONLY,
         packet_analyzer,
         ConsolidateEvidenceAnalysis(planner, packet_analyzer),
         validator,
@@ -411,6 +418,7 @@ def test_packetized_analysis_caches_fragments_and_records_stages() -> None:
         NoOpFallback(),
         AssembleRequirementEvidence(),
         planner,
+        SECTIONS_ONLY,
         packet_analyzer,
         ConsolidateEvidenceAnalysis(planner, packet_analyzer),
         validator,
@@ -448,6 +456,7 @@ def test_failed_multi_packet_analysis_does_not_commit_partial_fragment_cache() -
         NoOpFallback(),
         AssembleRequirementEvidence(),
         planner,
+        SECTIONS_ONLY,
         packet_analyzer,
         ConsolidateEvidenceAnalysis(planner, packet_analyzer),
         validator,
@@ -643,6 +652,7 @@ def test_consolidation_preserves_exact_references_across_multiple_documents() ->
         NoOpFallback(),
         AssembleRequirementEvidence(),
         planner,
+        SECTIONS_ONLY,
         packet_analyzer,
         ConsolidateEvidenceAnalysis(planner, packet_analyzer),
         validator,
@@ -727,3 +737,125 @@ def test_packet_cache_is_scoped_to_configuration_fingerprint() -> None:
     provider.configuration_fingerprint = "configuration-two"
     packet.execute(requirement, (), (_document(),), ())
     assert provider.calls == 2
+
+
+class QuestionRecordingEvidenceAnalyzer(RecordingEvidenceAnalyzer):
+    """Records the blocks and active questions each call was given."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.block_ids: list[list[str]] = []
+        self.active_questions: list[tuple[ActiveQuestionContext, ...]] = []
+
+    def analyze_evidence(
+        self,
+        requirement: Requirement,
+        clarifications: Sequence[HumanClarification],
+        documents: Sequence[AnalysisDocumentContext],
+        intent_decisions: Sequence[IntentProposal],
+        active_questions: Sequence[ActiveQuestionContext],
+        *,
+        figure_support: Sequence[str] = (),
+    ) -> RequirementAnalysisCandidate:
+        self.block_ids.append(
+            [block["block_id"] for document in documents for block in document["evidence_blocks"]]
+        )
+        self.active_questions.append(tuple(active_questions))
+        return super().analyze_evidence(
+            requirement,
+            clarifications,
+            documents,
+            intent_decisions,
+            active_questions,
+            figure_support=figure_support,
+        )
+
+
+def test_a_document_one_pass_holds_is_analysed_in_one_call_with_the_active_questions() -> None:
+    provider = QuestionRecordingEvidenceAnalyzer()
+    validator = ValidateAnalysisCitations()
+    progress = RecordingProgress()
+    planner = PlanEvidencePackets(12_400)
+    packet_analyzer = AnalyzeEvidencePacket(
+        provider, validator, InMemoryEvidenceFragmentCache(), FixedClock(NOW)
+    )
+    analyzer = StructuredRequirementAnalyzer(
+        NoOpFallback(),
+        AssembleRequirementEvidence(),
+        planner,
+        PlanSinglePass(max_input_characters=400_000, max_output_characters=262_144),
+        packet_analyzer,
+        ConsolidateEvidenceAnalysis(planner, packet_analyzer),
+        validator,
+        FixedClock(NOW),
+        progress,
+    )
+    requirement = Requirement(
+        RequirementId("requirement-1"),
+        RequirementTitle("Bundle"),
+        RequirementDescription("Analyze the BRD"),
+        RequirementStatus.DRAFT,
+    )
+    question = ActiveQuestionContext(
+        question_id="question-1",
+        kind=ClarificationKind.OPEN_QUESTION,
+        subject="Which plans need consent?",
+        rationale="Still undecided.",
+        source=ClarificationSource.AI,
+    )
+
+    first = _accepted_analyze(analyzer, requirement, (), (_document(),), (), (question,))
+    second = _accepted_analyze(analyzer, requirement, (), (_document(),), (), (question,))
+
+    # One call read both sections and reviewed the question; the repeat came from the cache.
+    assert provider.calls == 1
+    assert provider.block_ids == [["block-1", "block-2"]]
+    assert provider.active_questions == [(question,)]
+    assert [stage["stage"] for stage in first["stage_provenance"]] == ["evidence_single_pass"]
+    assert first["known_facts"] == second["known_facts"]
+    assert progress.phases[:3] == [
+        "planning_evidence",
+        "analyzing_evidence",
+        "validating_evidence_references",
+    ]
+    assert "consolidating_findings" not in progress.phases
+
+
+def test_one_pass_needs_room_to_read_the_evidence_and_to_write_its_analysis() -> None:
+    # _document()'s two blocks count 361 and 314 characters: 675 in all.
+    document = _document()
+
+    assert PlanSinglePass(max_input_characters=13_000, max_output_characters=3_000).holds(
+        (document,)
+    )
+    # The window, less the prompt's reserve, is too small to read them.
+    assert not PlanSinglePass(max_input_characters=12_500, max_output_characters=3_000).holds(
+        (document,)
+    )
+    # The model could not write three times the evidence it read.
+    assert not PlanSinglePass(max_input_characters=400_000, max_output_characters=1_500).holds(
+        (document,)
+    )
+    assert not SECTIONS_ONLY.holds((document,))
+
+
+def test_a_document_with_many_images_keeps_its_section_packets() -> None:
+    def with_images(count: int) -> AnalysisDocumentContext:
+        document = _document()
+        document["evidence_blocks"] = [
+            {
+                "block_id": f"image-{index}",
+                "kind": "image",
+                "section_path": ["BUC1"],
+                "label": f"Figure {index}",
+                "text": None,
+                "asset_id": f"asset-{index}",
+            }
+            for index in range(count)
+        ]
+        return document
+
+    single_pass = PlanSinglePass(max_input_characters=400_000, max_output_characters=262_144)
+
+    assert single_pass.holds((with_images(MAX_SINGLE_PASS_IMAGES),))
+    assert not single_pass.holds((with_images(MAX_SINGLE_PASS_IMAGES + 1),))

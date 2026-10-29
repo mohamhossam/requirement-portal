@@ -11,6 +11,16 @@ restoring a backup.
 
 ## Unreleased
 
+- **A document the model can hold is analysed in one pass.** Analysis split every attached
+  document into section packets, analysed each, then consolidated their findings: three model
+  calls at least, and more repairs. A BRD of 41,000 characters took 641 s of model time over 7
+  calls. When the analysis model's window holds the whole document and its output limit can
+  write three times the evidence, the document and the active questions now go to the model in
+  one call (345–435 s, 2–4 calls, for the same BRD), which also catches contradictions between
+  sections. Ten images at most go in one pass. Otherwise, and for small-output models such as
+  Gemini Flash-Lite, the section packets stay. A new analysis records stage
+  `evidence_single_pass`. No upgrade step; setting `OPENROUTER_CONTEXT_TOKENS` lets a document
+  past 48,000 characters qualify too (ADR-0029, amended).
 - **Suggested answers are written in business language.** They repeated the wording of the
   material they cite: unexplained abbreviations, document codes, accounting and system terms, long
   numbered lists, and "this is not yet defined" offered as an answer. They are now asked for one
