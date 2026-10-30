@@ -11,6 +11,17 @@ restoring a backup.
 
 ## Unreleased
 
+- **Stories can be sized in story points: the AI suggests, the team confirms.** A reviewer asks
+  for suggestions on a Feature's Stories (job `suggest_story_estimates`, prompt
+  `story-estimate-v1`, on the `review` model profile) and accepts, changes or clears each size on
+  the Story list or the Story itself (ADR-0121). Only confirmed sizes count: they appear as badges
+  and Feature and backlog totals, in the export (schema 1.8, new Excel columns), in the Business
+  Requirements Document (schema 1.4), and in Azure DevOps through `ADO_STORY_POINTS_FIELD`
+  (default `Microsoft.VSTS.Scheduling.StoryPoints`; set it empty when the process has no such
+  field). A size is part of what approval covers, so changing one reopens an approved Story's
+  approval and is republished. One expand-only migration,
+  `202610301200_feature_estimate_suggestions.sql`. Unsized Stories keep their stored payloads,
+  approvals, fingerprints and context tokens.
 - **The analysis now extracts non-functional requirements and business use cases.** Two settled
   categories beside facts, rules and constraints, each cited to a source passage and confirmed with
   the analysis (ADR-0120): a typed quality the solution must have, and a business-level use case

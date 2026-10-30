@@ -137,6 +137,18 @@ An exception sets no precedent for the redesign: it changes behaviour, not the l
     create, update and draft requests, with the regenerated contract types.
   Tested in `RevisionPanel.test.tsx`, `StatusStrip.test.tsx`, `RequirementForm.test.tsx`,
   `client.test.ts`, and the `review-flow.spec.ts` document and intake journeys.
+- **Story point estimates** (ADR-0121; slice `enhancement-story-point-estimates.md`,
+  owner-approved 2026-10-30):
+  - **Suggestions and sizes** (`api/client.ts`, `app/queryKeys.ts`,
+    `app/workspaceInvalidation.ts`, `features/stories/StoryList.tsx`). `getStoryEstimateSuggestions`
+    reads `GET …/stories/estimate-suggestions` as a Feature-scoped query beside the quality
+    assessment; `setStoryEstimate` sends `PUT …/stories/{id}/estimate` as a mutation that
+    invalidates the Story set like an edit. The new job operation `suggest_story_estimates`
+    starts through the existing job path and invalidates its own `story-estimates` key.
+  - **Return to Review & approve** (`features/stories/StoryList.tsx`). An unsized Story's link
+    from Review & approve carries `?from=review`, read from the address to offer the way back.
+  Tested in `StorySizePanel.test.tsx`, `StorySizeCell.test.tsx`, `StoryList.test.tsx`,
+  `ApprovalWorkflowPanel.test.tsx`, and the `review-flow.spec.ts` desktop journey.
 
 ## Consequences
 
