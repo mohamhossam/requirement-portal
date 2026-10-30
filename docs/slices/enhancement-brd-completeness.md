@@ -293,6 +293,11 @@ across the two runs). Checked by hand in the browser pane: the Confirm screen's 
 non-functional requirement with its Performance pill and the business use case with its steps; the
 Markdown document carries sections 7 and 10.
 
+**Browser journeys added after the phase commits (2026-10-30).** `review-flow.spec.ts` gains "Business
+owner states the scope at intake and reads it back on the Source step" (types the three scope fields,
+reads them on the Source step's Business need region and from the API), and the approval journey now
+asserts the Confirm screen's Non-functional requirements and Business use cases regions.
+
 **Open: the live-model record for Phase C.** No provider credentials are available in this session, so
 the structured BRD fixture has not been run through the local model or OpenRouter. The record in
 `docs/evaluation/` is owed before Phase C is treated as release evidence; the fake-provider path and the

@@ -468,6 +468,14 @@ test("submitted Story rejection is revised, resubmitted, and finally approved", 
   const documentGroup = page.getByRole("group", { name: "Business Requirements Document" });
   await expect(documentGroup).toBeVisible();
   await expect(documentGroup.getByRole("button", { name: "Download Word document" })).toBeVisible();
+  // The two settled categories ADR-0120 added, in the settled column.
+  const qualities = page.getByRole("region", { name: "Non-functional requirements" });
+  await expect(qualities).toContainText("Order confirmation is shown within 5 seconds.");
+  await expect(qualities).toContainText("Performance");
+  const useCases = page.getByRole("region", { name: "Business use cases" });
+  await expect(useCases).toContainText("SMB customer orders a plan");
+  await expect(useCases).toContainText("Choose a plan");
+  await expect(useCases).toContainText("Place the order");
 
   await page.goto(`/requirements/${requirementId}/review`);
   await expect(page.getByRole("list", { name: "Approval lifecycle" }).locator("[aria-current=step]")).toContainText("Approved");
@@ -583,6 +591,34 @@ test("two Requirement owners approve one shared contradiction resolution", async
   });
   await linkedContradiction.getByRole("button", { name: "Accept shared resolution" }).click();
   await expect(linkedContradiction).toHaveCount(0);
+});
+
+test("Business owner states the scope at intake and reads it back on the Source step", async ({ page }) => {
+  await page.goto("/requirements/new");
+  await expect(page.getByRole("heading", { level: 1, name: "New requirement" })).toBeVisible();
+  await page.getByLabel(/Requirement title/).fill("Scoped bundles");
+  await page.getByLabel(/Business need/).fill("Make XGPON business bundles orderable for eligible SMB customers.");
+  await page.getByText("Add detail if you know it (optional)").click();
+  await page.getByLabel("How it works today").fill("Orders are keyed by hand in the shop.");
+  await page.getByLabel("How it should work").fill("Customers order online and the order provisions itself.");
+  await page.getByLabel("Out of scope").fill("Enterprise accounts\nHardware resale");
+  await page.getByRole("button", { name: "Save and analyse", exact: true }).click();
+  await expect(page).toHaveURL(/\/requirements\/[^/]+\/clarify$/);
+
+  const requirementId = page.url().match(/\/requirements\/([^/]+)\//)![1];
+  await page.goto(`/requirements/${requirementId}/capture`);
+  const source = page.getByRole("region", { name: "Business need" });
+  await expect(source.getByText("How it works today", { exact: true })).toBeVisible();
+  await expect(source.getByText("Orders are keyed by hand in the shop.")).toBeVisible();
+  await expect(source.getByText("How it should work", { exact: true })).toBeVisible();
+  await expect(source.getByText("Out of scope", { exact: true })).toBeVisible();
+  await expect(source.getByText("Enterprise accounts")).toBeVisible();
+  await expect(source.getByText("Hardware resale")).toBeVisible();
+
+  // The same statement reaches the API as the requirement's own fields.
+  const stored = await (await page.request.get(`${apiUrl}/requirements/${requirementId}`)).json();
+  expect(stored.out_of_scope).toEqual(["Enterprise accounts", "Hardware resale"]);
+  expect(stored.current_state).toBe("Orders are keyed by hand in the shop.");
 });
 
 test("Product Owner completes the desktop journey and sees worklist staleness", async ({ page }) => {
