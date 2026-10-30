@@ -47,6 +47,9 @@ class RequirementDraftInput:
     systems: tuple[str, ...] = ()
     business_rules: tuple[str, ...] = ()
     constraints: tuple[str, ...] = ()
+    current_state: str = ""
+    proposed_state: str = ""
+    out_of_scope: tuple[str, ...] = ()
 
 
 class CreateRequirementDraft:
@@ -60,11 +63,14 @@ class CreateRequirementDraft:
             description=data.description,
             desired_outcome=data.desired_outcome,
             customer_context=data.customer_context,
+            current_state=data.current_state,
+            proposed_state=data.proposed_state,
             lists={
                 "channels": data.channels,
                 "systems": data.systems,
                 "business_rules": data.business_rules,
                 "constraints": data.constraints,
+                "out_of_scope": data.out_of_scope,
             },
         )
         draft = RequirementDraft(
@@ -79,6 +85,9 @@ class CreateRequirementDraft:
             data.constraints,
             RequirementVersion(1),
             self._clock.now(),
+            current_state=data.current_state,
+            proposed_state=data.proposed_state,
+            out_of_scope=data.out_of_scope,
         )
         self._drafts.add(draft)
         return draft
@@ -121,6 +130,9 @@ class SaveRequirementDraft:
             business_rules=data.business_rules,
             constraints=data.constraints,
             updated_at=self._clock.now(),
+            current_state=data.current_state,
+            proposed_state=data.proposed_state,
+            out_of_scope=data.out_of_scope,
         )
         self._drafts.save(revised)
         return revised
@@ -164,6 +176,9 @@ class PromoteRequirementDraft:
                     systems=draft.systems,
                     business_rules=draft.business_rules,
                     constraints=draft.constraints,
+                    current_state=draft.current_state or None,
+                    proposed_state=draft.proposed_state or None,
+                    out_of_scope=draft.out_of_scope,
                 ),
                 attachment_backed=has_usable_attachment(documents),
             )

@@ -315,6 +315,13 @@ def build_requirement_specification(
             ),
             channels=tuple(item.value for item in requirement.channels),
             systems=tuple(item.value for item in requirement.systems),
+            out_of_scope=tuple(item.value for item in requirement.out_of_scope),
+            current_state=(
+                requirement.current_state.value if requirement.current_state is not None else None
+            ),
+            proposed_state=(
+                requirement.proposed_state.value if requirement.proposed_state is not None else None
+            ),
         ),
         stakeholders=_stakeholders(requirement_revision),
         business_requirements=business_requirements,

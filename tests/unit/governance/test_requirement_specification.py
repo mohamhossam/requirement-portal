@@ -219,7 +219,7 @@ def test_confirmed_analysis_without_backlog_builds_a_document_without_functional
         revisions.list_breakdown_revisions(RequirementId(requirement_id)),
     )
 
-    assert document.schema_version == "1.1"
+    assert document.schema_version == "1.2"
     assert document.manifest.title == "Confirmed need"
     assert document.manifest.confirmation.actor == SpecificationActor("Amina Owner")
     assert document.manifest.backlog_approval is None

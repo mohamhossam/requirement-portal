@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from smb_requirement_agent.interfaces.api.schemas.identity import ActorResponse
 
@@ -13,6 +13,10 @@ class RequirementRevisionResponse(BaseModel):
     title: str
     description: str
     status: str
+    # The scope statement a standard BRD carries (enhancement-brd-completeness, Phase B).
+    current_state: str | None = None
+    proposed_state: str | None = None
+    out_of_scope: list[str] = Field(default_factory=list)
     model_config = ConfigDict(frozen=True)
 
 

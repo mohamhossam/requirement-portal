@@ -139,6 +139,8 @@ class RequirementKnowledgeCorpus:
         optional = (
             ("desired_outcome", requirement.desired_outcome),
             ("customer_context", requirement.customer_context),
+            ("current_state", requirement.current_state),
+            ("proposed_state", requirement.proposed_state),
         )
         values.extend(
             (KnowledgeSourceKind.SOURCE, field, item.value, path, ())
@@ -150,6 +152,7 @@ class RequirementKnowledgeCorpus:
             ("system", requirement.systems),
             ("business_rule", requirement.business_rules),
             ("constraint", requirement.constraints),
+            ("out_of_scope", requirement.out_of_scope),
         ):
             values.extend(
                 (KnowledgeSourceKind.SOURCE, field, item.value, path, ()) for item in entries

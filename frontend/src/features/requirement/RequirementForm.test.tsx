@@ -51,6 +51,9 @@ describe("RequirementForm", () => {
         systems: [],
         business_rules: [],
         constraints: [],
+        current_state: "",
+        proposed_state: "",
+        out_of_scope: [],
       },
       "primary",
     );
@@ -65,6 +68,32 @@ describe("RequirementForm", () => {
     render(<RequirementForm context="create" submitLabel="Save" onSubmit={vi.fn()} initial={{ title: "T", description: "D", systems: ["BCRM"] }} />);
     expect(screen.getByLabelText(/Systems involved/)).toBeVisible();
     expect(screen.getByLabelText(/Systems involved/)).toHaveValue("BCRM");
+  });
+
+  it("captures the scope statement under the optional detail and trims it on submit", async () => {
+    const onSubmit = vi.fn();
+    render(
+      <RequirementForm
+        context="create"
+        submitLabel="Save"
+        onSubmit={onSubmit}
+        initial={{ title: "T", description: "D", out_of_scope: ["Hardware resale"] }}
+      />,
+    );
+    expect(screen.getByLabelText(/Out of scope/)).toHaveValue("Hardware resale");
+
+    await userEvent.type(screen.getByLabelText(/How it works today/), "  Keyed by hand.  ");
+    await userEvent.type(screen.getByLabelText(/How it should work/), "Self-service.");
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        current_state: "Keyed by hand.",
+        proposed_state: "Self-service.",
+        out_of_scope: ["Hardware resale"],
+      }),
+      "primary",
+    );
   });
 
   it("drops the business need requirement once a ready file carries it", () => {

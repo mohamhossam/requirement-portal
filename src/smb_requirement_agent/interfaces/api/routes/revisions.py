@@ -79,6 +79,17 @@ def revision_history(
                 title=item.requirement.title.value,
                 description=item.requirement.description.value,
                 status=item.requirement.status.value,
+                current_state=(
+                    item.requirement.current_state.value
+                    if item.requirement.current_state is not None
+                    else None
+                ),
+                proposed_state=(
+                    item.requirement.proposed_state.value
+                    if item.requirement.proposed_state is not None
+                    else None
+                ),
+                out_of_scope=[value.value for value in item.requirement.out_of_scope],
             )
             for item in history.requirement_revisions
         ],

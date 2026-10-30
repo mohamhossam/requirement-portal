@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 
-SPECIFICATION_SCHEMA_VERSION = "1.1"
+SPECIFICATION_SCHEMA_VERSION = "1.2"
 SPECIFICATION_GENERATOR = "SMB AI Requirement Breakdown Agent"
 SPECIFICATION_TITLE = "Business Requirements Document"
 
@@ -111,6 +111,10 @@ class SpecificationScope:
     customer_context: str | None
     channels: tuple[str, ...]
     systems: tuple[str, ...]
+    # Added in 1.2: the scope statement a standard BRD carries.
+    out_of_scope: tuple[str, ...] = ()
+    current_state: str | None = None
+    proposed_state: str | None = None
 
 
 @dataclass(frozen=True)

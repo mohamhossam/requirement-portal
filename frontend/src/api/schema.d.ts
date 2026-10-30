@@ -2892,12 +2892,18 @@ export interface components {
             channels?: string[];
             /** Constraints */
             constraints?: string[];
+            /** Current State */
+            current_state?: string | null;
             /** Customer Context */
             customer_context?: string | null;
             /** Description */
             description: string;
             /** Desired Outcome */
             desired_outcome?: string | null;
+            /** Out Of Scope */
+            out_of_scope?: string[];
+            /** Proposed State */
+            proposed_state?: string | null;
             /** Systems */
             systems?: string[];
             /** Title */
@@ -4728,6 +4734,11 @@ export interface components {
             /** Constraints */
             constraints?: string[];
             /**
+             * Current State
+             * @default
+             */
+            current_state: string;
+            /**
              * Customer Context
              * @default
              */
@@ -4742,6 +4753,13 @@ export interface components {
              * @default
              */
             desired_outcome: string;
+            /** Out Of Scope */
+            out_of_scope?: string[];
+            /**
+             * Proposed State
+             * @default
+             */
+            proposed_state: string;
             /** Systems */
             systems?: string[];
             /**
@@ -4759,6 +4777,11 @@ export interface components {
             channels: string[];
             /** Constraints */
             constraints: string[];
+            /**
+             * Current State
+             * @default
+             */
+            current_state: string;
             /** Customer Context */
             customer_context: string;
             /** Description */
@@ -4767,6 +4790,13 @@ export interface components {
             desired_outcome: string;
             /** Id */
             id: string;
+            /** Out Of Scope */
+            out_of_scope?: string[];
+            /**
+             * Proposed State
+             * @default
+             */
+            proposed_state: string;
             /** Systems */
             systems: string[];
             /** Title */
@@ -4855,6 +4885,8 @@ export interface components {
             channels: string[];
             /** Constraints */
             constraints: string[];
+            /** Current State */
+            current_state?: string | null;
             /** Customer Context */
             customer_context: string | null;
             /** Description */
@@ -4865,6 +4897,10 @@ export interface components {
             duplicate_of_requirement_id?: string | null;
             /** Id */
             id: string;
+            /** Out Of Scope */
+            out_of_scope?: string[];
+            /** Proposed State */
+            proposed_state?: string | null;
             status: components["schemas"]["RequirementStatus"];
             /** Systems */
             systems: string[];
@@ -4882,10 +4918,16 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Current State */
+            current_state?: string | null;
             /** Description */
             description: string;
             /** Number */
             number: number;
+            /** Out Of Scope */
+            out_of_scope?: string[];
+            /** Proposed State */
+            proposed_state?: string | null;
             /** Status */
             status: string;
             /** Title */
@@ -4913,6 +4955,8 @@ export interface components {
             /** Constraints */
             constraints: string[];
             current_stage: components["schemas"]["WorkflowStage"];
+            /** Current State */
+            current_state?: string | null;
             /** Customer Context */
             customer_context: string | null;
             /** Description */
@@ -4925,7 +4969,11 @@ export interface components {
             id: string;
             last_activity: components["schemas"]["LastActivityResponse"] | null;
             next_action: components["schemas"]["NextAction"];
+            /** Out Of Scope */
+            out_of_scope?: string[];
             owner: components["schemas"]["ActorResponse"] | null;
+            /** Proposed State */
+            proposed_state?: string | null;
             /** Reviewer Count */
             reviewer_count: number;
             /** Stale Items */
@@ -5130,6 +5178,11 @@ export interface components {
             /** Constraints */
             constraints?: string[];
             /**
+             * Current State
+             * @default
+             */
+            current_state: string;
+            /**
              * Customer Context
              * @default
              */
@@ -5146,6 +5199,13 @@ export interface components {
             desired_outcome: string;
             /** Expected Version */
             expected_version: number;
+            /** Out Of Scope */
+            out_of_scope?: string[];
+            /**
+             * Proposed State
+             * @default
+             */
+            proposed_state: string;
             /** Systems */
             systems?: string[];
             /**
@@ -5585,6 +5645,8 @@ export interface components {
             channels?: string[] | null;
             /** Constraints */
             constraints?: string[] | null;
+            /** Current State */
+            current_state?: string | null;
             /** Customer Context */
             customer_context?: string | null;
             /** Description */
@@ -5598,6 +5660,10 @@ export interface components {
              * @default false
              */
             impact_acknowledged: boolean;
+            /** Out Of Scope */
+            out_of_scope?: string[] | null;
+            /** Proposed State */
+            proposed_state?: string | null;
             /** Systems */
             systems?: string[] | null;
             /** Title */

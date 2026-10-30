@@ -21,7 +21,7 @@ type JsonObject = dict[str, object]
 
 
 def requirement_to_payload(value: Requirement) -> JsonObject:
-    return {
+    payload: JsonObject = {
         "id": value.id.value,
         "title": value.title.value,
         "description": value.description.value,
@@ -40,6 +40,15 @@ def requirement_to_payload(value: Requirement) -> JsonObject:
             else None
         ),
     }
+    # Written only when present, so stored payloads and goldens from before the scope
+    # fields existed are unchanged.
+    if value.current_state is not None:
+        payload["current_state"] = value.current_state.value
+    if value.proposed_state is not None:
+        payload["proposed_state"] = value.proposed_state.value
+    if value.out_of_scope:
+        payload["out_of_scope"] = [item.value for item in value.out_of_scope]
+    return payload
 
 
 def requirement_from_payload(data: JsonObject) -> Requirement:
@@ -61,11 +70,14 @@ def requirement_from_payload(data: JsonObject) -> Requirement:
             if (raw_duplicate := _nullable_text(data, "duplicate_of_requirement_id"))
             else None
         ),
+        current_state=_optional_context(data, "current_state"),
+        proposed_state=_optional_context(data, "proposed_state"),
+        out_of_scope=_context_array(data, "out_of_scope"),
     )
 
 
 def requirement_draft_to_payload(value: RequirementDraft) -> JsonObject:
-    return {
+    payload: JsonObject = {
         "id": value.id.value,
         "title": value.title,
         "description": value.description,
@@ -78,6 +90,13 @@ def requirement_draft_to_payload(value: RequirementDraft) -> JsonObject:
         "version": value.version.value,
         "updated_at": value.updated_at.isoformat(),
     }
+    if value.current_state:
+        payload["current_state"] = value.current_state
+    if value.proposed_state:
+        payload["proposed_state"] = value.proposed_state
+    if value.out_of_scope:
+        payload["out_of_scope"] = list(value.out_of_scope)
+    return payload
 
 
 def requirement_draft_from_payload(data: JsonObject) -> RequirementDraft:
@@ -93,7 +112,19 @@ def requirement_draft_from_payload(data: JsonObject) -> RequirementDraft:
         constraints=_text_array(data, "constraints"),
         version=RequirementVersion(_optional_integer(data, "version", 1)),
         updated_at=datetime.fromisoformat(_text(data, "updated_at")),
+        current_state=_optional_text(data, "current_state"),
+        proposed_state=_optional_text(data, "proposed_state"),
+        out_of_scope=_text_array(data, "out_of_scope"),
     )
+
+
+def _optional_text(data: JsonObject, key: str) -> str:
+    value = data.get(key)
+    if value is None:
+        return ""
+    if not isinstance(value, str):
+        raise TypeError(f"Expected {key!r} to be text.")
+    return value
 
 
 def _text(data: JsonObject, key: str) -> str:

@@ -113,3 +113,17 @@ say so before it. Sections are numbered 1–18. `SPECIFICATION_SCHEMA_VERSION` i
 from the optional architecture-mapping job (ADR-0097), never confirmed or approved data, so it stays
 out of a document whose rule is to print only what a person confirmed or approved. The neutral XLSX
 export still carries it for machine consumers.
+
+## Amendment 2 — schema 1.2: the scope statement (2026-10-30)
+
+A standard BRD states what is in scope, what is out of scope, and the current and proposed way of
+working. The Requirement gains three optional intake fields, `current_state`, `proposed_state` and
+`out_of_scope`, modelled on `customer_context` and `channels` (same limits, same codec, stored in the
+JSON payload, no migration). They flow to the Source step, the source editor, the History diff, the
+knowledge chunks and the analysis prompt (`analysis-v27-intake-scope-context`); generation prompts
+pick them up with the next prompt change. Section 3 of the document renders In scope, Out of scope,
+Current state and Proposed state. `SPECIFICATION_SCHEMA_VERSION` is `1.2`.
+
+Two invariants keep existing work valid: the fields are written to payloads only when present, and
+the generation context token drops them while empty (`_requirement_state`), so stored rows, the
+characterisation goldens and tokens minted before the fields existed are unchanged.

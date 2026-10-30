@@ -11,6 +11,12 @@ restoring a backup.
 
 ## Unreleased
 
+- **A requirement can state its scope: how it works today, how it should work, and what is out
+  of scope.** Three optional intake fields on the new-requirement form and the source editor,
+  shown on the Source step, diffed in History, given to the analysis prompt (`analysis-v27`) and
+  printed in section 3 of the Business Requirements Document (schema 1.2, ADR-0119 Amendment 2).
+  Stored in the requirement's JSON payload; no migration. Empty fields stay out of payloads and
+  generation context tokens, so nothing already saved or open changes.
 - **The Business Requirements Document gains a version history, actors and scenarios, and a Risks
   section.** Document schema 1.1 (ADR-0119 Amendment 1): every revision up to the exported one is
   listed with what changed in it; the approved Stories are summarised by actor; the backlog review's

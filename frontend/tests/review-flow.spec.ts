@@ -828,6 +828,9 @@ test("owner and reviewer identities enforce assignments and private drafts", asy
       systems: [],
       business_rules: [],
       constraints: [],
+      current_state: "",
+      proposed_state: "",
+      out_of_scope: [],
     },
   });
   expect(draft.ok()).toBeTruthy();

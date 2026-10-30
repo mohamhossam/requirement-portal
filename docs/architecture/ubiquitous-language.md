@@ -12,7 +12,7 @@ different things in different places.
 
 | Term | Owning context | Meaning |
 |---|---|---|
-| Requirement | requirements | A business need submitted by its owner. It holds title, description, desired outcome, customer context, channels, systems, business rules and constraints. It is versioned; editing it publishes `RequirementRevised`. |
+| Requirement | requirements | A business need submitted by its owner. It holds title, description, desired outcome, customer context, channels, systems, business rules and constraints, and the scope statement a BRD carries: current state, proposed state and what is out of scope. It is versioned; editing it publishes `RequirementRevised`. |
 | Draft (Requirement draft) | requirements | Resumable, partial intake. A draft cannot be analysed until it is promoted to a Requirement (ADR-0013). |
 | Source document | requirements | A file attached to one Requirement as evidence. Its versions are immutable (ADR-0014). Including, excluding or removing one revises the Requirement. Not the same as a *reference document*. |
 | Attachment | requirements | An upload in progress that becomes a source document once ingestion succeeds (ADR-0042, ADR-0065). |

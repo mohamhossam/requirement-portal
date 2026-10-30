@@ -155,6 +155,15 @@ _REQUIREMENT_FIELDS: tuple[tuple[str, Callable[[Requirement], object]], ...] = (
     ("systems", lambda item: tuple(value.value for value in item.systems)),
     ("business rules", lambda item: tuple(value.value for value in item.business_rules)),
     ("constraints", lambda item: tuple(value.value for value in item.constraints)),
+    (
+        "current state",
+        lambda item: item.current_state.value if item.current_state is not None else None,
+    ),
+    (
+        "proposed state",
+        lambda item: item.proposed_state.value if item.proposed_state is not None else None,
+    ),
+    ("out of scope", lambda item: tuple(value.value for value in item.out_of_scope)),
 )
 
 

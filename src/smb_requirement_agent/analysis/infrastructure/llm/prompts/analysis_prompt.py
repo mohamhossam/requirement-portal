@@ -20,7 +20,7 @@ from smb_requirement_agent.analysis.application.ports.requirement_analyzer impor
 )
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 
-PROMPT_VERSION = "analysis-v26-requirement-citations"
+PROMPT_VERSION = "analysis-v27-intake-scope-context"
 
 _CORE_SYSTEM_PROMPT = """You are an expert Agile Business Analyst.
 Your task is to analyze a raw business requirement and extract structured information.
@@ -664,11 +664,16 @@ def format_structured_context(requirement: Requirement) -> str:
         lines.append(f"- Desired outcome: {requirement.desired_outcome.value}")
     if requirement.customer_context is not None:
         lines.append(f"- Customer context: {requirement.customer_context.value}")
+    if requirement.current_state is not None:
+        lines.append(f"- Current state: {requirement.current_state.value}")
+    if requirement.proposed_state is not None:
+        lines.append(f"- Proposed state: {requirement.proposed_state.value}")
     for label, values in (
         ("Channel", requirement.channels),
         ("System", requirement.systems),
         ("Business rule", requirement.business_rules),
         ("Constraint", requirement.constraints),
+        ("Out of scope", requirement.out_of_scope),
     ):
         lines.extend(f"- {label}: {value.value}" for value in values)
     return "\n".join(lines) if lines else "- (none supplied)"

@@ -50,6 +50,9 @@ class CreateRequirementRequest(BaseModel):
     systems: ContextList = Field(default_factory=list)
     business_rules: ContextList = Field(default_factory=list)
     constraints: ContextList = Field(default_factory=list)
+    current_state: ContextText | None = None
+    proposed_state: ContextText | None = None
+    out_of_scope: ContextList = Field(default_factory=list)
 
 
 class UpdateRequirementRequest(BaseModel):
@@ -61,6 +64,9 @@ class UpdateRequirementRequest(BaseModel):
     systems: ContextList | None = None
     business_rules: ContextList | None = None
     constraints: ContextList | None = None
+    current_state: ContextText | None = None
+    proposed_state: ContextText | None = None
+    out_of_scope: ContextList | None = None
     expected_version: int = Field(ge=1)
     impact_acknowledged: bool = False
 
@@ -74,6 +80,9 @@ class RequirementDraftRequest(BaseModel):
     systems: ContextList = Field(default_factory=list)
     business_rules: ContextList = Field(default_factory=list)
     constraints: ContextList = Field(default_factory=list)
+    current_state: ContextText = ""
+    proposed_state: ContextText = ""
+    out_of_scope: ContextList = Field(default_factory=list)
 
 
 class SaveRequirementDraftRequest(RequirementDraftRequest):
@@ -101,6 +110,9 @@ class RequirementResponse(BaseModel):
     systems: list[str]
     business_rules: list[str]
     constraints: list[str]
+    current_state: str | None = None
+    proposed_state: str | None = None
+    out_of_scope: list[str] = Field(default_factory=list)
     version: int
     updated_at: datetime | None
     analysis_eligibility: AnalysisEligibilityResponse
@@ -117,6 +129,9 @@ class RequirementDraftResponse(BaseModel):
     systems: list[str]
     business_rules: list[str]
     constraints: list[str]
+    current_state: str = ""
+    proposed_state: str = ""
+    out_of_scope: list[str] = Field(default_factory=list)
     version: int
     updated_at: datetime
     analysis_eligibility: AnalysisEligibilityResponse

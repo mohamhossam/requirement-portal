@@ -849,6 +849,50 @@ function Diff({ before, after }: { before: string; after: string }) {
   );
 }
 
+/** The scope statement's edits (ADR-0119): the two texts word by word, the exclusions by item. */
+function ScopeChanges({ before, after }: { before: NeedVersion; after: NeedVersion }) {
+  const texts: Array<[string, string, string]> = [
+    ["How it works today", before.current_state ?? "", after.current_state ?? ""],
+    ["How it should work", before.proposed_state ?? "", after.proposed_state ?? ""],
+  ].filter(([, was, now]) => was !== now) as Array<[string, string, string]>;
+  const wasOut = before.out_of_scope ?? [];
+  const nowOut = after.out_of_scope ?? [];
+  const added = nowOut.filter((item) => !wasOut.includes(item));
+  const removed = wasOut.filter((item) => !nowOut.includes(item));
+  if (!texts.length && !added.length && !removed.length) return null;
+  return (
+    <dl className="m-0 grid gap-2">
+      {texts.map(([label, was, now]) => (
+        <div className="grid gap-1" key={label}>
+          <dt className="text-label text-ink-muted">{label}</dt>
+          <dd className="font-serif text-document text-ink m-0 max-w-[var(--measure-document)] whitespace-pre-line">
+            <Diff after={now} before={was} />
+          </dd>
+        </div>
+      ))}
+      {(added.length > 0 || removed.length > 0) && (
+        <div className="grid gap-1">
+          <dt className="text-label text-ink-muted">Out of scope</dt>
+          <dd className="m-0">
+            <ul className="m-0 grid list-none gap-1 p-0">
+              {added.map((item) => (
+                <li className="text-body text-ink" key={`added-${item}`}>
+                  <ins className="no-underline">{item}</ins>
+                </li>
+              ))}
+              {removed.map((item) => (
+                <li className="text-body text-ink-muted" key={`removed-${item}`}>
+                  <del>{item}</del>
+                </li>
+              ))}
+            </ul>
+          </dd>
+        </div>
+      )}
+    </dl>
+  );
+}
+
 function NeedVersions({ history, basisNumber }: { history: RevisionHistory; basisNumber: number | null }) {
   const oldestFirst = history.requirement_revisions;
   const newestFirst = [...oldestFirst].reverse();
@@ -891,13 +935,16 @@ function NeedVersions({ history, basisNumber }: { history: RevisionHistory; basi
                 </p>
                 {previous && (
                   <Disclosure defaultOpen={index === 0} label={`What changed from version ${previous.number}`}>
-                    {previous.description === revision.description ? (
-                      <p className="text-body text-ink-muted m-0">The text of the business need did not change.</p>
-                    ) : (
-                      <p className="font-serif text-document text-ink m-0 max-w-[var(--measure-document)] whitespace-pre-line">
-                        <Diff after={revision.description} before={previous.description} />
-                      </p>
-                    )}
+                    <div className="grid gap-3">
+                      {previous.description === revision.description ? (
+                        <p className="text-body text-ink-muted m-0">The text of the business need did not change.</p>
+                      ) : (
+                        <p className="font-serif text-document text-ink m-0 max-w-[var(--measure-document)] whitespace-pre-line">
+                          <Diff after={revision.description} before={previous.description} />
+                        </p>
+                      )}
+                      <ScopeChanges after={revision} before={previous} />
+                    </div>
                   </Disclosure>
                 )}
                 <Disclosure label={`Read version ${revision.number} in full`}>

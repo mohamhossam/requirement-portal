@@ -74,7 +74,10 @@ Eighteen route entries resolve to nine distinct screens. Routes are declared in 
 *Business owner, once per requirement.*
 
 1. `/requirements/new`. A single form; guidance and the worked example sit behind a `<details>`.
-2. Type title and business need; optionally attach PDF/DOCX/XLSX/TXT via `DocumentPanel`.
+2. Type title and business need; optionally attach PDF/DOCX/XLSX/TXT via `DocumentPanel`. Under
+   "Add detail if you know it": desired outcome, who is affected, channels, systems, rules,
+   constraints, and the scope statement a BRD carries (how it works today, how it should work,
+   what is out of scope).
 3. The draft autosaves after 700 ms idle. A four-state indicator reads Saving / Saved HH:MM / Changes not saved / Draft save failed.
 4. An eligibility card updates live: **Ready for analysis**, or **Missing: title, business need text or a ready attachment…**
 5. Submit **Save and analyse business need** — the draft is persisted, promoted to a Requirement, and an `analyse_requirement` job starts, then redirect to `/clarify`.

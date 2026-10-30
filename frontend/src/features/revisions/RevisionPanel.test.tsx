@@ -257,6 +257,32 @@ describe("RevisionPanel", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("The document could not be prepared.");
   });
 
+  it("shows how the scope statement changed between business need versions", () => {
+    renderPanel({
+      history: {
+        ...history,
+        requirement_revisions: [
+          { ...history.requirement_revisions[0]!, out_of_scope: ["Hardware resale"], current_state: "Keyed by hand." },
+          {
+            number: 2,
+            created_at: "2026-01-01T00:05:00Z",
+            title: "Transfer funds",
+            description: "Human source",
+            status: "draft",
+            out_of_scope: ["Hardware resale", "Enterprise accounts"],
+            current_state: "Keyed by hand, twice.",
+            proposed_state: null,
+          },
+        ],
+      },
+    });
+    expect(screen.getByText("How it works today")).toBeVisible();
+    const added = [...document.querySelectorAll("ins")].map((element) => element.textContent).join(" ");
+    expect(added).toContain("Enterprise accounts");
+    expect(added).toContain("twice");
+    expect(screen.getByText("Out of scope")).toBeVisible();
+  });
+
   it("says when the approval was signed against an earlier business need, and shows the edit word by word", () => {
     renderPanel({
       history: {

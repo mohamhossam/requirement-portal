@@ -138,6 +138,7 @@ def outline(document: RequirementSpecification) -> tuple[Block, ...]:
         blocks += [Paragraph("Success measures:"), Bullets(objectives.success_measures)]
     scope = document.scope
     blocks.append(Heading(1, "3. Scope"))
+    blocks.append(Heading(2, "In scope"))
     blocks.append(
         Paragraph(
             f"Customer context: {scope.customer_context}"
@@ -147,6 +148,24 @@ def outline(document: RequirementSpecification) -> tuple[Block, ...]:
     )
     blocks += _named_list("Channels", scope.channels)
     blocks += _named_list("Systems", scope.systems)
+    blocks.append(Heading(2, "Out of scope"))
+    blocks.append(
+        Bullets(scope.out_of_scope)
+        if scope.out_of_scope
+        else Paragraph("Nothing was recorded as out of scope.", note=True)
+    )
+    blocks.append(Heading(2, "Current state"))
+    blocks.append(
+        Paragraph(scope.current_state)
+        if scope.current_state
+        else Paragraph("The current way of working was not recorded.", note=True)
+    )
+    blocks.append(Heading(2, "Proposed state"))
+    blocks.append(
+        Paragraph(scope.proposed_state)
+        if scope.proposed_state
+        else Paragraph("The proposed way of working was not recorded.", note=True)
+    )
     blocks.append(Heading(1, "4. Stakeholders"))
     if document.stakeholders:
         blocks.append(

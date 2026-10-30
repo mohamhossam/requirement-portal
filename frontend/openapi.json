@@ -3238,6 +3238,18 @@
             "title": "Constraints",
             "type": "array"
           },
+          "current_state": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current State"
+          },
           "customer_context": {
             "anyOf": [
               {
@@ -3266,6 +3278,27 @@
               }
             ],
             "title": "Desired Outcome"
+          },
+          "out_of_scope": {
+            "items": {
+              "maxLength": 1000,
+              "type": "string"
+            },
+            "maxItems": 50,
+            "title": "Out Of Scope",
+            "type": "array"
+          },
+          "proposed_state": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed State"
           },
           "systems": {
             "items": {
@@ -8551,6 +8584,12 @@
             "title": "Constraints",
             "type": "array"
           },
+          "current_state": {
+            "default": "",
+            "maxLength": 10000,
+            "title": "Current State",
+            "type": "string"
+          },
           "customer_context": {
             "default": "",
             "maxLength": 10000,
@@ -8567,6 +8606,21 @@
             "default": "",
             "maxLength": 10000,
             "title": "Desired Outcome",
+            "type": "string"
+          },
+          "out_of_scope": {
+            "items": {
+              "maxLength": 1000,
+              "type": "string"
+            },
+            "maxItems": 50,
+            "title": "Out Of Scope",
+            "type": "array"
+          },
+          "proposed_state": {
+            "default": "",
+            "maxLength": 10000,
+            "title": "Proposed State",
             "type": "string"
           },
           "systems": {
@@ -8614,6 +8668,11 @@
             "title": "Constraints",
             "type": "array"
           },
+          "current_state": {
+            "default": "",
+            "title": "Current State",
+            "type": "string"
+          },
           "customer_context": {
             "title": "Customer Context",
             "type": "string"
@@ -8628,6 +8687,18 @@
           },
           "id": {
             "title": "Id",
+            "type": "string"
+          },
+          "out_of_scope": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Out Of Scope",
+            "type": "array"
+          },
+          "proposed_state": {
+            "default": "",
+            "title": "Proposed State",
             "type": "string"
           },
           "systems": {
@@ -8851,6 +8922,17 @@
             "title": "Constraints",
             "type": "array"
           },
+          "current_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current State"
+          },
           "customer_context": {
             "anyOf": [
               {
@@ -8891,6 +8973,24 @@
           "id": {
             "title": "Id",
             "type": "string"
+          },
+          "out_of_scope": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Out Of Scope",
+            "type": "array"
+          },
+          "proposed_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed State"
           },
           "status": {
             "$ref": "#/components/schemas/RequirementStatus"
@@ -8948,6 +9048,17 @@
             "title": "Created At",
             "type": "string"
           },
+          "current_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current State"
+          },
           "description": {
             "title": "Description",
             "type": "string"
@@ -8955,6 +9066,24 @@
           "number": {
             "title": "Number",
             "type": "integer"
+          },
+          "out_of_scope": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Out Of Scope",
+            "type": "array"
+          },
+          "proposed_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed State"
           },
           "status": {
             "title": "Status",
@@ -9041,6 +9170,17 @@
           "current_stage": {
             "$ref": "#/components/schemas/WorkflowStage"
           },
+          "current_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current State"
+          },
           "customer_context": {
             "anyOf": [
               {
@@ -9095,6 +9235,13 @@
           "next_action": {
             "$ref": "#/components/schemas/NextAction"
           },
+          "out_of_scope": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Out Of Scope",
+            "type": "array"
+          },
           "owner": {
             "anyOf": [
               {
@@ -9104,6 +9251,17 @@
                 "type": "null"
               }
             ]
+          },
+          "proposed_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed State"
           },
           "reviewer_count": {
             "title": "Reviewer Count",
@@ -9706,6 +9864,12 @@
             "title": "Constraints",
             "type": "array"
           },
+          "current_state": {
+            "default": "",
+            "maxLength": 10000,
+            "title": "Current State",
+            "type": "string"
+          },
           "customer_context": {
             "default": "",
             "maxLength": 10000,
@@ -9727,6 +9891,21 @@
           "expected_version": {
             "title": "Expected Version",
             "type": "integer"
+          },
+          "out_of_scope": {
+            "items": {
+              "maxLength": 1000,
+              "type": "string"
+            },
+            "maxItems": 50,
+            "title": "Out Of Scope",
+            "type": "array"
+          },
+          "proposed_state": {
+            "default": "",
+            "maxLength": 10000,
+            "title": "Proposed State",
+            "type": "string"
           },
           "systems": {
             "items": {
@@ -10993,6 +11172,18 @@
             ],
             "title": "Constraints"
           },
+          "current_state": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current State"
+          },
           "customer_context": {
             "anyOf": [
               {
@@ -11031,6 +11222,34 @@
             "default": false,
             "title": "Impact Acknowledged",
             "type": "boolean"
+          },
+          "out_of_scope": {
+            "anyOf": [
+              {
+                "items": {
+                  "maxLength": 1000,
+                  "type": "string"
+                },
+                "maxItems": 50,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Out Of Scope"
+          },
+          "proposed_state": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed State"
           },
           "systems": {
             "anyOf": [

@@ -52,6 +52,9 @@ export function SourcePanel({
               systems: requirement.systems,
               business_rules: requirement.business_rules,
               constraints: requirement.constraints,
+              current_state: requirement.current_state,
+              proposed_state: requirement.proposed_state,
+              out_of_scope: requirement.out_of_scope,
             }}
             hasIncludedAttachment={source.attachments.hasIncludedAttachment}
             attachmentsBusy={source.attachments.busy}

@@ -34,6 +34,9 @@ class CreateRequirementInput:
     systems: tuple[str, ...] = ()
     business_rules: tuple[str, ...] = ()
     constraints: tuple[str, ...] = ()
+    current_state: str | None = None
+    proposed_state: str | None = None
+    out_of_scope: tuple[str, ...] = ()
 
 
 class CreateRequirement:
@@ -56,11 +59,14 @@ class CreateRequirement:
             description=data.description,
             desired_outcome=data.desired_outcome,
             customer_context=data.customer_context,
+            current_state=data.current_state,
+            proposed_state=data.proposed_state,
             lists={
                 "channels": data.channels,
                 "systems": data.systems,
                 "business_rules": data.business_rules,
                 "constraints": data.constraints,
+                "out_of_scope": data.out_of_scope,
             },
         )
         requirement = Requirement(
@@ -77,6 +83,9 @@ class CreateRequirement:
             business_rules=_contexts(data.business_rules),
             constraints=_contexts(data.constraints),
             version=RequirementVersion(1),
+            current_state=_optional_context(data.current_state),
+            proposed_state=_optional_context(data.proposed_state),
+            out_of_scope=_contexts(data.out_of_scope),
         )
         self._repository.add(requirement)
         return requirement

@@ -243,7 +243,7 @@ class GenerationContextTokens:
         return _token(
             {
                 "scope": "stories",
-                "requirement": asdict(requirement) if requirement else None,
+                "requirement": _requirement_state(requirement) if requirement else None,
                 "analysis": _analysis_state(analysis) if analysis else None,
                 "epic": asdict(epic) if epic else None,
                 "feature_id": feature_id.value,
@@ -326,6 +326,16 @@ class GenerationContextTokens:
             raise ArtifactVersionConflictError(
                 "The generation context changed. Reload and reconcile before trying again."
             )
+
+
+def _requirement_state(requirement: Requirement) -> dict[str, Any]:
+    state = asdict(requirement)
+    # The scope fields came later; while unset they stay out, so tokens minted before them
+    # stay valid (docs/slices/enhancement-brd-completeness.md, Phase B).
+    for key in ("current_state", "proposed_state", "out_of_scope"):
+        if not state[key]:
+            del state[key]
+    return state
 
 
 def _analysis_state(analysis: RequirementAnalysis) -> dict[str, Any]:
