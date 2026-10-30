@@ -12,12 +12,15 @@ import type { Requirement } from "../../api/client";
 const TEXT: Array<[keyof Requirement, string]> = [
   ["desired_outcome", "Desired outcome"],
   ["customer_context", "Customer context"],
+  ["current_state", "How it works today"],
+  ["proposed_state", "How it should work"],
 ];
 const LISTS: Array<[keyof Requirement, string]> = [
   ["channels", "Channels"],
   ["systems", "Systems"],
   ["business_rules", "Business rules"],
   ["constraints", "Constraints"],
+  ["out_of_scope", "Out of scope"],
 ];
 
 export function RequirementFacts({ requirement }: { requirement: Requirement }) {

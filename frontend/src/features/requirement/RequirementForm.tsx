@@ -9,7 +9,14 @@ import { Button, cx, Input, Textarea } from "../../components/ui";
 // The contract leaves the list fields optional; the form always holds them, so
 // its state requires what `emptyValue` initialises.
 type FormValue = RequirementDraftInput &
-  Required<Pick<RequirementDraftInput, "channels" | "systems" | "business_rules" | "constraints">>;
+  Required<
+    Pick<
+      RequirementDraftInput,
+      "channels" | "systems" | "business_rules" | "constraints" | "out_of_scope" | "current_state" | "proposed_state"
+    >
+  >;
+
+type ListName = "channels" | "systems" | "business_rules" | "constraints" | "out_of_scope";
 
 type Props = {
   initial?: Partial<RequirementInput>;
@@ -52,6 +59,9 @@ const emptyValue: FormValue = {
   systems: [],
   business_rules: [],
   constraints: [],
+  current_state: "",
+  proposed_state: "",
+  out_of_scope: [],
 };
 
 const rows = (values?: string[] | null) => (values ?? []).join("\n");
@@ -85,6 +95,9 @@ export function RequirementForm({
     systems: initial?.systems ?? [],
     business_rules: initial?.business_rules ?? [],
     constraints: initial?.constraints ?? [],
+    current_state: initial?.current_state ?? "",
+    proposed_state: initial?.proposed_state ?? "",
+    out_of_scope: initial?.out_of_scope ?? [],
   });
   // The create flow autosaves a draft, so only the edit context can lose work.
   useUnsavedGuard(form, context === "edit");
@@ -130,6 +143,8 @@ export function RequirementForm({
         description: form.description.trim(),
         desired_outcome: form.desired_outcome.trim(),
         customer_context: form.customer_context.trim(),
+        current_state: form.current_state.trim(),
+        proposed_state: form.proposed_state.trim(),
       },
       intent,
     );
@@ -138,7 +153,9 @@ export function RequirementForm({
   const create = context === "create";
   const optionalFilled = Boolean(
     form.desired_outcome.trim() || form.customer_context.trim() ||
-    form.channels.length || form.systems.length || form.business_rules.length || form.constraints.length,
+    form.current_state.trim() || form.proposed_state.trim() ||
+    form.channels.length || form.systems.length || form.business_rules.length || form.constraints.length ||
+    form.out_of_scope.length,
   );
   const missing = !form.title.trim() || (!form.description.trim() && !hasIncludedAttachment);
   // Attachments still processing, or one that could not be read, hold the
@@ -147,7 +164,7 @@ export function RequirementForm({
   const holdReason = attachmentsBusy ? "Files are still processing." : "A file needs attention first.";
 
   const listField = (
-    name: "channels" | "systems" | "business_rules" | "constraints",
+    name: ListName,
     label: string,
     hint: string,
   ) => (
@@ -249,6 +266,31 @@ export function RequirementForm({
             {listField("business_rules", "Rules that must hold", "One per line, only rules someone has actually stated.")}
             {listField("constraints", "Deadlines and limits", "One per line: dates, compliance, capacity.")}
           </div>
+          {/* The scope statement a standard BRD carries (ADR-0119): how things work today, how they
+              should, and what this need deliberately leaves out. A fieldset of its own, so the nine
+              optional fields read as two groups rather than one long run. */}
+          <fieldset className="m-0 grid gap-5 border-0 p-0">
+            <legend className="text-label text-ink mb-1 p-0">Scope</legend>
+            <Textarea
+              className="max-w-[var(--measure-interface)]"
+              hint="How this is done today, in a few sentences. Leave it blank if it is new."
+              id={`${fieldId}-current_state`}
+              label="How it works today"
+              onChange={(event) => change({ current_state: event.target.value })}
+              rows={3}
+              value={form.current_state}
+            />
+            <Textarea
+              className="max-w-[var(--measure-interface)]"
+              hint="How it should work once this is delivered, if you already know."
+              id={`${fieldId}-proposed_state`}
+              label="How it should work"
+              onChange={(event) => change({ proposed_state: event.target.value })}
+              rows={3}
+              value={form.proposed_state}
+            />
+            {listField("out_of_scope", "Out of scope", "One per line: what this need deliberately does not cover.")}
+          </fieldset>
         </div>
       </Disclosure>
 

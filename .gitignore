@@ -15,7 +15,7 @@ coverage.xml
 .coverage.*
 htmlcov/
 .tools/
-frontend/node_modules/
+node_modules/
 frontend/dist/
 frontend/coverage/
 frontend/playwright-report/

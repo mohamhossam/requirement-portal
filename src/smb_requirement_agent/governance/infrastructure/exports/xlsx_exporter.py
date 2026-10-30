@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from collections.abc import Iterable
 from datetime import UTC, datetime
 from io import BytesIO
@@ -20,9 +19,9 @@ from smb_requirement_agent.governance.application.exports import (
     ExportJourneyNeighbour,
     NeutralBacklogExport,
 )
+from smb_requirement_agent.governance.infrastructure.exports.xml_text import ILLEGAL_XML
 
 XLSX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-_ILLEGAL_XML = re.compile(r"[\x00-\x08\x0B\x0C\x0E-\x1F]")
 _MAX_CELL_CHARACTERS = 32_767
 type CellValue = str | int | bool | None
 
@@ -465,7 +464,7 @@ def _iso(value: datetime) -> str:
 def _validated(value: CellValue) -> CellValue:
     if not isinstance(value, str):
         return value
-    if len(value) > _MAX_CELL_CHARACTERS or _ILLEGAL_XML.search(value):
+    if len(value) > _MAX_CELL_CHARACTERS or ILLEGAL_XML.search(value):
         raise BacklogExportFormatError(
             "This content cannot be represented losslessly in XLSX; export the revision as JSON."
         )

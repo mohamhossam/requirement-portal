@@ -11,6 +11,7 @@ import {
   type ClarificationSeverity,
   type IntentProposal,
   type IntentProposalStatus,
+  type SpecificationFormat,
 } from "../../api/client";
 import { errorMessage, errorReference } from "../../api/errors";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
@@ -130,8 +131,25 @@ export function AnalysisView({
     mutationFn: () => api.confirmAnalysis(id, data?.version ?? 0),
     onSuccess: async () => {
       await refresh("analysis");
+      void queryClient.invalidateQueries({ queryKey: queryKeys.revisions(id) });
       void navigate(`/requirements/${id}/breakdown/epic`);
     },
+  });
+  // The Business Requirements Document (ADR-0119) is cut from an immutable revision, so the
+  // confirmed analysis has to be found in the history; the analysis itself cannot name it.
+  const revisions = useQuery({
+    queryKey: queryKeys.revisions(id),
+    queryFn: ({ signal }) => api.getRevisionHistory(id, { signal }),
+    enabled: data?.human_confirmed === true,
+  });
+  const documented = (() => {
+    const versions = [...(revisions.data?.breakdown_revisions ?? [])].reverse();
+    return versions.find((item) => item.exportable) ?? versions.find((item) => item.specification_available) ?? null;
+  })();
+  const downloadSpecification = useMutation({
+    meta: { action: "Downloading the Business Requirements Document" },
+    mutationFn: ({ revision, format }: { revision: number; format: SpecificationFormat }) =>
+      api.exportRequirementSpecification(id, revision, format),
   });
   const suggestAnswers = useMutation({
     meta: { action: "Finding answer suggestions" },
@@ -249,6 +267,17 @@ export function AnalysisView({
               onDecideIntent={(proposal, decision, replacement, successMeasures, rationale) =>
                 decideIntent.mutate({ proposal, decision, replacement, successMeasures, rationale })}
               onDecideProductImpact={(choice) => decideProductImpact.mutate(choice)}
+              specification={
+                workspace.canExportApprovedRevisions && documented
+                  ? {
+                      revision: documented.number,
+                      busy: downloadSpecification.isPending ? downloadSpecification.variables.format : null,
+                      error: downloadSpecification.error ? errorMessage(downloadSpecification.error) : null,
+                      downloaded: downloadSpecification.isSuccess ? downloadSpecification.variables.format : null,
+                      onDownload: (format: SpecificationFormat) => downloadSpecification.mutate({ revision: documented.number, format }),
+                    }
+                  : null
+              }
               confirmPermissionReason={
                 canConfirmAnalysis && !knowledgeReview.data?.ready
                   ? "Complete the current Requirement knowledge screen and resolve every finding before confirmation."

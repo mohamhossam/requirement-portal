@@ -231,6 +231,9 @@ def _user_prompt(
         assumptions=[item.statement for item in analysis.assumptions],
         open_questions=[item.question for item in analysis.open_questions],
         clarifications=[f"{item.subject}: {item.answer}" for item in analysis.clarifications],
+        non_functional_requirements=[
+            item.statement for item in analysis.non_functional_requirements
+        ],
         epic_name=epic.name.value,
         epic_outcome=epic.outcome.value,
         feature_name=feature.name.value,

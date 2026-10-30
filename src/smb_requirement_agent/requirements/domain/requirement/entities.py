@@ -50,6 +50,10 @@ class Requirement:
     version: RequirementVersion = RequirementVersion(1)
     updated_at: datetime | None = None
     duplicate_of_requirement_id: RequirementId | None = None
+    # A standard BRD's scope statement (docs/slices/enhancement-brd-completeness.md).
+    current_state: RequirementContext | None = None
+    proposed_state: RequirementContext | None = None
+    out_of_scope: tuple[RequirementContext, ...] = ()
 
     def __post_init__(self) -> None:
         if self.status is RequirementStatus.DUPLICATE:
@@ -90,6 +94,9 @@ class Requirement:
             version=self.version.next(),
             updated_at=at,
             duplicate_of_requirement_id=canonical_id,
+            current_state=self.current_state,
+            proposed_state=self.proposed_state,
+            out_of_scope=self.out_of_scope,
         )
 
     def require_active(self) -> None:
@@ -109,6 +116,9 @@ class Requirement:
         business_rules: tuple[RequirementContext, ...] = (),
         constraints: tuple[RequirementContext, ...] = (),
         updated_at: datetime | None = None,
+        current_state: RequirementContext | None = None,
+        proposed_state: RequirementContext | None = None,
+        out_of_scope: tuple[RequirementContext, ...] = (),
     ) -> Requirement:
         """Return a new Requirement with updated title and description.
 
@@ -120,11 +130,14 @@ class Requirement:
             description=description.value,
             desired_outcome=desired_outcome.value if desired_outcome else None,
             customer_context=customer_context.value if customer_context else None,
+            current_state=current_state.value if current_state else None,
+            proposed_state=proposed_state.value if proposed_state else None,
             lists={
                 "channels": (item.value for item in channels),
                 "systems": (item.value for item in systems),
                 "business_rules": (item.value for item in business_rules),
                 "constraints": (item.value for item in constraints),
+                "out_of_scope": (item.value for item in out_of_scope),
             },
         )
         return Requirement(
@@ -141,6 +154,9 @@ class Requirement:
             version=self.version.next(),
             updated_at=updated_at,
             duplicate_of_requirement_id=self.duplicate_of_requirement_id,
+            current_state=current_state,
+            proposed_state=proposed_state,
+            out_of_scope=out_of_scope,
         )
 
 
@@ -159,11 +175,21 @@ class RequirementDraft:
     constraints: tuple[str, ...]
     version: RequirementVersion
     updated_at: datetime
+    current_state: str = ""
+    proposed_state: str = ""
+    out_of_scope: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
-        for field in ("title", "description", "desired_outcome", "customer_context"):
+        for field in (
+            "title",
+            "description",
+            "desired_outcome",
+            "customer_context",
+            "current_state",
+            "proposed_state",
+        ):
             object.__setattr__(self, field, getattr(self, field).strip())
-        for field in ("channels", "systems", "business_rules", "constraints"):
+        for field in ("channels", "systems", "business_rules", "constraints", "out_of_scope"):
             values = tuple(item.strip() for item in getattr(self, field) if item.strip())
             object.__setattr__(self, field, values)
 
@@ -191,17 +217,23 @@ class RequirementDraft:
         business_rules: tuple[str, ...],
         constraints: tuple[str, ...],
         updated_at: datetime,
+        current_state: str = "",
+        proposed_state: str = "",
+        out_of_scope: tuple[str, ...] = (),
     ) -> RequirementDraft:
         require_within_intake_limits(
             title=title,
             description=description,
             desired_outcome=desired_outcome,
             customer_context=customer_context,
+            current_state=current_state,
+            proposed_state=proposed_state,
             lists={
                 "channels": channels,
                 "systems": systems,
                 "business_rules": business_rules,
                 "constraints": constraints,
+                "out_of_scope": out_of_scope,
             },
         )
         return RequirementDraft(
@@ -216,4 +248,7 @@ class RequirementDraft:
             constraints=constraints,
             version=self.version.next(),
             updated_at=updated_at,
+            current_state=current_state,
+            proposed_state=proposed_state,
+            out_of_scope=out_of_scope,
         )

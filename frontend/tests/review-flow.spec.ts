@@ -439,6 +439,44 @@ test("submitted Story rejection is revised, resubmitted, and finally approved", 
   expect(xlsxDownload.suggestedFilename()).toMatch(/breakdown-v\d+\.xlsx$/);
   expect((await downloadBytes(xlsxDownload)).subarray(0, 2).toString()).toBe("PK");
 
+  // The Business Requirements Document of the same approved version (ADR-0119).
+  await expect(page.getByRole("heading", { name: /Business Requirements Document/ })).toBeVisible();
+  await expect(page.getByText(/It includes the approved backlog as functional requirements/)).toBeVisible();
+  const documentButton = page.getByRole("button", { name: /^Download document version \d+$/ });
+  await expect(page.getByRole("radio", { name: /^Word document/ })).toBeChecked();
+  const docxStarted = page.waitForEvent("download");
+  await documentButton.click();
+  const docxDownload = await docxStarted;
+  expect(docxDownload.suggestedFilename()).toMatch(/business-requirements-v\d+\.docx$/);
+  expect((await downloadBytes(docxDownload)).subarray(0, 2).toString()).toBe("PK");
+  await page.getByRole("radio", { name: /^Markdown/ }).check();
+  const markdownStarted = page.waitForEvent("download");
+  await documentButton.click();
+  const markdownDownload = await markdownStarted;
+  expect(markdownDownload.suggestedFilename()).toMatch(/business-requirements-v\d+\.md$/);
+  const markdown = (await downloadBytes(markdownDownload)).toString("utf8");
+  expect(markdown.startsWith("# ")).toBe(true);
+  expect(markdown).toContain("## 16. Functional requirements");
+  expect(markdown).toContain("### Version history");
+  expect(markdown).toContain("## 17. Risks");
+  expect(markdown).toContain("## 7. Business use cases");
+  expect(markdown).toContain("| NF-01 |");
+  expect(markdown).toContain("### FR-01 ");
+
+  // The confirmed analysis offers the same document from the Confirm view.
+  await page.goto(`/requirements/${requirementId}/confirm`);
+  const documentGroup = page.getByRole("group", { name: "Business Requirements Document" });
+  await expect(documentGroup).toBeVisible();
+  await expect(documentGroup.getByRole("button", { name: "Download Word document" })).toBeVisible();
+  // The two settled categories ADR-0120 added, in the settled column.
+  const qualities = page.getByRole("region", { name: "Non-functional requirements" });
+  await expect(qualities).toContainText("Order confirmation is shown within 5 seconds.");
+  await expect(qualities).toContainText("Performance");
+  const useCases = page.getByRole("region", { name: "Business use cases" });
+  await expect(useCases).toContainText("SMB customer orders a plan");
+  await expect(useCases).toContainText("Choose a plan");
+  await expect(useCases).toContainText("Place the order");
+
   await page.goto(`/requirements/${requirementId}/review`);
   await expect(page.getByRole("list", { name: "Approval lifecycle" }).locator("[aria-current=step]")).toContainText("Approved");
   await expect(page.getByText("Complete and current.")).toBeVisible();
@@ -555,11 +593,44 @@ test("two Requirement owners approve one shared contradiction resolution", async
   await expect(linkedContradiction).toHaveCount(0);
 });
 
+test("Business owner states the scope at intake and reads it back on the Source step", async ({ page }) => {
+  await page.goto("/requirements/new");
+  await expect(page.getByRole("heading", { level: 1, name: "New requirement" })).toBeVisible();
+  await page.getByLabel(/Requirement title/).fill("Scoped bundles");
+  await page.getByLabel(/Business need/).fill("Make XGPON business bundles orderable for eligible SMB customers.");
+  await page.getByText("Add detail if you know it (optional)").click();
+  await page.getByLabel("How it works today").fill("Orders are keyed by hand in the shop.");
+  await page.getByLabel("How it should work").fill("Customers order online and the order provisions itself.");
+  await page.getByLabel("Out of scope").fill("Enterprise accounts\nHardware resale");
+  await page.getByRole("button", { name: "Save and analyse", exact: true }).click();
+  await expect(page).toHaveURL(/\/requirements\/[^/]+\/clarify$/);
+
+  const requirementId = page.url().match(/\/requirements\/([^/]+)\//)![1];
+  await page.goto(`/requirements/${requirementId}/capture`);
+  const source = page.getByRole("region", { name: "Business need" });
+  await expect(source.getByText("How it works today", { exact: true })).toBeVisible();
+  await expect(source.getByText("Orders are keyed by hand in the shop.")).toBeVisible();
+  await expect(source.getByText("How it should work", { exact: true })).toBeVisible();
+  await expect(source.getByText("Out of scope", { exact: true })).toBeVisible();
+  await expect(source.getByText("Enterprise accounts")).toBeVisible();
+  await expect(source.getByText("Hardware resale")).toBeVisible();
+
+  // The same statement reaches the API as the requirement's own fields.
+  const stored = await (await page.request.get(`${apiUrl}/requirements/${requirementId}`)).json();
+  expect(stored.out_of_scope).toEqual(["Enterprise accounts", "Hardware resale"]);
+  expect(stored.current_state).toBe("Orders are keyed by hand in the shop.");
+});
+
 test("Product Owner completes the desktop journey and sees worklist staleness", async ({ page }) => {
   const standaloneChecks: string[] = [];
   const prematureBacklogReads: string[] = [];
+  // Once the analysis is confirmed, the Confirm view reads the revision history to offer the
+  // Business Requirements Document (ADR-0119); that read is by design, not a premature backlog read.
+  let analysisConfirmed = false;
   page.on("request", (request) => {
-    if (/\/(capture|clarify|knowledge|confirm)$/.test(page.url()) && request.method() === "GET" && /\/requirements\/[^/]+\/(epic|features|revisions)(?:[/?]|$)/.test(request.url())) {
+    const backlogRead = /\/requirements\/[^/]+\/(epic|features|revisions)(?:[/?]|$)/.test(request.url());
+    const confirmedHistoryRead = analysisConfirmed && /\/revisions(?:[/?]|$)/.test(request.url());
+    if (/\/(capture|clarify|knowledge|confirm)$/.test(page.url()) && request.method() === "GET" && backlogRead && !confirmedHistoryRead) {
       prematureBacklogReads.push(request.url());
     }
     if (request.method() === "POST" && request.url().endsWith("/ai-jobs")) {
@@ -586,6 +657,7 @@ test("Product Owner completes the desktop journey and sees worklist staleness", 
   await expect(page.getByText("Drafted by the analysis", { exact: true })).toBeVisible();
   await page.screenshot({ path: "test-results/wireframe-clarification.png", fullPage: true });
   expect(prematureBacklogReads).toEqual([]);
+  analysisConfirmed = true;
   await resolveAndConfirmAnalysis(page);
   expect(prematureBacklogReads).toEqual([]);
   await page.getByRole("button", { name: "Generate Epic" }).click();
@@ -800,6 +872,9 @@ test("owner and reviewer identities enforce assignments and private drafts", asy
       systems: [],
       business_rules: [],
       constraints: [],
+      current_state: "",
+      proposed_state: "",
+      out_of_scope: [],
     },
   });
   expect(draft.ok()).toBeTruthy();

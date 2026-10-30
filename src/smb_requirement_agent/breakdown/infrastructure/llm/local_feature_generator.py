@@ -65,6 +65,17 @@ class StructuredFeatureGeneratorAdapter:
             epic_business_case=epic.business_case.value,
             desired_outcome=analysis.effective_desired_outcome(),
             guidance=guidance,
+            non_functional_requirements=[
+                item.statement for item in analysis.non_functional_requirements
+            ],
+            business_use_cases=[
+                f"{item.name}: {item.actor} achieves {item.goal}"
+                for item in analysis.business_use_cases
+            ],
+            out_of_scope=[item.value for item in requirement.out_of_scope],
+            proposed_state=(
+                requirement.proposed_state.value if requirement.proposed_state is not None else None
+            ),
         )
         try:
             parsed = self._parse(prompt)

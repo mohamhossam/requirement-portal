@@ -9,6 +9,7 @@ import re
 from collections.abc import Callable, Mapping, Sequence
 from copy import deepcopy
 from dataclasses import asdict, dataclass
+from typing import TypedDict
 
 from smb_kernel.time.clock import ClockPort
 
@@ -21,7 +22,9 @@ from smb_requirement_agent.analysis.application.ports.requirement_analyzer impor
     AnalysisEvidenceReferenceCandidate,
     AnalysisImageAsset,
     AnalysisStageProvenanceCandidate,
+    BusinessUseCaseCandidate,
     IntentProposalCandidate,
+    NonFunctionalRequirementCandidate,
     OpenQuestionCandidate,
     QuestionReviewCandidate,
     RequirementAnalysisCandidate,
@@ -287,7 +290,7 @@ class AnalyzeEvidencePacket:
         # Cache the entire semantic input, including citation/section metadata.
         # Earlier entries remain durable but are never consulted by this namespace.
         cache_input = {
-            "format": "evidence-fragment-v3",
+            "format": "evidence-fragment-v4",
             "configuration_fingerprint": getattr(self._analyzer, "configuration_fingerprint", ""),
             "stage": stage,
             "requirement": asdict(requirement),
@@ -299,7 +302,7 @@ class AnalyzeEvidencePacket:
             "prompt_version": self._analyzer.prompt_version,
         }
         cache_key = (
-            "v3:"
+            "v4:"
             + hashlib.sha256(
                 json.dumps(cache_input, sort_keys=True, separators=(",", ":"), default=str).encode()
             ).hexdigest()
@@ -369,8 +372,14 @@ class ConsolidateEvidenceAnalysis:
         current = list(fragments)
         provenance: list[AnalysisStageProvenanceCandidate] = []
         pending_cache_entries: list[PendingEvidenceFragment] = []
+        # Business use cases and non-functional requirements were cited against real
+        # passages in the packet stage, so they skip the consolidation model and are
+        # re-attached, taking precedence, to whatever it returns (ADR-0120).
+        held: HeldRecords | None = None
         for _round in range(6):
             merged = self._merge(current, ())
+            taken = _hold_records(merged)
+            held = taken if held is None else held
             documents, source_references, human_sources, requirement_sources = (
                 _consolidation_documents(merged)
             )
@@ -399,19 +408,16 @@ class ConsolidateEvidenceAnalysis:
                 if pending is not None:
                     pending_cache_entries.append(pending)
             if final_round:
+                _restore_records(next_round[0], held)
                 return next_round[0], provenance, pending_cache_entries
             if len(next_round) >= len(current):
-                return (
-                    _merged_fallback(next_round, active_questions, "no smaller round"),
-                    provenance,
-                    pending_cache_entries,
-                )
+                fallback = _merged_fallback(next_round, active_questions, "no smaller round")
+                _restore_records(fallback, held)
+                return fallback, provenance, pending_cache_entries
             current = next_round
-        return (
-            _merged_fallback(current, active_questions, "hierarchy depth"),
-            provenance,
-            pending_cache_entries,
-        )
+        fallback = _merged_fallback(current, active_questions, "hierarchy depth")
+        _restore_records(fallback, held)
+        return fallback, provenance, pending_cache_entries
 
     @staticmethod
     def _merge(
@@ -450,6 +456,22 @@ class ConsolidateEvidenceAnalysis:
                 evidence,
             )
             _merge_proposals(result, fragment, evidence)
+            _merge_objects(
+                result["non_functional_requirements"],
+                fragment.get("non_functional_requirements", []),
+                lambda item: item["statement"],
+                "non_functional_requirement",
+                fragment,
+                evidence,
+            )
+            _merge_objects(
+                result["business_use_cases"],
+                fragment.get("business_use_cases", []),
+                lambda item: item["name"],
+                "business_use_case",
+                fragment,
+                evidence,
+            )
         result["evidence_references"] = evidence
         human_evidence: dict[str, list[int]] = {}
         for fragment in fragments:
@@ -743,6 +765,101 @@ def _figure_support(
     )
 
 
+class HeldRecords(TypedDict):
+    """Settled records kept out of a consolidation round, with their references (ADR-0120).
+
+    Business use cases and non-functional requirements were cited against real passages in
+    the packet stage; the consolidation model would only rewrite them.
+    """
+
+    use_cases: list[BusinessUseCaseCandidate]
+    non_functional: list[NonFunctionalRequirementCandidate]
+    evidence_references: dict[str, list[AnalysisEvidenceReferenceCandidate]]
+    clarification_references: dict[str, list[int]]
+    requirement_references: list[str]
+
+
+def _record_keys(
+    use_cases: Sequence[BusinessUseCaseCandidate],
+    non_functional: Sequence[NonFunctionalRequirementCandidate],
+) -> set[str]:
+    return {
+        *(analysis_evidence_key("business_use_case", item["name"]) for item in use_cases),
+        *(
+            analysis_evidence_key("non_functional_requirement", item["statement"])
+            for item in non_functional
+        ),
+    }
+
+
+def _hold_records(candidate: RequirementAnalysisCandidate) -> HeldRecords:
+    """Take the settled records and their references out of a candidate."""
+    use_cases = list(candidate.get("business_use_cases", []))
+    non_functional = list(candidate.get("non_functional_requirements", []))
+    keys = _record_keys(use_cases, non_functional)
+    evidence = candidate.get("evidence_references", {})
+    human = candidate.get("clarification_references", {})
+    held = HeldRecords(
+        use_cases=use_cases,
+        non_functional=non_functional,
+        evidence_references={key: evidence.pop(key) for key in keys if key in evidence},
+        clarification_references={key: human.pop(key) for key in keys if key in human},
+        requirement_references=[
+            key for key in candidate.get("requirement_references", []) if key in keys
+        ],
+    )
+    if "business_use_cases" in candidate:
+        candidate["business_use_cases"] = []
+    if "non_functional_requirements" in candidate:
+        candidate["non_functional_requirements"] = []
+    if "requirement_references" in candidate:
+        candidate["requirement_references"] = [
+            key for key in candidate["requirement_references"] if key not in keys
+        ]
+    return held
+
+
+def _restore_records(candidate: RequirementAnalysisCandidate, held: HeldRecords | None) -> None:
+    """Put held records back once the consolidation model has returned.
+
+    A held record wins over anything the model emitted under the same key: the held one was
+    validated against real passages, the model's is a rewrite of a synthetic sentence.
+    """
+    if held is None or not (held["use_cases"] or held["non_functional"]):
+        return
+    keys = _record_keys(held["use_cases"], held["non_functional"])
+    candidate["business_use_cases"] = [
+        item
+        for item in candidate.get("business_use_cases", [])
+        if analysis_evidence_key("business_use_case", item["name"]) not in keys
+    ] + held["use_cases"]
+    candidate["non_functional_requirements"] = [
+        item
+        for item in candidate.get("non_functional_requirements", [])
+        if analysis_evidence_key("non_functional_requirement", item["statement"]) not in keys
+    ] + held["non_functional"]
+    for field in ("evidence_references", "clarification_references"):
+        references = candidate.get(field)
+        if isinstance(references, dict):
+            for key in keys:
+                references.pop(key, None)
+    if "requirement_references" in candidate:
+        candidate["requirement_references"] = [
+            key for key in candidate["requirement_references"] if key not in keys
+        ]
+    if held["evidence_references"]:
+        candidate.setdefault("evidence_references", {}).update(held["evidence_references"])
+    if held["clarification_references"]:
+        candidate.setdefault("clarification_references", {}).update(
+            held["clarification_references"]
+        )
+    if held["requirement_references"]:
+        existing = candidate.get("requirement_references", [])
+        candidate["requirement_references"] = sorted(
+            set(existing) | set(held["requirement_references"])
+        )
+
+
 def _consolidation_documents(
     candidate: RequirementAnalysisCandidate,
 ) -> tuple[
@@ -872,6 +989,14 @@ def _statements_by_evidence_key(
         *(("ambiguity", item["statement"]) for item in candidate["ambiguities"]),
         *(("potential_dependency", item) for item in candidate["potential_dependencies"]),
         *(("intent_proposal", item["statement"]) for item in candidate["intent_proposals"]),
+        *(
+            ("non_functional_requirement", item["statement"])
+            for item in candidate.get("non_functional_requirements", [])
+        ),
+        *(
+            ("business_use_case", f"{item['name']} — {item['actor']} achieves {item['goal']}")
+            for item in candidate.get("business_use_cases", [])
+        ),
     ]
     return {analysis_evidence_key(kind, statement): statement for kind, statement in values}
 
@@ -931,6 +1056,8 @@ def _empty_candidate(model: str, prompt_version: str) -> RequirementAnalysisCand
         intent_proposals=[],
         model=model,
         prompt_version=prompt_version,
+        non_functional_requirements=[],
+        business_use_cases=[],
     )
 
 
@@ -955,6 +1082,14 @@ def _candidate_keys(candidate: RequirementAnalysisCandidate) -> set[str]:
         *(
             analysis_evidence_key("intent_proposal", item["statement"])
             for item in candidate["intent_proposals"]
+        ),
+        *(
+            analysis_evidence_key("non_functional_requirement", item["statement"])
+            for item in candidate.get("non_functional_requirements", [])
+        ),
+        *(
+            analysis_evidence_key("business_use_case", item["name"])
+            for item in candidate.get("business_use_cases", [])
         ),
     }
 

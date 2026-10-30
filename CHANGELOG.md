@@ -11,6 +11,36 @@ restoring a backup.
 
 ## Unreleased
 
+- **The analysis now extracts non-functional requirements and business use cases.** Two settled
+  categories beside facts, rules and constraints, each cited to a source passage and confirmed with
+  the analysis (ADR-0120): a typed quality the solution must have, and a business-level use case
+  with actor, goal and steps. They appear on Clarify and Confirm, in the analysis response, in the
+  knowledge index, in the Epic, Feature and Story prompts (`epic-v5`, `feature-v9`, `story-v9`),
+  and in the Business Requirements Document as sections 7 and 10 (schema 1.3). Analysis prompt
+  `analysis-v28`; evidence-fragment cache `v4`, so structured documents are re-analysed once.
+  Stored analyses, approvals and context tokens are unchanged while the categories are empty. No
+  migration.
+- **A requirement can state its scope: how it works today, how it should work, and what is out
+  of scope.** Three optional intake fields on the new-requirement form and the source editor,
+  shown on the Source step, diffed in History, given to the analysis prompt (`analysis-v27`) and
+  printed in section 3 of the Business Requirements Document (schema 1.2, ADR-0119 Amendment 2).
+  Stored in the requirement's JSON payload; no migration. Empty fields stay out of payloads and
+  generation context tokens, so nothing already saved or open changes.
+- **The Business Requirements Document gains a version history, actors and scenarios, and a Risks
+  section.** Document schema 1.1 (ADR-0119 Amendment 1): every revision up to the exported one is
+  listed with what changed in it; the approved Stories are summarised by actor; the backlog review's
+  risks have their own section. Both new sections appear once the backlog has final approval and say
+  so before. No upgrade step.
+- **A Business Requirements Document can be downloaded once the analysis is confirmed.** The
+  Confirm view and the History screen offer it as Word or Markdown, cut from the immutable revision
+  and rendered without any model call: the requirement, confirmed facts, business rules,
+  constraints, assumptions, dependencies, open questions and ambiguities with their resolutions, the
+  product verdict, source documents and sign-offs. When the revision also holds a formally approved
+  backlog, it appears as functional requirements; an unapproved backlog never does. People appear
+  by name only. `GET /requirements/{id}/revisions/{n}/specification?format=docx|md`, member-only;
+  the revision list gains `specification_available`, `analysis_confirmed_by` and
+  `analysis_confirmed_at`. No migration. `python-docx` (with `lxml`) is a new runtime dependency of
+  the API image (ADR-0119).
 - **Generate Features waits for an architecture match, and corrects one bad field value.**
   Each Feature is checked against the architecture catalogue by the knowledge portal's model,
   which can take longer than the everyday knowledge client's 10 seconds: a slow match was

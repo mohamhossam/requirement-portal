@@ -243,7 +243,7 @@ class GenerationContextTokens:
         return _token(
             {
                 "scope": "stories",
-                "requirement": asdict(requirement) if requirement else None,
+                "requirement": _requirement_state(requirement) if requirement else None,
                 "analysis": _analysis_state(analysis) if analysis else None,
                 "epic": asdict(epic) if epic else None,
                 "feature_id": feature_id.value,
@@ -328,11 +328,25 @@ class GenerationContextTokens:
             )
 
 
+def _requirement_state(requirement: Requirement) -> dict[str, Any]:
+    state = asdict(requirement)
+    # The scope fields came later; while unset they stay out, so tokens minted before them
+    # stay valid (docs/slices/enhancement-brd-completeness.md, Phase B).
+    for key in ("current_state", "proposed_state", "out_of_scope"):
+        if not state[key]:
+            del state[key]
+    return state
+
+
 def _analysis_state(analysis: RequirementAnalysis) -> dict[str, Any]:
     state = asdict(analysis)
     # What was not recorded stays out, so tokens minted before it was recorded stay valid.
     for key in ("reference_grounding", "product_impact", "product_impact_status"):
         if state[key] is None:
+            del state[key]
+    # The settled categories ADR-0120 added stay out while empty, for the same reason.
+    for key in ("non_functional_requirements", "business_use_cases"):
+        if not state[key]:
             del state[key]
     return state
 

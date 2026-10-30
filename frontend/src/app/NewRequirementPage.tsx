@@ -35,6 +35,9 @@ const emptyDraft: RequirementDraftInput = {
   systems: [],
   business_rules: [],
   constraints: [],
+  current_state: "",
+  proposed_state: "",
+  out_of_scope: [],
 };
 
 const fingerprint = (value: RequirementDraftInput) => JSON.stringify(value);
@@ -49,6 +52,9 @@ function inputFromDraft(draft: RequirementDraft): RequirementDraftInput {
     systems: draft.systems,
     business_rules: draft.business_rules,
     constraints: draft.constraints,
+    current_state: draft.current_state,
+    proposed_state: draft.proposed_state,
+    out_of_scope: draft.out_of_scope,
   };
 }
 

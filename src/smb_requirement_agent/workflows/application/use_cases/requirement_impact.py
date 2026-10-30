@@ -106,6 +106,10 @@ def _source_changed(requirement: Requirement, data: UpdateRequirementInput) -> b
     customer_context = (
         requirement.customer_context.value if requirement.customer_context is not None else ""
     )
+    current_state = requirement.current_state.value if requirement.current_state is not None else ""
+    proposed_state = (
+        requirement.proposed_state.value if requirement.proposed_state is not None else ""
+    )
 
     def normalized(values: tuple[str, ...]) -> tuple[str, ...]:
         return tuple(value.strip() for value in values if value.strip())
@@ -126,5 +130,10 @@ def _source_changed(requirement: Requirement, data: UpdateRequirementInput) -> b
             data.constraints is not None
             and normalized(data.constraints)
             != tuple(item.value for item in requirement.constraints),
+            data.current_state is not None and data.current_state.strip() != current_state,
+            data.proposed_state is not None and data.proposed_state.strip() != proposed_state,
+            data.out_of_scope is not None
+            and normalized(data.out_of_scope)
+            != tuple(item.value for item in requirement.out_of_scope),
         )
     )

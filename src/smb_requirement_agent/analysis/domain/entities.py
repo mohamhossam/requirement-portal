@@ -25,6 +25,7 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     AnalysisId,
     Assumption,
     BusinessRule,
+    BusinessUseCase,
     ClarificationKind,
     ClarificationSeverity,
     ClarificationSource,
@@ -36,6 +37,7 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     IntentProposalKind,
     IntentProposalStatus,
     KnownFact,
+    NonFunctionalRequirement,
     OpenQuestion,
     PotentialDependency,
     QuestionChangeAction,
@@ -359,6 +361,10 @@ class RequirementAnalysis:
     # (ADR-0115). None for analyses from before it was recorded.
     product_impact: ProductImpact | None = None
     product_impact_status: ProductImpactStatus | None = None
+    # Settled categories a standard BRD carries, extracted with evidence and confirmed with
+    # the analysis (ADR-0120). Empty for analyses from before they were recorded.
+    non_functional_requirements: tuple[NonFunctionalRequirement, ...] = ()
+    business_use_cases: tuple[BusinessUseCase, ...] = ()
 
     def __post_init__(self) -> None:
         # An unavailable round keeps the earlier round's impact, so its decision still gates.

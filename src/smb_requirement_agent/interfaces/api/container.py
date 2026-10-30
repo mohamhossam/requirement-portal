@@ -106,6 +106,9 @@ from smb_requirement_agent.governance.application.ports.breakdown_review_reposit
 from smb_requirement_agent.governance.application.ports.publication_repository import (
     PublicationRepositoryPort,
 )
+from smb_requirement_agent.governance.application.ports.specification_export import (
+    SpecificationExportPort,
+)
 from smb_requirement_agent.governance.application.use_cases.approval_workflow import (
     AddReviewComment,
     ApproveBreakdown,
@@ -125,6 +128,9 @@ from smb_requirement_agent.governance.application.use_cases.delivery_closure imp
     RecordTrackerEvent,
 )
 from smb_requirement_agent.governance.application.use_cases.export_breakdown import ExportBreakdown
+from smb_requirement_agent.governance.application.use_cases.export_requirement_specification import (  # noqa: E501
+    ExportRequirementSpecification,
+)
 from smb_requirement_agent.governance.application.use_cases.publish_breakdown import (
     GetPublicationStatus,
     PreviewPublication,
@@ -135,8 +141,14 @@ from smb_requirement_agent.governance.application.use_cases.revision_history imp
     CompareBreakdownVersions,
     GetRevisionHistory,
 )
+from smb_requirement_agent.governance.infrastructure.exports.docx_specification_exporter import (  # noqa: E501
+    DocxSpecificationExporter,
+)
 from smb_requirement_agent.governance.infrastructure.exports.json_exporter import (
     JsonBacklogExporter,
+)
+from smb_requirement_agent.governance.infrastructure.exports.markdown_specification_exporter import (  # noqa: E501
+    MarkdownSpecificationExporter,
 )
 from smb_requirement_agent.governance.infrastructure.exports.xlsx_exporter import (
     XlsxBacklogExporter,
@@ -420,6 +432,7 @@ class Container:
     reporting_reader: ReportingReadPort
     saved_view_repository: SavedViewRepositoryPort
     backlog_exporters: tuple[BacklogExportPort, ...]
+    specification_exporters: tuple[SpecificationExportPort, ...]
     backlog_publisher: BacklogPublisherPort
     # The tracker's service hook; None unless ADO_HOOK_SECRET and a knowledge service are set.
     tracker_hook: TrackerHook | None
@@ -489,6 +502,7 @@ class Container:
     get_revision_history: GetRevisionHistory
     compare_breakdown_versions: CompareBreakdownVersions
     export_breakdown: ExportBreakdown
+    export_requirement_specification: ExportRequirementSpecification
     preview_publication: PreviewPublication
     publish_breakdown: PublishBreakdown
     retry_failed_publication: RetryFailedPublication
@@ -565,6 +579,10 @@ def _build_container(
     backlog_exporters: tuple[BacklogExportPort, ...] = (
         JsonBacklogExporter(),
         XlsxBacklogExporter(),
+    )
+    specification_exporters: tuple[SpecificationExportPort, ...] = (
+        DocxSpecificationExporter(),
+        MarkdownSpecificationExporter(),
     )
     # First, so its buffered spans are exported last, after every adapter has closed.
     tracing = build_tracing(settings, resources)
@@ -668,6 +686,7 @@ def _build_container(
         access_service,
         knowledge.source_impact,
         backlog_exporters,
+        specification_exporters,
         knowledge.current_release,
         backlog_publisher,
         # Approvals hand their backlog over only when there is an inbox to deliver to.
@@ -856,6 +875,7 @@ def _build_container(
         reporting_reader=persistence.reporting_reader,
         saved_view_repository=persistence.saved_view_repository,
         backlog_exporters=backlog_exporters,
+        specification_exporters=specification_exporters,
         backlog_publisher=backlog_publisher,
         tracker_hook=tracker_hook,
         story_quality_repository=persistence.story_quality_repository,
@@ -927,6 +947,7 @@ def _build_container(
         get_revision_history=review.get_revision_history,
         compare_breakdown_versions=review.compare_breakdown_versions,
         export_breakdown=review.export_breakdown,
+        export_requirement_specification=review.export_requirement_specification,
         preview_publication=review.preview_publication,
         publish_breakdown=review.publish_breakdown,
         retry_failed_publication=review.retry_failed_publication,

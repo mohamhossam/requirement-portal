@@ -106,6 +106,25 @@ class IntentProposalCandidate(TypedDict):
     reference_provenance: NotRequired[Provenance]
 
 
+class NonFunctionalRequirementCandidate(TypedDict):
+    """A quality the solution must have, with the attribute it constrains (ADR-0120)."""
+
+    statement: str
+    kind: str
+
+
+class BusinessUseCaseCandidate(TypedDict):
+    """A business-level use case: actor, goal and the steps the business performs (ADR-0120)."""
+
+    name: str
+    actor: str
+    trigger: str | None
+    goal: str
+    main_steps: list[str]
+    alternate_paths: list[str]
+    business_rules: list[str]
+
+
 class SetAsideCandidate(TypedDict):
     """A generated item removed instead of failing the whole analysis (ADR-0032)."""
 
@@ -126,6 +145,9 @@ class RequirementAnalysisCandidate(TypedDict):
     intent_proposals: list[IntentProposalCandidate]
     model: str
     prompt_version: str
+    # Settled categories added by ADR-0120; absent in candidates from before them.
+    non_functional_requirements: NotRequired[list[NonFunctionalRequirementCandidate]]
+    business_use_cases: NotRequired[list[BusinessUseCaseCandidate]]
     question_reviews: NotRequired[list[QuestionReviewCandidate]]
     new_uncertainties: NotRequired[list[UncertaintyCandidate]]
     evidence_references: NotRequired[dict[str, list[AnalysisEvidenceReferenceCandidate]]]

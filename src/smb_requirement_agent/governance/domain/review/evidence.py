@@ -30,6 +30,27 @@ class ReviewEvidence:
 
 
 def evidence_fingerprint(evidence: ReviewEvidence) -> str:
+    # Settled categories added later (ADR-0120) enter the fingerprint only when present,
+    # so approvals recorded before them stay current.
+    settled: dict[str, object] = {}
+    if evidence.analysis.non_functional_requirements:
+        settled["non_functional_requirements"] = [
+            [item.statement, item.kind.value]
+            for item in evidence.analysis.non_functional_requirements
+        ]
+    if evidence.analysis.business_use_cases:
+        settled["business_use_cases"] = [
+            [
+                item.name,
+                item.actor,
+                item.trigger,
+                item.goal,
+                list(item.main_steps),
+                list(item.alternate_paths),
+                list(item.business_rules),
+            ]
+            for item in evidence.analysis.business_use_cases
+        ]
     payload = {
         "quality_context": [
             asdict(
@@ -66,6 +87,7 @@ def evidence_fingerprint(evidence: ReviewEvidence) -> str:
                 ]
                 for item in evidence.questions
             ],
+            **settled,
         },
         "epic": _epic_evidence(evidence.epic) if evidence.epic else None,
         "features": [_feature_evidence(item) for item in evidence.features],

@@ -106,6 +106,73 @@ class BusinessRule:
         _require_text(self.statement, "BusinessRule statement")
 
 
+class NonFunctionalKind(StrEnum):
+    """The quality attribute a non-functional requirement constrains (ADR-0120)."""
+
+    PERFORMANCE = "performance"
+    AVAILABILITY = "availability"
+    SECURITY = "security"
+    COMPLIANCE = "compliance"
+    USABILITY = "usability"
+    DATA = "data"
+    SCALABILITY = "scalability"
+    OTHER = "other"
+
+
+@dataclass(frozen=True)
+class NonFunctionalRequirement:
+    """A quality the solution must have, stated by the source (ADR-0120)."""
+
+    statement: str
+    kind: NonFunctionalKind
+    evidence_references: tuple[AnalysisEvidenceReference, ...] = ()
+
+    def __post_init__(self) -> None:
+        _require_text(self.statement, "NonFunctionalRequirement statement")
+
+
+@dataclass(frozen=True)
+class BusinessUseCase:
+    """How the business, as a black box, delivers value to an external actor (ADR-0120).
+
+    Written at business level: an actor, a goal and the steps the business performs; never
+    systems or screens. The trigger is optional because many sources leave it unstated.
+    """
+
+    name: str
+    actor: str
+    goal: str
+    main_steps: tuple[str, ...]
+    trigger: str | None = None
+    alternate_paths: tuple[str, ...] = ()
+    business_rules: tuple[str, ...] = ()
+    evidence_references: tuple[AnalysisEvidenceReference, ...] = ()
+
+    def __post_init__(self) -> None:
+        _require_text(self.name, "BusinessUseCase name")
+        _require_text(self.actor, "BusinessUseCase actor")
+        _require_text(self.goal, "BusinessUseCase goal")
+        steps = tuple(step.strip() for step in self.main_steps if step and step.strip())
+        if not steps:
+            raise InvalidAnalysisContentError("BusinessUseCase needs at least one main step.")
+        object.__setattr__(self, "name", self.name.strip())
+        object.__setattr__(self, "actor", self.actor.strip())
+        object.__setattr__(self, "goal", self.goal.strip())
+        object.__setattr__(self, "main_steps", steps)
+        trigger = self.trigger.strip() if self.trigger else None
+        object.__setattr__(self, "trigger", trigger or None)
+        object.__setattr__(
+            self,
+            "alternate_paths",
+            tuple(item.strip() for item in self.alternate_paths if item and item.strip()),
+        )
+        object.__setattr__(
+            self,
+            "business_rules",
+            tuple(item.strip() for item in self.business_rules if item and item.strip()),
+        )
+
+
 @dataclass(frozen=True)
 class Assumption:
     statement: str

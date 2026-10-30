@@ -29,6 +29,14 @@ class BacklogExportFormatError(Exception):
     """A neutral export format cannot represent the selected content safely."""
 
 
+class RequirementSpecificationNotAvailableError(Exception):
+    """The selected revision has no analysis the Requirement Owner confirmed (ADR-0119)."""
+
+
+class SpecificationExportFormatError(Exception):
+    """A document format cannot represent the selected content safely."""
+
+
 class BreakdownRevisionNotPublishableError(Exception):
     """The selected revision lacks a formal final approval or a complete tree."""
 

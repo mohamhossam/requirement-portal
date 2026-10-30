@@ -23,8 +23,6 @@ MAX_CONTEXT_CHARACTERS = 10_000
 MAX_LIST_ITEMS = 50
 MAX_LIST_ITEM_CHARACTERS = 1_000
 
-LIST_FIELDS = ("channels", "systems", "business_rules", "constraints")
-
 
 def require_within_intake_limits(
     *,
@@ -33,12 +31,16 @@ def require_within_intake_limits(
     desired_outcome: str | None,
     customer_context: str | None,
     lists: Mapping[str, Iterable[str]],
+    current_state: str | None = None,
+    proposed_state: str | None = None,
 ) -> None:
     """Refuse source content beyond the intake limits, naming the first field over."""
     _limit("title", title, MAX_TITLE_CHARACTERS)
     _limit("description", description, MAX_DESCRIPTION_CHARACTERS)
     _limit("desired_outcome", desired_outcome or "", MAX_CONTEXT_CHARACTERS)
     _limit("customer_context", customer_context or "", MAX_CONTEXT_CHARACTERS)
+    _limit("current_state", current_state or "", MAX_CONTEXT_CHARACTERS)
+    _limit("proposed_state", proposed_state or "", MAX_CONTEXT_CHARACTERS)
     for name, raw_items in lists.items():
         items = tuple(raw_items)
         if len(items) > MAX_LIST_ITEMS:

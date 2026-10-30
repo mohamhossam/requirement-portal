@@ -20,7 +20,7 @@ from smb_requirement_agent.analysis.application.ports.requirement_analyzer impor
 )
 from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 
-PROMPT_VERSION = "analysis-v26-requirement-citations"
+PROMPT_VERSION = "analysis-v28-nfr-and-business-use-cases"
 
 _CORE_SYSTEM_PROMPT = """You are an expert Agile Business Analyst.
 Your task is to analyze a raw business requirement and extract structured information.
@@ -60,6 +60,19 @@ EXTRACTION RULES:
    has direct support. Do not emit both the original rule and an invented qualified
    variant. An explicitly conflicting human answer is a conflict for review, not
    permission to silently weaken the source rule.
+
+NON-FUNCTIONAL REQUIREMENTS AND BUSINESS USE CASES:
+A. Put a quality the source requires of the solution (performance, availability,
+   security, compliance, usability, data, scalability) in non_functional_requirements
+   with its kind and the target the source states. Never a capability or a function,
+   never a quality the source does not state. Do not repeat it in known_facts or
+   constraints.
+B. Put a business use case the source describes in business_use_cases: the external
+   actor (a customer, partner or regulator), the goal they achieve, the business-level
+   steps in order, and the trigger and alternate paths only when the source states them.
+   Describe what the business does, never systems or screens. Never invent a use case;
+   return none when the source describes none. Skip anything the structured context
+   lists as out of scope.
 
 UNCERTAINTY RULES:
 11. If something is missing or unclear, surface it as an OPEN QUESTION or AMBIGUITY.
@@ -145,8 +158,9 @@ QUESTION LIFECYCLE RULES (active clarification questions are supplied):
 
 _CITATION_SECTION = """
 EVIDENCE CITATION RULES (evidence blocks are supplied):
-- Cite every fact, rule, constraint, assumption, ambiguity, dependency, proposal,
-  and open question in evidence_citations. Copy each output subject exactly and use
+- Cite every fact, rule, constraint, non-functional requirement, business use case
+  (kind business_use_case, subject its exact name), assumption, ambiguity, dependency,
+  proposal, and open question in evidence_citations. Copy each output subject exactly and use
   only block IDs present in this request. A table row or image remains evidence in
   the section path shown beside it. Never cite an unknown ID.
 - Human answers are separate evidence: cite their supplied one-based numbers in
@@ -204,8 +218,9 @@ def build_analysis_system_prompt(
 COMPLETE_ANALYSIS_RETRY_INSTRUCTION = """
 Your previous structured response contained no usable analysis content. Try once more.
 Return a COMPLETE replacement analysis: re-extract the original requirement's known
-facts, constraints, and business rules even when the human clarifications resolve all
-uncertainties. Do not return an empty replacement analysis.
+facts, constraints, business rules, non-functional requirements and business use cases
+even when the human clarifications resolve all uncertainties. Do not return an empty
+replacement analysis.
 """
 
 MALFORMED_ANALYSIS_RETRY_INSTRUCTION = """
@@ -664,11 +679,16 @@ def format_structured_context(requirement: Requirement) -> str:
         lines.append(f"- Desired outcome: {requirement.desired_outcome.value}")
     if requirement.customer_context is not None:
         lines.append(f"- Customer context: {requirement.customer_context.value}")
+    if requirement.current_state is not None:
+        lines.append(f"- Current state: {requirement.current_state.value}")
+    if requirement.proposed_state is not None:
+        lines.append(f"- Proposed state: {requirement.proposed_state.value}")
     for label, values in (
         ("Channel", requirement.channels),
         ("System", requirement.systems),
         ("Business rule", requirement.business_rules),
         ("Constraint", requirement.constraints),
+        ("Out of scope", requirement.out_of_scope),
     ):
         lines.extend(f"- {label}: {value.value}" for value in values)
     return "\n".join(lines) if lines else "- (none supplied)"

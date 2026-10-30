@@ -639,6 +639,10 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
                 for q in candidate["open_questions"]
             },
             **{("ambiguity", q["statement"]): q["reason"] for q in candidate["ambiguities"]},
+            **{
+                ("business_use_case", u["name"]): f"{u['actor']} achieves {u['goal']}"
+                for u in candidate.get("business_use_cases", [])
+            },
         }
         base_prompt = build_citation_recovery_prompt(
             outputs,

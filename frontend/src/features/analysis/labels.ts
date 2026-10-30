@@ -89,10 +89,24 @@ export const SUGGESTION_SOURCE_LABEL = {
  * this humanises rather than maps: `known_fact` becomes "Known fact". The
  * known names are spelled out above it because "Ai summary" is not a word.
  */
+/** The quality attribute a non-functional requirement constrains (ADR-0120). */
+export const NON_FUNCTIONAL_KIND_LABEL: Record<string, string> = {
+  performance: "Performance",
+  availability: "Availability",
+  security: "Security",
+  compliance: "Compliance",
+  usability: "Usability",
+  data: "Data",
+  scalability: "Scalability",
+  other: "Other quality",
+};
+
 const EVIDENCE_FIELD_LABEL: Record<string, string> = {
   known_fact: "Known fact",
   business_rule: "Business rule",
   constraint: "Constraint",
+  non_functional_requirement: "Non-functional requirement",
+  business_use_case: "Business use case",
   open_question: "Open question",
   ambiguity: "Ambiguity",
   assumption: "Assumption",

@@ -221,3 +221,9 @@ Applied after the slice review, on top of the scope above:
   into the application layer.
 - `UpdateRequirement`'s optional `analysis_repository` dependency, which makes
   invalidation silently skippable. A domain event is the better shape.
+
+## Later change — non-functional requirements and business use cases (2026-10-30)
+
+ADR-0120 added two settled categories to the analysis, `non_functional_requirements` and
+`business_use_cases`, extracted with the same citation rules as facts and confirmed with the
+analysis. See `docs/slices/enhancement-brd-completeness.md`, Phase C.

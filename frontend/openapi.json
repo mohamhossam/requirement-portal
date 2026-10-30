@@ -2273,6 +2273,28 @@
       },
       "BreakdownRevisionResponse": {
         "properties": {
+          "analysis_confirmed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysis Confirmed At"
+          },
+          "analysis_confirmed_by": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ActorResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "analysis_human_confirmed": {
             "title": "Analysis Human Confirmed",
             "type": "boolean"
@@ -2393,6 +2415,10 @@
             ],
             "title": "Review Status"
           },
+          "specification_available": {
+            "title": "Specification Available",
+            "type": "boolean"
+          },
           "stale_story_count": {
             "title": "Stale Story Count",
             "type": "integer"
@@ -2442,7 +2468,10 @@
           "submitted_fingerprint",
           "exportable",
           "final_approved_by",
-          "final_approved_at"
+          "final_approved_at",
+          "specification_available",
+          "analysis_confirmed_by",
+          "analysis_confirmed_at"
         ],
         "title": "BreakdownRevisionResponse",
         "type": "object"
@@ -2519,6 +2548,73 @@
           "statement"
         ],
         "title": "BusinessRuleResponse",
+        "type": "object"
+      },
+      "BusinessUseCaseResponse": {
+        "properties": {
+          "actor": {
+            "title": "Actor",
+            "type": "string"
+          },
+          "alternate_paths": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Alternate Paths",
+            "type": "array"
+          },
+          "business_rules": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Business Rules",
+            "type": "array"
+          },
+          "evidence_references": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AnalysisEvidenceReferenceResponse"
+            },
+            "title": "Evidence References",
+            "type": "array"
+          },
+          "goal": {
+            "title": "Goal",
+            "type": "string"
+          },
+          "main_steps": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Main Steps",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "trigger": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trigger"
+          }
+        },
+        "required": [
+          "name",
+          "actor",
+          "trigger",
+          "goal",
+          "main_steps",
+          "alternate_paths",
+          "business_rules"
+        ],
+        "title": "BusinessUseCaseResponse",
         "type": "object"
       },
       "CancelAiJobRequest": {
@@ -3209,6 +3305,18 @@
             "title": "Constraints",
             "type": "array"
           },
+          "current_state": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current State"
+          },
           "customer_context": {
             "anyOf": [
               {
@@ -3237,6 +3345,27 @@
               }
             ],
             "title": "Desired Outcome"
+          },
+          "out_of_scope": {
+            "items": {
+              "maxLength": 1000,
+              "type": "string"
+            },
+            "maxItems": 50,
+            "title": "Out Of Scope",
+            "type": "array"
+          },
+          "proposed_state": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed State"
           },
           "systems": {
             "items": {
@@ -6298,6 +6427,32 @@
         "title": "NextAction",
         "type": "string"
       },
+      "NonFunctionalRequirementResponse": {
+        "properties": {
+          "evidence_references": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AnalysisEvidenceReferenceResponse"
+            },
+            "title": "Evidence References",
+            "type": "array"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "statement": {
+            "title": "Statement",
+            "type": "string"
+          }
+        },
+        "required": [
+          "statement",
+          "kind"
+        ],
+        "title": "NonFunctionalRequirementResponse",
+        "type": "object"
+      },
       "NotificationKind": {
         "enum": [
           "ai_job_succeeded",
@@ -8225,6 +8380,14 @@
             "title": "Business Rules",
             "type": "array"
           },
+          "business_use_cases": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/BusinessUseCaseResponse"
+            },
+            "title": "Business Use Cases",
+            "type": "array"
+          },
           "clarification_evidence": {
             "default": [],
             "items": {
@@ -8296,6 +8459,14 @@
               "$ref": "#/components/schemas/KnownFactResponse"
             },
             "title": "Known Facts",
+            "type": "array"
+          },
+          "non_functional_requirements": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/NonFunctionalRequirementResponse"
+            },
+            "title": "Non Functional Requirements",
             "type": "array"
           },
           "open_questions": {
@@ -8522,6 +8693,12 @@
             "title": "Constraints",
             "type": "array"
           },
+          "current_state": {
+            "default": "",
+            "maxLength": 10000,
+            "title": "Current State",
+            "type": "string"
+          },
           "customer_context": {
             "default": "",
             "maxLength": 10000,
@@ -8538,6 +8715,21 @@
             "default": "",
             "maxLength": 10000,
             "title": "Desired Outcome",
+            "type": "string"
+          },
+          "out_of_scope": {
+            "items": {
+              "maxLength": 1000,
+              "type": "string"
+            },
+            "maxItems": 50,
+            "title": "Out Of Scope",
+            "type": "array"
+          },
+          "proposed_state": {
+            "default": "",
+            "maxLength": 10000,
+            "title": "Proposed State",
             "type": "string"
           },
           "systems": {
@@ -8585,6 +8777,11 @@
             "title": "Constraints",
             "type": "array"
           },
+          "current_state": {
+            "default": "",
+            "title": "Current State",
+            "type": "string"
+          },
           "customer_context": {
             "title": "Customer Context",
             "type": "string"
@@ -8599,6 +8796,18 @@
           },
           "id": {
             "title": "Id",
+            "type": "string"
+          },
+          "out_of_scope": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Out Of Scope",
+            "type": "array"
+          },
+          "proposed_state": {
+            "default": "",
+            "title": "Proposed State",
             "type": "string"
           },
           "systems": {
@@ -8822,6 +9031,17 @@
             "title": "Constraints",
             "type": "array"
           },
+          "current_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current State"
+          },
           "customer_context": {
             "anyOf": [
               {
@@ -8862,6 +9082,24 @@
           "id": {
             "title": "Id",
             "type": "string"
+          },
+          "out_of_scope": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Out Of Scope",
+            "type": "array"
+          },
+          "proposed_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed State"
           },
           "status": {
             "$ref": "#/components/schemas/RequirementStatus"
@@ -8919,6 +9157,17 @@
             "title": "Created At",
             "type": "string"
           },
+          "current_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current State"
+          },
           "description": {
             "title": "Description",
             "type": "string"
@@ -8926,6 +9175,24 @@
           "number": {
             "title": "Number",
             "type": "integer"
+          },
+          "out_of_scope": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Out Of Scope",
+            "type": "array"
+          },
+          "proposed_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed State"
           },
           "status": {
             "title": "Status",
@@ -9012,6 +9279,17 @@
           "current_stage": {
             "$ref": "#/components/schemas/WorkflowStage"
           },
+          "current_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current State"
+          },
           "customer_context": {
             "anyOf": [
               {
@@ -9066,6 +9344,13 @@
           "next_action": {
             "$ref": "#/components/schemas/NextAction"
           },
+          "out_of_scope": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Out Of Scope",
+            "type": "array"
+          },
           "owner": {
             "anyOf": [
               {
@@ -9075,6 +9360,17 @@
                 "type": "null"
               }
             ]
+          },
+          "proposed_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed State"
           },
           "reviewer_count": {
             "title": "Reviewer Count",
@@ -9677,6 +9973,12 @@
             "title": "Constraints",
             "type": "array"
           },
+          "current_state": {
+            "default": "",
+            "maxLength": 10000,
+            "title": "Current State",
+            "type": "string"
+          },
           "customer_context": {
             "default": "",
             "maxLength": 10000,
@@ -9698,6 +10000,21 @@
           "expected_version": {
             "title": "Expected Version",
             "type": "integer"
+          },
+          "out_of_scope": {
+            "items": {
+              "maxLength": 1000,
+              "type": "string"
+            },
+            "maxItems": 50,
+            "title": "Out Of Scope",
+            "type": "array"
+          },
+          "proposed_state": {
+            "default": "",
+            "maxLength": 10000,
+            "title": "Proposed State",
+            "type": "string"
           },
           "systems": {
             "items": {
@@ -10019,6 +10336,14 @@
         ],
         "title": "SourceLineage",
         "type": "object"
+      },
+      "SpecificationFormat": {
+        "enum": [
+          "docx",
+          "md"
+        ],
+        "title": "SpecificationFormat",
+        "type": "string"
       },
       "SpidrPattern": {
         "enum": [
@@ -10956,6 +11281,18 @@
             ],
             "title": "Constraints"
           },
+          "current_state": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current State"
+          },
           "customer_context": {
             "anyOf": [
               {
@@ -10994,6 +11331,34 @@
             "default": false,
             "title": "Impact Acknowledged",
             "type": "boolean"
+          },
+          "out_of_scope": {
+            "anyOf": [
+              {
+                "items": {
+                  "maxLength": 1000,
+                  "type": "string"
+                },
+                "maxItems": 50,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Out Of Scope"
+          },
+          "proposed_state": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed State"
           },
           "systems": {
             "anyOf": [
@@ -19192,6 +19557,84 @@
           }
         ],
         "summary": "Publish Revision",
+        "tags": [
+          "revisions"
+        ]
+      }
+    },
+    "/requirements/{requirement_id}/revisions/{revision_number}/specification": {
+      "get": {
+        "operationId": "export_specification_requirements__requirement_id__revisions__revision_number__specification_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "requirement_id",
+            "required": true,
+            "schema": {
+              "title": "Requirement Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "revision_number",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "Revision Number",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/SpecificationFormat"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Fake-Actor-Id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fake-Actor-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {},
+              "text/markdown": {}
+            },
+            "description": "The Business Requirements Document of the selected revision's confirmed analysis."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Export Specification",
         "tags": [
           "revisions"
         ]

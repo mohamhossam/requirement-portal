@@ -42,6 +42,7 @@ forbidden_modules =
     smb_requirement_agent.reporting.infrastructure
     smb_requirement_agent.workflows.application
     smb_requirement_agent.workflows.infrastructure
+    docx
 
 [importlinter:contract:shared_kernel_pure]
 name = The shared kernel imports nothing else from requirement-portal (ADR-0103)
@@ -91,6 +92,7 @@ forbidden_modules =
     smb_requirement_agent.governance.infrastructure
     smb_requirement_agent.reporting.infrastructure
     smb_requirement_agent.workflows.infrastructure
+    docx
 
 [importlinter:contract:domain_framework_independence]
 name = Domain must not import frameworks or provider SDKs

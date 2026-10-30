@@ -64,6 +64,9 @@ from smb_requirement_agent.governance.application.use_cases.breakdown_review imp
     ResolveFlag,
 )
 from smb_requirement_agent.governance.application.use_cases.export_breakdown import ExportBreakdown
+from smb_requirement_agent.governance.application.use_cases.export_requirement_specification import (  # noqa: E501
+    ExportRequirementSpecification,
+)
 from smb_requirement_agent.governance.application.use_cases.publish_breakdown import (
     GetPublicationStatus,
     PreviewPublication,
@@ -439,6 +442,12 @@ def get_compare_breakdown_versions(container: ContainerDep) -> CompareBreakdownV
 
 def get_export_breakdown(container: ContainerDep) -> ExportBreakdown:
     return container.export_breakdown
+
+
+def get_export_requirement_specification(
+    container: ContainerDep,
+) -> ExportRequirementSpecification:
+    return container.export_requirement_specification
 
 
 def get_preview_publication(container: ContainerDep) -> PreviewPublication:

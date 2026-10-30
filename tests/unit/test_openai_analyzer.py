@@ -216,7 +216,7 @@ def test_openai_analyzer_success(
     assert candidate["assumptions"] == ["Assumption 1"]
     assert candidate["open_questions"][0]["question"] == "Q1"
     assert candidate["model"] == "gpt-4o"
-    assert candidate["prompt_version"] == "analysis-v26-requirement-citations"
+    assert candidate["prompt_version"] == "analysis-v28-nfr-and-business-use-cases"
 
     # Verify prompt safety properties
     mock_client.chat.completions.parse.assert_called_once()

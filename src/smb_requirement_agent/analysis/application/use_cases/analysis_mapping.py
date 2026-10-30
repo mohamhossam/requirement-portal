@@ -22,12 +22,15 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     AnalysisId,
     Assumption,
     BusinessRule,
+    BusinessUseCase,
     Constraint,
     HumanClarification,
     IntentProposal,
     IntentProposalId,
     IntentProposalStatus,
     KnownFact,
+    NonFunctionalKind,
+    NonFunctionalRequirement,
     OpenQuestion,
     PotentialDependency,
     is_additional_intent_proposal,
@@ -180,6 +183,27 @@ def build_analysis(
         reference_grounding=candidate.get("reference_grounding"),
         product_impact=_round_impact(candidate, previous_impact),
         product_impact_status=candidate.get("product_impact_status"),
+        non_functional_requirements=tuple(
+            NonFunctionalRequirement(
+                item["statement"],
+                NonFunctionalKind(item["kind"]),
+                _evidence(candidate, "non_functional_requirement", item["statement"]),
+            )
+            for item in candidate.get("non_functional_requirements", [])
+        ),
+        business_use_cases=tuple(
+            BusinessUseCase(
+                name=item["name"],
+                actor=item["actor"],
+                goal=item["goal"],
+                main_steps=tuple(item["main_steps"]),
+                trigger=item.get("trigger"),
+                alternate_paths=tuple(item.get("alternate_paths", [])),
+                business_rules=tuple(item.get("business_rules", [])),
+                evidence_references=_evidence(candidate, "business_use_case", item["name"]),
+            )
+            for item in candidate.get("business_use_cases", [])
+        ),
     )
 
 

@@ -100,7 +100,9 @@ from smb_requirement_agent.governance.application.errors import (
     PublicationTargetChangedError,
     PublicationTargetError,
     PublicationUnavailableError,
+    RequirementSpecificationNotAvailableError,
     ReviewFlagNotFoundError,
+    SpecificationExportFormatError,
 )
 from smb_requirement_agent.governance.domain.publication.errors import (
     InvalidPublicationError,
@@ -270,6 +272,8 @@ EXPECTED_STATUS_CODES: dict[type[Exception], int] = {
     PublicationInProgressError: 409,
     InvalidPublicationError: 500,
     BacklogExportFormatError: 422,
+    RequirementSpecificationNotAvailableError: 409,
+    SpecificationExportFormatError: 422,
     AiJobConflictError: 409,
     AiJobInputsPrunedError: 409,
     KnowledgeFindingConflictError: 409,
