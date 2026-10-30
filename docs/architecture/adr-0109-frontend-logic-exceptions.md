@@ -123,6 +123,20 @@ An exception sets no precedent for the redesign: it changes behaviour, not the l
     `PassageCitation` are derived from the generated contract types instead of hand-written.
   Tested in `EpicCard.test.tsx`, `FeatureTree.test.tsx`, `StoryCard.test.tsx`,
   `StoryList.test.tsx`, whose scenarios now carry the server's `actions`.
+- **Business Requirements Document and BRD completeness** (ADR-0119, ADR-0120; slices
+  `enhancement-business-requirements-document-export.md`, `enhancement-brd-completeness.md`,
+  owner-approved 2026-10-30):
+  - **Document download** (`api/client.ts`, `app/requirement/RevisionsView.tsx`,
+    `app/requirement/AnalysisView.tsx`). `exportRequirementSpecification` fetches
+    `GET /requirements/{id}/revisions/{n}/specification?format=docx|md` through the existing
+    `download()` path; History and Confirm run it as a mutation. The Confirm view reads the
+    revision history once the analysis is confirmed, because the document is cut from an
+    immutable revision the analysis itself cannot name, and invalidates it on confirmation.
+  - **Scope fields** (`features/requirement/RequirementForm.tsx`, `app/NewRequirementPage.tsx`,
+    `app/requirement/SourcePanel.tsx`). `current_state`, `proposed_state` and `out_of_scope` travel with the
+    create, update and draft requests, with the regenerated contract types.
+  Tested in `RevisionPanel.test.tsx`, `StatusStrip.test.tsx`, `RequirementForm.test.tsx`,
+  `client.test.ts`, and the `review-flow.spec.ts` document and intake journeys.
 
 ## Consequences
 
