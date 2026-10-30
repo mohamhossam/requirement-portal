@@ -87,6 +87,9 @@ class ApprovalCompletion:
     features_total: int
     stories_approved: int
     stories_total: int
+    # Confirmed sizes only (ADR-0121).
+    story_points: int = 0
+    stories_sized: int = 0
 
 
 @dataclass(frozen=True)
@@ -194,6 +197,8 @@ class GetApprovalWorkflow:
                 if item.target.kind is ApprovalTargetKind.STORY
             ),
             stories_total=sum(item.target.kind is ApprovalTargetKind.STORY for item in artifacts),
+            story_points=sum(item.story_points or 0 for item in artifacts),
+            stories_sized=sum(item.story_points is not None for item in artifacts),
         )
         readiness = readiness_reasons(evidence, review, artifacts)
         subject = approval_subject(evidence, review)

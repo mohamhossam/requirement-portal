@@ -48,6 +48,9 @@ class UpdateRequirementInput:
     systems: tuple[str, ...] | None = None
     business_rules: tuple[str, ...] | None = None
     constraints: tuple[str, ...] | None = None
+    current_state: str | None = None
+    proposed_state: str | None = None
+    out_of_scope: tuple[str, ...] | None = None
     expected_version: int
 
 
@@ -131,6 +134,21 @@ class UpdateRequirement:
                     else _contexts(data.constraints)
                 ),
                 updated_at=self._clock.now(),
+                current_state=(
+                    existing.current_state
+                    if data.current_state is None
+                    else _optional_context(data.current_state)
+                ),
+                proposed_state=(
+                    existing.proposed_state
+                    if data.proposed_state is None
+                    else _optional_context(data.proposed_state)
+                ),
+                out_of_scope=(
+                    existing.out_of_scope
+                    if data.out_of_scope is None
+                    else _contexts(data.out_of_scope)
+                ),
             )
             if _same_source(existing, updated):
                 return existing
@@ -157,4 +175,7 @@ def _same_source(left: Requirement, right: Requirement) -> bool:
         and left.systems == right.systems
         and left.business_rules == right.business_rules
         and left.constraints == right.constraints
+        and left.current_state == right.current_state
+        and left.proposed_state == right.proposed_state
+        and left.out_of_scope == right.out_of_scope
     )

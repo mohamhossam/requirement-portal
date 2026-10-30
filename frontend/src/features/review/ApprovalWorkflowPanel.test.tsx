@@ -20,6 +20,8 @@ const workflow: ApprovalWorkflow = {
     features_total: 1,
     stories_approved: 0,
     stories_total: 1,
+    story_points: 0,
+    stories_sized: 0,
   },
   artifacts: [
     {
@@ -45,7 +47,11 @@ const workflow: ApprovalWorkflow = {
 function renderPanel(value: ApprovalWorkflow = workflow) {
   vi.spyOn(api, "getApprovalWorkflow").mockResolvedValue(value);
   vi.spyOn(api, "listAiJobs").mockResolvedValue([]);
-  return renderWithJobs(<ApprovalWorkflowPanel requirementId="req-1" flags={[]} />);
+  return renderWithJobs(
+    <MemoryRouter>
+      <ApprovalWorkflowPanel requirementId="req-1" flags={[]} />
+    </MemoryRouter>,
+  );
 }
 
 describe("ApprovalWorkflowPanel", () => {
@@ -73,6 +79,26 @@ describe("ApprovalWorkflowPanel", () => {
     expect(submit).toHaveBeenCalledWith("req-1", "breakdown-fingerprint", 1);
     expect(await screen.findByRole("listitem", { current: "step" })).toHaveTextContent("Under review");
     expect((await screen.findAllByText(/under review/i))[0]).toBeVisible();
+  });
+
+  it("keeps the backlog size apart from the approval counts and says when a Story is unsized", async () => {
+    renderPanel({
+      ...workflow,
+      completion: { ...workflow.completion, stories_total: 2, story_points: 5, stories_sized: 1 },
+      artifacts: [
+        { ...workflow.artifacts[0]!, story_points: 5, story_points_basis: "accepted_suggestion", story_points_decided_by: "Amina Owner" },
+        { ...workflow.artifacts[0]!, target: { kind: "story", item_id: "story-2" }, story_points: null },
+      ],
+    });
+
+    expect(await screen.findByText("5 points · 1 of 2 Stories sized")).toBeVisible();
+    const completion = screen.getByLabelText("Approval completion");
+    expect(within(completion).queryByText(/points/)).not.toBeInTheDocument();
+    // Who decided is said where every approver can see it, as the Story card says it.
+    expect(screen.getByText("AI suggestion accepted by Amina Owner")).toBeVisible();
+    // An unsized Story is a way to its size, with the advice before the act, and a way back.
+    const link = screen.getByRole("link", { name: /^Not sized yet — size it before approving: As a customer/ });
+    expect(link).toHaveAttribute("href", "/requirements/req-1/breakdown/features/feature-1/stories/story-2?from=review");
   });
 
   it("explains disabled actions and preserves a failed comment draft", async () => {

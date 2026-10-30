@@ -57,6 +57,8 @@ class AzureDevOpsConfiguration:
     work_item_types: Mapping[WorkItemKind, str]
     description_field: str
     acceptance_criteria_field: str
+    # Blank when the process has no story-points field; sizes are then not sent.
+    story_points_field: str
     tags: tuple[str, ...]
     # Squad id to the area path of that squad's board.
     squad_area_paths: Mapping[str, str]
@@ -217,14 +219,16 @@ class AzureDevOpsWorkItemPublisher:
     def _edit_url(self, external_id: str) -> str:
         return f"{self._project_path}/_workitems/edit/{external_id}"
 
-    def _content(self, item: PlannedWorkItem) -> list[tuple[str, str]]:
+    def _content(self, item: PlannedWorkItem) -> list[tuple[str, str | int]]:
         """The fields a person reads, which an update replaces."""
-        fields = [
+        fields: list[tuple[str, str | int]] = [
             ("System.Title", item.title),
             (self._config.description_field, _description(item)),
         ]
         if item.acceptance_criteria:
             fields.append((self._config.acceptance_criteria_field, _acceptance_criteria(item)))
+        if item.story_points is not None and self._config.story_points_field:
+            fields.append((self._config.story_points_field, item.story_points))
         return fields
 
     def _document(

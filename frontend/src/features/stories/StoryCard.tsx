@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import type { Story, StoryInput, StoryQuality } from "../../api/client";
+import type { EstimateSuggestion, FeatureEstimateSuggestions, Story, StoryInput, StoryQuality } from "../../api/client";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { CriterionLines } from "./CriterionLines";
 import { EditorConflictNotice } from "../../components/EditorConflictNotice";
@@ -14,6 +14,9 @@ import { Button, Card, Checkbox } from "../../components/ui";
 import { ArchitectureImpactPanel } from "../architecture/ArchitectureImpactPanel";
 import { StoryEditForm } from "./StoryEditForm";
 import { StoryQualityPanel } from "./StoryQualityPanel";
+import { SizeBadge } from "./SizeBadge";
+import { StorySizePanel, type SizeChange } from "./StorySizePanel";
+import { NOT_SIZED, type SizeSibling } from "./storyPoints";
 import { BacklogStatus } from "../breakdown/BacklogStatus";
 import { KindBadge } from "../breakdown/KindBadge";
 import { useEditFocus } from "../breakdown/useEditFocus";
@@ -51,6 +54,18 @@ export function StoryCard({
   quality,
   focused = false,
   reviewHref,
+  sizeSuggestion = null,
+  sizeProvenance = null,
+  sizing = false,
+  sizeError = null,
+  sizeSuggestionStale = false,
+  sizeSiblings = [],
+  listReasonId,
+  sizeReturnHref,
+  canSuggestSizes = false,
+  suggestingSizes = false,
+  onSuggestSizes,
+  onSize,
 }: {
   story: Story;
   /** Kept for the non-focused tree; the card no longer renders an ordinal. */
@@ -67,6 +82,23 @@ export function StoryCard({
   quality: StoryQuality | null;
   focused?: boolean;
   reviewHref?: string;
+  /** This Story's current AI size suggestion, when one is fresh (ADR-0121). */
+  sizeSuggestion?: EstimateSuggestion | null;
+  sizeProvenance?: FeatureEstimateSuggestions["provenance"] | null;
+  sizing?: boolean;
+  sizeError?: string | null;
+  /** Suggestions exist for the Feature but predate these Stories' content. */
+  sizeSuggestionStale?: boolean;
+  /** The Feature's other Stories, so a size is chosen beside them. */
+  sizeSiblings?: SizeSibling[];
+  /** Where the list says why its Stories are gated, when this card is not focused. */
+  listReasonId?: string;
+  /** Set when the person came from Review & approve to size this Story. */
+  sizeReturnHref?: string;
+  canSuggestSizes?: boolean;
+  suggestingSizes?: boolean;
+  onSuggestSizes: () => void;
+  onSize: (change: SizeChange) => void;
 }) {
   const [editing, setEditing] = useState<Story | null>(null);
   const [confirmation, setConfirmation] = useState<string | null>(null);
@@ -81,13 +113,16 @@ export function StoryCard({
 
   const gated = busy || Boolean(disabledReason);
   const reasonId = `story-${story.id}-gated`;
+  // The reason line renders on the focused card; elsewhere the list says it
+  // once, and the controls point at whichever line is on screen.
+  const gatedBy = disabledReason ? (focused ? reasonId : listReasonId) : undefined;
   const moreActions = (
     <>
-      <Button disabled={gated} aria-describedby={disabledReason ? reasonId : undefined} onClick={regenerate}>
+      <Button disabled={gated} aria-describedby={gatedBy} onClick={regenerate}>
         {focused ? "Regenerate Story" : "Regenerate"}
       </Button>
-      <Button disabled={gated} aria-describedby={disabledReason ? reasonId : undefined} onClick={onManualSplit}>Split by hand</Button>
-      <Button disabled={gated} aria-describedby={disabledReason ? reasonId : undefined} onClick={onSplit}>Suggest a split</Button>
+      <Button disabled={gated} aria-describedby={gatedBy} onClick={onManualSplit}>Split by hand</Button>
+      <Button disabled={gated} aria-describedby={gatedBy} onClick={onSplit}>Suggest a split</Button>
     </>
   );
 
@@ -120,6 +155,12 @@ export function StoryCard({
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <BacklogStatus item={story} level="story" />
             <KindBadge kind={story.kind} />
+            {story.estimate ? (
+              <SizeBadge points={story.estimate.points} />
+            ) : (
+              // Said in the header too, so an unsized Story is visible before the fold.
+              <span className="text-ink-muted text-meta">{NOT_SIZED}</span>
+            )}
             {focused && quality && (
               <span className="text-ink-muted text-meta">
                 {quality.status === "passes"
@@ -131,7 +172,7 @@ export function StoryCard({
           {/* `min-w-0`, not `shrink-0`: at 390px the three controls were wider
               than the card and pushed the page to 397px. Now they wrap. */}
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <Button ref={trigger} disabled={gated} aria-describedby={disabledReason ? reasonId : undefined} onClick={() => setEditing(story)}>Edit</Button>
+            <Button ref={trigger} disabled={gated} aria-describedby={gatedBy} onClick={() => setEditing(story)}>Edit</Button>
             {focused ? (
               <details className="workspace-disclosure-inline">
                 <summary>More actions</summary>
@@ -188,6 +229,25 @@ export function StoryCard({
       )}
 
       {quality && <StoryQualityPanel quality={quality} focused={focused} />}
+      {/* After the readiness checks: whether a Story can be sized (Estimable,
+          Small) is read before how big it is. */}
+      <StorySizePanel
+        story={story}
+        suggestion={sizeSuggestion}
+        suggestionStale={sizeSuggestionStale}
+        siblings={sizeSiblings}
+        provenance={sizeProvenance}
+        busy={sizing}
+        error={sizeError}
+        disabled={Boolean(disabledReason)}
+        describedBy={gatedBy}
+        canSuggest={canSuggestSizes}
+        suggesting={suggestingSizes}
+        onSuggest={onSuggestSizes}
+        onSplit={onSplit}
+        returnHref={sizeReturnHref}
+        onSize={onSize}
+      />
       <ProvenanceDetails provenance={story.provenance} />
 
       {confirmation && (

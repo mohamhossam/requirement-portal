@@ -58,6 +58,9 @@ from smb_requirement_agent.breakdown.application.ports.epic_repository import Ep
 from smb_requirement_agent.breakdown.application.ports.feature_repository import (
     FeatureRepositoryPort,
 )
+from smb_requirement_agent.breakdown.application.ports.story_estimate_repository import (
+    StoryEstimateSuggestionRepositoryPort,
+)
 from smb_requirement_agent.breakdown.application.ports.story_quality_repository import (
     StoryQualityRepositoryPort,
 )
@@ -90,6 +93,10 @@ from smb_requirement_agent.breakdown.infrastructure.postgres_backlog import (
     PostgresFeatureRepository,
     PostgresStoryChangeProposalRepository,
     PostgresStoryRepository,
+)
+from smb_requirement_agent.breakdown.infrastructure.story_estimate_repository import (
+    InMemoryStoryEstimateSuggestionRepository,
+    PostgresStoryEstimateSuggestionRepository,
 )
 from smb_requirement_agent.breakdown.infrastructure.story_quality_repository import (
     InMemoryStoryQualityRepository,
@@ -406,6 +413,7 @@ class PersistenceAdapters:
     ai_job_backlog: AiJobBacklogPort
     notification_repository: NotificationRepositoryPort
     story_quality_repository: StoryQualityRepositoryPort
+    story_estimate_repository: StoryEstimateSuggestionRepositoryPort
     saved_view_repository: SavedViewRepositoryPort
     activity_reader: ActivityReadPort
     reporting_reader: ReportingReadPort
@@ -569,6 +577,7 @@ def _postgres(
     ai_job_backlog = postgres_ai_jobs
     notification_repository = PostgresNotificationRepository(postgres)
     story_quality_repository = PostgresStoryQualityRepository(postgres)
+    story_estimate_repository = PostgresStoryEstimateSuggestionRepository(postgres)
     saved_view_repository = PostgresSavedViewRepository(postgres)
     postgres_knowledge = postgres_requirement_knowledge.PostgresRequirementKnowledgeStore(postgres)
     knowledge_index: RequirementKnowledgeIndexPort = postgres_knowledge
@@ -628,6 +637,7 @@ def _postgres(
         ai_job_backlog=ai_job_backlog,
         notification_repository=notification_repository,
         story_quality_repository=story_quality_repository,
+        story_estimate_repository=story_estimate_repository,
         saved_view_repository=saved_view_repository,
         activity_reader=activity_reader,
         reporting_reader=activity_reader,
@@ -706,6 +716,7 @@ def _memory(
     notification_repository = InMemoryNotificationRepository(memory_ai_jobs)
 
     story_quality_repository = InMemoryStoryQualityRepository()
+    story_estimate_repository = InMemoryStoryEstimateSuggestionRepository()
     saved_view_repository = InMemorySavedViewRepository(lock=memory_lock)
     memory_transactions = InMemoryTransactionManager(
         memory_knowledge.mark_source_changed, memory_lock
@@ -839,6 +850,7 @@ def _memory(
         story_proposal_repository,
         memory_ai_jobs,
         story_quality_repository,
+        story_estimate_repository,
         saved_view_repository,
         revision_repository,
         memory_knowledge,
@@ -881,6 +893,7 @@ def _memory(
         ai_job_backlog=ai_job_backlog,
         notification_repository=notification_repository,
         story_quality_repository=story_quality_repository,
+        story_estimate_repository=story_estimate_repository,
         saved_view_repository=saved_view_repository,
         activity_reader=activity_reader,
         reporting_reader=activity_reader,

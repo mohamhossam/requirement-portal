@@ -123,6 +123,32 @@ An exception sets no precedent for the redesign: it changes behaviour, not the l
     `PassageCitation` are derived from the generated contract types instead of hand-written.
   Tested in `EpicCard.test.tsx`, `FeatureTree.test.tsx`, `StoryCard.test.tsx`,
   `StoryList.test.tsx`, whose scenarios now carry the server's `actions`.
+- **Business Requirements Document and BRD completeness** (ADR-0119, ADR-0120; slices
+  `enhancement-business-requirements-document-export.md`, `enhancement-brd-completeness.md`,
+  owner-approved 2026-10-30):
+  - **Document download** (`api/client.ts`, `app/requirement/RevisionsView.tsx`,
+    `app/requirement/AnalysisView.tsx`). `exportRequirementSpecification` fetches
+    `GET /requirements/{id}/revisions/{n}/specification?format=docx|md` through the existing
+    `download()` path; History and Confirm run it as a mutation. The Confirm view reads the
+    revision history once the analysis is confirmed, because the document is cut from an
+    immutable revision the analysis itself cannot name, and invalidates it on confirmation.
+  - **Scope fields** (`features/requirement/RequirementForm.tsx`, `app/NewRequirementPage.tsx`,
+    `app/requirement/SourcePanel.tsx`). `current_state`, `proposed_state` and `out_of_scope` travel with the
+    create, update and draft requests, with the regenerated contract types.
+  Tested in `RevisionPanel.test.tsx`, `StatusStrip.test.tsx`, `RequirementForm.test.tsx`,
+  `client.test.ts`, and the `review-flow.spec.ts` document and intake journeys.
+- **Story point estimates** (ADR-0121; slice `enhancement-story-point-estimates.md`,
+  owner-approved 2026-10-30):
+  - **Suggestions and sizes** (`api/client.ts`, `app/queryKeys.ts`,
+    `app/workspaceInvalidation.ts`, `features/stories/StoryList.tsx`). `getStoryEstimateSuggestions`
+    reads `GET …/stories/estimate-suggestions` as a Feature-scoped query beside the quality
+    assessment; `setStoryEstimate` sends `PUT …/stories/{id}/estimate` as a mutation that
+    invalidates the Story set like an edit. The new job operation `suggest_story_estimates`
+    starts through the existing job path and invalidates its own `story-estimates` key.
+  - **Return to Review & approve** (`features/stories/StoryList.tsx`). An unsized Story's link
+    from Review & approve carries `?from=review`, read from the address to offer the way back.
+  Tested in `StorySizePanel.test.tsx`, `StorySizeCell.test.tsx`, `StoryList.test.tsx`,
+  `ApprovalWorkflowPanel.test.tsx`, and the `review-flow.spec.ts` desktop journey.
 
 ## Consequences
 

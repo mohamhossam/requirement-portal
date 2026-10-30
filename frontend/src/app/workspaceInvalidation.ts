@@ -4,13 +4,13 @@ import { queryKeys } from "./queryKeys";
 
 export type WorkspaceChange =
   | "question" | "analysis" | "source" | "epic" | "features" | "stories"
-  | "story-quality" | "story-proposals" | "answer-suggestions" | "knowledge"
+  | "story-quality" | "story-estimates" | "story-proposals" | "answer-suggestions" | "knowledge"
   | "review" | "architecture" | "epic-approval" | "feature-approval" | "prior-art";
 
 export function workspaceChangeKeys(id: string, change: WorkspaceChange, featureId?: string) {
   const featureKey = (kind: string) => queryKeys.scope(kind, id, ...(featureId ? [featureId] : []));
   const governance = [queryKeys.breakdownReview(id), queryKeys.approvalWorkflow(id), queryKeys.revisions(id), queryKeys.requirementLists()];
-  const stories = [featureKey("stories"), featureKey("story-quality"), featureKey("story-proposals")];
+  const stories = [featureKey("stories"), featureKey("story-quality"), featureKey("story-estimates"), featureKey("story-proposals")];
   const downstream = [queryKeys.epic(id), queryKeys.features(id), ...stories, ...governance];
   switch (change) {
     case "question": return [queryKeys.analysis(id), queryKeys.analysisRounds(id), queryKeys.revisions(id), queryKeys.requirementLists()];
@@ -22,6 +22,7 @@ export function workspaceChangeKeys(id: string, change: WorkspaceChange, feature
     case "feature-approval": return [queryKeys.features(id), ...governance];
     case "stories": return [...stories, ...governance];
     case "story-quality": return [featureKey("story-quality"), queryKeys.breakdownReview(id), queryKeys.approvalWorkflow(id)];
+    case "story-estimates": return [featureKey("story-estimates")];
     case "story-proposals": return [featureKey("story-proposals")];
     case "answer-suggestions": return [queryKeys.scope("answer-suggestions", id)];
     case "knowledge": return [queryKeys.knowledgeReview(id), queryKeys.requirement(id), queryKeys.requirementLists()];
@@ -51,6 +52,7 @@ const jobChanges: Record<AiJob["operation"], WorkspaceChange> = {
   generate_epic: "epic", generate_features: "features", generate_stories: "stories",
   regenerate_story: "stories", regenerate_story_set: "stories",
   propose_story_change: "story-proposals", evaluate_feature_quality: "story-quality",
+  suggest_story_estimates: "story-estimates",
   generate_breakdown_review: "review", resolve_review_open_question: "analysis",
   screen_requirement_knowledge: "knowledge", suggest_clarification_answers: "answer-suggestions",
   screen_prior_art: "prior-art",

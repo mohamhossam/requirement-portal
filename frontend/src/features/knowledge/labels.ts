@@ -42,11 +42,16 @@ const FIELD_LABEL: Record<string, string> = {
   business_need: "Business need",
   desired_outcome: "Desired outcome",
   customer_context: "Customer context",
+  current_state: "Current state",
+  proposed_state: "Proposed state",
+  out_of_scope: "Out of scope",
   channel: "Channel",
   system: "System",
   business_rule: "Business rule",
   constraint: "Constraint",
   known_fact: "Known fact",
+  non_functional_requirement: "Non-functional requirement",
+  business_use_case: "Business use case",
   conflict_resolution: "Agreed resolution",
 };
 

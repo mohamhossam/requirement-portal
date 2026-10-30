@@ -19,6 +19,8 @@ const baseProps = {
   onManualSplit: vi.fn(),
   disabledReason: null,
   quality: null,
+  onSize: vi.fn(),
+  onSuggestSizes: vi.fn(),
 };
 
 describe("StoryCard", () => {

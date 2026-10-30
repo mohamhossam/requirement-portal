@@ -103,7 +103,7 @@ def test_formally_approved_revision_exports_stable_nested_json(client: TestClien
         "final_approval",
         "counts",
     ]
-    assert payload["schema_version"] == "1.7"
+    assert payload["schema_version"] == "1.8"
     assert payload["manifest"]["breakdown_revision"] == revision
     assert payload["manifest"]["final_approval"]["recorded_by"]["id"] == "fake-owner"
     assert payload["manifest"]["final_approval"]["rationale"] == ("Approved for portable export.")
@@ -152,11 +152,14 @@ def test_xlsx_download_preserves_hierarchy_and_given_when_then(client: TestClien
         "splitting_rationale",
         "work_kind",
         "acceptance_criteria",
+        "story_points",
         "status",
         "generated_at",
         "model",
         "prompt_version",
     ]
+    stories_header = [cell.value for cell in workbook["Stories"][1]]
+    assert stories_header[stories_header.index("work_kind") + 1] == "story_points"
     for sheet in workbook.worksheets:
         assert sheet.freeze_panes == "A2"
         assert sheet.auto_filter.ref == sheet.dimensions

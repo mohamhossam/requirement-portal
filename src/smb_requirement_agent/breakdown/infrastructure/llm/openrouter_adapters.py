@@ -10,6 +10,9 @@ from smb_requirement_agent.breakdown.infrastructure.llm.local_epic_generator imp
 from smb_requirement_agent.breakdown.infrastructure.llm.local_feature_generator import (
     StructuredFeatureGeneratorAdapter,
 )
+from smb_requirement_agent.breakdown.infrastructure.llm.local_story_estimator import (
+    StructuredStoryEstimatorAdapter,
+)
 from smb_requirement_agent.breakdown.infrastructure.llm.local_story_generator import (
     StructuredStoryGeneratorAdapter,
 )
@@ -33,6 +36,11 @@ class OpenRouterFeatureGenerator(StructuredFeatureGeneratorAdapter):
 
 
 class OpenRouterStoryGenerator(StructuredStoryGeneratorAdapter):
+    def __init__(self, **settings: Unpack[OpenRouterAdapterSettings]) -> None:
+        super().__init__(openrouter_client_from_settings(settings), "OpenRouter")
+
+
+class OpenRouterStoryEstimator(StructuredStoryEstimatorAdapter):
     def __init__(self, **settings: Unpack[OpenRouterAdapterSettings]) -> None:
         super().__init__(openrouter_client_from_settings(settings), "OpenRouter")
 

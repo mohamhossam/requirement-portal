@@ -139,6 +139,8 @@ class RequirementKnowledgeCorpus:
         optional = (
             ("desired_outcome", requirement.desired_outcome),
             ("customer_context", requirement.customer_context),
+            ("current_state", requirement.current_state),
+            ("proposed_state", requirement.proposed_state),
         )
         values.extend(
             (KnowledgeSourceKind.SOURCE, field, item.value, path, ())
@@ -150,6 +152,7 @@ class RequirementKnowledgeCorpus:
             ("system", requirement.systems),
             ("business_rule", requirement.business_rules),
             ("constraint", requirement.constraints),
+            ("out_of_scope", requirement.out_of_scope),
         ):
             values.extend(
                 (KnowledgeSourceKind.SOURCE, field, item.value, path, ()) for item in entries
@@ -371,6 +374,20 @@ class RequirementKnowledgeCorpus:
         )
         values.extend(
             (source_kind, "constraint", item.statement, path) for item in analysis.constraints
+        )
+        values.extend(
+            (source_kind, "non_functional_requirement", item.statement, path)
+            for item in analysis.non_functional_requirements
+        )
+        values.extend(
+            (
+                source_kind,
+                "business_use_case",
+                f"{item.name}: {item.actor} achieves {item.goal}. "
+                + " ".join(f"{number}. {step}" for number, step in enumerate(item.main_steps, 1)),
+                path,
+            )
+            for item in analysis.business_use_cases
         )
         return values
 

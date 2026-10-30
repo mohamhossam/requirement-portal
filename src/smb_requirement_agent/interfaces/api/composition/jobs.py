@@ -74,6 +74,7 @@ def build_ai_jobs(
         breakdown.regenerate_story,
         breakdown.story_change_proposals,
         breakdown.evaluate_feature_stories,
+        breakdown.suggest_story_estimates,
         breakdown.generate_breakdown_review,
         breakdown.resolve_open_question,
         knowledge.screen,

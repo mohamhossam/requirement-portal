@@ -123,6 +123,9 @@ def _to_response(
         systems=[item.value for item in requirement.systems],
         business_rules=[item.value for item in requirement.business_rules],
         constraints=[item.value for item in requirement.constraints],
+        current_state=_context(requirement.current_state),
+        proposed_state=_context(requirement.proposed_state),
+        out_of_scope=[item.value for item in requirement.out_of_scope],
         version=requirement.version.value,
         updated_at=requirement.updated_at,
         analysis_eligibility=AnalysisEligibilityResponse(
@@ -154,6 +157,9 @@ def _draft_with_eligibility(
         systems=list(draft.systems),
         business_rules=list(draft.business_rules),
         constraints=list(draft.constraints),
+        current_state=draft.current_state,
+        proposed_state=draft.proposed_state,
+        out_of_scope=list(draft.out_of_scope),
         version=draft.version.value,
         updated_at=draft.updated_at,
         analysis_eligibility=AnalysisEligibilityResponse(
@@ -190,6 +196,9 @@ def _draft_input(body: RequirementDraftRequest) -> RequirementDraftInput:
         systems=tuple(body.systems),
         business_rules=tuple(body.business_rules),
         constraints=tuple(body.constraints),
+        current_state=body.current_state,
+        proposed_state=body.proposed_state,
+        out_of_scope=tuple(body.out_of_scope),
     )
 
 
@@ -203,6 +212,9 @@ def _update_input(body: UpdateRequirementRequest) -> UpdateRequirementInput:
         systems=None if body.systems is None else tuple(body.systems),
         business_rules=None if body.business_rules is None else tuple(body.business_rules),
         constraints=None if body.constraints is None else tuple(body.constraints),
+        current_state=body.current_state,
+        proposed_state=body.proposed_state,
+        out_of_scope=None if body.out_of_scope is None else tuple(body.out_of_scope),
         expected_version=body.expected_version,
     )
 
@@ -222,6 +234,9 @@ def _to_worklist_response(
         systems=[value.value for value in requirement.systems],
         business_rules=[value.value for value in requirement.business_rules],
         constraints=[value.value for value in requirement.constraints],
+        current_state=_context(requirement.current_state),
+        proposed_state=_context(requirement.proposed_state),
+        out_of_scope=[value.value for value in requirement.out_of_scope],
         version=requirement.version.value,
         analysis_eligibility=AnalysisEligibilityResponse(
             eligible=documents.eligibility(requirement).eligible,
@@ -281,6 +296,9 @@ def create_requirement(
             systems=tuple(body.systems),
             business_rules=tuple(body.business_rules),
             constraints=tuple(body.constraints),
+            current_state=body.current_state,
+            proposed_state=body.proposed_state,
+            out_of_scope=tuple(body.out_of_scope),
         ),
         actor,
     )

@@ -18,6 +18,8 @@ import { useRequirementJobs } from "../jobs/useRequirementJobs";
 import { Skeleton } from "../../components/Skeleton";
 import { Disclosure } from "../../components/Disclosure";
 import { StoryQualityPanel } from "../stories/StoryQualityPanel";
+import { SizeBadge } from "../stories/SizeBadge";
+import { NONE_SIZED, NOT_SIZED, decidedBy, pointsLabel } from "../stories/storyPoints";
 import { Badge, Button, Card, cx, Modal, ModalBody, ModalFooter, ModalHeader, Select, Textarea } from "../../components/ui";
 import {
   BREAKDOWN_STATUS_LABEL,
@@ -272,6 +274,16 @@ export function ApprovalWorkflowPanel({
               </div>
             ))}
           </dl>
+          {/* Information, not a gate: kept out of the approval counts above so it
+              never reads as something approval waits on (ADR-0121). */}
+          <p className="text-meta text-ink-muted m-0 tabular-nums">
+            Backlog size:{" "}
+            <span className="text-body text-ink font-semibold">
+              {completion.stories_sized
+                ? `${pointsLabel(completion.story_points)} · ${completion.stories_sized} of ${completion.stories_total} Stories sized`
+                : NONE_SIZED}
+            </span>
+          </p>
         </Card>
 
         {storyArtifacts.length > 0 && (
@@ -305,6 +317,29 @@ export function ApprovalWorkflowPanel({
                             <Badge tone="neutral">Awaiting a decision</Badge>
                           )}
                           {checks && <ReadinessBadge quality={checks} />}
+                          {item.story_points != null ? (
+                            <>
+                              <SizeBadge points={item.story_points} />
+                              {/* Who decided is what the approver attests to; said, not hidden. */}
+                              <span className="text-meta text-ink-muted">
+                                {item.story_points_basis && item.story_points_decided_by
+                                  ? decidedBy(item.story_points_basis, item.story_points_decided_by)
+                                  : null}
+                              </span>
+                            </>
+                          ) : (
+                            <Link
+                              className="text-meta text-ink-soft hover:text-ink underline underline-offset-2"
+                              to={`/requirements/${requirementId}/breakdown/features/${item.parent_id ?? ""}/stories/${item.target.item_id}?from=review`}
+                            >
+                              {/* Advice before the act, not an apology after it: sizing an
+                                  approved Story means approving it again. */}
+                              {item.current_approval
+                                ? `${NOT_SIZED} — sizing it reopens its approval`
+                                : `${NOT_SIZED} — size it before approving`}
+                              <span className="sr-only">: {item.label}</span>
+                            </Link>
+                          )}
                         </span>
                       </div>
                       <div className="flex shrink-0 flex-wrap gap-2">

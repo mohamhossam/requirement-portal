@@ -1,7 +1,22 @@
-import { Check, Sparkles } from "lucide-react";
+import { Check, CircleAlert, Download, FileText, Sparkles } from "lucide-react";
 
-import type { RequirementAnalysis } from "../../api/client";
-import { when } from "./analysisFormat";
+import type { RequirementAnalysis, SpecificationFormat } from "../../api/client";
+import { Button } from "../../components/ui/Button";
+import { whenLabel } from "../revisions/labels";
+
+/** The Business Requirements Document of the confirmed analysis (ADR-0119), offered once confirmed. */
+export type SpecificationDownload = {
+  /** The backlog version the document is built from. */
+  revision: number;
+  /** The format being prepared right now, so only its button says so. */
+  busy: SpecificationFormat | null;
+  error: string | null;
+  /** The format of the download that last finished. */
+  downloaded: SpecificationFormat | null;
+  onDownload: (format: SpecificationFormat) => void;
+};
+
+const SPECIFICATION_LABELS: Record<SpecificationFormat, string> = { docx: "Word document", md: "Markdown" };
 
 /**
  * Provenance and progress, on one line.
@@ -16,10 +31,12 @@ export function StatusStrip({
   analysis,
   answered,
   open,
+  specification = null,
 }: {
   analysis: RequirementAnalysis;
   answered: number;
   open: number;
+  specification?: SpecificationDownload | null;
 }) {
   const confirmed = analysis.human_confirmed;
   const total = Math.max(answered + open, 1);
@@ -38,7 +55,9 @@ export function StatusStrip({
             </span>
             <span className="text-ink-muted text-meta">
               {confirmed
-                ? `${analysis.confirmed_by?.display_name ?? "The confirming person is not on record"} · ${when(analysis.confirmed_at)}`
+                ? `${analysis.confirmed_by?.display_name ?? "The confirming person is not on record"} · ${
+                    analysis.confirmed_at ? whenLabel(analysis.confirmed_at) : "an unrecorded date"
+                  }`
                 : `Round ${analysis.round_number ?? "before rounds were numbered"} · nobody has confirmed this yet`}
             </span>
           </span>
@@ -69,6 +88,53 @@ export function StatusStrip({
           style={{ transform: `scaleX(${answered / total})` }}
         />
       </span>
+      {confirmed && specification && (
+        <div
+          aria-label="Business Requirements Document"
+          className="border-line flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-0 border-t border-solid pt-3"
+          role="group"
+        >
+          <p className="text-ink text-meta m-0 flex items-center gap-2">
+            <FileText aria-hidden="true" className="text-ink-muted shrink-0" size={14} />
+            <span>Business Requirements Document, from backlog version {specification.revision}</span>
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Kept enabled while the file is prepared, so focus stays put; a second press is ignored. */}
+            <Button
+              aria-busy={specification.busy === "docx" || undefined}
+              icon={<Download aria-hidden="true" size={16} />}
+              onClick={() => {
+                if (!specification.busy) specification.onDownload("docx");
+              }}
+              size="sm"
+              variant="secondary"
+            >
+              {specification.busy === "docx" ? "Preparing the Word document…" : "Download Word document"}
+            </Button>
+            <Button
+              aria-busy={specification.busy === "md" || undefined}
+              onClick={() => {
+                if (!specification.busy) specification.onDownload("md");
+              }}
+              size="sm"
+              variant="text"
+            >
+              {specification.busy === "md" ? "Preparing the Markdown…" : "Download Markdown"}
+            </Button>
+          </div>
+          <p aria-live="polite" className="text-ink-soft text-meta m-0 basis-full empty:hidden" role="status">
+            {!specification.busy && specification.downloaded && !specification.error
+              ? `Downloaded version ${specification.revision} as ${SPECIFICATION_LABELS[specification.downloaded]}.`
+              : ""}
+          </p>
+          {specification.error && (
+            <p className="text-danger text-meta m-0 flex basis-full items-start gap-1.5 font-semibold" role="alert">
+              <CircleAlert aria-hidden="true" className="mt-px shrink-0" size={14} />
+              <span>The download did not complete: {specification.error} Try again; the file is prepared fresh each time.</span>
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

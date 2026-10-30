@@ -53,6 +53,7 @@ from smb_requirement_agent.breakdown.application.ports.feature_generator import 
 from smb_requirement_agent.breakdown.application.ports.feature_repository import (
     FeatureRepositoryPort,
 )
+from smb_requirement_agent.breakdown.application.ports.story_estimator import StoryEstimatorPort
 from smb_requirement_agent.breakdown.application.ports.story_generator import StoryGeneratorPort
 from smb_requirement_agent.breakdown.application.ports.story_quality_evaluator import (
     StoryQualityEvaluatorPort,
@@ -82,6 +83,10 @@ from smb_requirement_agent.breakdown.application.use_cases.get_epic import GetEp
 from smb_requirement_agent.breakdown.application.use_cases.story_change_proposals import (
     StoryChangeProposals,
 )
+from smb_requirement_agent.breakdown.application.use_cases.story_estimates import (
+    GetStoryEstimateSuggestions,
+    SetStoryEstimate,
+)
 from smb_requirement_agent.breakdown.application.use_cases.story_quality import (
     GetFeatureQualitySnapshot,
 )
@@ -106,6 +111,9 @@ from smb_requirement_agent.governance.application.ports.breakdown_review_reposit
 from smb_requirement_agent.governance.application.ports.publication_repository import (
     PublicationRepositoryPort,
 )
+from smb_requirement_agent.governance.application.ports.specification_export import (
+    SpecificationExportPort,
+)
 from smb_requirement_agent.governance.application.use_cases.approval_workflow import (
     AddReviewComment,
     ApproveBreakdown,
@@ -125,6 +133,9 @@ from smb_requirement_agent.governance.application.use_cases.delivery_closure imp
     RecordTrackerEvent,
 )
 from smb_requirement_agent.governance.application.use_cases.export_breakdown import ExportBreakdown
+from smb_requirement_agent.governance.application.use_cases.export_requirement_specification import (  # noqa: E501
+    ExportRequirementSpecification,
+)
 from smb_requirement_agent.governance.application.use_cases.publish_breakdown import (
     GetPublicationStatus,
     PreviewPublication,
@@ -135,8 +146,14 @@ from smb_requirement_agent.governance.application.use_cases.revision_history imp
     CompareBreakdownVersions,
     GetRevisionHistory,
 )
+from smb_requirement_agent.governance.infrastructure.exports.docx_specification_exporter import (  # noqa: E501
+    DocxSpecificationExporter,
+)
 from smb_requirement_agent.governance.infrastructure.exports.json_exporter import (
     JsonBacklogExporter,
+)
+from smb_requirement_agent.governance.infrastructure.exports.markdown_specification_exporter import (  # noqa: E501
+    MarkdownSpecificationExporter,
 )
 from smb_requirement_agent.governance.infrastructure.exports.xlsx_exporter import (
     XlsxBacklogExporter,
@@ -420,6 +437,7 @@ class Container:
     reporting_reader: ReportingReadPort
     saved_view_repository: SavedViewRepositoryPort
     backlog_exporters: tuple[BacklogExportPort, ...]
+    specification_exporters: tuple[SpecificationExportPort, ...]
     backlog_publisher: BacklogPublisherPort
     # The tracker's service hook; None unless ADO_HOOK_SECRET and a knowledge service are set.
     tracker_hook: TrackerHook | None
@@ -477,6 +495,8 @@ class Container:
     merge_stories: MergeStories
     story_change_proposals: StoryChangeProposals
     get_feature_quality_snapshot: GetFeatureQualitySnapshot
+    get_story_estimate_suggestions: GetStoryEstimateSuggestions
+    set_story_estimate: SetStoryEstimate
     map_feature_architecture: MapFeatureArchitecture
     map_story_architecture: MapStoryArchitecture
     get_breakdown_review: GetBreakdownReview
@@ -489,6 +509,7 @@ class Container:
     get_revision_history: GetRevisionHistory
     compare_breakdown_versions: CompareBreakdownVersions
     export_breakdown: ExportBreakdown
+    export_requirement_specification: ExportRequirementSpecification
     preview_publication: PreviewPublication
     publish_breakdown: PublishBreakdown
     retry_failed_publication: RetryFailedPublication
@@ -518,6 +539,7 @@ def build_container(
     feature_generator: FeatureGeneratorPort | None = None,
     story_generator: StoryGeneratorPort | None = None,
     story_quality_evaluator: StoryQualityEvaluatorPort | None = None,
+    story_estimator: StoryEstimatorPort | None = None,
     architecture_knowledge: ArchitectureKnowledgePort | None = None,
     clock: ClockPort | None = None,
     identity_provider: IdentityProviderPort | None = None,
@@ -531,6 +553,7 @@ def build_container(
             feature_generator=feature_generator,
             story_generator=story_generator,
             story_quality_evaluator=story_quality_evaluator,
+            story_estimator=story_estimator,
             architecture_knowledge=architecture_knowledge,
             clock=clock,
             identity_provider=identity_provider,
@@ -549,6 +572,7 @@ def _build_container(
     feature_generator: FeatureGeneratorPort | None = None,
     story_generator: StoryGeneratorPort | None = None,
     story_quality_evaluator: StoryQualityEvaluatorPort | None = None,
+    story_estimator: StoryEstimatorPort | None = None,
     architecture_knowledge: ArchitectureKnowledgePort | None = None,
     clock: ClockPort | None = None,
     identity_provider: IdentityProviderPort | None = None,
@@ -565,6 +589,10 @@ def _build_container(
     backlog_exporters: tuple[BacklogExportPort, ...] = (
         JsonBacklogExporter(),
         XlsxBacklogExporter(),
+    )
+    specification_exporters: tuple[SpecificationExportPort, ...] = (
+        DocxSpecificationExporter(),
+        MarkdownSpecificationExporter(),
     )
     # First, so its buffered spans are exported last, after every adapter has closed.
     tracing = build_tracing(settings, resources)
@@ -603,6 +631,9 @@ def _build_container(
         story_quality_evaluator
         if story_quality_evaluator is not None
         else defaults.story_quality_evaluator
+    )
+    resolved_story_estimator = (
+        story_estimator if story_estimator is not None else defaults.story_estimator
     )
     # Architecture matching is the knowledge service's; tests may supply their own.
     resolved_architecture = (
@@ -668,6 +699,7 @@ def _build_container(
         access_service,
         knowledge.source_impact,
         backlog_exporters,
+        specification_exporters,
         knowledge.current_release,
         backlog_publisher,
         # Approvals hand their backlog over only when there is an inbox to deliver to.
@@ -680,6 +712,7 @@ def _build_container(
             resolved_feature_generator,
             resolved_story_generator,
             resolved_story_quality_evaluator,
+            resolved_story_estimator,
         ),
         resolved_architecture,
         review,
@@ -856,6 +889,7 @@ def _build_container(
         reporting_reader=persistence.reporting_reader,
         saved_view_repository=persistence.saved_view_repository,
         backlog_exporters=backlog_exporters,
+        specification_exporters=specification_exporters,
         backlog_publisher=backlog_publisher,
         tracker_hook=tracker_hook,
         story_quality_repository=persistence.story_quality_repository,
@@ -915,6 +949,8 @@ def _build_container(
         merge_stories=breakdown.merge_stories,
         story_change_proposals=breakdown.story_change_proposals,
         get_feature_quality_snapshot=breakdown.get_feature_quality_snapshot,
+        get_story_estimate_suggestions=breakdown.get_story_estimate_suggestions,
+        set_story_estimate=breakdown.set_story_estimate,
         map_feature_architecture=breakdown.map_feature_architecture,
         map_story_architecture=breakdown.map_story_architecture,
         get_breakdown_review=review.get_breakdown_review,
@@ -927,6 +963,7 @@ def _build_container(
         get_revision_history=review.get_revision_history,
         compare_breakdown_versions=review.compare_breakdown_versions,
         export_breakdown=review.export_breakdown,
+        export_requirement_specification=review.export_requirement_specification,
         preview_publication=review.preview_publication,
         publish_breakdown=review.publish_breakdown,
         retry_failed_publication=review.retry_failed_publication,

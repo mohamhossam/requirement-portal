@@ -39,6 +39,10 @@ from smb_requirement_agent.breakdown.application.use_cases.get_epic import GetEp
 from smb_requirement_agent.breakdown.application.use_cases.story_change_proposals import (
     StoryChangeProposals,
 )
+from smb_requirement_agent.breakdown.application.use_cases.story_estimates import (
+    GetStoryEstimateSuggestions,
+    SetStoryEstimate,
+)
 from smb_requirement_agent.breakdown.application.use_cases.story_quality import (
     GetFeatureQualitySnapshot,
 )
@@ -64,6 +68,9 @@ from smb_requirement_agent.governance.application.use_cases.breakdown_review imp
     ResolveFlag,
 )
 from smb_requirement_agent.governance.application.use_cases.export_breakdown import ExportBreakdown
+from smb_requirement_agent.governance.application.use_cases.export_requirement_specification import (  # noqa: E501
+    ExportRequirementSpecification,
+)
 from smb_requirement_agent.governance.application.use_cases.publish_breakdown import (
     GetPublicationStatus,
     PreviewPublication,
@@ -401,6 +408,14 @@ def get_feature_quality_snapshot(container: ContainerDep) -> GetFeatureQualitySn
     return container.get_feature_quality_snapshot
 
 
+def get_story_estimate_suggestions(container: ContainerDep) -> GetStoryEstimateSuggestions:
+    return container.get_story_estimate_suggestions
+
+
+def get_set_story_estimate(container: ContainerDep) -> SetStoryEstimate:
+    return container.set_story_estimate
+
+
 def get_get_breakdown_review(container: ContainerDep) -> GetBreakdownReview:
     return container.get_breakdown_review
 
@@ -439,6 +454,12 @@ def get_compare_breakdown_versions(container: ContainerDep) -> CompareBreakdownV
 
 def get_export_breakdown(container: ContainerDep) -> ExportBreakdown:
     return container.export_breakdown
+
+
+def get_export_requirement_specification(
+    container: ContainerDep,
+) -> ExportRequirementSpecification:
+    return container.export_requirement_specification
 
 
 def get_preview_publication(container: ContainerDep) -> PreviewPublication:

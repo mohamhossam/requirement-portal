@@ -44,6 +44,9 @@ const history: RevisionHistory = {
       exportable: false,
       final_approved_by: null,
       final_approved_at: null,
+      specification_available: false,
+      analysis_confirmed_by: null,
+      analysis_confirmed_at: null,
     },
     {
       number: 2,
@@ -71,6 +74,9 @@ const history: RevisionHistory = {
       exportable: false,
       final_approved_by: null,
       final_approved_at: null,
+      specification_available: false,
+      analysis_confirmed_by: null,
+      analysis_confirmed_at: null,
     },
   ],
 };
@@ -86,6 +92,9 @@ const approvedHistory: RevisionHistory = {
             exportable: true,
             final_approved_by: { id: "owner-1", display_name: "Amina Owner", email: "amina@example.test", roles: [] },
             final_approved_at: "2026-01-01T00:03:00Z",
+            specification_available: true,
+            analysis_confirmed_by: { id: "owner-1", display_name: "Amina Owner", email: "amina@example.test", roles: [] },
+            analysis_confirmed_at: "2026-01-01T00:02:30Z",
           }
         : revision,
     ),
@@ -112,6 +121,7 @@ function renderPanel(overrides: Partial<PanelProps> = {}) {
     canExportApprovedRevisions: true,
     onCompare: vi.fn(),
     onDownload: vi.fn(),
+    onDownloadSpecification: vi.fn(),
     ...overrides,
   };
   render(<MemoryRouter><RevisionPanel {...props} /></MemoryRouter>);
@@ -185,9 +195,10 @@ describe("RevisionPanel", () => {
     expect(props.onDownload).not.toHaveBeenCalled();
   });
 
-  it("explains a restricted export without offering its controls", () => {
+  it("explains a restricted export and document without offering their controls", () => {
     renderPanel({ history: approvedHistory, canExportApprovedRevisions: false });
-    expect(screen.getByText(/Only the requirement owner and its reviewers can download/)).toBeVisible();
+    // Once for the approved export, once for the Business Requirements Document.
+    expect(screen.getAllByText(/Only the requirement owner and its reviewers can download/)).toHaveLength(2);
     expect(screen.queryByRole("button", { name: /Download/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("group", { name: "Format" })).not.toBeInTheDocument();
   });
@@ -195,6 +206,85 @@ describe("RevisionPanel", () => {
   it("reports a failed download beside the button", () => {
     renderPanel({ history: approvedHistory, exportError: "The approved export could not be downloaded." });
     expect(screen.getByRole("alert")).toHaveTextContent("The approved export could not be downloaded.");
+  });
+
+  it("offers no document before an analysis is confirmed", () => {
+    renderPanel();
+    expect(screen.queryByRole("heading", { name: /Business Requirements Document/ })).not.toBeInTheDocument();
+  });
+
+  it("offers the document of the newest confirmed analysis before approval, saying the backlog is left out", async () => {
+    const confirmed: RevisionHistory = {
+      ...history,
+      breakdown_revisions: history.breakdown_revisions.map((revision) =>
+        revision.number === 2
+          ? {
+              ...revision,
+              specification_available: true,
+              analysis_human_confirmed: true,
+              analysis_confirmed_by: { id: "owner-1", display_name: "Amina Owner", email: "amina@example.test", roles: [] },
+              analysis_confirmed_at: "2026-01-01T00:02:30Z",
+            }
+          : revision,
+      ),
+    };
+    const props = renderPanel({ history: confirmed, specified: { revision: 2, format: "docx" } });
+
+    expect(screen.getByRole("heading", { name: "Nothing is approved for export yet" })).toBeVisible();
+    expect(screen.getByText(/from backlog version 2 \(analysis confirmed /)).toBeVisible();
+    expect(screen.getByText(/Functional requirements are left out until the backlog has final approval/)).toBeVisible();
+    expect(screen.getByText("Downloaded document version 2 as Word document.")).toBeVisible();
+    expect(screen.getByRole("radio", { name: /Word document/ })).toBeChecked();
+
+    await userEvent.click(screen.getByRole("radio", { name: /Markdown/ }));
+    await userEvent.click(screen.getByRole("button", { name: "Download document version 2" }));
+    expect(props.onDownloadSpecification).toHaveBeenCalledWith(2, "md");
+    expect(props.onDownload).not.toHaveBeenCalled();
+  });
+
+  it("documents the approved version and says the backlog is included", async () => {
+    const props = renderPanel({ history: approvedHistory, specifyingRevision: 2 });
+
+    expect(screen.getByText(/It includes the approved backlog as functional requirements/)).toBeVisible();
+    const button = screen.getByRole("button", { name: "Preparing document version 2…" });
+    expect(button).toBeEnabled();
+    await userEvent.click(button);
+    expect(props.onDownloadSpecification).not.toHaveBeenCalled();
+  });
+
+  it("reports a failed document download beside its button", () => {
+    renderPanel({ history: approvedHistory, specificationError: "The document could not be prepared." });
+    expect(screen.getByRole("alert")).toHaveTextContent("The document could not be prepared.");
+  });
+
+  it("shows how the scope statement changed between business need versions", () => {
+    renderPanel({
+      history: {
+        ...history,
+        requirement_revisions: [
+          { ...history.requirement_revisions[0]!, out_of_scope: ["Hardware resale"], current_state: "Keyed by hand." },
+          {
+            number: 2,
+            created_at: "2026-01-01T00:05:00Z",
+            title: "Transfer funds",
+            description: "Human source",
+            status: "draft",
+            out_of_scope: ["Hardware resale", "Enterprise accounts"],
+            current_state: "Keyed by hand, twice.",
+            proposed_state: null,
+          },
+        ],
+      },
+    });
+    expect(screen.getByText("How it works today")).toBeVisible();
+    const added = [...document.querySelectorAll("ins")].map((element) => element.textContent).join(" ");
+    expect(added).toContain("Enterprise accounts");
+    expect(added).toContain("twice");
+    expect(screen.getByText("Out of scope")).toBeVisible();
+    // The whole exclusion list as it now stands: the unchanged item plain, the new one marked in words.
+    expect(screen.getByText("Hardware resale")).toBeVisible();
+    expect(screen.getByText("Hardware resale").closest("ins")).toBeNull();
+    expect(screen.getByText("Enterprise accounts").closest("ins")).toHaveTextContent("[added: Enterprise accounts]");
   });
 
   it("says when the approval was signed against an earlier business need, and shows the edit word by word", () => {

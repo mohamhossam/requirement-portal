@@ -299,7 +299,7 @@ def test_generated_analysis_has_identity_provenance_and_stable_forced_questions(
     assert first["round_number"] == 1
     assert first["source_requirement_version"] == 1
     assert first["provenance"]["model"] == "fake-analysis"
-    assert first["provenance"]["prompt_version"] == "fake-analysis-v4"
+    assert first["provenance"]["prompt_version"] == "fake-analysis-v5"
     assert {item["action"] for item in first["question_changes"]} == {"created"}
     assert len(first_questions) == 4
     assert all(item["severity"] == "medium" for item in first_questions.values())

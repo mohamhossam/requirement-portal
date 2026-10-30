@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 
-import { api } from "../../api/client";
+import { api, type ExportFormat, type SpecificationFormat } from "../../api/client";
 import { ApiError, errorMessage, errorReference } from "../../api/errors";
 import { Skeleton } from "../../components/Skeleton";
 import { ErrorState } from "../../components/states";
@@ -31,8 +31,13 @@ export function RevisionsView({ id, workspace }: { id: string; workspace: Requir
   });
   const download = useMutation({
     meta: { action: "Downloading the revision" },
-    mutationFn: ({ revision, format }: { revision: number; format: "json" | "xlsx" }) =>
+    mutationFn: ({ revision, format }: { revision: number; format: ExportFormat }) =>
       api.exportBreakdownRevision(id, revision, format),
+  });
+  const downloadSpecification = useMutation({
+    meta: { action: "Downloading the Business Requirements Document" },
+    mutationFn: ({ revision, format }: { revision: number; format: SpecificationFormat }) =>
+      api.exportRequirementSpecification(id, revision, format),
   });
 
   const approved = [...(revisions.data?.breakdown_revisions ?? [])].reverse().find((item) => item.exportable)?.number ?? null;
@@ -83,6 +88,10 @@ export function RevisionsView({ id, workspace }: { id: string; workspace: Requir
           exportError={download.error ? errorMessage(download.error) : null}
           exportingRevision={download.isPending ? download.variables?.revision ?? null : null}
           exported={download.isSuccess ? download.variables : null}
+          specificationError={downloadSpecification.error ? errorMessage(downloadSpecification.error) : null}
+          specifyingRevision={downloadSpecification.isPending ? downloadSpecification.variables?.revision ?? null : null}
+          specified={downloadSpecification.isSuccess ? downloadSpecification.variables : null}
+          onDownloadSpecification={(revision, format) => downloadSpecification.mutate({ revision, format })}
           reviewHref={`/requirements/${id}/review`}
           activityHref={`/activity?requirement_id=${encodeURIComponent(id)}`}
           canExportApprovedRevisions={workspace.canExportApprovedRevisions}

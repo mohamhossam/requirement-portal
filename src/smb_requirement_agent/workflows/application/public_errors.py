@@ -53,6 +53,9 @@ from smb_requirement_agent.breakdown.application.errors import (
     FeatureGenerationError,
     FeatureNotFoundError,
     FeaturesNotFoundError,
+    StoryEstimateSuggestionsConflictError,
+    StoryEstimateSuggestionsNotFoundError,
+    StoryEstimationError,
     StoryGenerationError,
     StoryNotFoundError,
     StoryProposalNotFoundError,
@@ -91,7 +94,9 @@ from smb_requirement_agent.governance.application.errors import (
     PublicationTargetChangedError,
     PublicationTargetError,
     PublicationUnavailableError,
+    RequirementSpecificationNotAvailableError,
     ReviewFlagNotFoundError,
+    SpecificationExportFormatError,
 )
 from smb_requirement_agent.governance.domain.publication.errors import (
     InvalidPublicationError,
@@ -224,6 +229,12 @@ ERROR_CATALOGUE: tuple[tuple[type[Exception], str, FailureCategory], ...] = (
         FailureCategory.CONFLICT,
     ),
     (BacklogExportFormatError, "backlog_export_format", FailureCategory.INVALID_INPUT),
+    (
+        RequirementSpecificationNotAvailableError,
+        "requirement_specification_not_available",
+        FailureCategory.CONFLICT,
+    ),
+    (SpecificationExportFormatError, "specification_export_format", FailureCategory.INVALID_INPUT),
     (
         BreakdownRevisionNotPublishableError,
         "breakdown_revision_not_publishable",
@@ -421,6 +432,16 @@ ERROR_CATALOGUE: tuple[tuple[type[Exception], str, FailureCategory], ...] = (
         "story_quality_snapshot_not_found",
         FailureCategory.NOT_FOUND,
     ),
+    (
+        StoryEstimateSuggestionsConflictError,
+        "story_estimate_suggestions_conflict",
+        FailureCategory.CONFLICT,
+    ),
+    (
+        StoryEstimateSuggestionsNotFoundError,
+        "story_estimate_suggestions_not_found",
+        FailureCategory.NOT_FOUND,
+    ),
     (StoryProposalNotFoundError, "story_proposal_not_found", FailureCategory.NOT_FOUND),
     (StoriesAlreadyExistError, "stories_already_exist", FailureCategory.CONFLICT),
     (StoryRegenerationConflictError, "story_regeneration_conflict", FailureCategory.CONFLICT),
@@ -429,6 +450,7 @@ ERROR_CATALOGUE: tuple[tuple[type[Exception], str, FailureCategory], ...] = (
     (InvalidStoryContentError, "invalid_story_content", FailureCategory.INVALID_INPUT),
     (StoryGenerationError, "story_generation", FailureCategory.PROVIDER),
     (StoryQualityEvaluationError, "story_quality_evaluation", FailureCategory.PROVIDER),
+    (StoryEstimationError, "story_estimation", FailureCategory.PROVIDER),
     (InvalidGeneratedContentError, "invalid_generated_content", FailureCategory.INTERNAL),
     (DatabaseBusyError, "database_busy", FailureCategory.UNAVAILABLE),
     (PersistenceError, "persistence", FailureCategory.INTERNAL),

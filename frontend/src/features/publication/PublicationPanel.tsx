@@ -296,7 +296,7 @@ function confirmText(preview: PublicationPreview, revision: number, creates: num
   if (preview.status === "not_published") {
     return `This creates ${preview.items.length} work items in ${where}, exactly as version ${revision} was approved. They cannot be removed from this portal.`;
   }
-  return `This creates ${creates} and updates ${updates} work items in ${where} to match version ${revision}. Unchanged items are not sent; an update replaces the title, description and acceptance criteria.`;
+  return `This creates ${creates} and updates ${updates} work items in ${where} to match version ${revision}. Unchanged items are not sent; an update replaces the title, description, acceptance criteria and story points.`;
 }
 
 function FactRow({ label, value }: { label: string; value: string }) {

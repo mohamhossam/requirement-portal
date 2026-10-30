@@ -249,6 +249,36 @@ describe("API client", () => {
   });
 });
 
+describe("Business Requirements Document download", () => {
+  it("downloads the Word document using the server filename", async () => {
+    configureAuthentication(() => ({ Authorization: "Bearer export-token" }));
+    const createObjectUrl = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:document");
+    vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
+    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
+    let authorization = "";
+    let format = "";
+    server.use(
+      http.get("http://localhost/api/requirements/r-1/revisions/7/specification", ({ request }) => {
+        authorization = request.headers.get("authorization") ?? "";
+        format = new URL(request.url).searchParams.get("format") ?? "";
+        return new HttpResponse(new Uint8Array([0x50, 0x4b]), {
+          headers: {
+            "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "Content-Disposition": 'attachment; filename="requirement-r-1-business-requirements-v7.docx"',
+          },
+        });
+      }),
+    );
+
+    await api.exportRequirementSpecification("r-1", 7, "docx");
+
+    expect(authorization).toBe("Bearer export-token");
+    expect(format).toBe("docx");
+    expect(createObjectUrl).toHaveBeenCalledOnce();
+    expect(click).toHaveBeenCalledOnce();
+  });
+});
+
 describe("timeouts and cancellation", () => {
   /** A server that never answers: the request ends only when its signal aborts. */
   function hangingFetch() {

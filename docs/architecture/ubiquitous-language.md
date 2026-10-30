@@ -12,11 +12,13 @@ different things in different places.
 
 | Term | Owning context | Meaning |
 |---|---|---|
-| Requirement | requirements | A business need submitted by its owner. It holds title, description, desired outcome, customer context, channels, systems, business rules and constraints. It is versioned; editing it publishes `RequirementRevised`. |
+| Requirement | requirements | A business need submitted by its owner. It holds title, description, desired outcome, customer context, channels, systems, business rules and constraints, and the scope statement a BRD carries: current state, proposed state and what is out of scope. It is versioned; editing it publishes `RequirementRevised`. |
 | Draft (Requirement draft) | requirements | Resumable, partial intake. A draft cannot be analysed until it is promoted to a Requirement (ADR-0013). |
 | Source document | requirements | A file attached to one Requirement as evidence. Its versions are immutable (ADR-0014). Including, excluding or removing one revises the Requirement. Not the same as a *reference document*. |
 | Attachment | requirements | An upload in progress that becomes a source document once ingestion succeeds (ADR-0042, ADR-0065). |
-| Analysis (Requirement analysis) | analysis | AI-generated decomposition of what is known and unknown: known facts, constraints, business rules, assumptions, open questions, ambiguities and dependencies. It is disposable: a Requirement revision deletes it. |
+| Analysis (Requirement analysis) | analysis | AI-generated decomposition of what is known and unknown: known facts, constraints, business rules, non-functional requirements, business use cases, assumptions, open questions, ambiguities and dependencies. It is disposable: a Requirement revision deletes it. |
+| Non-functional requirement | analysis | A quality the solution must have, as the source states it, with the attribute it constrains (performance, availability, security, compliance, usability, data, scalability). Settled content like a fact: cited, carried whole into each round, confirmed with the analysis (ADR-0120). |
+| Business use case | analysis | How the business, as a black box, delivers value to an external actor: actor, optional trigger, goal and business-level steps, never systems or screens. Settled content like a fact (ADR-0120). Not a *user story*, which is a sprint-sized slice of a Feature. |
 | Confirmation | analysis | The owner's explicit acceptance of the current analysis. Breakdown generation requires it (ADR-0010). |
 | Clarification question | analysis | A stable, assignable question raised by AI or a human, with its own lifecycle: open → in progress → resolved, or superseded (ADR-0019). |
 | Intent proposal | analysis | An AI-suggested change to the Requirement's desired outcome, business rules or constraints. It changes nothing until the owner accepts, edits or rejects it (ADR-0025). |
@@ -30,12 +32,16 @@ different things in different places.
 | Story (User Story) | breakdown | One small, testable slice of a Feature: "As a…, I want…, so that…", with Given/When/Then acceptance criteria. |
 | Story change proposal | breakdown | An AI-suggested split or merge of Stories. It changes nothing until applied. |
 | Quality (INVEST assessment) | breakdown | A deterministic and semantic assessment of a Story against INVEST, with SPIDR split suggestions (ADR-0015, ADR-0041). |
+| Story points (size) | breakdown | A Story's relative size on the scale 1, 2, 3, 5, 8, 13, decided by a person (`StoryEstimate`). It is part of the approved content (ADR-0121). |
+| Size suggestion | breakdown | The AI's suggested size for each of a Feature's Stories, with its reason or why it cannot size one (`FeatureEstimateSuggestions`). It is a review aid: it is never a Story's size until a person accepts it, and never exported. |
 | Architecture impact | breakdown | The systems, squads and dependencies a Feature or Story touches. It is part of the approved content. |
 | Architecture catalogue | references | The system, squad, product and journey model published by knowledge-portal. Impact mapping reads it; this service does not own it. |
 | Breakdown review | governance | The single review of a Requirement's whole breakdown: flags, decisions, dependencies, risks, recommendations, submission and final approval (ADR-0017). |
 | Flag | governance | A review finding with a category (open question, assumption, ambiguity, dependency, architecture, product, quality, staleness) and a severity. A *blocking* flag prevents final approval until resolved. |
 | Revision | governance | An immutable snapshot of the Requirement (*requirement revision*) or of the whole breakdown (*breakdown revision*), taken at commit (ADR-0009). |
 | Export | governance | A versioned, neutral file produced from an approved breakdown revision (ADR-0023). It is not ADO publication. |
+| Business Requirements Document (`RequirementSpecification`) | governance | A Word or Markdown document rendered, without any model call, from a breakdown revision whose analysis the owner confirmed: the Requirement, confirmed facts, rules, constraints, the uncertainties with their resolutions, the product verdict, sources and sign-offs, plus the approved backlog as functional requirements when the revision holds one (ADR-0119). Its own contract, not the *export*. |
+| BRD | requirements, references | A business requirements document somebody wrote and uploaded: a *source document* on a live Requirement, or the file a *historic requirement* was imported from. Always an input; the document this service produces is the *Business Requirements Document* above. |
 | Publication (ADO publication) | governance | Creating an approved breakdown revision's Epic, Features and Stories as linked work items in Azure DevOps, after the owner confirms a preview (Slice 12, ADR-0112). The *publisher* is the adapter behind `BacklogPublisherPort`; the *target* is where it sends items. |
 | Publication record | governance | What was published for one Requirement: which local item became which tracker item (*external work-item mapping*), every attempt with a result per item (*publication result*), and the accepted product verdict once there is one (Slice 13, ADR-0113). |
 | Publication status | governance | Not published, publishing now, published, incomplete (the last attempt did not send everything) or outdated (a newer revision has final approval). |
@@ -69,6 +75,10 @@ different things in different places.
 - The *subject* is the canonical content an approval attests to.
 - The *fingerprint* is its SHA-256.
 - An approval stays in the artifact's history, but it is *current* only while its fingerprint matches the artifact's present content (`current_approval(fingerprint)`). Any content change makes it non-current.
+
+**Size suggestion vs story points**
+- A *size suggestion* is AI output kept beside a Feature's Stories; it goes out of date when their content changes.
+- *Story points* are the size a person confirmed on the Story, by accepting a suggestion or entering one. Only they count towards totals, export and the tracker.
 
 **Evidence fingerprint**
 - The fingerprint of everything the breakdown review was built from.

@@ -510,7 +510,7 @@ def test_a_drafted_offering_is_shown_and_sent_with_the_approved_backlog(portal: 
     export = portal.client.get(
         f"/requirements/{requirement_id}/revisions/{revision}/export?format=json"
     ).json()
-    assert export["schema_version"] == "1.7"
+    assert export["schema_version"] == "1.8"
     # The draft goes back exactly as the knowledge portal wrote it.
     assert export["product_impact"] == {
         "verdict": "new_product_line",

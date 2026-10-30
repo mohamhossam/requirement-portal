@@ -1641,7 +1641,7 @@ def test_approved_revision_exports_after_postgres_restart() -> None:
 
     artifact = use_case.execute(requirement_id, revision.number, ExportFormat.JSON, owner)
 
-    assert artifact.content.startswith(b'{\n  "schema_version": "1.7"')
+    assert artifact.content.startswith(b'{\n  "schema_version": "1.8"')
     assert artifact.filename.endswith(f"breakdown-v{revision.number.value}.json")
 
 
@@ -1734,6 +1734,58 @@ def test_generated_quality_and_checked_preview_survive_real_container_restart() 
         assert final_quality["fresh"]
         assert len(final_quality["stories"]) == len(applied.json()["stories"])
         assert client.get(f"/requirements/{requirement_id}/breakdown-review").json()["fresh"]
+
+
+def test_size_suggestions_and_a_confirmed_size_survive_real_container_restart() -> None:
+    from fastapi.testclient import TestClient
+
+    from smb_requirement_agent.infrastructure.config.options import LLMProvider, PersistenceProvider
+    from smb_requirement_agent.infrastructure.config.settings import Settings
+    from smb_requirement_agent.interfaces.api.container import build_container
+    from smb_requirement_agent.interfaces.api.main import create_app
+    from tests.job_driver import run_job
+    from tests.unit.workflow_helpers import generate_story_tree
+
+    assert DATABASE_URL is not None
+    settings = Settings(
+        llm_provider=LLMProvider.FAKE,
+        persistence_provider=PersistenceProvider.POSTGRES,
+        database_url=DATABASE_URL,
+    )
+    first = build_container(settings)
+    with TestClient(create_app(lambda: first)) as client:
+        requirement_id, feature_id, stories = generate_story_tree(client)
+        path = f"/requirements/{requirement_id}/features/{feature_id}/stories"
+        suggested = run_job(
+            client,
+            requirement_id,
+            "suggest_story_estimates",
+            context_token=client.get(path).json()["generation_context_token"],
+            feature_id=feature_id,
+        )
+        assert suggested.succeeded, suggested.job
+        suggestions = client.get(f"{path}/estimate-suggestions").json()
+        story = stories[0]
+        points = next(
+            item["points"] for item in suggestions["suggestions"] if item["story_id"] == story["id"]
+        )
+        accepted = client.put(
+            f"{path}/{story['id']}/estimate",
+            json={
+                "points": points,
+                "basis": "accepted_suggestion",
+                "expected_version": story["version"],
+            },
+        )
+        assert accepted.status_code == 200, accepted.text
+    second = build_container(settings)
+    with TestClient(create_app(lambda: second)) as client:
+        assert client.get(f"{path}/estimate-suggestions").json() == suggestions
+        reloaded = next(
+            item for item in client.get(path).json()["stories"] if item["id"] == story["id"]
+        )
+        assert reloaded["estimate"] == accepted.json()["estimate"]
+        assert client.get(path).json()["estimate_total"]["points"] == points
 
 
 def test_incremental_activity_matches_audit_sources_and_report_aggregation() -> None:

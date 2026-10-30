@@ -5,6 +5,8 @@ and you must bump it, or the provenance of previously generated Epics becomes
 a false record of what produced them.
 """
 
+from collections.abc import Sequence
+
 from smb_requirement_agent.breakdown.application.ports.generation_guidance import (
     EMPTY_GENERATION_GUIDANCE,
     GenerationGuidance,
@@ -13,7 +15,7 @@ from smb_requirement_agent.breakdown.infrastructure.llm.prompts.generation_guida
     render_guidance,
 )
 
-PROMPT_VERSION = "epic-v4"
+PROMPT_VERSION = "epic-v5"
 
 EPIC_SYSTEM_PROMPT = """You are an expert Agile Consultant (SAFe-aligned) supporting a
 Telecom SMB value stream.
@@ -73,6 +75,9 @@ def build_epic_user_prompt(
     clarifications: list[str],
     desired_outcome: str | None = None,
     guidance: GenerationGuidance = EMPTY_GENERATION_GUIDANCE,
+    non_functional_requirements: Sequence[str] = (),
+    out_of_scope: Sequence[str] = (),
+    proposed_state: str | None = None,
 ) -> str:
     """Build the user prompt from the requirement and its analysis.
 
@@ -80,7 +85,7 @@ def build_epic_user_prompt(
     cannot mistake them for source truth.
     """
 
-    def bullets(items: list[str]) -> str:
+    def bullets(items: Sequence[str]) -> str:
         return "\n".join(f"- {item}" for item in items) if items else "- (none)"
 
     return f"""Express one Epic for the following requirement.
@@ -89,6 +94,9 @@ def build_epic_user_prompt(
 Title: {title}
 Description: {description}
 Confirmed desired outcome: {desired_outcome or "(not supplied)"}
+Proposed state: {proposed_state or "(not supplied)"}
+Out of scope (never build for these):
+{bullets(out_of_scope)}
 --- BUSINESS REQUIREMENT CONTENT END ---
 
 --- ANALYSIS: SUPPORTED BY THE REQUIREMENT ---
@@ -100,6 +108,9 @@ Constraints:
 
 Business rules:
 {bullets(business_rules)}
+
+Non-functional requirements (qualities the solution must have):
+{bullets(non_functional_requirements)}
 
 --- ANALYSIS: NOT CONFIRMED - DO NOT TREAT AS FACT ---
 Assumptions:

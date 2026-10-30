@@ -265,7 +265,14 @@ def test_current_analysis_suggestion_evidence_excludes_uncertainty(
     ).current_analysis_chunks(requirement)
 
     assert chunks
-    assert {item.field for item in chunks} <= {"known_fact", "business_rule", "constraint"}
+    # The settled categories only, never an uncertainty (ADR-0120 added the last two).
+    assert {item.field for item in chunks} <= {
+        "known_fact",
+        "business_rule",
+        "constraint",
+        "non_functional_requirement",
+        "business_use_case",
+    }
     assert {item.source_kind for item in chunks} == {KnowledgeSourceKind.CURRENT_ANALYSIS}
 
 

@@ -19,6 +19,9 @@ from smb_requirement_agent.governance.application.ports.backlog_export import Ba
 from smb_requirement_agent.governance.application.ports.backlog_publisher import (
     BacklogPublisherPort,
 )
+from smb_requirement_agent.governance.application.ports.specification_export import (
+    SpecificationExportPort,
+)
 from smb_requirement_agent.governance.application.publication import WorkItemKind
 from smb_requirement_agent.governance.application.use_cases.approval_workflow import (
     AddReviewComment,
@@ -37,6 +40,9 @@ from smb_requirement_agent.governance.application.use_cases.delivery_closure imp
     DeliverClosures,
 )
 from smb_requirement_agent.governance.application.use_cases.export_breakdown import ExportBreakdown
+from smb_requirement_agent.governance.application.use_cases.export_requirement_specification import (  # noqa: E501
+    ExportRequirementSpecification,
+)
 from smb_requirement_agent.governance.application.use_cases.publish_breakdown import (
     GetPublicationStatus,
     PreviewPublication,
@@ -89,6 +95,7 @@ class ReviewWiring:
     get_revision_history: GetRevisionHistory
     compare_breakdown_versions: CompareBreakdownVersions
     export_breakdown: ExportBreakdown
+    export_requirement_specification: ExportRequirementSpecification
     preview_publication: PreviewPublication
     publish_breakdown: PublishBreakdown
     retry_failed_publication: RetryFailedPublication
@@ -121,6 +128,7 @@ def build_backlog_publisher(
             },
             description_field=settings.description_field,
             acceptance_criteria_field=settings.acceptance_criteria_field,
+            story_points_field=settings.story_points_field,
             tags=settings.tags,
             squad_area_paths=dict(settings.squad_area_paths),
             timeout_seconds=settings.timeout_seconds,
@@ -135,6 +143,7 @@ def build_review(
     access: RequirementAccessService,
     source_impact: SourceImpactReview,
     exporters: tuple[BacklogExportPort, ...],
+    specification_exporters: tuple[SpecificationExportPort, ...],
     current_release: ActiveArchitectureReleasePort,
     publisher: BacklogPublisherPort,
     handoffs: ApprovedBacklogOutboxPort | None = None,
@@ -185,6 +194,12 @@ def build_review(
             access,
             persistence.revision_repository,
             exporters,
+        ),
+        export_requirement_specification=ExportRequirementSpecification(
+            persistence.requirement_repository,
+            access,
+            persistence.revision_repository,
+            specification_exporters,
         ),
         preview_publication=preview,
         publish_breakdown=publish,

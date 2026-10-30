@@ -28,6 +28,9 @@ from smb_requirement_agent.breakdown.application.use_cases.generate_features imp
 from smb_requirement_agent.breakdown.application.use_cases.story_change_proposals import (
     StoryChangeProposals,
 )
+from smb_requirement_agent.breakdown.application.use_cases.story_estimates import (
+    SuggestStoryEstimates,
+)
 from smb_requirement_agent.breakdown.application.use_cases.story_quality import (
     EvaluateFeatureStories,
 )
@@ -125,6 +128,7 @@ class ExecuteAiJob:
         regenerate_story: RegenerateStory,
         proposals: StoryChangeProposals,
         quality: EvaluateFeatureStories,
+        estimates: SuggestStoryEstimates,
         generate_review: GenerateBreakdownReview,
         resolve_review_question: ResolveOpenQuestion,
         screen_knowledge: ScreenRequirementKnowledge,
@@ -151,6 +155,7 @@ class ExecuteAiJob:
         self._regenerate_story = regenerate_story
         self._proposals = proposals
         self._quality = quality
+        self._estimates = estimates
         self._generate_review = generate_review
         self._resolve_review_question = resolve_review_question
         self._screen_knowledge = screen_knowledge
@@ -369,6 +374,14 @@ class ExecuteAiJob:
             return (
                 AiJobResultResource(
                     "story_quality",
+                    f"{base}/breakdown/features/{feature_id.value}",
+                ),
+            )
+        if operation is AiJobOperation.SUGGEST_STORY_ESTIMATES and feature_id is not None:
+            self._estimates.execute(actor, requirement_id, feature_id)
+            return (
+                AiJobResultResource(
+                    "story_estimates",
                     f"{base}/breakdown/features/{feature_id.value}",
                 ),
             )

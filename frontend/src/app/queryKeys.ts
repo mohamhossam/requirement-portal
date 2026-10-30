@@ -33,6 +33,7 @@ export const queryKeys = {
   publicationStatus: (id: string) => scoped("publication-status", id),
   stories: (id: string, featureId: string) => scoped("stories", id, featureId),
   storyQuality: (id: string, featureId: string) => scoped("story-quality", id, featureId),
+  storyEstimates: (id: string, featureId: string) => scoped("story-estimates", id, featureId),
   storyProposals: (id: string, featureId: string) => scoped("story-proposals", id, featureId),
   breakdownReview: (id: string) => scoped("breakdown-review", id),
   approvalWorkflow: (id: string) => scoped("approval-workflow", id),

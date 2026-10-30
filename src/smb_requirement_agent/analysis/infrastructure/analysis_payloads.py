@@ -26,6 +26,7 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     AnalysisId,
     Assumption,
     BusinessRule,
+    BusinessUseCase,
     ClarificationKind,
     ClarificationSeverity,
     ClarificationSource,
@@ -38,6 +39,8 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     IntentProposalKind,
     IntentProposalStatus,
     KnownFact,
+    NonFunctionalKind,
+    NonFunctionalRequirement,
     OpenQuestion,
     PotentialDependency,
     QuestionChangeAction,
@@ -81,6 +84,28 @@ def analysis_to_payload(value: RequirementAnalysis) -> JsonObject:
         payload["product_impact_status"] = value.product_impact_status.value
     if value.product_impact is not None:
         payload["product_impact"] = product_impact_to_payload(value.product_impact)
+    if value.non_functional_requirements:
+        payload["non_functional_requirements"] = [
+            {
+                **_analysis_item_payload(item.statement, item.evidence_references),
+                "kind": item.kind.value,
+            }
+            for item in value.non_functional_requirements
+        ]
+    if value.business_use_cases:
+        payload["business_use_cases"] = [
+            {
+                "name": item.name,
+                "actor": item.actor,
+                "trigger": item.trigger,
+                "goal": item.goal,
+                "main_steps": list(item.main_steps),
+                "alternate_paths": list(item.alternate_paths),
+                "business_rules": list(item.business_rules),
+                "evidence_references": evidence_payload(item.evidence_references),
+            }
+            for item in value.business_use_cases
+        ]
     return payload
 
 
@@ -255,6 +280,17 @@ def analysis_from_payload(data: JsonObject) -> RequirementAnalysis:
             )
         ),
         requirement_id=RequirementId(required_text(data, "requirement_id")),
+        non_functional_requirements=tuple(
+            NonFunctionalRequirement(
+                _analysis_item_text(item),
+                NonFunctionalKind(required_text(json_object(item), "kind")),
+                _analysis_item_evidence(item),
+            )
+            for item in optional_json_array(data, "non_functional_requirements")
+        ),
+        business_use_cases=tuple(
+            _use_case_from_payload(item) for item in optional_json_array(data, "business_use_cases")
+        ),
         known_facts=tuple(
             KnownFact(_analysis_item_text(item), _analysis_item_evidence(item))
             for item in json_array(data, "known_facts")
@@ -578,6 +614,21 @@ def _analysis_item_payload(
     statement: str, values: tuple[AnalysisEvidenceReference, ...]
 ) -> JsonObject:
     return {"statement": statement, "evidence_references": evidence_payload(values)}
+
+
+def _use_case_from_payload(value: object) -> BusinessUseCase:
+    data = json_object(value)
+    trigger = data.get("trigger")
+    return BusinessUseCase(
+        name=required_text(data, "name"),
+        actor=required_text(data, "actor"),
+        goal=required_text(data, "goal"),
+        main_steps=tuple(str(step) for step in optional_json_array(data, "main_steps")),
+        trigger=trigger if isinstance(trigger, str) else None,
+        alternate_paths=tuple(str(step) for step in optional_json_array(data, "alternate_paths")),
+        business_rules=tuple(str(rule) for rule in optional_json_array(data, "business_rules")),
+        evidence_references=_analysis_item_evidence(value),
+    )
 
 
 def _analysis_item_text(value: object) -> str:

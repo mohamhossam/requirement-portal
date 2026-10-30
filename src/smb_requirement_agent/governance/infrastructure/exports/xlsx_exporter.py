@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from collections.abc import Iterable
 from datetime import UTC, datetime
 from io import BytesIO
@@ -20,9 +19,9 @@ from smb_requirement_agent.governance.application.exports import (
     ExportJourneyNeighbour,
     NeutralBacklogExport,
 )
+from smb_requirement_agent.governance.infrastructure.exports.xml_text import ILLEGAL_XML
 
 XLSX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-_ILLEGAL_XML = re.compile(r"[\x00-\x08\x0B\x0C\x0E-\x1F]")
 _MAX_CELL_CHARACTERS = 32_767
 type CellValue = str | int | bool | None
 
@@ -81,6 +80,8 @@ class XlsxBacklogExporter:
             ("feature_count", value.counts.features),
             ("story_count", value.counts.stories),
             ("acceptance_criterion_count", value.counts.acceptance_criteria),
+            ("story_points", value.counts.story_points),
+            ("sized_story_count", value.counts.sized_stories),
         )
         for row in rows:
             _append(sheet, row)
@@ -135,6 +136,7 @@ class XlsxBacklogExporter:
                 "splitting_rationale",
                 "work_kind",
                 "acceptance_criteria",
+                "story_points",
                 "status",
                 "generated_at",
                 "model",
@@ -156,6 +158,7 @@ class XlsxBacklogExporter:
                     feature.splitting_rationale,
                     feature.work_kind,
                     "\n".join(feature.acceptance_criteria),
+                    feature.story_points,
                     feature.status,
                     _iso(feature.provenance.generated_at),
                     feature.provenance.model,
@@ -178,6 +181,7 @@ class XlsxBacklogExporter:
                 "value",
                 "voice",
                 "work_kind",
+                "story_points",
                 "status",
                 "generated_at",
                 "model",
@@ -199,6 +203,7 @@ class XlsxBacklogExporter:
                         story.value,
                         story.voice,
                         story.work_kind,
+                        story.story_points,
                         story.status,
                         _iso(story.provenance.generated_at),
                         story.provenance.model,
@@ -465,7 +470,7 @@ def _iso(value: datetime) -> str:
 def _validated(value: CellValue) -> CellValue:
     if not isinstance(value, str):
         return value
-    if len(value) > _MAX_CELL_CHARACTERS or _ILLEGAL_XML.search(value):
+    if len(value) > _MAX_CELL_CHARACTERS or ILLEGAL_XML.search(value):
         raise BacklogExportFormatError(
             "This content cannot be represented losslessly in XLSX; export the revision as JSON."
         )

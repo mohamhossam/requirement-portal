@@ -103,6 +103,12 @@ class EvaluateFeatureQualityJobRequest(_JobRequest):
     feature_id: str = Field(min_length=1, max_length=MAX_IDENTIFIER_CHARACTERS)
 
 
+class SuggestStoryEstimatesJobRequest(_JobRequest):
+    operation: Literal[AiJobOperation.SUGGEST_STORY_ESTIMATES]
+    context_token: str = Field(min_length=1, max_length=MAX_IDENTIFIER_CHARACTERS)
+    feature_id: str = Field(min_length=1, max_length=MAX_IDENTIFIER_CHARACTERS)
+
+
 class GenerateBreakdownReviewJobRequest(_JobRequest):
     operation: Literal[AiJobOperation.GENERATE_BREAKDOWN_REVIEW]
 
@@ -138,6 +144,7 @@ AiJobStartRequest = Annotated[
     | RegenerateStorySetJobRequest
     | ProposeStoryChangeJobRequest
     | EvaluateFeatureQualityJobRequest
+    | SuggestStoryEstimatesJobRequest
     | GenerateBreakdownReviewJobRequest
     | ResolveReviewOpenQuestionJobRequest
     | ScreenRequirementKnowledgeJobRequest

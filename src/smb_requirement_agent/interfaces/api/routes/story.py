@@ -9,6 +9,11 @@ from fastapi import APIRouter, Depends, Response
 from smb_requirement_agent.breakdown.application.use_cases.story_change_proposals import (
     StoryChangeProposals,
 )
+from smb_requirement_agent.breakdown.application.use_cases.story_estimates import (
+    GetStoryEstimateSuggestions,
+    SetStoryEstimate,
+    StoryEstimateInput,
+)
 from smb_requirement_agent.breakdown.application.use_cases.story_quality import (
     GetFeatureQualitySnapshot,
     SuggestStorySplit,
@@ -27,6 +32,7 @@ from smb_requirement_agent.breakdown.domain.story.entities import (
     StoryDraft,
     UserStory,
 )
+from smb_requirement_agent.breakdown.domain.story.estimate import estimate_total
 from smb_requirement_agent.breakdown.domain.story.quality import (
     InvestAssessment,
     SpidrRecommendation,
@@ -47,8 +53,10 @@ from smb_requirement_agent.interfaces.api.dependencies import (
     get_get_stories,
     get_merge_stories,
     get_reject_story,
+    get_set_story_estimate,
     get_split_story,
     get_story_change_proposals,
+    get_story_estimate_suggestions,
     require_authenticated_actor,
 )
 from smb_requirement_agent.interfaces.api.schemas.architecture import ArchitectureImpactResponse
@@ -61,8 +69,12 @@ from smb_requirement_agent.interfaces.api.schemas.governance import (
     ApprovalResponse,
     StoryRejectionRequest,
 )
+from smb_requirement_agent.interfaces.api.schemas.identity import ActorResponse
 from smb_requirement_agent.interfaces.api.schemas.story import (
     AcceptanceCriterionPayload,
+    EstimateSuggestionResponse,
+    EstimateTotalResponse,
+    FeatureEstimateSuggestionsResponse,
     FeatureStoryQualitySnapshotResponse,
     MergeStoriesRequest,
     SpidrRecommendationResponse,
@@ -71,6 +83,8 @@ from smb_requirement_agent.interfaces.api.schemas.story import (
     StoryChangeProposalResponse,
     StoryContentRequest,
     StoryDraftRequest,
+    StoryEstimateRequest,
+    StoryEstimateResponse,
     StoryProposalCandidateResponse,
     StoryProposalMutationRequest,
     StoryQualityResponse,
@@ -140,6 +154,20 @@ def _story_response(story: UserStory, context_token: str | None = None) -> Story
             approve=ActionAvailabilityResponse.from_domain(story.approval_availability()),
             regenerate=ActionAvailabilityResponse.from_domain(story.regeneration_availability()),
         ),
+        estimate=(
+            StoryEstimateResponse(
+                points=story.estimate.points.value,
+                basis=story.estimate.basis,
+                decided_by=ActorResponse(
+                    id=story.estimate.decided_by.id.value,
+                    display_name=story.estimate.decided_by.display_name,
+                    email=story.estimate.decided_by.email,
+                ),
+                decided_at=story.estimate.decided_at,
+            )
+            if story.estimate is not None
+            else None
+        ),
         story_context_token=context_token,
     )
 
@@ -158,7 +186,13 @@ def _set(
         ],
         set_version=generation_context.story_set_version(feature_id),
         generation_context_token=generation_context.stories(requirement_id, feature_id),
+        estimate_total=_total(stories),
     )
+
+
+def _total(stories: list[UserStory]) -> EstimateTotalResponse:
+    total = estimate_total(item.estimate for item in stories)
+    return EstimateTotalResponse(points=total.points, sized=total.sized, stories=total.stories)
 
 
 def _candidate_response(candidate: StoryDraft) -> StoryProposalCandidateResponse:
@@ -265,6 +299,37 @@ def get_feature_story_quality_assessment(
     )
 
 
+@router.get(
+    "/{requirement_id}/features/{feature_id}/stories/estimate-suggestions",
+    response_model=FeatureEstimateSuggestionsResponse,
+)
+def get_feature_story_estimate_suggestions(
+    requirement_id: str,
+    feature_id: str,
+    use_case: Annotated[GetStoryEstimateSuggestions, Depends(get_story_estimate_suggestions)],
+) -> FeatureEstimateSuggestionsResponse:
+    view = use_case.execute(RequirementId(requirement_id), FeatureId(feature_id))
+    suggestions = view.suggestions
+    return FeatureEstimateSuggestionsResponse(
+        feature_id=suggestions.feature_id.value,
+        source_fingerprint=suggestions.source_fingerprint,
+        fresh=view.fresh,
+        provenance=ProvenanceResponse(
+            generated_at=suggestions.provenance.generated_at,
+            model=suggestions.provenance.model,
+            prompt_version=suggestions.provenance.prompt_version,
+        ),
+        suggestions=[
+            EstimateSuggestionResponse(
+                story_id=item.story_id.value,
+                points=item.points.value if item.points else None,
+                rationale=item.rationale,
+            )
+            for item in suggestions.suggestions
+        ],
+    )
+
+
 @router.get("/{requirement_id}/features/{feature_id}/stories", response_model=StorySetResponse)
 def get_stories(
     requirement_id: str,
@@ -302,6 +367,32 @@ def edit_story(
             actor,
             lambda: use_case.execute(
                 actor, requirement, FeatureId(feature_id), StoryId(story_id), _input(body)
+            ),
+        )
+    )
+
+
+@router.put(
+    "/{requirement_id}/features/{feature_id}/stories/{story_id}/estimate",
+    response_model=StoryResponse,
+)
+def set_story_estimate(
+    requirement_id: str,
+    feature_id: str,
+    story_id: str,
+    body: StoryEstimateRequest,
+    actor: CurrentActorDep,
+    commands: RequirementCommandsDep,
+    use_case: Annotated[SetStoryEstimate, Depends(get_set_story_estimate)],
+) -> StoryResponse:
+    requirement = RequirementId(requirement_id)
+    data = StoryEstimateInput(body.points, body.basis, body.expected_version)
+    return _story_response(
+        commands.run(
+            requirement,
+            actor,
+            lambda: use_case.execute(
+                actor, requirement, FeatureId(feature_id), StoryId(story_id), data
             ),
         )
     )

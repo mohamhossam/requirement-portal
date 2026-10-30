@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 from smb_requirement_agent.breakdown.application.ports.generation_guidance import (
     EMPTY_GENERATION_GUIDANCE,
     GenerationGuidance,
@@ -12,7 +14,7 @@ from smb_requirement_agent.breakdown.infrastructure.llm.prompts.generation_guida
     render_guidance,
 )
 
-PROMPT_VERSION = "story-v8"
+PROMPT_VERSION = "story-v9"
 
 SPLIT_OPERATION = """\
 Split the one source Story into TWO OR MORE distinct, smaller Stories.
@@ -75,7 +77,7 @@ Return only content conforming to the requested JSON schema.
 STORY_SYSTEM_PROMPT += GENERATION_RULES
 
 
-def _bullets(items: list[str]) -> str:
+def _bullets(items: Sequence[str]) -> str:
     return "\n".join(f"- {item}" for item in items) if items else "- (none)"
 
 
@@ -105,6 +107,7 @@ def build_story_user_prompt(
     source_stories: list[UserStory],
     desired_outcome: str | None = None,
     guidance: GenerationGuidance = EMPTY_GENERATION_GUIDANCE,
+    non_functional_requirements: Sequence[str] = (),
 ) -> str:
     source = "\n\n".join(_story_text(item) for item in source_stories) or "(none)"
     return f"""Operation: {operation}
@@ -127,6 +130,8 @@ Constraints:
 {_bullets(constraints)}
 Business rules:
 {_bullets(business_rules)}
+Non-functional requirements (sequence each as its own Story when it applies to this Feature):
+{_bullets(non_functional_requirements)}
 
 UNCONFIRMED ANALYSIS
 Assumptions:

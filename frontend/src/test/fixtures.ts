@@ -91,6 +91,8 @@ export const analysisFixture: RequirementAnalysis = {
   known_facts: [{ statement: "Business broadband is in scope.", evidence_references: [] }],
   constraints: [{ statement: "Only XGPON coverage areas qualify.", evidence_references: [] }],
   business_rules: [{ statement: "Eligibility must be checked before ordering.", evidence_references: [] }],
+  non_functional_requirements: [],
+  business_use_cases: [],
   assumptions: [{ statement: "Existing coverage data is current.", evidence_references: [] }],
   open_questions: [{ question: "Who owns fallout?", rationale: "Ownership is not stated.", evidence_references: [] }],
   ambiguities: [{ statement: "Available in channel", reason: "No release date is stated.", evidence_references: [] }],
@@ -267,6 +269,7 @@ export const storySetFixture: StorySet = {
   feature_id: "feature-1",
   set_version: 1,
   generation_context_token: "story-set-context-1",
+  estimate_total: { points: 0, sized: 0, stories: 2 },
   stories: [
     storyFixture,
     {

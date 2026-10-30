@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from smb_requirement_agent.breakdown.domain.kinds import WorkKind
 from smb_requirement_agent.breakdown.domain.story.entities import StoryChangeOperation
+from smb_requirement_agent.breakdown.domain.story.estimate import EstimateBasis
 from smb_requirement_agent.breakdown.domain.story.quality import (
     FindingSource,
     InvestCriterion,
@@ -24,6 +25,7 @@ from smb_requirement_agent.interfaces.api.schemas.bounds import (
 from smb_requirement_agent.interfaces.api.schemas.epic import ProvenanceResponse, StalenessResponse
 from smb_requirement_agent.interfaces.api.schemas.generation import ActionAvailabilityResponse
 from smb_requirement_agent.interfaces.api.schemas.governance import ApprovalResponse
+from smb_requirement_agent.interfaces.api.schemas.identity import ActorResponse
 from smb_requirement_agent.shared_kernel.generation import GenerationStatus
 
 
@@ -59,6 +61,31 @@ class MergeStoriesRequest(BaseModel):
     expected_set_version: int = Field(ge=1)
 
 
+class StoryEstimateRequest(BaseModel):
+    """The size a person chose for a Story; null points clears it (ADR-0121)."""
+
+    points: int | None
+    basis: EstimateBasis = EstimateBasis.TEAM_ENTERED
+    expected_version: int = Field(ge=1)
+
+
+class StoryEstimateResponse(BaseModel):
+    points: int
+    basis: EstimateBasis
+    decided_by: ActorResponse
+    decided_at: datetime
+    model_config = ConfigDict(frozen=True)
+
+
+class EstimateTotalResponse(BaseModel):
+    """Confirmed points only; unsized Stories are counted, never treated as zero."""
+
+    points: int
+    sized: int
+    stories: int
+    model_config = ConfigDict(frozen=True)
+
+
 class StoryActionsResponse(BaseModel):
     approve: ActionAvailabilityResponse
     regenerate: ActionAvailabilityResponse
@@ -83,6 +110,7 @@ class StoryResponse(BaseModel):
     current_approval: ApprovalResponse | None
     approval_history: list[ApprovalResponse]
     actions: StoryActionsResponse
+    estimate: StoryEstimateResponse | None = None
     story_context_token: str | None = None
     model_config = ConfigDict(frozen=True)
 
@@ -92,6 +120,7 @@ class StorySetResponse(BaseModel):
     stories: list[StoryResponse]
     set_version: int
     generation_context_token: str
+    estimate_total: EstimateTotalResponse
     model_config = ConfigDict(frozen=True)
 
 
@@ -152,3 +181,17 @@ class FeatureStoryQualitySnapshotResponse(FeatureStoryQualityResponse):
     source_fingerprint: str
     generated_at: datetime
     fresh: bool
+
+
+class EstimateSuggestionResponse(BaseModel):
+    story_id: str
+    points: int | None
+    rationale: str
+
+
+class FeatureEstimateSuggestionsResponse(BaseModel):
+    feature_id: str
+    source_fingerprint: str
+    fresh: bool
+    provenance: ProvenanceResponse
+    suggestions: list[EstimateSuggestionResponse]

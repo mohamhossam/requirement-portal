@@ -1,5 +1,5 @@
 import { jobFixture } from "../../test/jobFixture";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -19,6 +19,7 @@ describe("StoryList", () => {
   beforeEach(() => {
     vi.spyOn(api, "listAiJobs").mockResolvedValue([]);
     vi.spyOn(api, "listStoryProposals").mockResolvedValue([]);
+    vi.spyOn(api, "getStoryEstimateSuggestions").mockResolvedValue(null);
     vi.spyOn(api, "getFeatureStoryQualityAssessment").mockResolvedValue({
       feature_id: "feature-1",
       source_fingerprint: "current",
@@ -34,6 +35,7 @@ describe("StoryList", () => {
       feature_id: "feature-1",
       stories: [],
       set_version: 1,
+      estimate_total: { points: 0, sized: 0, stories: 0 },
       generation_context_token: "story-set-context-1",
     });
     renderWithJobs(
@@ -50,6 +52,7 @@ describe("StoryList", () => {
       feature_id: "feature-1",
       stories: [],
       set_version: 1,
+      estimate_total: { points: 0, sized: 0, stories: 0 },
       generation_context_token: "story-set-context-1",
     });
     const generate = vi.spyOn(api, "startAiJob").mockResolvedValue(jobFixture);
@@ -89,6 +92,29 @@ describe("StoryList", () => {
     expect(start).not.toHaveBeenCalled();
     await userEvent.click(assess);
     expect(start).toHaveBeenCalledWith("req-1", expect.objectContaining({ operation: "evaluate_feature_quality" }), expect.any(String));
+  });
+
+  it("totals confirmed sizes and offers suggestions again when they went out of date", async () => {
+    vi.spyOn(api, "getStories").mockResolvedValue({
+      ...storySetFixture,
+      estimate_total: { points: 5, sized: 1, stories: 2 },
+    });
+    vi.spyOn(api, "getStoryEstimateSuggestions").mockResolvedValue({
+      feature_id: "feature-1",
+      source_fingerprint: "older",
+      fresh: false,
+      provenance: { generated_at: "2026-10-30T12:00:00Z", model: "fake", prompt_version: "fake-story-estimate-v1" },
+      suggestions: [],
+    });
+    const start = vi.spyOn(api, "startAiJob").mockResolvedValue(jobFixture);
+    renderWithJobs(<StoryList requirementId="req-1" feature={approvedFeatureFixture} canManage />);
+
+    expect(await screen.findByText("5 points · 1 of 2 sized")).toBeInTheDocument();
+    const stale = await screen.findByText(/changed after their sizes were suggested/);
+    // The way back sits beside the message, as it does for an out-of-date quality check.
+    const again = within(stale.closest("[role=status]") as HTMLElement).getByRole("button", { name: "Suggest sizes again" });
+    await userEvent.click(again);
+    expect(start).toHaveBeenCalledWith("req-1", expect.objectContaining({ operation: "suggest_story_estimates" }), expect.any(String));
   });
 
   it("shows a pending split proposal and applies it only when confirmed", async () => {

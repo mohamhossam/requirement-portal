@@ -68,6 +68,25 @@ class BusinessRuleResponse(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
+class NonFunctionalRequirementResponse(BaseModel):
+    statement: str
+    kind: str
+    evidence_references: list[AnalysisEvidenceReferenceResponse] = []
+    model_config = ConfigDict(frozen=True)
+
+
+class BusinessUseCaseResponse(BaseModel):
+    name: str
+    actor: str
+    trigger: str | None
+    goal: str
+    main_steps: list[str]
+    alternate_paths: list[str]
+    business_rules: list[str]
+    evidence_references: list[AnalysisEvidenceReferenceResponse] = []
+    model_config = ConfigDict(frozen=True)
+
+
 class AssumptionResponse(BaseModel):
     statement: str
     evidence_references: list[AnalysisEvidenceReferenceResponse] = []
@@ -308,6 +327,9 @@ class RequirementAnalysisResponse(BaseModel):
     known_facts: list[KnownFactResponse]
     constraints: list[ConstraintResponse]
     business_rules: list[BusinessRuleResponse]
+    # Settled categories a standard BRD carries (ADR-0120); empty for older analyses.
+    non_functional_requirements: list[NonFunctionalRequirementResponse] = []
+    business_use_cases: list[BusinessUseCaseResponse] = []
     assumptions: list[AssumptionResponse]
     open_questions: list[OpenQuestionResponse]
     ambiguities: list[AmbiguityResponse]

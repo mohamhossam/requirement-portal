@@ -44,6 +44,8 @@ from smb_requirement_agent.breakdown.domain.story.value_objects import (
 from smb_requirement_agent.breakdown.infrastructure.backlog_codecs import (
     architecture_from_payload,
     architecture_to_payload,
+    estimate_from_payload,
+    estimate_to_payload,
     quality_assessment_from_payload,
     quality_assessment_to_payload,
 )
@@ -173,6 +175,8 @@ def story_to_payload(value: UserStory) -> JsonObject:
     }
     if value.kind is not WorkKind.BUSINESS:
         payload["work_kind"] = value.kind.value
+    if value.estimate is not None:
+        payload["estimate"] = estimate_to_payload(value.estimate)
     return payload
 
 
@@ -197,6 +201,7 @@ def story_from_payload(data: JsonObject) -> UserStory:
         ),
         kind=WorkKind(nullable_text(data, "work_kind") or WorkKind.BUSINESS.value),
         architecture=architecture_from_payload(data.get("architecture")),
+        estimate=estimate_from_payload(data.get("estimate")),
         status=status,
         provenance=provenance,
         staleness=staleness,

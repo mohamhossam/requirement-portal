@@ -42,6 +42,7 @@ class AiJobOperation(StrEnum):
     REGENERATE_STORY_SET = "regenerate_story_set"
     PROPOSE_STORY_CHANGE = "propose_story_change"
     EVALUATE_FEATURE_QUALITY = "evaluate_feature_quality"
+    SUGGEST_STORY_ESTIMATES = "suggest_story_estimates"
     GENERATE_BREAKDOWN_REVIEW = "generate_breakdown_review"
     RESOLVE_REVIEW_OPEN_QUESTION = "resolve_review_open_question"
     SCREEN_REQUIREMENT_KNOWLEDGE = "screen_requirement_knowledge"
