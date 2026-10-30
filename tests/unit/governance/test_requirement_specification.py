@@ -36,6 +36,8 @@ from smb_requirement_agent.governance.application.specification import (
     SpecificationStatement,
     SpecificationStory,
     SpecificationSummary,
+    SpecificationVersion,
+    SpecificationVersionKind,
     StatementOrigin,
 )
 from smb_requirement_agent.governance.application.use_cases.export_requirement_specification import (  # noqa: E501
@@ -175,6 +177,10 @@ def _specification(*, with_backlog: bool, resolved: bool = True) -> RequirementS
         product_impact=None,
         functional_requirements=backlog,
         source_documents=(SpecificationSourceDocument("brief.docx", "v1", "ab" * 32),),
+        versions=(
+            SpecificationVersion(SpecificationVersionKind.REQUIREMENT, 1, NOW, "Need captured"),
+            SpecificationVersion(SpecificationVersionKind.BREAKDOWN, 7, NOW, "Analysis confirmed"),
+        ),
     )
 
 
@@ -206,9 +212,14 @@ def test_confirmed_analysis_without_backlog_builds_a_document_without_functional
     )
     assert requirement_revision is not None
 
-    document = build_requirement_specification(breakdown, requirement_revision)
+    document = build_requirement_specification(
+        breakdown,
+        requirement_revision,
+        revisions.list_requirement_revisions(RequirementId(requirement_id)),
+        revisions.list_breakdown_revisions(RequirementId(requirement_id)),
+    )
 
-    assert document.schema_version == "1.0"
+    assert document.schema_version == "1.1"
     assert document.manifest.title == "Confirmed need"
     assert document.manifest.confirmation.actor == SpecificationActor("Amina Owner")
     assert document.manifest.backlog_approval is None
@@ -251,7 +262,12 @@ def test_approved_revision_adds_the_backlog_as_functional_requirements(
     )
     assert requirement_revision is not None
 
-    document = build_requirement_specification(breakdown, requirement_revision)
+    document = build_requirement_specification(
+        breakdown,
+        requirement_revision,
+        revisions.list_requirement_revisions(RequirementId(requirement_id)),
+        revisions.list_breakdown_revisions(RequirementId(requirement_id)),
+    )
 
     backlog = document.functional_requirements
     assert backlog is not None
@@ -262,6 +278,25 @@ def test_approved_revision_adds_the_backlog_as_functional_requirements(
     assert backlog.features[0].stories[0].criteria[0].given == (
         "the customer is eligible for the approved Feature"
     )
+    summaries = [item.summary for item in document.versions]
+    assert summaries[0] == "Need captured"
+    for expected in (
+        "Analysis generated, round 1",
+        "Analysis re-run, round 2; Clarification answered",
+        "Analysis confirmed",
+        "Epic generated",
+        "Features generated (2)",
+        "Review generated",
+        "Stories generated (2)",
+        "Submitted for review",
+        "Final approval recorded",
+    ):
+        assert any(expected in summary for summary in summaries), (expected, summaries)
+    confirmed = next(i for i, s in enumerate(summaries) if s == "Analysis confirmed")
+    assert confirmed < summaries.index("Epic generated")
+    assert summaries[-1] == "Final approval recorded"
+    assert [item.kind for item in document.versions][0] is SpecificationVersionKind.REQUIREMENT
+    assert document.versions[-1].number == revision_number
 
 
 def test_unconfirmed_revision_has_no_document(client: TestClient, container: Container) -> None:
@@ -275,7 +310,12 @@ def test_unconfirmed_revision_has_no_document(client: TestClient, container: Con
 
     assert not is_specification_available(breakdown)
     with pytest.raises(RequirementSpecificationNotAvailableError):
-        build_requirement_specification(breakdown, requirement_revision)
+        build_requirement_specification(
+            breakdown,
+            requirement_revision,
+            revisions.list_requirement_revisions(RequirementId(requirement_id)),
+            revisions.list_breakdown_revisions(RequirementId(requirement_id)),
+        )
 
 
 def test_document_is_built_from_the_requirement_version_the_analysis_saw(
@@ -323,19 +363,22 @@ def test_word_document_carries_every_section_in_order_and_is_byte_stable() -> No
         "2. Business objectives",
         "3. Scope",
         "4. Stakeholders",
-        "5. Business requirements",
-        "6. Business rules",
-        "7. Constraints",
-        "8. Assumptions",
-        "9. Dependencies",
-        "10. Open questions",
-        "11. Ambiguities",
-        "12. Product impact",
-        "13. Functional requirements",
-        "14. Source documents",
-        "15. Approvals",
-        "16. Glossary",
+        "5. Actors and scenarios",
+        "6. Business requirements",
+        "7. Business rules",
+        "8. Constraints",
+        "9. Assumptions",
+        "10. Dependencies",
+        "11. Open questions",
+        "12. Ambiguities",
+        "13. Product impact",
+        "14. Functional requirements",
+        "15. Risks",
+        "16. Source documents",
+        "17. Approvals",
+        "18. Glossary",
     ]
+    assert "Version history" in headings
     assert "FR-01 Ordering" in headings
     assert any(text.startswith("FR-01.1 As a SMB customer") for text in headings)
     word = Document(BytesIO(first))
@@ -344,6 +387,27 @@ def test_word_document_carries_every_section_in_order_and_is_byte_stable() -> No
     assert ("Backlog approval", "Amina Owner, 2026-09-04 08:30 UTC — Ready for delivery.") in {
         (row.cells[0].text, row.cells[1].text) for row in control.rows
     }
+    versions = word.tables[1]
+    assert [cell.text for cell in versions.rows[0].cells] == [
+        "Kind",
+        "Version",
+        "Recorded",
+        "Change",
+    ]
+    assert [cell.text for cell in versions.rows[1].cells] == [
+        "Need",
+        "1",
+        "2026-09-04 08:30 UTC",
+        "Need captured",
+    ]
+    assert [cell.text for cell in versions.rows[2].cells][3] == "Analysis confirmed"
+    actors = next(table for table in word.tables if table.rows[0].cells[0].text == "Actor")
+    assert [cell.text for cell in actors.rows[1].cells] == [
+        "SMB customer",
+        "FR-01.1",
+        "Ordering",
+        "place an order",
+    ]
     assert word.core_properties.author == "SMB AI Requirement Breakdown Agent"
     assert word.core_properties.created == NOW
     assert word.core_properties.modified == NOW
@@ -357,6 +421,8 @@ def test_word_document_without_approved_backlog_says_so() -> None:
     text = "\n".join(paragraph.text for paragraph in word.paragraphs)
     assert "functional requirements are not included in this document" in text
     assert "FR-01" not in text
+    assert "Actors and their scenarios come from the approved backlog" in text
+    assert "Risks come from the approved backlog" in text
     assert ("Backlog approval", "Not yet approved") in {
         (row.cells[0].text, row.cells[1].text) for row in word.tables[0].rows
     }
@@ -393,8 +459,13 @@ def test_markdown_renders_the_same_outline_with_escaped_tables() -> None:
         "# Order in one visit\n\nBusiness Requirements Document — Requirement req-1"
     )
     assert "## 1. Executive summary\n\nCustomers must | be able to order\nwithout a visit." in text
-    assert "## 13. Functional requirements" in text
+    assert "## 14. Functional requirements" in text
     assert "### FR-01 Ordering" in text
+    assert "### Version history\n\n| Kind | Version | Recorded | Change |" in text
+    assert "| Need | 1 | 2026-09-04 08:30 UTC | Need captured |" in text
+    assert "## 5. Actors and scenarios\n\n| Actor | Scenario | Feature | Goal |" in text
+    assert "| SMB customer | FR-01.1 | Ordering | place an order |" in text
+    assert "## 15. Risks\n\n| Severity | Risk |" in text
     assert (
         "#### FR-01.1 As a SMB customer, I want place an order, so that I do not visit a shop"
         in text
@@ -412,7 +483,7 @@ def test_markdown_renders_the_same_outline_with_escaped_tables() -> None:
     lines = [line for line in text.splitlines() if line.startswith("## ")]
     assert lines[0] == "## Document control"
     assert lines[1:4] == ["## 1. Executive summary", "## 2. Business objectives", "## 3. Scope"]
-    assert lines[-1] == "## 16. Glossary"
+    assert lines[-1] == "## 18. Glossary"
 
 
 def test_markdown_and_word_hold_no_email_addresses() -> None:

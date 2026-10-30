@@ -49,11 +49,17 @@ from smb_requirement_agent.governance.application.specification import (
     SpecificationStatement,
     SpecificationStory,
     SpecificationSummary,
+    SpecificationVersion,
+    SpecificationVersionKind,
     StatementOrigin,
 )
 from smb_requirement_agent.governance.application.use_cases.export_breakdown import (
     formal_final_approval,
     is_exportable_revision,
+)
+from smb_requirement_agent.governance.application.use_cases.revision_history import (
+    describe_breakdown_revision,
+    describe_requirement_revision,
 )
 from smb_requirement_agent.governance.domain.revision.entities import (
     BreakdownRevision,
@@ -137,9 +143,8 @@ class ExportRequirementSpecification:
             raise RequirementSpecificationNotAvailableError(
                 "The selected revision has no analysis confirmed by the Requirement Owner."
             )
-        requirement_revision = select_requirement_revision(
-            self._revisions.list_requirement_revisions(requirement_id), revision
-        )
+        requirement_revisions = self._revisions.list_requirement_revisions(requirement_id)
+        requirement_revision = select_requirement_revision(requirement_revisions, revision)
         if requirement_revision is None:
             raise RequirementSpecificationNotAvailableError(
                 "No Requirement version is recorded for the selected revision."
@@ -154,15 +159,26 @@ class ExportRequirementSpecification:
             ),
             media_type=exporter.media_type,
             content=exporter.render(
-                build_requirement_specification(revision, requirement_revision)
+                build_requirement_specification(
+                    revision,
+                    requirement_revision,
+                    requirement_revisions,
+                    self._revisions.list_breakdown_revisions(requirement_id),
+                )
             ),
         )
 
 
 def build_requirement_specification(
-    breakdown: BreakdownRevision, requirement_revision: RequirementRevision
+    breakdown: BreakdownRevision,
+    requirement_revision: RequirementRevision,
+    requirement_revisions: Sequence[RequirementRevision],
+    breakdown_revisions: Sequence[BreakdownRevision],
 ) -> RequirementSpecification:
-    """Copy a confirmed revision into the document contract. Raises when unconfirmed."""
+    """Copy a confirmed revision into the document contract. Raises when unconfirmed.
+
+    The two histories feed the version table: every revision up to the selected ones.
+    """
     analysis = breakdown.analysis
     if analysis is None or not analysis.is_human_confirmed:
         raise RequirementSpecificationNotAvailableError(
@@ -314,6 +330,55 @@ def build_requirement_specification(
             SpecificationSourceDocument(item.filename, item.version_id, item.checksum_sha256)
             for item in analysis.document_references
         ),
+        versions=_versions(
+            requirement_revisions, breakdown_revisions, requirement_revision, breakdown
+        ),
+    )
+
+
+def _versions(
+    requirement_revisions: Sequence[RequirementRevision],
+    breakdown_revisions: Sequence[BreakdownRevision],
+    requirement_revision: RequirementRevision,
+    breakdown: BreakdownRevision,
+) -> tuple[SpecificationVersion, ...]:
+    """Every revision up to the selected ones, each labelled against its predecessor."""
+    entries: list[SpecificationVersion] = []
+    previous_requirement: RequirementRevision | None = None
+    for item in sorted(requirement_revisions, key=lambda row: row.number.value):
+        if item.number.value > requirement_revision.number.value:
+            break
+        entries.append(
+            SpecificationVersion(
+                SpecificationVersionKind.REQUIREMENT,
+                item.number.value,
+                item.created_at,
+                describe_requirement_revision(previous_requirement, item),
+            )
+        )
+        previous_requirement = item
+    previous_breakdown: BreakdownRevision | None = None
+    for snapshot in sorted(breakdown_revisions, key=lambda row: row.number.value):
+        if snapshot.number.value > breakdown.number.value:
+            break
+        entries.append(
+            SpecificationVersion(
+                SpecificationVersionKind.BREAKDOWN,
+                snapshot.number.value,
+                snapshot.created_at,
+                describe_breakdown_revision(previous_breakdown, snapshot),
+            )
+        )
+        previous_breakdown = snapshot
+    return tuple(
+        sorted(
+            entries,
+            key=lambda entry: (
+                entry.recorded_at,
+                entry.kind is not SpecificationVersionKind.REQUIREMENT,
+                entry.number,
+            ),
+        )
     )
 
 

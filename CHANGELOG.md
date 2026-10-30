@@ -11,6 +11,11 @@ restoring a backup.
 
 ## Unreleased
 
+- **The Business Requirements Document gains a version history, actors and scenarios, and a Risks
+  section.** Document schema 1.1 (ADR-0119 Amendment 1): every revision up to the exported one is
+  listed with what changed in it; the approved Stories are summarised by actor; the backlog review's
+  risks have their own section. Both new sections appear once the backlog has final approval and say
+  so before. No upgrade step.
 - **A Business Requirements Document can be downloaded once the analysis is confirmed.** The
   Confirm view and the History screen offer it as Word or Markdown, cut from the immutable revision
   and rendered without any model call: the requirement, confirmed facts, business rules,

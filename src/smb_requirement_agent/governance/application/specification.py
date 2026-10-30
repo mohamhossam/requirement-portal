@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 
-SPECIFICATION_SCHEMA_VERSION = "1.0"
+SPECIFICATION_SCHEMA_VERSION = "1.1"
 SPECIFICATION_GENERATOR = "SMB AI Requirement Breakdown Agent"
 SPECIFICATION_TITLE = "Business Requirements Document"
 
@@ -34,6 +34,13 @@ class StatementOrigin(StrEnum):
     ACCEPTED_PROPOSAL = "accepted_proposal"
 
 
+class SpecificationVersionKind(StrEnum):
+    """Which immutable history a version entry comes from (ADR-0009)."""
+
+    REQUIREMENT = "requirement"
+    BREAKDOWN = "breakdown"
+
+
 @dataclass(frozen=True)
 class SpecificationActor:
     display_name: str
@@ -46,6 +53,16 @@ class SpecificationSignature:
     actor: SpecificationActor
     recorded_at: datetime
     rationale: str | None = None
+
+
+@dataclass(frozen=True)
+class SpecificationVersion:
+    """One row of the version history: a revision and what changed in it. Added in 1.1."""
+
+    kind: SpecificationVersionKind
+    number: int
+    recorded_at: datetime
+    summary: str
 
 
 @dataclass(frozen=True)
@@ -282,4 +299,6 @@ class RequirementSpecification:
     product_impact: SpecificationProductImpact | None
     functional_requirements: SpecificationBacklog | None
     source_documents: tuple[SpecificationSourceDocument, ...]
+    # Added in 1.1: every revision up to this one, in time order.
+    versions: tuple[SpecificationVersion, ...]
     glossary: tuple[SpecificationGlossaryEntry, ...] = GLOSSARY

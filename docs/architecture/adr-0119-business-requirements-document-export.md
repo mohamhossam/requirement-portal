@@ -89,3 +89,27 @@ precondition would then depend on the format — a business rule in a handler (A
   stakeholders edit a BRD. Word opens in every office suite; Markdown diffs in version control.
 - **A print stylesheet on the Confirm screen.** Rejected: no deterministic artefact, nothing to
   download from History, and no functional requirements section.
+
+## Amendment 1 — schema 1.1: version history, actors and scenarios, risks (2026-10-30)
+
+Measured against the standard BRD (`docs/slices/enhancement-brd-completeness.md`), the document
+gains three sections, all from data the revision already holds:
+
+- **Version history**, under Document control: every requirement revision and breakdown revision up
+  to the one exported, each labelled against its predecessor by two pure functions in
+  `revision_history.py` (`describe_requirement_revision`, `describe_breakdown_revision`): "Need
+  captured", "Need edited: title", "Team changed", "Analysis confirmed", "Epic generated",
+  "Features generated (2)", "Submitted for review", "Final approval recorded" and so on. The
+  builder therefore takes both histories; the use case loads them.
+- **5. Actors and scenarios**: the approved Stories grouped by actor, with Feature and goal.
+- **15. Risks**: the backlog review's risks, moved out of the functional requirements section.
+
+Actors, scenarios and risks are review and backlog content that nobody has approved before the
+formal final approval, so both sections appear under the same gate as functional requirements and
+say so before it. Sections are numbered 1–18. `SPECIFICATION_SCHEMA_VERSION` is `1.1`;
+`RequirementSpecification.versions` is the one contract addition.
+
+**Not added: business journeys affected.** `ArchitectureImpact.journey_steps` is reviewer advice
+from the optional architecture-mapping job (ADR-0097), never confirmed or approved data, so it stays
+out of a document whose rule is to print only what a person confirmed or approved. The neutral XLSX
+export still carries it for machine consumers.
