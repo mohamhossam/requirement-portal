@@ -13,6 +13,7 @@ from smb_kernel.llm.local_structured_output import (
     LocalLLMError,
     LocalStructuredOutputClient,
 )
+from smb_kernel.llm.openrouter_structured_output import OpenRouterStructuredOutputClient
 from smb_kernel.llm.structured_output import truncated
 
 from smb_requirement_agent.analysis.application.errors import RequirementAnalysisGenerationError
@@ -66,6 +67,7 @@ from smb_requirement_agent.breakdown.infrastructure.llm.local_epic_generator imp
 )
 from smb_requirement_agent.breakdown.infrastructure.llm.local_feature_generator import (
     LocalFeatureGenerator,
+    StructuredFeatureGeneratorAdapter,
 )
 from smb_requirement_agent.breakdown.infrastructure.llm.schemas.epic_schema import EpicSchema
 from smb_requirement_agent.breakdown.infrastructure.llm.schemas.feature_schema import (
@@ -1932,6 +1934,76 @@ def test_local_features_map_transport_failure(
 
     with pytest.raises(FeatureGenerationError, match="offline"):
         generator.generate(requirement, analysis, epic)
+    # A transport failure is not a malformed answer: it is never asked for again.
+    assert client_type.return_value.parse.call_count == 1
+
+
+def _feature(kind: str) -> dict[str, object]:
+    return {
+        "name": "Ordering",
+        "outcome": "Customers order bundles online.",
+        "delivery_drop": "mvp",
+        "splitting_pattern": "journey_stage",
+        "splitting_rationale": "A separate journey step.",
+        "acceptance_criteria": ["Bundles can be ordered."],
+        "kind": kind,
+    }
+
+
+def _routed_features(*kinds: str) -> tuple[StructuredFeatureGeneratorAdapter, list[str]]:
+    """An adapter over the real OpenRouter transport, answering one Feature set per call."""
+    prompts: list[str] = []
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        prompts.append(body["messages"][1]["content"])
+        content = json.dumps({"features": [_feature(kinds[len(prompts) - 1])]})
+        return httpx.Response(
+            200,
+            json={"choices": [{"finish_reason": "stop", "message": {"content": content}}]},
+        )
+
+    client = OpenRouterStructuredOutputClient(
+        base_url="https://router.example/v1",
+        http_client=httpx.Client(transport=httpx.MockTransport(handle)),
+        api_key="private-test-key",
+        model="test-model",
+        timeout_seconds=120,
+        max_output_tokens=8192,
+        data_collection="deny",
+    )
+    return StructuredFeatureGeneratorAdapter(client, "OpenRouter"), prompts
+
+
+def test_a_value_outside_a_feature_field_s_list_is_corrected_once(
+    requirement: Requirement,
+    analysis: RequirementAnalysis,
+    epic: Epic,
+) -> None:
+    generator, prompts = _routed_features("enabler", "architecture")
+
+    result = generator.generate(requirement, analysis, epic)
+
+    assert [candidate["kind"] for candidate in result] == ["architecture"]
+    assert len(prompts) == 2
+    assert prompts[1].startswith(prompts[0])
+    feedback = prompts[1][len(prompts[0]) :]
+    assert "APPLICATION VALIDATION FEEDBACK" in feedback
+    assert "kind: business, exploration, architecture, infrastructure, compliance" in feedback
+    assert "delivery_drop: mvp, later" in feedback
+    assert "acceptance_criteria" not in feedback
+
+
+def test_a_second_value_outside_the_list_fails_after_one_correction(
+    requirement: Requirement,
+    analysis: RequirementAnalysis,
+    epic: Epic,
+) -> None:
+    generator, prompts = _routed_features("enabler", "enabler")
+
+    with pytest.raises(FeatureGenerationError, match="after one correction"):
+        generator.generate(requirement, analysis, epic)
+    assert len(prompts) == 2
 
 
 @patch(

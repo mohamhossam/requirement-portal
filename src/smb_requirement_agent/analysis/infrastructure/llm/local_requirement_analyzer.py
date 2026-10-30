@@ -624,9 +624,9 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
         )
         try:
             schema = citation_recovery_schema(len(outputs), len(blocks), len(clarifications))
-            # The correction leaves block numbers to be checked here (ADR-0032, 2026-10-28).
+            # The correction leaves every number to be checked here (ADR-0032, 2026-10-30).
             correction_schema = citation_recovery_schema(
-                len(outputs), len(blocks), len(clarifications), bound_blocks=False
+                len(outputs), len(blocks), len(clarifications), bounded=False
             )
         except ValueError as exc:
             raise RequirementAnalysisGenerationError(
@@ -673,24 +673,44 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
                 # unsupported decision's numbers are moot: it is set aside or terminal.
                 dumped = focused.model_dump()
                 invented: list[int] = []
+                unknown_outputs = 0
+                if attempt_schema is correction_schema:
+                    # A corrected decision for an output that was never supplied decides
+                    # nothing; one that still omits a real output fails below.
+                    kept = [
+                        decision
+                        for decision in dumped["decisions"]
+                        if 1 <= decision["output_number"] <= len(outputs)
+                    ]
+                    unknown_outputs = len(dumped["decisions"]) - len(kept)
+                    dumped["decisions"] = kept
                 for decision in dumped["decisions"]:
-                    # A corrected decision citing a block outside the packet names no
-                    # supplied evidence, so its output is unsupported, as if it said so.
+                    # A corrected decision citing a block or human answer outside the
+                    # packet names no supplied source, so its output is unsupported, as
+                    # if it said so.
                     if (
                         attempt_schema is correction_schema
                         and decision["supported"]
-                        and any(
-                            not 1 <= number <= len(blocks) for number in decision["block_numbers"]
+                        and (
+                            any(
+                                not 1 <= number <= len(blocks)
+                                for number in decision["block_numbers"]
+                            )
+                            or any(
+                                not 1 <= number <= len(clarifications)
+                                for number in decision["clarification_numbers"]
+                            )
                         )
                     ):
                         decision["supported"] = False
                         invented.append(decision["output_number"])
                     if not decision["supported"]:
                         decision.update(block_numbers=[], clarification_numbers=[])
-                if invented:
+                if invented or unknown_outputs:
                     self._debug_trace.record(
-                        "analysis.citation_repair_invented_blocks",
+                        "analysis.citation_repair_invented_sources",
                         output_numbers=sorted(invented),
+                        unknown_output_count=unknown_outputs,
                     )
                 try:
                     focused = attempt_schema.model_validate(dumped, strict=True)
@@ -796,7 +816,8 @@ class StructuredRequirementAnalyzerAdapter(RequirementAnalyzerPort):
                     prompt = base_prompt + (
                         "\nAPPLICATION VALIDATION FEEDBACK: "
                         + str(validation)
-                        + f" There are {len(outputs)} outputs and {len(blocks)} evidence blocks."
+                        + f" There are {len(outputs)} outputs, {len(blocks)} evidence blocks"
+                        + f" and {len(clarifications)} human answers."
                         + " Return one complete corrected mapping for the SAME frozen outputs. "
                         + "Do not rewrite, drop, guess support, or add analysis content.\n"
                     )

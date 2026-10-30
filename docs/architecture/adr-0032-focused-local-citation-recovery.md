@@ -339,3 +339,35 @@ both calls. Duplicates, missing outputs and empty support still fail after the c
 correction's system message differs only in the appended schema. No prompt, migration or API
 change, and no prompt-version bump. The kernel's mark is left as it is; whether it still earns
 its place belongs to platform-kernel.
+
+### Human-answer and output numbers outside the packet — 2026-10-30
+
+Three analyses of one requirement's eleven answered questions failed in a row on 2026-10-27 with
+"The model could not provide valid source citations. Analysis was not saved.", each five or six
+minutes in. The worker log showed eight `less_than_equal` failures against
+`PacketAnalysisEvidenceRecovery`: GPT-5.1's mapping cited numbers past the packet's range, and
+its correction did the same. Block numbers have their own feedback, which did not appear, so the
+numbers were human-answer or output numbers. A fix written then (pull request 98) was merged into
+a stacked branch after that branch had itself merged, so it never reached `main`; the decision
+above covered block numbers only.
+
+Decision:
+
+- **After the correction, every number is checked by the adapter, not the schema.** The
+  correction call's schema leaves output, block and human-answer numbers unbounded; the parameter
+  is now `bounded` rather than `bound_blocks`.
+- **A human answer outside the packet is treated as a block outside it.** A corrected decision
+  that cites an answer number past the supplied answers names no supplied source, so its output
+  is unsupported, with the same consequences as above and for the same reason: its other cited
+  sources are not kept for it.
+- **A decision for an output that was never supplied is dropped.** It decides nothing. A
+  correction that still omits or repeats a real output fails as before; dropping an unknown
+  output never stands in for one.
+- **The correction feedback names the human answer count** as well as the output and block
+  counts.
+- The trace event is renamed `analysis.citation_repair_invented_sources`. It records the
+  unsupported output numbers and the count of dropped unknown outputs, as numbers only.
+
+Unchanged: the first mapping call keeps the fully bounded schema, so an out-of-range number there
+still gets the correction with its feedback. Duplicates, missing outputs and empty support still
+fail after the correction. No prompt, migration or API change, and no prompt-version bump.
