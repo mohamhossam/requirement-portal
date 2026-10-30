@@ -267,26 +267,30 @@ export function RequirementForm({
             {listField("constraints", "Deadlines and limits", "One per line: dates, compliance, capacity.")}
           </div>
           {/* The scope statement a standard BRD carries (ADR-0119): how things work today, how they
-              should, and what this need deliberately leaves out. */}
-          <Textarea
-            className="max-w-[var(--measure-interface)]"
-            hint="How this is done today, in a few sentences. Leave it blank if it is new."
-            id={`${fieldId}-current_state`}
-            label="How it works today"
-            onChange={(event) => change({ current_state: event.target.value })}
-            rows={3}
-            value={form.current_state}
-          />
-          <Textarea
-            className="max-w-[var(--measure-interface)]"
-            hint="How it should work once this is delivered, if you already know."
-            id={`${fieldId}-proposed_state`}
-            label="How it should work"
-            onChange={(event) => change({ proposed_state: event.target.value })}
-            rows={3}
-            value={form.proposed_state}
-          />
-          {listField("out_of_scope", "Out of scope", "One per line: what this need deliberately does not cover.")}
+              should, and what this need deliberately leaves out. A fieldset of its own, so the nine
+              optional fields read as two groups rather than one long run. */}
+          <fieldset className="m-0 grid gap-5 border-0 p-0">
+            <legend className="text-label text-ink mb-1 p-0">Scope</legend>
+            <Textarea
+              className="max-w-[var(--measure-interface)]"
+              hint="How this is done today, in a few sentences. Leave it blank if it is new."
+              id={`${fieldId}-current_state`}
+              label="How it works today"
+              onChange={(event) => change({ current_state: event.target.value })}
+              rows={3}
+              value={form.current_state}
+            />
+            <Textarea
+              className="max-w-[var(--measure-interface)]"
+              hint="How it should work once this is delivered, if you already know."
+              id={`${fieldId}-proposed_state`}
+              label="How it should work"
+              onChange={(event) => change({ proposed_state: event.target.value })}
+              rows={3}
+              value={form.proposed_state}
+            />
+            {listField("out_of_scope", "Out of scope", "One per line: what this need deliberately does not cover.")}
+          </fieldset>
         </div>
       </Disclosure>
 

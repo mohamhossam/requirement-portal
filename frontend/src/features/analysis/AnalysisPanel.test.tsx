@@ -990,13 +990,15 @@ it("lists non-functional requirements with their kind and business use cases wit
   const qualities = screen.getByRole("region", { name: "Non-functional requirements" });
   expect(within(qualities).getByText("Order confirmation is shown within 5 seconds.")).toBeVisible();
   expect(within(qualities).getByText("Performance")).toBeVisible();
+  // The kind is a label, not a filter: nothing in the list is a button.
+  expect(within(qualities).queryByRole("button")).toBeNull();
   const useCases = screen.getByRole("region", { name: "Business use cases" });
   expect(within(useCases).getByText("SMB customer orders a plan")).toBeVisible();
-  expect(within(useCases).getByText(/SMB customer → The plan is active without a shop visit./)).toBeVisible();
+  expect(within(useCases).getByText("Actor: SMB customer. Goal: the plan is active without a shop visit.")).toBeVisible();
   expect(within(useCases).getByText(/Starts when a customer asks for a new plan/)).toBeVisible();
   expect(within(useCases).getAllByRole("listitem").map((item) => item.textContent)).toEqual(
     expect.arrayContaining(["Choose a plan", "Place the order"]),
   );
-  expect(within(useCases).getByText(/Otherwise: Eligibility fails/)).toBeVisible();
+  expect(within(useCases).getByText(/Otherwise: eligibility fails/)).toBeVisible();
   expect(screen.getByText("5 recorded")).toBeVisible();
 });

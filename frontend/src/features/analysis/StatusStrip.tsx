@@ -2,12 +2,14 @@ import { Check, CircleAlert, Download, FileText, Sparkles } from "lucide-react";
 
 import type { RequirementAnalysis, SpecificationFormat } from "../../api/client";
 import { Button } from "../../components/ui/Button";
-import { when } from "./analysisFormat";
+import { whenLabel } from "../revisions/labels";
 
 /** The Business Requirements Document of the confirmed analysis (ADR-0119), offered once confirmed. */
 export type SpecificationDownload = {
+  /** The backlog version the document is built from. */
   revision: number;
-  busy: boolean;
+  /** The format being prepared right now, so only its button says so. */
+  busy: SpecificationFormat | null;
   error: string | null;
   /** The format of the download that last finished. */
   downloaded: SpecificationFormat | null;
@@ -53,7 +55,9 @@ export function StatusStrip({
             </span>
             <span className="text-ink-muted text-meta">
               {confirmed
-                ? `${analysis.confirmed_by?.display_name ?? "The confirming person is not on record"} · ${when(analysis.confirmed_at)}`
+                ? `${analysis.confirmed_by?.display_name ?? "The confirming person is not on record"} · ${
+                    analysis.confirmed_at ? whenLabel(analysis.confirmed_at) : "an unrecorded date"
+                  }`
                 : `Round ${analysis.round_number ?? "before rounds were numbered"} · nobody has confirmed this yet`}
             </span>
           </span>
@@ -92,12 +96,12 @@ export function StatusStrip({
         >
           <p className="text-ink text-meta m-0 flex items-center gap-2">
             <FileText aria-hidden="true" className="text-ink-muted shrink-0" size={14} />
-            <span>Business Requirements Document, version {specification.revision}</span>
+            <span>Business Requirements Document, from backlog version {specification.revision}</span>
           </p>
           <div className="flex flex-wrap items-center gap-2">
             {/* Kept enabled while the file is prepared, so focus stays put; a second press is ignored. */}
             <Button
-              aria-busy={specification.busy || undefined}
+              aria-busy={specification.busy === "docx" || undefined}
               icon={<Download aria-hidden="true" size={16} />}
               onClick={() => {
                 if (!specification.busy) specification.onDownload("docx");
@@ -105,16 +109,17 @@ export function StatusStrip({
               size="sm"
               variant="secondary"
             >
-              {specification.busy ? "Preparing the document…" : "Download Word document"}
+              {specification.busy === "docx" ? "Preparing the Word document…" : "Download Word document"}
             </Button>
             <Button
+              aria-busy={specification.busy === "md" || undefined}
               onClick={() => {
                 if (!specification.busy) specification.onDownload("md");
               }}
               size="sm"
               variant="text"
             >
-              Download Markdown
+              {specification.busy === "md" ? "Preparing the Markdown…" : "Download Markdown"}
             </Button>
           </div>
           <p aria-live="polite" className="text-ink-soft text-meta m-0 basis-full empty:hidden" role="status">

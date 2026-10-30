@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 
 import type { RequirementAnalysis } from "../../api/client";
 import { cx } from "../../components/ui";
-import { Pill } from "../../components/ui/Badge";
 import { SourceLinks } from "./AnalysisSources";
 import { humanEvidence, when } from "./analysisFormat";
 import { NON_FUNCTIONAL_KIND_LABEL } from "./labels";
@@ -61,30 +60,46 @@ function SettledList<Item extends { statement: string; evidence_references: Evid
   );
 }
 
-/** A business use case: who, what starts it, the goal, and the steps the business performs. */
+/**
+ * Lower-case the first letter of a clause the sentence around it already
+ * introduces ("Starts when a customer…"), unless it opens with an acronym or "I".
+ */
+function asClause(text: string): string {
+  return /^(?!I\b)[A-Z](?=[a-z]|\s)/.test(text) ? text.charAt(0).toLowerCase() + text.slice(1) : text;
+}
+
+/**
+ * A business use case: who, what starts it, the goal, and the steps the business
+ * performs. Set as document content, in the requirement's own register (serif,
+ * `text-document`), because every word of it was extracted from the source:
+ * only the heading and the two lead-ins are the instrument's.
+ */
 function UseCaseList({ analysis, items }: { analysis: RequirementAnalysis; items: UseCase[] }) {
   return (
     <section aria-label="Business use cases" className="grid gap-2">
       <h3 className="text-label text-ink-muted m-0">Business use cases</h3>
       {items.length ? (
         <ul className="grid list-none gap-4 p-0">
-          {items.map((item) => (
-            <li className="border-line grid gap-2 border-0 border-l-2 border-solid pl-3" key={item.name}>
-              <span className="text-document text-ink font-serif font-semibold">{item.name}</span>
-              <p className="text-body text-ink-soft m-0">
-                {item.actor} → {item.goal}
-                {item.trigger ? ` · Starts when ${item.trigger}` : ""}
+          {items.map((item, index) => (
+            <li
+              className="border-line text-document text-ink-soft grid gap-1.5 border-0 border-l border-solid pl-3 font-serif"
+              key={`${index}-${item.name}`}
+            >
+              <p className="text-ink m-0 font-semibold">{item.name}</p>
+              <p className="m-0">
+                Actor: {item.actor}. Goal: {asClause(item.goal)}
               </p>
-              <ol className="text-body text-ink-soft m-0 grid gap-1 pl-5">
-                {item.main_steps.map((step, index) => (
-                  <li key={`${index}-${step}`}>{step}</li>
+              {item.trigger && <p className="m-0">Starts when {asClause(item.trigger)}</p>}
+              <ol className="m-0 grid gap-1 pl-5">
+                {item.main_steps.map((step, stepIndex) => (
+                  <li key={`${stepIndex}-${step}`}>{step}</li>
                 ))}
               </ol>
               {item.alternate_paths.length > 0 && (
-                <p className="text-meta text-ink-muted m-0">Otherwise: {item.alternate_paths.join("; ")}</p>
+                <p className="text-ink-muted m-0">Otherwise: {item.alternate_paths.map(asClause).join("; ")}</p>
               )}
               {item.business_rules.length > 0 && (
-                <p className="text-meta text-ink-muted m-0">Relies on: {item.business_rules.join("; ")}</p>
+                <p className="text-ink-muted m-0">Relies on: {item.business_rules.map(asClause).join("; ")}</p>
               )}
               <SourceLinks
                 evidence={item.evidence_references}
@@ -163,7 +178,11 @@ export function SettledColumn({
         items={analysis.non_functional_requirements}
         kind="non_functional_requirement"
         title="Non-functional requirements"
-        trailing={(item) => <Pill>{NON_FUNCTIONAL_KIND_LABEL[item.kind] ?? item.kind}</Pill>}
+        trailing={(item) => (
+          /* A static label, not a Pill: a Pill is a toggle, and a toggle that
+             cannot be pressed is a lie to the keyboard and the screen reader. */
+          <span className="text-meta text-ink-muted">{NON_FUNCTIONAL_KIND_LABEL[item.kind] ?? item.kind}</span>
+        )}
       />
       <UseCaseList analysis={analysis} items={analysis.business_use_cases} />
 

@@ -14,7 +14,7 @@ const confirmed: RequirementAnalysis = {
 };
 
 function specification(overrides: Partial<SpecificationDownload> = {}): SpecificationDownload {
-  return { revision: 4, busy: false, error: null, downloaded: null, onDownload: vi.fn(), ...overrides };
+  return { revision: 4, busy: null, error: null, downloaded: null, onDownload: vi.fn(), ...overrides };
 }
 
 describe("StatusStrip", () => {
@@ -28,7 +28,7 @@ describe("StatusStrip", () => {
 
     rerender(<StatusStrip analysis={confirmed} answered={2} open={0} specification={specification()} />);
     expect(screen.getByRole("group", { name: "Business Requirements Document" })).toBeVisible();
-    expect(screen.getByText("Business Requirements Document, version 4")).toBeVisible();
+    expect(screen.getByText("Business Requirements Document, from backlog version 4")).toBeVisible();
   });
 
   it("downloads Word or Markdown and says what was downloaded", async () => {
@@ -45,9 +45,9 @@ describe("StatusStrip", () => {
   });
 
   it("keeps the button focusable while the file is prepared, ignores a second press, and reports a failure", async () => {
-    const busy = specification({ busy: true });
+    const busy = specification({ busy: "docx" });
     const { rerender } = render(<StatusStrip analysis={confirmed} answered={2} open={0} specification={busy} />);
-    const button = screen.getByRole("button", { name: "Preparing the document…" });
+    const button = screen.getByRole("button", { name: "Preparing the Word document…" });
     expect(button).toBeEnabled();
     await userEvent.click(button);
     await userEvent.click(screen.getByRole("button", { name: "Download Markdown" }));

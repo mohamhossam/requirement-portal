@@ -271,7 +271,7 @@ export function AnalysisView({
                 workspace.canExportApprovedRevisions && documented
                   ? {
                       revision: documented.number,
-                      busy: downloadSpecification.isPending,
+                      busy: downloadSpecification.isPending ? downloadSpecification.variables.format : null,
                       error: downloadSpecification.error ? errorMessage(downloadSpecification.error) : null,
                       downloaded: downloadSpecification.isSuccess ? downloadSpecification.variables.format : null,
                       onDownload: (format: SpecificationFormat) => downloadSpecification.mutate({ revision: documented.number, format }),

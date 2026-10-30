@@ -231,8 +231,8 @@ describe("RevisionPanel", () => {
     const props = renderPanel({ history: confirmed, specified: { revision: 2, format: "docx" } });
 
     expect(screen.getByRole("heading", { name: "Nothing is approved for export yet" })).toBeVisible();
-    expect(screen.getByText(/Built from the analysis confirmed by Amina Owner/)).toBeVisible();
-    expect(screen.getByText(/The backlog has not had final approval yet, so functional requirements are not included/)).toBeVisible();
+    expect(screen.getByText(/from backlog version 2 \(analysis confirmed /)).toBeVisible();
+    expect(screen.getByText(/Functional requirements are left out until the backlog has final approval/)).toBeVisible();
     expect(screen.getByText("Downloaded document version 2 as Word document.")).toBeVisible();
     expect(screen.getByRole("radio", { name: /Word document/ })).toBeChecked();
 
@@ -281,6 +281,10 @@ describe("RevisionPanel", () => {
     expect(added).toContain("Enterprise accounts");
     expect(added).toContain("twice");
     expect(screen.getByText("Out of scope")).toBeVisible();
+    // The whole exclusion list as it now stands: the unchanged item plain, the new one marked in words.
+    expect(screen.getByText("Hardware resale")).toBeVisible();
+    expect(screen.getByText("Hardware resale").closest("ins")).toBeNull();
+    expect(screen.getByText("Enterprise accounts").closest("ins")).toHaveTextContent("[added: Enterprise accounts]");
   });
 
   it("says when the approval was signed against an earlier business need, and shows the edit word by word", () => {

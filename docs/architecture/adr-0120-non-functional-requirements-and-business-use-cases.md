@@ -49,8 +49,8 @@ anything the analysis records is reviewed before the backlog or the document use
    present; the story-quality evidence adds non-functional statements. Stored rows, the
    characterisation goldens, existing approvals and live tokens are unchanged.
 5. **Where they are read.** The API returns both; the Confirm and Clarify screens list them in the
-   settled column (statement with a kind pill; a use case card with actor, goal, trigger, numbered
-   steps); the knowledge index chunks them; the Epic, Feature and Story prompts receive the
+   settled column (statement with a kind label; a use case set as document prose with actor, goal,
+   trigger and numbered steps); the knowledge index chunks them; the Epic, Feature and Story prompts receive the
    non-functional requirements (and the Feature prompt the use cases as scope framing), together
    with Phase B's out-of-scope and proposed-state fields, in one prompt bump (`epic-v5`,
    `feature-v9`, `story-v9`); the document renders "7. Business use cases" (BUC-nn) and "10.

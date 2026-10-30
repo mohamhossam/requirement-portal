@@ -308,6 +308,23 @@ scenario ids sort numerically; a team change is labelled even when the need chan
 revision. Loading every revision for the version table is unchanged: the History screen already
 does the same on each visit (ADR-0119 Amendment 1 says so).
 
+**Design critique fixes (2026-10-30).** A UI critique of the frontend this slice changed scored it
+27/40 and named five issues; all five are fixed. The non-functional kind is a static label, no longer
+a filter `Pill` (a toggle a screen reader announced as pressable). The History out-of-scope diff shows
+the whole exclusion list with the same marks as the texts above it (underline and "[added: …]" for
+screen readers, strike-through and "[removed: …]"), where it had shown only the changed items with
+unmarked `<ins>`/`<del>`. The version badge sits beside the two History card headings instead of
+inside them, so their accessible names no longer run the words together. A business use case is set as
+document prose in the requirement's register (serif, `text-document`, a 1px hairline): "Actor: …
+Goal: …", the trigger on its own line as a clause, numbered steps. `DownloadControls` takes a
+`variant`, so the document card's button is secondary and History keeps one primary action; the card
+describes the document's contents and its backlog version instead of repeating the approver line
+above it. The Confirm strip says "from backlog version N", shares History's date format
+(`whenLabel`), and each format's button reports its own preparation. The nine optional intake fields
+are two groups: a "Scope" fieldset holds the three scope fields. Tests updated accordingly; two
+regression assertions added (no button in the non-functional list; the unchanged exclusion shown
+plain and the new one marked in words).
+
 **Open: the live-model record for Phase C.** No provider credentials are available in this session, so
 the structured BRD fixture has not been run through the local model or OpenRouter. The record in
 `docs/evaluation/` is owed before Phase C is treated as release evidence; the fake-provider path and the

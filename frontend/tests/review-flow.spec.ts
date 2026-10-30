@@ -624,8 +624,13 @@ test("Business owner states the scope at intake and reads it back on the Source 
 test("Product Owner completes the desktop journey and sees worklist staleness", async ({ page }) => {
   const standaloneChecks: string[] = [];
   const prematureBacklogReads: string[] = [];
+  // Once the analysis is confirmed, the Confirm view reads the revision history to offer the
+  // Business Requirements Document (ADR-0119); that read is by design, not a premature backlog read.
+  let analysisConfirmed = false;
   page.on("request", (request) => {
-    if (/\/(capture|clarify|knowledge|confirm)$/.test(page.url()) && request.method() === "GET" && /\/requirements\/[^/]+\/(epic|features|revisions)(?:[/?]|$)/.test(request.url())) {
+    const backlogRead = /\/requirements\/[^/]+\/(epic|features|revisions)(?:[/?]|$)/.test(request.url());
+    const confirmedHistoryRead = analysisConfirmed && /\/revisions(?:[/?]|$)/.test(request.url());
+    if (/\/(capture|clarify|knowledge|confirm)$/.test(page.url()) && request.method() === "GET" && backlogRead && !confirmedHistoryRead) {
       prematureBacklogReads.push(request.url());
     }
     if (request.method() === "POST" && request.url().endsWith("/ai-jobs")) {
@@ -652,6 +657,7 @@ test("Product Owner completes the desktop journey and sees worklist staleness", 
   await expect(page.getByText("Drafted by the analysis", { exact: true })).toBeVisible();
   await page.screenshot({ path: "test-results/wireframe-clarification.png", fullPage: true });
   expect(prematureBacklogReads).toEqual([]);
+  analysisConfirmed = true;
   await resolveAndConfirmAnalysis(page);
   expect(prematureBacklogReads).toEqual([]);
   await page.getByRole("button", { name: "Generate Epic" }).click();

@@ -222,13 +222,15 @@ function ApprovedExport({
   return (
     <Card aria-labelledby="export-title" className="grid gap-5" padding="fluid" tone="success">
       <div className="grid gap-1">
-        <h2 className="text-headline text-ink m-0 flex flex-wrap items-center gap-x-3 gap-y-1" id="export-title">
-          <span className="inline-flex items-center gap-2">
+        {/* The badge sits beside the heading, not inside it: inside, the
+            accessible name ran the two together ("Approved backlogVersion 18"). */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <h2 className="text-headline text-ink m-0 inline-flex items-center gap-2" id="export-title">
             <Check aria-hidden="true" className="text-success" size={20} />
             Approved backlog
-          </span>
+          </h2>
           <Badge>Version {approved.number}</Badge>
-        </h2>
+        </div>
         <p className="text-body text-ink-soft m-0 max-w-[var(--measure-document)]">
           Approved
           {approved.final_approved_by ? ` by ${approved.final_approved_by.display_name}` : ""}
@@ -281,23 +283,27 @@ function SpecificationExport({
   return (
     <Card aria-labelledby="specification-title" className="grid gap-5" padding="fluid">
       <div className="grid gap-1">
-        <h2 className="text-headline text-ink m-0 flex flex-wrap items-center gap-x-3 gap-y-1" id="specification-title">
-          <span className="inline-flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <h2 className="text-headline text-ink m-0 inline-flex items-center gap-2" id="specification-title">
             <FileText aria-hidden="true" className="text-ink-soft" size={20} />
             Business Requirements Document
-          </span>
+          </h2>
           <Badge>Version {documented.number}</Badge>
-        </h2>
+        </div>
+        {/* What is in it, not who approved what: the card above already names
+            the people, and a reader deciding whether to download wants the
+            contents. The version is the backlog version it was built from. */}
         <p className="text-body text-ink-soft m-0 max-w-[var(--measure-document)]">
-          Built from the analysis
-          {documented.analysis_confirmed_by ? ` confirmed by ${documented.analysis_confirmed_by.display_name}` : " the owner confirmed"}
-          {documented.analysis_confirmed_at ? ` on ${whenLabel(documented.analysis_confirmed_at)}` : ""}.
+          The confirmed analysis as a document for people who never open the portal: objectives, scope,
+          stakeholders, business requirements, use cases, rules, constraints, qualities, assumptions and
+          open questions, from backlog version {documented.number}
+          {documented.analysis_confirmed_at ? ` (analysis confirmed ${whenLabel(documented.analysis_confirmed_at)})` : ""}.
           {" "}
           {documented.exportable
             ? "It includes the approved backlog as functional requirements."
             : hasBacklog
-              ? "The backlog has not had final approval yet, so functional requirements are not included."
-              : "There is no approved backlog yet, so functional requirements are not included."}
+              ? "Functional requirements are left out until the backlog has final approval."
+              : "Functional requirements are left out until there is an approved backlog."}
         </p>
       </div>
       {canExport ? (
@@ -311,6 +317,7 @@ function SpecificationExport({
           noun="document "
           onDownload={onDownload}
           revision={documented.number}
+          variant="secondary"
         />
       ) : (
         <RestrictedDownload />
@@ -338,6 +345,7 @@ function DownloadControls<F extends string>({
   exported,
   error,
   onDownload,
+  variant = "primary",
 }: {
   formats: FormatChoices<F>;
   initial: F;
@@ -345,6 +353,8 @@ function DownloadControls<F extends string>({
   name: string;
   /** What is downloaded, before "version N": "" for the export, "document " for the document. */
   noun?: string;
+  /** One primary action per screen: the approved export keeps it, the document card is secondary. */
+  variant?: "primary" | "secondary";
   revision: number;
   exporting: number | null;
   exported: { revision: number; format: F } | null;
@@ -387,7 +397,7 @@ function DownloadControls<F extends string>({
           onClick={() => {
             if (exporting === null) onDownload(revision, format);
           }}
-          variant="primary"
+          variant={variant}
         >
           {running ? `Preparing ${noun}version ${revision}…` : `Download ${noun}version ${revision}`}
         </Button>
@@ -825,6 +835,28 @@ function BacklogVersions({
 }
 
 /** An edit, word by word: added words underlined, removed ones struck through, each also said in words. */
+/** Added text: underlined, and said in words to a screen reader, which does not announce <ins>. */
+function Added({ children }: { children: ReactNode }) {
+  return (
+    <ins className="text-ink decoration-ink underline decoration-2 underline-offset-2">
+      <span className="sr-only">[added: </span>
+      {children}
+      <span className="sr-only">]</span>
+    </ins>
+  );
+}
+
+/** Removed text: struck through, and said in words to a screen reader. */
+function Removed({ children }: { children: ReactNode }) {
+  return (
+    <del className="text-ink-muted line-through">
+      <span className="sr-only">[removed: </span>
+      {children}
+      <span className="sr-only">]</span>
+    </del>
+  );
+}
+
 function Diff({ before, after }: { before: string; after: string }) {
   return (
     <>
@@ -832,17 +864,9 @@ function Diff({ before, after }: { before: string; after: string }) {
         part.kind === "same" ? (
           <span key={index}>{part.text}</span>
         ) : part.kind === "added" ? (
-          <ins className="text-ink decoration-ink underline decoration-2 underline-offset-2" key={index}>
-            <span className="sr-only">[added: </span>
-            {part.text}
-            <span className="sr-only">]</span>
-          </ins>
+          <Added key={index}>{part.text}</Added>
         ) : (
-          <del className="text-ink-muted line-through" key={index}>
-            <span className="sr-only">[removed: </span>
-            {part.text}
-            <span className="sr-only">]</span>
-          </del>
+          <Removed key={index}>{part.text}</Removed>
         ),
       )}
     </>
@@ -873,16 +897,18 @@ function ScopeChanges({ before, after }: { before: NeedVersion; after: NeedVersi
       {(added.length > 0 || removed.length > 0) && (
         <div className="grid gap-1">
           <dt className="text-label text-ink-muted">Out of scope</dt>
+          {/* The whole list as it now stands, with the same marks as the texts
+              above: the heading promises added words underlined and removed
+              words struck through, and a list that showed only the changed
+              items left the reader to guess what else was excluded. */}
           <dd className="m-0">
-            <ul className="m-0 grid list-none gap-1 p-0">
-              {added.map((item) => (
-                <li className="text-body text-ink" key={`added-${item}`}>
-                  <ins className="no-underline">{item}</ins>
-                </li>
+            <ul className="font-serif text-document text-ink m-0 grid list-none gap-1 p-0">
+              {nowOut.map((item) => (
+                <li key={`now-${item}`}>{added.includes(item) ? <Added>{item}</Added> : item}</li>
               ))}
               {removed.map((item) => (
-                <li className="text-body text-ink-muted" key={`removed-${item}`}>
-                  <del>{item}</del>
+                <li key={`removed-${item}`}>
+                  <Removed>{item}</Removed>
                 </li>
               ))}
             </ul>
