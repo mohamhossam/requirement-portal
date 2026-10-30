@@ -715,8 +715,68 @@ def test_a_block_still_outside_the_packet_after_correction_sets_its_output_aside
         {"key": "constraint:plan 1 requires consent.", "reason": "unsupported"}
     ]
     events = [json.loads(line) for line in (tmp_path / "trace.jsonl").read_text().splitlines()]
-    invented = next(e for e in events if e["event"] == "analysis.citation_repair_invented_blocks")
+    invented = next(e for e in events if e["event"] == "analysis.citation_repair_invented_sources")
     assert invented["details"]["output_numbers"] == [13]
+    assert invented["details"]["unknown_output_count"] == 0
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+def test_a_human_answer_outside_the_packet_after_correction_sets_its_output_aside(
+    provider: str, tmp_path: Path
+) -> None:
+    # Observed 2026-10-27: GPT-5.1 cited human answer numbers past the answers it was
+    # given, and its correction did the same, so the analysis failed whole.
+    answer = HumanClarification(
+        ClarificationKind.OPEN_QUESTION,
+        "Which plans need consent?",
+        "Every plan needs consent.",
+        QuestionId("answered-question"),
+    )
+    invented = mapping()
+    invented["decisions"][12]["clarification_numbers"] = [2]
+    requests: list[dict[str, Any]] = []
+    result = analyze(provider, [analysis(), invented, invented], requests, tmp_path, (answer,))
+    assert len(requests) == 3
+    correction = requests[2]["messages"][1]["content"][0]["text"]
+    assert "24 outputs, 12 evidence blocks and 1 human answers" in correction
+    # Output 13 also cites block 1, but a citation of an answer that was never given
+    # makes its whole claim of support untrustworthy, as an invented block does.
+    assert result["constraints"] == analysis()["constraints"][1:]
+    assert result["set_aside"] == [
+        {"key": "constraint:plan 1 requires consent.", "reason": "unsupported"}
+    ]
+    events = [json.loads(line) for line in (tmp_path / "trace.jsonl").read_text().splitlines()]
+    recorded = next(e for e in events if e["event"] == "analysis.citation_repair_invented_sources")
+    assert recorded["details"]["output_numbers"] == [13]
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+def test_a_decision_for_an_unknown_output_after_correction_is_dropped(
+    provider: str, tmp_path: Path
+) -> None:
+    extra = mapping()
+    extra["decisions"].append({"output_number": 25, "supported": True, "block_numbers": [1]})
+    requests: list[dict[str, Any]] = []
+    result = analyze(provider, [analysis(), extra, extra], requests, tmp_path)
+    assert len(requests) == 3
+    assert result["known_facts"] == analysis()["known_facts"]
+    assert result["constraints"] == analysis()["constraints"]
+    assert "set_aside" not in result
+    events = [json.loads(line) for line in (tmp_path / "trace.jsonl").read_text().splitlines()]
+    recorded = next(e for e in events if e["event"] == "analysis.citation_repair_invented_sources")
+    assert recorded["details"] == {"output_numbers": [], "unknown_output_count": 1}
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+def test_a_correction_that_still_omits_an_output_fails(provider: str, tmp_path: Path) -> None:
+    # Dropping an unknown output's decision never stands in for a real one.
+    shifted = mapping()
+    shifted["decisions"][-1]["output_number"] = 25
+    requests: list[dict[str, Any]] = []
+    with pytest.raises(RequirementAnalysisGenerationError, match="2 focused attempt") as failure:
+        analyze(provider, [analysis(), shifted, shifted], requests, tmp_path)
+    assert describe_public_error(failure.value).code == "model_invalid_citations"
+    assert len(requests) == 3
 
 
 @pytest.mark.parametrize("provider", PROVIDERS)
@@ -900,14 +960,23 @@ def test_packet_schema_enforces_counts_and_independent_ranges() -> None:
     nine = mapping()
     nine["decisions"][0]["block_numbers"] = list(range(1, 10))
     schema.model_validate(nine)
-    # The correction's schema leaves block numbers for the adapter to check, and keeps
-    # every other bound.
-    unbounded = citation_recovery_schema(24, 12, bound_blocks=False)
+    # The correction's schema leaves every number for the adapter to check, and keeps
+    # the lower bound on the decision count.
+    unbounded = citation_recovery_schema(24, 12, 1, bounded=False)
     unbounded.model_validate(invalid_mapping("range"))
+    unbounded.model_validate(wrong_output)
+    unknown_answer = mapping()
+    unknown_answer["decisions"][0]["clarification_numbers"] = [2]
+    unbounded.model_validate(unknown_answer)
+    extra = mapping()
+    extra["decisions"].append({"output_number": 25, "supported": True, "block_numbers": [1]})
+    unbounded.model_validate(extra)
     with pytest.raises(ValidationError):
-        unbounded.model_validate(wrong_output)
+        unbounded.model_validate(invalid_mapping("missing_output"))
     decision = unbounded.model_json_schema()["$defs"]["PacketAnalysisEvidenceDecision"]
+    assert "maximum" not in decision["properties"]["output_number"]
     assert "maximum" not in decision["properties"]["block_numbers"]["items"]
+    assert "maximum" not in decision["properties"]["clarification_numbers"]["items"]
 
 
 @pytest.mark.parametrize("provider", PROVIDERS)
@@ -1053,9 +1122,12 @@ def test_unknown_human_answer_never_bypasses_evidence_validation(
     repaired = mapping()
     repaired["decisions"][11].update(block_numbers=[], clarification_numbers=[1])
     requests: list[dict[str, Any]] = []
-    with pytest.raises(RequirementAnalysisGenerationError) as failure:
-        analyze(provider, [analysis(), repaired, repaired], requests, tmp_path)
-    assert describe_public_error(failure.value).code == "model_invalid_citations"
+    # No answers were supplied: answer 1 supports nothing, so its output is set aside.
+    result = analyze(provider, [analysis(), repaired, repaired], requests, tmp_path)
+    key = "known_fact:service line 12 uses its selected plan."
+    assert result["set_aside"] == [{"key": key, "reason": "unsupported"}]
+    assert key not in result["evidence_references"]
+    assert "clarification_references" not in result
     assert len(requests) == 3
 
 

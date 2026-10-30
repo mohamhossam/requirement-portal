@@ -163,41 +163,49 @@ def citation_recovery_schema(
     block_count: int,
     clarification_count: int = 0,
     *,
-    bound_blocks: bool = True,
+    bounded: bool = True,
 ) -> type[IndexedAnalysisEvidenceRecoverySchema]:
     """Constrain both independent number spaces to this packet, without global state.
 
-    Without `bound_blocks`, block numbers are left for the adapter to check, so that a
-    corrected mapping citing a block outside the packet can set that output aside rather
-    than be refused whole (ADR-0032, 2026-10-28).
+    Without `bounded`, output, block and human answer numbers are left for the adapter
+    to check, so that a corrected mapping citing a source outside the packet can set
+    that output aside rather than be refused whole (ADR-0032, 2026-10-28 and 2026-10-30).
     """
     if output_count < 1 or block_count < 1:
         raise ValueError("Citation recovery requires nonempty outputs and evidence.")
-    block_numbers: tuple[Any, Any] = (
+    numbers: tuple[Any, Any, Any, Any] = (
         (
-            list[Annotated[int, Field(ge=1, le=block_count)]],
-            Field(default_factory=list, max_length=block_count),
+            (int, Field(ge=1, le=output_count)),
+            (
+                list[Annotated[int, Field(ge=1, le=block_count)]],
+                Field(default_factory=list, max_length=block_count),
+            ),
+            (
+                list[Annotated[int, Field(ge=1, le=max(1, clarification_count))]],
+                Field(default_factory=list, max_length=clarification_count),
+            ),
+            Field(min_length=output_count, max_length=output_count),
         )
-        if bound_blocks
-        else (list[int], Field(default_factory=list))
+        if bounded
+        else (
+            (int, ...),
+            (list[int], Field(default_factory=list)),
+            (list[int], Field(default_factory=list)),
+            Field(min_length=output_count),
+        )
     )
+    output_number, block_numbers, clarification_numbers, decision_count = numbers
     decision = create_model(
         "PacketAnalysisEvidenceDecision",
         __base__=IndexedAnalysisEvidenceDecisionSchema,
-        output_number=(int, Field(ge=1, le=output_count)),
+        output_number=output_number,
         block_numbers=block_numbers,
-        clarification_numbers=(
-            list[Annotated[int, Field(ge=1, le=max(1, clarification_count))]],
-            Field(default_factory=list, max_length=clarification_count),
-        ),
+        clarification_numbers=clarification_numbers,
     )
     return create_model(
         "PacketAnalysisEvidenceRecovery",
         __base__=IndexedAnalysisEvidenceRecoverySchema,
-        decisions=(
-            GenericAlias(list, decision),
-            Field(min_length=output_count, max_length=output_count),
-        ),
+        decisions=(GenericAlias(list, decision), decision_count),
     )
 
 

@@ -20,6 +20,14 @@ restoring a backup.
   with "The model returned invalid, empty, refused or truncated structured output"; such an
   answer is now asked for once more with the allowed values named, and fails only if the
   correction is malformed too. No upgrade step.
+- **A citation of an answer or finding that does not exist no longer fails the analysis.** When
+  the model's citation repair cited a human answer number past the answers it was given, or a
+  finding number past the findings, the whole repair was refused, and after its one correction
+  the analysis failed with "The model could not provide valid source citations. Analysis was not
+  saved.", five or six minutes in. If the corrected repair still cites an answer that does not
+  exist, that finding is set aside, or carried if it is a question the review kept, as already
+  happens for an invented document block; a decision for a finding that does not exist is
+  dropped. The rest of the analysis stands (ADR-0032, amended). No upgrade step.
 - **A document the model can hold is analysed in one pass.** Analysis split every attached
   document into section packets, analysed each, then consolidated their findings: three model
   calls at least, and more repairs. A BRD of 41,000 characters took 641 s of model time over 7
