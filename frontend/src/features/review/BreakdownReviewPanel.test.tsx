@@ -169,7 +169,7 @@ describe("BreakdownReviewPanel", () => {
       status: "generated",
       subject_fingerprint: "breakdown-fingerprint",
       submitted_fingerprint: null,
-      completion: { epic_approved: 0, epic_total: 1, features_approved: 0, features_total: 1, stories_approved: 0, stories_total: 1 },
+      completion: { epic_approved: 0, epic_total: 1, features_approved: 0, features_total: 1, stories_approved: 0, stories_total: 1, story_points: 0, stories_sized: 0 },
       artifacts: [],
       readiness_reasons: [],
       blocking_reasons: ["1 blocking review flag(s) remain open."],

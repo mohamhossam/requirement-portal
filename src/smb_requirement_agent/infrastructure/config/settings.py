@@ -255,6 +255,8 @@ class AdoPublicationSettings:
     story_type: str = "User Story"
     description_field: str = "System.Description"
     acceptance_criteria_field: str = "Microsoft.VSTS.Common.AcceptanceCriteria"
+    # Where a confirmed Story size goes (ADR-0121); set it empty to leave sizes out.
+    story_points_field: str = "Microsoft.VSTS.Scheduling.StoryPoints"
     tags: tuple[str, ...] = ()
     # Squad id to its board's area path, so a squad's Features land on its board.
     squad_area_paths: tuple[tuple[str, str], ...] = ()
@@ -334,6 +336,9 @@ class AdoPublicationSettings:
             description_field=os.getenv("ADO_DESCRIPTION_FIELD", "System.Description").strip(),
             acceptance_criteria_field=os.getenv(
                 "ADO_ACCEPTANCE_CRITERIA_FIELD", "Microsoft.VSTS.Common.AcceptanceCriteria"
+            ).strip(),
+            story_points_field=os.getenv(
+                "ADO_STORY_POINTS_FIELD", "Microsoft.VSTS.Scheduling.StoryPoints"
             ).strip(),
             tags=tuple(tag.strip() for tag in os.getenv("ADO_TAGS", "").split(";") if tag.strip()),
             squad_area_paths=parse_squad_area_paths(os.getenv("ADO_SQUAD_AREA_PATHS", "")),

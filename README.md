@@ -424,7 +424,7 @@ The HTTP surface is grouped by resource:
 | Attachments | `/requirements/{id}/attachments/...`, `/requirement-drafts/{draft_id}/attachments/...`, `/documents/...` |
 | Analysis and clarification | `/requirements/{id}/analysis`, `.../analysis/rounds`, `.../analysis/questions/...`, `.../analysis/proposals/{proposal_id}`, `.../analysis/confirmation` |
 | Requirement knowledge | `/requirements/{id}/knowledge-review`, `.../knowledge-findings/...`, `.../knowledge-index`, `/knowledge/search/unified` |
-| Backlog | `/requirements/{id}/epic`, `.../features/...`, `.../features/{feature_id}/stories/...` (quality, split, merge, change proposals, regeneration) |
+| Backlog | `/requirements/{id}/epic`, `.../features/...`, `.../features/{feature_id}/stories/...` (quality, size suggestions and story points (ADR-0121), split, merge, change proposals, regeneration) |
 | Architecture | `/requirements/{id}/architecture-mapping`, `.../architecture-mapping/jobs/{job_id}`, `/architecture/active-release` |
 | Review and approval | `/requirements/{id}/breakdown-review/...`, `.../review-submission`, `.../approval-workflow`, `.../breakdown-approval`, `.../impact-preview` |
 | Revisions and export | `/requirements/{id}/revisions`, `.../revisions/compare`, `.../revisions/{revision_number}/export` |

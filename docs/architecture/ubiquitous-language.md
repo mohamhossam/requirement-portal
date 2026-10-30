@@ -32,6 +32,8 @@ different things in different places.
 | Story (User Story) | breakdown | One small, testable slice of a Feature: "As a…, I want…, so that…", with Given/When/Then acceptance criteria. |
 | Story change proposal | breakdown | An AI-suggested split or merge of Stories. It changes nothing until applied. |
 | Quality (INVEST assessment) | breakdown | A deterministic and semantic assessment of a Story against INVEST, with SPIDR split suggestions (ADR-0015, ADR-0041). |
+| Story points (size) | breakdown | A Story's relative size on the scale 1, 2, 3, 5, 8, 13, decided by a person (`StoryEstimate`). It is part of the approved content (ADR-0121). |
+| Size suggestion | breakdown | The AI's suggested size for each of a Feature's Stories, with its reason or why it cannot size one (`FeatureEstimateSuggestions`). It is a review aid: it is never a Story's size until a person accepts it, and never exported. |
 | Architecture impact | breakdown | The systems, squads and dependencies a Feature or Story touches. It is part of the approved content. |
 | Architecture catalogue | references | The system, squad, product and journey model published by knowledge-portal. Impact mapping reads it; this service does not own it. |
 | Breakdown review | governance | The single review of a Requirement's whole breakdown: flags, decisions, dependencies, risks, recommendations, submission and final approval (ADR-0017). |
@@ -73,6 +75,10 @@ different things in different places.
 - The *subject* is the canonical content an approval attests to.
 - The *fingerprint* is its SHA-256.
 - An approval stays in the artifact's history, but it is *current* only while its fingerprint matches the artifact's present content (`current_approval(fingerprint)`). Any content change makes it non-current.
+
+**Size suggestion vs story points**
+- A *size suggestion* is AI output kept beside a Feature's Stories; it goes out of date when their content changes.
+- *Story points* are the size a person confirmed on the Story, by accepting a suggestion or entering one. Only they count towards totals, export and the tracker.
 
 **Evidence fingerprint**
 - The fingerprint of everything the breakdown review was built from.

@@ -564,6 +564,7 @@ def _backlog(breakdown: BreakdownRevision) -> SpecificationBacklog | None:
                     SpecificationCriterion(item.given, item.when, item.then)
                     for item in story.acceptance_criteria
                 ),
+                story_points=story.estimate.points.value if story.estimate else None,
             )
             for story_index, story in enumerate(
                 (item for item in breakdown.stories if item.feature_id == feature.id), start=1

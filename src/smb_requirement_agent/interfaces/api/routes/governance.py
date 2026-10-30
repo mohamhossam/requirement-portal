@@ -4,6 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
+from smb_requirement_agent.breakdown.domain.story.estimate import EstimateBasis
 from smb_requirement_agent.governance.application.use_cases.approval_workflow import (
     AddReviewComment,
     ApprovalWorkflowView,
@@ -63,6 +64,11 @@ def workflow_response(view: ApprovalWorkflowView) -> ApprovalWorkflowResponse:
                 approval_history=[
                     ApprovalResponse.from_domain(approval) for approval in item.approvals
                 ],
+                story_points=item.story_points,
+                story_points_basis=(
+                    EstimateBasis(item.story_points_basis) if item.story_points_basis else None
+                ),
+                story_points_decided_by=item.story_points_decided_by,
             )
             for item in view.artifacts
         ],
@@ -73,6 +79,8 @@ def workflow_response(view: ApprovalWorkflowView) -> ApprovalWorkflowResponse:
             features_total=completion.features_total,
             stories_approved=completion.stories_approved,
             stories_total=completion.stories_total,
+            story_points=completion.story_points,
+            stories_sized=completion.stories_sized,
         ),
         readiness_reasons=list(view.readiness_reasons),
         blocking_reasons=list(view.blocking_reasons),

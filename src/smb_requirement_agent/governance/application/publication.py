@@ -58,18 +58,23 @@ class PlannedWorkItem:
     # A stable tag on the tracker item, so an item created by an interrupted attempt can be
     # found again instead of created twice (Slice 13).
     marker: str = ""
+    # A Story's confirmed size (ADR-0121); None for Epics, Features and unsized Stories.
+    story_points: int | None = None
 
     def content_fingerprint(self) -> str:
         """What a person reads on the tracker item; a change to it is sent as an update.
 
         Where the item lands is left out: once published, people triage it in the tracker.
         """
-        content = {
+        content: dict[str, object] = {
             "kind": self.kind.value,
             "title": self.title,
             "description": [list(pair) for pair in self.description],
             "acceptance_criteria": [asdict(item) for item in self.acceptance_criteria],
         }
+        # Left out when unset, so items published before sizes existed stay unchanged.
+        if self.story_points is not None:
+            content["story_points"] = self.story_points
         encoded = json.dumps(content, sort_keys=True, ensure_ascii=False).encode()
         return f"sha256:{hashlib.sha256(encoded).hexdigest()}"
 
@@ -228,6 +233,7 @@ def publication_plan(document: NeutralBacklogExport) -> PublicationPlan:
                     owning_squad_id=squad_id,
                     owning_squad_name=squad_name,
                     marker=_marker(document, story.id),
+                    story_points=story.story_points,
                 )
             )
     manifest = document.manifest

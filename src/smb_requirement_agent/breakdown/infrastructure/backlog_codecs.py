@@ -1,10 +1,21 @@
-"""Snapshot mappings for breakdown's value types: Story quality and architecture impact."""
+"""Snapshot mappings for breakdown's value types.
+
+Story quality, Story sizes and their suggestions, and architecture impact.
+"""
 
 from __future__ import annotations
 
 from datetime import datetime
 
 from smb_requirement_agent.breakdown.domain.architecture.entities import ArchitectureImpact
+from smb_requirement_agent.breakdown.domain.feature.value_objects import FeatureId
+from smb_requirement_agent.breakdown.domain.story.estimate import (
+    EstimateBasis,
+    EstimateSuggestion,
+    FeatureEstimateSuggestions,
+    StoryEstimate,
+    StoryPoints,
+)
 from smb_requirement_agent.breakdown.domain.story.quality import (
     FindingSource,
     InvestAssessment,
@@ -17,11 +28,16 @@ from smb_requirement_agent.breakdown.domain.story.value_objects import (
 from smb_requirement_agent.infrastructure.persistence.payload_fields import (
     JsonObject,
     boolean_field,
+    integer_field,
     json_array,
     json_object,
     nullable_text,
     optional_json_array,
     required_text,
+)
+from smb_requirement_agent.infrastructure.persistence.shared_payloads import (
+    actor_fields_to_payload,
+    required_actor_snapshot,
 )
 from smb_requirement_agent.references.domain.architecture.catalogue import (
     ArchitectureCitation,
@@ -78,6 +94,79 @@ def quality_assessment_to_payload(value: InvestAssessment) -> JsonObject:
             "prompt_version": value.provenance.prompt_version,
         },
     }
+
+
+def _provenance_to_payload(value: Provenance) -> JsonObject:
+    return {
+        "generated_at": value.generated_at.isoformat(),
+        "model": value.model,
+        "prompt_version": value.prompt_version,
+    }
+
+
+def _provenance_from_payload(data: JsonObject) -> Provenance:
+    return Provenance(
+        datetime.fromisoformat(required_text(data, "generated_at")),
+        required_text(data, "model"),
+        required_text(data, "prompt_version"),
+    )
+
+
+def estimate_to_payload(value: StoryEstimate) -> JsonObject:
+    return {
+        "points": value.points.value,
+        "basis": value.basis.value,
+        "decided_by": actor_fields_to_payload(value.decided_by),
+        "decided_at": value.decided_at.isoformat(),
+    }
+
+
+def estimate_from_payload(value: object) -> StoryEstimate | None:
+    if value is None:
+        return None
+    data = json_object(value)
+    return StoryEstimate(
+        points=StoryPoints(integer_field(data, "points")),
+        basis=EstimateBasis(required_text(data, "basis")),
+        decided_by=required_actor_snapshot(data, "decided_by"),
+        decided_at=datetime.fromisoformat(required_text(data, "decided_at")),
+    )
+
+
+def estimate_suggestions_to_payload(value: FeatureEstimateSuggestions) -> JsonObject:
+    return {
+        "feature_id": value.feature_id.value,
+        "source_fingerprint": value.source_fingerprint,
+        "provenance": _provenance_to_payload(value.provenance),
+        "suggestions": [
+            {
+                "story_id": item.story_id.value,
+                "points": item.points.value if item.points else None,
+                "rationale": item.rationale,
+            }
+            for item in value.suggestions
+        ],
+    }
+
+
+def estimate_suggestions_from_payload(data: JsonObject) -> FeatureEstimateSuggestions:
+    suggestions = []
+    for raw in json_array(data, "suggestions"):
+        item = json_object(raw)
+        points = item.get("points")
+        suggestions.append(
+            EstimateSuggestion(
+                StoryId(required_text(item, "story_id")),
+                StoryPoints(integer_field(item, "points")) if points is not None else None,
+                required_text(item, "rationale"),
+            )
+        )
+    return FeatureEstimateSuggestions(
+        feature_id=FeatureId(required_text(data, "feature_id")),
+        source_fingerprint=required_text(data, "source_fingerprint"),
+        suggestions=tuple(suggestions),
+        provenance=_provenance_from_payload(json_object(data["provenance"])),
+    )
 
 
 def _references_to_payload(values: tuple[OrganisationReference, ...]) -> list[JsonObject]:

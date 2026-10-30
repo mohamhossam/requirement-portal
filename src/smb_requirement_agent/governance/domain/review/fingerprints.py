@@ -110,6 +110,10 @@ def artifact_fingerprint(item: Epic | Feature | UserStory) -> str:
         }
         if item.kind.is_enabler:
             payload["work_kind"] = item.kind.value
+        # Approval attests to the confirmed size (ADR-0121); unsized Stories keep the
+        # fingerprint they were approved with.
+        if item.estimate is not None:
+            payload["story_points"] = item.estimate.points.value
     return _digest(payload)
 
 

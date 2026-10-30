@@ -53,6 +53,7 @@ from smb_requirement_agent.breakdown.application.ports.feature_generator import 
 from smb_requirement_agent.breakdown.application.ports.feature_repository import (
     FeatureRepositoryPort,
 )
+from smb_requirement_agent.breakdown.application.ports.story_estimator import StoryEstimatorPort
 from smb_requirement_agent.breakdown.application.ports.story_generator import StoryGeneratorPort
 from smb_requirement_agent.breakdown.application.ports.story_quality_evaluator import (
     StoryQualityEvaluatorPort,
@@ -81,6 +82,10 @@ from smb_requirement_agent.breakdown.application.use_cases.generate_features imp
 from smb_requirement_agent.breakdown.application.use_cases.get_epic import GetEpic
 from smb_requirement_agent.breakdown.application.use_cases.story_change_proposals import (
     StoryChangeProposals,
+)
+from smb_requirement_agent.breakdown.application.use_cases.story_estimates import (
+    GetStoryEstimateSuggestions,
+    SetStoryEstimate,
 )
 from smb_requirement_agent.breakdown.application.use_cases.story_quality import (
     GetFeatureQualitySnapshot,
@@ -490,6 +495,8 @@ class Container:
     merge_stories: MergeStories
     story_change_proposals: StoryChangeProposals
     get_feature_quality_snapshot: GetFeatureQualitySnapshot
+    get_story_estimate_suggestions: GetStoryEstimateSuggestions
+    set_story_estimate: SetStoryEstimate
     map_feature_architecture: MapFeatureArchitecture
     map_story_architecture: MapStoryArchitecture
     get_breakdown_review: GetBreakdownReview
@@ -532,6 +539,7 @@ def build_container(
     feature_generator: FeatureGeneratorPort | None = None,
     story_generator: StoryGeneratorPort | None = None,
     story_quality_evaluator: StoryQualityEvaluatorPort | None = None,
+    story_estimator: StoryEstimatorPort | None = None,
     architecture_knowledge: ArchitectureKnowledgePort | None = None,
     clock: ClockPort | None = None,
     identity_provider: IdentityProviderPort | None = None,
@@ -545,6 +553,7 @@ def build_container(
             feature_generator=feature_generator,
             story_generator=story_generator,
             story_quality_evaluator=story_quality_evaluator,
+            story_estimator=story_estimator,
             architecture_knowledge=architecture_knowledge,
             clock=clock,
             identity_provider=identity_provider,
@@ -563,6 +572,7 @@ def _build_container(
     feature_generator: FeatureGeneratorPort | None = None,
     story_generator: StoryGeneratorPort | None = None,
     story_quality_evaluator: StoryQualityEvaluatorPort | None = None,
+    story_estimator: StoryEstimatorPort | None = None,
     architecture_knowledge: ArchitectureKnowledgePort | None = None,
     clock: ClockPort | None = None,
     identity_provider: IdentityProviderPort | None = None,
@@ -621,6 +631,9 @@ def _build_container(
         story_quality_evaluator
         if story_quality_evaluator is not None
         else defaults.story_quality_evaluator
+    )
+    resolved_story_estimator = (
+        story_estimator if story_estimator is not None else defaults.story_estimator
     )
     # Architecture matching is the knowledge service's; tests may supply their own.
     resolved_architecture = (
@@ -699,6 +712,7 @@ def _build_container(
             resolved_feature_generator,
             resolved_story_generator,
             resolved_story_quality_evaluator,
+            resolved_story_estimator,
         ),
         resolved_architecture,
         review,
@@ -935,6 +949,8 @@ def _build_container(
         merge_stories=breakdown.merge_stories,
         story_change_proposals=breakdown.story_change_proposals,
         get_feature_quality_snapshot=breakdown.get_feature_quality_snapshot,
+        get_story_estimate_suggestions=breakdown.get_story_estimate_suggestions,
+        set_story_estimate=breakdown.set_story_estimate,
         map_feature_architecture=breakdown.map_feature_architecture,
         map_story_architecture=breakdown.map_story_architecture,
         get_breakdown_review=review.get_breakdown_review,

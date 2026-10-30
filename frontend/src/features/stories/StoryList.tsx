@@ -18,6 +18,9 @@ import { useRequirementJobs } from "../jobs/useRequirementJobs";
 import { ManualStoryChangeDialog } from "./ManualStoryChangeDialog";
 import { StoryCard } from "./StoryCard";
 import { StoryProposalPanel } from "./StoryProposalPanel";
+import { NONE_SIZED, pointsLabel } from "./storyPoints";
+import { StorySizeCell } from "./StorySizeCell";
+import type { SizeChange } from "./StorySizePanel";
 import { storyGist } from "./storyVoice";
 import { VerdictText } from "../breakdown/BacklogStatus";
 import { backlogVerdict } from "../breakdown/labels";
@@ -44,6 +47,13 @@ export function StoryList({ requirementId, feature, canManage, focused = false, 
   canManage: boolean;
 }) {
   const queryClient = useQueryClient();
+  // Review & approve links an unsized Story here with ?from=review; give it a way back.
+  // Read from the address rather than the router: the Story page mounts fresh on that
+  // link, and the list also renders outside a router (the backlog tree, tests).
+  const reviewReturn =
+    new URLSearchParams(window.location.search).get("from") === "review"
+      ? `/requirements/${requirementId}/review`
+      : undefined;
   const [selectMode, setSelectMode] = useState(false);
   const observedStory = useRef<string | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
@@ -79,6 +89,12 @@ export function StoryList({ requirementId, feature, canManage, focused = false, 
     refetchOnMount: "always",
     enabled: !focused || visible,
   });
+  const estimates = useQuery({
+    queryKey: queryKeys.storyEstimates(requirementId, feature.id),
+    queryFn: ({ signal }) => api.getStoryEstimateSuggestions(requirementId, feature.id, { signal }),
+    refetchOnMount: "always",
+    enabled: !focused || visible,
+  });
   useEffect(() => {
     if (!focused || !visible || !selectedStoryId) { observedStory.current = null; return; }
     if (stories.data?.stories.some((story) => story.id === selectedStoryId)) observedStory.current = selectedStoryId;
@@ -95,7 +111,24 @@ export function StoryList({ requirementId, feature, canManage, focused = false, 
       ),
   });
 
+  const suggestSizes = useMutation({
+    mutationFn: () =>
+      jobs.startJob({
+        operation: "suggest_story_estimates",
+        feature_id: feature.id,
+        context_token: stories.data?.generation_context_token ?? "",
+      }),
+  });
+
   const refresh = () => invalidateWorkspace(queryClient, requirementId, "stories", feature.id);
+
+  const setSize = useMutation({
+    mutationFn: ({ storyId, change, expectedVersion }: {
+      storyId: string; change: SizeChange; expectedVersion: number
+    }) => api.setStoryEstimate(requirementId, feature.id, storyId, { ...change, expected_version: expectedVersion }),
+    onError: () => invalidateWorkspaceKeys(queryClient, [queryKeys.stories(requirementId, feature.id)]),
+    onSuccess: refresh,
+  });
 
   const generate = useMutation({
     mutationFn: () => jobs.startJob({
@@ -240,6 +273,23 @@ export function StoryList({ requirementId, feature, canManage, focused = false, 
   const storiesGenerating = generate.isPending || jobs.active.some((job) => job.operation === "generate_stories" && affectsFeature(job.id));
   const storiesRegenerating = regenerateAll.isPending || jobs.active.some((job) => job.operation === "regenerate_story_set" && affectsFeature(job.id));
   const qualityActive = jobs.active.some((job) => job.operation === "evaluate_feature_quality" && affectsFeature(job.id));
+  const sizingActive = suggestSizes.isPending || jobs.active.some((job) => job.operation === "suggest_story_estimates" && affectsFeature(job.id));
+  // Only a current suggestion is offered; an out-of-date one read different Stories.
+  const freshSizes = estimates.data?.fresh ? estimates.data : null;
+  const total = stories.data?.estimate_total;
+  const toolbarReasonId = `feature-${feature.id}-stories-gated`;
+  const sizesStale = Boolean(estimates.data && !estimates.data.fresh);
+  // Out-of-date suggestions are worth amber only while a Story still needs a size.
+  const sizesNeeded = Boolean(total && total.sized < total.stories);
+  const siblingsOf = (storyId: string) =>
+    list
+      .filter((item) => item.id !== storyId)
+      .map((item) => ({
+        id: item.id,
+        gist: storyGist(item.voice),
+        points: item.estimate?.points ?? null,
+        suggested: freshSizes?.suggestions.find((entry) => entry.story_id === item.id)?.points ?? null,
+      }));
 
   /** Why a Story action is unavailable, in the person's own words. */
   const blocked = !canManage
@@ -344,9 +394,18 @@ export function StoryList({ requirementId, feature, canManage, focused = false, 
         hidden={focused && Boolean(selectedStoryId)}
       >
         {/* A heading, so the list sits in the outline under the Feature. */}
-        <h3 className="text-title text-ink m-0">
-          {list.length} Stor{list.length === 1 ? "y" : "ies"}
-        </h3>
+        <div className="grid gap-0.5">
+          <h3 className="text-title text-ink m-0">
+            {list.length} Stor{list.length === 1 ? "y" : "ies"}
+          </h3>
+          {/* Confirmed sizes only, and the unsized ones said in words, so a
+              partial total never reads as the whole Feature's size. */}
+          <p className="text-meta text-ink-muted m-0 tabular-nums">
+            {total?.sized
+              ? `${pointsLabel(total.points)} · ${total.sized} of ${total.stories} sized`
+              : NONE_SIZED}
+          </p>
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           {focused && !selectedStoryId && list[0] && (
             <ButtonLink
@@ -381,10 +440,24 @@ export function StoryList({ requirementId, feature, canManage, focused = false, 
               </Button>
             </>
           )}
+          {/* Like "Check these Stories": suggesting sizes changes no Story, so
+              only permission gates it, not the Feature's readiness. Gated, not
+              disabled, and pointed at the one reason line below. While the
+              out-of-date notice offers it, it is not offered twice. */}
+          {!sizesStale && (
+            <Button
+              blockedBy={!canManage ? toolbarReasonId : undefined}
+              loading={sizingActive}
+              loadingLabel="Suggesting sizes…"
+              onClick={() => suggestSizes.mutate()}
+            >
+              {estimates.data ? "Suggest sizes again" : "Suggest sizes"}
+            </Button>
+          )}
           {/* Gated, not disabled: the button keeps its tab stop and says why,
               instead of a reason floating on a line of its own. */}
           <Button
-            blockedReason={blocked ?? undefined}
+            blockedBy={blocked ? toolbarReasonId : undefined}
             loading={storiesRegenerating}
             loadingLabel="Regenerating…"
             onClick={requestRegenerateAll}
@@ -395,6 +468,9 @@ export function StoryList({ requirementId, feature, canManage, focused = false, 
       </div>
 
 
+      {blocked && !(focused && selectedStoryId) && (
+        <p className="text-meta text-ink-muted m-0" id={toolbarReasonId}>{blocked}</p>
+      )}
       {regenerateAll.error && <ErrorNotice message={errorMessage(regenerateAll.error)} reference={errorReference(regenerateAll.error)} />}
       {proposals.error && <ErrorNotice message={errorMessage(proposals.error)} reference={errorReference(proposals.error)} />}
       {proposalError && <ErrorNotice message={errorMessage(proposalError)} reference={errorReference(proposalError)} />}
@@ -429,6 +505,47 @@ export function StoryList({ requirementId, feature, canManage, focused = false, 
         </Card>
       )}
       {evaluateQuality.error && <ErrorNotice message={errorMessage(evaluateQuality.error)} reference={errorReference(evaluateQuality.error)} />}
+      {suggestSizes.error && <ErrorNotice message={errorMessage(suggestSizes.error)} reference={errorReference(suggestSizes.error)} />}
+      {estimates.error && (
+        <ErrorNotice
+          message={`Size suggestions could not be loaded: ${errorMessage(estimates.error)}`}
+          reference={errorReference(estimates.error)}
+        />
+      )}
+      {sizesStale && !(focused && selectedStoryId) && (sizesNeeded ? (
+        <Card tone="warning" role="status">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {/* Said as what happened, with the way back beside it — the same
+                shape as an out-of-date quality check. */}
+            <p className="text-body text-ink-soft m-0">
+              These Stories changed after their sizes were suggested, so those suggestions no longer apply.
+            </p>
+            <Button
+              blockedBy={!canManage ? toolbarReasonId : undefined}
+              loading={sizingActive}
+              loadingLabel="Suggesting sizes…"
+              onClick={() => suggestSizes.mutate()}
+            >
+              Suggest sizes again
+            </Button>
+          </div>
+        </Card>
+      ) : (
+        // Every Story already has a size a person chose: nothing waits on new
+        // suggestions, so this is information, not attention (§4.4).
+        <p className="text-meta text-ink-muted m-0 flex flex-wrap items-center gap-x-2" role="status">
+          Every Story is sized; the AI suggestions predate the latest changes.
+          <Button
+            variant="text"
+            blockedBy={!canManage ? toolbarReasonId : undefined}
+            loading={sizingActive}
+            loadingLabel="Suggesting sizes…"
+            onClick={() => suggestSizes.mutate()}
+          >
+            Suggest sizes again
+          </Button>
+        </p>
+      ))}
 
       {proposalData.map((proposal) => (
         <StoryProposalPanel
@@ -485,6 +602,19 @@ export function StoryList({ requirementId, feature, canManage, focused = false, 
                   )}
                 </span>
               </Link>
+              {/* Outside the link: a row can be read and opened, and its size
+                  decided, without the one swallowing the other. */}
+              <div className="-mt-2 pb-4">
+                <StorySizeCell
+                  story={story}
+                  suggestion={freshSizes?.suggestions.find((item) => item.story_id === story.id) ?? null}
+                  busy={setSize.isPending && setSize.variables?.storyId === story.id}
+                  error={setSize.error && setSize.variables?.storyId === story.id ? errorMessage(setSize.error) : null}
+                  disabled={Boolean(blocked)}
+                  describedBy={blocked ? toolbarReasonId : undefined}
+                  onSize={(change) => setSize.mutate({ storyId: story.id, change, expectedVersion: story.version })}
+                />
+              </div>
             </li>
           ))}
         </ul>
@@ -511,6 +641,18 @@ export function StoryList({ requirementId, feature, canManage, focused = false, 
           }
           disabledReason={blocked}
           quality={quality.data?.fresh ? quality.data.stories.find((item) => item.story_id === story.id) ?? null : null}
+          sizeSuggestion={freshSizes?.suggestions.find((item) => item.story_id === story.id) ?? null}
+          sizeProvenance={freshSizes?.provenance ?? null}
+          sizing={setSize.isPending && setSize.variables?.storyId === story.id}
+          sizeError={setSize.error && setSize.variables?.storyId === story.id ? errorMessage(setSize.error) : null}
+          onSize={(change) => setSize.mutate({ storyId: story.id, change, expectedVersion: story.version })}
+          sizeSuggestionStale={sizesStale}
+          sizeSiblings={siblingsOf(story.id)}
+          listReasonId={blocked ? toolbarReasonId : undefined}
+          sizeReturnHref={story.id === selectedStoryId ? reviewReturn : undefined}
+          canSuggestSizes={canManage}
+          suggestingSizes={sizingActive}
+          onSuggestSizes={() => suggestSizes.mutate()}
         />
         </div>
       ))}

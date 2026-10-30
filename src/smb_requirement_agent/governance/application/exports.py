@@ -7,7 +7,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
-EXPORT_SCHEMA_VERSION = "1.7"
+EXPORT_SCHEMA_VERSION = "1.8"
 
 
 class ExportFormat(StrEnum):
@@ -37,6 +37,9 @@ class ExportCounts:
     features: int
     stories: int
     acceptance_criteria: int
+    # Added in 1.8: confirmed story points, and how many Stories carry one (ADR-0121).
+    story_points: int = 0
+    sized_stories: int = 0
 
 
 @dataclass(frozen=True)
@@ -173,6 +176,8 @@ class ExportStory:
     architecture: ExportArchitecture | None
     # Added in 1.7: business, or the SAFe enabler kind.
     work_kind: str = "business"
+    # Added in 1.8: the size the team confirmed; null when the Story is unsized.
+    story_points: int | None = None
 
 
 @dataclass(frozen=True)
@@ -192,6 +197,8 @@ class ExportFeature:
     # Added in 1.7: feature-level conditions of satisfaction, and the SAFe kind.
     acceptance_criteria: tuple[str, ...] = ()
     work_kind: str = "business"
+    # Added in 1.8: confirmed points across the Feature's Stories.
+    story_points: int = 0
 
 
 @dataclass(frozen=True)

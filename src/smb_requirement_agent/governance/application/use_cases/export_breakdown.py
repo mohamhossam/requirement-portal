@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 
 from smb_requirement_agent.breakdown.domain.architecture.entities import ArchitectureImpact
+from smb_requirement_agent.breakdown.domain.story.estimate import estimate_total
 from smb_requirement_agent.governance.application.errors import BreakdownRevisionNotExportableError
 from smb_requirement_agent.governance.application.exports import (
     EXPORT_SCHEMA_VERSION,
@@ -267,6 +268,9 @@ def _document(revision: BreakdownRevision, approval: Approval) -> NeutralBacklog
             architecture=_architecture(feature.architecture),
             acceptance_criteria=tuple(item.value for item in feature.acceptance_criteria),
             work_kind=feature.kind.value,
+            story_points=estimate_total(
+                story.estimate for story in stories_by_feature[feature.id]
+            ).points,
             stories=tuple(
                 ExportStory(
                     sequence=story_sequence,
@@ -286,6 +290,7 @@ def _document(revision: BreakdownRevision, approval: Approval) -> NeutralBacklog
                     ),
                     architecture=_architecture(story.architecture),
                     work_kind=story.kind.value,
+                    story_points=story.estimate.points.value if story.estimate else None,
                 )
                 for story_sequence, story in enumerate(stories_by_feature[feature.id], start=1)
             ),
@@ -293,6 +298,7 @@ def _document(revision: BreakdownRevision, approval: Approval) -> NeutralBacklog
         for feature_sequence, feature in enumerate(revision.features, start=1)
     )
     actor = approval.recorded_by
+    sizes = estimate_total(story.estimate for story in revision.stories)
     return NeutralBacklogExport(
         schema_version=EXPORT_SCHEMA_VERSION,
         manifest=ExportManifest(
@@ -315,6 +321,8 @@ def _document(revision: BreakdownRevision, approval: Approval) -> NeutralBacklog
                     for feature in features
                     for story in feature.stories
                 ),
+                story_points=sizes.points,
+                sized_stories=sizes.sized,
             ),
         ),
         epic=ExportEpic(

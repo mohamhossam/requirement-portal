@@ -63,6 +63,11 @@ export type DocumentListParams = {
 };
 export type DocumentContent = components["schemas"]["DocumentContentResponse"];
 export type StoryQuality = components["schemas"]["StoryQualityResponse"];
+export type StoryEstimate = components["schemas"]["StoryEstimateResponse"];
+export type StoryEstimateInput = Requests["StoryEstimateRequest"];
+export type EstimateTotal = components["schemas"]["EstimateTotalResponse"];
+export type EstimateSuggestion = components["schemas"]["EstimateSuggestionResponse"];
+export type FeatureEstimateSuggestions = components["schemas"]["FeatureEstimateSuggestionsResponse"];
 export type FeatureStoryQualitySnapshot =
   components["schemas"]["FeatureStoryQualitySnapshotResponse"];
 export type ArchitectureImpact = components["schemas"]["ArchitectureImpactResponse"];
@@ -110,6 +115,7 @@ export type AiJobStartInput =
   | (components["schemas"]["RegenerateStorySetJobRequest"] & { context_token: string })
   | components["schemas"]["ProposeStoryChangeJobRequest"]
   | components["schemas"]["EvaluateFeatureQualityJobRequest"]
+  | components["schemas"]["SuggestStoryEstimatesJobRequest"]
   | components["schemas"]["GenerateBreakdownReviewJobRequest"]
   | components["schemas"]["ResolveReviewOpenQuestionJobRequest"]
   | components["schemas"]["ScreenRequirementKnowledgeJobRequest"]
@@ -811,6 +817,8 @@ export const api = {
     optional<StorySet>(storiesPath(id, featureId), options),
   getFeatureStoryQualityAssessment: (id: string, featureId: string, options?: RequestOptions) =>
     optional<FeatureStoryQualitySnapshot>(`${storiesPath(id, featureId)}/quality-assessment`, options),
+  getStoryEstimateSuggestions: (id: string, featureId: string, options?: RequestOptions) =>
+    optional<FeatureEstimateSuggestions>(`${storiesPath(id, featureId)}/estimate-suggestions`, options),
   startArchitectureMappingJob: (id: string) =>
     request<ArchitectureMappingJob>(`${requirementPath(id)}/architecture-mapping/jobs`, {
       method: "POST",
@@ -891,6 +899,11 @@ export const api = {
     input: StoryInput & { expected_version: number }
   ) =>
     request<Story>(`${storiesPath(id, featureId)}/${encodeURIComponent(storyId)}`, {
+      method: "PUT",
+      body: JSON.stringify(input),
+    }),
+  setStoryEstimate: (id: string, featureId: string, storyId: string, input: StoryEstimateInput) =>
+    request<Story>(`${storiesPath(id, featureId)}/${encodeURIComponent(storyId)}/estimate`, {
       method: "PUT",
       body: JSON.stringify(input),
     }),

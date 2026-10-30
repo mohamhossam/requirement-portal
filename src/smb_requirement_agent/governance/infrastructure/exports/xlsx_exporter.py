@@ -80,6 +80,8 @@ class XlsxBacklogExporter:
             ("feature_count", value.counts.features),
             ("story_count", value.counts.stories),
             ("acceptance_criterion_count", value.counts.acceptance_criteria),
+            ("story_points", value.counts.story_points),
+            ("sized_story_count", value.counts.sized_stories),
         )
         for row in rows:
             _append(sheet, row)
@@ -134,6 +136,7 @@ class XlsxBacklogExporter:
                 "splitting_rationale",
                 "work_kind",
                 "acceptance_criteria",
+                "story_points",
                 "status",
                 "generated_at",
                 "model",
@@ -155,6 +158,7 @@ class XlsxBacklogExporter:
                     feature.splitting_rationale,
                     feature.work_kind,
                     "\n".join(feature.acceptance_criteria),
+                    feature.story_points,
                     feature.status,
                     _iso(feature.provenance.generated_at),
                     feature.provenance.model,
@@ -177,6 +181,7 @@ class XlsxBacklogExporter:
                 "value",
                 "voice",
                 "work_kind",
+                "story_points",
                 "status",
                 "generated_at",
                 "model",
@@ -198,6 +203,7 @@ class XlsxBacklogExporter:
                         story.value,
                         story.voice,
                         story.work_kind,
+                        story.story_points,
                         story.status,
                         _iso(story.provenance.generated_at),
                         story.provenance.model,

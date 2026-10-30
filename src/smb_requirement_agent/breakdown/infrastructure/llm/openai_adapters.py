@@ -10,6 +10,9 @@ from smb_requirement_agent.breakdown.infrastructure.llm.local_epic_generator imp
 from smb_requirement_agent.breakdown.infrastructure.llm.local_feature_generator import (
     StructuredFeatureGeneratorAdapter,
 )
+from smb_requirement_agent.breakdown.infrastructure.llm.local_story_estimator import (
+    StructuredStoryEstimatorAdapter,
+)
 from smb_requirement_agent.breakdown.infrastructure.llm.local_story_generator import (
     StructuredStoryGeneratorAdapter,
 )
@@ -38,6 +41,15 @@ class OpenAIFeatureGenerator(StructuredFeatureGeneratorAdapter):
 
 
 class OpenAIStoryGenerator(StructuredStoryGeneratorAdapter):
+    def __init__(
+        self, client: OpenAI, *, model: str, timeout_seconds: float, max_output_tokens: int
+    ) -> None:
+        super().__init__(
+            openai_transport(client, model, timeout_seconds, max_output_tokens), OPENAI
+        )
+
+
+class OpenAIStoryEstimator(StructuredStoryEstimatorAdapter):
     def __init__(
         self, client: OpenAI, *, model: str, timeout_seconds: float, max_output_tokens: int
     ) -> None:

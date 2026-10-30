@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 
-SPECIFICATION_SCHEMA_VERSION = "1.3"
+SPECIFICATION_SCHEMA_VERSION = "1.4"
 SPECIFICATION_GENERATOR = "SMB AI Requirement Breakdown Agent"
 SPECIFICATION_TITLE = "Business Requirements Document"
 
@@ -225,6 +225,8 @@ class SpecificationStory:
     value: str
     kind: str
     criteria: tuple[SpecificationCriterion, ...]
+    # Added in 1.4: the size the team confirmed, if any (ADR-0121).
+    story_points: int | None = None
 
 
 @dataclass(frozen=True)
@@ -236,6 +238,14 @@ class SpecificationFeature:
     kind: str
     acceptance_criteria: tuple[str, ...]
     stories: tuple[SpecificationStory, ...]
+
+    @property
+    def story_points(self) -> int:
+        return sum(item.story_points or 0 for item in self.stories)
+
+    @property
+    def sized_stories(self) -> int:
+        return sum(item.story_points is not None for item in self.stories)
 
 
 @dataclass(frozen=True)

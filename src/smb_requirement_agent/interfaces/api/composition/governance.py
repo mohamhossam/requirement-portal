@@ -128,6 +128,7 @@ def build_backlog_publisher(
             },
             description_field=settings.description_field,
             acceptance_criteria_field=settings.acceptance_criteria_field,
+            story_points_field=settings.story_points_field,
             tags=settings.tags,
             squad_area_paths=dict(settings.squad_area_paths),
             timeout_seconds=settings.timeout_seconds,

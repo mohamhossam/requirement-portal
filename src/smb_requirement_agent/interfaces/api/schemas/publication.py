@@ -58,6 +58,8 @@ class PlannedWorkItemResponse(BaseModel):
     parent_key: str | None
     acceptance_criteria_count: int
     owning_squad_name: str | None
+    # A Story's confirmed size, sent to the tracker's story-points field (ADR-0121).
+    story_points: int | None = None
     # Where the item lands in the target, such as an Azure DevOps area path.
     location: str
     # What publishing would do with it, given what was published before (Slice 13).
@@ -251,6 +253,7 @@ def planned_item_response(
         title=item.title,
         parent_key=item.parent_key,
         acceptance_criteria_count=len(item.acceptance_criteria),
+        story_points=item.story_points,
         owning_squad_name=item.owning_squad_name,
         location=target.location_for(item.owning_squad_id),
         action=action,

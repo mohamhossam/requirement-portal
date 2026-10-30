@@ -1254,6 +1254,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/requirements/{requirement_id}/features/{feature_id}/stories/estimate-suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Feature Story Estimate Suggestions */
+        get: operations["get_feature_story_estimate_suggestions_requirements__requirement_id__features__feature_id__stories_estimate_suggestions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/requirements/{requirement_id}/features/{feature_id}/stories/merge": {
         parameters: {
             query?: never;
@@ -1316,6 +1333,23 @@ export interface paths {
         put?: never;
         /** Approve Story */
         post: operations["approve_story_requirements__requirement_id__features__feature_id__stories__story_id__approval_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/requirements/{requirement_id}/features/{feature_id}/stories/{story_id}/estimate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set Story Estimate */
+        put: operations["set_story_estimate_requirements__requirement_id__features__feature_id__stories__story_id__estimate_put"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1919,7 +1953,7 @@ export interface components {
          * AiJobOperation
          * @enum {string}
          */
-        AiJobOperation: "analyse_requirement" | "clarify_requirement_analysis" | "resolve_clarification_question" | "resolve_clarification_questions" | "generate_epic" | "generate_features" | "generate_stories" | "regenerate_story" | "regenerate_story_set" | "propose_story_change" | "evaluate_feature_quality" | "generate_breakdown_review" | "resolve_review_open_question" | "screen_requirement_knowledge" | "suggest_clarification_answers" | "screen_prior_art";
+        AiJobOperation: "analyse_requirement" | "clarify_requirement_analysis" | "resolve_clarification_question" | "resolve_clarification_questions" | "generate_epic" | "generate_features" | "generate_stories" | "regenerate_story" | "regenerate_story_set" | "propose_story_change" | "evaluate_feature_quality" | "suggest_story_estimates" | "generate_breakdown_review" | "resolve_review_open_question" | "screen_requirement_knowledge" | "suggest_clarification_answers" | "screen_prior_art";
         /**
          * AiJobOrigin
          * @enum {string}
@@ -2146,8 +2180,18 @@ export interface components {
             features_total: number;
             /** Stories Approved */
             stories_approved: number;
+            /**
+             * Stories Sized
+             * @default 0
+             */
+            stories_sized: number;
             /** Stories Total */
             stories_total: number;
+            /**
+             * Story Points
+             * @default 0
+             */
+            story_points: number;
         };
         /**
          * ApprovalDecision
@@ -2364,6 +2408,11 @@ export interface components {
             /** Parent Id */
             parent_id: string | null;
             status: components["schemas"]["GenerationStatus"];
+            /** Story Points */
+            story_points?: number | null;
+            story_points_basis?: components["schemas"]["EstimateBasis"] | null;
+            /** Story Points Decided By */
+            story_points_decided_by?: string | null;
             target: components["schemas"]["ApprovalTargetResponse"];
             /** Version */
             version: number;
@@ -3369,6 +3418,33 @@ export interface components {
             /** Version */
             version: number;
         };
+        /**
+         * EstimateBasis
+         * @description Where a confirmed size came from, so provenance stays honest.
+         * @enum {string}
+         */
+        EstimateBasis: "accepted_suggestion" | "team_entered";
+        /** EstimateSuggestionResponse */
+        EstimateSuggestionResponse: {
+            /** Points */
+            points: number | null;
+            /** Rationale */
+            rationale: string;
+            /** Story Id */
+            story_id: string;
+        };
+        /**
+         * EstimateTotalResponse
+         * @description Confirmed points only; unsized Stories are counted, never treated as zero.
+         */
+        EstimateTotalResponse: {
+            /** Points */
+            points: number;
+            /** Sized */
+            sized: number;
+            /** Stories */
+            stories: number;
+        };
         /** EvaluateFeatureQualityJobRequest */
         EvaluateFeatureQualityJobRequest: {
             /** Context Token */
@@ -3405,6 +3481,18 @@ export interface components {
         FeatureActionsResponse: {
             approve: components["schemas"]["ActionAvailabilityResponse"];
             generate_stories: components["schemas"]["ActionAvailabilityResponse"];
+        };
+        /** FeatureEstimateSuggestionsResponse */
+        FeatureEstimateSuggestionsResponse: {
+            /** Feature Id */
+            feature_id: string;
+            /** Fresh */
+            fresh: boolean;
+            provenance: components["schemas"]["ProvenanceResponse"];
+            /** Source Fingerprint */
+            source_fingerprint: string;
+            /** Suggestions */
+            suggestions: components["schemas"]["EstimateSuggestionResponse"][];
         };
         /**
          * FeatureResponse
@@ -4188,6 +4276,8 @@ export interface components {
             owning_squad_name: string | null;
             /** Parent Key */
             parent_key: string | null;
+            /** Story Points */
+            story_points?: number | null;
             /** Title */
             title: string;
             /** Url */
@@ -5481,6 +5571,30 @@ export interface components {
             /** Value */
             value: string;
         };
+        /**
+         * StoryEstimateRequest
+         * @description The size a person chose for a Story; null points clears it (ADR-0121).
+         */
+        StoryEstimateRequest: {
+            /** @default team_entered */
+            basis: components["schemas"]["EstimateBasis"];
+            /** Expected Version */
+            expected_version: number;
+            /** Points */
+            points: number | null;
+        };
+        /** StoryEstimateResponse */
+        StoryEstimateResponse: {
+            basis: components["schemas"]["EstimateBasis"];
+            /**
+             * Decided At
+             * Format: date-time
+             */
+            decided_at: string;
+            decided_by: components["schemas"]["ActorResponse"];
+            /** Points */
+            points: number;
+        };
         /** StoryProposalCandidateResponse */
         StoryProposalCandidateResponse: {
             /** Acceptance Criteria */
@@ -5547,6 +5661,7 @@ export interface components {
             /** Content Fingerprint */
             content_fingerprint: string;
             current_approval: components["schemas"]["ApprovalResponse"] | null;
+            estimate?: components["schemas"]["StoryEstimateResponse"] | null;
             /** Feature Id */
             feature_id: string;
             /** Id */
@@ -5568,6 +5683,7 @@ export interface components {
         };
         /** StorySetResponse */
         StorySetResponse: {
+            estimate_total: components["schemas"]["EstimateTotalResponse"];
             /** Feature Id */
             feature_id: string;
             /** Generation Context Token */
@@ -5588,6 +5704,18 @@ export interface components {
             operation: "suggest_clarification_answers";
             /** Question Id */
             question_id: string;
+        };
+        /** SuggestStoryEstimatesJobRequest */
+        SuggestStoryEstimatesJobRequest: {
+            /** Context Token */
+            context_token: string;
+            /** Feature Id */
+            feature_id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            operation: "suggest_story_estimates";
         };
         /** SystemCapabilityResponse */
         SystemCapabilityResponse: {
@@ -7134,7 +7262,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["AnalyseRequirementJobRequest"] | components["schemas"]["ClarifyAnalysisJobRequest"] | components["schemas"]["ResolveQuestionJobRequest"] | components["schemas"]["ResolveQuestionsJobRequest"] | components["schemas"]["GenerateEpicJobRequest"] | components["schemas"]["GenerateFeaturesJobRequest"] | components["schemas"]["GenerateStoriesJobRequest"] | components["schemas"]["RegenerateStoryJobRequest"] | components["schemas"]["RegenerateStorySetJobRequest"] | components["schemas"]["ProposeStoryChangeJobRequest"] | components["schemas"]["EvaluateFeatureQualityJobRequest"] | components["schemas"]["GenerateBreakdownReviewJobRequest"] | components["schemas"]["ResolveReviewOpenQuestionJobRequest"] | components["schemas"]["ScreenRequirementKnowledgeJobRequest"] | components["schemas"]["SuggestClarificationAnswersJobRequest"];
+                "application/json": components["schemas"]["AnalyseRequirementJobRequest"] | components["schemas"]["ClarifyAnalysisJobRequest"] | components["schemas"]["ResolveQuestionJobRequest"] | components["schemas"]["ResolveQuestionsJobRequest"] | components["schemas"]["GenerateEpicJobRequest"] | components["schemas"]["GenerateFeaturesJobRequest"] | components["schemas"]["GenerateStoriesJobRequest"] | components["schemas"]["RegenerateStoryJobRequest"] | components["schemas"]["RegenerateStorySetJobRequest"] | components["schemas"]["ProposeStoryChangeJobRequest"] | components["schemas"]["EvaluateFeatureQualityJobRequest"] | components["schemas"]["SuggestStoryEstimatesJobRequest"] | components["schemas"]["GenerateBreakdownReviewJobRequest"] | components["schemas"]["ResolveReviewOpenQuestionJobRequest"] | components["schemas"]["ScreenRequirementKnowledgeJobRequest"] | components["schemas"]["SuggestClarificationAnswersJobRequest"];
             };
         };
         responses: {
@@ -8627,6 +8755,40 @@ export interface operations {
             };
         };
     };
+    get_feature_story_estimate_suggestions_requirements__requirement_id__features__feature_id__stories_estimate_suggestions_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Fake-Actor-Id"?: string | null;
+            };
+            path: {
+                requirement_id: string;
+                feature_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureEstimateSuggestionsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     merge_stories_requirements__requirement_id__features__feature_id__stories_merge_post: {
         parameters: {
             query?: never;
@@ -8754,6 +8916,45 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ApprovalRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StoryResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_story_estimate_requirements__requirement_id__features__feature_id__stories__story_id__estimate_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Fake-Actor-Id"?: string | null;
+            };
+            path: {
+                requirement_id: string;
+                feature_id: string;
+                story_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StoryEstimateRequest"];
             };
         };
         responses: {

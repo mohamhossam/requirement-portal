@@ -63,3 +63,15 @@ class ArchitectureMappingProfileChangedError(Exception):
     It reports as `architecture_knowledge_conflict`, as it did while mapping jobs
     ran in the catalogue's queue (ADR-0099).
     """
+
+
+class StoryEstimationError(Exception):
+    """A Story size estimator failed or returned unusable content."""
+
+
+class StoryEstimateSuggestionsNotFoundError(Exception):
+    """No size suggestions have been saved for a Feature."""
+
+
+class StoryEstimateSuggestionsConflictError(Exception):
+    """The Stories changed, or there were none, so sizes could not be suggested or accepted."""

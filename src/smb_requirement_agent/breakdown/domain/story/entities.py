@@ -9,6 +9,7 @@ from smb_requirement_agent.breakdown.domain.architecture.entities import Archite
 from smb_requirement_agent.breakdown.domain.feature.value_objects import FeatureId
 from smb_requirement_agent.breakdown.domain.kinds import WorkKind
 from smb_requirement_agent.breakdown.domain.story.errors import InvalidStoryContentError
+from smb_requirement_agent.breakdown.domain.story.estimate import StoryEstimate
 from smb_requirement_agent.breakdown.domain.story.quality import InvestAssessment
 from smb_requirement_agent.breakdown.domain.story.value_objects import (
     AcceptanceCriterion,
@@ -38,6 +39,7 @@ class UserStory(ReviewableGeneration):
     acceptance_criteria: tuple[AcceptanceCriterion, ...]
     kind: WorkKind = WorkKind.BUSINESS
     architecture: ArchitectureImpact | None = None
+    estimate: StoryEstimate | None = None
 
     review_label = "Story"
 
@@ -75,6 +77,21 @@ class UserStory(ReviewableGeneration):
     def with_architecture(self, impact: ArchitectureImpact) -> UserStory:
         """Attach a current mapping without changing content ownership or approval."""
         return replace(self, architecture=impact, version=self.version + 1)
+
+    def sized(self, estimate: StoryEstimate | None) -> UserStory:
+        """Record, change or clear the team's size.
+
+        A size is part of what approval attests to, so changing it is a human edit:
+        approval is revoked and staleness stays, exactly as for a content edit.
+        Re-recording the same size is a no-op so a replayed request does not revoke.
+        """
+        if self.estimate == estimate or (
+            self.estimate is not None
+            and estimate is not None
+            and self.estimate.points == estimate.points
+        ):
+            return self
+        return self._edited(estimate=estimate)
 
     def approve(self, approval: Approval) -> UserStory:
         if self.is_stale:

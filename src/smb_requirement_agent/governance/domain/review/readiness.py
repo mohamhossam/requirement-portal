@@ -40,6 +40,12 @@ class ArtifactApprovalState:
     version: int
     current_approval: Approval | None
     approvals: tuple[Approval, ...]
+    # A Story's confirmed size (ADR-0121); None for Epics, Features and unsized Stories.
+    story_points: int | None = None
+    # Whether a person entered that size or accepted the AI's suggestion.
+    story_points_basis: str | None = None
+    # Who decided it, by name, as the Story card says it.
+    story_points_decided_by: str | None = None
 
 
 def artifact_states(evidence: ReviewEvidence) -> tuple[ArtifactApprovalState, ...]:
@@ -67,6 +73,21 @@ def artifact_states(evidence: ReviewEvidence) -> tuple[ArtifactApprovalState, ..
                 item.version,
                 item.current_approval(fingerprint),
                 item.approvals,
+                (
+                    item.estimate.points.value
+                    if isinstance(item, UserStory) and item.estimate is not None
+                    else None
+                ),
+                (
+                    item.estimate.basis.value
+                    if isinstance(item, UserStory) and item.estimate is not None
+                    else None
+                ),
+                (
+                    item.estimate.decided_by.display_name
+                    if isinstance(item, UserStory) and item.estimate is not None
+                    else None
+                ),
             )
         )
     return tuple(result)

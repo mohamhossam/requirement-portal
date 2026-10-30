@@ -2507,6 +2507,38 @@ but not scheduled.
 - Per phase, listed in the specification; goldens and fingerprints unchanged when new fields are empty;
   a live-model record for C.
 
+## Enhancement — Story point estimates
+
+**Status:** Implemented 2026-10-30 on `feat/story-point-estimates`. See
+`docs/slices/enhancement-story-point-estimates.md` and ADR-0121. Includes declared frontend feature
+work (a size panel on each Story, size badges and totals). Four items were dropped by agreement
+before implementation and are recorded in the specification: totals in the backlog rail and on the
+Epic page's Feature rows, a revision-comparison fact, suggesting sizes during generation, and
+readiness warnings for unsized Stories.
+
+### Domain
+- `StoryPoints`, `StoryEstimate`, `EstimateSuggestion`, `FeatureEstimateSuggestions`,
+  `estimate_total`; `UserStory.estimate` and `sized()`; the approval fingerprint covers a set size.
+### Application
+- `SuggestStoryEstimates` (durable job `suggest_story_estimates`), `GetStoryEstimateSuggestions`,
+  `SetStoryEstimate`; three mapped errors; export schema 1.8, BRD schema 1.4, approval completion
+  and publication plan carry confirmed sizes.
+### Ports
+- `StoryEstimatorPort`, `StoryEstimateSuggestionRepositoryPort`.
+### Adapters
+- Structured, local, OpenAI, OpenRouter and fake estimators (prompt `story-estimate-v1`);
+  in-memory and Postgres suggestion stores (one migration); XLSX columns; BRD outline;
+  `ADO_STORY_POINTS_FIELD`.
+### API
+- `GET …/stories/estimate-suggestions`, `PUT …/stories/{story_id}/estimate`, the new job operation,
+  `estimate` and `estimate_total` on Story responses; regenerated OpenAPI types.
+### UI
+- Story card size panel (suggestion, accept, select, provenance); size badges on the card, the
+  Feature's Story list and Review & approve; Feature and backlog totals; **Suggest sizes**.
+### Tests
+- Domain, mapper, API, error map, export, BRD, ADO publisher, goldens unchanged for unsized
+  Stories; Vitest for the size panel.
+
 ---
 
 # Bounded Enhancements and Maintenance Record

@@ -33,6 +33,7 @@ from smb_requirement_agent.breakdown.application.ports.story_repository import (
     StoryRepositoryPort,
 )
 from smb_requirement_agent.breakdown.domain.feature.value_objects import FeatureId
+from smb_requirement_agent.breakdown.domain.story.entities import StoryChangeProposal, UserStory
 from smb_requirement_agent.breakdown.domain.story.value_objects import StoryId
 from smb_requirement_agent.governance.domain.review.fingerprints import artifact_fingerprint
 from smb_requirement_agent.jobs.domain.entities import AiJobOperation
@@ -173,14 +174,14 @@ class GenerationContextTokens:
                     "feature": asdict(feature),
                     "story_set_version": self._stories.set_version(feature.id),
                     "stories": [
-                        asdict(item)
+                        _story_state(item)
                         for item in sorted(
                             self._stories.get_by_feature_id(feature.id),
                             key=lambda item: item.id.value,
                         )
                     ],
                     "proposals": [
-                        asdict(item)
+                        _proposal_state(item)
                         for item in sorted(
                             self._proposals.list_for_feature(feature.id),
                             key=lambda item: item.id.value,
@@ -250,7 +251,7 @@ class GenerationContextTokens:
                 "feature": asdict(feature) if feature else None,
                 "set_version": self._stories.set_version(feature_id),
                 "stories": [
-                    asdict(item) for item in sorted(stories, key=lambda value: value.id.value)
+                    _story_state(item) for item in sorted(stories, key=lambda value: value.id.value)
                 ],
             }
         )
@@ -303,6 +304,7 @@ class GenerationContextTokens:
             AiJobOperation.REGENERATE_STORY_SET,
             AiJobOperation.PROPOSE_STORY_CHANGE,
             AiJobOperation.EVALUATE_FEATURE_QUALITY,
+            AiJobOperation.SUGGEST_STORY_ESTIMATES,
         }:
             return None
         raw_feature_id = arguments.get("feature_id")
@@ -335,6 +337,26 @@ def _requirement_state(requirement: Requirement) -> dict[str, Any]:
     for key in ("current_state", "proposed_state", "out_of_scope"):
         if not state[key]:
             del state[key]
+    return state
+
+
+def _without_unset_estimate(state: dict[str, Any]) -> dict[str, Any]:
+    # A Story's size came later (ADR-0121); while unset it stays out, so tokens minted
+    # before it existed stay valid.
+    if state.get("estimate") is None:
+        state.pop("estimate", None)
+    return state
+
+
+def _story_state(story: UserStory) -> dict[str, Any]:
+    return _without_unset_estimate(asdict(story))
+
+
+def _proposal_state(proposal: StoryChangeProposal) -> dict[str, Any]:
+    state = asdict(proposal)
+    state["prepared_candidates"] = [
+        _without_unset_estimate(item) for item in state["prepared_candidates"]
+    ]
     return state
 
 

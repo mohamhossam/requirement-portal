@@ -269,6 +269,7 @@ export const storySetFixture: StorySet = {
   feature_id: "feature-1",
   set_version: 1,
   generation_context_token: "story-set-context-1",
+  estimate_total: { points: 0, sized: 0, stories: 2 },
   stories: [
     storyFixture,
     {

@@ -155,7 +155,7 @@ def test_a_final_approval_hands_its_revision_over_once_without_the_approvers_ema
     assert approval["recorded_by"]["email"] is None
     downloaded["manifest"]["final_approval"]["recorded_by"]["email"] = None
     assert export == downloaded
-    assert (export["schema_version"], export["manifest"]["breakdown_revision"]) == ("1.7", revision)
+    assert (export["schema_version"], export["manifest"]["breakdown_revision"]) == ("1.8", revision)
     handoff = handing_over.backlog_handoffs.get(approval["id"])
     assert handoff is not None
     assert (handoff.status, handoff.change_request_id, handoff.requirement_id) == (

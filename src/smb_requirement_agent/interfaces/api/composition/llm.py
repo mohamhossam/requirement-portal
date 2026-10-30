@@ -57,6 +57,7 @@ from smb_requirement_agent.analysis.infrastructure.llm.reference_proposals impor
 )
 from smb_requirement_agent.breakdown.application.ports.epic_generator import EpicGeneratorPort
 from smb_requirement_agent.breakdown.application.ports.feature_generator import FeatureGeneratorPort
+from smb_requirement_agent.breakdown.application.ports.story_estimator import StoryEstimatorPort
 from smb_requirement_agent.breakdown.application.ports.story_generator import StoryGeneratorPort
 from smb_requirement_agent.breakdown.application.ports.story_quality_evaluator import (
     StoryQualityEvaluatorPort,
@@ -64,6 +65,9 @@ from smb_requirement_agent.breakdown.application.ports.story_quality_evaluator i
 from smb_requirement_agent.breakdown.infrastructure.llm.fake_epic_generator import FakeEpicGenerator
 from smb_requirement_agent.breakdown.infrastructure.llm.fake_feature_generator import (
     FakeFeatureGenerator,
+)
+from smb_requirement_agent.breakdown.infrastructure.llm.fake_story_estimator import (
+    FakeStoryEstimator,
 )
 from smb_requirement_agent.breakdown.infrastructure.llm.fake_story_generator import (
     FakeStoryGenerator,
@@ -79,6 +83,10 @@ from smb_requirement_agent.breakdown.infrastructure.llm.local_feature_generator 
     LocalFeatureGenerator,
     StructuredFeatureGeneratorAdapter,
 )
+from smb_requirement_agent.breakdown.infrastructure.llm.local_story_estimator import (
+    LocalStoryEstimator,
+    StructuredStoryEstimatorAdapter,
+)
 from smb_requirement_agent.breakdown.infrastructure.llm.local_story_generator import (
     LocalStoryGenerator,
     StructuredStoryGeneratorAdapter,
@@ -90,12 +98,14 @@ from smb_requirement_agent.breakdown.infrastructure.llm.local_story_quality_eval
 from smb_requirement_agent.breakdown.infrastructure.llm.openai_adapters import (
     OpenAIEpicGenerator,
     OpenAIFeatureGenerator,
+    OpenAIStoryEstimator,
     OpenAIStoryGenerator,
     OpenAIStoryQualityEvaluator,
 )
 from smb_requirement_agent.breakdown.infrastructure.llm.openrouter_adapters import (
     OpenRouterEpicGenerator,
     OpenRouterFeatureGenerator,
+    OpenRouterStoryEstimator,
     OpenRouterStoryGenerator,
     OpenRouterStoryQualityEvaluator,
 )
@@ -150,6 +160,7 @@ class LLMAdapters:
     feature_generator: FeatureGeneratorPort
     story_generator: StoryGeneratorPort
     story_quality_evaluator: StoryQualityEvaluatorPort
+    story_estimator: StoryEstimatorPort
     knowledge_embedding: KnowledgeEmbeddingPort
     relationship_classifier: RequirementRelationshipClassifierPort
     # Prior art from historic requirements (Knowledge Center E2): its own judge and prompt.
@@ -219,6 +230,7 @@ def _profile_adapters(
         story_quality_evaluator=StructuredStoryQualityEvaluatorAdapter(
             clients["review"], review.provider
         ),
+        story_estimator=StructuredStoryEstimatorAdapter(clients["review"], review.provider),
         knowledge_embedding=embedding,
         relationship_classifier=StructuredRequirementRelationshipClassifierAdapter(
             clients["knowledge"], knowledge.provider
@@ -294,6 +306,7 @@ def _build_llm_adapters(
             feature_generator=FakeFeatureGenerator(),
             story_generator=FakeStoryGenerator(),
             story_quality_evaluator=FakeStoryQualityEvaluator.passing(),
+            story_estimator=FakeStoryEstimator(),
             knowledge_embedding=FakeKnowledgeEmbedding(),
             relationship_classifier=FakeRequirementRelationshipClassifier(),
             prior_art_judge=FakePriorArtJudge(),
@@ -330,6 +343,7 @@ def _build_llm_adapters(
             feature_generator=LocalFeatureGenerator(**shared),
             story_generator=LocalStoryGenerator(**shared),
             story_quality_evaluator=LocalStoryQualityEvaluator(**shared),
+            story_estimator=LocalStoryEstimator(**shared),
             knowledge_embedding=local_embedding,
             relationship_classifier=LocalRequirementRelationshipClassifier(**shared),
             prior_art_judge=LocalPriorArtJudge(**shared),
@@ -368,6 +382,7 @@ def _build_llm_adapters(
             feature_generator=OpenRouterFeatureGenerator(**openrouter_shared),
             story_generator=OpenRouterStoryGenerator(**openrouter_shared),
             story_quality_evaluator=OpenRouterStoryQualityEvaluator(**openrouter_shared),
+            story_estimator=OpenRouterStoryEstimator(**openrouter_shared),
             knowledge_embedding=openrouter_embedding,
             relationship_classifier=OpenRouterRequirementRelationshipClassifier(
                 **openrouter_shared
@@ -428,6 +443,9 @@ def _build_llm_adapters(
             client, model=model, timeout_seconds=timeout, max_output_tokens=cap
         ),
         story_quality_evaluator=OpenAIStoryQualityEvaluator(
+            client, model=model, timeout_seconds=timeout, max_output_tokens=cap
+        ),
+        story_estimator=OpenAIStoryEstimator(
             client, model=model, timeout_seconds=timeout, max_output_tokens=cap
         ),
         knowledge_embedding=openai_embedding,

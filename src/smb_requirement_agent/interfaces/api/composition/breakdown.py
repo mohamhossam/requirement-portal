@@ -21,6 +21,7 @@ from smb_requirement_agent.analysis.application.use_cases.analysis_collaboration
 from smb_requirement_agent.application.ports.domain_events import DomainEventPublisher
 from smb_requirement_agent.breakdown.application.ports.epic_generator import EpicGeneratorPort
 from smb_requirement_agent.breakdown.application.ports.feature_generator import FeatureGeneratorPort
+from smb_requirement_agent.breakdown.application.ports.story_estimator import StoryEstimatorPort
 from smb_requirement_agent.breakdown.application.ports.story_generator import StoryGeneratorPort
 from smb_requirement_agent.breakdown.application.ports.story_quality_evaluator import (
     StoryQualityEvaluatorPort,
@@ -47,6 +48,11 @@ from smb_requirement_agent.breakdown.application.use_cases.leased_jobs import (
 )
 from smb_requirement_agent.breakdown.application.use_cases.story_change_proposals import (
     StoryChangeProposals,
+)
+from smb_requirement_agent.breakdown.application.use_cases.story_estimates import (
+    GetStoryEstimateSuggestions,
+    SetStoryEstimate,
+    SuggestStoryEstimates,
 )
 from smb_requirement_agent.breakdown.application.use_cases.story_quality import (
     AssessStoryCandidate,
@@ -104,6 +110,7 @@ class BreakdownModels:
     feature_generator: FeatureGeneratorPort
     story_generator: StoryGeneratorPort
     story_quality_evaluator: StoryQualityEvaluatorPort
+    story_estimator: StoryEstimatorPort
 
 
 @dataclass(frozen=True)
@@ -127,6 +134,9 @@ class BreakdownWiring:
     reject_story: RejectStory
     evaluate_feature_stories: EvaluateFeatureStories
     get_feature_quality_snapshot: GetFeatureQualitySnapshot
+    suggest_story_estimates: SuggestStoryEstimates
+    get_story_estimate_suggestions: GetStoryEstimateSuggestions
+    set_story_estimate: SetStoryEstimate
     map_feature_architecture: MapFeatureArchitecture
     map_story_architecture: MapStoryArchitecture
     map_breakdown_architecture: MapBreakdownArchitecture
@@ -273,6 +283,24 @@ def build_breakdown(
         ),
         get_feature_quality_snapshot=GetFeatureQualitySnapshot(
             get_stories, persistence.story_quality_repository
+        ),
+        suggest_story_estimates=SuggestStoryEstimates(
+            get_stories,
+            models.story_estimator,
+            persistence.story_estimate_repository,
+            transactions,
+            clock,
+            authorization=access,
+        ),
+        get_story_estimate_suggestions=GetStoryEstimateSuggestions(
+            get_stories, persistence.story_estimate_repository
+        ),
+        set_story_estimate=SetStoryEstimate(
+            *story_set,
+            events,
+            authorization=access,
+            suggestions=persistence.story_estimate_repository,
+            clock=clock,
         ),
         map_feature_architecture=map_feature,
         map_story_architecture=map_story,

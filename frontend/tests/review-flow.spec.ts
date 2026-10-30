@@ -429,7 +429,7 @@ test("submitted Story rejection is revised, resubmitted, and finally approved", 
     schema_version: string;
     epic: { features: Array<{ stories: unknown[] }> };
   };
-  expect(json.schema_version).toBe("1.7");
+  expect(json.schema_version).toBe("1.8");
   expect(json.epic.features[0]!.stories.length).toBeGreaterThan(0);
 
   await page.getByRole("radio", { name: /^Excel workbook/ }).check();
@@ -722,6 +722,20 @@ test("Product Owner completes the desktop journey and sees worklist staleness", 
   await page.getByRole("button", { name: "Apply proposal" }).click();
   await page.locator(".backlog-breadcrumbs a").last().click();
   await expect(page.locator(".compact-story-list li")).toHaveCount(3);
+
+  // Sizes (ADR-0121): the AI suggests, a person accepts, and only that counts.
+  await expect(page.getByRole("paragraph").filter({ hasText: /^None sized yet$/ })).toBeVisible();
+  await page.getByRole("button", { name: "Suggest sizes" }).click();
+  await expect(page.getByRole("button", { name: "Suggest sizes again" })).toBeVisible({ timeout: 20_000 });
+  await page.locator(".compact-story-list a").first().click();
+  const sizedStory = page.locator("article.story-card:visible").first();
+  const accept = sizedStory.getByRole("button", { name: /^Accept \d+ points?$/ });
+  await expect(accept).toBeVisible();
+  const points = /\d+/.exec((await accept.textContent()) ?? "")![0];
+  await accept.click();
+  await expect(sizedStory.getByText(/^AI suggestion accepted by /)).toBeVisible();
+  await page.locator(".backlog-breadcrumbs a").last().click();
+  await expect(page.getByText(new RegExp(`^${points} points? · 1 of 3 sized$`))).toBeVisible();
   // Map / Refresh architecture lives inside the card's System impact now,
   // beside the result it produces, not in a disclosure of its own below it.
   await reviewedFeature.getByText("System impact", { exact: true }).click();

@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import json
 from collections.abc import Callable
+from dataclasses import replace
 
 import httpx
 import pytest
@@ -34,6 +35,7 @@ CONFIGURATION = AzureDevOpsConfiguration(
     },
     description_field="System.Description",
     acceptance_criteria_field="Microsoft.VSTS.Common.AcceptanceCriteria",
+    story_points_field="Microsoft.VSTS.Scheduling.StoryPoints",
     tags=("smb-requirement-portal",),
     squad_area_paths={"billing": "SMB Delivery\\Billing"},
     timeout_seconds=5.0,
@@ -107,6 +109,49 @@ def test_a_story_is_created_under_its_parent_on_its_squads_board() -> None:
         "rel": "System.LinkTypes.Hierarchy-Reverse",
         "url": "https://dev.azure.com/contoso/_apis/wit/workItems/41",
     }
+
+
+def _fields(request: httpx.Request) -> dict[str, object]:
+    return {
+        op["path"]: op["value"]
+        for op in json.loads(request.content)
+        if op["path"].startswith("/fields/")
+    }
+
+
+def test_a_confirmed_size_is_sent_and_an_unsized_story_sends_none() -> None:
+    publisher, requests = _publisher(lambda _: httpx.Response(200, json={"id": 42}))
+
+    publisher.create(replace(STORY, story_points=5), PARENT)
+    publisher.create(STORY, PARENT)
+
+    assert _fields(requests[0])["/fields/Microsoft.VSTS.Scheduling.StoryPoints"] == 5
+    assert "/fields/Microsoft.VSTS.Scheduling.StoryPoints" not in _fields(requests[1])
+
+
+def test_a_blank_story_points_field_leaves_sizes_out() -> None:
+    requests: list[httpx.Request] = []
+
+    def record(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(200, json={"id": 42})
+
+    publisher = AzureDevOpsWorkItemPublisher(
+        replace(CONFIGURATION, story_points_field=""),
+        httpx.Client(transport=httpx.MockTransport(record)),
+    )
+    publisher.create(replace(STORY, story_points=5), PARENT)
+
+    assert not [path for path in _fields(requests[0]) if "StoryPoints" in path]
+
+
+def test_a_changed_size_changes_what_republish_compares() -> None:
+    assert replace(STORY, story_points=None).content_fingerprint() == STORY.content_fingerprint()
+    assert replace(STORY, story_points=3).content_fingerprint() != STORY.content_fingerprint()
+    assert (
+        replace(STORY, story_points=3).content_fingerprint()
+        != replace(STORY, story_points=5).content_fingerprint()
+    )
 
 
 def test_an_epic_has_no_parent_link_and_lands_on_the_default_area() -> None:

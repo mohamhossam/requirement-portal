@@ -6,6 +6,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from smb_requirement_agent.breakdown.domain.story.estimate import EstimateBasis
 from smb_requirement_agent.governance.domain.review.entities import BreakdownStatus
 from smb_requirement_agent.interfaces.api.schemas.bounds import (
     MAX_IDENTIFIER_CHARACTERS,
@@ -114,6 +115,8 @@ class ApprovalCompletionResponse(BaseModel):
     features_total: int
     stories_approved: int
     stories_total: int
+    story_points: int = 0
+    stories_sized: int = 0
 
 
 class ArtifactApprovalResponse(BaseModel):
@@ -125,6 +128,9 @@ class ArtifactApprovalResponse(BaseModel):
     version: int
     current_approval: ApprovalResponse | None
     approval_history: list[ApprovalResponse]
+    story_points: int | None = None
+    story_points_basis: EstimateBasis | None = None
+    story_points_decided_by: str | None = None
 
 
 class ApprovalWorkflowResponse(BaseModel):

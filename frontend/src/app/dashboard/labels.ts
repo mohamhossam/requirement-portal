@@ -49,6 +49,7 @@ export const jobLabels: Record<NonNullable<RequirementWorklistItem["active_ai_op
   regenerate_story_set: "Story-set regeneration running",
   propose_story_change: "Story proposal running",
   evaluate_feature_quality: "Quality evaluation running",
+  suggest_story_estimates: "Size suggestions running",
   generate_breakdown_review: "Review generation running",
   resolve_review_open_question: "Review resolution running",
   screen_requirement_knowledge: "Knowledge screening running",

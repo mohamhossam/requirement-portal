@@ -39,6 +39,10 @@ from smb_requirement_agent.breakdown.application.use_cases.get_epic import GetEp
 from smb_requirement_agent.breakdown.application.use_cases.story_change_proposals import (
     StoryChangeProposals,
 )
+from smb_requirement_agent.breakdown.application.use_cases.story_estimates import (
+    GetStoryEstimateSuggestions,
+    SetStoryEstimate,
+)
 from smb_requirement_agent.breakdown.application.use_cases.story_quality import (
     GetFeatureQualitySnapshot,
 )
@@ -402,6 +406,14 @@ def get_story_change_proposals(container: ContainerDep) -> StoryChangeProposals:
 
 def get_feature_quality_snapshot(container: ContainerDep) -> GetFeatureQualitySnapshot:
     return container.get_feature_quality_snapshot
+
+
+def get_story_estimate_suggestions(container: ContainerDep) -> GetStoryEstimateSuggestions:
+    return container.get_story_estimate_suggestions
+
+
+def get_set_story_estimate(container: ContainerDep) -> SetStoryEstimate:
+    return container.set_story_estimate
 
 
 def get_get_breakdown_review(container: ContainerDep) -> GetBreakdownReview:

@@ -506,6 +506,19 @@ def _functional_requirements(document: RequirementSpecification) -> list[Block]:
                     ("Outcome", feature.outcome),
                     ("Delivery drop", label(feature.delivery_drop)),
                     ("Work kind", label(feature.kind)),
+                    # Only once the team has sized something, so an unsized backlog's
+                    # document reads as it always did.
+                    *(
+                        (
+                            (
+                                "Story points",
+                                f"{feature.story_points} ({feature.sized_stories} of "
+                                f"{len(feature.stories)} Stories sized)",
+                            ),
+                        )
+                        if feature.sized_stories
+                        else ()
+                    ),
                 ),
             ),
         ]
@@ -520,7 +533,16 @@ def _functional_requirements(document: RequirementSpecification) -> list[Block]:
                     3,
                     f"{story.id} As a {story.role}, I want {story.action}, so that {story.value}",
                 ),
-                Paragraph(f"Work kind: {label(story.kind)}", note=True),
+                Paragraph(
+                    f"Work kind: {label(story.kind)}"
+                    + (
+                        f" · Size: {story.story_points} "
+                        f"point{'' if story.story_points == 1 else 's'}"
+                        if story.story_points is not None
+                        else ""
+                    ),
+                    note=True,
+                ),
             ]
             if story.criteria:
                 blocks.append(
