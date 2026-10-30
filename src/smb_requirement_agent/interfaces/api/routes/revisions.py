@@ -5,10 +5,15 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Path, Query, Response
 
 from smb_requirement_agent.governance.application.exports import ExportFormat
+from smb_requirement_agent.governance.application.specification import SpecificationFormat
 from smb_requirement_agent.governance.application.use_cases.export_breakdown import (
     ExportBreakdown,
     formal_final_approval,
     is_exportable_revision,
+)
+from smb_requirement_agent.governance.application.use_cases.export_requirement_specification import (  # noqa: E501
+    ExportRequirementSpecification,
+    is_specification_available,
 )
 from smb_requirement_agent.governance.application.use_cases.publish_breakdown import (
     GetPublicationStatus,
@@ -28,6 +33,7 @@ from smb_requirement_agent.interfaces.api.dependencies import (
     CurrentActorDep,
     get_compare_breakdown_versions,
     get_export_breakdown,
+    get_export_requirement_specification,
     get_preview_publication,
     get_publication_status,
     get_publish_breakdown,
@@ -82,6 +88,7 @@ def revision_history(
 
 def _revision_response(item: BreakdownRevision) -> BreakdownRevisionResponse:
     approval = formal_final_approval(item)
+    confirmed_by = item.analysis.confirmed_by if item.analysis is not None else None
     return BreakdownRevisionResponse(
         number=item.number.value,
         created_at=item.created_at,
@@ -127,6 +134,17 @@ def _revision_response(item: BreakdownRevision) -> BreakdownRevisionResponse:
             else None
         ),
         final_approved_at=approval.recorded_at if approval else None,
+        specification_available=is_specification_available(item),
+        analysis_confirmed_by=(
+            ActorResponse(
+                id=confirmed_by.id.value,
+                display_name=confirmed_by.display_name,
+                email=confirmed_by.email,
+            )
+            if confirmed_by is not None
+            else None
+        ),
+        analysis_confirmed_at=item.analysis.confirmed_at if item.analysis is not None else None,
     )
 
 
@@ -168,6 +186,46 @@ def export_revision(
     export_format: Annotated[ExportFormat, Query(alias="format")],
     actor: CurrentActorDep,
     use_case: Annotated[ExportBreakdown, Depends(get_export_breakdown)],
+) -> Response:
+    artifact = use_case.execute(
+        RequirementId(requirement_id),
+        RevisionNumber(revision_number),
+        export_format,
+        actor,
+    )
+    return Response(
+        content=artifact.content,
+        media_type=artifact.media_type,
+        headers={
+            "Content-Disposition": f'attachment; filename="{artifact.filename}"',
+            "Cache-Control": "private, no-store",
+        },
+    )
+
+
+@router.get(
+    "/{requirement_id}/revisions/{revision_number}/specification",
+    response_class=Response,
+    responses={
+        200: {
+            "description": (
+                "The Business Requirements Document of the selected revision's confirmed analysis."
+            ),
+            "content": {
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {},
+                "text/markdown": {},
+            },
+        }
+    },
+)
+def export_specification(
+    requirement_id: str,
+    revision_number: Annotated[int, Path(ge=1)],
+    export_format: Annotated[SpecificationFormat, Query(alias="format")],
+    actor: CurrentActorDep,
+    use_case: Annotated[
+        ExportRequirementSpecification, Depends(get_export_requirement_specification)
+    ],
 ) -> Response:
     artifact = use_case.execute(
         RequirementId(requirement_id),

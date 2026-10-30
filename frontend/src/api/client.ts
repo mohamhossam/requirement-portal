@@ -96,6 +96,8 @@ export type KnowledgeFinding = components["schemas"]["KnowledgeFindingResponse"]
 export type KnowledgeFindingDecision = components["schemas"]["KnowledgeFindingDecisionRequest"];
 export type AnswerSuggestionSet = components["schemas"]["AnswerSuggestionSetResponse"];
 export type ExportFormat = "json" | "xlsx";
+/** The Business Requirements Document of a confirmed analysis (ADR-0119). */
+export type SpecificationFormat = "docx" | "md";
 export type AiJobStartInput =
   | (components["schemas"]["AnalyseRequirementJobRequest"] & { context_token: string })
   | components["schemas"]["ClarifyAnalysisJobRequest"]
@@ -788,6 +790,11 @@ export const api = {
     download(
       `${requirementPath(id)}/revisions/${revision}/export?format=${format}`,
       `requirement-${id}-breakdown-v${revision}.${format}`,
+    ),
+  exportRequirementSpecification: (id: string, revision: number, format: SpecificationFormat) =>
+    download(
+      `${requirementPath(id)}/revisions/${revision}/specification?format=${format}`,
+      `requirement-${id}-business-requirements-v${revision}.${format}`,
     ),
   getPublicationPreview: (id: string, revision: number, options?: RequestOptions) =>
     request<PublicationPreview>(`${requirementPath(id)}/revisions/${revision}/publication`, options),

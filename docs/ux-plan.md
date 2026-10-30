@@ -49,10 +49,10 @@ Eighteen route entries resolve to nine distinct screens. Routes are declared in 
 | `…/capture` | `CaptureView` | Business owner, BA | **"Is this requirement ready to analyse, and if not, what is missing?"** See eligibility, manage attachments, edit the source. |
 | `…/clarify` | `AnalysisView` | BA + business owner | **"Close the gaps the analysis found."** Read findings by tone, answer blocking and non-blocking questions, accept grounded suggestions, reclassify and assign questions, decide AI intent proposals, trigger re-analysis. **The highest-value screen in the product.** |
 | `…/knowledge` | `KnowledgeView` | BA | **"Has this been asked before, and does it contradict anything we know?"** Review duplicate and contradiction findings; mark distinct, close as duplicate, or propose/accept a resolution. |
-| `…/confirm` | `AnalysisView` (same component) | Requirement Owner | **"Sign off that the analysis is right before anything is generated from it."** Read the facts/rules/constraints summary, then confirm. |
+| `…/confirm` | `AnalysisView` (same component) | Requirement Owner | **"Sign off that the analysis is right before anything is generated from it."** Read the facts/rules/constraints summary, then confirm. Once confirmed, download the Business Requirements Document (Word or Markdown) from the status strip. |
 | `…/breakdown`, `…/breakdown/epic`, `…/breakdown/features/:featureId`, `…/breakdown/features/:featureId/stories/:storyId` | `BreakdownView` → `BreakdownWorkspace` | PO, BA | **"Read and shape the generated backlog."** Navigate Epic → Feature → Story, edit, approve each level, regenerate, map architecture, check INVEST quality. |
 | `…/review` | `BreakdownReviewPanel` | PO + architect | **"Is this backlog safe to approve?"** Resolve review flags, read dependencies/risks/recommendations and story-quality evidence, record decisions, submit for review, grant final approval, comment. |
-| `…/revisions` | `RevisionsView` | PO, audit | **"What changed, and give me the approved export."** Compare immutable revisions; download an approved revision as JSON or XLSX. |
+| `…/revisions` | `RevisionsView` | PO, audit | **"What changed, and give me the approved export."** Compare immutable revisions; download an approved revision as JSON or XLSX, and the Business Requirements Document of the confirmed analysis as Word or Markdown. |
 
 **Note the mismatch:** the journey model in [`journey.ts`](../frontend/src/app/requirement/journey.ts) declares **five** steps (Capture, Analyse, Knowledge, Confirm, Breakdown). `/review` and `/revisions` are real screens that the progress model does not contain. See §3.2.
 
@@ -110,6 +110,9 @@ Eighteen route entries resolve to nine distinct screens. Routes are declared in 
 1. `/revisions`, reached from the source rail's "View revisions" or the Breakdown header's **History**.
 2. Pick two revisions, compare, read the diff.
 3. Download an approved revision as JSON or XLSX. Gated on `canExportApprovedRevisions`.
+   Beside it, download the Business Requirements Document of the confirmed analysis as Word or
+   Markdown, same gate; it carries the approved backlog as functional requirements once there is
+   one (ADR-0119). The same document is offered on `/confirm` once the analysis is confirmed.
 4. Cross-check in `/activity`, filtered to that requirement — or arrive there from a `/reports` metric link.
 
 ---

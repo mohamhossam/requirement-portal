@@ -26,7 +26,7 @@ import type { LegacyEntry } from "./LegacyClarificationForm";
 import { QuestionGroup } from "./QuestionCard";
 import { RoundHistory } from "./RoundHistory";
 import { ColumnHeading, SettledColumn } from "./SettledColumn";
-import { StatusStrip } from "./StatusStrip";
+import { StatusStrip, type SpecificationDownload } from "./StatusStrip";
 
 /**
  * Clarify — the requirement's open questions.
@@ -115,6 +115,7 @@ function AnalysisPanelContent({
   onDecideIntent,
   onDecideProductImpact,
   view = "clarify",
+  specification = null,
 }: Required<
   Pick<AnalysisPanelProps, "analysis" | "busy" | "error" | "onClarify" | "onConfirm">
 > &
@@ -389,7 +390,7 @@ function AnalysisPanelContent({
 
   return (
     <div className="@container grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 [overflow-wrap:anywhere]">
-      <StatusStrip analysis={analysis} answered={resolvedCount} open={unresolvedCount} />
+      <StatusStrip analysis={analysis} answered={resolvedCount} open={unresolvedCount} specification={specification} />
 
       {(analysis.round_number ?? 1) > 1 && questionChanges.length > 0 && (
         /* Four counts to scan, not a sentence to read, and neutral: it reports
@@ -662,6 +663,8 @@ export type AnalysisPanelProps = {
     rationale?: string,
   ) => void;
   onDecideProductImpact?: (choice: ProductImpactChoice) => void;
+  /** The Business Requirements Document download, once the analysis is confirmed (ADR-0119). */
+  specification?: SpecificationDownload | null;
 };
 
 export function AnalysisPanel(props: AnalysisPanelProps) {

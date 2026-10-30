@@ -91,7 +91,9 @@ from smb_requirement_agent.governance.application.errors import (
     PublicationTargetChangedError,
     PublicationTargetError,
     PublicationUnavailableError,
+    RequirementSpecificationNotAvailableError,
     ReviewFlagNotFoundError,
+    SpecificationExportFormatError,
 )
 from smb_requirement_agent.governance.domain.publication.errors import (
     InvalidPublicationError,
@@ -224,6 +226,12 @@ ERROR_CATALOGUE: tuple[tuple[type[Exception], str, FailureCategory], ...] = (
         FailureCategory.CONFLICT,
     ),
     (BacklogExportFormatError, "backlog_export_format", FailureCategory.INVALID_INPUT),
+    (
+        RequirementSpecificationNotAvailableError,
+        "requirement_specification_not_available",
+        FailureCategory.CONFLICT,
+    ),
+    (SpecificationExportFormatError, "specification_export_format", FailureCategory.INVALID_INPUT),
     (
         BreakdownRevisionNotPublishableError,
         "breakdown_revision_not_publishable",

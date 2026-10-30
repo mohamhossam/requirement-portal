@@ -2446,6 +2446,38 @@ owner impact reconciliation and replaces history scans with a transactional depe
 See `docs/slices/enhancement-source-lineage.md` and ADR-0066 for all six requested outcomes and
 actual validation evidence. Parent production qualification remains separate.
 
+## Enhancement — Business Requirements Document export
+
+**Status:** Implemented 2026-10-30 on `feat/business-requirements-document-export`. See
+`docs/slices/enhancement-business-requirements-document-export.md` and ADR-0119. Includes declared
+frontend feature work (a new download on two screens).
+
+### Domain
+- No change. The document is read from the immutable `BreakdownRevision` and `RequirementRevision`
+  snapshots.
+### Application
+- `RequirementSpecification` (schema 1.0), a contract of its own beside the neutral backlog export;
+  `ExportRequirementSpecification`, gated on the revision's analysis being confirmed, adding the
+  backlog as functional requirements only when the same revision is formally approved;
+  `RequirementSpecificationNotAvailableError` (409) and `SpecificationExportFormatError` (422).
+### Ports
+- `SpecificationExportPort` (format, extension, media type, render).
+### Adapters
+- `DocxSpecificationExporter` (python-docx, byte-stable archive) and `MarkdownSpecificationExporter`,
+  over one shared outline so both formats carry the same sections and identifiers; the illegal-XML
+  guard is shared with the XLSX exporter.
+### API
+- `GET /requirements/{id}/revisions/{n}/specification?format=docx|md`, member-only, synchronous,
+  never stored; `BreakdownRevisionResponse` gains `specification_available`,
+  `analysis_confirmed_by` and `analysis_confirmed_at`; regenerated OpenAPI types.
+### UI
+- History: a Business Requirements Document card beside the approved export, for the approved
+  version or else the newest confirmed one. Confirm: a download row in the status strip once the
+  analysis is confirmed. Same permission as the export.
+### Tests
+- Builder, both renderers, transport (200/403/404/409/422), error map, OpenAPI snapshot; RevisionPanel,
+  StatusStrip and client tests; the review-flow browser journey downloads both formats.
+
 ---
 
 # Bounded Enhancements and Maintenance Record
@@ -2469,3 +2501,4 @@ Each record keeps its own dated validation history; the ledger at the top govern
 | `docs/slices/enhancement-review-remediation*.md` | Four whole-workspace review remediations | Merged into `main`; human review open (ledger above) |
 | `docs/slices/fix-ai-job-trace-gaps.md` | Seven gaps found tracing an AI job from click to completion (attempt cap, claim reset, refusal before enqueue, stale context, key reuse) | In review (PR #48) |
 | `docs/slices/production-hardening.md` | Second production-readiness review: fail-closed config, AI-job retry backoff, durable-only provider work, release images and backups, shared rate limit, alerting, DB timeouts, frontend session safety | Specified 2026-10-08; Phase 0 (platform-kernel v1.2.0), the pilot gate (PR 1, PR 8, PR 2, PR 4a, PR 4b, PR 5, PR 6), PR 7 and PR 3 delivered 2026-10-09, PR 9, PR 10, PR 11 and PR 12 2026-10-10 (Phase 2 complete); Phase 3: PR 13–16 delivered 2026-10-10 (slice complete) |
+| `docs/slices/enhancement-business-requirements-document-export.md` | Business Requirements Document download (Word, Markdown) of a confirmed analysis, with the approved backlog as functional requirements; ADR-0119 | Implemented 2026-10-30; in review |

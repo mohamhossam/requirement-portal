@@ -2273,6 +2273,28 @@
       },
       "BreakdownRevisionResponse": {
         "properties": {
+          "analysis_confirmed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysis Confirmed At"
+          },
+          "analysis_confirmed_by": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ActorResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "analysis_human_confirmed": {
             "title": "Analysis Human Confirmed",
             "type": "boolean"
@@ -2393,6 +2415,10 @@
             ],
             "title": "Review Status"
           },
+          "specification_available": {
+            "title": "Specification Available",
+            "type": "boolean"
+          },
           "stale_story_count": {
             "title": "Stale Story Count",
             "type": "integer"
@@ -2442,7 +2468,10 @@
           "submitted_fingerprint",
           "exportable",
           "final_approved_by",
-          "final_approved_at"
+          "final_approved_at",
+          "specification_available",
+          "analysis_confirmed_by",
+          "analysis_confirmed_at"
         ],
         "title": "BreakdownRevisionResponse",
         "type": "object"
@@ -10019,6 +10048,14 @@
         ],
         "title": "SourceLineage",
         "type": "object"
+      },
+      "SpecificationFormat": {
+        "enum": [
+          "docx",
+          "md"
+        ],
+        "title": "SpecificationFormat",
+        "type": "string"
       },
       "SpidrPattern": {
         "enum": [
@@ -19192,6 +19229,84 @@
           }
         ],
         "summary": "Publish Revision",
+        "tags": [
+          "revisions"
+        ]
+      }
+    },
+    "/requirements/{requirement_id}/revisions/{revision_number}/specification": {
+      "get": {
+        "operationId": "export_specification_requirements__requirement_id__revisions__revision_number__specification_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "requirement_id",
+            "required": true,
+            "schema": {
+              "title": "Requirement Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "revision_number",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "Revision Number",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/SpecificationFormat"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Fake-Actor-Id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Fake-Actor-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {},
+              "text/markdown": {}
+            },
+            "description": "The Business Requirements Document of the selected revision's confirmed analysis."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Export Specification",
         "tags": [
           "revisions"
         ]

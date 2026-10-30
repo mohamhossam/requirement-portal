@@ -1,8 +1,8 @@
-import { ArrowLeftRight, Check, CircleAlert, Download, TriangleAlert } from "lucide-react";
+import { ArrowLeftRight, Check, CircleAlert, Download, FileText, TriangleAlert } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 
-import type { BreakdownComparison, ExportFormat, RevisionHistory } from "../../api/client";
+import type { BreakdownComparison, ExportFormat, RevisionHistory, SpecificationFormat } from "../../api/client";
 import { Disclosure } from "../../components/Disclosure";
 import { Badge } from "../../components/ui/Badge";
 import { Button, ButtonLink } from "../../components/ui/Button";
@@ -34,6 +34,10 @@ type Props = {
   exportingRevision: number | null;
   /** The last download that finished, so the page can say it did. */
   exported?: { revision: number; format: ExportFormat } | null;
+  /** The Business Requirements Document download (ADR-0119), gated like the export. */
+  specificationError?: string | null;
+  specifyingRevision?: number | null;
+  specified?: { revision: number; format: SpecificationFormat } | null;
   canExportApprovedRevisions: boolean;
   /** Where final approval happens, for the screen that has nothing to export yet. */
   reviewHref?: string;
@@ -41,11 +45,19 @@ type Props = {
   activityHref?: string;
   onCompare: (fromRevision: number, toRevision: number) => void;
   onDownload: (revision: number, format: ExportFormat) => void;
+  onDownloadSpecification?: (revision: number, format: SpecificationFormat) => void;
 };
 
-const FORMATS: Record<ExportFormat, { label: string; hint: string }> = {
+type FormatChoices<F extends string> = Record<F, { label: string; hint: string }>;
+
+const FORMATS: FormatChoices<ExportFormat> = {
   json: { label: "JSON", hint: "Structured data, for tools and scripts." },
   xlsx: { label: "Excel workbook", hint: "A workbook to read, share or import by hand." },
+};
+
+const SPECIFICATION_FORMATS: FormatChoices<SpecificationFormat> = {
+  docx: { label: "Word document", hint: "A document to read, edit and circulate." },
+  md: { label: "Markdown", hint: "Plain text, for wikis and version control." },
 };
 
 /** A history longer than FOLD_OVER shows its newest SHOW_NEWEST and the approved one. */
@@ -67,15 +79,22 @@ export function RevisionPanel({
   exportError,
   exportingRevision,
   exported = null,
+  specificationError = null,
+  specifyingRevision = null,
+  specified = null,
   canExportApprovedRevisions,
   reviewHref,
   activityHref,
   onCompare,
   onDownload,
+  onDownloadSpecification,
 }: Props) {
   const versions = history.breakdown_revisions;
   const latest = versions.at(-1) ?? null;
   const approved = [...versions].reverse().find((revision) => revision.exportable) ?? null;
+  // The document of the approved version, so it carries the same backlog as the export;
+  // before approval, the newest version whose analysis the owner confirmed.
+  const documented = approved ?? [...versions].reverse().find((revision) => revision.specification_available) ?? null;
   const basis = approved ? approvalBasis(history.requirement_revisions, approved.final_approved_at) : null;
   const [fromRevision, setFromRevision] = useState(versions.at(-2)?.number ?? versions[0]?.number ?? 1);
   const [toRevision, setToRevision] = useState(latest?.number ?? 1);
@@ -109,6 +128,16 @@ export function RevisionPanel({
         </div>
       ) : (
         <NothingApproved latest={latest} reviewHref={reviewHref} />
+      )}
+      {documented && onDownloadSpecification && (
+        <SpecificationExport
+          canExport={canExportApprovedRevisions}
+          documented={documented}
+          error={specificationError}
+          exported={specified}
+          exporting={specifyingRevision}
+          onDownload={onDownloadSpecification}
+        />
       )}
       <Compare
         approved={approved}
@@ -190,9 +219,6 @@ function ApprovedExport({
   error: string | null;
   onDownload: (revision: number, format: ExportFormat) => void;
 }) {
-  const [format, setFormat] = useState<ExportFormat>("json");
-  const running = exporting === approved.number;
-
   return (
     <Card aria-labelledby="export-title" className="grid gap-5" padding="fluid" tone="success">
       <div className="grid gap-1">
@@ -214,55 +240,165 @@ function ApprovedExport({
       </div>
 
       {canExport ? (
-        <div className="grid gap-3">
-          <fieldset className="m-0 grid gap-2 border-0 p-0">
-            <legend className="text-label text-ink mb-1 p-0">Format</legend>
-            <div className="flex flex-wrap gap-x-6 gap-y-2">
-              {(Object.keys(FORMATS) as ExportFormat[]).map((key) => (
-                <label className="grid cursor-pointer grid-cols-[auto_minmax(0,1fr)] items-start gap-x-2" key={key}>
-                  <input
-                    checked={format === key}
-                    className="mt-1 size-4 cursor-pointer accent-[var(--ink)]"
-                    name="export-format"
-                    onChange={() => setFormat(key)}
-                    type="radio"
-                    value={key}
-                  />
-                  <span className="grid">
-                    <span className="text-body text-ink font-semibold">{FORMATS[key].label}</span>
-                    <span className="text-meta text-ink-muted">{FORMATS[key].hint}</span>
-                  </span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Kept enabled while the file is prepared: disabling the button that
-                has focus drops focus to the page. A second press is ignored. */}
-            <Button
-              aria-busy={running || undefined}
-              icon={<Download aria-hidden="true" size={16} />}
-              onClick={() => {
-                if (exporting === null) onDownload(approved.number, format);
-              }}
-              variant="primary"
-            >
-              {running ? `Preparing version ${approved.number}…` : `Download version ${approved.number}`}
-            </Button>
-            <p aria-live="polite" className="text-meta text-ink-soft m-0" role="status">
-              {!running && exported?.revision === approved.number && !error
-                ? `Downloaded version ${approved.number} as ${FORMATS[exported.format].label}.`
-                : ""}
-            </p>
-          </div>
-          {error && <ErrorLine>The download did not complete: {error} Try again; the file is prepared fresh each time.</ErrorLine>}
-        </div>
+        <DownloadControls
+          error={error}
+          exported={exported}
+          exporting={exporting}
+          formats={FORMATS}
+          initial="json"
+          name="export-format"
+          onDownload={onDownload}
+          revision={approved.number}
+        />
       ) : (
-        <p className="text-body text-ink-muted m-0">
-          Only the requirement owner and its reviewers can download it. People, at the top of the page, lists who they are.
-        </p>
+        <RestrictedDownload />
       )}
     </Card>
+  );
+}
+
+/**
+ * The Business Requirements Document (ADR-0119): the confirmed analysis as a document,
+ * carrying the approved backlog as functional requirements once there is one. Not green:
+ * that tone is the approval's.
+ */
+function SpecificationExport({
+  documented,
+  canExport,
+  exporting,
+  exported,
+  error,
+  onDownload,
+}: {
+  documented: BacklogRevision;
+  canExport: boolean;
+  exporting: number | null;
+  exported: { revision: number; format: SpecificationFormat } | null;
+  error: string | null;
+  onDownload: (revision: number, format: SpecificationFormat) => void;
+}) {
+  const hasBacklog = documented.feature_count > 0 || documented.story_count > 0;
+  return (
+    <Card aria-labelledby="specification-title" className="grid gap-5" padding="fluid">
+      <div className="grid gap-1">
+        <h2 className="text-headline text-ink m-0 flex flex-wrap items-center gap-x-3 gap-y-1" id="specification-title">
+          <span className="inline-flex items-center gap-2">
+            <FileText aria-hidden="true" className="text-ink-soft" size={20} />
+            Business Requirements Document
+          </span>
+          <Badge>Version {documented.number}</Badge>
+        </h2>
+        <p className="text-body text-ink-soft m-0 max-w-[var(--measure-document)]">
+          Built from the analysis
+          {documented.analysis_confirmed_by ? ` confirmed by ${documented.analysis_confirmed_by.display_name}` : " the owner confirmed"}
+          {documented.analysis_confirmed_at ? ` on ${whenLabel(documented.analysis_confirmed_at)}` : ""}.
+          {" "}
+          {documented.exportable
+            ? "It includes the approved backlog as functional requirements."
+            : hasBacklog
+              ? "The backlog has not had final approval yet, so functional requirements are not included."
+              : "There is no approved backlog yet, so functional requirements are not included."}
+        </p>
+      </div>
+      {canExport ? (
+        <DownloadControls
+          error={error}
+          exported={exported}
+          exporting={exporting}
+          formats={SPECIFICATION_FORMATS}
+          initial="docx"
+          name="specification-format"
+          noun="document "
+          onDownload={onDownload}
+          revision={documented.number}
+        />
+      ) : (
+        <RestrictedDownload />
+      )}
+    </Card>
+  );
+}
+
+function RestrictedDownload() {
+  return (
+    <p className="text-body text-ink-muted m-0">
+      Only the requirement owner and its reviewers can download it. People, at the top of the page, lists who they are.
+    </p>
+  );
+}
+
+/** A format to choose, one button, and a line that says what was downloaded. */
+function DownloadControls<F extends string>({
+  formats,
+  initial,
+  name,
+  noun = "",
+  revision,
+  exporting,
+  exported,
+  error,
+  onDownload,
+}: {
+  formats: FormatChoices<F>;
+  initial: F;
+  /** The radio group's name, unique on the page. */
+  name: string;
+  /** What is downloaded, before "version N": "" for the export, "document " for the document. */
+  noun?: string;
+  revision: number;
+  exporting: number | null;
+  exported: { revision: number; format: F } | null;
+  error: string | null;
+  onDownload: (revision: number, format: F) => void;
+}) {
+  const [format, setFormat] = useState<F>(initial);
+  const running = exporting === revision;
+  const keys = Object.keys(formats) as F[];
+
+  return (
+    <div className="grid gap-3">
+      <fieldset className="m-0 grid gap-2 border-0 p-0">
+        <legend className="text-label text-ink mb-1 p-0">Format</legend>
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          {keys.map((key) => (
+            <label className="grid cursor-pointer grid-cols-[auto_minmax(0,1fr)] items-start gap-x-2" key={key}>
+              <input
+                checked={format === key}
+                className="mt-1 size-4 cursor-pointer accent-[var(--ink)]"
+                name={name}
+                onChange={() => setFormat(key)}
+                type="radio"
+                value={key}
+              />
+              <span className="grid">
+                <span className="text-body text-ink font-semibold">{formats[key].label}</span>
+                <span className="text-meta text-ink-muted">{formats[key].hint}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Kept enabled while the file is prepared: disabling the button that
+            has focus drops focus to the page. A second press is ignored. */}
+        <Button
+          aria-busy={running || undefined}
+          icon={<Download aria-hidden="true" size={16} />}
+          onClick={() => {
+            if (exporting === null) onDownload(revision, format);
+          }}
+          variant="primary"
+        >
+          {running ? `Preparing ${noun}version ${revision}…` : `Download ${noun}version ${revision}`}
+        </Button>
+        <p aria-live="polite" className="text-meta text-ink-soft m-0" role="status">
+          {!running && exported?.revision === revision && !error
+            ? `Downloaded ${noun}version ${revision} as ${formats[exported.format].label}.`
+            : ""}
+        </p>
+      </div>
+      {error && <ErrorLine>The download did not complete: {error} Try again; the file is prepared fresh each time.</ErrorLine>}
+    </div>
   );
 }
 

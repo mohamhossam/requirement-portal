@@ -11,6 +11,16 @@ restoring a backup.
 
 ## Unreleased
 
+- **A Business Requirements Document can be downloaded once the analysis is confirmed.** The
+  Confirm view and the History screen offer it as Word or Markdown, cut from the immutable revision
+  and rendered without any model call: the requirement, confirmed facts, business rules,
+  constraints, assumptions, dependencies, open questions and ambiguities with their resolutions, the
+  product verdict, source documents and sign-offs. When the revision also holds a formally approved
+  backlog, it appears as functional requirements; an unapproved backlog never does. People appear
+  by name only. `GET /requirements/{id}/revisions/{n}/specification?format=docx|md`, member-only;
+  the revision list gains `specification_available`, `analysis_confirmed_by` and
+  `analysis_confirmed_at`. No migration. `python-docx` (with `lxml`) is a new runtime dependency of
+  the API image (ADR-0119).
 - **Generate Features waits for an architecture match, and corrects one bad field value.**
   Each Feature is checked against the architecture catalogue by the knowledge portal's model,
   which can take longer than the everyday knowledge client's 10 seconds: a slow match was

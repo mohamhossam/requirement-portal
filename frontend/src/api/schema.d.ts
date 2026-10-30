@@ -1650,6 +1650,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/requirements/{requirement_id}/revisions/{revision_number}/specification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Specification */
+        get: operations["export_specification_requirements__requirement_id__revisions__revision_number__specification_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/requirements/{requirement_id}/source-impact": {
         parameters: {
             query?: never;
@@ -2573,6 +2590,9 @@ export interface components {
         };
         /** BreakdownRevisionResponse */
         BreakdownRevisionResponse: {
+            /** Analysis Confirmed At */
+            analysis_confirmed_at: string | null;
+            analysis_confirmed_by: components["schemas"]["ActorResponse"] | null;
             /** Analysis Human Confirmed */
             analysis_human_confirmed: boolean;
             /** Approval Count */
@@ -2617,6 +2637,8 @@ export interface components {
             review_decision_count: number;
             /** Review Status */
             review_status: string | null;
+            /** Specification Available */
+            specification_available: boolean;
             /** Stale Story Count */
             stale_story_count: number;
             /** Story Count */
@@ -5249,6 +5271,11 @@ export interface components {
              */
             via: string[];
         };
+        /**
+         * SpecificationFormat
+         * @enum {string}
+         */
+        SpecificationFormat: "docx" | "md";
         /**
          * SpidrPattern
          * @enum {string}
@@ -9376,6 +9403,43 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicationReportResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_specification_requirements__requirement_id__revisions__revision_number__specification_get: {
+        parameters: {
+            query: {
+                format: components["schemas"]["SpecificationFormat"];
+            };
+            header?: {
+                "X-Fake-Actor-Id"?: string | null;
+            };
+            path: {
+                requirement_id: string;
+                revision_number: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The Business Requirements Document of the selected revision's confirmed analysis. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": unknown;
+                    "text/markdown": unknown;
                 };
             };
             /** @description Validation Error */

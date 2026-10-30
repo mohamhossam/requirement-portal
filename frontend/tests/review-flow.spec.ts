@@ -439,6 +439,32 @@ test("submitted Story rejection is revised, resubmitted, and finally approved", 
   expect(xlsxDownload.suggestedFilename()).toMatch(/breakdown-v\d+\.xlsx$/);
   expect((await downloadBytes(xlsxDownload)).subarray(0, 2).toString()).toBe("PK");
 
+  // The Business Requirements Document of the same approved version (ADR-0119).
+  await expect(page.getByRole("heading", { name: /Business Requirements Document/ })).toBeVisible();
+  await expect(page.getByText(/It includes the approved backlog as functional requirements/)).toBeVisible();
+  const documentButton = page.getByRole("button", { name: /^Download document version \d+$/ });
+  await expect(page.getByRole("radio", { name: /^Word document/ })).toBeChecked();
+  const docxStarted = page.waitForEvent("download");
+  await documentButton.click();
+  const docxDownload = await docxStarted;
+  expect(docxDownload.suggestedFilename()).toMatch(/business-requirements-v\d+\.docx$/);
+  expect((await downloadBytes(docxDownload)).subarray(0, 2).toString()).toBe("PK");
+  await page.getByRole("radio", { name: /^Markdown/ }).check();
+  const markdownStarted = page.waitForEvent("download");
+  await documentButton.click();
+  const markdownDownload = await markdownStarted;
+  expect(markdownDownload.suggestedFilename()).toMatch(/business-requirements-v\d+\.md$/);
+  const markdown = (await downloadBytes(markdownDownload)).toString("utf8");
+  expect(markdown.startsWith("# ")).toBe(true);
+  expect(markdown).toContain("## 13. Functional requirements");
+  expect(markdown).toContain("### FR-01 ");
+
+  // The confirmed analysis offers the same document from the Confirm view.
+  await page.goto(`/requirements/${requirementId}/confirm`);
+  const documentGroup = page.getByRole("group", { name: "Business Requirements Document" });
+  await expect(documentGroup).toBeVisible();
+  await expect(documentGroup.getByRole("button", { name: "Download Word document" })).toBeVisible();
+
   await page.goto(`/requirements/${requirementId}/review`);
   await expect(page.getByRole("list", { name: "Approval lifecycle" }).locator("[aria-current=step]")).toContainText("Approved");
   await expect(page.getByText("Complete and current.")).toBeVisible();

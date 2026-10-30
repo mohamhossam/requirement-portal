@@ -42,6 +42,10 @@ class BreakdownRevisionResponse(BaseModel):
     exportable: bool
     final_approved_by: ActorResponse | None
     final_approved_at: datetime | None
+    # ADR-0119: a Business Requirements Document exists once the analysis is confirmed.
+    specification_available: bool
+    analysis_confirmed_by: ActorResponse | None
+    analysis_confirmed_at: datetime | None
     model_config = ConfigDict(frozen=True)
 
 
