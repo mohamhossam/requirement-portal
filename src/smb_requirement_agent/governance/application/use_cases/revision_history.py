@@ -186,7 +186,7 @@ def describe_requirement_revision(
         and after.requirement.status is RequirementStatus.DUPLICATE
     ):
         changes.append("Closed as duplicate")
-    if not changes and _team(before.access) != _team(after.access):
+    if _team(before.access) != _team(after.access):
         changes.append("Team changed")
     return "; ".join(changes) or "Recorded again"
 

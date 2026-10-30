@@ -24,6 +24,7 @@ from smb_requirement_agent.analysis.application.ports.requirement_analyzer impor
     AnalysisStageProvenanceCandidate,
     BusinessUseCaseCandidate,
     IntentProposalCandidate,
+    NonFunctionalRequirementCandidate,
     OpenQuestionCandidate,
     QuestionReviewCandidate,
     RequirementAnalysisCandidate,
@@ -371,13 +372,13 @@ class ConsolidateEvidenceAnalysis:
         current = list(fragments)
         provenance: list[AnalysisStageProvenanceCandidate] = []
         pending_cache_entries: list[PendingEvidenceFragment] = []
-        # Business use cases are section-local (the planner cuts packets at their
-        # headings) and were cited against real passages in the packet stage, so they skip
-        # the consolidation model and are re-attached to whatever it returns (ADR-0120).
-        held: HeldUseCases | None = None
+        # Business use cases and non-functional requirements were cited against real
+        # passages in the packet stage, so they skip the consolidation model and are
+        # re-attached, taking precedence, to whatever it returns (ADR-0120).
+        held: HeldRecords | None = None
         for _round in range(6):
             merged = self._merge(current, ())
-            taken = _hold_use_cases(merged)
+            taken = _hold_records(merged)
             held = taken if held is None else held
             documents, source_references, human_sources, requirement_sources = (
                 _consolidation_documents(merged)
@@ -407,15 +408,15 @@ class ConsolidateEvidenceAnalysis:
                 if pending is not None:
                     pending_cache_entries.append(pending)
             if final_round:
-                _restore_use_cases(next_round[0], held)
+                _restore_records(next_round[0], held)
                 return next_round[0], provenance, pending_cache_entries
             if len(next_round) >= len(current):
                 fallback = _merged_fallback(next_round, active_questions, "no smaller round")
-                _restore_use_cases(fallback, held)
+                _restore_records(fallback, held)
                 return fallback, provenance, pending_cache_entries
             current = next_round
         fallback = _merged_fallback(current, active_questions, "hierarchy depth")
-        _restore_use_cases(fallback, held)
+        _restore_records(fallback, held)
         return fallback, provenance, pending_cache_entries
 
     @staticmethod
@@ -764,23 +765,43 @@ def _figure_support(
     )
 
 
-class HeldUseCases(TypedDict):
-    """Business use cases kept out of a consolidation round, with their references."""
+class HeldRecords(TypedDict):
+    """Settled records kept out of a consolidation round, with their references (ADR-0120).
+
+    Business use cases and non-functional requirements were cited against real passages in
+    the packet stage; the consolidation model would only rewrite them.
+    """
 
     use_cases: list[BusinessUseCaseCandidate]
+    non_functional: list[NonFunctionalRequirementCandidate]
     evidence_references: dict[str, list[AnalysisEvidenceReferenceCandidate]]
     clarification_references: dict[str, list[int]]
     requirement_references: list[str]
 
 
-def _hold_use_cases(candidate: RequirementAnalysisCandidate) -> HeldUseCases:
-    """Take the use cases and their references out of a candidate (ADR-0120)."""
+def _record_keys(
+    use_cases: Sequence[BusinessUseCaseCandidate],
+    non_functional: Sequence[NonFunctionalRequirementCandidate],
+) -> set[str]:
+    return {
+        *(analysis_evidence_key("business_use_case", item["name"]) for item in use_cases),
+        *(
+            analysis_evidence_key("non_functional_requirement", item["statement"])
+            for item in non_functional
+        ),
+    }
+
+
+def _hold_records(candidate: RequirementAnalysisCandidate) -> HeldRecords:
+    """Take the settled records and their references out of a candidate."""
     use_cases = list(candidate.get("business_use_cases", []))
-    keys = {analysis_evidence_key("business_use_case", item["name"]) for item in use_cases}
+    non_functional = list(candidate.get("non_functional_requirements", []))
+    keys = _record_keys(use_cases, non_functional)
     evidence = candidate.get("evidence_references", {})
     human = candidate.get("clarification_references", {})
-    held = HeldUseCases(
+    held = HeldRecords(
         use_cases=use_cases,
+        non_functional=non_functional,
         evidence_references={key: evidence.pop(key) for key in keys if key in evidence},
         clarification_references={key: human.pop(key) for key in keys if key in human},
         requirement_references=[
@@ -789,6 +810,8 @@ def _hold_use_cases(candidate: RequirementAnalysisCandidate) -> HeldUseCases:
     )
     if "business_use_cases" in candidate:
         candidate["business_use_cases"] = []
+    if "non_functional_requirements" in candidate:
+        candidate["non_functional_requirements"] = []
     if "requirement_references" in candidate:
         candidate["requirement_references"] = [
             key for key in candidate["requirement_references"] if key not in keys
@@ -796,19 +819,34 @@ def _hold_use_cases(candidate: RequirementAnalysisCandidate) -> HeldUseCases:
     return held
 
 
-def _restore_use_cases(candidate: RequirementAnalysisCandidate, held: HeldUseCases | None) -> None:
-    """Put held use cases back, after the consolidation model has returned."""
-    if held is None or not held["use_cases"]:
+def _restore_records(candidate: RequirementAnalysisCandidate, held: HeldRecords | None) -> None:
+    """Put held records back once the consolidation model has returned.
+
+    A held record wins over anything the model emitted under the same key: the held one was
+    validated against real passages, the model's is a rewrite of a synthetic sentence.
+    """
+    if held is None or not (held["use_cases"] or held["non_functional"]):
         return
-    present = {
-        analysis_evidence_key("business_use_case", item["name"])
-        for item in candidate.get("business_use_cases", [])
-    }
-    candidate.setdefault("business_use_cases", []).extend(
+    keys = _record_keys(held["use_cases"], held["non_functional"])
+    candidate["business_use_cases"] = [
         item
-        for item in held["use_cases"]
-        if analysis_evidence_key("business_use_case", item["name"]) not in present
-    )
+        for item in candidate.get("business_use_cases", [])
+        if analysis_evidence_key("business_use_case", item["name"]) not in keys
+    ] + held["use_cases"]
+    candidate["non_functional_requirements"] = [
+        item
+        for item in candidate.get("non_functional_requirements", [])
+        if analysis_evidence_key("non_functional_requirement", item["statement"]) not in keys
+    ] + held["non_functional"]
+    for field in ("evidence_references", "clarification_references"):
+        references = candidate.get(field)
+        if isinstance(references, dict):
+            for key in keys:
+                references.pop(key, None)
+    if "requirement_references" in candidate:
+        candidate["requirement_references"] = [
+            key for key in candidate["requirement_references"] if key not in keys
+        ]
     if held["evidence_references"]:
         candidate.setdefault("evidence_references", {}).update(held["evidence_references"])
     if held["clarification_references"]:
@@ -951,12 +989,8 @@ def _statements_by_evidence_key(
         *(("ambiguity", item["statement"]) for item in candidate["ambiguities"]),
         *(("potential_dependency", item) for item in candidate["potential_dependencies"]),
         *(("intent_proposal", item["statement"]) for item in candidate["intent_proposals"]),
-        # The type rides in the text so the consolidation model can keep it.
         *(
-            (
-                "non_functional_requirement",
-                f"{item['statement']} (non-functional requirement: {item['kind']})",
-            )
+            ("non_functional_requirement", item["statement"])
             for item in candidate.get("non_functional_requirements", [])
         ),
         *(

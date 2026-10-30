@@ -24,6 +24,7 @@ from smb_requirement_agent.governance.infrastructure.exports.specification_outli
     Block,
     Bullets,
     Heading,
+    Numbered,
     Paragraph,
     Table,
     outline,
@@ -83,6 +84,9 @@ def _render(word: WordDocument, block: Block) -> None:
         case Bullets(items):
             for item in items:
                 word.add_paragraph(_safe(item), style="List Bullet")
+        case Numbered(items):
+            for item in items:
+                word.add_paragraph(_safe(item), style="List Number")
         case Table(headers, rows):
             table = word.add_table(rows=1, cols=len(headers))
             table.style = "Table Grid"

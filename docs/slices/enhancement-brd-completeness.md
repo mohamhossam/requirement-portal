@@ -298,6 +298,16 @@ owner states the scope at intake and reads it back on the Source step" (types th
 reads them on the Source step's Business need region and from the API), and the approval journey now
 asserts the Confirm screen's Non-functional requirements and Business use cases regions.
 
+**Review fixes (2026-10-30).** An independent review of the branch found nine issues; eight are fixed
+and one needs no change. The analysis prompt now carries extraction and citation rules for both
+categories and is `analysis-v28-nfr-and-business-use-cases`, with a test pinning the rules.
+Non-functional requirements join business use cases in the consolidation bypass, and a held,
+packet-validated record wins over a model rewrite under the same key (tested end to end through
+`ConsolidateEvidenceAnalysis.execute`). Use-case steps render as an ordered list in both formats;
+scenario ids sort numerically; a team change is labelled even when the need changed in the same
+revision. Loading every revision for the version table is unchanged: the History screen already
+does the same on each visit (ADR-0119 Amendment 1 says so).
+
 **Open: the live-model record for Phase C.** No provider credentials are available in this session, so
 the structured BRD fixture has not been run through the local model or OpenRouter. The record in
 `docs/evaluation/` is owed before Phase C is treated as release evidence; the fake-provider path and the

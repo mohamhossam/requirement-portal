@@ -10,6 +10,7 @@ from smb_requirement_agent.governance.infrastructure.exports.specification_outli
     Block,
     Bullets,
     Heading,
+    Numbered,
     Paragraph,
     Table,
     outline,
@@ -44,6 +45,8 @@ def _render(block: Block) -> str:
             return f"*{_inline(text)}*" if note else text.strip()
         case Bullets(items):
             return "\n".join(f"- {_inline(item)}" for item in items)
+        case Numbered(items):
+            return "\n".join(f"{number}. {_inline(item)}" for number, item in enumerate(items, 1))
         case Table(headers, rows):
             lines = [
                 "| " + " | ".join(_cell(item) for item in headers) + " |",

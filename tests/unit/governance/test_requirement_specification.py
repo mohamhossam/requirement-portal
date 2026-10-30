@@ -484,7 +484,7 @@ def test_markdown_renders_the_same_outline_with_escaped_tables() -> None:
     assert "## 16. Functional requirements" in text
     assert "## 7. Business use cases\n\n### BUC-01 Customer orders a plan" in text
     assert "| NF-01 | Order confirmation within 5 seconds. | Performance | — |" in text
-    assert "- 1. Choose a plan" in text
+    assert "1. Choose a plan\n2. Place the order" in text
     assert "### FR-01 Ordering" in text
     assert "### Version history\n\n| Kind | Version | Recorded | Change |" in text
     assert "| Need | 1 | 2026-09-04 08:30 UTC | Need captured |" in text

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import replace
 from datetime import UTC, datetime
 
@@ -10,6 +11,9 @@ from fastapi.testclient import TestClient
 
 from smb_requirement_agent.analysis.application.errors import RequirementAnalysisGenerationError
 from smb_requirement_agent.analysis.application.ports.requirement_analyzer import (
+    ActiveQuestionContext,
+    AnalysisDocumentContext,
+    AnalysisEvidenceReferenceCandidate,
     BusinessUseCaseCandidate,
     NonFunctionalRequirementCandidate,
     RequirementAnalysisCandidate,
@@ -24,6 +28,8 @@ from smb_requirement_agent.analysis.application.use_cases.evidence_analysis impo
 from smb_requirement_agent.analysis.domain.errors import InvalidAnalysisContentError
 from smb_requirement_agent.analysis.domain.value_objects import (
     BusinessUseCase,
+    HumanClarification,
+    IntentProposal,
     NonFunctionalKind,
     NonFunctionalRequirement,
 )
@@ -40,6 +46,7 @@ from smb_requirement_agent.governance.domain.review.evidence import (
     evidence_fingerprint,
 )
 from smb_requirement_agent.interfaces.api.container import Container
+from smb_requirement_agent.requirements.domain.requirement.entities import Requirement
 from smb_requirement_agent.shared_kernel.identifiers import RequirementId
 from tests.unit.workflow_helpers import post_analysis
 
@@ -255,3 +262,122 @@ def test_fingerprint_changes_only_when_the_categories_are_present(
     assert fingerprint(bare) == fingerprint(
         replace(bare, non_functional_requirements=(), business_use_cases=())
     )
+
+
+# --- prompt and consolidation -------------------------------------------------------------------
+
+
+def test_prompt_asks_for_both_categories_and_their_citations() -> None:
+    from smb_requirement_agent.analysis.infrastructure.llm.prompts.analysis_prompt import (
+        COMPLETE_ANALYSIS_RETRY_INSTRUCTION,
+        PROMPT_VERSION,
+        build_analysis_system_prompt,
+    )
+
+    prompt = build_analysis_system_prompt(
+        has_active_ai_questions=False, has_evidence_blocks=True, has_documents=True
+    )
+
+    assert PROMPT_VERSION == "analysis-v28-nfr-and-business-use-cases"
+    assert "non_functional_requirements" in prompt
+    assert "business_use_cases" in prompt
+    assert "business use case\n  (kind business_use_case, subject its exact name)" in prompt
+    assert "never systems or screens" in prompt
+    assert (
+        "non-functional requirements and business use cases" in COMPLETE_ANALYSIS_RETRY_INSTRUCTION
+    )
+
+
+class _RewritingAnalyzer:
+    """A consolidation model that re-emits one fact and rewrites a use case under its name."""
+
+    model = "rewriting"
+    prompt_version = "rewriting-v1"
+
+    def analyze_evidence(
+        self,
+        requirement: Requirement,
+        clarifications: Sequence[HumanClarification],
+        documents: Sequence[AnalysisDocumentContext],
+        intent_decisions: Sequence[IntentProposal],
+        active_questions: Sequence[ActiveQuestionContext],
+        *,
+        figure_support: Sequence[str] = (),
+    ) -> RequirementAnalysisCandidate:
+        del requirement, clarifications, intent_decisions, active_questions, figure_support
+        document = documents[0]
+        block = document["evidence_blocks"][0]
+        reference = AnalysisEvidenceReferenceCandidate(
+            document_id=document["document_id"],
+            version_id=document["version_id"],
+            checksum_sha256=document["checksum_sha256"],
+            block_id=block["block_id"],
+            label=block["label"],
+        )
+        rewritten = _use_case(main_steps=["One rewritten step"])
+        return _candidate(
+            known_facts=["A fact."],
+            business_use_cases=[rewritten],
+            evidence_references={
+                analysis_evidence_key("known_fact", "A fact."): [reference],
+                analysis_evidence_key("business_use_case", rewritten["name"]): [reference],
+            },
+        )
+
+
+def test_consolidation_keeps_held_records_over_the_model_rewrite() -> None:
+    from smb_kernel.time.fixed import FixedClock
+
+    from smb_requirement_agent.analysis.application.use_cases.evidence_analysis import (
+        AnalyzeEvidencePacket,
+        PlanEvidencePackets,
+    )
+    from smb_requirement_agent.analysis.infrastructure.in_memory_evidence_fragment_cache import (
+        InMemoryEvidenceFragmentCache,
+    )
+    from smb_requirement_agent.requirements.domain.requirement.value_objects import (
+        RequirementDescription,
+        RequirementStatus,
+        RequirementTitle,
+    )
+
+    validator = ValidateAnalysisCitations()
+    packet_analyzer = AnalyzeEvidencePacket(
+        _RewritingAnalyzer(), validator, InMemoryEvidenceFragmentCache(), FixedClock(NOW)
+    )
+    consolidator = ConsolidateEvidenceAnalysis(PlanEvidencePackets(100_000), packet_analyzer)
+    fact_key = analysis_evidence_key("known_fact", "A fact.")
+    use_case_key = analysis_evidence_key("business_use_case", "Customer orders a plan")
+    nfr_key = analysis_evidence_key("non_functional_requirement", "Fast")
+    first = _candidate(
+        business_use_cases=[_use_case()],
+        non_functional_requirements=[
+            NonFunctionalRequirementCandidate(statement="Fast", kind="performance")
+        ],
+        requirement_references=[fact_key, use_case_key, nfr_key],
+    )
+    second = _candidate(
+        known_facts=["Another fact."],
+        business_use_cases=[_use_case(name="customer orders a plan")],
+        requirement_references=[analysis_evidence_key("known_fact", "Another fact."), use_case_key],
+    )
+    requirement = Requirement(
+        RequirementId("req-1"),
+        RequirementTitle("Plans"),
+        RequirementDescription("Compare plans"),
+        RequirementStatus.DRAFT,
+    )
+
+    result, _, _ = consolidator.execute(requirement, (), (first, second), (), ())
+
+    validator.execute(result, (), ())
+    assert [item["name"] for item in result["business_use_cases"]] == ["Customer orders a plan"]
+    # The packet-validated record, not the model's rewrite.
+    assert result["business_use_cases"][0]["main_steps"] == ["Choose a plan", "Place the order"]
+    assert [
+        (item["statement"], item["kind"]) for item in result["non_functional_requirements"]
+    ] == [("Fast", "performance")]
+    assert use_case_key in result["requirement_references"]
+    assert nfr_key in result["requirement_references"]
+    # The model's rewrite cited a synthetic block; the held record carries no document reference.
+    assert result["evidence_references"][use_case_key] == []

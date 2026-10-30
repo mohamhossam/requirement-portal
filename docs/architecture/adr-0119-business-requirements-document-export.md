@@ -100,7 +100,8 @@ gains three sections, all from data the revision already holds:
   `revision_history.py` (`describe_requirement_revision`, `describe_breakdown_revision`): "Need
   captured", "Need edited: title", "Team changed", "Analysis confirmed", "Epic generated",
   "Features generated (2)", "Submitted for review", "Final approval recorded" and so on. The
-  builder therefore takes both histories; the use case loads them.
+  builder therefore takes both histories; the use case loads them in full, as `GetRevisionHistory`
+  already does for every visit to the History screen.
 - **5. Actors and scenarios**: the approved Stories grouped by actor, with Feature and goal.
 - **15. Risks**: the backlog review's risks, moved out of the functional requirements section.
 

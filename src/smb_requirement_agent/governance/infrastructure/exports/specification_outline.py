@@ -6,6 +6,7 @@ numbering, identifiers and wording. Only the typesetting differs.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
@@ -40,12 +41,19 @@ class Bullets:
 
 
 @dataclass(frozen=True)
+class Numbered:
+    """An ordered list; the renderer numbers it."""
+
+    items: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class Table:
     headers: tuple[str, ...]
     rows: tuple[tuple[str, ...], ...]
 
 
-type Block = Heading | Paragraph | Bullets | Table
+type Block = Heading | Paragraph | Bullets | Numbered | Table
 
 NONE = "—"
 NOT_APPROVED_NOTE = (
@@ -363,9 +371,14 @@ def _actors(document: RequirementSpecification) -> list[Block]:
     if not rows:
         blocks.append(Paragraph("The approved backlog holds no Stories.", note=True))
         return blocks
-    rows.sort(key=lambda row: (row[0].casefold(), row[1]))
+    rows.sort(key=lambda row: (row[0].casefold(), _scenario_order(row[1])))
     blocks.append(Table(("Actor", "Scenario", "Feature", "Goal"), tuple(rows)))
     return blocks
+
+
+def _scenario_order(story_id: str) -> tuple[int, ...]:
+    """FR-01.10 sorts after FR-01.2: the numbers in an id, not its letters."""
+    return tuple(int(part) for part in re.findall(r"\d+", story_id))
 
 
 def _risks(document: RequirementSpecification) -> list[Block]:
@@ -409,7 +422,7 @@ def _use_cases(document: RequirementSpecification) -> list[Block]:
                 ),
             ),
             Paragraph("Main steps:"),
-            Bullets(tuple(f"{number}. {step}" for number, step in enumerate(item.main_steps, 1))),
+            Numbered(item.main_steps),
         ]
         if item.alternate_paths:
             blocks += [Paragraph("Alternate paths:"), Bullets(item.alternate_paths)]

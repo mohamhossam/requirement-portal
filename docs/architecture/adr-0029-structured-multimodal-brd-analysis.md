@@ -111,7 +111,8 @@ ADR-0120 adds business use cases, a multi-field record, to the analysis. Consoli
 findings from one synthetic sentence per cited passage, which would have rewritten or dropped such a
 record. `ConsolidateEvidenceAnalysis` now merges use cases deterministically by normalised name,
 holds them and their references aside before the first round, emits no synthetic blocks for them,
-and re-attaches them to the model's result or to the merged fallback. The planner's `BUC n` packet
-boundaries make a use case section-local, and the packet stage already validated its citations.
-Non-functional statements take the normal statement path, with their type carried in the synthetic
-text. The fragment cache key moves to `evidence-fragment-v4`.
+and re-attaches them to the model's result or to the merged fallback, where a held record wins
+over a rewrite under the same key. Non-functional requirements are held the same way, keyed by
+statement, so their type survives. The planner's `BUC n` packet boundaries make a use case
+section-local, and the packet stage already validated both kinds' citations. The fragment cache key
+moves to `evidence-fragment-v4`.

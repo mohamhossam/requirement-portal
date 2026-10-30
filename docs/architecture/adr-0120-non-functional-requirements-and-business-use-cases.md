@@ -35,15 +35,15 @@ anything the analysis records is reviewed before the backlog or the document use
    `business_use_case:<name>`, steps uncited); citation recovery judges a use case by its name and
    goal and sets aside an uncited one like any other new output. Plain-text requirements stay
    exempt, as facts are. The prompt is `analysis-v28-nfr-and-business-use-cases`.
-3. **Use cases bypass the consolidation model.** The packet planner already starts a new packet
-   at each `BUC n` heading, so a use case is section-local and was validated against real passages
-   in the packet stage; cross-section reconciliation would only ask the consolidation model to
-   re-emit a multi-field record from a synthetic sentence. `ConsolidateEvidenceAnalysis` therefore
-   merges use cases deterministically by normalised name, holds them and their references aside
-   before the first consolidation round, emits no synthetic blocks for them, and re-attaches them to
-   whatever the model (or the merged fallback) returns. Non-functional statements take the normal
-   statement path with their type carried in the synthetic text. The fragment cache key is
-   `evidence-fragment-v4`.
+3. **Both categories bypass the consolidation model.** The packet planner already starts a new
+   packet at each `BUC n` heading, so a use case is section-local, and both kinds of record were
+   validated against real passages in the packet stage; cross-section reconciliation would only ask
+   the consolidation model to re-emit a record from a synthetic sentence, losing steps or the type.
+   `ConsolidateEvidenceAnalysis` therefore merges use cases by normalised name and non-functional
+   requirements by normalised statement, holds both and their references aside before the first
+   consolidation round, emits no synthetic blocks for them, and re-attaches them to whatever the
+   model (or the merged fallback) returns. A held record wins over anything the model emitted under
+   the same key. The fragment cache key is `evidence-fragment-v4`.
 4. **Nothing already recorded changes.** The payload codec writes both categories only when
    non-empty; the review fingerprint and the generation context token include them only when
    present; the story-quality evidence adds non-functional statements. Stored rows, the
