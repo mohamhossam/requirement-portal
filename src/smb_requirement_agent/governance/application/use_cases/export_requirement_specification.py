@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 
 from smb_requirement_agent.analysis.domain.entities import RequirementAnalysis
 from smb_requirement_agent.analysis.domain.value_objects import (
@@ -37,6 +37,7 @@ from smb_requirement_agent.governance.application.specification import (
     SpecificationImpactGap,
     SpecificationImpactSystem,
     SpecificationManifest,
+    SpecificationNonFunctionalRequirement,
     SpecificationObjectives,
     SpecificationProductImpact,
     SpecificationResolution,
@@ -49,6 +50,7 @@ from smb_requirement_agent.governance.application.specification import (
     SpecificationStatement,
     SpecificationStory,
     SpecificationSummary,
+    SpecificationUseCase,
     SpecificationVersion,
     SpecificationVersionKind,
     StatementOrigin,
@@ -266,6 +268,8 @@ def build_requirement_specification(
         ),
         analysis.clarifications,
     )
+    non_functional = _non_functional(analysis, evidence)
+    use_cases = _use_cases(analysis, evidence)
     backlog = _backlog(breakdown)
     confirmation = SpecificationSignature(
         _actor(analysis.confirmed_by),
@@ -304,6 +308,8 @@ def build_requirement_specification(
                     item.resolution is not None
                     for item in (*assumptions, *dependencies, *open_questions, *ambiguities)
                 ),
+                non_functional_requirements=len(non_functional),
+                business_use_cases=len(use_cases),
             ),
         ),
         objectives=_objectives(analysis, requirement_revision),
@@ -340,6 +346,8 @@ def build_requirement_specification(
         versions=_versions(
             requirement_revisions, breakdown_revisions, requirement_revision, breakdown
         ),
+        non_functional_requirements=non_functional,
+        business_use_cases=use_cases,
     )
 
 
@@ -586,3 +594,55 @@ def _backlog(breakdown: BreakdownRevision) -> SpecificationBacklog | None:
             else ()
         ),
     )
+
+
+Evidence = Callable[[tuple[AnalysisEvidenceReference, ...]], tuple[SpecificationEvidence, ...]]
+
+
+def _non_functional(
+    analysis: RequirementAnalysis, evidence: Evidence
+) -> tuple[SpecificationNonFunctionalRequirement, ...]:
+    """NF-nn, the first of any repeated wording kept."""
+    seen: set[str] = set()
+    rows: list[SpecificationNonFunctionalRequirement] = []
+    for item in analysis.non_functional_requirements:
+        key = " ".join(item.statement.split()).casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        rows.append(
+            SpecificationNonFunctionalRequirement(
+                f"NF-{len(rows) + 1:02d}",
+                item.statement.strip(),
+                item.kind.value,
+                evidence(item.evidence_references),
+            )
+        )
+    return tuple(rows)
+
+
+def _use_cases(
+    analysis: RequirementAnalysis, evidence: Evidence
+) -> tuple[SpecificationUseCase, ...]:
+    """BUC-nn, by name."""
+    seen: set[str] = set()
+    rows: list[SpecificationUseCase] = []
+    for item in analysis.business_use_cases:
+        key = " ".join(item.name.split()).casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        rows.append(
+            SpecificationUseCase(
+                id=f"BUC-{len(rows) + 1:02d}",
+                name=item.name,
+                actor=item.actor,
+                trigger=item.trigger,
+                goal=item.goal,
+                main_steps=item.main_steps,
+                alternate_paths=item.alternate_paths,
+                business_rules=item.business_rules,
+                evidence=evidence(item.evidence_references),
+            )
+        )
+    return tuple(rows)

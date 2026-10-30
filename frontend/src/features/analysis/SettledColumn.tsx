@@ -1,11 +1,15 @@
 import { UserRound } from "lucide-react";
+import type { ReactNode } from "react";
 
 import type { RequirementAnalysis } from "../../api/client";
 import { cx } from "../../components/ui";
+import { Pill } from "../../components/ui/Badge";
 import { SourceLinks } from "./AnalysisSources";
 import { humanEvidence, when } from "./analysisFormat";
+import { NON_FUNCTIONAL_KIND_LABEL } from "./labels";
 
 type EvidenceReference = RequirementAnalysis["known_facts"][number]["evidence_references"][number];
+type UseCase = RequirementAnalysis["business_use_cases"][number];
 export function ColumnHeading({ id, children, count }: { id: string; children: string; count?: string }) {
   return (
     <div className="border-line flex items-baseline justify-between gap-3 border-0 border-b border-solid pb-2">
@@ -17,16 +21,19 @@ export function ColumnHeading({ id, children, count }: { id: string; children: s
   );
 }
 
-function SettledList({
+function SettledList<Item extends { statement: string; evidence_references: EvidenceReference[] }>({
   analysis,
   title,
   kind,
   items,
+  trailing,
 }: {
   analysis: RequirementAnalysis;
   title: string;
   kind: string;
-  items: { statement: string; evidence_references: EvidenceReference[] }[];
+  items: Item[];
+  /** Something small beside the statement, such as the kind of a non-functional requirement. */
+  trailing?: (item: Item) => ReactNode;
 }) {
   return (
     <section aria-label={title} className="grid gap-2">
@@ -35,11 +42,54 @@ function SettledList({
         <ul className="grid list-none gap-3 p-0">
           {items.map((item) => (
             <li className="grid gap-1" key={item.statement}>
-              <span className="text-document text-ink-soft font-serif">{item.statement}</span>
+              <span className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                <span className="text-document text-ink-soft font-serif">{item.statement}</span>
+                {trailing?.(item)}
+              </span>
               <SourceLinks
                 evidence={item.evidence_references}
                 humanAnswers={humanEvidence(analysis, kind, item.statement)}
                 subject={item.statement}
+              />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-ink-muted text-body m-0">Nothing recorded yet.</p>
+      )}
+    </section>
+  );
+}
+
+/** A business use case: who, what starts it, the goal, and the steps the business performs. */
+function UseCaseList({ analysis, items }: { analysis: RequirementAnalysis; items: UseCase[] }) {
+  return (
+    <section aria-label="Business use cases" className="grid gap-2">
+      <h3 className="text-label text-ink-muted m-0">Business use cases</h3>
+      {items.length ? (
+        <ul className="grid list-none gap-4 p-0">
+          {items.map((item) => (
+            <li className="border-line grid gap-2 border-0 border-l-2 border-solid pl-3" key={item.name}>
+              <span className="text-document text-ink font-serif font-semibold">{item.name}</span>
+              <p className="text-body text-ink-soft m-0">
+                {item.actor} → {item.goal}
+                {item.trigger ? ` · Starts when ${item.trigger}` : ""}
+              </p>
+              <ol className="text-body text-ink-soft m-0 grid gap-1 pl-5">
+                {item.main_steps.map((step, index) => (
+                  <li key={`${index}-${step}`}>{step}</li>
+                ))}
+              </ol>
+              {item.alternate_paths.length > 0 && (
+                <p className="text-meta text-ink-muted m-0">Otherwise: {item.alternate_paths.join("; ")}</p>
+              )}
+              {item.business_rules.length > 0 && (
+                <p className="text-meta text-ink-muted m-0">Relies on: {item.business_rules.join("; ")}</p>
+              )}
+              <SourceLinks
+                evidence={item.evidence_references}
+                humanAnswers={humanEvidence(analysis, "business_use_case", item.name)}
+                subject={item.name}
               />
             </li>
           ))}
@@ -71,7 +121,11 @@ export function SettledColumn({
 }) {
   const answers = analysis.clarifications;
   const settledCount =
-    analysis.known_facts.length + analysis.business_rules.length + analysis.constraints.length;
+    analysis.known_facts.length +
+    analysis.business_rules.length +
+    analysis.constraints.length +
+    analysis.non_functional_requirements.length +
+    analysis.business_use_cases.length;
 
   return (
     /* A named region, like the working column beside it: two landmarks is the
@@ -102,6 +156,16 @@ export function SettledColumn({
         kind="constraint"
         title="Constraints"
       />
+      {/* The two categories a standard BRD carries that the analysis learned last (ADR-0120). Settled
+          content, like the lists above: extracted with evidence and confirmed with the analysis. */}
+      <SettledList
+        analysis={analysis}
+        items={analysis.non_functional_requirements}
+        kind="non_functional_requirement"
+        title="Non-functional requirements"
+        trailing={(item) => <Pill>{NON_FUNCTIONAL_KIND_LABEL[item.kind] ?? item.kind}</Pill>}
+      />
+      <UseCaseList analysis={analysis} items={analysis.business_use_cases} />
 
       {/* The one thing on this screen that actually crosses.
        *

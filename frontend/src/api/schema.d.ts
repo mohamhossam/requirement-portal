@@ -2673,6 +2673,28 @@ export interface components {
             /** Statement */
             statement: string;
         };
+        /** BusinessUseCaseResponse */
+        BusinessUseCaseResponse: {
+            /** Actor */
+            actor: string;
+            /** Alternate Paths */
+            alternate_paths: string[];
+            /** Business Rules */
+            business_rules: string[];
+            /**
+             * Evidence References
+             * @default []
+             */
+            evidence_references: components["schemas"]["AnalysisEvidenceReferenceResponse"][];
+            /** Goal */
+            goal: string;
+            /** Main Steps */
+            main_steps: string[];
+            /** Name */
+            name: string;
+            /** Trigger */
+            trigger: string | null;
+        };
         /** CancelAiJobRequest */
         CancelAiJobRequest: {
             /** Expected Version */
@@ -3981,6 +4003,18 @@ export interface components {
          * @enum {string}
          */
         NextAction: "analyse" | "answer_questions" | "confirm_analysis" | "generate_epic" | "review_epic" | "generate_features" | "review_features" | "generate_stories" | "review_stories" | "submit_for_review" | "revise_backlog" | "approve_breakdown" | "reconcile_stale" | "open" | "review_knowledge";
+        /** NonFunctionalRequirementResponse */
+        NonFunctionalRequirementResponse: {
+            /**
+             * Evidence References
+             * @default []
+             */
+            evidence_references: components["schemas"]["AnalysisEvidenceReferenceResponse"][];
+            /** Kind */
+            kind: string;
+            /** Statement */
+            statement: string;
+        };
         /**
          * NotificationKind
          * @enum {string}
@@ -4651,6 +4685,11 @@ export interface components {
             /** Business Rules */
             business_rules: components["schemas"]["BusinessRuleResponse"][];
             /**
+             * Business Use Cases
+             * @default []
+             */
+            business_use_cases: components["schemas"]["BusinessUseCaseResponse"][];
+            /**
              * Clarification Evidence
              * @default []
              */
@@ -4670,6 +4709,11 @@ export interface components {
             human_confirmed: boolean;
             /** Known Facts */
             known_facts: components["schemas"]["KnownFactResponse"][];
+            /**
+             * Non Functional Requirements
+             * @default []
+             */
+            non_functional_requirements: components["schemas"]["NonFunctionalRequirementResponse"][];
             /** Open Questions */
             open_questions: components["schemas"]["OpenQuestionResponse"][];
             /**

@@ -108,7 +108,59 @@ type AnalysisEvidenceKind = Literal[
     "ambiguity",
     "potential_dependency",
     "intent_proposal",
+    "non_functional_requirement",
+    "business_use_case",
 ]
+
+
+type NonFunctionalKindLiteral = Literal[
+    "performance",
+    "availability",
+    "security",
+    "compliance",
+    "usability",
+    "data",
+    "scalability",
+    "other",
+]
+
+
+class NonFunctionalRequirementSchema(BaseModel):
+    statement: str = Field(
+        description=(
+            "One quality the solution must have, as the source states it, with its target "
+            "when the source gives one. Never a capability or a function."
+        )
+    )
+    kind: NonFunctionalKindLiteral = Field(
+        description="The quality attribute this requirement constrains; other when none fits."
+    )
+
+
+class BusinessUseCaseSchema(BaseModel):
+    name: str = Field(description="A short name, such as 'Customer orders a plan'.")
+    actor: str = Field(
+        description="The external business actor who gains value: a customer, partner or regulator."
+    )
+    trigger: str | None = Field(
+        default=None, description="What starts the use case, only when the source says."
+    )
+    goal: str = Field(description="The outcome the actor achieves.")
+    main_steps: list[str] = Field(
+        min_length=1,
+        description=(
+            "The business-level steps in order; what the business does, never systems or screens."
+        ),
+    )
+    alternate_paths: list[str] = Field(
+        default_factory=list, description="Exceptions or alternative flows the source states."
+    )
+    business_rules: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Rules from the source this use case relies on, copied as written in business_rules."
+        ),
+    )
 
 
 class AnalysisEvidenceCitationSchema(BaseModel):
@@ -225,6 +277,22 @@ class RequirementAnalysisSchema(BaseModel):
     business_rules: list[str] = Field(
         description="Explicit behavioral rules contained in the requirement.",
         default_factory=list,
+    )
+    non_functional_requirements: list[NonFunctionalRequirementSchema] = Field(
+        default_factory=list,
+        max_length=20,
+        description=(
+            "Qualities the source requires of the solution: performance, availability, "
+            "security, compliance, usability, data, scalability. Only what the source states."
+        ),
+    )
+    business_use_cases: list[BusinessUseCaseSchema] = Field(
+        default_factory=list,
+        max_length=12,
+        description=(
+            "Business use cases the source describes: an external actor achieving a goal "
+            "through business-level steps. Never invent one; omit when the source has none."
+        ),
     )
     active_question_reviews: list[ActiveQuestionReviewSchema] = Field(
         default_factory=list,

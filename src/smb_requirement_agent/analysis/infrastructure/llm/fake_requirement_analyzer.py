@@ -8,7 +8,9 @@ from smb_requirement_agent.analysis.application.ports.requirement_analyzer impor
     AmbiguityCandidate,
     AnalysisDocumentContext,
     AnalysisEvidenceReferenceCandidate,
+    BusinessUseCaseCandidate,
     IntentProposalCandidate,
+    NonFunctionalRequirementCandidate,
     OpenQuestionCandidate,
     QuestionReviewCandidate,
     RequirementAnalysisCandidate,
@@ -34,7 +36,7 @@ class FakeRequirementAnalyzer(RequirementAnalyzerPort):
 
     def __init__(self) -> None:
         self.model = "fake-analysis"
-        self.prompt_version = "fake-analysis-v4"
+        self.prompt_version = "fake-analysis-v5"
         self.candidate = RequirementAnalysisCandidate(
             known_facts=["This is a known fact."],
             constraints=["This is a constraint."],
@@ -54,6 +56,23 @@ class FakeRequirementAnalyzer(RequirementAnalyzerPort):
             intent_proposals=[],
             model=self.model,
             prompt_version=self.prompt_version,
+            non_functional_requirements=[
+                NonFunctionalRequirementCandidate(
+                    statement="Order confirmation is shown within 5 seconds.",
+                    kind="performance",
+                )
+            ],
+            business_use_cases=[
+                BusinessUseCaseCandidate(
+                    name="SMB customer orders a plan",
+                    actor="SMB customer",
+                    trigger="A customer asks for a new plan.",
+                    goal="The plan is active without a shop visit.",
+                    main_steps=["Choose a plan", "Confirm eligibility", "Place the order"],
+                    alternate_paths=["Eligibility fails: the customer is told why."],
+                    business_rules=["This is a business rule."],
+                )
+            ],
         )
         self.should_fail = False
         self.received_clarifications: Sequence[HumanClarification] = ()
@@ -142,6 +161,12 @@ class FakeRequirementAnalyzer(RequirementAnalyzerPort):
             known_facts=list(self.candidate["known_facts"]),
             constraints=list(self.candidate["constraints"]),
             business_rules=list(self.candidate["business_rules"]),
+            non_functional_requirements=[
+                item.copy() for item in self.candidate.get("non_functional_requirements", [])
+            ],
+            business_use_cases=[
+                item.copy() for item in self.candidate.get("business_use_cases", [])
+            ],
             assumptions=[item for item in self.candidate["assumptions"] if item not in resolved],
             open_questions=[
                 item
@@ -247,4 +272,9 @@ def _candidate_items(candidate: RequirementAnalysisCandidate) -> list[tuple[str,
         *(("ambiguity", item["statement"]) for item in candidate["ambiguities"]),
         *(("potential_dependency", item) for item in candidate["potential_dependencies"]),
         *(("intent_proposal", item["statement"]) for item in candidate["intent_proposals"]),
+        *(
+            ("non_functional_requirement", item["statement"])
+            for item in candidate.get("non_functional_requirements", [])
+        ),
+        *(("business_use_case", item["name"]) for item in candidate.get("business_use_cases", [])),
     ]

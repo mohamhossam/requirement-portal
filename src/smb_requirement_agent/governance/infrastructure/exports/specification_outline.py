@@ -122,7 +122,9 @@ def outline(document: RequirementSpecification) -> tuple[Block, ...]:
             f"requirements, {counts.business_rules} business rules, {counts.constraints} "
             f"constraints, {counts.assumptions} assumptions, {counts.dependencies} dependencies, "
             f"{counts.open_questions} open questions and {counts.ambiguities} ambiguities; "
-            f"{counts.resolved_clarifications} uncertainties were resolved by a person.",
+            f"{counts.resolved_clarifications} uncertainties were resolved by a person. It "
+            f"names {counts.business_use_cases} business use cases and "
+            f"{counts.non_functional_requirements} non-functional requirements.",
             note=True,
         ),
         Heading(1, "2. Business objectives"),
@@ -181,23 +183,25 @@ def outline(document: RequirementSpecification) -> tuple[Block, ...]:
         blocks.append(Paragraph("No owner was recorded for this version.", note=True))
     blocks += _actors(document)
     blocks += _statements("6. Business requirements", document.business_requirements)
-    blocks += _statements("7. Business rules", document.business_rules)
-    blocks += _statements("8. Constraints", document.constraints)
+    blocks += _use_cases(document)
+    blocks += _statements("8. Business rules", document.business_rules)
+    blocks += _statements("9. Constraints", document.constraints)
+    blocks += _non_functional(document)
     blocks += _resolvables(
-        "9. Assumptions",
+        "11. Assumptions",
         document.assumptions,
         "Statement",
         note="Assumptions are not confirmed requirements until a person resolves them.",
     )
-    blocks += _resolvables("10. Dependencies", document.dependencies, "Statement")
+    blocks += _resolvables("12. Dependencies", document.dependencies, "Statement")
     blocks += _resolvables(
-        "11. Open questions", document.open_questions, "Question", rationale="Why it matters"
+        "13. Open questions", document.open_questions, "Question", rationale="Why it matters"
     )
-    blocks += _resolvables("12. Ambiguities", document.ambiguities, "Statement", rationale="Reason")
+    blocks += _resolvables("14. Ambiguities", document.ambiguities, "Statement", rationale="Reason")
     blocks += _product_impact(document)
     blocks += _functional_requirements(document)
     blocks += _risks(document)
-    blocks.append(Heading(1, "16. Source documents"))
+    blocks.append(Heading(1, "18. Source documents"))
     if document.source_documents:
         blocks.append(
             Table(
@@ -211,7 +215,7 @@ def outline(document: RequirementSpecification) -> tuple[Block, ...]:
     else:
         blocks.append(Paragraph("The analysis cites no source documents.", note=True))
     blocks += [
-        Heading(1, "17. Approvals"),
+        Heading(1, "19. Approvals"),
         Table(
             ("Act", "Record"),
             (
@@ -224,7 +228,7 @@ def outline(document: RequirementSpecification) -> tuple[Block, ...]:
                 ),
             ),
         ),
-        Heading(1, "18. Glossary"),
+        Heading(1, "20. Glossary"),
         Table(
             ("Term", "Definition"),
             tuple((item.term, item.definition) for item in document.glossary),
@@ -366,7 +370,7 @@ def _actors(document: RequirementSpecification) -> list[Block]:
 
 def _risks(document: RequirementSpecification) -> list[Block]:
     """The backlog review's risks, once the backlog they belong to is approved."""
-    blocks: list[Block] = [Heading(1, "15. Risks")]
+    blocks: list[Block] = [Heading(1, "17. Risks")]
     backlog = document.functional_requirements
     if backlog is None:
         blocks.append(Paragraph(NOT_APPROVED_NOTE.format(what="Risks"), note=True))
@@ -382,8 +386,55 @@ def _risks(document: RequirementSpecification) -> list[Block]:
     return blocks
 
 
+def _use_cases(document: RequirementSpecification) -> list[Block]:
+    """The business use cases the owner confirmed: who, what starts it, the goal, the steps."""
+    blocks: list[Block] = [Heading(1, "7. Business use cases")]
+    if not document.business_use_cases:
+        blocks.append(Paragraph("None recorded.", note=True))
+        return blocks
+    for item in document.business_use_cases:
+        blocks += [
+            Heading(2, f"{item.id} {item.name}"),
+            Table(
+                ("Item", "Value"),
+                (
+                    ("Actor", item.actor),
+                    ("Trigger", item.trigger or NONE),
+                    ("Goal", item.goal),
+                    (
+                        "Business rules",
+                        "; ".join(item.business_rules) if item.business_rules else NONE,
+                    ),
+                    ("Evidence", _evidence(item.evidence)),
+                ),
+            ),
+            Paragraph("Main steps:"),
+            Bullets(tuple(f"{number}. {step}" for number, step in enumerate(item.main_steps, 1))),
+        ]
+        if item.alternate_paths:
+            blocks += [Paragraph("Alternate paths:"), Bullets(item.alternate_paths)]
+    return blocks
+
+
+def _non_functional(document: RequirementSpecification) -> list[Block]:
+    blocks: list[Block] = [Heading(1, "10. Non-functional requirements")]
+    if not document.non_functional_requirements:
+        blocks.append(Paragraph("None recorded.", note=True))
+        return blocks
+    blocks.append(
+        Table(
+            ("ID", "Statement", "Type", "Evidence"),
+            tuple(
+                (item.id, item.text, label(item.kind), _evidence(item.evidence))
+                for item in document.non_functional_requirements
+            ),
+        )
+    )
+    return blocks
+
+
 def _product_impact(document: RequirementSpecification) -> list[Block]:
-    blocks: list[Block] = [Heading(1, "13. Product impact")]
+    blocks: list[Block] = [Heading(1, "15. Product impact")]
     impact = document.product_impact
     if impact is None:
         blocks.append(Paragraph("Product impact was not assessed.", note=True))
@@ -416,7 +467,7 @@ def _product_impact(document: RequirementSpecification) -> list[Block]:
 
 
 def _functional_requirements(document: RequirementSpecification) -> list[Block]:
-    blocks: list[Block] = [Heading(1, "14. Functional requirements")]
+    blocks: list[Block] = [Heading(1, "16. Functional requirements")]
     backlog = document.functional_requirements
     if backlog is None:
         blocks.append(

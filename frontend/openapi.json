@@ -2550,6 +2550,73 @@
         "title": "BusinessRuleResponse",
         "type": "object"
       },
+      "BusinessUseCaseResponse": {
+        "properties": {
+          "actor": {
+            "title": "Actor",
+            "type": "string"
+          },
+          "alternate_paths": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Alternate Paths",
+            "type": "array"
+          },
+          "business_rules": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Business Rules",
+            "type": "array"
+          },
+          "evidence_references": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AnalysisEvidenceReferenceResponse"
+            },
+            "title": "Evidence References",
+            "type": "array"
+          },
+          "goal": {
+            "title": "Goal",
+            "type": "string"
+          },
+          "main_steps": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Main Steps",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "trigger": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trigger"
+          }
+        },
+        "required": [
+          "name",
+          "actor",
+          "trigger",
+          "goal",
+          "main_steps",
+          "alternate_paths",
+          "business_rules"
+        ],
+        "title": "BusinessUseCaseResponse",
+        "type": "object"
+      },
       "CancelAiJobRequest": {
         "properties": {
           "expected_version": {
@@ -6360,6 +6427,32 @@
         "title": "NextAction",
         "type": "string"
       },
+      "NonFunctionalRequirementResponse": {
+        "properties": {
+          "evidence_references": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AnalysisEvidenceReferenceResponse"
+            },
+            "title": "Evidence References",
+            "type": "array"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "statement": {
+            "title": "Statement",
+            "type": "string"
+          }
+        },
+        "required": [
+          "statement",
+          "kind"
+        ],
+        "title": "NonFunctionalRequirementResponse",
+        "type": "object"
+      },
       "NotificationKind": {
         "enum": [
           "ai_job_succeeded",
@@ -8287,6 +8380,14 @@
             "title": "Business Rules",
             "type": "array"
           },
+          "business_use_cases": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/BusinessUseCaseResponse"
+            },
+            "title": "Business Use Cases",
+            "type": "array"
+          },
           "clarification_evidence": {
             "default": [],
             "items": {
@@ -8358,6 +8459,14 @@
               "$ref": "#/components/schemas/KnownFactResponse"
             },
             "title": "Known Facts",
+            "type": "array"
+          },
+          "non_functional_requirements": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/NonFunctionalRequirementResponse"
+            },
+            "title": "Non Functional Requirements",
             "type": "array"
           },
           "open_questions": {

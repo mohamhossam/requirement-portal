@@ -2480,8 +2480,8 @@ frontend feature work (a new download on two screens).
 
 ## Enhancement — A complete Business Requirements Document
 
-**Status:** Proposed 2026-10-30, awaiting owner scheduling. Specification:
-`docs/slices/enhancement-brd-completeness.md`. Closes the gaps between the shipped document
+**Status:** Implemented 2026-10-30 on `feat/business-requirements-document-export` (three commits,
+Phases A–C). Specification: `docs/slices/enhancement-brd-completeness.md`; decision ADR-0120. Closes the gaps between the shipped document
 (ADR-0119) and a standard BRD in three phases: A, document-only additions (version history, Risks,
 actors and scenarios, journeys; schema 1.1); B, intake fields out of scope, current state and
 proposed state (schema 1.2); C, non-functional requirements and business use cases as analysis
@@ -2531,4 +2531,4 @@ Each record keeps its own dated validation history; the ledger at the top govern
 | `docs/slices/fix-ai-job-trace-gaps.md` | Seven gaps found tracing an AI job from click to completion (attempt cap, claim reset, refusal before enqueue, stale context, key reuse) | In review (PR #48) |
 | `docs/slices/production-hardening.md` | Second production-readiness review: fail-closed config, AI-job retry backoff, durable-only provider work, release images and backups, shared rate limit, alerting, DB timeouts, frontend session safety | Specified 2026-10-08; Phase 0 (platform-kernel v1.2.0), the pilot gate (PR 1, PR 8, PR 2, PR 4a, PR 4b, PR 5, PR 6), PR 7 and PR 3 delivered 2026-10-09, PR 9, PR 10, PR 11 and PR 12 2026-10-10 (Phase 2 complete); Phase 3: PR 13–16 delivered 2026-10-10 (slice complete) |
 | `docs/slices/enhancement-business-requirements-document-export.md` | Business Requirements Document download (Word, Markdown) of a confirmed analysis, with the approved backlog as functional requirements; ADR-0119 | Implemented 2026-10-30; in review |
-| `docs/slices/enhancement-brd-completeness.md` | Version history, Risks, actors and journeys in the document; out-of-scope and current/proposed state at intake; non-functional requirements and business use cases as analysis categories | Proposed 2026-10-30; awaiting owner scheduling |
+| `docs/slices/enhancement-brd-completeness.md` | Version history, Risks and actors in the document; out-of-scope and current/proposed state at intake; non-functional requirements and business use cases as analysis categories (ADR-0120) | Implemented 2026-10-30; in review |

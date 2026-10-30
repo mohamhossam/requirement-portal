@@ -25,6 +25,7 @@ from smb_requirement_agent.governance.application.specification import (
     SpecificationFeature,
     SpecificationFormat,
     SpecificationManifest,
+    SpecificationNonFunctionalRequirement,
     SpecificationObjectives,
     SpecificationResolution,
     SpecificationResolvable,
@@ -36,6 +37,7 @@ from smb_requirement_agent.governance.application.specification import (
     SpecificationStatement,
     SpecificationStory,
     SpecificationSummary,
+    SpecificationUseCase,
     SpecificationVersion,
     SpecificationVersionKind,
     StatementOrigin,
@@ -181,6 +183,23 @@ def _specification(*, with_backlog: bool, resolved: bool = True) -> RequirementS
             SpecificationVersion(SpecificationVersionKind.REQUIREMENT, 1, NOW, "Need captured"),
             SpecificationVersion(SpecificationVersionKind.BREAKDOWN, 7, NOW, "Analysis confirmed"),
         ),
+        non_functional_requirements=(
+            SpecificationNonFunctionalRequirement(
+                "NF-01", "Order confirmation within 5 seconds.", "performance"
+            ),
+        ),
+        business_use_cases=(
+            SpecificationUseCase(
+                id="BUC-01",
+                name="Customer orders a plan",
+                actor="SMB customer",
+                trigger=None,
+                goal="The plan is active without a shop visit.",
+                main_steps=("Choose a plan", "Place the order"),
+                alternate_paths=("Eligibility fails: the customer is told why.",),
+                business_rules=("Orders need a signed contract.",),
+            ),
+        ),
     )
 
 
@@ -219,7 +238,7 @@ def test_confirmed_analysis_without_backlog_builds_a_document_without_functional
         revisions.list_breakdown_revisions(RequirementId(requirement_id)),
     )
 
-    assert document.schema_version == "1.2"
+    assert document.schema_version == "1.3"
     assert document.manifest.title == "Confirmed need"
     assert document.manifest.confirmation.actor == SpecificationActor("Amina Owner")
     assert document.manifest.backlog_approval is None
@@ -365,20 +384,23 @@ def test_word_document_carries_every_section_in_order_and_is_byte_stable() -> No
         "4. Stakeholders",
         "5. Actors and scenarios",
         "6. Business requirements",
-        "7. Business rules",
-        "8. Constraints",
-        "9. Assumptions",
-        "10. Dependencies",
-        "11. Open questions",
-        "12. Ambiguities",
-        "13. Product impact",
-        "14. Functional requirements",
-        "15. Risks",
-        "16. Source documents",
-        "17. Approvals",
-        "18. Glossary",
+        "7. Business use cases",
+        "8. Business rules",
+        "9. Constraints",
+        "10. Non-functional requirements",
+        "11. Assumptions",
+        "12. Dependencies",
+        "13. Open questions",
+        "14. Ambiguities",
+        "15. Product impact",
+        "16. Functional requirements",
+        "17. Risks",
+        "18. Source documents",
+        "19. Approvals",
+        "20. Glossary",
     ]
     assert "Version history" in headings
+    assert "BUC-01 Customer orders a plan" in headings
     assert "FR-01 Ordering" in headings
     assert any(text.startswith("FR-01.1 As a SMB customer") for text in headings)
     word = Document(BytesIO(first))
@@ -459,13 +481,16 @@ def test_markdown_renders_the_same_outline_with_escaped_tables() -> None:
         "# Order in one visit\n\nBusiness Requirements Document — Requirement req-1"
     )
     assert "## 1. Executive summary\n\nCustomers must | be able to order\nwithout a visit." in text
-    assert "## 14. Functional requirements" in text
+    assert "## 16. Functional requirements" in text
+    assert "## 7. Business use cases\n\n### BUC-01 Customer orders a plan" in text
+    assert "| NF-01 | Order confirmation within 5 seconds. | Performance | — |" in text
+    assert "- 1. Choose a plan" in text
     assert "### FR-01 Ordering" in text
     assert "### Version history\n\n| Kind | Version | Recorded | Change |" in text
     assert "| Need | 1 | 2026-09-04 08:30 UTC | Need captured |" in text
     assert "## 5. Actors and scenarios\n\n| Actor | Scenario | Feature | Goal |" in text
     assert "| SMB customer | FR-01.1 | Ordering | place an order |" in text
-    assert "## 15. Risks\n\n| Severity | Risk |" in text
+    assert "## 17. Risks\n\n| Severity | Risk |" in text
     assert (
         "#### FR-01.1 As a SMB customer, I want place an order, so that I do not visit a shop"
         in text
@@ -483,7 +508,7 @@ def test_markdown_renders_the_same_outline_with_escaped_tables() -> None:
     lines = [line for line in text.splitlines() if line.startswith("## ")]
     assert lines[0] == "## Document control"
     assert lines[1:4] == ["## 1. Executive summary", "## 2. Business objectives", "## 3. Scope"]
-    assert lines[-1] == "## 18. Glossary"
+    assert lines[-1] == "## 20. Glossary"
 
 
 def test_markdown_and_word_hold_no_email_addresses() -> None:

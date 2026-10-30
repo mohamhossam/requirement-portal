@@ -456,9 +456,11 @@ test("submitted Story rejection is revised, resubmitted, and finally approved", 
   expect(markdownDownload.suggestedFilename()).toMatch(/business-requirements-v\d+\.md$/);
   const markdown = (await downloadBytes(markdownDownload)).toString("utf8");
   expect(markdown.startsWith("# ")).toBe(true);
-  expect(markdown).toContain("## 14. Functional requirements");
+  expect(markdown).toContain("## 16. Functional requirements");
   expect(markdown).toContain("### Version history");
-  expect(markdown).toContain("## 15. Risks");
+  expect(markdown).toContain("## 17. Risks");
+  expect(markdown).toContain("## 7. Business use cases");
+  expect(markdown).toContain("| NF-01 |");
   expect(markdown).toContain("### FR-01 ");
 
   // The confirmed analysis offers the same document from the Confirm view.

@@ -134,6 +134,7 @@ class StoryQualityEvidence:
                 *(item.statement for item in analysis.known_facts),
                 *(item.statement for item in analysis.constraints),
                 *(item.statement for item in analysis.business_rules),
+                *(item.statement for item in analysis.non_functional_requirements),
             ),
             human_decisions=(
                 *(f"{item.subject}: {item.answer}" for item in analysis.clarifications),

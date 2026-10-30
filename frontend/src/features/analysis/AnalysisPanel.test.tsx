@@ -958,3 +958,45 @@ describe("AnalysisPanel", () => {
     expect(confirm.className).not.toMatch(/\bbg-accent\b/);
   });
 });
+
+it("lists non-functional requirements with their kind and business use cases with their steps", () => {
+  render(
+    <AnalysisPanel
+      analysis={{
+        ...analysisFixture,
+        non_functional_requirements: [
+          { statement: "Order confirmation is shown within 5 seconds.", kind: "performance", evidence_references: [] },
+        ],
+        business_use_cases: [
+          {
+            name: "SMB customer orders a plan",
+            actor: "SMB customer",
+            trigger: "a customer asks for a new plan",
+            goal: "The plan is active without a shop visit.",
+            main_steps: ["Choose a plan", "Place the order"],
+            alternate_paths: ["Eligibility fails: the customer is told why."],
+            business_rules: ["Eligibility must be checked before ordering."],
+            evidence_references: [],
+          },
+        ],
+      }}
+      busy={false}
+      error={null}
+      onClarify={vi.fn()}
+      onConfirm={vi.fn()}
+    />,
+  );
+
+  const qualities = screen.getByRole("region", { name: "Non-functional requirements" });
+  expect(within(qualities).getByText("Order confirmation is shown within 5 seconds.")).toBeVisible();
+  expect(within(qualities).getByText("Performance")).toBeVisible();
+  const useCases = screen.getByRole("region", { name: "Business use cases" });
+  expect(within(useCases).getByText("SMB customer orders a plan")).toBeVisible();
+  expect(within(useCases).getByText(/SMB customer → The plan is active without a shop visit./)).toBeVisible();
+  expect(within(useCases).getByText(/Starts when a customer asks for a new plan/)).toBeVisible();
+  expect(within(useCases).getAllByRole("listitem").map((item) => item.textContent)).toEqual(
+    expect.arrayContaining(["Choose a plan", "Place the order"]),
+  );
+  expect(within(useCases).getByText(/Otherwise: Eligibility fails/)).toBeVisible();
+  expect(screen.getByText("5 recorded")).toBeVisible();
+});

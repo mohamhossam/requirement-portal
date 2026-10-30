@@ -11,6 +11,15 @@ restoring a backup.
 
 ## Unreleased
 
+- **The analysis now extracts non-functional requirements and business use cases.** Two settled
+  categories beside facts, rules and constraints, each cited to a source passage and confirmed with
+  the analysis (ADR-0120): a typed quality the solution must have, and a business-level use case
+  with actor, goal and steps. They appear on Clarify and Confirm, in the analysis response, in the
+  knowledge index, in the Epic, Feature and Story prompts (`epic-v5`, `feature-v9`, `story-v9`),
+  and in the Business Requirements Document as sections 7 and 10 (schema 1.3). Analysis prompt
+  `analysis-v28`; evidence-fragment cache `v4`, so structured documents are re-analysed once.
+  Stored analyses, approvals and context tokens are unchanged while the categories are empty. No
+  migration.
 - **A requirement can state its scope: how it works today, how it should work, and what is out
   of scope.** Three optional intake fields on the new-requirement form and the source editor,
   shown on the Source step, diffed in History, given to the analysis prompt (`analysis-v27`) and

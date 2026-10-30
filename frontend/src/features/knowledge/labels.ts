@@ -50,6 +50,8 @@ const FIELD_LABEL: Record<string, string> = {
   business_rule: "Business rule",
   constraint: "Constraint",
   known_fact: "Known fact",
+  non_functional_requirement: "Non-functional requirement",
+  business_use_case: "Business use case",
   conflict_resolution: "Agreed resolution",
 };
 

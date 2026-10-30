@@ -1,6 +1,6 @@
 # Enhancement — A complete Business Requirements Document
 
-**Status: Approved 2026-10-30; Phase A in progress on `feat/business-requirements-document-export`.**
+**Status: Approved 2026-10-30; Phases A, B and C delivered on `feat/business-requirements-document-export`.**
 Follows `docs/slices/enhancement-business-requirements-document-export.md` (ADR-0119), which ships
 the document. This slice closes the gaps between that document and a standard BRD (IIBA BABOK
 requirement types; the common Asana, Lucid, Slite, Bakkah, monday.com, Smartsheet and Info-Tech
@@ -260,11 +260,11 @@ note; ubiquitous language; `docs/ux-plan.md` `/confirm`; CHANGELOG; PRODUCT.md.
 
 - [x] A: every revision is listed with what changed; actors and scenarios and Risks appear once
   approved and say so before; numbering is 1–18 in both formats.
-- [ ] B: the three fields can be captured, edited, diffed in History, reach the analysis prompt and
+- [x] B: the three fields can be captured, edited, diffed in History, reach the analysis prompt and
   appear in section 3; goldens and live tokens unchanged.
-- [ ] C: fake and live analyzers return typed non-functional requirements and business use cases
-  with steps, each cited; the owner sees them on Confirm; the document carries NF-nn and BUC-nn;
-  goldens and existing approvals unchanged when the categories are empty.
+- [x] C: the fake analyzer returns a typed non-functional requirement and a business use case with
+  steps; the owner sees them on Confirm; the document carries NF-nn and BUC-nn; goldens and existing
+  approvals unchanged when the categories are empty. The live-model record is still open (below).
 
 ## Validation Evidence
 
@@ -276,6 +276,27 @@ the Playwright journeys; for C, the live-model record.
 --check .` unchanged; `mypy src tests` Success, 763 files; `lint-imports` 43 kept, 0 broken.
 Frontend unchanged (no code change). Playwright `review-flow.spec.ts` "finally approved" journey, 1
 passed against a fresh API, asserting the version history, section 14 and section 15.
+
+**Phase B (2026-10-30).** `pytest` 2315 passed, 105 skipped (characterisation goldens, context
+tokens and the OpenAPI snapshot unchanged beyond the regenerated contract); `ruff check .` All checks
+passed; `ruff format --check .` unchanged; `mypy src tests` Success, 764 files; `lint-imports` 43 kept,
+0 broken. Frontend: `api:check`, `lint`, `typecheck` clean; `vitest run` 68 files, 600 tests; `build`
+green. Playwright `review-flow.spec.ts` on chromium, 9 passed. Checked by hand in the browser pane:
+the three fields render under "Add detail if you know it" on the new-requirement form.
+
+**Phase C (2026-10-30).** `pytest` full suite exit 0 (goldens, context tokens, fingerprints unchanged;
+OpenAPI snapshot regenerated); `ruff check .` All checks passed; `ruff format --check .` unchanged;
+`mypy src tests` Success, 765 files; `lint-imports` 43 kept, 0 broken. Frontend: `api:check`, `lint`,
+`typecheck` clean; `vitest run` 68 files, 601 tests; `build` green. Playwright `review-flow.spec.ts` on
+chromium: 7 passed and 2 timed out while the backend suite ran alongside; both passed on rerun (9 of 9
+across the two runs). Checked by hand in the browser pane: the Confirm screen's settled column lists the
+non-functional requirement with its Performance pill and the business use case with its steps; the
+Markdown document carries sections 7 and 10.
+
+**Open: the live-model record for Phase C.** No provider credentials are available in this session, so
+the structured BRD fixture has not been run through the local model or OpenRouter. The record in
+`docs/evaluation/` is owed before Phase C is treated as release evidence; the fake-provider path and the
+consolidation bypass are unit-tested.
 
 ## Deferred
 

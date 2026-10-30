@@ -344,6 +344,10 @@ def _analysis_state(analysis: RequirementAnalysis) -> dict[str, Any]:
     for key in ("reference_grounding", "product_impact", "product_impact_status"):
         if state[key] is None:
             del state[key]
+    # The settled categories ADR-0120 added stay out while empty, for the same reason.
+    for key in ("non_functional_requirements", "business_use_cases"):
+        if not state[key]:
+            del state[key]
     return state
 
 

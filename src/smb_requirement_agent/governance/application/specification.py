@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 
-SPECIFICATION_SCHEMA_VERSION = "1.2"
+SPECIFICATION_SCHEMA_VERSION = "1.3"
 SPECIFICATION_GENERATOR = "SMB AI Requirement Breakdown Agent"
 SPECIFICATION_TITLE = "Business Requirements Document"
 
@@ -91,6 +91,9 @@ class SpecificationCounts:
     open_questions: int
     ambiguities: int
     resolved_clarifications: int
+    # Added in 1.3.
+    non_functional_requirements: int = 0
+    business_use_cases: int = 0
 
 
 @dataclass(frozen=True)
@@ -135,6 +138,31 @@ class SpecificationStatement:
     id: str
     text: str
     origin: StatementOrigin
+    evidence: tuple[SpecificationEvidence, ...] = ()
+
+
+@dataclass(frozen=True)
+class SpecificationNonFunctionalRequirement:
+    """Added in 1.3: a quality the solution must have, with the attribute it constrains."""
+
+    id: str
+    text: str
+    kind: str
+    evidence: tuple[SpecificationEvidence, ...] = ()
+
+
+@dataclass(frozen=True)
+class SpecificationUseCase:
+    """Added in 1.3: a business use case the owner confirmed."""
+
+    id: str
+    name: str
+    actor: str
+    trigger: str | None
+    goal: str
+    main_steps: tuple[str, ...]
+    alternate_paths: tuple[str, ...]
+    business_rules: tuple[str, ...]
     evidence: tuple[SpecificationEvidence, ...] = ()
 
 
@@ -275,6 +303,16 @@ GLOSSARY: tuple[SpecificationGlossaryEntry, ...] = (
         "Ambiguity (AM)", "Wording in the source that allows more than one reading."
     ),
     SpecificationGlossaryEntry(
+        "Business use case (BUC)",
+        "How the business, as a black box, delivers value to an external actor: who, what "
+        "starts it, the goal and the business-level steps. Confirmed with the analysis.",
+    ),
+    SpecificationGlossaryEntry(
+        "Non-functional requirement (NF)",
+        "A quality the solution must have (performance, availability, security, compliance, "
+        "usability, data, scalability) as the source states it. Confirmed with the analysis.",
+    ),
+    SpecificationGlossaryEntry(
         "Functional requirement (FR)",
         "A Feature of the approved backlog, with its User Stories and acceptance criteria.",
     ),
@@ -305,4 +343,7 @@ class RequirementSpecification:
     source_documents: tuple[SpecificationSourceDocument, ...]
     # Added in 1.1: every revision up to this one, in time order.
     versions: tuple[SpecificationVersion, ...]
+    # Added in 1.3: the settled categories the owner confirmed (ADR-0120).
+    non_functional_requirements: tuple[SpecificationNonFunctionalRequirement, ...] = ()
+    business_use_cases: tuple[SpecificationUseCase, ...] = ()
     glossary: tuple[SpecificationGlossaryEntry, ...] = GLOSSARY

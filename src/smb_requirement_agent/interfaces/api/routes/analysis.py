@@ -58,6 +58,7 @@ from smb_requirement_agent.interfaces.api.schemas.analysis import (
     AssumptionResponse,
     BusinessIntentResponse,
     BusinessRuleResponse,
+    BusinessUseCaseResponse,
     CapabilityNeedResponse,
     ClarificationQuestionResponse,
     ClassifyClarificationQuestionRequest,
@@ -76,6 +77,7 @@ from smb_requirement_agent.interfaces.api.schemas.analysis import (
     IntentProposalDecisionResponse,
     IntentProposalResponse,
     KnownFactResponse,
+    NonFunctionalRequirementResponse,
     OfferingDraftResponse,
     OpenQuestionResponse,
     PotentialDependencyResponse,
@@ -297,6 +299,27 @@ def analysis_response(
                 evidence_references=_evidence_response(r.evidence_references),
             )
             for r in analysis.business_rules
+        ],
+        non_functional_requirements=[
+            NonFunctionalRequirementResponse(
+                statement=item.statement,
+                kind=item.kind.value,
+                evidence_references=_evidence_response(item.evidence_references),
+            )
+            for item in analysis.non_functional_requirements
+        ],
+        business_use_cases=[
+            BusinessUseCaseResponse(
+                name=item.name,
+                actor=item.actor,
+                trigger=item.trigger,
+                goal=item.goal,
+                main_steps=list(item.main_steps),
+                alternate_paths=list(item.alternate_paths),
+                business_rules=list(item.business_rules),
+                evidence_references=_evidence_response(item.evidence_references),
+            )
+            for item in analysis.business_use_cases
         ],
         assumptions=[
             AssumptionResponse(

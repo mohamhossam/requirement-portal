@@ -375,6 +375,20 @@ class RequirementKnowledgeCorpus:
         values.extend(
             (source_kind, "constraint", item.statement, path) for item in analysis.constraints
         )
+        values.extend(
+            (source_kind, "non_functional_requirement", item.statement, path)
+            for item in analysis.non_functional_requirements
+        )
+        values.extend(
+            (
+                source_kind,
+                "business_use_case",
+                f"{item.name}: {item.actor} achieves {item.goal}. "
+                + " ".join(f"{number}. {step}" for number, step in enumerate(item.main_steps, 1)),
+                path,
+            )
+            for item in analysis.business_use_cases
+        )
         return values
 
     def _require(self, requirement_id: RequirementId) -> Requirement:

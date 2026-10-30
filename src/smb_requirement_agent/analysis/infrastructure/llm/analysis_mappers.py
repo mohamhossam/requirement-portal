@@ -19,7 +19,9 @@ from smb_requirement_agent.analysis.application.ports.requirement_analyzer impor
     AmbiguityCandidate,
     AnalysisDocumentContext,
     AnalysisEvidenceReferenceCandidate,
+    BusinessUseCaseCandidate,
     IntentProposalCandidate,
+    NonFunctionalRequirementCandidate,
     OpenQuestionCandidate,
     QuestionReviewCandidate,
     RequirementAnalysisCandidate,
@@ -31,12 +33,15 @@ from smb_requirement_agent.analysis.domain.value_objects import (
     ClarificationSource,
     IntentProposal,
     IntentProposalKind,
+    NonFunctionalKind,
     QuestionChangeAction,
     is_additional_intent_proposal,
 )
 from smb_requirement_agent.analysis.infrastructure.llm.response_sanitizer import (
     clean_pairs,
     clean_statements,
+    clean_typed_statements,
+    clean_use_cases,
     require_any_content,
 )
 from smb_requirement_agent.analysis.infrastructure.llm.schemas.analysis_schema import (
@@ -155,6 +160,13 @@ def to_analysis_candidate(
     )
 
 
+_NON_FUNCTIONAL_KINDS = frozenset(kind.value for kind in NonFunctionalKind)
+
+
+def _strings(value: object) -> list[object]:
+    return list(value) if isinstance(value, list | tuple) else []
+
+
 def to_analysis_content_candidate(
     parsed: RequirementAnalysisSchema,
     *,
@@ -168,6 +180,26 @@ def to_analysis_content_candidate(
     known_facts = _distinct(clean_statements(parsed.known_facts))
     constraints = _distinct(clean_statements(parsed.constraints))
     business_rules = _distinct(clean_statements(parsed.business_rules))
+    non_functional = [
+        NonFunctionalRequirementCandidate(statement=statement, kind=kind)
+        for statement, kind in clean_typed_statements(
+            ((item.statement, item.kind) for item in parsed.non_functional_requirements),
+            _NON_FUNCTIONAL_KINDS,
+            "other",
+        )
+    ]
+    use_cases = [
+        BusinessUseCaseCandidate(
+            name=str(item["name"]),
+            actor=str(item["actor"]),
+            trigger=item["trigger"] if isinstance(item["trigger"], str) else None,
+            goal=str(item["goal"]),
+            main_steps=[str(step) for step in _strings(item["main_steps"])],
+            alternate_paths=[str(step) for step in _strings(item["alternate_paths"])],
+            business_rules=[str(rule) for rule in _strings(item["business_rules"])],
+        )
+        for item in clean_use_cases(item.model_dump() for item in parsed.business_use_cases)
+    ]
     uncertainties, question_reviews, new_uncertainties = _reconcile_uncertainties(
         parsed, tuple(active_questions)
     )
@@ -227,6 +259,8 @@ def to_analysis_content_candidate(
         ambiguities,
         potential_dependencies,
         [item["statement"] for item in proposals],
+        [item["statement"] for item in non_functional],
+        [item["name"] for item in use_cases],
     )
 
     result = RequirementAnalysisCandidate(
@@ -248,6 +282,8 @@ def to_analysis_content_candidate(
         prompt_version=prompt_version,
         question_reviews=question_reviews,
         new_uncertainties=new_uncertainties,
+        non_functional_requirements=non_functional,
+        business_use_cases=use_cases,
     )
     if invented:
         result["set_aside"] = [
@@ -430,6 +466,11 @@ def analysis_evidence_subjects(
         *(("ambiguity", item["statement"]) for item in candidate["ambiguities"]),
         *(("potential_dependency", item) for item in candidate["potential_dependencies"]),
         *(("intent_proposal", item["statement"]) for item in candidate["intent_proposals"]),
+        *(
+            ("non_functional_requirement", item["statement"])
+            for item in candidate.get("non_functional_requirements", [])
+        ),
+        *(("business_use_case", item["name"]) for item in candidate.get("business_use_cases", [])),
     ]
     return tuple(values)
 
@@ -514,6 +555,16 @@ def set_aside_outputs(
     candidate["intent_proposals"] = [
         i for i in candidate["intent_proposals"] if kept("intent_proposal", i["statement"])
     ]
+    if "non_functional_requirements" in candidate:
+        candidate["non_functional_requirements"] = [
+            i
+            for i in candidate["non_functional_requirements"]
+            if kept("non_functional_requirement", i["statement"])
+        ]
+    if "business_use_cases" in candidate:
+        candidate["business_use_cases"] = [
+            i for i in candidate["business_use_cases"] if kept("business_use_case", i["name"])
+        ]
     if "new_uncertainties" in candidate:
         candidate["new_uncertainties"] = [
             i

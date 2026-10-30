@@ -93,6 +93,7 @@ export function SourcePanel({
               {([
                 ["Known facts", analysis.known_facts.length],
                 ["Rules and constraints", analysis.business_rules.length + analysis.constraints.length],
+                ["Use cases and qualities", analysis.business_use_cases.length + analysis.non_functional_requirements.length],
                 ["Answers from people", analysis.clarifications.length],
               ] as const).map(([label, count]) => (
                 <div className="flex items-baseline justify-between gap-4 py-2 [&+&]:[border-top:1px_solid_var(--line)]" key={label}>

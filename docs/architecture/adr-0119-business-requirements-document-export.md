@@ -127,3 +127,12 @@ Current state and Proposed state. `SPECIFICATION_SCHEMA_VERSION` is `1.2`.
 Two invariants keep existing work valid: the fields are written to payloads only when present, and
 the generation context token drops them while empty (`_requirement_state`), so stored rows, the
 characterisation goldens and tokens minted before the fields existed are unchanged.
+
+## Amendment 3 — schema 1.3: non-functional requirements and business use cases (2026-10-30)
+
+With ADR-0120 the analysis records non-functional requirements and business use cases as settled
+categories the owner confirms. The document renders them as "7. Business use cases" (BUC-nn: actor,
+trigger, goal, business rules, evidence, numbered main steps, alternate paths) after Business
+requirements, and "10. Non-functional requirements" (NF-nn: statement, type, evidence) after
+Constraints. Sections are numbered 1–20; the executive summary's count sentence names both; the
+glossary gains both terms. `SPECIFICATION_SCHEMA_VERSION` is `1.3`.

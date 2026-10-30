@@ -59,6 +59,15 @@ class StructuredEpicGeneratorAdapter:
                     ],
                     desired_outcome=analysis.effective_desired_outcome(),
                     guidance=guidance,
+                    non_functional_requirements=[
+                        item.statement for item in analysis.non_functional_requirements
+                    ],
+                    out_of_scope=[item.value for item in requirement.out_of_scope],
+                    proposed_state=(
+                        requirement.proposed_state.value
+                        if requirement.proposed_state is not None
+                        else None
+                    ),
                 ),
                 schema_type=EpicSchema,
             )

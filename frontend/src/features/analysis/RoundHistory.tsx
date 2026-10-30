@@ -30,6 +30,8 @@ export function RoundHistory({ rounds }: { rounds: AnalysisRound[] }) {
               ...item.known_facts.map((value) => `Known fact: ${value.statement}`),
               ...item.business_rules.map((value) => `Business rule: ${value.statement}`),
               ...item.constraints.map((value) => `Constraint: ${value.statement}`),
+              ...item.non_functional_requirements.map((value) => `Non-functional requirement: ${value.statement}`),
+              ...item.business_use_cases.map((value) => `Business use case: ${value.name}`),
               ...item.business_intent.proposals.map(
                 (value) => `Proposed ${INTENT_KIND_LABEL[value.kind].toLowerCase()}: ${value.statement}`,
               ),
